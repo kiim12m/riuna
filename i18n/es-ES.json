@@ -1,6 +1,6 @@
 {
 	"common": {
-		"appName": "Kaneo",
+		"appName": "Riuna",
 		"actions": {
 			"cancel": "Cancelar",
 			"close": "Cerrar",
@@ -56,7 +56,30 @@
 			"troubleshooting": "Pasos para solucionar problemas:",
 			"tryAgain": "Intentar de nuevo",
 			"viewDeploymentGuide": "Ver el manual del despliegue",
-			"refreshPage": "Actualizar página"
+			"refreshPage": "Actualizar página",
+			"description": "La página ha fallado inesperadamente. Normalmente se soluciona actualizando.",
+			"messages": {
+				"cors": "No se ha podido conectar con el servidor. Puede deberse a la configuración de CORS.",
+				"network": "Error de red. Comprueba tu conexión a internet e inténtalo de nuevo.",
+				"auth": "Ha fallado la autenticación. Vuelve a iniciar sesión.",
+				"server": "Error del servidor. Inténtalo de nuevo más tarde.",
+				"unknown": "Se ha producido un error inesperado."
+			},
+			"troubleshootingSteps": {
+				"cors": {
+					"checkApiRunning": "Asegúrate de que el servidor de la API está en marcha",
+					"checkApiUrl": "Comprueba que VITE_API_URL en el .env del frontend coincide con la URL del servidor de la API",
+					"verifyCorsOrigins": "Verifica que CORS_ORIGINS en el .env de la API incluye la URL del frontend",
+					"checkProtocol": "Asegúrate de que el frontend y la API usan el mismo protocolo (http/https)",
+					"checkAccessibility": "Comprueba que el servidor de la API es accesible desde tu navegador"
+				},
+				"network": {
+					"checkConnection": "Comprueba tu conexión a internet",
+					"verifyApiRunning": "Verifica que el servidor de la API está en marcha y es accesible",
+					"tryRefresh": "Prueba a actualizar la página",
+					"checkFirewall": "Comprueba si hay problemas de cortafuegos o proxy"
+				}
+			}
 		},
 		"formats": {
 			"never": "Nunca"
@@ -77,7 +100,7 @@
 				"errorToast": "Hubo un error al crear el proyecto"
 			},
 			"createWorkspace": {
-				"breadcrumbKaneo": "KANEO",
+				"breadcrumbKaneo": "RIUNA",
 				"title": "Crear un nuevo espacio de trabajo",
 				"description": "Crea un nuevo espacio de trabajo eligiendo un nombre.",
 				"namePlaceholder": "Nombre del espacio de trabajo",
@@ -196,7 +219,7 @@
 			"toggleMessage": "¿Ya tienes cuenta?",
 			"toggleLink": "Iniciar sesión",
 			"instanceStatusError": "No se ha podido contactar con el servidor. Vuelve a intentarlo en un momento.",
-			"instanceAdminTitle": "Configura tu instancia de Kaneo",
+			"instanceAdminTitle": "Configura tu instancia de Riuna",
 			"instanceAdminSubtitle": "Esta cuenta se convierte en la administradora de la instancia con acceso completo."
 		},
 		"verifyOtp": {
@@ -254,7 +277,7 @@
 			"workspaceLabel": "Espacio de trabajo: {{workspaceName}}",
 			"joinWorkspace": "Unirse a {{workspaceName}}",
 			"inviteBodySignedIn": "<inviter>{{inviterName}}</inviter> te ha invitado a unirse a su espacio de trabajo.",
-			"inviteBodySignedOut": "<inviter>{{inviterName}}</inviter> te ha invitado a unirse a su espacio de trabajo en Kaneo.",
+			"inviteBodySignedOut": "<inviter>{{inviterName}}</inviter> te ha invitado a unirse a su espacio de trabajo en Riuna.",
 			"createAccountOrSignIn": "Crea una cuenta para aceptar esta invitación o inicia sesión si ya tienes una.",
 			"createAccount": "Crear cuenta",
 			"accepting": "Aceptando...",
@@ -270,7 +293,7 @@
 			}
 		},
 		"onboarding": {
-			"pageTitle": "Bienvenido a Kaneo",
+			"pageTitle": "Bienvenido a Riuna",
 			"workspacePageTitle": "Crear espacio de trabajo",
 			"createWorkspaceTitle": "Crear espacio de trabajo",
 			"createWorkspaceSubtitle": "Configura tu espacio de trabajo para empezar a gestionar proyectos",
@@ -360,7 +383,7 @@
 		},
 		"preferencesPage": {
 			"title": "Preferencias",
-			"subtitle": "Personaliza tu experiencia Kaneo.",
+			"subtitle": "Personaliza tu experiencia Riuna.",
 			"appearanceTitle": "Apariencia",
 			"appearanceSubtitle": "Ajustes visuales y de diseño.",
 			"theme": "Tema",
@@ -404,7 +427,7 @@
 			"title": "Ajustes de Desarrollador",
 			"subtitle": "Gestiona tus claves de API y recursos de desarrollo.",
 			"apiKeysCardTitle": "Claves de API",
-			"apiKeysCardDescription": "Crea y gestiona las claves de API para acceder a Kaneo.",
+			"apiKeysCardDescription": "Crea y gestiona las claves de API para acceder a Riuna.",
 			"createApiKey": "Crear clave de API",
 			"unnamedKey": "Clave sin nombre"
 		},
@@ -443,7 +466,7 @@
 			},
 			"createDialog": {
 				"title": "Crear clave de API",
-				"description": "Create una nueva clave de API para acceder a la API de Kaneo.",
+				"description": "Create una nueva clave de API para acceder a la API de Riuna.",
 				"nameLabel": "Nombre",
 				"namePlaceholder": "Mi API Key",
 				"nameDescription": "Un nombre descriptivo para esta clave de API",
@@ -635,7 +658,7 @@
 				"removeError": "Error al eliminar la integración con GitHub",
 				"issuesImported": "Issues importados correctamente",
 				"importError": "Error al importar issues",
-				"commentOnEnabled": "Kaneo añadirá un comentario con un enlace a la tarea en los nuevos issues",
+				"commentOnEnabled": "Riuna añadirá un comentario con un enlace a la tarea en los nuevos issues",
 				"commentOnDisabled": "Los comentarios con enlaces a tareas en nuevos issues están desactivados",
 				"settingsUpdateError": "Error al actualizar la integración de GitHub"
 			},
@@ -646,8 +669,8 @@
 			"badgeNotConnected": "No connectado",
 			"repository": "Repositorio",
 			"repositoryHint": "Repositorio de GitHub conectado",
-			"commentTaskLinkTitle": "Comenta Kaneo link en issues nuevos",
-			"commentTaskLinkHint": "Si está activado, Kaneo añade un comentario en cada nuevo issue de GitHub vinculado con la tarea.",
+			"commentTaskLinkTitle": "Comenta Riuna link en issues nuevos",
+			"commentTaskLinkHint": "Si está activado, Riuna añade un comentario en cada nuevo issue de GitHub vinculado con la tarea.",
 			"appStatusTitle": "Estado de la App de GitHub",
 			"appStatusHint": "Estado de instalación y permisos",
 			"statusProperlyConfigured": "Correctamente configurado",
@@ -769,11 +792,11 @@
 			"connected": "Conectado",
 			"paused": "Pausado",
 			"webhookLabel": "URL del webhook",
-			"webhookPlaceholder": "https://ejemplo.com/webhooks/kaneo",
-			"webhookHint": "Kaneo envía requests POST como JSON para cada evento activo.",
+			"webhookPlaceholder": "https://ejemplo.com/webhooks/riuna",
+			"webhookHint": "Riuna envía requests POST como JSON para cada evento activo.",
 			"secretLabel": "Secreto para la firma",
 			"secretPlaceholder": "Secreto opcional",
-			"secretHint": "Opcional. Si está configurado, Kaneo envía el cuerpo de la petición y añade la cabecera X-Kaneo-Signature.",
+			"secretHint": "Opcional. Si está configurado, Riuna envía el cuerpo de la petición y añade la cabecera X-Kaneo-Signature.",
 			"secretHintConfigured": "Ya hay un secreto configurado ({{secret}}). Introduce uno nuevo para reemplazarlo.",
 			"eventsTitle": "Notificaciones de eventos",
 			"eventsHint": "Elige qué cambios en el proyecto deben ser notificados a través de webhooks.",
@@ -864,7 +887,7 @@
 		"notificationsPage": {
 			"pageTitle": "Notificaciones",
 			"title": "Notificaciones",
-			"subtitle": "Elige cómo Kaneo entrega las notificaciones de tu cuenta y qué canales usar.",
+			"subtitle": "Elige cómo Riuna entrega las notificaciones de tu cuenta y qué canales usar.",
 			"statusConnected": "Conectado",
 			"statusPaused": "Pausado",
 			"emailTitle": "Correo electrónico",
@@ -897,10 +920,10 @@
 			"webhookDescription": "Envía las notificaciones de tu cuenta a tu propio endpoint como JSON.",
 			"endpointUrl": "URL del endpoint",
 			"signingSecret": "Secreto de firma",
-			"webhookUrlPlaceholder": "https://example.com/webhooks/kaneo",
+			"webhookUrlPlaceholder": "https://example.com/webhooks/riuna",
 			"webhookSecretPlaceholder": "Secreto compartido opcional",
 			"webhookSecretHintConfigured": "Ya hay un secreto de firma configurado ({{masked}}). Introduce uno nuevo para reemplazarlo.",
-			"webhookSecretHintOptional": "Opcional. Kaneo firma el cuerpo de la petición cuando hay un secreto configurado.",
+			"webhookSecretHintOptional": "Opcional. Riuna firma el cuerpo de la petición cuando hay un secreto configurado.",
 			"connectWebhook": "Conectar webhook",
 			"workspaceRulesTitle": "Reglas de entrega por espacio de trabajo",
 			"workspaceRulesDescription": "Reutiliza tus canales globales y decide qué espacios de trabajo y proyectos pueden enviar notificaciones a tu cuenta.",
@@ -1148,7 +1171,7 @@
 				"removeError": "Error al eliminar la integración con Gitea",
 				"issuesImported": "Issues importadas correctamente",
 				"importError": "Error al importar issues",
-				"commentOnEnabled": "Kaneo comentará con un enlace a la tarea en las nuevas issues",
+				"commentOnEnabled": "Riuna comentará con un enlace a la tarea en las nuevas issues",
 				"commentOnDisabled": "Los comentarios con enlace a la tarea en nuevas issues están desactivados",
 				"settingsUpdateError": "Error al actualizar la integración con Gitea",
 				"secretCopied": "Copiado",
@@ -1166,8 +1189,8 @@
 			"badgeNotConnected": "No conectado",
 			"repository": "Repositorio",
 			"repositoryHint": "Repositorio de Gitea vinculado",
-			"commentTaskLinkTitle": "Comentar el enlace de Kaneo en nuevas issues",
-			"commentTaskLinkHint": "Si está activado, Kaneo publica un comentario en cada nueva issue con un enlace a la tarea.",
+			"commentTaskLinkTitle": "Comentar el enlace de Riuna en nuevas issues",
+			"commentTaskLinkHint": "Si está activado, Riuna publica un comentario en cada nueva issue con un enlace a la tarea.",
 			"webhookTitle": "Webhook",
 			"webhookHint": "En tu repositorio de Gitea, añade un webhook con esta URL y secreto. Activa push, pull request, issues, comentarios de issues y create (para etiquetas).",
 			"webhookSecretLabel": "Secreto (debe coincidir con el secreto del webhook en Gitea)",
@@ -1232,7 +1255,7 @@
 			"threadIdHint": "Opcional. Úsalo para temas de foro dentro de grupos de Telegram.",
 			"chatLabelLabel": "Etiqueta del chat",
 			"chatLabelPlaceholder": "Actualizaciones de ingeniería",
-			"chatLabelHint": "Etiqueta opcional para tu referencia dentro de Kaneo.",
+			"chatLabelHint": "Etiqueta opcional para tu referencia dentro de Riuna.",
 			"eventsTitle": "Notificaciones de eventos",
 			"eventsHint": "Elige qué cambios del proyecto deben publicarse en Telegram.",
 			"events": {
@@ -1357,7 +1380,7 @@
 				"prevTask": "Tarea anterior",
 				"openTask": "Abrir tarea seleccionada",
 				"quickSelectNumber": "Seleccionar opción por número",
-				"calendarView": "Switch to calendar view"
+				"calendarView": "Cambiar a vista de calendario"
 			}
 		}
 	},
@@ -1958,14 +1981,14 @@
 	},
 	"invitations": {
 		"email": {
-			"subject": "{{inviterName}} te ha invitado a unirte a {{workspaceName}} en Kaneo",
-			"preview": "Te han invitado a {{workspaceName}} en Kaneo",
+			"subject": "{{inviterName}} te ha invitado a unirte a {{workspaceName}} en Riuna",
+			"preview": "Te han invitado a {{workspaceName}} en Riuna",
 			"title": "Únete a {{workspaceName}}",
-			"subtitle": "{{inviterName}} ({{inviterEmail}}) te ha invitado a colaborar en Kaneo.",
+			"subtitle": "{{inviterName}} ({{inviterEmail}}) te ha invitado a colaborar en Riuna.",
 			"cta": "Aceptar invitación",
 			"sameEmail": "Puedes aceptarla con el mismo correo que recibió este mensaje.",
 			"ignore": "Si no esperabas este correo, puedes ignorarlo sin problema.",
-			"footer": "Invitación a un espacio de trabajo de Kaneo"
+			"footer": "Invitación a un espacio de trabajo de Riuna"
 		},
 		"pageTitle": "Invitaciones",
 		"pendingInvitations": "Invitaciones pendientes",

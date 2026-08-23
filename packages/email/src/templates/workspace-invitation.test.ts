@@ -2,24 +2,24 @@ import { render } from "@react-email/render";
 import { createElement } from "react";
 import { describe, expect, it } from "vitest";
 import enUS from "../../../../i18n/en-US.json";
-import frFR from "../../../../i18n/fr-FR.json";
+import esES from "../../../../i18n/es-ES.json";
 import WorkspaceInvitationEmail from "./workspace-invitation";
 
 describe("WorkspaceInvitationEmail", () => {
-  it("renders the invitation in French for a French locale", async () => {
+  it("renders the invitation in Spanish for a Spanish locale", async () => {
     const html = await render(
       createElement(WorkspaceInvitationEmail, {
-        workspaceName: "Équipe Produit",
+        workspaceName: "Equipo Producto",
         inviterName: "Camille",
         inviterEmail: "camille@example.com",
-        invitationLink: "https://kaneo.example/invite/abc",
+        invitationLink: "https://riuna.example/invite/abc",
         to: "invite@example.com",
-        copy: frFR.invitations.email,
+        copy: esES.invitations.email,
       }),
     );
 
-    expect(html).toContain("Rejoindre Équipe Produit");
-    expect(html).toContain("Accepter l’invitation");
+    expect(html).toContain("Únete a Equipo Producto");
+    expect(html).toContain("Aceptar invitación");
     expect(html).toContain("Camille (camille@example.com)");
   });
 });

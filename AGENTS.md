@@ -1,8 +1,10 @@
-# Kaneo agent guide
+# Riuna agent guide
 
-Kaneo is a fast, deliberately simple, self-hosted project-management platform. The Hono API owns domain behavior and authorization, the React app consumes its typed client, PostgreSQL stores durable state, and events plus WebSockets keep clients current. Redis is optional and coordinates realtime delivery across multiple API instances.
+Riuna is a self-hosted all-in-one productivity platform: project and task management first, CRM and light ERP later. It is a hard fork of [Kaneo](https://github.com/usekaneo/kaneo) v2.22.0 (MIT), maintained as an independent program — **there is no upstream sync**, so changing inherited code carries no future merge cost. Attribution lives in `NOTICE`.
 
-This is an operating guide, not a README. These rules are good defaults; explicit developer and user instructions take precedence.
+The Hono API owns domain behavior and authorization, the React app consumes its typed client, PostgreSQL stores durable state, and events plus WebSockets keep clients current. Redis is optional and coordinates realtime delivery across multiple API instances.
+
+This is an operating guide, not a README. These rules are good defaults; explicit developer and user instructions take precedence. Most of this document is inherited from Kaneo and is deliberately kept in English to match the codebase and keep the diff small; the product UI, however, defaults to Spanish.
 
 ## Principles
 
@@ -19,12 +21,26 @@ This is an operating guide, not a README. These rules are good defaults; explici
 
 - `apps/api` — Hono API, Better Auth, controllers, database access, events, integrations, MCP HTTP routes, and WebSockets.
 - `apps/web` — React/Vite UI, TanStack Router and Query, fetchers, hooks, and realtime cache updates.
-- `apps/docs` — product and API documentation content; `apps/site` — public Next.js site and documentation host.
 - `packages/libs` — shared typed Hono client and URL helpers.
 - `packages/permissions` — canonical permission vocabulary and built-in roles.
 - `packages/mcp` — published stdio MCP package.
 - `charts/kaneo` — Helm deployment surface.
 - `tests/api` contains API unit tests; `tests/api-integration` contains PostgreSQL-backed integration tests.
+- `docs/` — Riuna's own working documents: the Phase 0 gap audit and, from here on, ADRs.
+
+Kaneo's public marketing site (`apps/site`) and Mintlify documentation (`apps/docs`) were removed in Phase 0: Riuna is internal and needs neither.
+
+## Riuna-specific rules
+
+These are additions on top of everything above, not replacements.
+
+- **Complexity budget.** Rule of three before abstracting. Controllers stay under ~150 lines. No new dependency without a one-line justification. A new column only if it is filtered, sorted, grouped, or a foreign key — everything else belongs in `custom_fields`.
+- **Follow Kaneo's conventions, do not introduce competing ones.** A fork with two coexisting styles ages worse than one with an imperfect but consistent style.
+- **Additive over invasive.** New capability arrives as new tables and new modules alongside the inherited ones (`task_assignee`, `epic`, `field_definition`, `view`, `external_ref`), not as rewrites of the existing schema — unless the roadmap explicitly calls for it, as the task tree does.
+- **Every import must be idempotent** through `external_ref`. Re-importing updates; it never duplicates.
+- **Performance budget.** Any new view paginates and answers under 300 ms p95 with 50,000 tasks, including deep trees. Check with `EXPLAIN`.
+- **One ADR per structural decision** in `docs/adr/`, ten lines: context, decision, consequence.
+- **Product UI language is Spanish.** `i18n/en-US.json` remains the key source of truth; Spanish is the default locale.
 
 ## Boundaries that must hold
 
@@ -89,6 +105,8 @@ Run repository-wide checks when a change crosses packages broadly, before a requ
 
 ## Releases
 
+> **Inherited from Kaneo and not yet adapted to Riuna.** The workflows still target Kaneo's GHCR images, Helm chart, and GitHub repository, so none of this works as written here. The section is kept because it documents machinery that exists in the repository. Adapting or removing the release pipeline is pending — see the workflow cleanup decision.
+
 Releasing is manual and deliberate: dispatch the **Release** workflow from `main`. Nothing releases on a push.
 
 The workflow resolves the next version from the Conventional Commits since the last tag, builds and pushes the three GHCR images under that version, validates the Helm chart, and only then cuts the release: `package.json`, `charts/kaneo/Chart.yaml`, `CHANGELOG.md`, the `vX.Y.Z` tag, a GitHub Release with grouped notes, and a "released in vX.Y.Z" comment on every PR and issue it closed. `:latest` and the chart publish come after that. A failed image build stops the release; it never leaves a tag pointing at an image that was never published.
@@ -115,7 +133,7 @@ Version-carrying files are listed in `scripts/release/apply-version.mjs`. Add ne
 
 ## Glossary
 
-- **instance**: one deployed Kaneo installation.
+- **instance**: one deployed Riuna installation.
 - **workspace**: the top-level collaboration and authorization boundary.
 - **project**: a task container inside a workspace.
 - **role**: a workspace-scoped set of permission statements.

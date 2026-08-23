@@ -3,15 +3,11 @@ import { useTranslation } from "react-i18next";
 export function KaneoBranding() {
   const { t } = useTranslation();
 
+  // Sin enlace: Riuna es una instancia interna, no un producto con web pública.
   return (
-    <a
-      href="https://kaneo.app"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="hover:text-foreground transition-colors"
-    >
+    <span>
       {t("publicProject:branding.poweredBy")}{" "}
       <span className="font-medium">{t("common:appName")}</span>
-    </a>
+    </span>
   );
 }
