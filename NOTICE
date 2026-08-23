@@ -1,0 +1,22 @@
+Riuna
+=====
+
+Riuna deriva de Kaneo (https://github.com/usekaneo/kaneo), tomado como base en
+su versión 2.22.0 y distribuido bajo licencia MIT.
+
+Código original de Kaneo
+------------------------
+  Copyright (c) 2024 Andrej Acevski
+  Licencia MIT — texto completo en el fichero LICENSE
+
+Modificaciones y código nuevo de Riuna
+--------------------------------------
+  Copyright (c) 2026 [TITULAR — sustituir por tu nombre o razón social]
+
+Sobre la licencia
+-----------------
+La licencia MIT exige una sola cosa: conservar el aviso de copyright y el texto
+de la licencia en el código derivado. Se conservan en LICENSE y en este fichero.
+
+Cumplido eso, Riuna puede modificarse, relicenciarse, mantenerse cerrado,
+distribuirse y venderse sin ninguna otra obligación hacia el proyecto original.
