@@ -58,3 +58,6 @@ apps/web/.tanstack/
 
 # TypeScript incremental build state
 *.tsbuildinfo
+
+# Volcados de la base de datos generados por el servicio de copias
+/backups/
