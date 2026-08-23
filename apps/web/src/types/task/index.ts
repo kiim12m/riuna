@@ -31,6 +31,9 @@ type Task = {
   assigneeId: string | null;
   assigneeName: string | null;
   assigneeImage?: string | null;
+  // Conjunto completo de asignados, en orden de asignacion e incluyendo al
+  // responsable principal. Opcional porque solo lo devuelve el detalle.
+  assignees?: { id: string; name: string; image: string | null }[];
   // Departamento responsable, independiente del asignado individual.
   // Opcional a proposito: es un campo aditivo y hacerlo obligatorio romperia
   // todos los sitios que ya construyen tareas sin el.

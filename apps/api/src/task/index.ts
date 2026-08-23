@@ -40,6 +40,7 @@ import {
 } from "./controllers/require-task-permission";
 import updateTask from "./controllers/update-task";
 import updateTaskAssignee from "./controllers/update-task-assignee";
+import updateTaskAssignees from "./controllers/update-task-assignees";
 import updateTaskDescription from "./controllers/update-task-description";
 import updateTaskDueDate from "./controllers/update-task-due-date";
 import updateTaskPriority from "./controllers/update-task-priority";
@@ -576,6 +577,37 @@ const task = new Hono<{
       const currentUserId = c.get("userId");
 
       const task = await updateTaskAssignee({ id, userId, currentUserId });
+
+      return c.json(task);
+    },
+  )
+  .put(
+    "/assignees/:id",
+    describeRoute({
+      operationId: "updateTaskAssignees",
+      tags: ["Tasks"],
+      description:
+        "Replace the full set of assignees. The first one becomes the primary assignee.",
+      responses: {
+        200: {
+          description: "Task assignees updated successfully",
+          content: {
+            "application/json": { schema: resolver(v.any()) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ userIds: v.array(v.string()) })),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["assign"] }),
+    requireEntitlement,
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { userIds } = c.req.valid("json");
+      const currentUserId = c.get("userId");
+
+      const task = await updateTaskAssignees({ id, userIds, currentUserId });
 
       return c.json(task);
     },

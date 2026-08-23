@@ -7,6 +7,7 @@ import {
   assertAssignableUser,
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
+import { syncPrimaryAssignee } from "./assignees";
 
 async function updateTaskAssignee({
   id,
@@ -50,6 +51,10 @@ async function updateTaskAssignee({
       message: "Failed to update task assignee",
     });
   }
+
+  // Cambiar el responsable principal por esta via tambien mueve el conjunto de
+  // asignados, o las dos fuentes acabarian contradiciendose.
+  await syncPrimaryAssignee(id, existingTask.userId, nextAssigneeId);
 
   const newAssigneeName = nextAssigneeId
     ? (

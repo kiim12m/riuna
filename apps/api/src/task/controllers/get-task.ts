@@ -1,7 +1,12 @@
 import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
-import { taskTable, teamTable, userTable } from "../../database/schema";
+import {
+  taskAssigneeTable,
+  taskTable,
+  teamTable,
+  userTable,
+} from "../../database/schema";
 
 async function getTask(taskId: string) {
   const task = await db
@@ -35,7 +40,21 @@ async function getTask(taskId: string) {
     });
   }
 
-  return task[0];
+  // El conjunto completo de asignados, en orden de asignacion. Incluye al
+  // responsable principal, asi que la interfaz no tiene que unirlo con
+  // assigneeId para pintar la lista.
+  const assignees = await db
+    .select({
+      id: userTable.id,
+      name: userTable.name,
+      image: userTable.image,
+    })
+    .from(taskAssigneeTable)
+    .innerJoin(userTable, eq(taskAssigneeTable.userId, userTable.id))
+    .where(eq(taskAssigneeTable.taskId, taskId))
+    .orderBy(taskAssigneeTable.createdAt);
+
+  return { ...task[0], assignees };
 }
 
 export default getTask;

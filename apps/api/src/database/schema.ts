@@ -450,6 +450,32 @@ export const taskTable = pgTable(
   ],
 );
 
+// Asignados adicionales. `task.assignee_id` sigue siendo el responsable
+// principal y no se toca: todo lo heredado (notificaciones, filtros, tarjetas,
+// integraciones) sigue leyendolo. Esta tabla anade el resto, y el principal
+// tambien esta aqui, de modo que consultar "quien tiene esta tarea" es una
+// sola consulta y no una union con la columna.
+export const taskAssigneeTable = pgTable(
+  "task_assignee",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => taskTable.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("taskAssignee_taskId_idx").on(table.taskId),
+    index("taskAssignee_userId_idx").on(table.userId),
+    unique("task_assignee_unique").on(table.taskId, table.userId),
+  ],
+);
+
 export const billingReminderSentTable = pgTable(
   "billing_reminder_sent",
   {

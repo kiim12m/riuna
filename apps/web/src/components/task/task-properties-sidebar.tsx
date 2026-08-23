@@ -119,6 +119,18 @@ export default function TaskPropertiesSidebar({
     (member) => member.userId === task?.userId,
   );
 
+  // Con varios asignados el nombre del principal se queda corto, asi que la
+  // etiqueta pasa a contarlos. El avatar sigue siendo el del principal.
+  const assigneeCount = task?.assignees?.length ?? (task?.userId ? 1 : 0);
+  const assigneeLabel =
+    assigneeCount > 1
+      ? // `total` y no `count`: pasar `count` activaria la resolucion de
+        // plurales de i18next y buscaria claves que no existen.
+        t("tasks:popover.assignee.multiple", { total: assigneeCount })
+      : assignee?.user?.name ||
+        task?.assigneeName ||
+        t("tasks:popover.assignee.unassigned");
+
   const handleCopyTaskLink = () => {
     navigator.clipboard.writeText(
       `${window.location.origin}/dashboard/workspace/${workspaceId}/project/${projectId}/task/${taskId}`,
@@ -257,9 +269,7 @@ export default function TaskPropertiesSidebar({
                       </div>
                     )}
                     <span className="text-xs font-semibold truncate max-w-[100px]">
-                      {assignee?.user?.name ||
-                        task.assigneeName ||
-                        t("tasks:popover.assignee.unassigned")}
+                      {assigneeLabel}
                     </span>
                   </Button>
                 </TaskAssigneePopover>
@@ -464,9 +474,7 @@ export default function TaskPropertiesSidebar({
                         </div>
                       )}
                       <span className="text-xs font-semibold truncate max-w-[100px]">
-                        {assignee?.user?.name ||
-                          task.assigneeName ||
-                          t("tasks:popover.assignee.unassigned")}
+                        {assigneeLabel}
                       </span>
                     </Button>
                   </TaskAssigneePopover>
@@ -673,9 +681,7 @@ export default function TaskPropertiesSidebar({
                         </div>
                       )}
                       <span className="text-xs font-semibold truncate max-w-[100px]">
-                        {assignee?.user?.name ||
-                          task.assigneeName ||
-                          t("tasks:popover.assignee.unassigned")}
+                        {assigneeLabel}
                       </span>
                     </Button>
                   </TaskAssigneePopover>

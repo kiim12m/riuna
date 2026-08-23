@@ -1768,7 +1768,8 @@
 		"popover": {
 			"assignee": {
 				"unassigned": "No asignada",
-				"updateError": "Error al actualizar el asignado a esta tarea"
+				"updateError": "Error al actualizar el asignado a esta tarea",
+				"multiple": "{{total}} asignados"
 			},
 			"team": {
 				"unassigned": "Sin equipo",

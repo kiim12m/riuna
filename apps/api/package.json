@@ -23,7 +23,7 @@
     "test:unit": "vitest run --config vitest.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
-    "db:generate": "drizzle-kit generate",
+    "db:generate": "drizzle-kit generate && biome format --write drizzle",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:seed:user-data": "tsx scripts/seed-user-data.ts",

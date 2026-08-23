@@ -1779,7 +1779,8 @@
 		"popover": {
 			"assignee": {
 				"unassigned": "Unassigned",
-				"updateError": "Failed to update task assignee"
+				"updateError": "Failed to update task assignee",
+				"multiple": "{{total}} assignees"
 			},
 			"team": {
 				"unassigned": "No team",
