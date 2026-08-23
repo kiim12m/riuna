@@ -771,6 +771,34 @@
 				"description": "This will permanently delete the role \"{{role}}\". Members assigned to this role will lose its permissions."
 			}
 		},
+		"workspaceTeams": {
+			"title": "Teams",
+			"subtitle": "Group people into departments and assign whole teams to tasks.",
+			"cardDescription": "A task can be assigned to a team as well as to a person.",
+			"empty": "No teams yet. Create one to start assigning work to a whole department.",
+			"createTeam": "Create Team",
+			"createDescription": "Name the department or group.",
+			"createSuccess": "Team created",
+			"createError": "Failed to create team",
+			"name": "Name",
+			"namePlaceholder": "Design",
+			"rename": "Rename team",
+			"save": "Save",
+			"updateSuccess": "Team updated",
+			"updateError": "Failed to update team",
+			"delete": "Delete team",
+			"deleteTitle": "Delete team?",
+			"deleteDescription": "Tasks assigned to this team keep their individual assignee but lose the team.",
+			"deleteSuccess": "Team deleted",
+			"deleteError": "Failed to delete team",
+			"manageMembers": "Members",
+			"membersTitle": "Team members",
+			"noMembers": "This team has no members yet.",
+			"addMember": "Add a member",
+			"addMemberError": "Failed to add member",
+			"removeMember": "Remove from team",
+			"removeMemberError": "Failed to remove member"
+		},
 		"workspaceLabels": {
 			"pageTitle": "Label Settings",
 			"title": "Labels",
@@ -1446,6 +1474,8 @@
 	},
 	"activity": {
 		"assignedToSelf": "assigned the task to themselves",
+		"assignedToTeam": "assigned the task to the {{name}} team",
+		"teamUnassigned": "removed the task from its team",
 		"unassigned": "unassigned the task",
 		"assignedTo": "assigned the task to {{name}}",
 		"changedStatus": "changed status from {{from}} to {{to}}",
@@ -1750,6 +1780,10 @@
 			"assignee": {
 				"unassigned": "Unassigned",
 				"updateError": "Failed to update task assignee"
+			},
+			"team": {
+				"unassigned": "No team",
+				"updateError": "Failed to update the team"
 			},
 			"status": {
 				"updateError": "Failed to update task status"

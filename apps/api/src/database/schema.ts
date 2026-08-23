@@ -416,6 +416,14 @@ export const taskTable = pgTable(
       onDelete: "set null",
       onUpdate: "cascade",
     }),
+    // Asignacion a un departamento entero, independiente del asignado
+    // individual: una tarea puede pertenecer a un equipo sin tener todavia
+    // una persona concreta detras, y el equipo sobrevive a los cambios de
+    // pertenencia que una lista de asignados no reflejaria.
+    teamId: text("team_id").references(() => teamTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
     title: text("title").notNull(),
     description: text("description"),
     status: text("status").notNull().default("to-do"),
@@ -436,6 +444,7 @@ export const taskTable = pgTable(
     index("task_projectId_idx").on(table.projectId),
     index("task_dueDate_idx").on(table.dueDate),
     index("task_assigneeId_idx").on(table.userId),
+    index("task_teamId_idx").on(table.teamId),
     index("task_columnId_idx").on(table.columnId),
     unique("task_project_number_unique").on(table.projectId, table.number),
   ],

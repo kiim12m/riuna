@@ -17,6 +17,7 @@ import {
   labelTable,
   projectTable,
   taskTable,
+  teamTable,
   userTable,
 } from "../../database/schema";
 
@@ -135,6 +136,8 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     assigneeName: userTable.name,
     assigneeId: userTable.id,
     assigneeImage: userTable.image,
+    teamId: taskTable.teamId,
+    teamName: teamTable.name,
     projectId: taskTable.projectId,
   };
 
@@ -142,6 +145,7 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     .select(taskSelection)
     .from(taskTable)
     .leftJoin(userTable, eq(taskTable.userId, userTable.id))
+    .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))
     .leftJoin(projectTable, eq(taskTable.projectId, projectTable.id))
     .where(whereClause)
     .orderBy(orderByClause);

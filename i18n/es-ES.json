@@ -1123,6 +1123,34 @@
 				"description": "Esto eliminará permanentemente el rol \"{{role}}\". Los miembros con este rol asignado perderán sus permisos."
 			}
 		},
+		"workspaceTeams": {
+			"title": "Equipos",
+			"subtitle": "Agrupa a las personas en departamentos y asigna tareas a un equipo entero.",
+			"cardDescription": "Una tarea puede asignarse a un equipo además de a una persona.",
+			"empty": "Todavía no hay equipos. Crea uno para poder asignar trabajo a un departamento entero.",
+			"createTeam": "Crear equipo",
+			"createDescription": "Ponle nombre al departamento o grupo.",
+			"createSuccess": "Equipo creado",
+			"createError": "No se ha podido crear el equipo",
+			"name": "Nombre",
+			"namePlaceholder": "Diseño",
+			"rename": "Renombrar equipo",
+			"save": "Guardar",
+			"updateSuccess": "Equipo actualizado",
+			"updateError": "No se ha podido actualizar el equipo",
+			"delete": "Eliminar equipo",
+			"deleteTitle": "¿Eliminar el equipo?",
+			"deleteDescription": "Las tareas asignadas a este equipo conservan su responsable individual, pero pierden el equipo.",
+			"deleteSuccess": "Equipo eliminado",
+			"deleteError": "No se ha podido eliminar el equipo",
+			"manageMembers": "Miembros",
+			"membersTitle": "Miembros del equipo",
+			"noMembers": "Este equipo todavía no tiene miembros.",
+			"addMember": "Añadir un miembro",
+			"addMemberError": "No se ha podido añadir el miembro",
+			"removeMember": "Quitar del equipo",
+			"removeMemberError": "No se ha podido quitar el miembro"
+		},
 		"workspaceLabels": {
 			"pageTitle": "Ajustes de etiquetas",
 			"title": "Etiquetas",
@@ -1446,6 +1474,8 @@
 	},
 	"activity": {
 		"assignedToSelf": "se ha asignado la tarea a sí mismo",
+		"assignedToTeam": "asignada la tarea al equipo {{name}}",
+		"teamUnassigned": "quitada la tarea de su equipo",
 		"unassigned": "desasignado la tarea",
 		"assignedTo": "asignada la tarea a {{name}}",
 		"changedStatus": "cambio en el estado de {{from}} a {{to}}",
@@ -1739,6 +1769,10 @@
 			"assignee": {
 				"unassigned": "No asignada",
 				"updateError": "Error al actualizar el asignado a esta tarea"
+			},
+			"team": {
+				"unassigned": "Sin equipo",
+				"updateError": "No se ha podido cambiar el equipo"
 			},
 			"status": {
 				"updateError": "Error al actualizar el estado de esta tarea"

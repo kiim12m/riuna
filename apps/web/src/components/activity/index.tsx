@@ -1,4 +1,4 @@
-import { Calendar, CircleAlert, History, UserRound } from "lucide-react";
+import { Calendar, CircleAlert, History, UserRound, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
@@ -60,6 +60,9 @@ function getActivityTypeIcon(type: string) {
     case "assignee_changed":
     case "unassigned":
       return <UserRound className={iconClass} />;
+    case "team_changed":
+    case "team_unassigned":
+      return <Users className={iconClass} />;
     default:
       return <History className={iconClass} />;
   }
@@ -353,6 +356,26 @@ function renderActivityContent({
         </span>
       );
     }
+  }
+
+  // Tipos nuevos de Riuna: no existen filas historicas, asi que no necesitan
+  // los reanalisis de `content` que arrastran los tipos heredados.
+  if (activity.type === "team_unassigned") {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {t("activity:teamUnassigned")}
+      </span>
+    );
+  }
+
+  if (activity.type === "team_changed" && eventData) {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {t("activity:assignedToTeam", {
+          name: String(eventData.newTeam ?? ""),
+        })}
+      </span>
+    );
   }
 
   if (activity.type === "title_changed") {

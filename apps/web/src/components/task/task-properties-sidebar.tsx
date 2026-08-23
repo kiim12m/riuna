@@ -6,6 +6,7 @@ import {
   Copy,
   GitBranch,
   Plus,
+  Users,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -46,6 +47,7 @@ import TaskMovePopover from "./task-move-popover";
 import TaskPriorityPopover from "./task-priority-popover";
 import TaskStartDatePopover from "./task-start-date-popover";
 import TaskStatusPopover from "./task-status-popover";
+import TaskTeamPopover from "./task-team-popover";
 
 function slugify(text: string | undefined): string {
   if (!text) return "";
@@ -263,6 +265,22 @@ export default function TaskPropertiesSidebar({
                 </TaskAssigneePopover>
               )}
               {task && (
+                <TaskTeamPopover task={task} workspaceId={workspaceId}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="justify-start h-7 px-1.5 gap-1.5"
+                  >
+                    <div className="w-[16px] h-[16px] rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0">
+                      <Users className="w-2.5 h-2.5 text-muted-foreground" />
+                    </div>
+                    <span className="text-xs font-semibold truncate max-w-[100px]">
+                      {task.teamName || t("tasks:popover.team.unassigned")}
+                    </span>
+                  </Button>
+                </TaskTeamPopover>
+              )}
+              {task && (
                 <TaskStartDatePopover task={task}>
                   <Button
                     variant="ghost"
@@ -452,6 +470,22 @@ export default function TaskPropertiesSidebar({
                       </span>
                     </Button>
                   </TaskAssigneePopover>
+                )}
+                {task && (
+                  <TaskTeamPopover task={task} workspaceId={workspaceId}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start h-7 px-1.5 gap-1.5"
+                    >
+                      <div className="w-[16px] h-[16px] rounded-full bg-muted border border-border flex items-center justify-center shrink-0">
+                        <Users className="w-2.5 h-2.5 text-muted-foreground" />
+                      </div>
+                      <span className="text-xs font-semibold truncate max-w-[100px]">
+                        {task.teamName || t("tasks:popover.team.unassigned")}
+                      </span>
+                    </Button>
+                  </TaskTeamPopover>
                 )}
                 {task && (
                   <TaskStartDatePopover task={task}>
@@ -645,6 +679,22 @@ export default function TaskPropertiesSidebar({
                       </span>
                     </Button>
                   </TaskAssigneePopover>
+                )}
+                {task && (
+                  <TaskTeamPopover task={task} workspaceId={workspaceId}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start h-7 px-1.5 gap-1.5"
+                    >
+                      <div className="w-[16px] h-[16px] rounded-full bg-muted border border-border flex items-center justify-center shrink-0">
+                        <Users className="w-2.5 h-2.5 text-muted-foreground" />
+                      </div>
+                      <span className="text-xs font-semibold truncate max-w-[100px]">
+                        {task.teamName || t("tasks:popover.team.unassigned")}
+                      </span>
+                    </Button>
+                  </TaskTeamPopover>
                 )}
                 {task && (
                   <TaskStartDatePopover task={task}>

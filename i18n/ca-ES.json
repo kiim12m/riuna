@@ -1123,6 +1123,34 @@
 				"description": "Esto eliminará permanentemente el rol \"{{role}}\". Los miembros con este rol asignado perderán sus permisos."
 			}
 		},
+		"workspaceTeams": {
+			"title": "Equips",
+			"subtitle": "Agrupa les persones en departaments i assigna tasques a un equip sencer.",
+			"cardDescription": "Una tasca es pot assignar a un equip a més d'a una persona.",
+			"empty": "Encara no hi ha equips. Crea'n un per poder assignar feina a un departament sencer.",
+			"createTeam": "Crea un equip",
+			"createDescription": "Posa nom al departament o grup.",
+			"createSuccess": "Equip creat",
+			"createError": "No s'ha pogut crear l'equip",
+			"name": "Nom",
+			"namePlaceholder": "Disseny",
+			"rename": "Reanomena l'equip",
+			"save": "Desa",
+			"updateSuccess": "Equip actualitzat",
+			"updateError": "No s'ha pogut actualitzar l'equip",
+			"delete": "Elimina l'equip",
+			"deleteTitle": "Voleu eliminar l'equip?",
+			"deleteDescription": "Les tasques assignades a aquest equip conserven el responsable individual, però perden l'equip.",
+			"deleteSuccess": "Equip eliminat",
+			"deleteError": "No s'ha pogut eliminar l'equip",
+			"manageMembers": "Membres",
+			"membersTitle": "Membres de l'equip",
+			"noMembers": "Aquest equip encara no té membres.",
+			"addMember": "Afegeix un membre",
+			"addMemberError": "No s'ha pogut afegir el membre",
+			"removeMember": "Treu de l'equip",
+			"removeMemberError": "No s'ha pogut treure el membre"
+		},
 		"workspaceLabels": {
 			"pageTitle": "Ajustes de etiquetas",
 			"title": "Etiquetas",
@@ -1446,6 +1474,8 @@
 	},
 	"activity": {
 		"assignedToSelf": "se ha asignado la tarea a sí mismo",
+		"assignedToTeam": "assignada la tasca a l'equip {{name}}",
+		"teamUnassigned": "treta la tasca del seu equip",
 		"unassigned": "desasignado la tarea",
 		"assignedTo": "asignada la tarea a {{name}}",
 		"changedStatus": "cambio en el estado de {{from}} a {{to}}",
@@ -1739,6 +1769,10 @@
 			"assignee": {
 				"unassigned": "No asignada",
 				"updateError": "Error al actualizar el asignado a esta tarea"
+			},
+			"team": {
+				"unassigned": "Sense equip",
+				"updateError": "No s'ha pogut canviar l'equip"
 			},
 			"status": {
 				"updateError": "Error al actualizar el estado de esta tarea"

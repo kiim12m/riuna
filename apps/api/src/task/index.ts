@@ -44,6 +44,7 @@ import updateTaskDescription from "./controllers/update-task-description";
 import updateTaskDueDate from "./controllers/update-task-due-date";
 import updateTaskPriority from "./controllers/update-task-priority";
 import updateTaskStatus from "./controllers/update-task-status";
+import updateTaskTeam from "./controllers/update-task-team";
 import updateTaskTitle from "./controllers/update-task-title";
 import { VALID_PRIORITIES } from "./validate-task-fields";
 
@@ -575,6 +576,36 @@ const task = new Hono<{
       const currentUserId = c.get("userId");
 
       const task = await updateTaskAssignee({ id, userId, currentUserId });
+
+      return c.json(task);
+    },
+  )
+  .put(
+    "/team/:id",
+    describeRoute({
+      operationId: "updateTaskTeam",
+      tags: ["Tasks"],
+      description: "Assign or unassign a task to a team",
+      responses: {
+        200: {
+          description: "Task team updated successfully",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ teamId: v.nullable(v.string()) })),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["assign"] }),
+    requireEntitlement,
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { teamId } = c.req.valid("json");
+      const currentUserId = c.get("userId");
+
+      const task = await updateTaskTeam({ id, teamId, currentUserId });
 
       return c.json(task);
     },

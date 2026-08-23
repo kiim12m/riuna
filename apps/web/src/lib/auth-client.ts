@@ -46,6 +46,12 @@ export const authClient = createAuthClient({
       dynamicAccessControl: {
         enabled: true,
       },
+      // Debe reflejar `teams` del plugin de organizacion del servidor
+      // (apps/api/src/auth.ts): sin esto el cliente no expone listTeams ni
+      // el resto de metodos de equipo, aunque el servidor si los sirva.
+      teams: {
+        enabled: true,
+      },
     }),
     genericOAuthClient(),
     deviceAuthorizationClient(),

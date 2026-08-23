@@ -270,6 +270,30 @@ subscribeToEvent<{
 subscribeToEvent<{
   taskId: string;
   userId: string;
+  title: string;
+  type: string;
+}>("task.team_unassigned", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {});
+});
+
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  oldTeamId: string | null;
+  newTeam: string;
+  newTeamId: string;
+  title: string;
+  type: string;
+}>("task.team_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    newTeamId: data.newTeamId,
+    newTeam: data.newTeam,
+  });
+});
+
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
   oldDueDate: Date | null;
   newDueDate: Date;
   title: string;

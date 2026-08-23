@@ -31,6 +31,11 @@ type Task = {
   assigneeId: string | null;
   assigneeName: string | null;
   assigneeImage?: string | null;
+  // Departamento responsable, independiente del asignado individual.
+  // Opcional a proposito: es un campo aditivo y hacerlo obligatorio romperia
+  // todos los sitios que ya construyen tareas sin el.
+  teamId?: string | null;
+  teamName?: string | null;
   projectId: string;
   columnId?: string | null;
   labels?: TaskLabel[];
