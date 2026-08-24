@@ -112,7 +112,7 @@ export function OnboardingFlow() {
       transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
       className="w-full max-w-sm mx-auto"
     >
-      <Logo className="mx-auto mb-6 w-full flex items-end justify-center" />
+      <Logo className="mx-auto mb-6" />
 
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <div className="text-center mb-6">
@@ -192,7 +192,7 @@ export function OnboardingFlow() {
       transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
       className="w-full max-w-sm mx-auto"
     >
-      <Logo className="mx-auto mb-6 w-full flex items-end justify-center" />
+      <Logo className="mx-auto mb-6" />
 
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <div className="text-center space-y-4">

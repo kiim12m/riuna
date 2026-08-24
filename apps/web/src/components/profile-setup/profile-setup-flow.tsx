@@ -103,7 +103,7 @@ export function ProfileSetupFlow() {
       transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
       className="w-full max-w-sm mx-auto"
     >
-      <Logo className="mx-auto mb-6 w-full flex items-end justify-center" />
+      <Logo className="mx-auto mb-6" />
 
       <div className="bg-card/50 backdrop-blur-xl rounded-xl border border-border/50 p-6 shadow-xl shadow-background/20">
         <div className="text-center mb-6">
@@ -161,7 +161,7 @@ export function ProfileSetupFlow() {
       transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
       className="w-full max-w-sm mx-auto"
     >
-      <Logo className="mx-auto mb-6 w-full flex items-end justify-center" />
+      <Logo className="mx-auto mb-6" />
 
       <div className="bg-card/50 backdrop-blur-xl rounded-xl border border-border/50 p-6 shadow-xl shadow-background/20">
         <div className="text-center space-y-4">
