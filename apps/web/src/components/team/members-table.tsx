@@ -1,4 +1,4 @@
-import { DEFAULT_ROLE_NAMES } from "@kaneo/permissions";
+import { DEFAULT_ROLE_NAMES } from "@riuna/permissions";
 import {
   CopyIcon,
   EllipsisIcon,

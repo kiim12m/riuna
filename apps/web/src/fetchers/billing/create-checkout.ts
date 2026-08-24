@@ -1,4 +1,4 @@
-import { client } from "@kaneo/libs";
+import { client } from "@riuna/libs";
 
 export type BillingPlan = "personal" | "team";
 export type BillingInterval = "monthly" | "annual";

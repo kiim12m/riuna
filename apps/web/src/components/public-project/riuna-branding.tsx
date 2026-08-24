@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-export function KaneoBranding() {
+export function RiunaBranding() {
   const { t } = useTranslation();
 
   // Sin enlace: Riuna es una instancia interna, no un producto con web pública.

@@ -29,7 +29,7 @@ function parseTaskRouteFromUrl(url: string) {
   }
 }
 
-function KaneoIssueLinkView({ node }: NodeViewProps) {
+function RiunaIssueLinkView({ node }: NodeViewProps) {
   const { t } = useTranslation();
   const issueKey = String(node.attrs.issueKey || "");
   const taskIdAttr = String(node.attrs.taskId || "");
@@ -38,7 +38,7 @@ function KaneoIssueLinkView({ node }: NodeViewProps) {
   const taskId = taskIdAttr || taskRoute?.taskId || "";
 
   const { data: task } = useQuery({
-    queryKey: ["task", taskId, "kaneo-issue-link"],
+    queryKey: ["task", taskId, "riuna-issue-link"],
     queryFn: () => getTask(taskId),
     enabled: Boolean(taskId),
     staleTime: 1000 * 60,
@@ -48,7 +48,7 @@ function KaneoIssueLinkView({ node }: NodeViewProps) {
       "projects",
       taskRoute?.workspaceId,
       taskRoute?.projectId,
-      "kaneo-issue-link",
+      "riuna-issue-link",
     ],
     queryFn: () =>
       getProject({
@@ -79,37 +79,37 @@ function KaneoIssueLinkView({ node }: NodeViewProps) {
   const href = isInternal || isValidUrl(resolvedHref) ? resolvedHref : "";
 
   return (
-    <NodeViewWrapper as="span" className="kaneo-issue-link-node">
+    <NodeViewWrapper as="span" className="riuna-issue-link-node">
       <HoverCard openDelay={160} closeDelay={120}>
         <HoverCardTrigger asChild>
           <a
             href={href || undefined}
             target={isInternal ? undefined : "_blank"}
             rel={isInternal ? undefined : "noopener noreferrer"}
-            className="kaneo-issue-link-chip"
+            className="riuna-issue-link-chip"
           >
             {resolvedIssueKey ? (
-              <span className="kaneo-issue-link-key">{resolvedIssueKey}</span>
+              <span className="riuna-issue-link-key">{resolvedIssueKey}</span>
             ) : null}
-            <span className="kaneo-issue-link-title">{title}</span>
+            <span className="riuna-issue-link-title">{title}</span>
           </a>
         </HoverCardTrigger>
         <HoverCardContent
           side="top"
           align="start"
           sideOffset={8}
-          className="kaneo-issue-link-preview"
+          className="riuna-issue-link-preview"
         >
-          <div className="kaneo-issue-link-preview-top">
-            <span className="kaneo-issue-link-preview-key">
+          <div className="riuna-issue-link-preview-top">
+            <span className="riuna-issue-link-preview-key">
               {resolvedIssueKey || t("tasks:entity.task")}
             </span>
-            <span className="kaneo-issue-link-preview-assignee">
+            <span className="riuna-issue-link-preview-assignee">
               {assignee}
             </span>
           </div>
-          <p className="kaneo-issue-link-preview-title">{title}</p>
-          <div className="kaneo-issue-link-preview-meta">
+          <p className="riuna-issue-link-preview-title">{title}</p>
+          <div className="riuna-issue-link-preview-meta">
             <span>{status}</span>
             <span>·</span>
             <span>{priority}</span>
@@ -120,8 +120,8 @@ function KaneoIssueLinkView({ node }: NodeViewProps) {
   );
 }
 
-export const KaneoIssueLink = Node.create({
-  name: "kaneoIssueLink",
+export const RiunaIssueLink = Node.create({
+  name: "riunaIssueLink",
   group: "inline",
   inline: true,
   atom: true,
@@ -137,6 +137,10 @@ export const KaneoIssueLink = Node.create({
 
   parseHTML() {
     return [
+      { tag: "riuna-issue-link[url]" },
+      { tag: "span[data-type='riuna-issue-link'][data-url]" },
+      // Descriptions/comments written before the Kaneo->Riuna rename still
+      // contain the old tag name; keep parsing it so old content renders.
       { tag: "kaneo-issue-link[url]" },
       { tag: "span[data-type='kaneo-issue-link'][data-url]" },
     ];
@@ -144,9 +148,9 @@ export const KaneoIssueLink = Node.create({
 
   renderHTML({ HTMLAttributes }) {
     return [
-      "kaneo-issue-link",
+      "riuna-issue-link",
       mergeAttributes(HTMLAttributes, {
-        "data-type": "kaneo-issue-link",
+        "data-type": "riuna-issue-link",
         "data-url": HTMLAttributes.url,
         "data-issue-key": HTMLAttributes.issueKey,
         "data-task-id": HTMLAttributes.taskId,
@@ -158,7 +162,7 @@ export const KaneoIssueLink = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(KaneoIssueLinkView);
+    return ReactNodeViewRenderer(RiunaIssueLinkView);
   },
 
   renderMarkdown(
@@ -170,6 +174,6 @@ export const KaneoIssueLink = Node.create({
     const issueKey = String(node.attrs?.issueKey || "");
     const taskId = String(node.attrs?.taskId || "");
     if (!url) return "";
-    return `\n<kaneo-issue-link url="${escapeHtml(url)}" issue-key="${escapeHtml(issueKey)}" task-id="${escapeHtml(taskId)}" />\n`;
+    return `\n<riuna-issue-link url="${escapeHtml(url)}" issue-key="${escapeHtml(issueKey)}" task-id="${escapeHtml(taskId)}" />\n`;
   },
 });

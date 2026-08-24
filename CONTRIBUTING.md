@@ -1,6 +1,6 @@
-# Contributing to Kaneo
+# Contributing to Riuna
 
-Thanks for wanting to contribute to Kaneo! Whether you're fixing bugs, adding features, or improving docs, we appreciate your help.
+Thanks for wanting to contribute to Riuna! Whether you're fixing bugs, adding features, or improving docs, we appreciate your help.
 
 ## Table of Contents
 
@@ -36,8 +36,8 @@ We want everyone to feel welcome here. Please be respectful and follow our [Code
 
 1. **Fork and clone the repo**:
 ```bash
-git clone https://github.com/yourusername/kaneo.git
-cd kaneo
+git clone https://github.com/yourusername/riuna.git
+cd riuna
 ```
 
 2. **Install dependencies**:
@@ -117,7 +117,7 @@ We use [conventional commits](https://www.conventionalcommits.org/) to keep our 
 
 ### Localization (i18n)
 
-Kaneo uses [i18next](https://www.i18next.com/) with [react-i18next](https://react.i18next.com/) in the web app. We want user-facing copy to stay consistent, translatable, and easy to maintain.
+Riuna uses [i18next](https://www.i18next.com/) with [react-i18next](https://react.i18next.com/) in the web app. We want user-facing copy to stay consistent, translatable, and easy to maintain.
 
 #### Approach
 
@@ -183,18 +183,17 @@ t("projects:greeting", { name: userName });
 ### Project Structure
 
 ```
-kaneo/
+riuna/
 ├── apps/
 │   ├── api/          # Backend API (Node.js/Hono)
-│   ├── docs/         # Product and API documentation content
-│   ├── site/         # Public website and documentation host (Next.js)
 │   └── web/          # Frontend app (React/Vite)
 ├── packages/
 │   ├── email/        # Shared email utilities and templates
 │   ├── libs/         # Typed API client and shared runtime helpers
-│   ├── mcp/          # Published stdio MCP package
+│   ├── mcp/          # Stdio MCP package
 │   ├── permissions/  # Shared permission vocabulary and built-in roles
 │   └── ...            # Import tooling and shared TypeScript configuration
+├── docs/             # Riuna's own working documents (plan, ADRs, procedures)
 ├── tests/            # API unit and integration tests
 └── charts/           # Kubernetes Helm chart
 ```
@@ -229,8 +228,8 @@ For more context, see [this blog article](https://roe.dev/blog/using-ai-in-open-
 
 - **Bug fixes** - Found something broken? Fix it!
 - **New features** - Have an idea? Let's discuss it first
-- **Documentation** - Help others understand how to use Kaneo
+- **Documentation** - Help others understand how to use Riuna
 - **Performance improvements** - Make things faster
-- **Accessibility** - Help make Kaneo usable for everyone
+- **Accessibility** - Help make Riuna usable for everyone
 
-Thanks for contributing to Kaneo! 🚀
+Thanks for contributing to Riuna! 🚀

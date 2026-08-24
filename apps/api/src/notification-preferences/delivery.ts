@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto";
-import { sendNotificationEmail } from "@kaneo/email";
+import { sendNotificationEmail } from "@riuna/email";
 import { and, eq } from "drizzle-orm";
 import db from "../database";
 import {
@@ -47,7 +47,7 @@ type DeliveryContent = {
 };
 
 function buildTaskUrl(workspaceId: string, projectId: string, taskId: string) {
-  const clientUrl = process.env.KANEO_CLIENT_URL || "http://localhost:5173";
+  const clientUrl = process.env.RIUNA_CLIENT_URL || "http://localhost:5173";
   return `${clientUrl}/dashboard/workspace/${workspaceId}/project/${projectId}/task/${taskId}`;
 }
 
@@ -363,7 +363,7 @@ async function sendWebhookNotification(input: {
   };
 
   if (input.secret) {
-    headers["X-Kaneo-Signature"] = createHmac("sha256", input.secret)
+    headers["X-Riuna-Signature"] = createHmac("sha256", input.secret)
       .update(body)
       .digest("hex");
   }

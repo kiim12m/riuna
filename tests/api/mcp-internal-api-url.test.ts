@@ -31,7 +31,7 @@ function toolRequest() {
         _meta: {
           "io.modelcontextprotocol/protocolVersion": protocolVersion,
           "io.modelcontextprotocol/clientInfo": {
-            name: "kaneo-internal-url-test",
+            name: "riuna-internal-url-test",
             version: "1.0.0",
           },
           "io.modelcontextprotocol/clientCapabilities": {},
@@ -42,8 +42,8 @@ function toolRequest() {
 }
 
 async function loadMcpRoutes(internalApiUrl?: string) {
-  vi.stubEnv("KANEO_API_URL", "http://public.test:5273/api");
-  vi.stubEnv("KANEO_INTERNAL_API_URL", internalApiUrl);
+  vi.stubEnv("RIUNA_API_URL", "http://public.test:5273/api");
+  vi.stubEnv("RIUNA_INTERNAL_API_URL", internalApiUrl);
   vi.resetModules();
   return (await import("../../apps/api/src/mcp")).default;
 }

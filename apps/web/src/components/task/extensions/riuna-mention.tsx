@@ -2,10 +2,10 @@ import { mergeAttributes, Node } from "@tiptap/core";
 
 // Inline atom node for an @mention of a workspace member. Stores the member id
 // (used by the backend to fire a notification) and a display label, and
-// round-trips through Markdown as `<kaneo-mention id label></kaneo-mention>`,
-// mirroring the KaneoIssueLink extension.
-export const KaneoMention = Node.create({
-  name: "kaneoMention",
+// round-trips through Markdown as `<riuna-mention id label></riuna-mention>`,
+// mirroring the RiunaIssueLink extension.
+export const RiunaMention = Node.create({
+  name: "riunaMention",
   group: "inline",
   inline: true,
   atom: true,
@@ -30,6 +30,10 @@ export const KaneoMention = Node.create({
 
   parseHTML() {
     return [
+      { tag: "riuna-mention[id]" },
+      { tag: "span[data-type='riuna-mention']" },
+      // Descriptions/comments written before the Kaneo->Riuna rename still
+      // contain the old tag name; keep parsing it so old content renders.
       { tag: "kaneo-mention[id]" },
       { tag: "span[data-type='kaneo-mention']" },
     ];
@@ -39,8 +43,8 @@ export const KaneoMention = Node.create({
     return [
       "span",
       mergeAttributes(HTMLAttributes, {
-        "data-type": "kaneo-mention",
-        class: "kaneo-mention",
+        "data-type": "riuna-mention",
+        class: "riuna-mention",
       }),
       `@${node.attrs.label || ""}`,
     ];
@@ -54,6 +58,6 @@ export const KaneoMention = Node.create({
     const id = String(node.attrs?.id || "");
     const label = String(node.attrs?.label || "");
     if (!id) return `@${label}`;
-    return `<kaneo-mention id="${id}" label="${label}"></kaneo-mention>`;
+    return `<riuna-mention id="${id}" label="${label}"></riuna-mention>`;
   },
 });

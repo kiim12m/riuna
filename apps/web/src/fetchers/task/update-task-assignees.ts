@@ -1,4 +1,4 @@
-import { client } from "@kaneo/libs";
+import { client } from "@riuna/libs";
 
 async function updateTaskAssignees(taskId: string, userIds: string[]) {
   const response = await client.task.assignees[":id"].$put({

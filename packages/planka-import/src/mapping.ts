@@ -18,7 +18,7 @@ export type PlannedColumn = {
 
 const UNTITLED_COLUMN = "Untitled";
 
-// Kaneo rejects duplicate and reserved slugs, so a colliding name has to be
+// Riuna rejects duplicate and reserved slugs, so a colliding name has to be
 // adjusted before the column is created.
 export function planColumns(lists: PlankaList[]): PlannedColumn[] {
   const ordered = [...lists].sort(
@@ -103,7 +103,7 @@ export function formatComment(comment: PlankaComment): string {
     : comment.text;
 }
 
-/** PLANKA has no priority field; Kaneo requires one on create. */
+/** PLANKA has no priority field; Riuna requires one on create. */
 export const DEFAULT_PRIORITY = "no-priority";
 
 export function toDueDate(card: PlankaCard): string | undefined {

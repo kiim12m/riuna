@@ -3,13 +3,13 @@ import {
   sendMagicLinkEmail,
   sendOtpEmail,
   sendWorkspaceInvitationEmail,
-} from "@kaneo/email";
+} from "@riuna/email";
 import {
   ac,
   DEFAULT_ROLE_NAMES,
   defaultRolePayloads,
   owner,
-} from "@kaneo/permissions";
+} from "@riuna/permissions";
 import bcrypt from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -80,8 +80,8 @@ function isOAuthCallbackPath(path: unknown): boolean {
   return path.startsWith("/callback/") || path.startsWith("/oauth2/callback/");
 }
 
-const apiUrl = process.env.KANEO_API_URL || "http://localhost:1337";
-const clientUrl = process.env.KANEO_CLIENT_URL || "http://localhost:5173";
+const apiUrl = process.env.RIUNA_API_URL || "http://localhost:1337";
+const clientUrl = process.env.RIUNA_CLIENT_URL || "http://localhost:5173";
 
 const trustedOrigins = [clientUrl];
 try {
@@ -130,21 +130,21 @@ function getAuthEmailCopy(locale?: string | null) {
 
   if (localeKey === "de") {
     return {
-      magicLinkSubject: "Anmeldelink fuer Kaneo",
-      otpSubject: "Bestaetigungscode fuer Kaneo",
+      magicLinkSubject: "Anmeldelink fuer Riuna",
+      otpSubject: "Bestaetigungscode fuer Riuna",
     };
   }
 
   if (localeKey === "vi") {
     return {
-      magicLinkSubject: "Liên kết đăng nhập Kaneo",
-      otpSubject: "Mã xác minh Kaneo",
+      magicLinkSubject: "Liên kết đăng nhập Riuna",
+      otpSubject: "Mã xác minh Riuna",
     };
   }
 
   return {
-    magicLinkSubject: "Login for Kaneo",
-    otpSubject: "Authentication code for Kaneo",
+    magicLinkSubject: "Login for Riuna",
+    otpSubject: "Authentication code for Riuna",
   };
 }
 
@@ -158,7 +158,7 @@ function getDeviceAuthClientIds(): Set<string> {
         .filter(Boolean),
     );
   }
-  return new Set(["kaneo-cli", "kaneo-mcp"]);
+  return new Set(["riuna-cli", "riuna-mcp"]);
 }
 
 const DEFAULT_TRUSTED_PROXIES = [
@@ -269,7 +269,7 @@ export const auth = betterAuth({
       ? [
           anonymous({
             generateName: async () => generateDemoName(),
-            emailDomainName: "kaneo.app",
+            emailDomainName: "riuna.app",
           }),
         ]
       : []),
@@ -391,7 +391,7 @@ export const auth = betterAuth({
           }
         : true,
       // Better Auth defaults this to `true`, which blocks any user whose email
-      // is not verified from accepting/rejecting an invitation. Kaneo does not
+      // is not verified from accepting/rejecting an invitation. Riuna does not
       // verify emails on signup (and guest/anonymous users are unverified by
       // design), so leaving the default on breaks invitation acceptance for
       // everyone. The invitation link id is the actual secret here, so gate on
@@ -407,7 +407,7 @@ export const auth = betterAuth({
         afterCreateOrganization: async ({ organization, user }) => {
           // Seed the editable default roles for this workspace. Each
           // role's permissions are derived from the compiled-in defaults
-          // in `@kaneo/permissions`; admins can later replace them in the
+          // in `@riuna/permissions`; admins can later replace them in the
           // Roles UI. We skip names that somehow already exist (this hook
           // is best-effort idempotent; the boot-time backfill is the
           // belt-and-braces path).
@@ -473,7 +473,7 @@ export const auth = betterAuth({
         },
       },
       async sendInvitationEmail(data) {
-        const inviteLink = `${process.env.KANEO_CLIENT_URL}/invitation/accept/${data.id}`;
+        const inviteLink = `${process.env.RIUNA_CLIENT_URL}/invitation/accept/${data.id}`;
         const locale = await getUserLocale(data.email);
         const copy = getWorkspaceInvitationEmailCopy(locale);
 
@@ -552,7 +552,7 @@ export const auth = betterAuth({
     },
   },
   rateLimit: {
-    // Enable in cloud; self-hosted instances opt in by setting KANEO_CLOUD.
+    // Enable in cloud; self-hosted instances opt in by setting RIUNA_CLOUD.
     // Default better-auth rate-limit only kicks in for production; we keep the
     // global limits conservative and tighten signup/invite via customRules.
     enabled: isCloud(),
@@ -718,7 +718,7 @@ export const auth = betterAuth({
         }
 
         // Cloud-only abuse gates on password signup. Self-hosted instances
-        // leave KANEO_CLOUD/TURNSTILE_SECRET_KEY unset and skip both.
+        // leave RIUNA_CLOUD/TURNSTILE_SECRET_KEY unset and skip both.
         if (isCloud() && !isInstanceAdminSetup) {
           const signupEmail = (ctx.body?.email as string | undefined) ?? "";
           if (signupEmail && isDisposableEmail(signupEmail)) {

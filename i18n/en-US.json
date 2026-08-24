@@ -100,7 +100,7 @@
 				"errorToast": "Failed to create project"
 			},
 			"createWorkspace": {
-				"breadcrumbKaneo": "RIUNA",
+				"breadcrumbAppName": "RIUNA",
 				"title": "Create a new workspace",
 				"description": "Create a new workspace by providing a name for your workspace.",
 				"namePlaceholder": "Workspace name",
@@ -1157,7 +1157,7 @@
 				"removeError": "Failed to remove generic webhook integration"
 			},
 			"connectionTitle": "Outgoing webhook connection",
-			"connectionHint": "Send task events to your own endpoint as JSON. A signed X-Kaneo-Signature header is included when a secret is configured.",
+			"connectionHint": "Send task events to your own endpoint as JSON. A signed X-Riuna-Signature header is included when a secret is configured.",
 			"connected": "Connected",
 			"paused": "Paused",
 			"webhookLabel": "Endpoint URL",
@@ -1165,7 +1165,7 @@
 			"webhookHint": "Riuna sends POST requests with a JSON payload for each enabled event.",
 			"secretLabel": "Signing secret",
 			"secretPlaceholder": "Optional shared secret",
-			"secretHint": "Optional. If provided, Riuna signs the request body and sends the hex digest in the X-Kaneo-Signature header.",
+			"secretHint": "Optional. If provided, Riuna signs the request body and sends the hex digest in the X-Riuna-Signature header.",
 			"secretHintConfigured": "A signing secret is already configured ({{secret}}). Enter a new one to replace it.",
 			"eventsTitle": "Event notifications",
 			"eventsHint": "Choose which project changes should trigger outgoing webhooks.",

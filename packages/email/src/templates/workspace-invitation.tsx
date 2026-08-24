@@ -78,7 +78,7 @@ WorkspaceInvitationEmail.PreviewProps = {
   workspaceName: "Acme Inc",
   inviterName: "John Doe",
   inviterEmail: "john@acme.com",
-  invitationLink: "https://kaneo.app/invite/abc123",
+  invitationLink: "https://riuna.example/invite/abc123",
   to: "invitee@example.com",
   copy: {
     subject: "{{inviterName}} invited you to join {{workspaceName}} on Riuna",

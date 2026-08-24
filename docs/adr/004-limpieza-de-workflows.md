@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-08-23 · **Estado:** aceptada
 
-**Contexto.** El fork traía 14 workflows de GitHub Actions. La mayoría no automatizaban el producto, sino a Kaneo como proyecto de código abierto: publicaban paquetes npm bajo `@kaneo/*`, notificaban a su Discord, asignaban issues a su mantenedor, sincronizaban sus patrocinadores y cortaban releases con semantic-release. Varios habrían fallado, y los de npm habrían intentado publicar paquetes ajenos.
+**Contexto.** El fork traía 14 workflows de GitHub Actions. La mayoría no automatizaban el producto, sino a Kaneo como proyecto de código abierto: publicaban paquetes npm bajo `@riuna/*`, notificaban a su Discord, asignaban issues a su mantenedor, sincronizaban sus patrocinadores y cortaban releases con semantic-release. Varios habrían fallado, y los de npm habrían intentado publicar paquetes ajenos.
 
 **Decisión.** Eliminar ocho: `release.yml`, `publish-mcp.yml`, `publish-planka-import.yml`, `update-contributors.yml`, `issue-notify.yml`, `release-notify.yml`, `auto-assign.yml` y `auto-merge.yml`. Con ellos se van `release.config.js`, `scripts/release/notes.mjs`, `scripts/release/emit-version.mjs` y cinco dependencias de desarrollo de semantic-release.
 
