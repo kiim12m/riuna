@@ -1,6 +1,6 @@
 # ADR 005 — Sistema de marca: Deep Navy sostiene, River Teal actúa
 
-**Fecha:** 2026-08-24 · **Estado:** aceptada
+**Fecha:** 2026-08-24 · **Estado:** aceptada; el mapeo sobre los tokens queda sustituido por la [ADR 007](007-teal-en-los-estados-de-interaccion.md)
 
 **Contexto.** Riuna heredó de Kaneo una paleta neutra (escala `neutral` de Tailwind, sin color de marca) y sus logotipos. La Fase 0 dejó explícita la deuda: «logos y favicon siguen siendo los de Kaneo». Existía además un *brand system* de partida (v1.0, mayo 2026) que definía paleta y símbolo, pero describía otro producto —un constructor de diagramas de proceso— y solo cubría el tema claro.
 

@@ -69,7 +69,7 @@ export default function MobileProjectNav({
                 className={cn(
                   "flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
                   activeView === "backlog"
-                    ? "border-border bg-secondary text-foreground"
+                    ? "border-brand/40 bg-accent text-foreground"
                     : "border-transparent text-muted-foreground hover:bg-accent",
                 )}
               >
@@ -81,7 +81,7 @@ export default function MobileProjectNav({
                 className={cn(
                   "flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
                   activeView === "board"
-                    ? "border-border bg-secondary text-foreground"
+                    ? "border-brand/40 bg-accent text-foreground"
                     : "border-transparent text-muted-foreground hover:bg-accent",
                 )}
               >
@@ -94,7 +94,7 @@ export default function MobileProjectNav({
                 className={cn(
                   "flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
                   activeView === "calendar"
-                    ? "border-border bg-secondary text-foreground"
+                    ? "border-brand/40 bg-accent text-foreground"
                     : "border-transparent text-muted-foreground hover:bg-accent",
                 )}
               >
@@ -107,7 +107,7 @@ export default function MobileProjectNav({
                 className={cn(
                   "flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
                   activeView === "gantt"
-                    ? "border-border bg-secondary text-foreground"
+                    ? "border-brand/40 bg-accent text-foreground"
                     : "border-transparent text-muted-foreground hover:bg-accent",
                 )}
               >

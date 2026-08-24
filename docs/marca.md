@@ -315,9 +315,10 @@ sistema.
 | `navy-800`  | `#1B3A5C` | **Base.** `--primary`                                   |
 | `navy-900`  | `#142B44` | Estado pulsado                                          |
 | `teal-400`  | `#14A896` | Hover de trazo e icono                                  |
-| `teal-500`  | `#0E8A7A` | **Base.** Trazo, foco, icono, borde                     |
+| `teal-500`  | `#0E8A7A` | **Base.** Trazo, foco, icono, borde, tinte de hover     |
 | `teal-600`  | `#0B7466` | Relleno con texto encima, texto teal sobre fondo claro  |
 | `teal-300`  | `#2AB39F` | Solo tema oscuro                                        |
+| `teal-200`  | `#5FD3C0` | Texto del estado activo en tema oscuro                  |
 
 ### Tema oscuro
 
@@ -370,6 +371,13 @@ igual que el verde de éxito. Debe reapuntarse.
 
 Si en una pantalla hay más de un elemento en teal compitiendo por ser la acción
 principal, sobra uno.
+
+**Matiz desde la [ADR 007](adr/007-teal-en-los-estados-de-interaccion.md).** Los
+estados de interacción —hover, fila activa, elemento seleccionado— llevan River
+Teal a baja opacidad, entre el 10 % y el 16 %. La regla de «una sola por
+pantalla» se aplica al teal **sólido**: botón, enlace y anillo de foco. El tinte
+de interacción no cuenta, pero no es gratis: si en una pantalla el ojo va antes
+al hover que a la acción, sobra tinte.
 
 ---
 
@@ -510,7 +518,7 @@ Lo que este manual todavía no puede dar por cerrado.
 
 | # | Decisión | Estado |
 |---|----------|--------|
-| 1 | **Mapeo de la paleta sobre los tokens de shadcn.** | **Cerrada:** opción A, navy sostiene y teal actúa. Ver [ADR 005](adr/005-sistema-de-marca.md). Aplicada en `apps/web/src/index.css`. |
+| 1 | **Mapeo de la paleta sobre los tokens de shadcn.** | **Cerrada:** opción B, teal literal en `--accent`, como pedía el documento de partida. Ver [ADR 007](adr/007-teal-en-los-estados-de-interaccion.md), que sustituye el mapeo de la [ADR 005](adr/005-sistema-de-marca.md). Aplicada en `apps/web/src/index.css`. |
 | 2 | **Claim.** «Un solo cauce para todo el trabajo» es una propuesta. | Pendiente de aprobación. No aparece en la interfaz todavía. |
 | 3 | **Dibujo del símbolo.** | **Cerrada** tras seis rondas de exploración. Anillo partido en diagonal con nodos inversos, ver [ADR 006](adr/006-simbolo.md). |
 | 3b | **Variante ampliada.** Especificada en [03](#03--símbolo-y-logotipo), sin implementar. | Pendiente de que haga falta. No bloquea nada. |
@@ -533,7 +541,8 @@ Antes de dar por buena cualquier pantalla, componente o documento:
 - [ ] ¿Refuerza *Claro · Fluido · Preciso*, o solo es bonito?
 - [ ] ¿Los colores salen de tokens, no de hex escritos a mano? (Hoy no hay ni un
       hex literal en los componentes. Que siga así.)
-- [ ] ¿El teal solo aparece donde hay una acción, y solo una vez por pantalla?
+- [ ] ¿El teal **sólido** solo aparece donde hay una acción, y solo una vez por
+      pantalla? El tinte de interacción es otra cosa; ver la regla de oro.
 - [ ] ¿Todo el texto llega a 4,5:1, y los componentes a 3:1, **en los dos temas**?
 - [ ] ¿El estado se distingue sin depender del color?
 - [ ] ¿La copia usa el vocabulario de [02](#02--personalidad-y-tono-de-voz), con

@@ -142,6 +142,9 @@ input:-webkit-autofill:active {
   --riuna-teal: #0e8a7a;
   --riuna-teal-strong: #0b7466;
   --riuna-teal-light: #2ab39f;
+  /* Teal claro de texto para el estado activo en oscuro: 7,6:1 sobre la
+     barra lateral teñida, donde el -light se queda en 5,3:1. */
+  --riuna-teal-lighter: #5fd3c0;
   /* Tema oscuro: casi-negro con el mismo sesgo azul, nunca negro neutro. */
   --riuna-ground: #0b141f;
   --riuna-raised: #101c2a;
@@ -149,8 +152,9 @@ input:-webkit-autofill:active {
   --riuna-text-night: #e6edf4;
   --riuna-mid-night: #8fa7c0;
 
-  /* Navy al 5% en vez de negro: el hover queda azulado, no gris. */
-  --accent: color-mix(in srgb, var(--riuna-navy) 5%, transparent);
+  /* Opción B, ADR 007: el teal entra en los estados de interacción. El
+     hover deja de ser un tinte de navy y lo tiñe River Teal al 10%. */
+  --accent: color-mix(in srgb, var(--riuna-teal) 10%, transparent);
   --accent-foreground: var(--riuna-ink);
   --background: var(--color-white);
   /* 17% sobre blanco reproduce el #D8DDE5 del manual y además se adapta
@@ -192,8 +196,10 @@ input:-webkit-autofill:active {
   --sidebar-foreground: var(--riuna-mid);
   --sidebar-primary: var(--riuna-navy);
   --sidebar-primary-foreground: var(--color-white);
-  --sidebar-accent: color-mix(in srgb, var(--riuna-navy) 6%, transparent);
-  --sidebar-accent-foreground: var(--riuna-navy);
+  /* Hover y elemento activo comparten token en la barra lateral, así que
+     comparten tinte. El texto va en -strong: 4,57:1 sobre el tinte al 12%. */
+  --sidebar-accent: color-mix(in srgb, var(--riuna-teal) 12%, transparent);
+  --sidebar-accent-foreground: var(--riuna-teal-strong);
   --sidebar-border: color-mix(in srgb, var(--riuna-navy) 12%, transparent);
   --sidebar-ring: var(--riuna-teal);
   --code: var(--color-white);
@@ -207,7 +213,7 @@ input:-webkit-autofill:active {
    —se usan siempre al 10-15% de opacidad—; lo que se aclara es su variante de
    texto. Ver docs/marca.md §04. */
 .dark {
-  --accent: --alpha(var(--color-white) / 5%);
+  --accent: --alpha(var(--riuna-teal-light) / 14%);
   --accent-foreground: var(--riuna-text-night);
   --background: var(--riuna-ground);
   --border: --alpha(var(--color-white) / 10%);
@@ -244,8 +250,8 @@ input:-webkit-autofill:active {
   --sidebar-foreground: var(--riuna-mid-night);
   --sidebar-primary: var(--riuna-text-night);
   --sidebar-primary-foreground: #14293f;
-  --sidebar-accent: --alpha(var(--color-white) / 5%);
-  --sidebar-accent-foreground: var(--riuna-text-night);
+  --sidebar-accent: --alpha(var(--riuna-teal-light) / 16%);
+  --sidebar-accent-foreground: var(--riuna-teal-lighter);
   --sidebar-border: --alpha(var(--color-white) / 8%);
   --sidebar-ring: var(--riuna-teal-light);
   --code: var(--riuna-raised);

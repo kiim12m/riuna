@@ -190,7 +190,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
             } ${
               isDragging
                 ? "border-ring/40 bg-card shadow-lg"
-                : "hover:border-border/90 hover:bg-background hover:shadow-sm"
+                : "hover:border-brand/45 hover:shadow-sm"
             } ${
               isTaskSelected
                 ? "border-ring/40 bg-accent/50 shadow-sm ring-1 ring-inset ring-ring/30"

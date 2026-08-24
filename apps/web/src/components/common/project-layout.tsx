@@ -35,6 +35,17 @@ type ProjectLayoutProps = {
   activeView?: "backlog" | "board" | "calendar" | "gantt";
 };
 
+// La vista activa se marca con el tinte de --accent y un raíl de 2 px en River
+// Teal (ADR 007). El hover de las inactivas ya lo pone el botón ghost.
+function viewTabClass(isActive: boolean) {
+  return cn(
+    "h-6 gap-1.5 rounded-md px-2 text-xs",
+    isActive
+      ? "bg-accent text-foreground shadow-[inset_0_-2px_0_var(--brand)] hover:bg-accent"
+      : "text-muted-foreground",
+  );
+}
+
 export default function ProjectLayout({
   projectId,
   workspaceId,
@@ -162,49 +173,37 @@ export default function ProjectLayout({
             {showViewSwitcher && (
               <div className="hidden h-8 items-center gap-0.5 rounded-lg border border-border/80 bg-background p-0.5 sm:inline-flex">
                 <Button
-                  variant={resolvedView === "backlog" ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="xs"
                   onClick={handleNavigateToBacklog}
-                  className={cn(
-                    "h-6 gap-1.5 rounded-md px-2 text-xs",
-                    resolvedView !== "backlog" && "text-muted-foreground",
-                  )}
+                  className={viewTabClass(resolvedView === "backlog")}
                 >
                   <SquircleDashed className="size-3.5" />
                   Backlog
                 </Button>
                 <Button
-                  variant={resolvedView === "board" ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="xs"
                   onClick={handleNavigateToBoard}
-                  className={cn(
-                    "h-6 gap-1.5 rounded-md px-2 text-xs",
-                    resolvedView !== "board" && "text-muted-foreground",
-                  )}
+                  className={viewTabClass(resolvedView === "board")}
                 >
                   <SquareKanban className="size-3.5" />
                   Tasks
                 </Button>
                 <Button
-                  variant={resolvedView === "calendar" ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="xs"
                   onClick={handleNavigateToCalendar}
-                  className={cn(
-                    "h-6 gap-1.5 rounded-md px-2 text-xs",
-                    resolvedView !== "calendar" && "text-muted-foreground",
-                  )}
+                  className={viewTabClass(resolvedView === "calendar")}
                 >
                   <CalendarRange className="size-3.5" />
                   {t("tasks:calendar.title")}
                 </Button>
                 <Button
-                  variant={resolvedView === "gantt" ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="xs"
                   onClick={handleNavigateToGantt}
-                  className={cn(
-                    "h-6 gap-1.5 rounded-md px-2 text-xs",
-                    resolvedView !== "gantt" && "text-muted-foreground",
-                  )}
+                  className={viewTabClass(resolvedView === "gantt")}
                 >
                   <CalendarDays className="size-3.5" />
                   Gantt

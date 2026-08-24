@@ -252,7 +252,7 @@ export function NavProjects() {
                           <SidebarMenuButton
                             isActive={isCurrentProject(project.id)}
                             size="default"
-                            className="h-8 gap-0 ps-3.5 text-sm hover:bg-transparent hover:text-sidebar-accent-foreground active:bg-transparent"
+                            className="h-8 gap-0 ps-3.5 text-sm hover:bg-sidebar-accent/60"
                             onClick={() => handleProjectClick(project)}
                           >
                             <span>{project.name}</span>
@@ -351,7 +351,7 @@ export function NavProjects() {
                     <SidebarMenuItem className="mt-1">
                       <SidebarMenuButton
                         size="default"
-                        className="h-8 ps-3.5 text-sm hover:bg-transparent hover:text-sidebar-accent-foreground active:bg-transparent"
+                        className="h-8 ps-3.5 text-sm hover:bg-sidebar-accent/60"
                         onClick={() => setIsCreateProjectModalOpen(true)}
                       >
                         <span>{t("navigation:projectList.addProject")}</span>
