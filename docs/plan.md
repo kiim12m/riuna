@@ -35,7 +35,8 @@ gestor de tareas básico y nada propio.
 **Fase 0** — nada de esto es visible para quien usa Riuna:
 - Renombrado interno: ~1.400 referencias a "kaneo" (486 clases y atributos CSS,
   143 variables `KANEO_*`, 138 nombres de paquete `@kaneo/*`).
-- Logos y favicon siguen siendo los de Kaneo.
+- ~~Logos y favicon siguen siendo los de Kaneo.~~ Cerrado: sistema de marca
+  aplicado, ver [`marca.md`](marca.md) y [ADR 005](adr/005-sistema-de-marca.md).
 - Artefactos de despliegue aún se llaman `kaneo` / `web` / `api` y
   `charts/kaneo`: **no ejecutar `docker.yml` ni `helm-chart.yml`** hasta
   renombrarlos.
