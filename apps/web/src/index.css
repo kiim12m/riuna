@@ -90,6 +90,9 @@ input:-webkit-autofill:active {
   --color-code-foreground: var(--code-foreground);
   --color-code-highlight: var(--code-highlight);
   --color-code: var(--code);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand: var(--brand);
   --color-border: var(--border);
   --color-background: var(--background);
   --color-accent-foreground: var(--accent-foreground);
@@ -123,107 +126,131 @@ input:-webkit-autofill:active {
     "Courier New",
     monospace;
   --radius: 0.625rem;
-  --accent: --alpha(var(--color-black) / 4%);
-  --accent-foreground: var(--color-neutral-800);
+
+  /* Paleta de marca — docs/marca.md §04. Valores fijos, independientes del
+     tema: lo que cambia entre claro y oscuro son los tokens semánticos de
+     abajo. Los componentes consumen los tokens, nunca estos valores.
+     Los tres neutros llevan sesgo azul a propósito: un gris neutro puro al
+     lado del navy delata que no se eligió. */
+  --riuna-navy: #1b3a5c;
+  --riuna-ink: #141d2b;
+  --riuna-mid: #4a6380;
+  --riuna-surface: #f6f7f9;
+  /* River Teal da 4,25:1 sobre blanco: sirve para trazo, icono, borde y anillo
+     de foco (umbral 3:1), no para texto. Lo que lleva texto encima —o es
+     texto— usa la variante -strong, que da 5,67:1. */
+  --riuna-teal: #0e8a7a;
+  --riuna-teal-strong: #0b7466;
+  --riuna-teal-light: #2ab39f;
+  /* Tema oscuro: casi-negro con el mismo sesgo azul, nunca negro neutro. */
+  --riuna-ground: #0b141f;
+  --riuna-raised: #101c2a;
+  --riuna-sunken: #0e1825;
+  --riuna-text-night: #e6edf4;
+  --riuna-mid-night: #8fa7c0;
+
+  /* Navy al 5% en vez de negro: el hover queda azulado, no gris. */
+  --accent: color-mix(in srgb, var(--riuna-navy) 5%, transparent);
+  --accent-foreground: var(--riuna-ink);
   --background: var(--color-white);
-  --border: --alpha(var(--color-black) / 8%);
+  /* 17% sobre blanco reproduce el #D8DDE5 del manual y además se adapta
+     cuando el borde cae sobre una superficie que no es blanca. */
+  --border: color-mix(in srgb, var(--riuna-navy) 17%, transparent);
+  --brand: var(--riuna-teal);
+  --brand-strong: var(--riuna-teal-strong);
+  --brand-foreground: var(--color-white);
   --card: var(--color-white);
-  --card-foreground: var(--color-neutral-800);
-  --destructive: var(--color-red-500);
-  --destructive-foreground: var(--color-red-700);
-  --foreground: var(--color-neutral-800);
-  --info: var(--color-blue-500);
-  --info-foreground: var(--color-blue-700);
-  --input: --alpha(var(--color-black) / 10%);
-  --muted: --alpha(var(--color-black) / 4%);
-  --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-black));
+  --card-foreground: var(--riuna-ink);
+  --destructive: #dc2626;
+  --destructive-foreground: #b91c1c;
+  --foreground: var(--riuna-ink);
+  --info: #2563eb;
+  --info-foreground: #1d4ed8;
+  --input: color-mix(in srgb, var(--riuna-navy) 22%, transparent);
+  --muted: color-mix(in srgb, var(--riuna-navy) 5%, transparent);
+  --muted-foreground: var(--riuna-mid);
   --popover: var(--color-white);
-  --popover-foreground: var(--color-neutral-800);
-  --primary: var(--color-neutral-800);
-  --primary-foreground: var(--color-neutral-50);
-  --ring: var(--color-neutral-400);
-  --secondary: --alpha(var(--color-black) / 4%);
-  --secondary-foreground: var(--color-neutral-800);
-  --success: var(--color-emerald-500);
-  --success-foreground: var(--color-emerald-700);
-  --warning: var(--color-amber-500);
-  --warning-foreground: var(--color-amber-700);
-  --chart-1: var(--color-orange-600);
-  --chart-2: var(--color-teal-600);
-  --chart-3: var(--color-cyan-900);
-  --chart-4: var(--color-amber-400);
-  --chart-5: var(--color-amber-500);
-  --sidebar: var(--color-neutral-50);
-  --sidebar-foreground: color-mix(
-    in srgb,
-    var(--color-neutral-800) 64%,
-    var(--sidebar)
-  );
-  --sidebar-primary: var(--color-neutral-800);
-  --sidebar-primary-foreground: var(--color-neutral-50);
-  --sidebar-accent: --alpha(var(--color-black) / 4%);
-  --sidebar-accent-foreground: var(--color-neutral-800);
-  --sidebar-border: --alpha(var(--color-black) / 6%);
-  --sidebar-ring: var(--color-neutral-400);
+  --popover-foreground: var(--riuna-ink);
+  --primary: var(--riuna-navy);
+  --primary-foreground: var(--color-white);
+  --ring: var(--riuna-teal);
+  --secondary: color-mix(in srgb, var(--riuna-navy) 6%, transparent);
+  --secondary-foreground: var(--riuna-navy);
+  /* Verde puro (142°), no esmeralda (160°): con River Teal como color de
+     acción, el esmeralda quedaba a doce grados y confundía «esto es un botón»
+     con «esto ha salido bien». */
+  --success: #16a34a;
+  --success-foreground: #15803d;
+  --warning: #d97706;
+  --warning-foreground: #b45309;
+  --chart-1: var(--riuna-teal);
+  --chart-2: #2a5c8a;
+  --chart-3: #d97706;
+  --chart-4: #7c3aed;
+  --chart-5: #be185d;
+  --sidebar: var(--riuna-surface);
+  --sidebar-foreground: var(--riuna-mid);
+  --sidebar-primary: var(--riuna-navy);
+  --sidebar-primary-foreground: var(--color-white);
+  --sidebar-accent: color-mix(in srgb, var(--riuna-navy) 6%, transparent);
+  --sidebar-accent-foreground: var(--riuna-navy);
+  --sidebar-border: color-mix(in srgb, var(--riuna-navy) 12%, transparent);
+  --sidebar-ring: var(--riuna-teal);
   --code: var(--color-white);
   --code-foreground: var(--foreground);
-  --code-highlight: --alpha(var(--color-black) / 4%);
+  --code-highlight: color-mix(in srgb, var(--riuna-navy) 5%, transparent);
 }
 
+/* Deep Navy no funciona como color de acción en oscuro: es más oscuro que el
+   propio fondo elevado. Aquí el peso de marca lo lleva el teal claro y el navy
+   se retira a las superficies. Los rellenos semánticos no cambian de valor
+   —se usan siempre al 10-15% de opacidad—; lo que se aclara es su variante de
+   texto. Ver docs/marca.md §04. */
 .dark {
-  --accent: --alpha(var(--color-white) / 4%);
-  --accent-foreground: var(--color-neutral-100);
-  --background: color-mix(
-    in srgb,
-    var(--color-neutral-950) 96%,
-    var(--color-white)
-  );
-  --border: --alpha(var(--color-white) / 6%);
-  --card: color-mix(in srgb, var(--background) 98%, var(--color-white));
-  --card-foreground: var(--color-neutral-100);
-  --destructive: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
-  --destructive-foreground: var(--color-red-400);
-  --foreground: var(--color-neutral-100);
-  --info: var(--color-blue-500);
-  --info-foreground: var(--color-blue-400);
-  --input: --alpha(var(--color-white) / 8%);
-  --muted: --alpha(var(--color-white) / 4%);
-  --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-white));
-  --popover: color-mix(in srgb, var(--background) 98%, var(--color-white));
-  --popover-foreground: var(--color-neutral-100);
-  --primary: var(--color-neutral-100);
-  --primary-foreground: var(--color-neutral-800);
-  --ring: var(--color-neutral-500);
-  --secondary: --alpha(var(--color-white) / 4%);
-  --secondary-foreground: var(--color-neutral-100);
-  --success: var(--color-emerald-500);
-  --success-foreground: var(--color-emerald-400);
-  --warning: var(--color-amber-500);
-  --warning-foreground: var(--color-amber-400);
-  --chart-1: var(--color-blue-700);
-  --chart-2: var(--color-emerald-500);
-  --chart-3: var(--color-amber-500);
-  --chart-4: var(--color-purple-500);
-  --chart-5: var(--color-rose-500);
-  --sidebar: color-mix(
-    in srgb,
-    var(--color-neutral-950) 97%,
-    var(--color-white)
-  );
-  --sidebar-foreground: color-mix(
-    in srgb,
-    var(--color-neutral-100) 64%,
-    var(--sidebar)
-  );
-  --sidebar-primary: var(--color-neutral-100);
-  --sidebar-primary-foreground: var(--color-neutral-800);
-  --sidebar-accent: --alpha(var(--color-white) / 4%);
-  --sidebar-accent-foreground: var(--color-neutral-100);
-  --sidebar-border: --alpha(var(--color-white) / 5%);
-  --sidebar-ring: var(--color-neutral-400);
-  --code: color-mix(in srgb, var(--background) 98%, var(--color-white));
+  --accent: --alpha(var(--color-white) / 5%);
+  --accent-foreground: var(--riuna-text-night);
+  --background: var(--riuna-ground);
+  --border: --alpha(var(--color-white) / 10%);
+  --brand: var(--riuna-teal-light);
+  --brand-strong: var(--riuna-teal-light);
+  --brand-foreground: #062a25;
+  --card: var(--riuna-raised);
+  --card-foreground: var(--riuna-text-night);
+  --destructive: #dc2626;
+  --destructive-foreground: #f26d6d;
+  --foreground: var(--riuna-text-night);
+  --info: #2563eb;
+  --info-foreground: #7ca9f5;
+  --input: --alpha(var(--color-white) / 12%);
+  --muted: --alpha(var(--color-white) / 5%);
+  --muted-foreground: var(--riuna-mid-night);
+  --popover: var(--riuna-raised);
+  --popover-foreground: var(--riuna-text-night);
+  --primary: var(--riuna-text-night);
+  --primary-foreground: #14293f;
+  --ring: var(--riuna-teal-light);
+  --secondary: --alpha(var(--color-white) / 6%);
+  --secondary-foreground: var(--riuna-text-night);
+  --success: #16a34a;
+  --success-foreground: #55d486;
+  --warning: #d97706;
+  --warning-foreground: #f0a83c;
+  --chart-1: var(--riuna-teal-light);
+  --chart-2: #6e9bc7;
+  --chart-3: #f0a83c;
+  --chart-4: #a78bfa;
+  --chart-5: #f472b6;
+  --sidebar: var(--riuna-sunken);
+  --sidebar-foreground: var(--riuna-mid-night);
+  --sidebar-primary: var(--riuna-text-night);
+  --sidebar-primary-foreground: #14293f;
+  --sidebar-accent: --alpha(var(--color-white) / 5%);
+  --sidebar-accent-foreground: var(--riuna-text-night);
+  --sidebar-border: --alpha(var(--color-white) / 8%);
+  --sidebar-ring: var(--riuna-teal-light);
+  --code: var(--riuna-raised);
   --code-foreground: var(--foreground);
-  --code-highlight: --alpha(var(--color-white) / 4%);
+  --code-highlight: --alpha(var(--color-white) / 5%);
 }
 
 @layer base {
