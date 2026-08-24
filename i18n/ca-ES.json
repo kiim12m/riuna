@@ -100,7 +100,7 @@
 				"errorToast": "Hi ha hagut un error en crear el projecte"
 			},
 			"createWorkspace": {
-				"breadcrumbKaneo": "RIUNA",
+				"breadcrumbAppName": "RIUNA",
 				"title": "Crea un espai de treball nou",
 				"description": "Crea un espai de treball nou triant-ne un nom.",
 				"namePlaceholder": "Nom de l'espai de treball",
@@ -788,7 +788,7 @@
 				"removeError": "Error al eliminar la integración con webhook"
 			},
 			"connectionTitle": "Conexión de sálida a un webhook",
-			"connectionHint": "Envía eventos de las tareas a tu propio webhook como JSON. Una cabecera X-Kaneo-Signature se incluye si el secreto está configurado.",
+			"connectionHint": "Envía eventos de las tareas a tu propio webhook como JSON. Una cabecera X-Riuna-Signature se incluye si el secreto está configurado.",
 			"connected": "Conectado",
 			"paused": "Pausado",
 			"webhookLabel": "URL del webhook",
@@ -796,7 +796,7 @@
 			"webhookHint": "Riuna envía requests POST como JSON para cada evento activo.",
 			"secretLabel": "Secreto para la firma",
 			"secretPlaceholder": "Secreto opcional",
-			"secretHint": "Opcional. Si está configurado, Riuna envía el cuerpo de la petición y añade la cabecera X-Kaneo-Signature.",
+			"secretHint": "Opcional. Si está configurado, Riuna envía el cuerpo de la petición y añade la cabecera X-Riuna-Signature.",
 			"secretHintConfigured": "Ya hay un secreto configurado ({{secret}}). Introduce uno nuevo para reemplazarlo.",
 			"eventsTitle": "Notificaciones de eventos",
 			"eventsHint": "Elige qué cambios en el proyecto deben ser notificados a través de webhooks.",

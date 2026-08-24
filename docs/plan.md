@@ -33,15 +33,28 @@ gestor de tareas básico y nada propio.
 ### Deuda abierta de las fases cerradas
 
 **Fase 0** — nada de esto es visible para quien usa Riuna:
-- Renombrado interno: ~1.400 referencias a "kaneo" (486 clases y atributos CSS,
-  143 variables `KANEO_*`, 138 nombres de paquete `@kaneo/*`).
+- ~~Renombrado interno~~ ✔ Hecho: clases y atributos CSS, variables de entorno
+  (`RIUNA_*`), nombres de paquete (`@riuna/*`), artefactos de despliegue
+  (`Dockerfile.riuna`, `charts/riuna`, imágenes `riuna`/`web`/`api`) y el
+  discriminante `createdFrom`/`source` de las integraciones GitHub/Gitea
+  (acepta `"kaneo"` y `"riuna"` en lectura, escribe `"riuna"`). Las etiquetas
+  persistidas del editor (`<kaneo-mention>`, `<kaneo-issue-link>`, etc.) siguen
+  parseándose por compatibilidad con contenido antiguo, aunque el editor ya
+  solo escribe `<riuna-*>`.
 - ~~Logos y favicon siguen siendo los de Kaneo.~~ Cerrado: sistema de marca
   aplicado, ver [`marca.md`](marca.md) y [ADR 005](adr/005-sistema-de-marca.md).
-- Artefactos de despliegue aún se llaman `kaneo` / `web` / `api` y
-  `charts/kaneo`: **no ejecutar `docker.yml` ni `helm-chart.yml`** hasta
-  renombrarlos.
-- `package.json` sigue en la versión `2.22.0` heredada; falta decidir si se
-  mantiene la trazabilidad con Kaneo o se reinicia en `0.1.0`.
+- ~~`package.json` en la versión `2.22.0` heredada de Kaneo.~~ Cerrado: se
+  reinicia en `0.1.0`; la trazabilidad con Kaneo vive en `NOTICE` y en la
+  [ADR 001](adr/001-fork-duro-de-kaneo.md), no en el número de versión.
+- `sentry/alerts.json` y `sentry/dashboards.json` siguen apuntando a la
+  organización y a los proyectos Sentry `kaneo-api` / `kaneo-web`: pendiente
+  decidir si esa organización Sentry se renombra o si se crea una nueva.
+- `SECURITY.md`, los enlaces de comunidad de `CONTRIBUTING.md` (Discord,
+  issues) y los enlaces a documentación de `ENVIRONMENT_SETUP.md` siguen
+  apuntando al Kaneo real (repositorio, Discord, email del mantenedor): no se
+  han tocado a propósito porque Riuna no tiene todavía repositorio público,
+  Discord ni proceso de disclosure propios — inventar uno sería peor que
+  dejarlo así. Pendiente decidir si Riuna necesita esa infraestructura.
 - Código de facturación heredado: apagado por configuración, no eliminado.
 - Catalán: 207 de 1.725 claves traducidas de verdad (12%); el resto es relleno
   en español. Lo gordo está en `settings`, `tasks` y `auth`.

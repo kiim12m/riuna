@@ -65,7 +65,7 @@ const MagicLinkEmail = ({ magicLink, locale }: MagicLinkEmailProps) => {
 };
 
 MagicLinkEmail.PreviewProps = {
-  magicLink: "https://kaneo.app",
+  magicLink: "https://riuna.example",
   locale: "en-US",
 } as MagicLinkEmailProps;
 

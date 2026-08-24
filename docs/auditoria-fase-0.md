@@ -19,7 +19,7 @@ Sí existe una noción de **backlog** (componente `backlog-list-view` y document
 
 ## Hallazgos adicionales
 
-**Facturación: ya viene desactivada.** No hace falta tocar código. `KANEO_CLOUD` sin valor y las claves de Creem vacías dejan el billing apagado, y así se ha configurado `.env`. La eliminación del código de billing pasa de tarea de la Fase 0 a limpieza opcional cuando estorbe.
+**Facturación: ya viene desactivada.** No hace falta tocar código. `RIUNA_CLOUD` sin valor y las claves de Creem vacías dejan el billing apagado, y así se ha configurado `.env`. La eliminación del código de billing pasa de tarea de la Fase 0 a limpieza opcional cuando estorbe.
 
 **Redis: opcional.** Sin `REDIS_*` configurado, los WebSockets usan un adaptador en memoria válido para instancia única. Un servicio menos que operar.
 
@@ -27,7 +27,7 @@ Sí existe una noción de **backlog** (componente `backlog-list-view` y document
 
 **Responsive: cobertura parcial, no nula.** 66 de 264 ficheros `.tsx` usan breakpoints (`sm:`/`md:`/`lg:`), un 25%. El trabajo de la Fase 9 es completar las pantallas de consulta móvil, no partir de cero.
 
-**La marca de Kaneo llega hasta el CSS.** Además de nombres de paquete y textos, hay atributos y clases como `data-kaneo-sortable` y `kaneo-dragging`, y variables de entorno con prefijo `KANEO_`. El renombrado es mecánico pero más extenso de lo que sugiere el plan.
+**La marca de Kaneo llega hasta el CSS.** Además de nombres de paquete y textos, hay atributos y clases como `data-kaneo-sortable` y `kaneo-dragging`, y variables de entorno con prefijo `RIUNA_`. El renombrado es mecánico pero más extenso de lo que sugiere el plan.
 
 **El repositorio trae dos aplicaciones que Riuna no necesita:** `apps/site` (web pública de marketing, comparativas y blog de Kaneo) y `apps/docs` (documentación en Mintlify). Son la mayor parte del ruido en las búsquedas de código. Borrarlas reduce el repositorio y la superficie de mantenimiento. **Decisión pendiente.**
 

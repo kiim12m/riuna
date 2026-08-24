@@ -1,4 +1,4 @@
-// Mirrors `toSlug` in apps/api/src/column/controllers/create-column.ts. Kaneo
+// Mirrors `toSlug` in apps/api/src/column/controllers/create-column.ts. Riuna
 // derives a column's slug from its name server-side, and tasks reference the
 // column by that slug, so we have to predict it to place cards correctly.
 export function toColumnSlug(name: string): string {
@@ -12,7 +12,7 @@ export function toColumnSlug(name: string): string {
   return /[\p{L}\p{N}]/u.test(slug) ? slug : "";
 }
 
-// Kaneo rejects these as column slugs: they are virtual task statuses.
+// Riuna rejects these as column slugs: they are virtual task statuses.
 export const RESERVED_COLUMN_SLUGS = ["planned", "archived"];
 
 const PROJECT_KEY_MAX = 8;

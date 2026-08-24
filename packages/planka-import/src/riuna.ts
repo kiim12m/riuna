@@ -1,9 +1,9 @@
-export type KaneoWorkspace = { id: string; name: string; slug?: string };
-export type KaneoProject = { id: string; name: string; slug: string };
-export type KaneoColumn = { id: string; name: string; slug: string };
-export type KaneoTask = { id: string; title: string; number: number };
-export type KaneoLabel = { id: string; name: string; color: string };
-export type KaneoMember = { id: string; name: string; email: string };
+export type RiunaWorkspace = { id: string; name: string; slug?: string };
+export type RiunaProject = { id: string; name: string; slug: string };
+export type RiunaColumn = { id: string; name: string; slug: string };
+export type RiunaTask = { id: string; title: string; number: number };
+export type RiunaLabel = { id: string; name: string; color: string };
+export type RiunaMember = { id: string; name: string; email: string };
 
 export function normalizeBaseUrl(raw: string): string {
   const trimmed = raw.trim().replace(/\/+$/, "");
@@ -19,7 +19,7 @@ export function normalizeBaseUrl(raw: string): string {
   }
 }
 
-export class KaneoClient {
+export class RiunaClient {
   readonly baseUrl: string;
   private readonly apiKey: string;
 
@@ -28,18 +28,18 @@ export class KaneoClient {
     this.apiKey = options.apiKey;
   }
 
-  listWorkspaces(): Promise<KaneoWorkspace[]> {
-    return this.request<KaneoWorkspace[]>("/api/auth/organization/list");
+  listWorkspaces(): Promise<RiunaWorkspace[]> {
+    return this.request<RiunaWorkspace[]>("/api/auth/organization/list");
   }
 
-  listProjects(workspaceId: string): Promise<KaneoProject[]> {
-    return this.request<KaneoProject[]>(
+  listProjects(workspaceId: string): Promise<RiunaProject[]> {
+    return this.request<RiunaProject[]>(
       `/api/project?workspaceId=${encodeURIComponent(workspaceId)}`,
     );
   }
 
-  listMembers(workspaceId: string): Promise<KaneoMember[]> {
-    return this.request<KaneoMember[]>(
+  listMembers(workspaceId: string): Promise<RiunaMember[]> {
+    return this.request<RiunaMember[]>(
       `/api/workspace/${encodeURIComponent(workspaceId)}/members`,
     );
   }
@@ -49,15 +49,15 @@ export class KaneoClient {
     workspaceId: string;
     icon: string;
     slug: string;
-  }): Promise<KaneoProject> {
-    return this.request<KaneoProject>("/api/project", {
+  }): Promise<RiunaProject> {
+    return this.request<RiunaProject>("/api/project", {
       method: "POST",
       body: JSON.stringify(input),
     });
   }
 
-  listColumns(projectId: string): Promise<KaneoColumn[]> {
-    return this.request<KaneoColumn[]>(
+  listColumns(projectId: string): Promise<RiunaColumn[]> {
+    return this.request<RiunaColumn[]>(
       `/api/column/${encodeURIComponent(projectId)}`,
     );
   }
@@ -65,8 +65,8 @@ export class KaneoClient {
   createColumn(
     projectId: string,
     input: { name: string; isFinal?: boolean },
-  ): Promise<KaneoColumn> {
-    return this.request<KaneoColumn>(
+  ): Promise<RiunaColumn> {
+    return this.request<RiunaColumn>(
       `/api/column/${encodeURIComponent(projectId)}`,
       { method: "POST", body: JSON.stringify(input) },
     );
@@ -88,8 +88,8 @@ export class KaneoClient {
       dueDate?: string;
       userId?: string;
     },
-  ): Promise<KaneoTask> {
-    return this.request<KaneoTask>(
+  ): Promise<RiunaTask> {
+    return this.request<RiunaTask>(
       `/api/task/${encodeURIComponent(projectId)}`,
       { method: "POST", body: JSON.stringify(input) },
     );
@@ -102,8 +102,8 @@ export class KaneoClient {
     color: string;
     workspaceId: string;
     taskId?: string;
-  }): Promise<KaneoLabel> {
-    return this.request<KaneoLabel>("/api/label", {
+  }): Promise<RiunaLabel> {
+    return this.request<RiunaLabel>("/api/label", {
       method: "POST",
       body: JSON.stringify(input),
     });
@@ -153,7 +153,7 @@ export class KaneoClient {
       });
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
-      throw new Error(`Kaneo ${path}: ${reason}`);
+      throw new Error(`Riuna ${path}: ${reason}`);
     }
 
     const text = await res.text();
@@ -167,7 +167,7 @@ export class KaneoClient {
     }
 
     if (!res.ok) {
-      throw new Error(`Kaneo ${path}: ${describeError(body, res.status)}`);
+      throw new Error(`Riuna ${path}: ${describeError(body, res.status)}`);
     }
 
     return body as T;
@@ -176,7 +176,7 @@ export class KaneoClient {
 
 function describeError(body: unknown, status: number): string {
   if (status === 401) {
-    return "unauthorized (HTTP 401), check your Kaneo API key";
+    return "unauthorized (HTTP 401), check your Riuna API key";
   }
   if (typeof body === "object" && body !== null) {
     const record = body as Record<string, unknown>;

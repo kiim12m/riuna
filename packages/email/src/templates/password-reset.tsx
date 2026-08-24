@@ -79,7 +79,7 @@ const PasswordResetEmail = ({
 };
 
 PasswordResetEmail.PreviewProps = {
-  resetLink: "https://kaneo.app/auth/reset-password?token=example",
+  resetLink: "https://riuna.example/auth/reset-password?token=example",
   userName: "Jane",
 } as PasswordResetEmailProps;
 

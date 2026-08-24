@@ -1,4 +1,4 @@
-import { client } from "@kaneo/libs";
+import { client } from "@riuna/libs";
 import type Task from "@/types/task";
 
 type UpdateTaskTeamPayload = Pick<Task, "teamId">;

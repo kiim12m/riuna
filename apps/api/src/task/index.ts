@@ -920,7 +920,7 @@ const task = new Hono<{
       }
 
       const apiBaseUrl = normalizeApiServerUrl(
-        process.env.KANEO_API_URL || new URL(c.req.url).origin,
+        process.env.RIUNA_API_URL || new URL(c.req.url).origin,
       );
       return c.json({
         id: asset.id,

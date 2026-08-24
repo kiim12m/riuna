@@ -6,9 +6,9 @@ import PageTitle from "@/components/page-title";
 import { CopyUrlButton } from "@/components/public-project/copy-url-button";
 import { ErrorView } from "@/components/public-project/error-view";
 import { PublicKanbanView } from "@/components/public-project/kanban-view";
-import { KaneoBranding } from "@/components/public-project/kaneo-branding";
 import { PublicListView } from "@/components/public-project/list-view";
 import { LoadingSkeleton } from "@/components/public-project/loading-skeleton";
+import { RiunaBranding } from "@/components/public-project/riuna-branding";
 import { PublicTaskDetailModal } from "@/components/public-project/task-detail-modal";
 import { ThemeToggle } from "@/components/public-project/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/public-project/$projectId")({
 
 type ViewMode = "kanban" | "list";
 
-const VIEW_MODE_STORAGE_KEY = "kaneo-public-view-mode";
+const VIEW_MODE_STORAGE_KEY = "riuna-public-view-mode";
 
 function RouteComponent() {
   const { t } = useTranslation();
@@ -135,7 +135,7 @@ function RouteComponent() {
         <footer className="border-t border-border">
           <div className="px-6 py-3">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <KaneoBranding />
+              <RiunaBranding />
               <span>{t("publicProject:readOnly")}</span>
             </div>
           </div>

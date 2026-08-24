@@ -39,14 +39,14 @@ async function startMcpServer(): Promise<void> {
 }
 
 function printMainHelp(): void {
-  console.log(`kaneo-mcp: Kaneo MCP server (stdio transport)
+  console.log(`riuna-mcp: Riuna MCP server (stdio transport)
 
 Usage:
-  npx @kaneo/mcp         Interactive installer (terminal only; no global install)
-  kaneo-mcp              Same: installer in a TTY; MCP server when stdin is piped
-  kaneo-mcp install      Register in Cursor / Claude / a custom path (explicit)
-  kaneo-mcp serve        Run the MCP server (use from a terminal to test stdio)
-  kaneo-mcp help
+  npx @riuna/mcp         Interactive installer (terminal only; no global install)
+  riuna-mcp              Same: installer in a TTY; MCP server when stdin is piped
+  riuna-mcp install      Register in Cursor / Claude / a custom path (explicit)
+  riuna-mcp serve        Run the MCP server (use from a terminal to test stdio)
+  riuna-mcp help
 
 Options:
   -h, --help             Show this help
@@ -54,6 +54,6 @@ Options:
 MCP clients (Cursor, etc.) run this process with a pipe, so they get the server.
 In a normal terminal, the default is the interactive installer.
 
-See also: kaneo-mcp install --help
+See also: riuna-mcp install --help
 `);
 }

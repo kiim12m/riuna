@@ -63,7 +63,7 @@ const NotificationEmail = ({
 NotificationEmail.PreviewProps = {
   title: "Task assigned to you",
   message: "You were assigned to Design account notifications.",
-  actionUrl: "https://kaneo.app",
+  actionUrl: "https://riuna.example",
 } as NotificationEmailProps;
 
 export default NotificationEmail;

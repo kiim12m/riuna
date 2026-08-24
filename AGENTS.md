@@ -24,7 +24,7 @@ This is an operating guide, not a README. These rules are good defaults; explici
 - `packages/libs` — shared typed Hono client and URL helpers.
 - `packages/permissions` — canonical permission vocabulary and built-in roles.
 - `packages/mcp` — published stdio MCP package.
-- `charts/kaneo` — Helm deployment surface.
+- `charts/riuna` — Helm deployment surface.
 - `tests/api` contains API unit tests; `tests/api-integration` contains PostgreSQL-backed integration tests.
 - `docs/` — Riuna's own working documents: [`plan.md`](docs/plan.md) (the phased roadmap and its live status — read it before starting anything substantial), the Phase 0 gap audit, the backup procedure, and the ADRs.
 
@@ -45,7 +45,7 @@ These are additions on top of everything above, not replacements.
 ## Boundaries that must hold
 
 - The API is the authority for authentication and authorization. Hiding an action in the UI is not an authorization check.
-- Workspace-scoped operations must use the existing `@kaneo/permissions` vocabulary and API middleware.
+- Workspace-scoped operations must use the existing `@riuna/permissions` vocabulary and API middleware.
 - Do not expose secrets, credentials, internal fields, or private workspace data through responses, logs, events, WebSockets, or MCP tools.
 - Public API behavior must retain accurate Valibot validation and OpenAPI metadata.
 - Mutations that affect realtime state must consider event publication, WebSocket delivery, and client cache invalidation.
@@ -74,9 +74,9 @@ Not every change touches every surface. Make the decision deliberately rather th
 - Use `requireWorkspacePermission` rather than duplicating role checks.
 - Use `publishEvent()` when a mutation drives activity, notifications, integrations, or realtime updates.
 - Keep web requests in `apps/web/src/fetchers/` and server state in TanStack Query hooks.
-- Use the client from `@kaneo/libs`; do not create a parallel untyped request layer.
+- Use the client from `@riuna/libs`; do not create a parallel untyped request layer.
 - Define database schema in `apps/api/src/database/schema.ts` and relations in `apps/api/src/database/relations.ts`.
-- Generate migrations with `pnpm --filter @kaneo/api db:generate`, inspect the SQL, and include it with the schema change.
+- Generate migrations with `pnpm --filter @riuna/api db:generate`, inspect the SQL, and include it with the schema change.
 - Prefer inferred TypeScript types and `type` over `interface` unless extension or declaration merging is required.
 - Comments should explain constraints or surprising decisions, not narrate code.
 
@@ -114,13 +114,13 @@ What survives in `.github/workflows/`:
 - `docker.yml` → `build-images.yml` — manual dispatch that builds and pushes images to `ghcr.io/<owner>/…` under **your** namespace.
 - `helm-chart.yml` → `helm-validate.yml` — packages and validates the Helm chart.
 
-Do not run the image or chart workflows until their artifact names are renamed: they still publish as `kaneo`, `web`, `api` and `charts/kaneo`.
+Artifact names were renamed off `kaneo` in the internal-renaming pass: images publish as `riuna`, `web`, `api` and the chart as `charts/riuna`. Still confirm `ghcr.io/<owner>/…` resolves to a real registry namespace before running these workflows for the first time.
 
 Conventional Commits are still enforced by commitlint on `commit-msg`. Nothing bumps a version automatically any more, so the convention now buys readable history rather than a release.
 
 `scripts/release/apply-version.mjs` is kept because `build-images.yml` stamps versions with it. Version-carrying files are listed inside it; add new ones there rather than in a workflow step.
 
-The root `package.json` still reads `2.22.0`, the Kaneo version Riuna forked from. Deciding whether to keep that lineage or reset to `0.1.0` is pending.
+The root `package.json` and `charts/riuna/Chart.yaml` read `0.1.0`: Riuna resets versioning independently of the Kaneo lineage it forked from (`2.22.0`).
 
 ## Glossary
 

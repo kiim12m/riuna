@@ -1,14 +1,14 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Kaneo API",
-    "description": "Kaneo Project Management API - Manage projects, tasks, labels, and more",
+    "title": "Riuna API",
+    "description": "Riuna Project Management API - Manage projects, tasks, labels, and more",
     "version": "1.0.0"
   },
   "servers": [
     {
       "url": "http://localhost:1337/api",
-      "description": "Kaneo API Server"
+      "description": "Riuna API Server"
     }
   ],
   "components": {
@@ -512,7 +512,7 @@
         "security": [],
         "responses": {
           "302": {
-            "description": "Redirect to the Kaneo consent page"
+            "description": "Redirect to the Riuna consent page"
           },
           "400": {
             "description": "Invalid authorization request",

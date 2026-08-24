@@ -31,7 +31,7 @@ describe("WorkspaceInvitationEmail default copy", () => {
         workspaceName: "Acme Inc",
         inviterName: "John Doe",
         inviterEmail: "john@acme.com",
-        invitationLink: "https://kaneo.app/invite/abc123",
+        invitationLink: "https://riuna.example/invite/abc123",
         to: "invitee@example.com",
       }),
     );
@@ -46,7 +46,7 @@ describe("WorkspaceInvitationEmail default copy", () => {
         workspaceName: "Acme Inc",
         inviterName: "John Doe",
         inviterEmail: "john@acme.com",
-        invitationLink: "https://kaneo.app/invite/abc123",
+        invitationLink: "https://riuna.example/invite/abc123",
         to: "invitee@example.com",
       }),
     );
@@ -55,7 +55,7 @@ describe("WorkspaceInvitationEmail default copy", () => {
         workspaceName: "Acme Inc",
         inviterName: "John Doe",
         inviterEmail: "john@acme.com",
-        invitationLink: "https://kaneo.app/invite/abc123",
+        invitationLink: "https://riuna.example/invite/abc123",
         to: "invitee@example.com",
         copy: enUS.invitations.email,
       }),

@@ -1,21 +1,21 @@
-# Kaneo Service
+# Riuna Service
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "kaneo.fullname" . }}-kaneo
+  name: {{ include "riuna.fullname" . }}-riuna
   labels:
-    {{- include "kaneo.labels" . | nindent 4 }}
-    app.kubernetes.io/component: kaneo
+    {{- include "riuna.labels" . | nindent 4 }}
+    app.kubernetes.io/component: riuna
 spec:
-  type: {{ .Values.kaneo.service.type }}
+  type: {{ .Values.riuna.service.type }}
   ports:
-    - port: {{ .Values.kaneo.service.port }}
-      targetPort: kaneo
+    - port: {{ .Values.riuna.service.port }}
+      targetPort: riuna
       protocol: TCP
       name: http
   selector:
-    {{- include "kaneo.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: kaneo
+    {{- include "riuna.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: riuna
 
 {{- if .Values.postgresql.enabled }}
 ---
@@ -23,9 +23,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "kaneo.fullname" . }}-postgresql
+  name: {{ include "riuna.fullname" . }}-postgresql
   labels:
-    {{- include "kaneo.labels" . | nindent 4 }}
+    {{- include "riuna.labels" . | nindent 4 }}
     app.kubernetes.io/component: postgresql
 spec:
   type: {{ .Values.postgresql.service.type }}
@@ -35,6 +35,6 @@ spec:
       protocol: TCP
       name: postgresql
   selector:
-    {{- include "kaneo.selectorLabels" . | nindent 4 }}
+    {{- include "riuna.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: postgresql
 {{- end }}

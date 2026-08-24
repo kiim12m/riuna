@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { KaneoClient } from "./kaneo.js";
 import { migrate } from "./migrate.js";
 import type { BoardBundle, PlankaClient } from "./planka.js";
+import type { RiunaClient } from "./riuna.js";
 
 type Call = { method: string; args: unknown[] };
 
-function fakeKaneo(calls: Call[]) {
+function fakeRiuna(calls: Call[]) {
   let taskCounter = 0;
   const record = (method: string, ...args: unknown[]) => {
     calls.push({ method, args });
@@ -60,7 +60,7 @@ function fakeKaneo(calls: Call[]) {
       record("createComment", taskId, content, externalUserName);
       return {};
     },
-  } as unknown as KaneoClient;
+  } as unknown as RiunaClient;
 }
 
 function fakePlanka(bundle: BoardBundle, comments: unknown[] = []) {
@@ -132,11 +132,11 @@ function bundleWith(overrides: Partial<BoardBundle["included"]>): BoardBundle {
 const target = { project, board, boardCountInProject: 1 };
 
 describe("migrate (dry run)", () => {
-  it("reports counts without calling Kaneo", async () => {
+  it("reports counts without calling Riuna", async () => {
     const calls: Call[] = [];
     const [report] = await migrate({
       planka: fakePlanka(bundleWith({})),
-      kaneo: fakeKaneo(calls),
+      riuna: fakeRiuna(calls),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: true,
@@ -156,7 +156,7 @@ describe("migrate (dry run)", () => {
 
     const [report] = await migrate({
       planka: fakePlanka(bundle),
-      kaneo: fakeKaneo([]),
+      riuna: fakeRiuna([]),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: true,
@@ -168,11 +168,11 @@ describe("migrate (dry run)", () => {
 });
 
 describe("migrate (write)", () => {
-  it("removes Kaneo's seeded columns before creating the PLANKA ones", async () => {
+  it("removes Riuna's seeded columns before creating the PLANKA ones", async () => {
     const calls: Call[] = [];
     await migrate({
       planka: fakePlanka(bundleWith({})),
-      kaneo: fakeKaneo(calls),
+      riuna: fakeRiuna(calls),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: false,
@@ -199,7 +199,7 @@ describe("migrate (write)", () => {
     const calls: Call[] = [];
     const [report] = await migrate({
       planka: fakePlanka(bundleWith({})),
-      kaneo: fakeKaneo(calls),
+      riuna: fakeRiuna(calls),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: false,
@@ -227,7 +227,7 @@ describe("migrate (write)", () => {
           cardLabels: [{ cardId: "card1", labelId: "lab1" }],
         }),
       ),
-      kaneo: fakeKaneo(calls),
+      riuna: fakeRiuna(calls),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: false,
@@ -260,7 +260,7 @@ describe("migrate (write)", () => {
           ],
         }),
       ),
-      kaneo: fakeKaneo(calls),
+      riuna: fakeRiuna(calls),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: false,
@@ -289,7 +289,7 @@ describe("migrate (write)", () => {
           ],
         }),
       ),
-      kaneo: fakeKaneo(calls),
+      riuna: fakeRiuna(calls),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: false,
@@ -319,7 +319,7 @@ describe("migrate (write)", () => {
 
     await migrate({
       planka: fakePlanka(bundle),
-      kaneo: fakeKaneo(calls),
+      riuna: fakeRiuna(calls),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: false,
@@ -344,7 +344,7 @@ describe("migrate (write)", () => {
           createdAt: null,
         },
       ]),
-      kaneo: fakeKaneo(calls),
+      riuna: fakeRiuna(calls),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: false,
@@ -366,7 +366,7 @@ describe("migrate (write)", () => {
 
     const reports = await migrate({
       planka: failing,
-      kaneo: fakeKaneo([]),
+      riuna: fakeRiuna([]),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: false,
@@ -386,7 +386,7 @@ describe("migrate (write)", () => {
           users: [{ id: "pu1", email: null, name: "Hidden", username: null }],
         }),
       ),
-      kaneo: fakeKaneo(calls),
+      riuna: fakeRiuna(calls),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: false,
@@ -413,7 +413,7 @@ describe("migrate (write)", () => {
           ],
         }),
       ),
-      kaneo: fakeKaneo(calls),
+      riuna: fakeRiuna(calls),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: false,
@@ -453,7 +453,7 @@ describe("migrate (write)", () => {
 
     const [report] = await migrate({
       planka: fakePlanka(bundle),
-      kaneo: fakeKaneo(calls),
+      riuna: fakeRiuna(calls),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: false,
@@ -492,7 +492,7 @@ describe("migrate (write)", () => {
           createdAt: "2026-03-04T10:00:00.000Z",
         },
       ]),
-      kaneo: fakeKaneo(calls),
+      riuna: fakeRiuna(calls),
       workspaceId: "ws_1",
       targets: [target],
       dryRun: false,

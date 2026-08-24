@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Run twice per release: once on the uncommitted tree so the images self-report
-// the right version, once by semantic-release to produce the release commit.
+// Stamps a version into the uncommitted tree before build-images.yml builds
+// images, so they self-report the right version. Add new version-carrying
+// files here rather than in a workflow step.
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -40,7 +41,7 @@ rewrite(
 );
 
 rewrite(
-  "charts/kaneo/Chart.yaml",
+  "charts/riuna/Chart.yaml",
   (source) =>
     source
       .replace(/^version:.*$/m, `version: ${version}`)

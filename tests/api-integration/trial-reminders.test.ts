@@ -12,7 +12,7 @@ import {
 
 const sendTrialReminderEmail = vi.fn();
 
-vi.mock("@kaneo/email", () => ({
+vi.mock("@riuna/email", () => ({
   isSmtpConfigured: () => true,
   sendTrialReminderEmail: (...args: unknown[]) =>
     sendTrialReminderEmail(...args),
@@ -28,11 +28,11 @@ const { createWorkspaceMember } = await import("./helpers/fixtures");
 const DAY = 24 * 60 * 60 * 1000;
 
 const CLOUD_ENV = {
-  KANEO_CLOUD: "true",
+  RIUNA_CLOUD: "true",
   CREEM_API_KEY: "creem_test_dummy",
   CREEM_WEBHOOK_SECRET: "whsec_dummy",
   SMTP_HOST: "smtp.example.com",
-  SMTP_FROM: "kaneo@example.com",
+  SMTP_FROM: "riuna@example.com",
   BILLING_REMINDER_MAX_PER_RUN: "2",
 };
 const saved: Record<string, string | undefined> = {};

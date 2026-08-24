@@ -1,7 +1,7 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://kaneo.app/i18n/schema.json",
-	"title": "Kaneo locale schema",
+	"$id": "urn:riuna:i18n-schema",
+	"title": "Riuna locale schema",
 	"type": "object",
 	"additionalProperties": false,
 	"properties": {
@@ -301,7 +301,7 @@
 							"type": "object",
 							"additionalProperties": false,
 							"properties": {
-								"breadcrumbKaneo": {
+								"breadcrumbAppName": {
 									"type": "string"
 								},
 								"title": {
@@ -327,7 +327,7 @@
 								}
 							},
 							"required": [
-								"breadcrumbKaneo",
+								"breadcrumbAppName",
 								"title",
 								"description",
 								"namePlaceholder",

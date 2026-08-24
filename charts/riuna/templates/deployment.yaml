@@ -1,0 +1,111 @@
+{{- $corsOrigins := .Values.riuna.env.corsOrigins -}}
+{{- $corsOriginsValue := "" -}}
+{{- if kindIs "slice" $corsOrigins -}}
+  {{- $corsOriginsValue = join "," $corsOrigins -}}
+{{- else if $corsOrigins -}}
+  {{- $corsOriginsValue = $corsOrigins -}}
+{{- else if .Values.riuna.env.clientUrl -}}
+  {{- $corsOriginsValue = .Values.riuna.env.clientUrl -}}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "riuna.fullname" . }}
+  labels:
+    {{- include "riuna.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "riuna.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "riuna.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: riuna
+    spec:
+      serviceAccountName: {{ include "riuna.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: riuna
+          securityContext:
+            {{- toYaml .Values.riuna.securityContext | nindent 12 }}
+          image: "{{ .Values.riuna.image.repository }}:{{ .Values.riuna.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.riuna.image.pullPolicy }}
+          ports:
+            - name: riuna
+              containerPort: {{ .Values.riuna.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: RIUNA_CLIENT_URL
+              value: "{{ .Values.riuna.env.clientUrl }}"
+            - name: CORS_ORIGINS
+              value: {{ $corsOriginsValue | quote }}
+            - name: AUTH_SECRET
+              {{- if .Values.riuna.env.existingSecret.enabled }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.riuna.env.existingSecret.name }}
+                  key: {{ .Values.riuna.env.existingSecret.key }}
+              {{- else }}
+              value: {{ .Values.riuna.env.authSecret | quote }}
+              {{- end }}
+            {{- if and (not .Values.riuna.env.database.external.enabled) .Values.postgresql.auth.existingSecret }}
+            - name: RIUNA_POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgresql.auth.existingSecret }}
+                  key: {{ .Values.postgresql.auth.secretKeys.userPasswordKey }}
+            {{- end }}
+            - name: DATABASE_URL
+              {{- if .Values.riuna.env.database.external.enabled }}
+              {{- if .Values.riuna.env.database.external.existingSecret.enabled }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.riuna.env.database.external.existingSecret.name }}
+                  key: {{ .Values.riuna.env.database.external.existingSecret.passwordKey }}
+              {{- else }}
+              value: "postgresql://{{ include "riuna.urlencodeUserinfo" .Values.riuna.env.database.external.username }}:{{ include "riuna.urlencodeUserinfo" .Values.riuna.env.database.external.password }}@{{ .Values.riuna.env.database.external.host }}:{{ .Values.riuna.env.database.external.port }}/{{ .Values.riuna.env.database.external.database }}"
+              {{- end }}
+              {{- else }}
+              {{- if .Values.postgresql.auth.existingSecret }}
+              value: "postgresql://{{ include "riuna.urlencodeUserinfo" .Values.postgresql.auth.username }}:$(RIUNA_POSTGRES_PASSWORD)@{{ include "riuna.fullname" . }}-postgresql:{{ .Values.postgresql.service.port }}/{{ .Values.postgresql.auth.database }}"
+              {{- else }}
+              value: "postgresql://{{ include "riuna.urlencodeUserinfo" .Values.postgresql.auth.username }}:{{ include "riuna.urlencodeUserinfo" .Values.postgresql.auth.password }}@{{ include "riuna.fullname" . }}-postgresql:{{ .Values.postgresql.service.port }}/{{ .Values.postgresql.auth.database }}"
+              {{- end }}
+              {{- end }}
+            - name: DISABLE_REGISTRATION
+              value: {{ .Values.riuna.env.disableRegistration | quote }}
+            - name: DISABLE_PASSWORD_REGISTRATION
+              value: {{ .Values.riuna.env.disablePasswordRegistration | quote }}
+            - name: DISABLE_EMAIL_OTP_SIGN_IN
+              value: {{ .Values.riuna.env.disableEmailOtpSignIn | quote }}
+            {{- with .Values.riuna.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          livenessProbe:
+            {{- toYaml .Values.riuna.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.riuna.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.riuna.resources | nindent 12 }}
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
