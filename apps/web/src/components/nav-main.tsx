@@ -72,7 +72,7 @@ export function NavMain() {
                     tooltip={item.title}
                     isActive={item.isActive}
                     size="default"
-                    className="h-8 ps-3.5 text-sm hover:bg-transparent hover:text-sidebar-accent-foreground active:bg-transparent"
+                    className="h-8 ps-3.5 text-sm hover:bg-sidebar-accent/60"
                     onClick={() => navigate({ to: item.url })}
                   >
                     <span>{item.title}</span>
