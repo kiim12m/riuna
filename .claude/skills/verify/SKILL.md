@@ -7,7 +7,9 @@ description: Build/launch/drive recipe for verifying Riuna changes end-to-end on
 
 ## Launch
 
-- `pnpm dev` starts API (1337) and web (5173). Check `lsof -nP -iTCP:1337 -sTCP:LISTEN` first; the user often already has both running.
+- `pnpm dev` starts API (1337) and web (5173) — but only from a real terminal. Check for a listener first; the user often already has both running. On Windows: `netstat -ano | grep LISTENING | grep ":1337 "`. On Unix: `lsof -nP -iTCP:1337 -sTCP:LISTEN`.
+- **Headless, `pnpm dev` does not work.** With stdout redirected to a file and more than one persistent task running, the API never opens its port: turbo prints the `tsx watch` banner and nothing else — no error, no crash, the process just sits there. It is not a repo bug; it reproduces with api+web, api+mcp and api+email alike, and never with a single task. Launch the two you need separately instead: `pnpm --filter @riuna/api dev` and `pnpm --filter @riuna/web dev`. The API takes ~12s to listen (migrations run first), the web ~3s.
+- `pnpm dev` runs four dev tasks, not two: `api`, `web`, `mcp` and `email`.
 - API is `tsx watch`: it hot-restarts on any imported .ts change, but NOT on `apps/api/drizzle/*.sql` changes (manual restart needed after editing migrations).
 - Migrations auto-run on API startup; a failed migration exits the process (port goes dead).
 
