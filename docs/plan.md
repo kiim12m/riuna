@@ -10,7 +10,7 @@
 
 | Fase | Semanas | Estado |
 |---|---|---|
-| 0 — Fork, marca y auditoría | 2 | **Cerrada** con pendientes menores (ver abajo) |
+| 0 — Fork, marca y auditoría | 2 | **Cerrada** — dos decisiones aplazadas (ver abajo) |
 | 1 — Uso real y asignación por equipos | 2 | **Casi cerrada** — falta filtrar por equipo |
 | 2 — Árbol de tareas y épicas | 4 | Pendiente |
 | 3 — Campos personalizados | 4 | Pendiente |
@@ -46,15 +46,18 @@ gestor de tareas básico y nada propio.
 - ~~`package.json` en la versión `2.22.0` heredada de Kaneo.~~ Cerrado: se
   reinicia en `0.1.0`; la trazabilidad con Kaneo vive en `NOTICE` y en la
   [ADR 001](adr/001-fork-duro-de-kaneo.md), no en el número de versión.
-- `sentry/alerts.json` y `sentry/dashboards.json` siguen apuntando a la
-  organización y a los proyectos Sentry `kaneo-api` / `kaneo-web`: pendiente
-  decidir si esa organización Sentry se renombra o si se crea una nueva.
-- `SECURITY.md`, los enlaces de comunidad de `CONTRIBUTING.md` (Discord,
-  issues) y los enlaces a documentación de `ENVIRONMENT_SETUP.md` siguen
-  apuntando al Kaneo real (repositorio, Discord, email del mantenedor): no se
-  han tocado a propósito porque Riuna no tiene todavía repositorio público,
-  Discord ni proceso de disclosure propios — inventar uno sería peor que
-  dejarlo así. Pendiente decidir si Riuna necesita esa infraestructura.
+- ~~Sentry apuntando a `kaneo-api` / `kaneo-web`.~~ Cerrado: la configuración
+  como código nombra ya la organización `riuna` y los proyectos `riuna-api` /
+  `riuna-web`, **preparada pero inactiva** — `SENTRY_DSN` está vacío y ni la
+  API ni el web inicializan Sentry sin DSN. Activarlo es crear la organización,
+  importar `sentry/*.json` y rellenar el DSN.
+- ~~Enlaces de comunidad apuntando al Kaneo real.~~ Cerrado sin inventar nada:
+  los enlaces de repositorio, issues y aviso privado de seguridad van al
+  repositorio propio; el correo del mantenedor de Kaneo se ha retirado de
+  `SECURITY.md` y el Discord de Kaneo de `CONTRIBUTING.md`. Riuna **no tiene
+  todavía** buzón de seguridad, Discord ni web de documentación: los
+  documentos lo dicen en vez de fingir que existen, y los enlaces a
+  `kaneo.app/docs` se han sustituido por `.env.sample` y `docs/`.
 - Código de facturación heredado: apagado por configuración, no eliminado.
 - Catalán: 207 de 1.725 claves traducidas de verdad (12%); el resto es relleno
   en español. Lo gordo está en `settings`, `tasks` y `auth`.
