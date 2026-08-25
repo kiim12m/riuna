@@ -61,8 +61,13 @@ gestor de tareas básico y nada propio.
 - Código de facturación heredado: apagado por configuración, no eliminado.
 - Catalán: 207 de 1.725 claves traducidas de verdad (12%); el resto es relleno
   en español. Lo gordo está en `settings`, `tasks` y `auth`.
-- `tests/api/mcp-internal-api-url.test.ts` falla en la ejecución completa y
-  pasa en aislamiento: un `fetch` global que otro test no limpia.
+- ~~`tests/api/mcp-internal-api-url.test.ts` falla en la ejecución completa.~~
+  Cerrado: la causa no era un test que se olvidara de limpiar, sino dos formas
+  incompatibles de sustituir el `fetch` global —`verify-turnstile.test.ts`
+  asignaba y restauraba a mano, y el del MCP usa `vi.stubGlobal`—, de modo que
+  el que restauraba último dejaba puesto el doble del otro. Ambos usan ya
+  `vi.stubGlobal` / `vi.unstubAllGlobals`. Nota: al arreglarlo ya no se
+  reproducía, así que el fallo estaba dormido, no resuelto.
 
 **Fase 1**:
 - **Filtrado y agrupación por equipo en las vistas** — lo único que impide
