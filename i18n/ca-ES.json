@@ -3,6 +3,7 @@
 		"appName": "Riuna",
 		"actions": {
 			"cancel": "Cancel·la",
+			"save": "Desa",
 			"close": "Tanca",
 			"clearAll": "Neteja-ho tot",
 			"delete": "Elimina",

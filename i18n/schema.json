@@ -19,6 +19,9 @@
 						"cancel": {
 							"type": "string"
 						},
+						"save": {
+							"type": "string"
+						},
 						"close": {
 							"type": "string"
 						},
@@ -49,6 +52,7 @@
 					},
 					"required": [
 						"cancel",
+						"save",
 						"close",
 						"clearAll",
 						"delete",

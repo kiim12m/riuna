@@ -3,6 +3,7 @@
 		"appName": "Riuna",
 		"actions": {
 			"cancel": "Cancelar",
+			"save": "Guardar",
 			"close": "Cerrar",
 			"clearAll": "Limpiar todo",
 			"delete": "Borrar",
