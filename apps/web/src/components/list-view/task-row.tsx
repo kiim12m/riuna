@@ -31,6 +31,7 @@ import { useDeleteTask } from "@/hooks/mutations/task/use-delete-task";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { cn } from "@/lib/cn";
+import { getColumnIcon } from "@/lib/column";
 import {
   dueDateStatusColors,
   getDueDateStatus,
@@ -51,9 +52,17 @@ import { ContextMenu, ContextMenuTrigger } from "../ui/context-menu";
 type TaskRowProps = {
   task: Task;
   projectSlug: string;
+  // Solo llega cuando la lista no esta agrupada por estado: entonces la
+  // seccion ya no lo dice y la fila tiene que llevarlo.
+  statusColumn?: {
+    id: string;
+    name: string;
+    isFinal?: boolean | null;
+    icon?: string | null;
+  };
 };
 
-function TaskRow({ task, projectSlug }: TaskRowProps) {
+function TaskRow({ task, projectSlug, statusColumn }: TaskRowProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const {
@@ -334,6 +343,17 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
                 </div>
               </div>
             </div>
+
+            {statusColumn && (
+              <div className="flex items-center gap-1 text-[10px] text-muted-foreground flex-shrink-0 rounded border border-border/60 px-1.5 py-0.5 [&_svg]:h-3 [&_svg]:w-3">
+                {getColumnIcon(
+                  statusColumn.id,
+                  statusColumn.isFinal ?? undefined,
+                  statusColumn.icon,
+                )}
+                <span>{statusColumn.name}</span>
+              </div>
+            )}
 
             {showDueDates && task.dueDate && (
               <div

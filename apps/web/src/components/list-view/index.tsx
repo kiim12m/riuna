@@ -21,14 +21,15 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { produce } from "immer";
-import { Archive, ChevronRight, Flag, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Archive, ChevronRight, Flag, Plus, Users } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { priorityColorsTaskCard } from "@/constants/priority-colors";
 import { useUpdateTask } from "@/hooks/mutations/task/use-update-task";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { cn } from "@/lib/cn";
 import { getColumnIcon } from "@/lib/column";
+import { type GroupByField, groupTasksByTeam } from "@/lib/group-tasks";
 import { toast } from "@/lib/toast";
 import useBulkSelectionStore from "@/store/bulk-selection";
 import useProjectStore from "@/store/project";
@@ -41,10 +42,16 @@ import TaskRow from "./task-row";
 type ListViewProps = {
   project: ProjectWithTasks;
   disableDragDrop?: boolean;
+  groupBy?: GroupByField;
 };
 
-function ListView({ project, disableDragDrop = false }: ListViewProps) {
+function ListView({
+  project,
+  disableDragDrop = false,
+  groupBy = "status",
+}: ListViewProps) {
   const { t } = useTranslation();
+  const isGroupedByTeam = groupBy === "team";
   const { setProject } = useProjectStore();
   const {
     setAvailableTasks,
@@ -57,17 +64,12 @@ function ListView({ project, disableDragDrop = false }: ListViewProps) {
   const navigate = useNavigate();
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [overColumnId, setOverColumnId] = useState<string | null>(null);
+  // Solo guarda las secciones que alguien ha plegado a mano. Lo que no esta
+  // aqui esta abierto, que es lo que hace falta para que una seccion nueva
+  // —otra columna, otro equipo— no aparezca cerrada.
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
-  >(() => {
-    const sections: Record<string, boolean> = {};
-    if (project?.columns) {
-      for (const col of project.columns) {
-        sections[col.id] = true;
-      }
-    }
-    return sections;
-  });
+  >({});
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [activeColumn, setActiveColumn] = useState<string | null>(null);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
@@ -75,14 +77,55 @@ function ListView({ project, disableDragDrop = false }: ListViewProps) {
     ProjectWithTasks["columns"][number] | null
   >(null);
 
+  const isSectionExpanded = useCallback(
+    (sectionId: string) => expandedSections[sectionId] ?? true,
+    [expandedSections],
+  );
+
+  const teamGroups = useMemo(() => {
+    if (!isGroupedByTeam) return [];
+
+    const tasks = (project?.columns ?? []).flatMap((column) => column.tasks);
+    return groupTasksByTeam(tasks, t("tasks:group.noTeam"));
+  }, [isGroupedByTeam, project, t]);
+
+  // Agrupando por equipo la seccion deja de decir el estado, asi que cada fila
+  // lo lleva encima. El endpoint de tareas devuelve la columna con `id` igual
+  // al slug, pero se indexan los dos por si eso deja de ser cierto.
+  const columnsByStatus = useMemo(() => {
+    const byStatus = new Map<string, ProjectWithTasks["columns"][number]>();
+
+    for (const column of project?.columns ?? []) {
+      byStatus.set(column.slug, column);
+      byStatus.set(column.id, column);
+    }
+
+    return byStatus;
+  }, [project]);
+
   useEffect(() => {
+    if (isGroupedByTeam) {
+      setAvailableTasks(
+        teamGroups
+          .filter((group) => isSectionExpanded(group.id))
+          .flatMap((group) => group.tasks.map((task) => task.id)),
+      );
+      return;
+    }
+
     if (project?.columns) {
       const visibleTaskIds = project.columns
-        .filter((column) => expandedSections[column.id])
+        .filter((column) => isSectionExpanded(column.id))
         .flatMap((column) => column.tasks.map((task) => task.id));
       setAvailableTasks(visibleTaskIds);
     }
-  }, [project, expandedSections, setAvailableTasks]);
+  }, [
+    project,
+    setAvailableTasks,
+    isGroupedByTeam,
+    teamGroups,
+    isSectionExpanded,
+  ]);
 
   useEffect(() => {
     clearFocus();
@@ -119,13 +162,17 @@ function ListView({ project, disableDragDrop = false }: ListViewProps) {
     },
   });
 
+  // Arrastrar en esta vista mueve la tarea de estado, y agrupando por equipo
+  // las secciones ya no son estados: no habria a donde soltarla.
+  const dragDropDisabled = disableDragDrop || isGroupedByTeam;
+
   const sensors = useSensors(
     useSensor(MouseSensor, {
-      activationConstraint: { distance: disableDragDrop ? 999999 : 8 },
+      activationConstraint: { distance: dragDropDisabled ? 999999 : 8 },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: disableDragDrop ? 999999 : 200,
+        delay: dragDropDisabled ? 999999 : 200,
         tolerance: 8,
       },
     }),
@@ -310,7 +357,7 @@ function ListView({ project, disableDragDrop = false }: ListViewProps) {
             <ChevronRight
               className={cn(
                 "w-3 h-3 transition-transform",
-                expandedSections[column.id] && "rotate-90",
+                isSectionExpanded(column.id) && "rotate-90",
               )}
             />
             <div className="flex items-center gap-2 h-4">
@@ -350,7 +397,7 @@ function ListView({ project, disableDragDrop = false }: ListViewProps) {
           </div>
         </div>
 
-        {expandedSections[column.id] && (
+        {isSectionExpanded(column.id) && (
           <div
             ref={setNodeRef}
             className="bg-card transition-[translate,opacity] duration-150 ease-out starting:-translate-y-1 starting:opacity-0 motion-reduce:starting:translate-y-0"
@@ -385,6 +432,65 @@ function ListView({ project, disableDragDrop = false }: ListViewProps) {
     );
   }
 
+  // Sin zona de soltar ni archivado: una seccion de equipo no es un estado, y
+  // «archivar todo lo de este equipo» no significa nada.
+  function TeamSection({ group }: { group: (typeof teamGroups)[number] }) {
+    return (
+      <div className="border-b border-border/50 overflow-auto">
+        <div className="flex items-center justify-between py-2 px-4 bg-muted/60 border-b border-border/50">
+          <button
+            type="button"
+            onClick={() => toggleSection(group.id)}
+            className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronRight
+              className={cn(
+                "w-3 h-3 transition-transform",
+                isSectionExpanded(group.id) && "rotate-90",
+              )}
+            />
+            <div className="flex items-center gap-2 h-4">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <div className="flex items-center gap-1">
+                <span className="mt-1 mr-1">{group.name}</span>
+                <span className="text-xs text-muted-foreground mt-0.5">
+                  {group.tasks.length}
+                </span>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {isSectionExpanded(group.id) && (
+          <div className="bg-card transition-[translate,opacity] duration-150 ease-out starting:-translate-y-1 starting:opacity-0 motion-reduce:starting:translate-y-0">
+            <SortableContext
+              items={group.tasks}
+              strategy={verticalListSortingStrategy}
+            >
+              <AnimatePresence initial={false} mode="popLayout">
+                {group.tasks.map((task) => (
+                  <motion.div
+                    key={task.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                  >
+                    <TaskRow
+                      task={task}
+                      projectSlug={project?.slug ?? ""}
+                      statusColumn={columnsByStatus.get(task.status)}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </SortableContext>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (!project?.columns) {
     return null;
   }
@@ -406,9 +512,18 @@ function ListView({ project, disableDragDrop = false }: ListViewProps) {
     >
       <div className="w-full h-full overflow-auto bg-muted/20">
         <div className="divide-y divide-border/50">
-          {project.columns.map((column) => (
-            <ColumnSection key={column.id} column={column} />
-          ))}
+          {isGroupedByTeam
+            ? teamGroups.map((group) => (
+                <TeamSection key={group.id} group={group} />
+              ))
+            : project.columns.map((column) => (
+                <ColumnSection key={column.id} column={column} />
+              ))}
+          {isGroupedByTeam && teamGroups.length === 0 && (
+            <div className="py-6 px-4 text-center text-xs text-muted-foreground">
+              {t("tasks:listView.noTasks")}
+            </div>
+          )}
         </div>
       </div>
 

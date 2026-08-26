@@ -7397,6 +7397,38 @@
 						"fields"
 					]
 				},
+				"group": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"label": {
+							"type": "string"
+						},
+						"by": {
+							"type": "string"
+						},
+						"noTeam": {
+							"type": "string"
+						},
+						"boardHint": {
+							"type": "string"
+						},
+						"fields": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"status": {
+									"type": "string"
+								},
+								"team": {
+									"type": "string"
+								}
+							},
+							"required": ["status", "team"]
+						}
+					},
+					"required": ["label", "by", "noTeam", "boardHint", "fields"]
+				},
 				"boardFilters": {
 					"type": "object",
 					"additionalProperties": false,
@@ -7990,6 +8022,7 @@
 				"popover",
 				"backlog",
 				"sort",
+				"group",
 				"boardFilters",
 				"calendar",
 				"gantt",

@@ -13,6 +13,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import BacklogListView from "@/components/backlog-list-view";
+import GroupControl from "@/components/common/group-control";
 import ProjectLayout from "@/components/common/project-layout";
 import SortControl from "@/components/common/sort-control";
 import PageTitle from "@/components/page-title";
@@ -39,6 +40,7 @@ import useGetTeams from "@/hooks/queries/team/use-get-teams";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { DUE_DATE_FILTER_VALUES } from "@/hooks/use-task-filters";
+import { useTaskGrouping } from "@/hooks/use-task-grouping";
 import { getInitials } from "@/lib/get-initials";
 import { getPriorityLabel } from "@/lib/i18n/domain";
 import { getPriorityIcon } from "@/lib/priority";
@@ -75,6 +77,8 @@ function RouteComponent() {
     field: "position",
     direction: "asc",
   });
+
+  const { groupBy, setGroupBy } = useTaskGrouping(projectId);
 
   const { data: users } = useGetActiveWorkspaceUsers(workspaceId);
   const { data: teams = [] } = useGetTeams({ workspaceId });
@@ -574,6 +578,8 @@ function RouteComponent() {
 
                 <SortControl sort={sort} onSortChange={setSort} />
 
+                <GroupControl groupBy={groupBy} onGroupByChange={setGroupBy} />
+
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     render={
@@ -766,6 +772,7 @@ function RouteComponent() {
             <BacklogListView
               project={sortedProject}
               disableDragDrop={sort.field !== "position"}
+              groupBy={groupBy}
             />
           ) : (
             <div className="flex h-full items-center justify-center">

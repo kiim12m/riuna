@@ -1859,6 +1859,16 @@
 				"number": "Número de tarea"
 			}
 		},
+		"group": {
+			"label": "Agrupar",
+			"by": "Agrupar per",
+			"noTeam": "Sense equip",
+			"boardHint": "El tauler ja agrupa per estat, en columnes",
+			"fields": {
+				"status": "Estat",
+				"team": "Equip"
+			}
+		},
 		"boardFilters": {
 			"filterBy": "Filtrar por",
 			"allStatuses": "Todos los estados",
