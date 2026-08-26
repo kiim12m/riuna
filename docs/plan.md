@@ -130,10 +130,11 @@ gestor de tareas básico y nada propio.
   dos hooks fallan contra el código anterior, comprobado revirtiéndolo.
 - Las tarjetas de tablero y lista muestran solo al responsable principal; la
   lista completa de asignados solo se ve en el detalle.
-- **Falta la ADR de la asignación a equipos y los múltiples asignados.**
+- ~~Falta la ADR de la asignación a equipos y los múltiples asignados.~~
+  Escrita: [ADR 010](adr/010-asignacion-a-equipos-y-multiples-asignados.md).
   Conservar `assignee_id` como responsable principal y repetirlo dentro de
-  `task_assignee` es una decisión estructural, y `AGENTS.md` pide una ADR por
-  cada una. Sin ella, dentro de un año la redundancia parecerá un descuido.
+  `task_assignee` es una decisión estructural, y sin dejarla escrita la
+  redundancia parecería un descuido dentro de un año.
 
 ---
 
