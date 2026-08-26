@@ -11,7 +11,7 @@
 | Fase | Semanas | Estado |
 |---|---|---|
 | 0 — Fork, marca y auditoría | 2 | **Cerrada** — dos decisiones aplazadas (ver abajo) |
-| 1 — Uso real y asignación por equipos | 2 | **Casi cerrada** — falta filtrar por equipo |
+| 1 — Uso real y asignación por equipos | 2 | **Cerrada** — una deuda abierta (ver abajo) |
 | 2 — Árbol de tareas y épicas | 4 | Pendiente |
 | 3 — Campos personalizados | 4 | Pendiente |
 | 4 — Motor de vistas y vista Tabla | 4 | Pendiente |
@@ -59,29 +59,81 @@ gestor de tareas básico y nada propio.
   documentos lo dicen en vez de fingir que existen, y los enlaces a
   `kaneo.app/docs` se han sustituido por `.env.sample` y `docs/`.
 - Código de facturación heredado: apagado por configuración, no eliminado.
-- Catalán: 207 de 1.725 claves traducidas de verdad (12%); el resto es relleno
+- Catalán: 238 de 1.760 claves traducidas de verdad (13,5%); el resto es relleno
   en español. Lo gordo está en `settings`, `tasks` y `auth`.
-- ~~`tests/api/mcp-internal-api-url.test.ts` falla en la ejecución completa.~~
-  Cerrado: la causa no era un test que se olvidara de limpiar, sino dos formas
-  incompatibles de sustituir el `fetch` global —`verify-turnstile.test.ts`
-  asignaba y restauraba a mano, y el del MCP usa `vi.stubGlobal`—, de modo que
-  el que restauraba último dejaba puesto el doble del otro. Ambos usan ya
-  `vi.stubGlobal` / `vi.unstubAllGlobals`. Nota: al arreglarlo ya no se
-  reproducía, así que el fallo estaba dormido, no resuelto.
+- **`tests/api/mcp-internal-api-url.test.ts` vuelve a fallar** — se dio por
+  cerrado unificando cómo se sustituye el `fetch` global (`vi.stubGlobal` /
+  `vi.unstubAllGlobals` en vez de asignar a mano), y con eso dejó de
+  reproducirse; ya se avisó entonces de que el fallo estaba dormido, no
+  resuelto. Sigue dormido: `pnpm test` desde la raíz lo despierta —dos de sus
+  tres casos fallan con «expected vi.fn() to be called once, but got 2 times»—
+  y `pnpm --filter @riuna/api test` a solas pasa. Reproducido el 26-08-2026
+  sobre `main` limpio, así que no es de ninguna rama. La pista es que el doble
+  de `fetch` recibe una llamada de más, no que se pierda: algo de un caso
+  anterior sigue vivo cuando el siguiente instala el suyo, y solo se nota
+  cuando turbo corre todos los paquetes a la vez y el reloj se estira.
 
 **Fase 1**:
-- **Agrupación por equipo en las vistas** — el filtrado ya está; agrupar no,
-  y no es un añadido pequeño: hoy no existe ningún «agrupar por» en toda la
-  aplicación, y el tablero agrupa por estado de forma estructural, en columnas.
-  Antes de código hay que decidir si en el tablero sustituye a las columnas.
+- ~~Agrupación por equipo en las vistas.~~ Hecho: «agrupar por» cambia las
+  secciones de la vista Lista y reparte el backlog en bandas de equipo. La
+  decisión que faltaba —qué hace el tablero— es que **no agrupa**: sus columnas
+  ya son la agrupación, y las calles horizontales son una fase pequeña, no un
+  remate de esta. Razonado en la [ADR 009](adr/009-agrupacion-por-equipo.md).
+- **Calendario y Gantt no filtran ni agrupan por nada** — ni por equipo ni por
+  lo demás. Filtrar y agrupar llega hoy a tablero, lista y backlog. Dejarlos
+  para la Fase 4, que es donde las cuatro vistas heredadas se conectan al mismo
+  motor en vez de cablearse una a una, es la decisión tomada, no un olvido.
 - ~~Cuentas locales para poder probar con varias personas.~~ Hecho: usuario y
   contraseña sin correo, creadas por el admin de instancia desde la página de
   miembros. Nació de aquí —probar el filtrado por equipo exige más de una
   persona en el espacio— y quedó como función de producto, ver
   [ADR 008](adr/008-cuentas-locales.md).
-- Tests de integración de los controladores nuevos.
+- ~~Tests de integración de los controladores nuevos.~~ Hecho: `task-team`,
+  `task-assignees` y `local-account` en `tests/api-integration`, 26 casos.
+  Las cuentas locales ya tenían pruebas unitarias con la base simulada; lo que
+  faltaba —y es lo que estas añaden— era la base de verdad: el índice único que
+  respalda el 409 del nombre de usuario, la fila de pertenencia al espacio y una
+  sesión auténtica, porque `auth.api.createUser` no acepta una simulada y por
+  eso estas pruebas se registran de verdad contra la API. Equipos y asignados
+  múltiples no tenían nada.
+
+  **Encontraron dos cosas al primer intento**, que es exactamente para lo que
+  estaban:
+
+  - `task_assignee` **no estaba en el registro de esquema** de
+    `database/index.ts`, aunque `relations.ts` declarase `assignees:
+    many(taskAssigneeTable)`. Los controladores importan la tabla directamente
+    y por eso nada fallaba en producción, pero `db.query.taskAssigneeTable` no
+    existía y la relación `task → assignees` no se podía recorrer. Arreglado
+    registrando tabla y relaciones.
+  - **Asignar exige `task:assign`, que solo tienen `admin` y `owner`.** Un
+    miembro puede crear y editar tareas, pero no repartirlas: ni a una persona
+    ni a un departamento. Viene de los roles heredados, no es de esta fase, y
+    hoy queda documentado en las pruebas. Si el reparto por departamento tiene
+    que estar al alcance de cualquier miembro, es una decisión de producto que
+    se toma cambiando `packages/permissions`.
+- ~~Persistencia de las preferencias de lectura.~~ Arreglado al repasar la
+  agrupación en el navegador, que es donde se vio. Tanto `use-task-grouping`
+  (nuevo) como `use-board-sort` (heredado de Kaneo, tocado solo por el
+  renombrado) escribían en `localStorage` desde un efecto que dependía del
+  valor. Ese efecto se dispara en el primer render con el valor inicial y pisa
+  lo guardado antes de que el de lectura llegue a aplicarse; en `StrictMode`,
+  que es como corre la aplicación, la segunda pasada de efectos lee ya el valor
+  pisado y lo vuelve permanente. Elegías «Equipo» o «Prioridad», recargabas, y
+  volvía al valor por defecto. Los dos leen ahora en la inicialización perezosa
+  y escriben al cambiar, no desde un efecto.
+
+  Lo aleccionador es por qué no saltó antes: `use-board-sort` **ya tenía
+  pruebas**, y pasaban. Comprobaban el valor en memoria, que acaba siendo el
+  correcto, en vez de comprobar que lo guardado sobrevive; y montaban sin
+  `StrictMode`, sin el cual el fallo no se reproduce. Las guardas nuevas de los
+  dos hooks fallan contra el código anterior, comprobado revirtiéndolo.
 - Las tarjetas de tablero y lista muestran solo al responsable principal; la
   lista completa de asignados solo se ve en el detalle.
+- **Falta la ADR de la asignación a equipos y los múltiples asignados.**
+  Conservar `assignee_id` como responsable principal y repetirlo dentro de
+  `task_assignee` es una decisión estructural, y `AGENTS.md` pide una ADR por
+  cada una. Sin ella, dentro de un año la redundancia parecerá un descuido.
 
 ---
 
@@ -192,14 +244,15 @@ la auditoría de huecos que afina el resto del plan con hechos.
 **Hecho cuando:** Riuna corre con su marca, en español, sin rastro de
 facturación, y estás dentro creando tareas reales. ✔
 
-### Fase 1 — Uso real y asignación por equipos · **casi cerrada**
+### Fase 1 — Uso real y asignación por equipos · **cerrada**
 **Dogfooding desde aquí: el desarrollo de Riuna se gestiona dentro de Riuna.** ✔
 Asignación a un **equipo** y **múltiples asignados** (`task_assignee` aditiva,
 sin romper el `userId` existente) ✔, con filtrado y agrupación por equipo en
-las vistas que ya hay ✗.
+tablero, lista y backlog ✔ —el tablero filtra pero no agrupa, ver
+[ADR 009](adr/009-agrupacion-por-equipo.md)—.
 **Copias automáticas con restauración probada** ✔.
 **Hecho cuando:** asignas una tarea a un departamento entero, la ves filtrada
-por equipo, y restauras un backup sin perder nada.
+por equipo, y restauras un backup sin perder nada. ✔
 
 ### Fase 2 — Árbol de tareas y épicas (≈4 semanas)
 *Va antes del motor de vistas a propósito: si el motor nace sin saber de
@@ -367,6 +420,6 @@ destructiva.
 
 ## Siguiente paso
 
-Cerrar la Fase 1 con el **filtrado y la agrupación por equipo** en las vistas
-existentes, y escribir los tests de integración de los controladores de la
-fase. Después, Fase 2: el árbol de tareas.
+Fase 2: el árbol de tareas. `parent_id`, `path` y `depth` en `task`, con la
+migración que convierte en punteros de padre las relaciones `subtask` que ya
+existen.
