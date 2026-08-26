@@ -195,7 +195,9 @@
 			"emailPlaceholder": "yo@ejemplo.com",
 			"passwordPlaceholder": "••••••••",
 			"showPassword": "Mostrar contraseña",
-			"hidePassword": "Ocultar contraseña"
+			"hidePassword": "Ocultar contraseña",
+			"identifier": "Correo o usuario",
+			"identifierPlaceholder": "yo@ejemplo.com o miusuario"
 		},
 		"checkEmail": {
 			"pageTitle": "Verifica tu email",
@@ -2116,7 +2118,9 @@
 		"members": {
 			"pageTitle": "Miembros",
 			"inviteMember": "Invitar miembro",
-			"you": "Tú"
+			"you": "Tú",
+			"createLocalUser": "Crear cuenta local",
+			"localAccount": "Local"
 		},
 		"invitations": {
 			"linkLabel": "Enlace de invitación",
@@ -2162,6 +2166,19 @@
 			"cancelInviteError": "Error al cancelar invitación",
 			"roleUpdateSuccess": "Rol actualizado",
 			"roleUpdateError": "Error al actualizar el rol"
+		},
+		"localUserModal": {
+			"title": "Crear cuenta local",
+			"description": "Una cuenta con usuario y contraseña, sin correo. No recibe notificaciones por correo ni puede restablecer la contraseña por su cuenta: la cambia el administrador.",
+			"usernameLabel": "Usuario",
+			"usernamePlaceholder": "ana.torres",
+			"displayNameLabel": "Nombre visible",
+			"displayNamePlaceholder": "Ana Torres",
+			"passwordLabel": "Contraseña",
+			"roleLabel": "Rol",
+			"submit": "Crear cuenta",
+			"created": "Cuenta local {{username}} creada",
+			"error": "No se ha podido crear la cuenta local"
 		}
 	},
 	"publicProject": {

@@ -774,6 +774,12 @@
 						},
 						"hidePassword": {
 							"type": "string"
+						},
+						"identifier": {
+							"type": "string"
+						},
+						"identifierPlaceholder": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -783,7 +789,9 @@
 						"emailPlaceholder",
 						"passwordPlaceholder",
 						"showPassword",
-						"hidePassword"
+						"hidePassword",
+						"identifier",
+						"identifierPlaceholder"
 					]
 				},
 				"checkEmail": {
@@ -8367,9 +8375,21 @@
 						},
 						"you": {
 							"type": "string"
+						},
+						"createLocalUser": {
+							"type": "string"
+						},
+						"localAccount": {
+							"type": "string"
 						}
 					},
-					"required": ["pageTitle", "inviteMember", "you"]
+					"required": [
+						"pageTitle",
+						"inviteMember",
+						"you",
+						"createLocalUser",
+						"localAccount"
+					]
 				},
 				"invitations": {
 					"type": "object",
@@ -8546,6 +8566,58 @@
 						"roleUpdateSuccess",
 						"roleUpdateError"
 					]
+				},
+				"localUserModal": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"usernameLabel": {
+							"type": "string"
+						},
+						"usernamePlaceholder": {
+							"type": "string"
+						},
+						"displayNameLabel": {
+							"type": "string"
+						},
+						"displayNamePlaceholder": {
+							"type": "string"
+						},
+						"passwordLabel": {
+							"type": "string"
+						},
+						"roleLabel": {
+							"type": "string"
+						},
+						"submit": {
+							"type": "string"
+						},
+						"created": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"usernameLabel",
+						"usernamePlaceholder",
+						"displayNameLabel",
+						"displayNamePlaceholder",
+						"passwordLabel",
+						"roleLabel",
+						"submit",
+						"created",
+						"error"
+					]
 				}
 			},
 			"required": [
@@ -8553,7 +8625,8 @@
 				"members",
 				"invitations",
 				"inviteModal",
-				"membersTable"
+				"membersTable",
+				"localUserModal"
 			]
 		},
 		"publicProject": {

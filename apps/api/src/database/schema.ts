@@ -37,6 +37,12 @@ export const userTable = pgTable("user", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
   isAnonymous: boolean("is_anonymous").default(false),
+  // Cuentas locales: usuario y contrasena sin correo real. `username` y
+  // `displayUsername` los exige el plugin homonimo de Better Auth;
+  // `isLocalAccount` es propio y marca a quien no tiene correo al que escribir.
+  username: text("username").unique(),
+  displayUsername: text("display_username"),
+  isLocalAccount: boolean("is_local_account").default(false),
   role: text("role"),
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),

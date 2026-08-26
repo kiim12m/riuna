@@ -2,6 +2,7 @@ import { isSmtpConfigured } from "@riuna/email";
 import { config } from "dotenv-mono";
 import { isBillingEnabled } from "../billing/config";
 import { isGithubSsoConfigured } from "./github-sso-env";
+import { getLocalAccountDomain } from "./local-account";
 
 config();
 
@@ -29,6 +30,9 @@ function getSettings() {
     customOAuthAutoLogin: process.env.CUSTOM_OAUTH_AUTO_LOGIN === "true",
     customOAuthLogoutUrl: process.env.CUSTOM_OAUTH_LOGOUT_URL || null,
     billingEnabled: isBillingEnabled(),
+    // El cliente no puede deducirlo: lo necesita para saber que miembros son
+    // cuentas locales, porque su correo es sintetico y no se les escribe.
+    localAccountDomain: getLocalAccountDomain(),
   };
 }
 

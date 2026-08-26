@@ -56,6 +56,12 @@ vi.mock("@/hooks/queries/workspace/use-workspace-roles", () => ({
 
 const canInviteUsers = vi.fn(() => true);
 
+// La tabla marca las cuentas locales, y para eso pide el dominio reservado a
+// la configuracion de instancia. Aqui se sirve fijo: sin react-query alrededor.
+vi.mock("@/hooks/queries/config/use-get-config", () => ({
+  default: () => ({ data: { localAccountDomain: "local.riuna" } }),
+}));
+
 vi.mock("@/hooks/use-workspace-permission", () => ({
   useWorkspacePermission: () => ({
     canManageTeam: () => true,

@@ -70,8 +70,15 @@ gestor de tareas básico y nada propio.
   reproducía, así que el fallo estaba dormido, no resuelto.
 
 **Fase 1**:
-- **Filtrado y agrupación por equipo en las vistas** — lo único que impide
-  darla por cerrada.
+- **Agrupación por equipo en las vistas** — el filtrado ya está; agrupar no,
+  y no es un añadido pequeño: hoy no existe ningún «agrupar por» en toda la
+  aplicación, y el tablero agrupa por estado de forma estructural, en columnas.
+  Antes de código hay que decidir si en el tablero sustituye a las columnas.
+- ~~Cuentas locales para poder probar con varias personas.~~ Hecho: usuario y
+  contraseña sin correo, creadas por el admin de instancia desde la página de
+  miembros. Nació de aquí —probar el filtrado por equipo exige más de una
+  persona en el espacio— y quedó como función de producto, ver
+  [ADR 008](adr/008-cuentas-locales.md).
 - Tests de integración de los controladores nuevos.
 - Las tarjetas de tablero y lista muestran solo al responsable principal; la
   lista completa de asignados solo se ve en el detalle.

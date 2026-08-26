@@ -29,6 +29,7 @@ import {
   magicLink,
   openAPI,
   organization,
+  username,
 } from "better-auth/plugins";
 import type { AccessControl } from "better-auth/plugins/access";
 import type { UserWithAnonymous } from "better-auth/plugins/anonymous";
@@ -214,6 +215,13 @@ export const auth = betterAuth({
         type: "string",
         input: true,
         required: false,
+      },
+      // Lo fija el endpoint de cuentas locales, nunca quien se registra.
+      isLocalAccount: {
+        type: "boolean",
+        input: false,
+        required: false,
+        defaultValue: false,
       },
     },
     deleteUser: {
@@ -542,6 +550,12 @@ export const auth = betterAuth({
     adminPlugin({
       defaultRole: "user",
       adminRoles: ["admin"],
+    }),
+    // Permite entrar con nombre de usuario a las cuentas locales, que no
+    // tienen un correo real que escribir en el formulario de acceso.
+    username({
+      minUsernameLength: 3,
+      maxUsernameLength: 32,
     }),
     openAPI(),
   ],

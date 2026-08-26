@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import useCancelInvitation from "@/hooks/mutations/workspace-user/use-cancel-invitation";
 import useDeleteWorkspaceUser from "@/hooks/mutations/workspace-user/use-delete-workspace-user";
 import useUpdateWorkspaceUserRole from "@/hooks/mutations/workspace-user/use-update-workspace-user-role";
+import useGetConfig from "@/hooks/queries/config/use-get-config";
 import useWorkspaceRoles from "@/hooks/queries/workspace/use-workspace-roles";
 import { useCopyInvitationLink } from "@/hooks/use-copy-invitation-link";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
@@ -99,6 +100,13 @@ function MembersTable({ workspaceId, invitations, users }: Props) {
     useState<WorkspaceUserInvitation | null>(null);
 
   const { user: currentUser } = useAuth();
+  const { data: config } = useGetConfig();
+  // Una cuenta local se reconoce por su correo sintetico, y el dominio
+  // reservado lo decide el servidor: el cliente lo recibe en la configuracion.
+  const localAccountDomain = config?.localAccountDomain;
+  const isLocalAccount = (email: string) =>
+    Boolean(localAccountDomain) &&
+    email.toLowerCase().endsWith(`@${localAccountDomain?.toLowerCase()}`);
   const { mutateAsync: deleteWorkspaceUser, isPending: isDeleting } =
     useDeleteWorkspaceUser();
   const { mutateAsync: cancelInvitation, isPending: isCancelling } =
@@ -231,9 +239,16 @@ function MembersTable({ workspaceId, invitations, users }: Props) {
                             ({t("team:members.you", { defaultValue: "You" })})
                           </span>
                         ) : null}
+                        {isLocalAccount(member.user.email) ? (
+                          <span className="rounded border border-border/70 bg-muted/55 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            {t("team:members.localAccount")}
+                          </span>
+                        ) : null}
                       </div>
                       <div className="truncate text-xs text-muted-foreground">
-                        {member.user.email}
+                        {isLocalAccount(member.user.email)
+                          ? `@${member.user.email.split("@")[0]}`
+                          : member.user.email}
                       </div>
                     </div>
                   </div>

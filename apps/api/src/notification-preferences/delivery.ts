@@ -12,6 +12,7 @@ import {
   workspaceTable,
 } from "../database/schema";
 import { assertPublicWebhookDestination } from "../plugins/generic-webhook/config";
+import { isLocalAccountEmail } from "../utils/local-account";
 import { decryptSecret } from "./secrets";
 
 const DEFAULT_OUTBOUND_FETCH_TIMEOUT_MS = 15_000;
@@ -505,7 +506,14 @@ export async function deliverNotification(
 
   const deliveries: Array<Promise<void>> = [];
 
-  if (decryptedPreference.emailEnabled && rule.emailEnabled && user.email) {
+  // Una cuenta local no tiene correo real, solo el sintetico que exige la
+  // columna: intentar la entrega solo produciria rebotes.
+  if (
+    decryptedPreference.emailEnabled &&
+    rule.emailEnabled &&
+    user.email &&
+    !isLocalAccountEmail(user.email)
+  ) {
     deliveries.push(
       sendNotificationEmail(user.email, content.title, {
         title: content.title,

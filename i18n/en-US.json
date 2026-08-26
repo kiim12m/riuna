@@ -195,7 +195,9 @@
 			"emailPlaceholder": "me@example.com",
 			"passwordPlaceholder": "••••••••",
 			"showPassword": "Show password",
-			"hidePassword": "Hide password"
+			"hidePassword": "Hide password",
+			"identifier": "Email or username",
+			"identifierPlaceholder": "me@example.com or myusername"
 		},
 		"checkEmail": {
 			"pageTitle": "Check Your Email",
@@ -2116,7 +2118,9 @@
 		"members": {
 			"pageTitle": "Members",
 			"inviteMember": "Invite member",
-			"you": "You"
+			"you": "You",
+			"createLocalUser": "Create local account",
+			"localAccount": "Local"
 		},
 		"invitations": {
 			"pendingBadge": "pending",
@@ -2162,6 +2166,19 @@
 			"cancelInviteError": "Failed to cancel invitation",
 			"roleUpdateSuccess": "Role updated",
 			"roleUpdateError": "Failed to update role"
+		},
+		"localUserModal": {
+			"title": "Create local account",
+			"description": "An account with a username and password, with no email. It gets no email notifications and cannot reset its own password: the admin changes it.",
+			"usernameLabel": "Username",
+			"usernamePlaceholder": "ana.torres",
+			"displayNameLabel": "Display name",
+			"displayNamePlaceholder": "Ana Torres",
+			"passwordLabel": "Password",
+			"roleLabel": "Role",
+			"submit": "Create account",
+			"created": "Local account {{username}} created",
+			"error": "The local account could not be created"
 		}
 	},
 	"publicProject": {

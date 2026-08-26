@@ -278,4 +278,5 @@ export const configSchema = v.object({
   customOAuthAutoLogin: v.nullable(v.boolean()),
   customOAuthLogoutUrl: v.nullable(v.string()),
   billingEnabled: v.boolean(),
+  localAccountDomain: v.string(),
 });
