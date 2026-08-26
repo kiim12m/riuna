@@ -1848,7 +1848,8 @@
 				"label": "Label: {{name}}",
 				"dueThisWeek": "Due this week",
 				"dueNextWeek": "Due next week",
-				"noDueDate": "No due date"
+				"noDueDate": "No due date",
+				"team": "Team: {{name}}"
 			}
 		},
 		"sort": {
@@ -1879,12 +1880,14 @@
 				"priority": "Priority",
 				"assignee": "Assignee",
 				"dueDate": "Due date",
-				"labels": "Labels"
+				"labels": "Labels",
+				"team": "Team"
 			},
 			"operators": {
 				"isAnyOf": "is any of",
 				"includeAnyOf": "include any of"
-			}
+			},
+			"allTeams": "All teams"
 		},
 		"calendar": {
 			"pageTitle": "{{name}} – Calendar",
@@ -2012,6 +2015,10 @@
 				"deleteRow": "Delete row",
 				"deleteTable": "Delete table"
 			}
+		},
+		"team": {
+			"label": "Team",
+			"unknown": "Unknown team"
 		}
 	},
 	"invitations": {

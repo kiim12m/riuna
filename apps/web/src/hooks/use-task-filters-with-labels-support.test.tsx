@@ -104,6 +104,90 @@ describe("useTaskFiltersWithLabelsSupport", () => {
     );
   });
 
+  it("keeps only the tasks of the selected teams and forgets tasks with no team", async () => {
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({ team: ["team-design"] }),
+    );
+
+    const tareaBase = {
+      number: null,
+      description: null,
+      status: "todo",
+      priority: null,
+      startDate: null,
+      dueDate: null,
+      createdAt: "2026-04-16T00:00:00.000Z",
+      updatedAt: "2026-04-16T00:00:00.000Z",
+      userId: null,
+      assigneeId: null,
+      assigneeName: null,
+      assigneeImage: null,
+      projectId: "project-1",
+      labels: [],
+      externalLinks: [],
+    };
+
+    const project = {
+      id: "project-1",
+      name: "Project",
+      slug: "PROJ",
+      icon: null,
+      description: null,
+      isPublic: false,
+      createdAt: "2026-04-16T00:00:00.000Z",
+      updatedAt: "2026-04-16T00:00:00.000Z",
+      workspaceId: "workspace-1",
+      columns: [
+        {
+          id: "todo",
+          slug: "todo",
+          name: "Todo",
+          icon: null,
+          isFinal: false,
+          tasks: [
+            {
+              ...tareaBase,
+              id: "task-design",
+              title: "Design task",
+              position: 0,
+              teamId: "team-design",
+            },
+            {
+              ...tareaBase,
+              id: "task-backend",
+              title: "Backend task",
+              position: 1,
+              teamId: "team-backend",
+            },
+            {
+              ...tareaBase,
+              id: "task-sin-equipo",
+              title: "Task with no team",
+              position: 2,
+              teamId: null,
+            },
+          ],
+        },
+      ],
+      plannedTasks: [],
+      archivedTasks: [],
+    };
+
+    const { result } = renderHook(() =>
+      useTaskFiltersWithLabelsSupport(project, "project-1"),
+    );
+
+    await waitFor(() => {
+      expect(result.current.filters.team).toEqual(["team-design"]);
+    });
+
+    expect(result.current.filteredProject?.columns[0]?.tasks).toEqual([
+      expect.objectContaining({ id: "task-design" }),
+    ]);
+    expect(result.current.hasActiveFilters).toBe(true);
+  });
+
   it.each(["#123", "proj-123", "proj-"])(
     "matches a task by its issue identifier when searching for %s",
     (textQuery) => {

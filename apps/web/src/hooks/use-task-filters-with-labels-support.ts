@@ -9,6 +9,7 @@ const DEFAULT_FILTERS: BoardFilters = {
   status: null,
   priority: null,
   assignee: null,
+  team: null,
   dueDate: null,
   labels: null,
 };
@@ -17,6 +18,7 @@ const FILTER_KEYS: Array<keyof BoardFilters> = [
   "status",
   "priority",
   "assignee",
+  "team",
   "dueDate",
   "labels",
 ];
@@ -117,6 +119,14 @@ export function useTaskFiltersWithLabelsSupport(
           filters.assignee &&
           filters.assignee.length > 0 &&
           !filters.assignee.includes(task.userId ?? "")
+        ) {
+          return false;
+        }
+
+        if (
+          filters.team &&
+          filters.team.length > 0 &&
+          !filters.team.includes(task.teamId ?? "")
         ) {
           return false;
         }

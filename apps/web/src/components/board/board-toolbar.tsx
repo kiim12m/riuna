@@ -1,4 +1,4 @@
-import { Filter, PanelsTopLeft, Rows3, X } from "lucide-react";
+import { Filter, PanelsTopLeft, Rows3, Users, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import SortControl from "@/components/common/sort-control";
@@ -33,6 +33,11 @@ type WorkspaceLabel = {
   color: string;
 };
 
+type WorkspaceTeam = {
+  id: string;
+  name: string;
+};
+
 type ActiveUsers = {
   members?: Array<{
     userId: string;
@@ -54,6 +59,7 @@ type BoardToolbarProps = {
   clearFilters: () => void;
   hasActiveFilters: boolean;
   users?: ActiveUsers;
+  teams?: WorkspaceTeam[];
   workspaceLabels: WorkspaceLabel[];
   viewMode: "board" | "list";
   setViewMode: (mode: "board" | "list") => void;
@@ -138,6 +144,7 @@ export default function BoardToolbar({
   clearFilters,
   hasActiveFilters,
   users,
+  teams,
   workspaceLabels,
   viewMode,
   setViewMode,
@@ -148,6 +155,7 @@ export default function BoardToolbar({
   const selectedStatusIds = filters.status ?? [];
   const selectedPriorityIds = filters.priority ?? [];
   const selectedAssigneeIds = filters.assignee ?? [];
+  const selectedTeamIds = filters.team ?? [];
   const selectedDueDateFilters = filters.dueDate ?? [];
 
   const getStatusDisplayName = (statusId: string) => {
@@ -165,6 +173,10 @@ export default function BoardToolbar({
   const getAssigneeDisplayName = (userId: string) => {
     const member = users?.members?.find((m) => m.userId === userId);
     return member?.user?.name || t("common:people.unknown");
+  };
+  const getTeamDisplayName = (teamId: string) => {
+    const team = teams?.find((item) => item.id === teamId);
+    return team?.name || t("tasks:team.unknown");
   };
   const getAssigneeAvatar = (userId: string) => {
     const member = users?.members?.find((m) => m.userId === userId);
@@ -220,6 +232,14 @@ export default function BoardToolbar({
       ? selectedAssigneeIds.filter((id) => id !== userId)
       : [...selectedAssigneeIds, userId];
     updateFilter("assignee", next.length > 0 ? next : null);
+  };
+
+  const toggleTeamFilter = (teamId: string) => {
+    const exists = selectedTeamIds.includes(teamId);
+    const next = exists
+      ? selectedTeamIds.filter((id) => id !== teamId)
+      : [...selectedTeamIds, teamId];
+    updateFilter("team", next.length > 0 ? next : null);
   };
 
   const toggleDueDateFilter = (dueDate: string) => {
@@ -416,6 +436,48 @@ export default function BoardToolbar({
 
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger className="h-8 rounded-md text-sm">
+                    {t("tasks:boardFilters.subjects.team")}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-64">
+                    <div className="grid grid-cols-1 gap-1 p-1">
+                      <button
+                        className={`inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-left text-xs ${
+                          selectedTeamIds.length === 0
+                            ? "bg-accent text-accent-foreground"
+                            : "text-foreground/90 hover:bg-accent/60 hover:text-foreground"
+                        }`}
+                        onClick={() => updateFilter("team", null)}
+                        type="button"
+                      >
+                        <CheckSlot checked={selectedTeamIds.length === 0} />
+                        {t("tasks:boardFilters.allTeams")}
+                      </button>
+                      {teams?.map((team) => (
+                        <button
+                          key={team.id}
+                          className={`inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-left text-xs ${
+                            selectedTeamIds.includes(team.id)
+                              ? "bg-accent text-accent-foreground"
+                              : "text-foreground/90 hover:bg-accent/60 hover:text-foreground"
+                          }`}
+                          onClick={() => toggleTeamFilter(team.id)}
+                          type="button"
+                        >
+                          <CheckSlot
+                            checked={selectedTeamIds.includes(team.id)}
+                          />
+                          <span className="inline-flex items-center gap-2">
+                            <Users className="size-3.5 text-muted-foreground" />
+                            <span className="truncate">{team.name}</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="h-8 rounded-md text-sm">
                     {t("tasks:boardFilters.subjects.dueDate")}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="w-56">
@@ -603,6 +665,21 @@ export default function BoardToolbar({
                   </span>
                 }
                 onClear={() => updateFilter("assignee", null)}
+              />
+            )}
+
+            {selectedTeamIds.length > 0 && (
+              <ActiveFilterChip
+                subject={t("tasks:boardFilters.subjects.team")}
+                operator={t("tasks:boardFilters.operators.isAnyOf")}
+                value={
+                  selectedTeamIds.length === 1
+                    ? getTeamDisplayName(selectedTeamIds[0])
+                    : t("tasks:boardFilters.selectedCount", {
+                        count: selectedTeamIds.length,
+                      })
+                }
+                onClear={() => updateFilter("team", null)}
               />
             )}
 

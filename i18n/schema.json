@@ -206,6 +206,9 @@
 						"title": {
 							"type": "string"
 						},
+						"description": {
+							"type": "string"
+						},
 						"troubleshooting": {
 							"type": "string"
 						},
@@ -217,14 +220,98 @@
 						},
 						"refreshPage": {
 							"type": "string"
+						},
+						"messages": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"cors": {
+									"type": "string"
+								},
+								"network": {
+									"type": "string"
+								},
+								"auth": {
+									"type": "string"
+								},
+								"server": {
+									"type": "string"
+								},
+								"unknown": {
+									"type": "string"
+								}
+							},
+							"required": ["cors", "network", "auth", "server", "unknown"]
+						},
+						"troubleshootingSteps": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"cors": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"checkApiRunning": {
+											"type": "string"
+										},
+										"checkApiUrl": {
+											"type": "string"
+										},
+										"verifyCorsOrigins": {
+											"type": "string"
+										},
+										"checkProtocol": {
+											"type": "string"
+										},
+										"checkAccessibility": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"checkApiRunning",
+										"checkApiUrl",
+										"verifyCorsOrigins",
+										"checkProtocol",
+										"checkAccessibility"
+									]
+								},
+								"network": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"checkConnection": {
+											"type": "string"
+										},
+										"verifyApiRunning": {
+											"type": "string"
+										},
+										"tryRefresh": {
+											"type": "string"
+										},
+										"checkFirewall": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"checkConnection",
+										"verifyApiRunning",
+										"tryRefresh",
+										"checkFirewall"
+									]
+								}
+							},
+							"required": ["cors", "network"]
 						}
 					},
 					"required": [
 						"title",
+						"description",
 						"troubleshooting",
 						"tryAgain",
 						"viewDeploymentGuide",
-						"refreshPage"
+						"refreshPage",
+						"messages",
+						"troubleshootingSteps"
 					]
 				},
 				"formats": {
@@ -2916,6 +3003,118 @@
 						"deleteDialog"
 					]
 				},
+				"workspaceTeams": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"subtitle": {
+							"type": "string"
+						},
+						"cardDescription": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"createTeam": {
+							"type": "string"
+						},
+						"createDescription": {
+							"type": "string"
+						},
+						"createSuccess": {
+							"type": "string"
+						},
+						"createError": {
+							"type": "string"
+						},
+						"name": {
+							"type": "string"
+						},
+						"namePlaceholder": {
+							"type": "string"
+						},
+						"rename": {
+							"type": "string"
+						},
+						"save": {
+							"type": "string"
+						},
+						"updateSuccess": {
+							"type": "string"
+						},
+						"updateError": {
+							"type": "string"
+						},
+						"delete": {
+							"type": "string"
+						},
+						"deleteTitle": {
+							"type": "string"
+						},
+						"deleteDescription": {
+							"type": "string"
+						},
+						"deleteSuccess": {
+							"type": "string"
+						},
+						"deleteError": {
+							"type": "string"
+						},
+						"manageMembers": {
+							"type": "string"
+						},
+						"membersTitle": {
+							"type": "string"
+						},
+						"noMembers": {
+							"type": "string"
+						},
+						"addMember": {
+							"type": "string"
+						},
+						"addMemberError": {
+							"type": "string"
+						},
+						"removeMember": {
+							"type": "string"
+						},
+						"removeMemberError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"subtitle",
+						"cardDescription",
+						"empty",
+						"createTeam",
+						"createDescription",
+						"createSuccess",
+						"createError",
+						"name",
+						"namePlaceholder",
+						"rename",
+						"save",
+						"updateSuccess",
+						"updateError",
+						"delete",
+						"deleteTitle",
+						"deleteDescription",
+						"deleteSuccess",
+						"deleteError",
+						"manageMembers",
+						"membersTitle",
+						"noMembers",
+						"addMember",
+						"addMemberError",
+						"removeMember",
+						"removeMemberError"
+					]
+				},
 				"workspaceLabels": {
 					"type": "object",
 					"additionalProperties": false,
@@ -4936,6 +5135,7 @@
 				"apiKey",
 				"workspaceGeneral",
 				"workspaceRoles",
+				"workspaceTeams",
 				"workspaceLabels",
 				"projectGeneral",
 				"projectIntegrations",
@@ -5637,6 +5837,12 @@
 				"assignedToSelf": {
 					"type": "string"
 				},
+				"assignedToTeam": {
+					"type": "string"
+				},
+				"teamUnassigned": {
+					"type": "string"
+				},
 				"unassigned": {
 					"type": "string"
 				},
@@ -6071,6 +6277,8 @@
 			},
 			"required": [
 				"assignedToSelf",
+				"assignedToTeam",
+				"teamUnassigned",
 				"unassigned",
 				"assignedTo",
 				"changedStatus",
@@ -6837,6 +7045,22 @@
 								},
 								"updateError": {
 									"type": "string"
+								},
+								"multiple": {
+									"type": "string"
+								}
+							},
+							"required": ["unassigned", "updateError", "multiple"]
+						},
+						"team": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"unassigned": {
+									"type": "string"
+								},
+								"updateError": {
+									"type": "string"
 								}
 							},
 							"required": ["unassigned", "updateError"]
@@ -6985,6 +7209,7 @@
 					},
 					"required": [
 						"assignee",
+						"team",
 						"status",
 						"priority",
 						"dueDate",
@@ -7066,6 +7291,9 @@
 								},
 								"noDueDate": {
 									"type": "string"
+								},
+								"team": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -7075,7 +7303,8 @@
 								"label",
 								"dueThisWeek",
 								"dueNextWeek",
-								"noDueDate"
+								"noDueDate",
+								"team"
 							]
 						}
 					},
@@ -7199,6 +7428,9 @@
 								},
 								"labels": {
 									"type": "string"
+								},
+								"team": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -7206,7 +7438,8 @@
 								"priority",
 								"assignee",
 								"dueDate",
-								"labels"
+								"labels",
+								"team"
 							]
 						},
 						"operators": {
@@ -7221,6 +7454,9 @@
 								}
 							},
 							"required": ["isAnyOf", "includeAnyOf"]
+						},
+						"allTeams": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -7232,7 +7468,8 @@
 						"allLabels",
 						"selectedCount",
 						"subjects",
-						"operators"
+						"operators",
+						"allTeams"
 					]
 				},
 				"calendar": {
@@ -7711,6 +7948,19 @@
 						}
 					},
 					"required": ["table"]
+				},
+				"team": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"label": {
+							"type": "string"
+						},
+						"unknown": {
+							"type": "string"
+						}
+					},
+					"required": ["label", "unknown"]
 				}
 			},
 			"required": [
@@ -7743,7 +7993,8 @@
 				"contextMenu",
 				"actions",
 				"bulk",
-				"editor"
+				"editor",
+				"team"
 			]
 		},
 		"invitations": {

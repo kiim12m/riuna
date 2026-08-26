@@ -1837,7 +1837,8 @@
 				"label": "Etiqueta: {{name}}",
 				"dueThisWeek": "Para esta semana",
 				"dueNextWeek": "Para la semana que viene",
-				"noDueDate": "Sin fecha de vencimiento"
+				"noDueDate": "Sin fecha de vencimiento",
+				"team": "Equip: {{name}}"
 			}
 		},
 		"sort": {
@@ -1868,12 +1869,14 @@
 				"priority": "Prioridad",
 				"assignee": "Asignado",
 				"dueDate": "Fecha de vencimiento",
-				"labels": "Etiquetas"
+				"labels": "Etiquetas",
+				"team": "Equip"
 			},
 			"operators": {
 				"isAnyOf": "es alguno de",
 				"includeAnyOf": "incluye alguno de"
-			}
+			},
+			"allTeams": "Tots els equips"
 		},
 		"gantt": {
 			"pageTitle": "{{name}} – Gantt",
@@ -2012,6 +2015,10 @@
 			"title": "Calendar",
 			"today": "Today",
 			"loadError": "Failed to load tasks."
+		},
+		"team": {
+			"label": "Equip",
+			"unknown": "Equip desconegut"
 		}
 	},
 	"invitations": {
