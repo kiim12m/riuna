@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { SortConfig, SortDirection, SortField } from "@/lib/sort-tasks";
 
 const DEFAULT_SORT: SortConfig = {
@@ -48,35 +48,55 @@ function normalizeSort(value: unknown): SortConfig {
   return { field: candidate.field, direction: candidate.direction };
 }
 
+function readStored(storageKey: string | null): SortConfig {
+  if (!storageKey || typeof window === "undefined") return DEFAULT_SORT;
+
+  try {
+    const stored = window.localStorage.getItem(storageKey);
+    if (!stored) return DEFAULT_SORT;
+
+    return normalizeSort(JSON.parse(stored) as unknown);
+  } catch {
+    return DEFAULT_SORT;
+  }
+}
+
+function writeStored(storageKey: string | null, sort: SortConfig) {
+  if (!storageKey || typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(sort));
+  } catch {
+    // persistence is best-effort; private mode or quota can block writes
+  }
+}
+
+/**
+ * El orden se recuerda por proyecto en el navegador.
+ *
+ * Se escribe al cambiar, no en un efecto que dependa del valor: con un efecto
+ * de escritura, el primer render lo dispara con el valor inicial y pisa lo
+ * guardado antes de que el de lectura llegue a aplicarse, de modo que recargar
+ * la pagina deshacia la eleccion. Lo guardado se lee en la inicializacion
+ * perezosa, asi que el primer render ya ordena bien y la lista no parpadea.
+ */
 export function useBoardSort(projectId: string | undefined) {
   const storageKey = projectId ? `riuna:board-sort:${projectId}` : null;
-  const [sort, setSort] = useState<SortConfig>(DEFAULT_SORT);
+  const [sort, setSort] = useState<SortConfig>(() => readStored(storageKey));
 
+  // Cambiar de proyecto sin desmontar el componente tiene que traer el orden
+  // del proyecto nuevo.
   useEffect(() => {
-    if (!storageKey || typeof window === "undefined") return;
-
-    try {
-      const stored = window.localStorage.getItem(storageKey);
-      if (!stored) {
-        setSort(DEFAULT_SORT);
-        return;
-      }
-
-      const parsed = JSON.parse(stored) as unknown;
-      setSort(normalizeSort(parsed));
-    } catch {
-      setSort(DEFAULT_SORT);
-    }
+    setSort(readStored(storageKey));
   }, [storageKey]);
 
-  useEffect(() => {
-    if (!storageKey || typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(sort));
-    } catch {
-      // persistence is best-effort; private mode or quota can block writes
-    }
-  }, [sort, storageKey]);
+  const changeSort = useCallback(
+    (next: SortConfig) => {
+      setSort(next);
+      writeStored(storageKey, next);
+    },
+    [storageKey],
+  );
 
-  return { sort, setSort };
+  return { sort, setSort: changeSort };
 }
