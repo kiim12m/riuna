@@ -61,3 +61,9 @@ apps/web/.tanstack/
 
 # Volcados de la base de datos generados por el servicio de copias
 /backups/
+
+# Artefactos locales de Claude Code y del arranque directo de la API: cambian
+# en cada sesion y llevan rutas de la maquina de quien los genera.
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+apps/api/_direct_dev.log
