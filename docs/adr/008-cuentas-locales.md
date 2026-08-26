@@ -18,4 +18,11 @@
 - **Una cuenta local no tiene correo al que escribir.** La entrega de notificaciones por correo se salta a quien tiene dirección en el dominio reservado; las notificaciones en la aplicación y por websocket le llegan igual. Restablecer contraseña, enlace mágico y OTP no le sirven: la contraseña la cambia el admin.
 - **El dominio reservado viaja al cliente** en la configuración de instancia, porque la tabla de miembros necesita distinguir estas cuentas para no enseñar un correo que no existe. Es el único sitio donde se decide qué es una cuenta local.
 - **Nombre de usuario único en toda la instancia**, no por espacio de trabajo. Dos personas pueden llamarse igual; sus usuarios no.
-- Queda sin resolver qué pasa si una cuenta local necesita después un correo real. Convertirla es un cambio de identificador y no está implementado.
+- **Una cuenta local puede dejar de serlo.** El admin le asigna una dirección real y con eso recupera las notificaciones y puede entrar con cualquiera de las dos llaves, porque el nombre de usuario se conserva. El correo se marca como verificado sin enviar nada: lo pone quien responde de la cuenta, y en una instancia sin SMTP no habría forma de verificarlo. El dominio reservado no se puede asignar a mano.
+
+**Ampliación (26-08-2026): qué más puede hacer el admin.** Casi todo lo pedido ya lo servía el plugin `admin` —`update-user`, `set-user-password`, `ban-user` y `unban-user`, con las columnas `banned`, `ban_reason` y `ban_expires` heredadas del fork—, así que solo hubo que cablearlo y resolver el correo:
+
+- **Actúa sobre cualquier miembro, no solo sobre cuentas locales.** Es lo que se espera de un admin de instancia; limitarlo a las locales dejaría sin poder bloquear a quien se registró por su cuenta.
+- **El bloqueo es un interruptor**, sin motivo ni caducidad, aunque las columnas existan: cierra las sesiones abiertas e impide entrar, sin borrar nada. Si algún día hace falta dejar escrito el porqué, los campos están.
+- **Todo en un solo formulario**: nombre, correo, contraseña nueva y bloqueo. La contraseña y el correo vacíos significan «no tocar», que evita cambiarlos sin querer al editar el nombre.
+- **La tabla de miembros necesita datos que el plugin de organización no da** —quién está bloqueado—, así que el admin de instancia carga además la lista de usuarios del plugin de administración. Esa consulta está apagada para todos los demás, porque solo a él le responde.

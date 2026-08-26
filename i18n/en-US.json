@@ -2120,7 +2120,8 @@
 			"inviteMember": "Invite member",
 			"you": "You",
 			"createLocalUser": "Create local account",
-			"localAccount": "Local"
+			"localAccount": "Local",
+			"blocked": "Blocked"
 		},
 		"invitations": {
 			"pendingBadge": "pending",
@@ -2165,7 +2166,8 @@
 			"cancelInviteSuccess": "Invitation cancelled successfully",
 			"cancelInviteError": "Failed to cancel invitation",
 			"roleUpdateSuccess": "Role updated",
-			"roleUpdateError": "Failed to update role"
+			"roleUpdateError": "Failed to update role",
+			"manageAccount": "Manage account"
 		},
 		"localUserModal": {
 			"title": "Create local account",
@@ -2179,6 +2181,20 @@
 			"submit": "Create account",
 			"created": "Local account {{username}} created",
 			"error": "The local account could not be created"
+		},
+		"manageAccount": {
+			"title": "Manage account",
+			"nameLabel": "Display name",
+			"emailLabel": "Email",
+			"emailPlaceholder": "ana@example.com",
+			"emailHelp": "Assigning an email stops the account being local: it gets notifications back and can sign in with the email or the username.",
+			"passwordLabel": "New password",
+			"passwordPlaceholder": "Leave empty to keep it",
+			"shortPassword": "At least 8 characters",
+			"blockLabel": "Block access",
+			"blockHelp": "Ends their open sessions and stops them signing in, without deleting anything.",
+			"saved": "Account updated",
+			"error": "The account could not be updated"
 		}
 	},
 	"publicProject": {

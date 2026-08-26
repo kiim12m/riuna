@@ -8381,6 +8381,9 @@
 						},
 						"localAccount": {
 							"type": "string"
+						},
+						"blocked": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -8388,7 +8391,8 @@
 						"inviteMember",
 						"you",
 						"createLocalUser",
-						"localAccount"
+						"localAccount",
+						"blocked"
 					]
 				},
 				"invitations": {
@@ -8543,6 +8547,9 @@
 						},
 						"roleUpdateError": {
 							"type": "string"
+						},
+						"manageAccount": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -8564,7 +8571,8 @@
 						"cancelInviteSuccess",
 						"cancelInviteError",
 						"roleUpdateSuccess",
-						"roleUpdateError"
+						"roleUpdateError",
+						"manageAccount"
 					]
 				},
 				"localUserModal": {
@@ -8618,6 +8626,62 @@
 						"created",
 						"error"
 					]
+				},
+				"manageAccount": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"nameLabel": {
+							"type": "string"
+						},
+						"emailLabel": {
+							"type": "string"
+						},
+						"emailPlaceholder": {
+							"type": "string"
+						},
+						"emailHelp": {
+							"type": "string"
+						},
+						"passwordLabel": {
+							"type": "string"
+						},
+						"passwordPlaceholder": {
+							"type": "string"
+						},
+						"shortPassword": {
+							"type": "string"
+						},
+						"blockLabel": {
+							"type": "string"
+						},
+						"blockHelp": {
+							"type": "string"
+						},
+						"saved": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"nameLabel",
+						"emailLabel",
+						"emailPlaceholder",
+						"emailHelp",
+						"passwordLabel",
+						"passwordPlaceholder",
+						"shortPassword",
+						"blockLabel",
+						"blockHelp",
+						"saved",
+						"error"
+					]
 				}
 			},
 			"required": [
@@ -8626,7 +8690,8 @@
 				"invitations",
 				"inviteModal",
 				"membersTable",
-				"localUserModal"
+				"localUserModal",
+				"manageAccount"
 			]
 		},
 		"publicProject": {

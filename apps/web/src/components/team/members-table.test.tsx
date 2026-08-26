@@ -29,6 +29,9 @@ vi.mock("@/lib/toast", () => ({
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
+  // El modal de administracion arrastra mas grafo de la aplicacion, que llega
+  // hasta el arranque de i18n. Mismo remedio que en settings-sidebar.test.tsx.
+  initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 
 vi.mock("@/lib/format", () => ({
@@ -58,6 +61,12 @@ const canInviteUsers = vi.fn(() => true);
 
 // La tabla marca las cuentas locales, y para eso pide el dominio reservado a
 // la configuracion de instancia. Aqui se sirve fijo: sin react-query alrededor.
+// Lo mismo con la lista del plugin de administracion, que la tabla consulta
+// para saber quien esta bloqueado.
+vi.mock("@/hooks/queries/user/use-get-instance-users", () => ({
+  default: () => ({ data: new Map() }),
+}));
+
 vi.mock("@/hooks/queries/config/use-get-config", () => ({
   default: () => ({ data: { localAccountDomain: "local.riuna" } }),
 }));

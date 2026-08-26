@@ -6,8 +6,15 @@ import { MAX_AVATAR_BYTES } from "./avatar";
 import createLocalUser from "./controllers/create-local-user";
 import deleteAvatar from "./controllers/delete-avatar";
 import saveAvatar from "./controllers/save-avatar";
+import setUserEmail from "./controllers/set-user-email";
 
 const httpErrorSchema = v.object({ message: v.string() });
+
+const userEmailResponseSchema = v.object({
+  id: v.string(),
+  email: v.string(),
+  isLocalAccount: v.nullable(v.boolean()),
+});
 
 const localUserResponseSchema = v.object({
   id: v.string(),
@@ -160,6 +167,53 @@ const user = new Hono<{
           workspaceId,
           role: role ?? "member",
           headers: c.req.raw.headers,
+        }),
+      );
+    },
+  )
+  .put(
+    "/:id/email",
+    describeRoute({
+      operationId: "setUserEmail",
+      tags: ["User"],
+      description:
+        "Give a real email address to an account. A local account stops being local: it recovers email notifications and can sign in with either key. Restricted to the instance admin",
+      responses: {
+        200: {
+          description: "Email assigned",
+          content: {
+            "application/json": { schema: resolver(userEmailResponseSchema) },
+          },
+        },
+        400: {
+          description: "Invalid or reserved address",
+          content: {
+            "application/json": { schema: resolver(httpErrorSchema) },
+          },
+        },
+        403: {
+          description: "Not the instance admin",
+          content: {
+            "application/json": { schema: resolver(httpErrorSchema) },
+          },
+        },
+        409: {
+          description: "Address already in use",
+          content: {
+            "application/json": { schema: resolver(httpErrorSchema) },
+          },
+        },
+      },
+    }),
+    validator("json", v.object({ email: v.string() })),
+    async (c) => {
+      const { email } = c.req.valid("json");
+
+      return c.json(
+        await setUserEmail({
+          actorId: c.get("userId"),
+          userId: c.req.param("id"),
+          email,
         }),
       );
     },

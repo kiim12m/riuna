@@ -2120,7 +2120,8 @@
 			"inviteMember": "Invitar miembro",
 			"you": "Tú",
 			"createLocalUser": "Crear cuenta local",
-			"localAccount": "Local"
+			"localAccount": "Local",
+			"blocked": "Bloqueada"
 		},
 		"invitations": {
 			"linkLabel": "Enlace de invitación",
@@ -2165,7 +2166,8 @@
 			"cancelInviteSuccess": "Invitación cancelada correctamente",
 			"cancelInviteError": "Error al cancelar invitación",
 			"roleUpdateSuccess": "Rol actualizado",
-			"roleUpdateError": "Error al actualizar el rol"
+			"roleUpdateError": "Error al actualizar el rol",
+			"manageAccount": "Administrar cuenta"
 		},
 		"localUserModal": {
 			"title": "Crear cuenta local",
@@ -2179,6 +2181,20 @@
 			"submit": "Crear cuenta",
 			"created": "Cuenta local {{username}} creada",
 			"error": "No se ha podido crear la cuenta local"
+		},
+		"manageAccount": {
+			"title": "Administrar cuenta",
+			"nameLabel": "Nombre visible",
+			"emailLabel": "Correo",
+			"emailPlaceholder": "ana@ejemplo.com",
+			"emailHelp": "Al asignar un correo la cuenta deja de ser local: recupera las notificaciones y podrá entrar con el correo o con su usuario.",
+			"passwordLabel": "Contraseña nueva",
+			"passwordPlaceholder": "Dejar vacío para no cambiarla",
+			"shortPassword": "Mínimo 8 caracteres",
+			"blockLabel": "Bloquear el acceso",
+			"blockHelp": "Cierra sus sesiones abiertas y le impide entrar, sin borrar nada.",
+			"saved": "Cuenta actualizada",
+			"error": "No se ha podido actualizar la cuenta"
 		}
 	},
 	"publicProject": {

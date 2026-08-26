@@ -2120,7 +2120,8 @@
 			"inviteMember": "Invitar miembro",
 			"you": "Tú",
 			"createLocalUser": "Crea un compte local",
-			"localAccount": "Local"
+			"localAccount": "Local",
+			"blocked": "Bloquejat"
 		},
 		"invitations": {
 			"linkLabel": "Enlace de invitación",
@@ -2165,7 +2166,8 @@
 			"cancelInviteSuccess": "Invitación cancelada correctamente",
 			"cancelInviteError": "Error al cancelar invitación",
 			"roleUpdateSuccess": "Rol actualizado",
-			"roleUpdateError": "Error al actualizar el rol"
+			"roleUpdateError": "Error al actualizar el rol",
+			"manageAccount": "Administra el compte"
 		},
 		"localUserModal": {
 			"title": "Crea un compte local",
@@ -2179,6 +2181,20 @@
 			"submit": "Crea el compte",
 			"created": "Compte local {{username}} creat",
 			"error": "No s'ha pogut crear el compte local"
+		},
+		"manageAccount": {
+			"title": "Administra el compte",
+			"nameLabel": "Nom visible",
+			"emailLabel": "Correu",
+			"emailPlaceholder": "ana@exemple.com",
+			"emailHelp": "En assignar un correu el compte deixa de ser local: recupera les notificacions i podrà entrar amb el correu o amb el seu usuari.",
+			"passwordLabel": "Contrasenya nova",
+			"passwordPlaceholder": "Deixa-ho buit per no canviar-la",
+			"shortPassword": "Mínim 8 caràcters",
+			"blockLabel": "Bloqueja l'accés",
+			"blockHelp": "Tanca les seves sessions obertes i li impedeix entrar, sense esborrar res.",
+			"saved": "Compte actualitzat",
+			"error": "No s'ha pogut actualitzar el compte"
 		}
 	},
 	"publicProject": {
