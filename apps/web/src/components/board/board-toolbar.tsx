@@ -1,6 +1,7 @@
 import { Filter, PanelsTopLeft, Rows3, Users, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import GroupControl from "@/components/common/group-control";
 import SortControl from "@/components/common/sort-control";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -22,6 +23,7 @@ import {
 } from "@/hooks/use-task-filters";
 import { getColumnIcon } from "@/lib/column";
 import { getInitials } from "@/lib/get-initials";
+import type { GroupByField } from "@/lib/group-tasks";
 import { getPriorityLabel } from "@/lib/i18n/domain";
 import { getPriorityIcon } from "@/lib/priority";
 import type { SortConfig } from "@/lib/sort-tasks";
@@ -65,6 +67,8 @@ type BoardToolbarProps = {
   setViewMode: (mode: "board" | "list") => void;
   sort: SortConfig;
   onSortChange: (sort: SortConfig) => void;
+  groupBy: GroupByField;
+  onGroupByChange: (groupBy: GroupByField) => void;
 };
 
 function CheckSlot({ checked }: { checked: boolean }) {
@@ -150,6 +154,8 @@ export default function BoardToolbar({
   setViewMode,
   sort,
   onSortChange,
+  groupBy,
+  onGroupByChange,
 }: BoardToolbarProps) {
   const { t } = useTranslation();
   const selectedStatusIds = filters.status ?? [];
@@ -591,6 +597,13 @@ export default function BoardToolbar({
             </DropdownMenu>
 
             <SortControl sort={sort} onSortChange={onSortChange} />
+
+            <GroupControl
+              groupBy={groupBy}
+              onGroupByChange={onGroupByChange}
+              disabled={viewMode === "board"}
+              disabledHint={t("tasks:group.boardHint")}
+            />
 
             {selectedStatusIds.length > 0 && (
               <ActiveFilterChip

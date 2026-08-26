@@ -18,6 +18,7 @@ import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-
 import { useBoardSort } from "@/hooks/use-board-sort";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useTaskFiltersWithLabelsSupport } from "@/hooks/use-task-filters-with-labels-support";
+import { useTaskGrouping } from "@/hooks/use-task-grouping";
 import { sortTasks } from "@/lib/sort-tasks";
 import useProjectStore from "@/store/project";
 import { useUserPreferencesStore } from "@/store/user-preferences";
@@ -90,6 +91,7 @@ function RouteComponent() {
   const [boardSearchInput, setBoardSearchInput] =
     useState<HTMLInputElement | null>(null);
   const { sort, setSort } = useBoardSort(projectId);
+  const { groupBy, setGroupBy } = useTaskGrouping(projectId);
 
   const { data: users } = useGetActiveWorkspaceUsers(workspaceId);
   const { data: workspaceLabels = [] } = useGetLabelsByWorkspace(workspaceId);
@@ -238,6 +240,8 @@ function RouteComponent() {
           setViewMode={setViewMode}
           sort={sort}
           onSortChange={setSort}
+          groupBy={groupBy}
+          onGroupByChange={setGroupBy}
         />
 
         <div className="flex h-full flex-1 overflow-hidden bg-background">
@@ -251,6 +255,7 @@ function RouteComponent() {
               <ListView
                 project={sortedProject}
                 disableDragDrop={sort.field !== "position"}
+                groupBy={groupBy}
               />
             )
           ) : (

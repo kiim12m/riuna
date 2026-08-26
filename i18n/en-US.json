@@ -1870,6 +1870,16 @@
 				"number": "Task number"
 			}
 		},
+		"group": {
+			"label": "Group",
+			"by": "Group By",
+			"noTeam": "No team",
+			"boardHint": "The board already groups by status, in columns",
+			"fields": {
+				"status": "Status",
+				"team": "Team"
+			}
+		},
 		"boardFilters": {
 			"filterBy": "Filter By",
 			"allStatuses": "All statuses",

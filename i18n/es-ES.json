@@ -1859,6 +1859,16 @@
 				"number": "Número de tarea"
 			}
 		},
+		"group": {
+			"label": "Agrupar",
+			"by": "Agrupar por",
+			"noTeam": "Sin equipo",
+			"boardHint": "El tablero ya agrupa por estado, en columnas",
+			"fields": {
+				"status": "Estado",
+				"team": "Equipo"
+			}
+		},
 		"boardFilters": {
 			"filterBy": "Filtrar por",
 			"allStatuses": "Todos los estados",

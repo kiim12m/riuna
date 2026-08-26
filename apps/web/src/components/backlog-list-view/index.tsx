@@ -21,13 +21,14 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { produce } from "immer";
-import { Archive, ChevronRight, Clock, Flag, Plus } from "lucide-react";
+import { Archive, ChevronRight, Clock, Flag, Plus, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { priorityColorsTaskCard } from "@/constants/priority-colors";
 import { useUpdateTask } from "@/hooks/mutations/task/use-update-task";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { cn } from "@/lib/cn";
+import { type GroupByField, groupTasksByTeam } from "@/lib/group-tasks";
 import useBacklogBulkSelectionStore from "@/store/backlog-bulk-selection";
 import useProjectStore from "@/store/project";
 import type { ProjectWithTasks } from "@/types/project";
@@ -39,13 +40,19 @@ import BacklogTaskRow from "./backlog-task-row";
 type BacklogListViewProps = {
   project?: ProjectWithTasks;
   disableDragDrop?: boolean;
+  groupBy?: GroupByField;
 };
 
 function BacklogListView({
   project,
   disableDragDrop = false,
+  groupBy = "status",
 }: BacklogListViewProps) {
   const { t } = useTranslation();
+  // Aqui la agrupacion no sustituye a las secciones: planificadas y archivadas
+  // no son un estado cualquiera, son las dos mitades del backlog. El equipo
+  // reparte por dentro de cada una.
+  const isGroupedByTeam = groupBy === "team";
   const { mutate: updateTask } = useUpdateTask();
   const { setProject } = useProjectStore();
   const {
@@ -119,13 +126,17 @@ function BacklogListView({
     },
   });
 
+  // Arrastrar reordena y mueve entre planificadas y archivadas; con las bandas
+  // de equipo por medio la posicion de destino deja de estar definida.
+  const dragDropDisabled = disableDragDrop || isGroupedByTeam;
+
   const sensors = useSensors(
     useSensor(MouseSensor, {
-      activationConstraint: { distance: disableDragDrop ? 999999 : 8 },
+      activationConstraint: { distance: dragDropDisabled ? 999999 : 8 },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: disableDragDrop ? 999999 : 200,
+        delay: dragDropDisabled ? 999999 : 200,
         tolerance: 8,
       },
     }),
@@ -371,19 +382,40 @@ function BacklogListView({
               items={tasks}
               strategy={verticalListSortingStrategy}
             >
-              <AnimatePresence initial={false} mode="popLayout">
-                {tasks.map((task) => (
-                  <motion.div
-                    key={task.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
-                  >
-                    <BacklogTaskRow task={task} />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+              {isGroupedByTeam ? (
+                groupTasksByTeam(tasks, t("tasks:group.noTeam")).map(
+                  (group) => (
+                    <div key={group.id}>
+                      <div className="flex items-center gap-2 border-b border-border/40 bg-muted/30 px-4 py-1.5 text-xs">
+                        <Users className="h-3 w-3 text-muted-foreground" />
+                        <span className="font-medium text-foreground">
+                          {group.name}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {group.tasks.length}
+                        </span>
+                      </div>
+                      {group.tasks.map((task) => (
+                        <BacklogTaskRow key={task.id} task={task} />
+                      ))}
+                    </div>
+                  ),
+                )
+              ) : (
+                <AnimatePresence initial={false} mode="popLayout">
+                  {tasks.map((task) => (
+                    <motion.div
+                      key={task.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                    >
+                      <BacklogTaskRow task={task} />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
             </SortableContext>
 
             {tasks.length === 0 && (
