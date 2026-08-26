@@ -56,12 +56,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
+      # El token integrado basta para empujar a ghcr.io/<owner> desde el propio
+      # repositorio: el job ya declara `packages: write`. Antes se usaba un PAT
+      # (GH_PACKAGE_TOKEN) que no existe en este repositorio y hacia fallar el
+      # nightly cada madrugada con "Password required".
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GH_PACKAGE_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata
         id: meta
