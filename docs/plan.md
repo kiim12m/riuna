@@ -12,7 +12,7 @@
 |---|---|---|
 | 0 — Fork, marca y auditoría | 2 | **Cerrada** — dos decisiones aplazadas (ver abajo) |
 | 1 — Uso real y asignación por equipos | 2 | **Cerrada** — una deuda abierta (ver abajo) |
-| 2 — Árbol de tareas y épicas | 4 | Pendiente |
+| 2 — Árbol de tareas y épicas | 4 | **Cerrada** — deuda abierta (ver abajo) |
 | 3 — Campos personalizados | 4 | Pendiente |
 | 4 — Motor de vistas y vista Tabla | 4 | Pendiente |
 | 5 — Importación y exportación | 2 | Pendiente |
@@ -143,6 +143,55 @@ gestor de tareas básico y nada propio.
   `task_assignee` es una decisión estructural, y sin dejarla escrita la
   redundancia parecería un descuido dentro de un año.
 
+**Fase 2**:
+- **La importación y la exportación de tareas todavía no llevan jerarquía.**
+  Toda tarea importada entra como raíz y el fichero exportado no dice de quién
+  colgaba. Es de la Fase 5, donde el formato se generaliza a CSV y Excel, y así
+  está anotado en el propio controlador.
+- **Calendario y Gantt siguen sin filtrar ni agrupar** —la deuda de la Fase 1,
+  que sigue apuntando a la Fase 4—. El Gantt sí sabe ya de jerarquía: dibuja el
+  tramo de la rama cuando desborda al padre y rellena la barra con su progreso.
+- **El orden entre hermanas comparte columna con el del tablero** (`position`).
+  Arrastrar en el tablero reordena hermanas y al revés. Es intencionado, para
+  no gastar una columna antes de que la vista Tabla de la Fase 4 diga si
+  necesita un orden propio; queda escrito en la
+  [ADR 011](adr/011-arbol-de-tareas-y-epicas.md) para que no parezca un olvido.
+- **La profundidad heredada puede superar el límite del proyecto.** La
+  migración no recorta lo que ya existía: el límite guarda los movimientos
+  nuevos, no los datos viejos.
+- **`Tab` y `Shift+Tab` solo actúan con una fila enfocada en el modo
+  jerarquía.** Se entra al modo con `j`/`k`. Registrar el tabulador a todas
+  horas dejaría la vista sin navegación por teclado, que es peor que pedir un
+  gesto previo.
+- **Sin medición de rendimiento todavía.** Los agregados se calculan al leer,
+  acotados a las tareas que tienen hijas y apoyados en el prefijo
+  materializado, pero el presupuesto —50.000 tareas, `EXPLAIN`, < 300 ms p95—
+  se revisa al cerrar la Fase 4, que es cuando existe el motor que lo va a
+  estresar.
+- **Lo que las pruebas encontraron**, que es para lo que estaban:
+  - **Los agregados leían las fechas una hora corridas.** La consulta de
+    agregados es SQL crudo y node-postgres interpreta `timestamp` sin zona en
+    hora local, mientras que drizzle lo interpreta en UTC. La rama empezaba
+    antes que su propia hija. Se pide el valor en texto y se fija el criterio
+    de drizzle.
+  - **La subconsulta de recuento de las épicas apuntaba a sí misma.** Drizzle
+    interpola una columna en la lista de selección sin cualificar, y dentro de
+    una subconsulta `"id"` ya no es la fila de fuera. Cualificado a mano.
+  - **`substring(texto from $n)` no compilaba.** Sin `::int`, Postgres no puede
+    decidir entre la versión que corta por posición y la que corta por patrón.
+    Reparentar y borrar devolvían un 500.
+  - **Las dos `CHECK` del árbol hicieron fallar de golpe los quince ficheros de
+    pruebas de integración heredados** que insertaban tareas a mano. Era la
+    señal buscada: el mismo olvido en un controlador nuevo fallará igual de
+    ruidosamente.
+- **Lo que la pasada por el navegador encontró:** la ficha de épicas del
+  lateral de propiedades solo estaba en una de las tres disposiciones que ese
+  componente pinta —la compacta—, así que en la página de detalle no aparecía;
+  el ajuste de jerarquía dependía de resolver antes el espacio de trabajo, que
+  esa pantalla no tiene en la ruta, y se quedaba en blanco; y el disparador del
+  selector de épicas iba envuelto en un `span`, que Base UI rechaza por perder
+  la semántica de botón. Las tres arregladas.
+
 ---
 
 ## Contexto
@@ -231,8 +280,8 @@ invitaciones, i18n y tema claro/oscuro.
 |---|---|
 | Asignación a **equipos** y **múltiples asignados** | **Hecho** (fase 1) |
 | Gestión de equipos (crear, renombrar, miembros) | **Hecho** (fase 1) |
-| **Subtareas reales en árbol**, con agregados y cascada | Solo relaciones `subtask` entre pares: no hay `parent_id` ni orden dentro del padre |
-| **Épicas**: grupos transversales dentro del proyecto | No existe |
+| **Subtareas reales en árbol**, con agregados y cascada | **Hecho** (fase 2) |
+| **Épicas**: grupos transversales dentro del proyecto | **Hecho** (fase 2) |
 | Campos personalizados | No existe |
 | Motor de vistas: filtros guardados, agrupación, columnas, **vista Tabla editable** | No existe |
 | Importación CSV/Excel genérica con mapeo | Hay import/export de tareas; hay que generalizarlo |
@@ -262,27 +311,33 @@ tablero, lista y backlog ✔ —el tablero filtra pero no agrupa, ver
 **Hecho cuando:** asignas una tarea a un departamento entero, la ves filtrada
 por equipo, y restauras un backup sin perder nada. ✔
 
-### Fase 2 — Árbol de tareas y épicas (≈4 semanas)
-*Va antes del motor de vistas a propósito: si el motor nace sin saber de
+### Fase 2 — Árbol de tareas y épicas · **cerrada**
+*Fue antes del motor de vistas a propósito: si el motor nace sin saber de
 jerarquía, hay que retrofitear el renderizado en árbol, los agregados como
 columnas y los filtros de subárbol en las cuatro vistas.*
 
-**Árbol real:** `parent_id`, `path` materializado y `depth` en `task`, con
-migración que convierte las relaciones `subtask` existentes en punteros de
-padre. Validación anti-ciclo al reparentar y límite de profundidad
-configurable (la UI se vuelve inmanejable más allá de ~5 niveles).
-**Agregados del subárbol:** progreso por subtareas cerradas, fechas heredadas,
-estimación y tiempo sumados. Con **CTE recursiva al leer**; solo se
-desnormalizan contadores si el presupuesto de rendimiento lo exige.
-**Cascada configurable por proyecto:** cerrar y archivar se propagan hacia
-abajo; mover un subárbol reescribe `path` y renumera.
-**Épicas:** tabla `epic` por proyecto y `task_epic` muchos-a-muchos.
-**Frontend:** árbol plegable en la vista Lista, reparentar arrastrando con
-dnd-kit, `Tab` / `Shift+Tab` para degradar y promover, contador de subtareas en
-las tarjetas, y barras de resumen en el Gantt.
+**Árbol real** ✔: `parent_id` manda y `path`/`depth` son su forma
+materializada, con dos `CHECK` que vigilan la coherencia en la propia base de
+datos. Validación anti-ciclo al reparentar y profundidad máxima por proyecto.
+La relación `subtask` **se retira**: una migración de un solo sentido la
+convierte en punteros de padre y baja a `related` lo que no puede convertir.
+Razonado en la [ADR 011](adr/011-arbol-de-tareas-y-epicas.md).
+**Agregados del subárbol** ✔: progreso, fechas heredadas, estimación y tiempo
+sumados, calculados al leer sobre el prefijo materializado —no con una
+recursiva por tarea— y acotados a las tareas que tienen hijas. Una tarea
+archivada no entra en ningún agregado.
+**Cascada configurable por proyecto** ✔, apagada por defecto: cerrar y
+archivar se propagan hacia abajo. Mover un subárbol de proyecto se lo lleva
+entero y reclama números nuevos allí.
+**Épicas** ✔: `epic` por proyecto y `task_epic` muchos-a-muchos, con filtro en
+tablero, lista y backlog.
+**Frontend** ✔: la jerarquía es un modo de «agrupar por» en la vista Lista
+—árbol plegable, sangría, contador de subtareas—, con `Tab` / `Shift+Tab` para
+sangrar y promover, arrastre para colgar una tarea de otra, y barras de resumen
+en el Gantt. La estimación se edita en el detalle, en horas.
 **Hecho cuando:** descompones una tarea en tres niveles, el padre muestra
 progreso y fechas reales de su rama, cerrarlo baja en cascada, y filtras un
-tablero por épica.
+tablero por épica. ✔
 
 ### Fase 3 — Campos personalizados (≈4 semanas)
 `field_definition` (texto, número, moneda, select, multi-select, fecha,
@@ -428,6 +483,7 @@ destructiva.
 
 ## Siguiente paso
 
-Fase 2: el árbol de tareas. `parent_id`, `path` y `depth` en `task`, con la
-migración que convierte en punteros de padre las relaciones `subtask` que ya
-existen.
+Fase 3: los campos personalizados. `field_definition` por proyecto o por
+espacio y `custom_fields jsonb` con índice GIN en `task`, validando cada valor
+contra su definición. Es la última pieza que le falta al motor de vistas de la
+Fase 4 para tener algo que filtrar más allá de lo que ya trae `task`.
