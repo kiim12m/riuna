@@ -534,6 +534,16 @@
 				"confirm": "Transferir propiedad"
 			}
 		},
+		"workspaceTasksExport": {
+			"title": "Exportar tareas a Excel",
+			"subtitle": "Descarga todas las tareas del espacio de trabajo en el formato del cuadro de SERVITEC.",
+			"spreadsheet": "Cuadro de tareas (.xlsx)",
+			"spreadsheetDescription": "Una hoja con todas las tareas de todos los proyectos, con su estado, sus fechas y sus comentarios.",
+			"exportButton": "Exportar",
+			"exporting": "Exportando tareas...",
+			"exportSuccess": "Tareas exportadas correctamente",
+			"exportError": "Error al exportar tareas"
+		},
 		"projectGeneral": {
 			"pageTitle": "Ajustes del Proyecto",
 			"title": "Ajustes del Proyecto",

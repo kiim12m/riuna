@@ -2536,6 +2536,46 @@
 						"transferOwnership"
 					]
 				},
+				"workspaceTasksExport": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"subtitle": {
+							"type": "string"
+						},
+						"spreadsheet": {
+							"type": "string"
+						},
+						"spreadsheetDescription": {
+							"type": "string"
+						},
+						"exportButton": {
+							"type": "string"
+						},
+						"exporting": {
+							"type": "string"
+						},
+						"exportSuccess": {
+							"type": "string"
+						},
+						"exportError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"subtitle",
+						"spreadsheet",
+						"spreadsheetDescription",
+						"exportButton",
+						"exporting",
+						"exportSuccess",
+						"exportError"
+					]
+				},
 				"workspaceRoles": {
 					"type": "object",
 					"additionalProperties": false,
@@ -5146,6 +5186,7 @@
 				"developerPage",
 				"apiKey",
 				"workspaceGeneral",
+				"workspaceTasksExport",
 				"workspaceRoles",
 				"workspaceTeams",
 				"workspaceLabels",

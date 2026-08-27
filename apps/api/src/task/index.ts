@@ -18,6 +18,7 @@ import {
   isImageContentType,
   validateTaskAssetUploadInput,
 } from "../storage/s3";
+import { buildContentDisposition } from "../utils/content-disposition";
 import { normalizeApiServerUrl } from "../utils/openapi-spec";
 import { requireWorkspacePermission } from "../utils/require-workspace-permission";
 import {
@@ -29,6 +30,7 @@ import bulkUpdateTasks from "./controllers/bulk-update-tasks";
 import createTask from "./controllers/create-task";
 import deleteTask from "./controllers/delete-task";
 import exportTasks from "./controllers/export-tasks";
+import exportWorkspaceTasks from "./controllers/export-workspace-tasks";
 import getTask from "./controllers/get-task";
 import getTasks from "./controllers/get-tasks";
 import importTasks from "./controllers/import-tasks";
@@ -417,6 +419,41 @@ const task = new Hono<{
       const exportData = await exportTasks(projectId);
 
       return c.json(exportData);
+    },
+  )
+  .get(
+    "/export/servitec/:workspaceId",
+    describeRoute({
+      operationId: "exportWorkspaceTasksXlsx",
+      tags: ["Tasks"],
+      description:
+        "Export every task in a workspace as the SERVITEC spreadsheet board",
+      responses: {
+        200: {
+          description: "Spreadsheet file",
+          content: {
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+              { schema: { type: "string", format: "binary" } },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ workspaceId: v.string() })),
+    workspaceAccess.fromParam("workspaceId"),
+    requireWorkspacePermission({ task: ["read"] }),
+    async (c) => {
+      const { workspaceId } = c.req.valid("param");
+
+      const { buffer, filename } = await exportWorkspaceTasks(workspaceId);
+
+      // No Content-Length: the global compress() middleware may re-encode the
+      // body, and a stale length is worse than none.
+      return c.body(new Uint8Array(buffer), 200, {
+        "Content-Disposition": buildContentDisposition(filename, false),
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "X-Content-Type-Options": "nosniff",
+      });
     },
   )
   .post(

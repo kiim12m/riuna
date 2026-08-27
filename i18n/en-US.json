@@ -637,6 +637,16 @@
 				"confirm": "Transfer ownership"
 			}
 		},
+		"workspaceTasksExport": {
+			"title": "Export tasks to Excel",
+			"subtitle": "Download every task in this workspace as the SERVITEC board spreadsheet.",
+			"spreadsheet": "Task board (.xlsx)",
+			"spreadsheetDescription": "One sheet with every task across all projects, including status, dates and comments.",
+			"exportButton": "Export",
+			"exporting": "Exporting tasks...",
+			"exportSuccess": "Tasks exported successfully",
+			"exportError": "Could not export tasks"
+		},
 		"workspaceRoles": {
 			"pageTitle": "Roles",
 			"title": "Roles",
