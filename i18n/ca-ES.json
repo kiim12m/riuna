@@ -534,6 +534,16 @@
 				"confirm": "Transferir propiedad"
 			}
 		},
+		"workspaceTasksExport": {
+			"title": "Exportar tasques a Excel",
+			"subtitle": "Descarrega totes les tasques de l'espai de treball en el format del quadre de SERVITEC.",
+			"spreadsheet": "Quadre de tasques (.xlsx)",
+			"spreadsheetDescription": "Un full amb totes les tasques de tots els projectes, amb el seu estat, les seves dates i els seus comentaris.",
+			"exportButton": "Exportar",
+			"exporting": "Exportant tasques...",
+			"exportSuccess": "Tasques exportades correctament",
+			"exportError": "No s'han pogut exportar les tasques"
+		},
 		"projectGeneral": {
 			"pageTitle": "Ajustes del Proyecto",
 			"title": "Ajustes del Proyecto",

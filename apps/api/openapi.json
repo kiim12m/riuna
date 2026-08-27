@@ -301,6 +301,9 @@
                     },
                     "billingEnabled": {
                       "type": "boolean"
+                    },
+                    "localAccountDomain": {
+                      "type": "string"
                     }
                   },
                   "required": [
@@ -318,7 +321,8 @@
                     "disableLoginForm",
                     "customOAuthAutoLogin",
                     "customOAuthLogoutUrl",
-                    "billingEnabled"
+                    "billingEnabled",
+                    "localAccountDomain"
                   ]
                 }
               }
@@ -2487,6 +2491,39 @@
         "summary": "Export Tasks"
       }
     },
+    "/task/export/servitec/{workspaceId}": {
+      "get": {
+        "operationId": "exportWorkspaceTasksXlsx",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Export every task in a workspace as the SERVITEC spreadsheet board",
+        "responses": {
+          "200": {
+            "description": "Spreadsheet file",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Export Workspace Tasks Xlsx"
+      }
+    },
     "/task/import/{projectId}": {
       "post": {
         "operationId": "importTasks",
@@ -2918,6 +2955,59 @@
           }
         },
         "summary": "Update Task Assignee"
+      }
+    },
+    "/task/assignees/{id}": {
+      "put": {
+        "operationId": "updateTaskAssignees",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Replace the full set of assignees. The first one becomes the primary assignee.",
+        "responses": {
+          "200": {
+            "description": "Task assignees updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "userIds"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Task Assignees"
       }
     },
     "/task/team/{id}": {
@@ -11434,6 +11524,256 @@
           }
         },
         "summary": "Delete User Avatar"
+      }
+    },
+    "/user/local": {
+      "post": {
+        "operationId": "createLocalUser",
+        "tags": [
+          "User"
+        ],
+        "description": "Create a local account with a username and password, with no email address, and add it to a workspace. Restricted to the instance admin",
+        "responses": {
+          "200": {
+            "description": "Local account created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "username",
+                    "name",
+                    "role"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not the instance admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Username already taken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "workspaceId": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "username",
+                  "displayName",
+                  "password",
+                  "workspaceId"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Create Local User"
+      }
+    },
+    "/user/{id}/email": {
+      "put": {
+        "operationId": "setUserEmail",
+        "tags": [
+          "User"
+        ],
+        "description": "Give a real email address to an account. A local account stops being local: it recovers email notifications and can sign in with either key. Restricted to the instance admin",
+        "responses": {
+          "200": {
+            "description": "Email assigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "isLocalAccount": {
+                      "type": "boolean",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "isLocalAccount"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or reserved address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not the instance admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Address already in use",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "message"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "summary": "Set User Email"
       }
     },
     "/auth/organization/create": {
