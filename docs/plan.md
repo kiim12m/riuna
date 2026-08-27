@@ -376,7 +376,7 @@ Exportación de cualquier vista con sus filtros aplicados.
 campos solo, lo reimportas sin duplicar nada, y exportas una vista filtrada.
 **Adelantado:** la primera plantilla concreta ya está — el cuadro de tareas de
 SERVITEC se exporta en `.xlsx` desde los ajustes del espacio de trabajo
-([ADR 011](adr/011-exportacion-a-excel.md)). La fase la absorberá como caso de
+([ADR 012](adr/012-exportacion-a-excel.md)). La fase la absorberá como caso de
 prueba del motor genérico, no la sustituirá desde cero.
 
 *Semana 18: Riuna ya es la plataforma diferencial. Lo que sigue es mejora

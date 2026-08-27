@@ -1,4 +1,4 @@
-# ADR 011 — Exportación a Excel del cuadro de tareas
+# ADR 012 — Exportación a Excel del cuadro de tareas
 
 **Estado:** aceptada · **Fecha:** 2026-08-27
 
@@ -40,6 +40,10 @@ en el código —`apps/api/src/task/exports/servitec-workbook.ts`, que es el ún
 sitio que sabe cómo es la hoja— y hay una dependencia más que mantener. La Fase 5
 tendrá que absorber este módulo como caso de prueba del motor genérico en vez de
 tirarlo.
+
+El árbol de la Fase 2 no cambia nada aquí: la hoja es plana y una subtarea sale
+como una fila más, igual que el original, que tampoco tiene jerarquía. Las
+épicas viven en su propia tabla y no añaden filas.
 
 No hay importación desde este `.xlsx`: eso es Fase 5 y necesita `external_ref`
 para ser idempotente.
