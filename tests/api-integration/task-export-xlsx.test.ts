@@ -8,6 +8,7 @@ import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 const XLSX_MIME =
@@ -29,6 +30,7 @@ async function createTask({
   const [task] = await db
     .insert(schema.taskTable)
     .values({
+      ...taskTreeValues(),
       projectId,
       title,
       status,

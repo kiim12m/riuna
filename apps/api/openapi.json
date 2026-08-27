@@ -980,6 +980,15 @@
                       },
                       "position": {
                         "type": "number"
+                      },
+                      "cascadeClose": {
+                        "type": "boolean"
+                      },
+                      "cascadeArchive": {
+                        "type": "boolean"
+                      },
+                      "maxTaskDepth": {
+                        "type": "number"
                       }
                     },
                     "required": [
@@ -992,7 +1001,10 @@
                       "createdAt",
                       "isPublic",
                       "archivedAt",
-                      "position"
+                      "position",
+                      "cascadeClose",
+                      "cascadeArchive",
+                      "maxTaskDepth"
                     ]
                   }
                 }
@@ -1066,6 +1078,15 @@
                     },
                     "position": {
                       "type": "number"
+                    },
+                    "cascadeClose": {
+                      "type": "boolean"
+                    },
+                    "cascadeArchive": {
+                      "type": "boolean"
+                    },
+                    "maxTaskDepth": {
+                      "type": "number"
                     }
                   },
                   "required": [
@@ -1078,7 +1099,10 @@
                     "createdAt",
                     "isPublic",
                     "archivedAt",
-                    "position"
+                    "position",
+                    "cascadeClose",
+                    "cascadeArchive",
+                    "maxTaskDepth"
                   ]
                 }
               }
@@ -1166,6 +1190,15 @@
                     },
                     "position": {
                       "type": "number"
+                    },
+                    "cascadeClose": {
+                      "type": "boolean"
+                    },
+                    "cascadeArchive": {
+                      "type": "boolean"
+                    },
+                    "maxTaskDepth": {
+                      "type": "number"
                     }
                   },
                   "required": [
@@ -1178,7 +1211,10 @@
                     "createdAt",
                     "isPublic",
                     "archivedAt",
-                    "position"
+                    "position",
+                    "cascadeClose",
+                    "cascadeArchive",
+                    "maxTaskDepth"
                   ]
                 }
               }
@@ -1244,6 +1280,15 @@
                     },
                     "position": {
                       "type": "number"
+                    },
+                    "cascadeClose": {
+                      "type": "boolean"
+                    },
+                    "cascadeArchive": {
+                      "type": "boolean"
+                    },
+                    "maxTaskDepth": {
+                      "type": "number"
                     }
                   },
                   "required": [
@@ -1256,7 +1301,10 @@
                     "createdAt",
                     "isPublic",
                     "archivedAt",
-                    "position"
+                    "position",
+                    "cascadeClose",
+                    "cascadeArchive",
+                    "maxTaskDepth"
                   ]
                 }
               }
@@ -1356,6 +1404,15 @@
                     },
                     "position": {
                       "type": "number"
+                    },
+                    "cascadeClose": {
+                      "type": "boolean"
+                    },
+                    "cascadeArchive": {
+                      "type": "boolean"
+                    },
+                    "maxTaskDepth": {
+                      "type": "number"
                     }
                   },
                   "required": [
@@ -1368,7 +1425,10 @@
                     "createdAt",
                     "isPublic",
                     "archivedAt",
-                    "position"
+                    "position",
+                    "cascadeClose",
+                    "cascadeArchive",
+                    "maxTaskDepth"
                   ]
                 }
               }
@@ -1438,6 +1498,15 @@
                       },
                       "position": {
                         "type": "number"
+                      },
+                      "cascadeClose": {
+                        "type": "boolean"
+                      },
+                      "cascadeArchive": {
+                        "type": "boolean"
+                      },
+                      "maxTaskDepth": {
+                        "type": "number"
                       }
                     },
                     "required": [
@@ -1450,7 +1519,10 @@
                       "createdAt",
                       "isPublic",
                       "archivedAt",
-                      "position"
+                      "position",
+                      "cascadeClose",
+                      "cascadeArchive",
+                      "maxTaskDepth"
                     ]
                   }
                 }
@@ -1506,6 +1578,121 @@
         "summary": "Reorder Projects"
       }
     },
+    "/project/{id}/tree-settings": {
+      "patch": {
+        "operationId": "updateProjectTreeSettings",
+        "tags": [
+          "Projects"
+        ],
+        "description": "Update how the task tree behaves in this project: whether closing or archiving cascades down the branch, and how deep the tree may go.",
+        "responses": {
+          "200": {
+            "description": "Project tree settings updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "icon": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "isPublic": {
+                      "type": "boolean",
+                      "nullable": true
+                    },
+                    "archivedAt": {
+                      "nullable": true
+                    },
+                    "position": {
+                      "type": "number"
+                    },
+                    "cascadeClose": {
+                      "type": "boolean"
+                    },
+                    "cascadeArchive": {
+                      "type": "boolean"
+                    },
+                    "maxTaskDepth": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "slug",
+                    "icon",
+                    "name",
+                    "description",
+                    "createdAt",
+                    "isPublic",
+                    "archivedAt",
+                    "position",
+                    "cascadeClose",
+                    "cascadeArchive",
+                    "maxTaskDepth"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cascadeClose": {
+                    "type": "boolean"
+                  },
+                  "cascadeArchive": {
+                    "type": "boolean"
+                  },
+                  "maxTaskDepth": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 10
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update Project Tree Settings"
+      }
+    },
     "/project/{id}/archive": {
       "put": {
         "operationId": "archiveProject",
@@ -1554,6 +1741,15 @@
                     },
                     "position": {
                       "type": "number"
+                    },
+                    "cascadeClose": {
+                      "type": "boolean"
+                    },
+                    "cascadeArchive": {
+                      "type": "boolean"
+                    },
+                    "maxTaskDepth": {
+                      "type": "number"
                     }
                   },
                   "required": [
@@ -1566,7 +1762,10 @@
                     "createdAt",
                     "isPublic",
                     "archivedAt",
-                    "position"
+                    "position",
+                    "cascadeClose",
+                    "cascadeArchive",
+                    "maxTaskDepth"
                   ]
                 }
               }
@@ -1634,6 +1833,15 @@
                     },
                     "position": {
                       "type": "number"
+                    },
+                    "cascadeClose": {
+                      "type": "boolean"
+                    },
+                    "cascadeArchive": {
+                      "type": "boolean"
+                    },
+                    "maxTaskDepth": {
+                      "type": "number"
                     }
                   },
                   "required": [
@@ -1646,7 +1854,10 @@
                     "createdAt",
                     "isPublic",
                     "archivedAt",
-                    "position"
+                    "position",
+                    "cascadeClose",
+                    "cascadeArchive",
+                    "maxTaskDepth"
                   ]
                 }
               }
@@ -1711,6 +1922,20 @@
           {
             "in": "query",
             "name": "assigneeId",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "epicId",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rootsOnly",
             "schema": {
               "type": "string"
             }
@@ -1963,6 +2188,15 @@
                   },
                   "userId": {
                     "type": "string"
+                  },
+                  "parentId": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "estimate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "nullable": true
                   }
                 },
                 "required": [
@@ -3010,6 +3244,240 @@
         "summary": "Update Task Assignees"
       }
     },
+    "/task/parent/{id}": {
+      "put": {
+        "operationId": "updateTaskParent",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Hang a task under another one, or promote it to a root task with a null parent. Moves the whole subtree; rejects cycles, cross-project parents and anything past the project's depth limit.",
+        "responses": {
+          "200": {
+            "description": "Task reparented successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string"
+                    },
+                    "position": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "number": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "userId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "enum": [
+                        "no-priority",
+                        "low",
+                        "medium",
+                        "high",
+                        "urgent"
+                      ],
+                      "type": "string"
+                    },
+                    "startDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "position",
+                    "number",
+                    "userId",
+                    "title",
+                    "description",
+                    "status",
+                    "priority",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The parent is the task itself, inside its own subtree, in another project, or too deep"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "parentId": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "parentId"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Task Parent"
+      }
+    },
+    "/task/estimate/{id}": {
+      "put": {
+        "operationId": "updateTaskEstimate",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Update the task estimate, in seconds - the same unit time entries use.",
+        "responses": {
+          "200": {
+            "description": "Task estimate updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string"
+                    },
+                    "position": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "number": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "userId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "enum": [
+                        "no-priority",
+                        "low",
+                        "medium",
+                        "high",
+                        "urgent"
+                      ],
+                      "type": "string"
+                    },
+                    "startDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "position",
+                    "number",
+                    "userId",
+                    "title",
+                    "description",
+                    "status",
+                    "priority",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "estimate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "estimate"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Task Estimate"
+      }
+    },
     "/task/team/{id}": {
       "put": {
         "operationId": "updateTaskTeam",
@@ -3840,6 +4308,262 @@
           }
         ],
         "summary": "Delete Column"
+      }
+    },
+    "/epic/project/{projectId}": {
+      "get": {
+        "operationId": "listEpics",
+        "tags": [
+          "Epics"
+        ],
+        "description": "List the epics of a project with their task counts",
+        "responses": {
+          "200": {
+            "description": "Epics ordered by position",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "includeArchived",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "List Epics"
+      },
+      "post": {
+        "operationId": "createEpic",
+        "tags": [
+          "Epics"
+        ],
+        "description": "Create an epic inside a project",
+        "responses": {
+          "200": {
+            "description": "Epic created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "color": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "dueDate": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Create Epic"
+      }
+    },
+    "/epic/{id}": {
+      "patch": {
+        "operationId": "updateEpic",
+        "tags": [
+          "Epics"
+        ],
+        "description": "Update or archive an epic",
+        "responses": {
+          "200": {
+            "description": "Epic updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "color": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "dueDate": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "archived": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update Epic"
+      },
+      "delete": {
+        "operationId": "deleteEpic",
+        "tags": [
+          "Epics"
+        ],
+        "description": "Delete an epic; its tasks are kept",
+        "responses": {
+          "200": {
+            "description": "Epic deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Delete Epic"
+      }
+    },
+    "/epic/task/{taskId}": {
+      "put": {
+        "operationId": "updateTaskEpics",
+        "tags": [
+          "Epics"
+        ],
+        "description": "Replace the set of epics a task belongs to",
+        "responses": {
+          "200": {
+            "description": "Task epics updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "epicIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "epicIds"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Task Epics"
       }
     },
     "/activity/{taskId}": {
@@ -7358,6 +8082,15 @@
                           },
                           "position": {
                             "type": "number"
+                          },
+                          "cascadeClose": {
+                            "type": "boolean"
+                          },
+                          "cascadeArchive": {
+                            "type": "boolean"
+                          },
+                          "maxTaskDepth": {
+                            "type": "number"
                           }
                         },
                         "required": [
@@ -7370,7 +8103,10 @@
                           "createdAt",
                           "isPublic",
                           "archivedAt",
-                          "position"
+                          "position",
+                          "cascadeClose",
+                          "cascadeArchive",
+                          "maxTaskDepth"
                         ]
                       }
                     },
@@ -10906,7 +11642,6 @@
                   },
                   "relationType": {
                     "enum": [
-                      "subtask",
                       "blocks",
                       "related"
                     ],
