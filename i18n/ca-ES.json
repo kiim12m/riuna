@@ -1300,6 +1300,30 @@
 			"connect": "Conectar Telegram",
 			"saveChanges": "Guardar cambios",
 			"disconnect": "Desconectar"
+		},
+		"projectTree": {
+			"title": "Jerarquía",
+			"description": "Cómo se comporta el árbol de tareas en este proyecto: hasta dónde puede bajar, y si cerrar o archivar una tarea se lleva su rama por delante.",
+			"cascadeCloseLabel": "Cerrar baja en cascada",
+			"cascadeCloseHint": "Mover una tarea a una columna final mueve también todo lo que cuelga de ella.",
+			"cascadeArchiveLabel": "Archivar baja en cascada",
+			"cascadeArchiveHint": "Archivar una tarea archiva también todo lo que cuelga de ella.",
+			"depthLabel": "Profundidad máxima",
+			"depthHint": "Cuántos niveles puede tener una rama. Más allá de cinco, la sangría se come la lista.",
+			"updateError": "No se han podido guardar los ajustes de jerarquía"
+		},
+		"projectEpics": {
+			"title": "Épicas",
+			"description": "Las épicas cortan el proyecto en vertical: agrupan tareas de cualquier rama y de cualquier columna.",
+			"namePlaceholder": "Nombre de la épica",
+			"addAction": "Añadir",
+			"empty": "Todavía no hay épicas",
+			"archiveAction": "Archivar la épica",
+			"unarchiveAction": "Restaurar la épica",
+			"deleteAction": "Borrar la épica",
+			"createError": "No se ha podido crear la épica",
+			"updateError": "No se ha podido cambiar la épica",
+			"deleteError": "No se ha podido borrar la épica"
 		}
 	},
 	"navigation": {
@@ -1866,7 +1890,8 @@
 			"boardHint": "El tauler ja agrupa per estat, en columnes",
 			"fields": {
 				"status": "Estat",
-				"team": "Equip"
+				"team": "Equip",
+				"tree": "Jerarquía"
 			}
 		},
 		"boardFilters": {
@@ -1905,7 +1930,8 @@
 			"updateDatesError": "Error al actualizar las fechas de la tarea",
 			"resizeStart": "Cambiar la fecha de comienzo",
 			"resizeDue": "Cambiar la fecha de vencimiento",
-			"taskAriaLabel": "{{title}}: abrir o arrastrar para mover"
+			"taskAriaLabel": "{{title}}: abrir o arrastrar para mover",
+			"branchSpan": "Tramo de toda la rama"
 		},
 		"delete": {
 			"title": "¿Eliminar tarea?",
@@ -2032,6 +2058,29 @@
 		"team": {
 			"label": "Equip",
 			"unknown": "Equip desconegut"
+		},
+		"tree": {
+			"title": "Rama",
+			"expand": "Desplegar la rama",
+			"collapse": "Plegar la rama",
+			"detach": "Descolgar",
+			"branchProgress": "Cerradas en esta rama",
+			"branchDates": "Fechas de la rama",
+			"branchTime": "Registrado / estimado",
+			"estimateLabel": "Estimación",
+			"hoursShort": "h",
+			"estimateError": "No se ha podido guardar la estimación",
+			"reparentError": "No se ha podido mover la tarea",
+			"cycleError": "Una tarea no puede colgar de su propia rama",
+			"progressTooltip": "{{done}} de {{total}} subtareas cerradas"
+		},
+		"epics": {
+			"title": "Épicas",
+			"none": "Sin épica",
+			"count": "{{count}} épicas",
+			"allEpics": "Todas las épicas",
+			"emptyProject": "Este proyecto todavía no tiene épicas",
+			"updateError": "No se han podido cambiar las épicas de la tarea"
 		}
 	},
 	"invitations": {

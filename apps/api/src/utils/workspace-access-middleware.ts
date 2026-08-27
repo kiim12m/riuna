@@ -18,7 +18,8 @@ type WorkspaceIdSource =
         | "activity"
         | "comment"
         | "column"
-        | "workflowRule";
+        | "workflowRule"
+        | "epic";
       idKey: string;
     }
   | {
@@ -137,7 +138,8 @@ async function lookupWorkspaceId(
     | "activity"
     | "comment"
     | "column"
-    | "workflowRule",
+    | "workflowRule"
+    | "epic",
   id: string,
 ): Promise<string | null> {
   try {
@@ -164,6 +166,19 @@ async function lookupWorkspaceId(
           .where(eq(schema.taskTable.id, id))
           .limit(1);
         return task?.workspaceId || null;
+      }
+
+      case "epic": {
+        const [epic] = await db
+          .select({ workspaceId: schema.projectTable.workspaceId })
+          .from(schema.epicTable)
+          .innerJoin(
+            schema.projectTable,
+            eq(schema.epicTable.projectId, schema.projectTable.id),
+          )
+          .where(eq(schema.epicTable.id, id))
+          .limit(1);
+        return epic?.workspaceId || null;
       }
 
       case "label": {
@@ -356,6 +371,14 @@ export const workspaceAccess = {
     workspaceAccessMiddleware({
       sources: [
         { type: "lookup", resource: "workflowRule", idKey },
+        { type: "query", key: "workspaceId" },
+      ],
+    }),
+
+  fromEpic: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [
+        { type: "lookup", resource: "epic", idKey },
         { type: "query", key: "workspaceId" },
       ],
     }),

@@ -4,6 +4,7 @@ import db from "../../database";
 import { columnTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { assertValidTaskStatus } from "../validate-task-fields";
+import { cascadeStatusToSubtree } from "./cascade-status";
 
 async function updateTaskStatus({
   id,
@@ -45,6 +46,12 @@ async function updateTaskStatus({
     });
   }
 
+  const cascadedCount = await cascadeStatusToSubtree({
+    task: updatedTask,
+    status,
+    currentUserId,
+  });
+
   await publishEvent("task.status_changed", {
     taskId: updatedTask.id,
     projectId: updatedTask.projectId,
@@ -61,7 +68,7 @@ async function updateTaskStatus({
     userId: currentUserId,
   });
 
-  return updatedTask;
+  return { ...updatedTask, cascadedCount };
 }
 
 export default updateTaskStatus;

@@ -332,7 +332,7 @@ async function migrateBoard(context: {
     }
   }
 
-  // Relations need every task to exist first, so they run after the card loop.
+  // Hierarchy needs every task to exist first, so it runs after the card loop.
   for (const item of checklistItems) {
     if (!item.linkedCardId) continue;
 
@@ -341,22 +341,18 @@ async function migrateBoard(context: {
     )?.cardId;
     if (!parentCardId) continue;
 
-    const sourceTaskId = taskIdByCardId.get(parentCardId);
-    const targetTaskId = taskIdByCardId.get(item.linkedCardId);
-    if (!sourceTaskId || !targetTaskId || sourceTaskId === targetTaskId) {
+    const parentTaskId = taskIdByCardId.get(parentCardId);
+    const childTaskId = taskIdByCardId.get(item.linkedCardId);
+    if (!parentTaskId || !childTaskId || parentTaskId === childTaskId) {
       continue;
     }
 
     try {
-      await riuna.createTaskRelation({
-        sourceTaskId,
-        targetTaskId,
-        relationType: "subtask",
-      });
+      await riuna.updateTaskParent(childTaskId, parentTaskId);
       report.relations++;
     } catch (error) {
       report.warnings.push(
-        `Could not link "${item.name}" as a subtask: ${
+        `Could not hang "${item.name}" under its parent card: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );

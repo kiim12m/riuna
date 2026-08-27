@@ -16,6 +16,7 @@ function useCreateTask() {
       startDate,
       dueDate,
       priority,
+      parentId,
     }: CreateTaskRequest) =>
       createTask(
         title,
@@ -26,11 +27,18 @@ function useCreateTask() {
         startDate ? new Date(startDate) : undefined,
         dueDate ? new Date(dueDate) : undefined,
         priority,
+        { parentId },
       ),
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({
         queryKey: ["tasks", variables.projectId],
       });
+      // El padre cambia: gana una hija y con ella su progreso y sus fechas.
+      if (variables.parentId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["task", variables.parentId],
+        });
+      }
     },
   });
 }

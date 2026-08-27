@@ -42,6 +42,7 @@ import useBulkSelectionStore from "@/store/bulk-selection";
 import useProjectStore from "@/store/project";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import type Task from "@/types/task";
+import SubtaskBadge from "../task/subtask-badge";
 import { Button } from "../ui/button";
 import { ContextMenu, ContextMenuTrigger } from "../ui/context-menu";
 import TaskCardContextMenuContent from "./task-card-context-menu/task-card-context-menu-content";
@@ -257,6 +258,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
             )}
 
             <div className="flex items-center gap-1.5">
+              <SubtaskBadge subtree={task.subtree} />
               {showPriority && (
                 <span className="inline-flex items-center gap-1 rounded border border-border/70 bg-muted/55 px-2 py-1 text-[10px] font-medium text-muted-foreground">
                   {getPriorityIcon(task.priority ?? "")}

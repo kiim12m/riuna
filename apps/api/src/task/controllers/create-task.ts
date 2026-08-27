@@ -7,8 +7,10 @@ import {
   assertAssignableUser,
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
+import { childTaskTreeFields, rootTaskTreeFields } from "../tree";
 import { assertValidTaskStatus } from "../validate-task-fields";
 import { claimTaskNumber } from "./claim-task-numbers";
+import { resolveParentForNewTask } from "./update-task-parent";
 
 async function createTask({
   projectId,
@@ -20,6 +22,8 @@ async function createTask({
   dueDate,
   description,
   priority,
+  parentId,
+  estimate,
 }: {
   projectId: string;
   currentUserId: string;
@@ -30,6 +34,8 @@ async function createTask({
   dueDate?: Date;
   description?: string;
   priority?: string;
+  parentId?: string | null;
+  estimate?: number | null;
 }) {
   const resolvedStatus = status || "to-do";
   const resolvedPriority = priority || "no-priority";
@@ -51,6 +57,11 @@ async function createTask({
       .from(userTable)
       .where(eq(userTable.id, normalizedUserId));
   }
+
+  const parent = await resolveParentForNewTask(projectId, parentId);
+  const treeFields = parent
+    ? childTaskTreeFields(parent)
+    : rootTaskTreeFields();
 
   const column = await db.query.columnTable.findFirst({
     where: and(
@@ -79,6 +90,8 @@ async function createTask({
     const [task] = await tx
       .insert(taskTable)
       .values({
+        ...treeFields,
+        estimate: estimate ?? null,
         projectId,
         userId: normalizedUserId ?? null,
         title: title || "",

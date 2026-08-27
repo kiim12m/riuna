@@ -1,4 +1,4 @@
-import { and, asc, eq, max } from "drizzle-orm";
+import { and, asc, eq, inArray, like, max } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import {
@@ -8,7 +8,8 @@ import {
   taskTable,
 } from "../../database/schema";
 import { publishEvent } from "../../events";
-import { claimTaskNumber } from "./claim-task-numbers";
+import { rebasePath, rootPath, subtreePattern } from "../tree";
+import claimTaskNumbers from "./claim-task-numbers";
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -133,9 +134,30 @@ async function moveTask({
     destinationStatus,
   );
 
+  // Padre e hija comparten proyecto siempre (ADR 011), asi que mover una
+  // tarea es mover su rama entera. La tarea movida pasa a ser raiz en el
+  // destino: su padre se queda donde estaba.
+  const subtree = await db
+    .select({
+      id: taskTable.id,
+      path: taskTable.path,
+      depth: taskTable.depth,
+    })
+    .from(taskTable)
+    .where(
+      and(
+        eq(taskTable.projectId, existingTask.projectId),
+        like(taskTable.path, subtreePattern(existingTask.path)),
+      ),
+    )
+    .orderBy(asc(taskTable.depth));
+
+  const descendants = subtree.filter((node) => node.id !== taskId);
+  const newRootPath = rootPath(taskId);
+
   const movedTask = await db.transaction(async (tx) => {
-    const [nextTaskNumber, nextPosition] = await Promise.all([
-      claimTaskNumber(destinationProjectId, tx),
+    const [firstNumber, nextPosition] = await Promise.all([
+      claimTaskNumbers(destinationProjectId, subtree.length, tx),
       getNextTaskPosition(
         tx,
         destinationProjectId,
@@ -150,8 +172,11 @@ async function moveTask({
         projectId: destinationProjectId,
         status: resolvedColumn.slug,
         columnId: resolvedColumn.id,
-        number: nextTaskNumber,
+        number: firstNumber,
         position: nextPosition,
+        parentId: null,
+        path: newRootPath,
+        depth: 0,
       })
       .where(eq(taskTable.id, taskId))
       .returning();
@@ -162,10 +187,33 @@ async function moveTask({
       });
     }
 
+    // Los descendientes conservan su forma —quien cuelga de quien— y solo
+    // cambian de proyecto, de numero y de raiz del camino. El estado se
+    // resuelve por separado: la columna del origen puede no existir aqui.
+    let number = firstNumber + 1;
+    for (const descendant of descendants) {
+      await tx
+        .update(taskTable)
+        .set({
+          projectId: destinationProjectId,
+          status: resolvedColumn.slug,
+          columnId: resolvedColumn.id,
+          number: number++,
+          path: rebasePath(descendant.path, existingTask.path, newRootPath),
+          depth: descendant.depth - existingTask.depth,
+        })
+        .where(eq(taskTable.id, descendant.id));
+    }
+
     await tx
       .update(assetTable)
       .set({ projectId: destinationProjectId })
-      .where(eq(assetTable.taskId, taskId));
+      .where(
+        inArray(
+          assetTable.taskId,
+          subtree.map((node) => node.id),
+        ),
+      );
 
     return updatedTask;
   });

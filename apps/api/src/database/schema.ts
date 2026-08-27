@@ -1,7 +1,9 @@
 import { createId } from "@paralleldrive/cuid2";
 import { relations, sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
+  check,
   customType,
   foreignKey,
   index,
@@ -335,6 +337,12 @@ export const projectTable = pgTable(
     archivedAt: timestamp("archived_at", { mode: "date" }),
     lastTaskNumber: integer("last_task_number").notNull().default(0),
     position: integer("position").notNull().default(0),
+    // La cascada del arbol es por proyecto y viene apagada: cerrar una tarea
+    // y arrastrar con ella veinte descendientes es una accion que nadie ha
+    // pedido si no la ha encendido antes.
+    cascadeClose: boolean("cascade_close").notNull().default(false),
+    cascadeArchive: boolean("cascade_archive").notNull().default(false),
+    maxTaskDepth: integer("max_task_depth").notNull().default(5),
   },
   (table) => [
     unique("project_workspace_id_id_unique").on(table.workspaceId, table.id),
@@ -440,6 +448,22 @@ export const taskTable = pgTable(
     priority: text("priority").default("low").notNull(),
     startDate: timestamp("start_date", { mode: "date" }),
     dueDate: timestamp("due_date", { mode: "date" }),
+    // El arbol. `parent_id` es la verdad; `path` y `depth` son su forma
+    // materializada, que es lo que permite contestar "todo el subarbol" con un
+    // prefijo en vez de una recursiva por consulta. `path` incluye la propia
+    // tarea y va entre barras —`/raiz/hija/nieta/`—, de modo que los
+    // descendientes estrictos de X son `path LIKE X.path || '_%'`. Padre e
+    // hija comparten siempre proyecto: ver ADR 011.
+    parentId: text("parent_id").references((): AnyPgColumn => taskTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    path: text("path").notNull(),
+    depth: integer("depth").notNull().default(0),
+    // Estimacion en segundos, la misma unidad que `time_entry.duration`, para
+    // que el agregado del subarbol compare estimado y registrado sin convertir
+    // nada por el camino.
+    estimate: integer("estimate"),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()
@@ -452,7 +476,24 @@ export const taskTable = pgTable(
     index("task_assigneeId_idx").on(table.userId),
     index("task_teamId_idx").on(table.teamId),
     index("task_columnId_idx").on(table.columnId),
+    index("task_parentId_idx").on(table.parentId),
+    // `text_pattern_ops` es lo que hace que el `LIKE 'prefijo%'` del subarbol
+    // use el indice: el operador por defecto depende de la intercalacion de la
+    // base de datos y con una que no sea C no sirve para prefijos.
+    index("task_path_idx").using("btree", sql`${table.path} text_pattern_ops`),
     unique("task_project_number_unique").on(table.projectId, table.number),
+    // Las dos invariantes del arbol, vigiladas por la base de datos y no por
+    // la buena memoria de quien anada el proximo `insert(taskTable)`: el
+    // camino termina en la propia tarea, y la profundidad es el numero de
+    // saltos que ese camino describe.
+    check(
+      "task_path_ends_with_id",
+      sql`${table.path} LIKE '%/' || ${table.id} || '/'`,
+    ),
+    check(
+      "task_depth_matches_path",
+      sql`${table.depth} = length(${table.path}) - length(replace(${table.path}, '/', '')) - 2`,
+    ),
   ],
 );
 
@@ -479,6 +520,71 @@ export const taskAssigneeTable = pgTable(
     index("taskAssignee_taskId_idx").on(table.taskId),
     index("taskAssignee_userId_idx").on(table.userId),
     unique("task_assignee_unique").on(table.taskId, table.userId),
+  ],
+);
+
+// Las epicas cortan el proyecto en vertical: agrupan tareas de cualquier rama
+// del arbol y de cualquier columna. Son entidad propia y no una etiqueta
+// porque tienen fechas, orden y un ciclo de vida —se archivan— que una
+// etiqueta no sabria llevar.
+export const epicTable = pgTable(
+  "epic",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projectTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    description: text("description"),
+    color: text("color"),
+    position: integer("position").notNull().default(0),
+    startDate: timestamp("start_date", { mode: "date" }),
+    dueDate: timestamp("due_date", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    // Borrado suave, alineado con el `archived_at` que ya usa `project`.
+    archivedAt: timestamp("archived_at", { mode: "date" }),
+  },
+  (table) => [
+    index("epic_projectId_idx").on(table.projectId),
+    index("epic_projectId_position_idx").on(table.projectId, table.position),
+  ],
+);
+
+// Muchos a muchos a proposito: una tarea puede servir a mas de una epica, y
+// obligar a elegir una sola convertiria la epica en un segundo estado.
+export const taskEpicTable = pgTable(
+  "task_epic",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => taskTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    epicId: text("epic_id")
+      .notNull()
+      .references(() => epicTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("task_epic_taskId_idx").on(table.taskId),
+    index("task_epic_epicId_idx").on(table.epicId),
+    unique("task_epic_unique").on(table.taskId, table.epicId),
   ],
 );
 

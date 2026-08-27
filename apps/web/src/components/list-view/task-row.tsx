@@ -6,6 +6,7 @@ import {
   Calendar,
   CalendarClock,
   CalendarX,
+  ChevronRight,
   GitMerge,
   GitPullRequest,
 } from "lucide-react";
@@ -47,6 +48,7 @@ import { useUserPreferencesStore } from "@/store/user-preferences";
 import type Task from "@/types/task";
 import TaskCardContextMenuContent from "../kanban-board/task-card-context-menu/task-card-context-menu-content";
 import { TaskLabels } from "../kanban-board/task-labels";
+import SubtaskBadge from "../task/subtask-badge";
 import { ContextMenu, ContextMenuTrigger } from "../ui/context-menu";
 
 type TaskRowProps = {
@@ -60,9 +62,22 @@ type TaskRowProps = {
     isFinal?: boolean | null;
     icon?: string | null;
   };
+  // Solo llega en el modo jerarquia: la sangria, el desplegable y si la fila
+  // es ahora mismo el destino de un arrastre.
+  tree?: {
+    depth: number;
+    hasChildren: boolean;
+    isCollapsed: boolean;
+    onToggle: () => void;
+    isNestTarget?: boolean;
+  };
 };
 
-function TaskRow({ task, projectSlug, statusColumn }: TaskRowProps) {
+// Cada nivel sangra lo justo para que la relacion se lea sin comerse el ancho
+// del titulo, que es lo que pasa cuando se sangra por tabulador entero.
+const TREE_INDENT_PX = 18;
+
+function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const {
@@ -196,6 +211,7 @@ function TaskRow({ task, projectSlug, statusColumn }: TaskRowProps) {
         isTaskSelected &&
           "bg-accent/60 shadow-sm ring-1 ring-inset ring-ring/30",
         isTaskFocused && "ring-2 ring-inset ring-ring/50",
+        tree?.isNestTarget && "bg-primary/10 ring-2 ring-inset ring-primary/40",
       )}
     >
       <ContextMenu>
@@ -208,9 +224,44 @@ function TaskRow({ task, projectSlug, statusColumn }: TaskRowProps) {
               "group relative flex items-center gap-3 px-4 py-1.5 transition-colors cursor-pointer",
               isTaskSelected ? "bg-accent/45" : "hover:bg-accent/60",
             )}
+            style={
+              tree
+                ? { paddingLeft: 16 + tree.depth * TREE_INDENT_PX }
+                : undefined
+            }
             {...attributes}
             {...listeners}
           >
+            {tree &&
+              (tree.hasChildren ? (
+                <button
+                  type="button"
+                  aria-label={
+                    tree.isCollapsed
+                      ? t("tasks:tree.expand")
+                      : t("tasks:tree.collapse")
+                  }
+                  aria-expanded={!tree.isCollapsed}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    tree.onToggle();
+                  }}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  className="flex-shrink-0 rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <ChevronRight
+                    className={cn(
+                      "h-3 w-3 transition-transform",
+                      !tree.isCollapsed && "rotate-90",
+                    )}
+                  />
+                </button>
+              ) : (
+                // Hueco del mismo ancho que el desplegable: sin el, las hojas
+                // y las ramas de un mismo nivel no quedarian alineadas.
+                <span className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+              ))}
+
             {showPriority && (
               <div className="flex-shrink-0 first:[&_svg]:h-4 first:[&_svg]:w-4">
                 {getPriorityIcon(task.priority ?? "")}
@@ -228,6 +279,7 @@ function TaskRow({ task, projectSlug, statusColumn }: TaskRowProps) {
                   {task.title}
                 </span>
                 <div className="flex items-center gap-1">
+                  <SubtaskBadge subtree={task.subtree} />
                   {showLabels && <TaskLabels labels={task.labels ?? []} />}
 
                   {pullRequests.length === 1 && (

@@ -109,3 +109,26 @@ export async function createProjectFixture({
     },
   };
 }
+
+/**
+ * Los valores de arbol que toda tarea necesita desde la Fase 2. La base de
+ * datos lo exige con dos CHECK (`task_path_ends_with_id`,
+ * `task_depth_matches_path`), asi que un insert directo sin esto falla, que es
+ * justamente lo que se buscaba al ponerlos.
+ */
+export function taskTreeValues(id = `task-${randomUUID()}`) {
+  return { id, parentId: null, path: `/${id}/`, depth: 0 };
+}
+
+/** Los mismos valores para una tarea colgada de otra. */
+export function childTreeValues(
+  parent: { id: string; path: string; depth: number },
+  id = `task-${randomUUID()}`,
+) {
+  return {
+    id,
+    parentId: parent.id,
+    path: `${parent.path}${id}/`,
+    depth: parent.depth + 1,
+  };
+}

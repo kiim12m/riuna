@@ -8,6 +8,7 @@ import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 async function createTeam(workspaceId: string, name = "Desarrollo") {
@@ -28,6 +29,7 @@ async function createTask(projectId: string, columnId: string) {
   const [task] = await db
     .insert(schema.taskTable)
     .values({
+      ...taskTreeValues(),
       projectId,
       title: "Reparto por departamento",
       status: "to-do",

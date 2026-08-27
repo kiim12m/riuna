@@ -8,6 +8,7 @@ import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 beforeEach(async () => {
@@ -122,6 +123,7 @@ describe("task assignees stay inside the workspace", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Seeded",
         description: "",
@@ -157,6 +159,7 @@ describe("activity attribution", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Seeded",
         description: "",
@@ -200,6 +203,7 @@ describe("every assignee write path is workspace scoped", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Seeded",
         description: "",
@@ -345,6 +349,7 @@ describe("every assignee write path is workspace scoped", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Seeded",
         description: "",
@@ -385,6 +390,7 @@ describe("every assignee write path is workspace scoped", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Seeded",
         description: "",
@@ -425,6 +431,7 @@ describe("every assignee write path is workspace scoped", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Seeded",
         description: "",
