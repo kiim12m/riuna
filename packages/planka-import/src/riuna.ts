@@ -112,11 +112,20 @@ export class RiunaClient {
   createTaskRelation(input: {
     sourceTaskId: string;
     targetTaskId: string;
-    relationType: "subtask" | "blocks" | "related";
+    relationType: "blocks" | "related";
   }): Promise<unknown> {
     return this.request("/api/task-relation", {
       method: "POST",
       body: JSON.stringify(input),
+    });
+  }
+
+  // La jerarquia ya no es una relacion entre pares: PLANKA cuelga la tarjeta
+  // enlazada de la tarjeta que la lista, y eso es exactamente un padre.
+  updateTaskParent(taskId: string, parentId: string | null): Promise<unknown> {
+    return this.request(`/api/task/parent/${encodeURIComponent(taskId)}`, {
+      method: "PUT",
+      body: JSON.stringify({ parentId }),
     });
   }
 

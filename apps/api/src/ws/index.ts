@@ -267,6 +267,8 @@ type TaskEvent = {
 const taskUpdateEvents = [
   "task.created",
   "task.updated",
+  "task.parent_changed",
+  "task.epics_changed",
   "task.deleted",
   "task.status_changed",
   "task.priority_changed",
@@ -309,6 +311,22 @@ subscribeToEvent<{
   broadcastToProject(
     fromProjectId,
     { type: "TASK_MOVED", projectId: fromProjectId, taskId },
+    initiatorId,
+  );
+});
+
+subscribeToEvent<{
+  projectId: string;
+  epicId: string;
+  userId: string;
+  initiatorId?: string;
+}>("epic.changed", async (data) => {
+  const { projectId, initiatorId } = data;
+  if (!projectId) return;
+
+  broadcastToProject(
+    projectId,
+    { type: "EPIC_UPDATED", projectId, taskId: "" },
     initiatorId,
   );
 });

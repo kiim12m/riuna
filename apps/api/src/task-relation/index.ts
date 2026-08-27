@@ -69,7 +69,9 @@ const taskRelation = new Hono<{
       v.object({
         sourceTaskId: v.string(),
         targetTaskId: v.string(),
-        relationType: v.picklist(["subtask", "blocks", "related"]),
+        // `subtask` se retiro en la Fase 2: la jerarquia vive en el arbol
+        // (`task.parent_id`), no en una relacion entre pares. Ver ADR 011.
+        relationType: v.picklist(["blocks", "related"]),
       }),
     ),
     async (c, next) => {

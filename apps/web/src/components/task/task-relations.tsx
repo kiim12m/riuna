@@ -104,21 +104,17 @@ export default function TaskRelations({
     }
   }, [commandOpen]);
 
-  const nonSubtaskRelations = relations.filter(
-    (rel) => rel.relationType !== "subtask",
-  );
-
   const groupedRelations = useMemo(() => {
     const groups: Record<
       string,
       Array<{
         id: string;
         relationType: string;
-        task: NonNullable<(typeof nonSubtaskRelations)[number]["sourceTask"]>;
+        task: NonNullable<(typeof relations)[number]["sourceTask"]>;
       }>
     > = {};
 
-    for (const rel of nonSubtaskRelations) {
+    for (const rel of relations) {
       const isSource = rel.sourceTaskId === taskId;
       const linkedTask = isSource ? rel.targetTask : rel.sourceTask;
       if (!linkedTask) continue;
@@ -140,10 +136,10 @@ export default function TaskRelations({
     }
 
     return groups;
-  }, [nonSubtaskRelations, taskId]);
+  }, [relations, taskId]);
 
   const existingRelatedTaskIds = new Set(
-    nonSubtaskRelations.flatMap((rel) => [rel.sourceTaskId, rel.targetTaskId]),
+    relations.flatMap((rel) => [rel.sourceTaskId, rel.targetTaskId]),
   );
   existingRelatedTaskIds.add(taskId);
 
@@ -237,7 +233,7 @@ export default function TaskRelations({
   };
 
   const buildTaskObject = (item: {
-    task: NonNullable<(typeof nonSubtaskRelations)[number]["sourceTask"]>;
+    task: NonNullable<(typeof relations)[number]["sourceTask"]>;
   }): Task => ({
     id: item.task.id,
     title: item.task.title,
@@ -257,7 +253,7 @@ export default function TaskRelations({
     projectId: item.task.projectId,
   });
 
-  const totalCount = nonSubtaskRelations.length;
+  const totalCount = relations.length;
 
   return (
     <>

@@ -17,11 +17,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/menu";
 import labelColors from "@/constants/label-colors";
+import useGetEpics from "@/hooks/queries/epic/use-get-epics";
 import {
   type BoardFilters,
   DUE_DATE_FILTER_VALUES,
 } from "@/hooks/use-task-filters";
 import { getColumnIcon } from "@/lib/column";
+import { resolveEpicColor } from "@/lib/epic-color";
 import { getInitials } from "@/lib/get-initials";
 import type { GroupByField } from "@/lib/group-tasks";
 import { getPriorityLabel } from "@/lib/i18n/domain";
@@ -158,11 +160,13 @@ export default function BoardToolbar({
   onGroupByChange,
 }: BoardToolbarProps) {
   const { t } = useTranslation();
+  const { data: epics = [] } = useGetEpics(project?.id ?? "");
   const selectedStatusIds = filters.status ?? [];
   const selectedPriorityIds = filters.priority ?? [];
   const selectedAssigneeIds = filters.assignee ?? [];
   const selectedTeamIds = filters.team ?? [];
   const selectedDueDateFilters = filters.dueDate ?? [];
+  const selectedEpicIds = filters.epics ?? [];
 
   const getStatusDisplayName = (statusId: string) => {
     const column = project?.columns?.find((col) => col.id === statusId);
@@ -246,6 +250,14 @@ export default function BoardToolbar({
       ? selectedTeamIds.filter((id) => id !== teamId)
       : [...selectedTeamIds, teamId];
     updateFilter("team", next.length > 0 ? next : null);
+  };
+
+  const toggleEpicFilter = (epicId: string) => {
+    const exists = selectedEpicIds.includes(epicId);
+    const next = exists
+      ? selectedEpicIds.filter((id) => id !== epicId)
+      : [...selectedEpicIds, epicId];
+    updateFilter("epics", next.length > 0 ? next : null);
   };
 
   const toggleDueDateFilter = (dueDate: string) => {
@@ -537,6 +549,58 @@ export default function BoardToolbar({
 
                 <DropdownMenuSub>
                   <DropdownMenuSubTrigger className="h-8 rounded-md text-sm">
+                    {t("tasks:epics.title")}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-64">
+                    <div className="grid grid-cols-1 gap-1 p-1">
+                      <button
+                        className={`inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-left text-xs ${
+                          selectedEpicIds.length === 0
+                            ? "bg-accent text-accent-foreground"
+                            : "text-foreground/90 hover:bg-accent/60 hover:text-foreground"
+                        }`}
+                        onClick={() => updateFilter("epics", null)}
+                        type="button"
+                      >
+                        <CheckSlot checked={selectedEpicIds.length === 0} />
+                        {t("tasks:epics.allEpics")}
+                      </button>
+                      {epics.length === 0 && (
+                        <span className="px-2 py-2 text-center text-xs text-muted-foreground">
+                          {t("tasks:epics.emptyProject")}
+                        </span>
+                      )}
+                      {epics.map((epic) => (
+                        <button
+                          key={epic.id}
+                          className={`inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-left text-xs ${
+                            selectedEpicIds.includes(epic.id)
+                              ? "bg-accent text-accent-foreground"
+                              : "text-foreground/90 hover:bg-accent/60 hover:text-foreground"
+                          }`}
+                          onClick={() => toggleEpicFilter(epic.id)}
+                          type="button"
+                        >
+                          <CheckSlot
+                            checked={selectedEpicIds.includes(epic.id)}
+                          />
+                          <span className="inline-flex items-center gap-2">
+                            <span
+                              className="size-2.5 shrink-0 rounded-full"
+                              style={{
+                                backgroundColor: resolveEpicColor(epic.color),
+                              }}
+                            />
+                            <span className="truncate">{epic.name}</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="h-8 rounded-md text-sm">
                     {t("tasks:properties.labels")}
                   </DropdownMenuSubTrigger>
                   <DropdownMenuSubContent className="w-64">
@@ -721,6 +785,21 @@ export default function BoardToolbar({
               />
             )}
 
+            {selectedEpicIds.length > 0 && (
+              <ActiveFilterChip
+                subject={t("tasks:epics.title")}
+                operator={t("tasks:boardFilters.operators.isAnyOf")}
+                value={
+                  selectedEpicIds.length === 1
+                    ? (epics.find((epic) => epic.id === selectedEpicIds[0])
+                        ?.name ?? selectedEpicIds[0])
+                    : t("tasks:boardFilters.selectedCount", {
+                        count: selectedEpicIds.length,
+                      })
+                }
+                onClear={() => updateFilter("epics", null)}
+              />
+            )}
             {filters.labels && filters.labels.length > 0 && (
               <ActiveFilterChip
                 subject={t("tasks:boardFilters.subjects.labels")}

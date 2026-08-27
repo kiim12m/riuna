@@ -1300,6 +1300,30 @@
 			"merged": "Merged",
 			"draft": "Draft",
 			"open": "Open"
+		},
+		"projectTree": {
+			"title": "Hierarchy",
+			"description": "How the task tree behaves in this project: how deep it may go, and whether closing or archiving a task carries its branch along.",
+			"cascadeCloseLabel": "Closing cascades down",
+			"cascadeCloseHint": "Moving a task to a done column moves every task below it too.",
+			"cascadeArchiveLabel": "Archiving cascades down",
+			"cascadeArchiveHint": "Archiving a task archives every task below it too.",
+			"depthLabel": "Depth limit",
+			"depthHint": "How many levels a branch may have. Past five, indentation eats the list.",
+			"updateError": "Failed to update the hierarchy settings"
+		},
+		"projectEpics": {
+			"title": "Epics",
+			"description": "Epics cut across the project: they group tasks from any branch and any column.",
+			"namePlaceholder": "Epic name",
+			"addAction": "Add",
+			"empty": "No epics yet",
+			"archiveAction": "Archive epic",
+			"unarchiveAction": "Restore epic",
+			"deleteAction": "Delete epic",
+			"createError": "Failed to create the epic",
+			"updateError": "Failed to update the epic",
+			"deleteError": "Failed to delete the epic"
 		}
 	},
 	"navigation": {
@@ -1877,7 +1901,8 @@
 			"boardHint": "The board already groups by status, in columns",
 			"fields": {
 				"status": "Status",
-				"team": "Team"
+				"team": "Team",
+				"tree": "Hierarchy"
 			}
 		},
 		"boardFilters": {
@@ -1929,7 +1954,8 @@
 			"updateDatesError": "Failed to update task dates",
 			"resizeStart": "Resize start date",
 			"resizeDue": "Resize due date",
-			"taskAriaLabel": "{{title}}: open or drag to move"
+			"taskAriaLabel": "{{title}}: open or drag to move",
+			"branchSpan": "Span of the whole branch"
 		},
 		"delete": {
 			"title": "Delete Task?",
@@ -2032,6 +2058,29 @@
 		"team": {
 			"label": "Team",
 			"unknown": "Unknown team"
+		},
+		"tree": {
+			"title": "Branch",
+			"expand": "Expand branch",
+			"collapse": "Collapse branch",
+			"detach": "Unnest",
+			"branchProgress": "Closed in this branch",
+			"branchDates": "Branch dates",
+			"branchTime": "Logged / estimated",
+			"estimateLabel": "Estimate",
+			"hoursShort": "h",
+			"estimateError": "Failed to save the estimate",
+			"reparentError": "Failed to move the task",
+			"cycleError": "A task cannot be nested inside its own branch",
+			"progressTooltip": "{{done}} of {{total}} subtasks closed"
+		},
+		"epics": {
+			"title": "Epics",
+			"none": "No epic",
+			"count": "{{count}} epics",
+			"allEpics": "All epics",
+			"emptyProject": "This project has no epics yet",
+			"updateError": "Failed to update the task epics"
 		}
 	},
 	"invitations": {

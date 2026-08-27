@@ -1,6 +1,10 @@
 import type Task from "@/types/task";
 
-export const GROUP_BY_FIELDS = ["status", "team"] as const;
+// "tree" no es una agrupacion mas: no parte la lista en secciones, la
+// convierte en un solo arbol plegable. Vive aqui porque comparte el selector
+// de «agrupar por» y la preferencia guardada, que es como se elige leer un
+// proyecto.
+export const GROUP_BY_FIELDS = ["status", "team", "tree"] as const;
 
 export type GroupByField = (typeof GROUP_BY_FIELDS)[number];
 

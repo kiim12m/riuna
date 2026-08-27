@@ -6,6 +6,7 @@ import {
   assetTable,
   columnTable,
   commentTable,
+  epicTable,
   externalLinkTable,
   githubIntegrationTable,
   integrationTable,
@@ -15,6 +16,7 @@ import {
   projectTable,
   sessionTable,
   taskAssigneeTable,
+  taskEpicTable,
   taskRelationTable,
   taskReminderSentTable,
   taskTable,
@@ -102,6 +104,7 @@ export const projectTableRelations = relations(
       references: [workspaceTable.id],
     }),
     tasks: many(taskTable),
+    epics: many(epicTable),
     assets: many(assetTable),
     columns: many(columnTable),
     workflowRules: many(workflowRuleTable),
@@ -161,6 +164,32 @@ export const taskTableRelations = relations(taskTable, ({ one, many }) => ({
   targetRelations: many(taskRelationTable, { relationName: "targetTask" }),
   remindersSent: many(taskReminderSentTable),
   assignees: many(taskAssigneeTable),
+  parent: one(taskTable, {
+    fields: [taskTable.parentId],
+    references: [taskTable.id],
+    relationName: "taskTree",
+  }),
+  children: many(taskTable, { relationName: "taskTree" }),
+  epics: many(taskEpicTable),
+}));
+
+export const epicTableRelations = relations(epicTable, ({ one, many }) => ({
+  project: one(projectTable, {
+    fields: [epicTable.projectId],
+    references: [projectTable.id],
+  }),
+  tasks: many(taskEpicTable),
+}));
+
+export const taskEpicTableRelations = relations(taskEpicTable, ({ one }) => ({
+  task: one(taskTable, {
+    fields: [taskEpicTable.taskId],
+    references: [taskTable.id],
+  }),
+  epic: one(epicTable, {
+    fields: [taskEpicTable.epicId],
+    references: [epicTable.id],
+  }),
 }));
 
 export const taskAssigneeTableRelations = relations(

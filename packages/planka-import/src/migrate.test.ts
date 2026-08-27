@@ -52,6 +52,10 @@ function fakeRiuna(calls: Call[]) {
       record("createTaskRelation", input);
       return {};
     },
+    async updateTaskParent(taskId: string, parentId: string | null) {
+      record("updateTaskParent", taskId, parentId);
+      return {};
+    },
     async createComment(
       taskId: string,
       content: string,
@@ -423,7 +427,7 @@ describe("migrate (write)", () => {
     expect(report?.warnings.join(" ")).toContain("Invite those people");
   });
 
-  it("turns a linked checklist item into a task relation, not checkbox text", async () => {
+  it("hangs a linked checklist item under its card, not as checkbox text", async () => {
     const calls: Call[] = [];
     const bundle = bundleWith({
       taskLists: [{ id: "tl1", cardId: "card1", name: "Depends on" }],
@@ -460,12 +464,10 @@ describe("migrate (write)", () => {
       skipComments: false,
     });
 
-    const relations = calls
-      .filter((call) => call.method === "createTaskRelation")
-      .map((call) => call.args[0]);
-    expect(relations).toEqual([
-      { sourceTaskId: "t_1", targetTaskId: "t_2", relationType: "subtask" },
-    ]);
+    const reparented = calls
+      .filter((call) => call.method === "updateTaskParent")
+      .map((call) => call.args);
+    expect(reparented).toEqual([["t_2", "t_1"]]);
     expect(report?.relations).toBe(1);
 
     const descriptions = calls

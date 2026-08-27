@@ -11,6 +11,7 @@ export type BoardFilters = {
   team: string[] | null;
   dueDate: string[] | null;
   labels: string[] | null;
+  epics: string[] | null;
 };
 
 export const DUE_DATE_FILTER_VALUES = {
@@ -26,6 +27,7 @@ const DEFAULT_FILTERS: BoardFilters = {
   team: null,
   dueDate: null,
   labels: null,
+  epics: null,
 };
 
 const FILTER_KEYS: Array<keyof BoardFilters> = [
@@ -35,6 +37,7 @@ const FILTER_KEYS: Array<keyof BoardFilters> = [
   "team",
   "dueDate",
   "labels",
+  "epics",
 ];
 
 function normalizeFilters(raw: unknown): BoardFilters {
@@ -118,6 +121,14 @@ export function useTaskFilters(
         !filters.team.includes(task.teamId ?? "")
       ) {
         return false;
+      }
+
+      // Una tarea puede servir a varias epicas: basta con que coincida una.
+      if (filters.epics && filters.epics.length > 0) {
+        const taskEpicIds = (task.epics ?? []).map((epic) => epic.id);
+        if (!filters.epics.some((epicId) => taskEpicIds.includes(epicId))) {
+          return false;
+        }
       }
 
       if (filters.dueDate && filters.dueDate.length > 0) {

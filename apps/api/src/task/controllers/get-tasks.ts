@@ -3,8 +3,10 @@ import {
   asc,
   desc,
   eq,
+  exists,
   gte,
   inArray,
+  isNull,
   lte,
   type SQL,
   sql,
@@ -16,13 +18,21 @@ import {
   externalLinkTable,
   labelTable,
   projectTable,
+  taskEpicTable,
   taskTable,
   teamTable,
   userTable,
 } from "../../database/schema";
+import { getEpicsByTask } from "../../epic/controllers/get-epics";
+import {
+  getProjectSubtreeAggregates,
+  serializeAggregate,
+} from "../tree-aggregates";
 
 type GetTasksOptions = {
   assigneeId?: string;
+  epicId?: string;
+  rootsOnly?: boolean;
   dueAfter?: string;
   dueBefore?: string;
   limit?: number;
@@ -102,6 +112,28 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     conditions.push(gte(taskTable.dueDate, new Date(options.dueAfter)));
   }
 
+  // Filtrar por epica en la propia consulta y no despues: una vista paginada
+  // que filtrase en memoria devolveria paginas incompletas.
+  if (options.epicId) {
+    conditions.push(
+      exists(
+        db
+          .select({ one: sql`1` })
+          .from(taskEpicTable)
+          .where(
+            and(
+              eq(taskEpicTable.taskId, taskTable.id),
+              eq(taskEpicTable.epicId, options.epicId),
+            ),
+          ),
+      ),
+    );
+  }
+
+  if (options.rootsOnly) {
+    conditions.push(isNull(taskTable.parentId));
+  }
+
   const whereClause = and(...conditions);
   const usePagination = options.page != null || options.limit != null;
   const page = options.page && options.page > 0 ? options.page : 1;
@@ -139,6 +171,10 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     teamId: taskTable.teamId,
     teamName: teamTable.name,
     projectId: taskTable.projectId,
+    parentId: taskTable.parentId,
+    path: taskTable.path,
+    depth: taskTable.depth,
+    estimate: taskTable.estimate,
   };
 
   const query = db
@@ -219,6 +255,22 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     });
   }
 
+  const [aggregates, epicsByTask] = await Promise.all([
+    getProjectSubtreeAggregates(projectId),
+    getEpicsByTask(projectId),
+  ]);
+
+  const decorate = (task: (typeof paginatedTasks)[number]) => ({
+    ...task,
+    labels: taskLabelsMap.get(task.id) || [],
+    externalLinks: taskExternalLinksMap.get(task.id) || [],
+    epics: epicsByTask.get(task.id) || [],
+    subtree: serializeAggregate(aggregates.get(task.id), {
+      startDate: task.startDate,
+      dueDate: task.dueDate,
+    }),
+  });
+
   const projectColumns = await db
     .select()
     .from(columnTable)
@@ -233,28 +285,16 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     isFinal: column.isFinal,
     tasks: paginatedTasks
       .filter((task) => task.status === column.slug)
-      .map((task) => ({
-        ...task,
-        labels: taskLabelsMap.get(task.id) || [],
-        externalLinks: taskExternalLinksMap.get(task.id) || [],
-      })),
+      .map(decorate),
   }));
 
   const archivedTasks = paginatedTasks
     .filter((task) => task.status === "archived")
-    .map((task) => ({
-      ...task,
-      labels: taskLabelsMap.get(task.id) || [],
-      externalLinks: taskExternalLinksMap.get(task.id) || [],
-    }));
+    .map(decorate);
 
   const plannedTasks = paginatedTasks
     .filter((task) => task.status === "planned")
-    .map((task) => ({
-      ...task,
-      labels: taskLabelsMap.get(task.id) || [],
-      externalLinks: taskExternalLinksMap.get(task.id) || [],
-    }));
+    .map(decorate);
 
   return {
     data: {
@@ -265,6 +305,11 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
       description: project.description,
       isPublic: project.isPublic,
       workspaceId: project.workspaceId,
+      // Ajustes del arbol: viajan con el proyecto para que la pantalla que los
+      // edita no tenga que resolver antes el espacio de trabajo.
+      cascadeClose: project.cascadeClose,
+      cascadeArchive: project.cascadeArchive,
+      maxTaskDepth: project.maxTaskDepth,
       columns,
       archivedTasks,
       plannedTasks,
