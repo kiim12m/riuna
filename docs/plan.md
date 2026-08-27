@@ -61,17 +61,24 @@ gestor de tareas básico y nada propio.
 - Código de facturación heredado: apagado por configuración, no eliminado.
 - Catalán: 238 de 1.760 claves traducidas de verdad (13,5%); el resto es relleno
   en español. Lo gordo está en `settings`, `tasks` y `auth`.
-- **`tests/api/mcp-internal-api-url.test.ts` vuelve a fallar** — se dio por
-  cerrado unificando cómo se sustituye el `fetch` global (`vi.stubGlobal` /
-  `vi.unstubAllGlobals` en vez de asignar a mano), y con eso dejó de
-  reproducirse; ya se avisó entonces de que el fallo estaba dormido, no
-  resuelto. Sigue dormido: `pnpm test` desde la raíz lo despierta —dos de sus
-  tres casos fallan con «expected vi.fn() to be called once, but got 2 times»—
-  y `pnpm --filter @riuna/api test` a solas pasa. Reproducido el 26-08-2026
-  sobre `main` limpio, así que no es de ninguna rama. La pista es que el doble
-  de `fetch` recibe una llamada de más, no que se pierda: algo de un caso
-  anterior sigue vivo cuando el siguiente instala el suyo, y solo se nota
-  cuando turbo corre todos los paquetes a la vez y el reloj se estira.
+- ~~`tests/api/mcp-internal-api-url.test.ts` vuelve a fallar.~~ Cerrado, y esta
+  vez con la causa demostrada en vez de deducida. No era un doble de `fetch`
+  que se perdiera: el primer caso importa la ruta MCP entera —el SDK, Hono, la
+  autenticación y el resto del grafo— **dentro de su propio plazo de 5 s**. En
+  reposo cuesta ~1,5 s; con turbo corriendo los ocho paquetes a la vez pasa de
+  5 s y vitest lo da por caducado. Y **un caso caducado no se cancela: sigue
+  corriendo**, así que su `fetch` tardío aterriza en el doble del caso
+  siguiente, que falla por una llamada de más que no es suya. De ahí que el
+  contador subiera en vez de bajar, y de ahí que a solas pasara. La intuición
+  apuntada aquí —«algo de un caso anterior sigue vivo»— era correcta; lo que
+  faltaba era por qué seguía vivo.
+
+  Se reproduce de forma determinista bajando el plazo: con
+  `--testTimeout=300` caducan dos casos y el tercero ve **tres** llamadas.
+  El arreglo es un `beforeAll` que carga el grafo fuera del plazo de los casos,
+  con el suyo propio holgado. El primer caso baja de 1.474 ms a 81 ms, y los
+  tres pasan incluso con ese plazo de 300 ms, dieciséis veces más ajustado que
+  el real, que es la guarda de verdad contra que vuelva a dormirse.
 
 **Fase 1**:
 - ~~Agrupación por equipo en las vistas.~~ Hecho: «agrupar por» cambia las
