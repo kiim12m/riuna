@@ -13,6 +13,9 @@ describe("updateTaskLabelsInProject", () => {
       createdAt: "2026-04-16T00:00:00.000Z",
       updatedAt: "2026-04-16T00:00:00.000Z",
       workspaceId: "workspace-1",
+      cascadeClose: false,
+      cascadeArchive: false,
+      maxTaskDepth: 5,
       columns: [
         {
           id: "todo",
@@ -102,6 +105,9 @@ describe("updateTaskLabelsInProject", () => {
       createdAt: "2026-04-16T00:00:00.000Z",
       updatedAt: "2026-04-16T00:00:00.000Z",
       workspaceId: "workspace-1",
+      cascadeClose: false,
+      cascadeArchive: false,
+      maxTaskDepth: 5,
       columns: [],
       plannedTasks: [
         {

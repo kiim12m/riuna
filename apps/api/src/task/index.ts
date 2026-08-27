@@ -45,6 +45,8 @@ import updateTaskAssignee from "./controllers/update-task-assignee";
 import updateTaskAssignees from "./controllers/update-task-assignees";
 import updateTaskDescription from "./controllers/update-task-description";
 import updateTaskDueDate from "./controllers/update-task-due-date";
+import updateTaskEstimate from "./controllers/update-task-estimate";
+import updateTaskParent from "./controllers/update-task-parent";
 import updateTaskPriority from "./controllers/update-task-priority";
 import updateTaskStatus from "./controllers/update-task-status";
 import updateTaskTeam from "./controllers/update-task-team";
@@ -79,6 +81,8 @@ const task = new Hono<{
           status: v.optional(v.string()),
           priority: v.optional(v.string()),
           assigneeId: v.optional(v.string()),
+          epicId: v.optional(v.string()),
+          rootsOnly: v.optional(v.string()),
           page: v.optional(v.pipe(v.string(), v.transform(Number))),
           limit: v.optional(v.pipe(v.string(), v.transform(Number))),
           sortBy: v.optional(
@@ -102,7 +106,10 @@ const task = new Hono<{
       const { projectId } = c.req.valid("param");
       const filters = c.req.valid("query") || {};
 
-      const tasks = await getTasks(projectId, filters);
+      const tasks = await getTasks(projectId, {
+        ...filters,
+        rootsOnly: filters.rootsOnly === "true",
+      });
 
       return c.json(tasks);
     },
@@ -201,6 +208,8 @@ const task = new Hono<{
         priority: v.picklist(VALID_PRIORITIES),
         status: v.string(),
         userId: v.optional(v.string()),
+        parentId: v.optional(v.nullable(v.string())),
+        estimate: v.optional(v.nullable(v.pipe(v.number(), v.minValue(0)))),
       }),
     ),
     workspaceAccess.fromProject("projectId"),
@@ -216,6 +225,8 @@ const task = new Hono<{
         priority,
         status,
         userId,
+        parentId,
+        estimate,
       } = c.req.valid("json");
 
       const parsedStartDate =
@@ -239,6 +250,8 @@ const task = new Hono<{
         dueDate: parsedDueDate,
         priority,
         status,
+        parentId,
+        estimate,
       });
 
       return c.json(task);
@@ -645,6 +658,79 @@ const task = new Hono<{
       const currentUserId = c.get("userId");
 
       const task = await updateTaskAssignees({ id, userIds, currentUserId });
+
+      return c.json(task);
+    },
+  )
+  .put(
+    "/parent/:id",
+    describeRoute({
+      operationId: "updateTaskParent",
+      tags: ["Tasks"],
+      description:
+        "Hang a task under another one, or promote it to a root task with a null parent. Moves the whole subtree; rejects cycles, cross-project parents and anything past the project's depth limit.",
+      responses: {
+        200: {
+          description: "Task reparented successfully",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+        400: {
+          description:
+            "The parent is the task itself, inside its own subtree, in another project, or too deep",
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ parentId: v.nullable(v.string()) })),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    requireEntitlement,
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { parentId } = c.req.valid("json");
+      const currentUserId = c.get("userId");
+
+      const task = await updateTaskParent({
+        taskId: id,
+        parentId,
+        currentUserId,
+      });
+
+      return c.json(task);
+    },
+  )
+  .put(
+    "/estimate/:id",
+    describeRoute({
+      operationId: "updateTaskEstimate",
+      tags: ["Tasks"],
+      description:
+        "Update the task estimate, in seconds - the same unit time entries use.",
+      responses: {
+        200: {
+          description: "Task estimate updated successfully",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator(
+      "json",
+      v.object({ estimate: v.nullable(v.pipe(v.number(), v.minValue(0))) }),
+    ),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    requireEntitlement,
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { estimate } = c.req.valid("json");
+      const currentUserId = c.get("userId");
+
+      const task = await updateTaskEstimate({ id, estimate, currentUserId });
 
       return c.json(task);
     },

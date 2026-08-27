@@ -5171,6 +5171,102 @@
 						"draft",
 						"open"
 					]
+				},
+				"projectTree": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"cascadeCloseLabel": {
+							"type": "string"
+						},
+						"cascadeCloseHint": {
+							"type": "string"
+						},
+						"cascadeArchiveLabel": {
+							"type": "string"
+						},
+						"cascadeArchiveHint": {
+							"type": "string"
+						},
+						"depthLabel": {
+							"type": "string"
+						},
+						"depthHint": {
+							"type": "string"
+						},
+						"updateError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"cascadeCloseLabel",
+						"cascadeCloseHint",
+						"cascadeArchiveLabel",
+						"cascadeArchiveHint",
+						"depthLabel",
+						"depthHint",
+						"updateError"
+					]
+				},
+				"projectEpics": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"namePlaceholder": {
+							"type": "string"
+						},
+						"addAction": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"archiveAction": {
+							"type": "string"
+						},
+						"unarchiveAction": {
+							"type": "string"
+						},
+						"deleteAction": {
+							"type": "string"
+						},
+						"createError": {
+							"type": "string"
+						},
+						"updateError": {
+							"type": "string"
+						},
+						"deleteError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"namePlaceholder",
+						"addAction",
+						"empty",
+						"archiveAction",
+						"unarchiveAction",
+						"deleteAction",
+						"createError",
+						"updateError",
+						"deleteError"
+					]
 				}
 			},
 			"required": [
@@ -5205,7 +5301,9 @@
 				"repositoryBrowser",
 				"tasksImportExport",
 				"workflowEditor",
-				"externalLinks"
+				"externalLinks",
+				"projectTree",
+				"projectEpics"
 			]
 		},
 		"navigation": {
@@ -7463,9 +7561,12 @@
 								},
 								"team": {
 									"type": "string"
+								},
+								"tree": {
+									"type": "string"
 								}
 							},
-							"required": ["status", "team"]
+							"required": ["status", "team", "tree"]
 						}
 					},
 					"required": ["label", "by", "noTeam", "boardHint", "fields"]
@@ -7654,6 +7755,9 @@
 						},
 						"taskAriaLabel": {
 							"type": "string"
+						},
+						"branchSpan": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -7670,7 +7774,8 @@
 						"updateDatesError",
 						"resizeStart",
 						"resizeDue",
-						"taskAriaLabel"
+						"taskAriaLabel",
+						"branchSpan"
 					]
 				},
 				"delete": {
@@ -8046,6 +8151,98 @@
 						}
 					},
 					"required": ["label", "unknown"]
+				},
+				"tree": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"expand": {
+							"type": "string"
+						},
+						"collapse": {
+							"type": "string"
+						},
+						"detach": {
+							"type": "string"
+						},
+						"branchProgress": {
+							"type": "string"
+						},
+						"branchDates": {
+							"type": "string"
+						},
+						"branchTime": {
+							"type": "string"
+						},
+						"estimateLabel": {
+							"type": "string"
+						},
+						"hoursShort": {
+							"type": "string"
+						},
+						"estimateError": {
+							"type": "string"
+						},
+						"reparentError": {
+							"type": "string"
+						},
+						"cycleError": {
+							"type": "string"
+						},
+						"progressTooltip": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"expand",
+						"collapse",
+						"detach",
+						"branchProgress",
+						"branchDates",
+						"branchTime",
+						"estimateLabel",
+						"hoursShort",
+						"estimateError",
+						"reparentError",
+						"cycleError",
+						"progressTooltip"
+					]
+				},
+				"epics": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"none": {
+							"type": "string"
+						},
+						"count": {
+							"type": "string"
+						},
+						"allEpics": {
+							"type": "string"
+						},
+						"emptyProject": {
+							"type": "string"
+						},
+						"updateError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"none",
+						"count",
+						"allEpics",
+						"emptyProject",
+						"updateError"
+					]
 				}
 			},
 			"required": [
@@ -8080,7 +8277,9 @@
 				"actions",
 				"bulk",
 				"editor",
-				"team"
+				"team",
+				"tree",
+				"epics"
 			]
 		},
 		"invitations": {

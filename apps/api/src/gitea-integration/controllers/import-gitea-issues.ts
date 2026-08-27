@@ -27,6 +27,7 @@ import {
   extractIssueStatus,
 } from "../../plugins/github/utils/extract-priority";
 import { formatTaskDescriptionFromIssue } from "../../plugins/github/utils/format";
+import { rootTaskTreeFields } from "../../task/tree";
 
 type ImportResult = {
   imported: number;
@@ -253,6 +254,7 @@ async function importSingleIssue(
     const nextNumber = (result?.maxNumber ?? 0) + 1;
 
     const taskValues: typeof taskTable.$inferInsert = {
+      ...rootTaskTreeFields(),
       projectId,
       userId: null,
       title: issue.title,

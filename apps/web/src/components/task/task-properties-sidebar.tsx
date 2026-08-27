@@ -42,6 +42,7 @@ import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
 import TaskAssigneePopover from "./task-assignee-popover";
 import TaskDueDatePopover from "./task-due-date-popover";
+import TaskEpicsPopover, { TaskEpicsTrigger } from "./task-epics-popover";
 import TaskLabelsPopover from "./task-labels-popover";
 import TaskMovePopover from "./task-move-popover";
 import TaskPriorityPopover from "./task-priority-popover";
@@ -291,6 +292,11 @@ export default function TaskPropertiesSidebar({
                 </TaskTeamPopover>
               )}
               {task && (
+                <TaskEpicsPopover task={task} projectId={projectId}>
+                  <TaskEpicsTrigger task={task} />
+                </TaskEpicsPopover>
+              )}
+              {task && (
                 <TaskStartDatePopover task={task}>
                   <Button
                     variant="ghost"
@@ -494,6 +500,11 @@ export default function TaskPropertiesSidebar({
                       </span>
                     </Button>
                   </TaskTeamPopover>
+                )}
+                {task && (
+                  <TaskEpicsPopover task={task} projectId={projectId}>
+                    <TaskEpicsTrigger task={task} />
+                  </TaskEpicsPopover>
                 )}
                 {task && (
                   <TaskStartDatePopover task={task}>
@@ -701,6 +712,11 @@ export default function TaskPropertiesSidebar({
                       </span>
                     </Button>
                   </TaskTeamPopover>
+                )}
+                {task && (
+                  <TaskEpicsPopover task={task} projectId={projectId}>
+                    <TaskEpicsTrigger task={task} />
+                  </TaskEpicsPopover>
                 )}
                 {task && (
                   <TaskStartDatePopover task={task}>

@@ -6,6 +6,7 @@ import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 type ProjectListEntry = typeof schema.projectTable.$inferSelect & {
@@ -23,6 +24,7 @@ async function seedTasks(
 ) {
   for (const task of tasks) {
     await db.insert(schema.taskTable).values({
+      ...taskTreeValues(),
       projectId,
       title: task.title,
       status: task.status,

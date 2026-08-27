@@ -9,6 +9,7 @@ import {
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
 import { assertValidTaskStatus } from "../validate-task-fields";
+import { cascadeStatusToSubtree } from "./cascade-status";
 
 async function updateTask(
   id: string,
@@ -88,6 +89,12 @@ async function updateTask(
   }
 
   if (existingTask.status !== status) {
+    await cascadeStatusToSubtree({
+      task: updatedTask,
+      status,
+      currentUserId,
+    });
+
     await publishEvent("task.status_changed", {
       taskId: updatedTask.id,
       projectId: updatedTask.projectId,

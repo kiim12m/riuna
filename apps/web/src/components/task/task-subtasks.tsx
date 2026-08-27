@@ -23,9 +23,8 @@ import { Input } from "@/components/ui/input";
 import useCreateTask from "@/hooks/mutations/task/use-create-task";
 import { useDeleteTask } from "@/hooks/mutations/task/use-delete-task";
 import { useUpdateTaskStatus } from "@/hooks/mutations/task/use-update-task-status";
-import useCreateTaskRelation from "@/hooks/mutations/task-relation/use-create-task-relation";
 import { useGetColumns } from "@/hooks/queries/column/use-get-columns";
-import useGetTaskRelations from "@/hooks/queries/task-relation/use-get-task-relations";
+import useGetTask from "@/hooks/queries/task/use-get-task";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
@@ -57,13 +56,12 @@ export default function TaskSubtasks({
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { data: relations = [] } = useGetTaskRelations(taskId);
+  const { data: task } = useGetTask(taskId);
   const { data: workspace } = useActiveWorkspace();
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(
     workspace?.id ?? "",
   );
   const createTask = useCreateTask();
-  const createRelation = useCreateTaskRelation();
   const { mutateAsync: deleteTask } = useDeleteTask();
   const { mutateAsync: updateTaskStatus } = useUpdateTaskStatus();
   const { data: columns = [], isLoading: isLoadingColumns } =
@@ -84,15 +82,10 @@ export default function TaskSubtasks({
       ? (columns.find((c) => c.slug === status)?.isFinal ?? false)
       : status === "done";
 
-  const subtasks = relations
-    .filter(
-      (rel) => rel.relationType === "subtask" && rel.sourceTaskId === taskId,
-    )
-    .map((rel) => ({ relation: rel, task: rel.targetTask }))
-    .filter(
-      (item): item is typeof item & { task: NonNullable<typeof item.task> } =>
-        item.task !== null,
-    );
+  // Las hijas directas vienen ya con el detalle de la tarea. Antes esto leia
+  // relaciones `subtask`, que se retiraron en la Fase 2: la jerarquia vive en
+  // `parent_id` y este panel enseña un nivel de ese arbol.
+  const subtasks = (task?.children ?? []).map((child) => ({ task: child }));
 
   const completedCount = subtasks.filter((s) =>
     isCompleted(s.task.status),
@@ -264,18 +257,13 @@ export default function TaskSubtasks({
     if (!initialStatus) return;
 
     try {
-      const newTask = await createTask.mutateAsync({
+      await createTask.mutateAsync({
         title: newTitle.trim(),
         description: "",
         projectId,
         status: initialStatus,
         priority: "no-priority",
-      });
-
-      await createRelation.mutateAsync({
-        sourceTaskId: taskId,
-        targetTaskId: newTask.id,
-        relationType: "subtask",
+        parentId: taskId,
       });
 
       setNewTitle("");
@@ -290,7 +278,7 @@ export default function TaskSubtasks({
     try {
       await deleteTask(deleteTaskId);
       queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
-      queryClient.invalidateQueries({ queryKey: ["task-relations", taskId] });
+      queryClient.invalidateQueries({ queryKey: ["task", taskId] });
       setSelectedIds((prev) => {
         const next = new Set(prev);
         next.delete(deleteTaskId);

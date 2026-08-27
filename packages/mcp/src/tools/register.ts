@@ -492,14 +492,67 @@ export function registerTools(
   );
 
   server.registerTool(
+    "update_task_parent",
+    {
+      description:
+        "Hang a task under another task of the same project, or promote it to a root task by passing a null parentId. Moves the whole subtree. Rejects cycles, cross-project parents and anything past the project depth limit.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        parentId: z.string().nullable(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/task/parent/${encodeURIComponent(args.taskId)}`, {
+          method: "PUT",
+          body: JSON.stringify({ parentId: args.parentId }),
+        }),
+      ),
+  );
+
+  server.registerTool(
+    "list_project_epics",
+    {
+      description:
+        "List the epics of a project with how many tasks each one holds.",
+      inputSchema: z.object({ projectId: nonEmptyString }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/epic/project/${encodeURIComponent(args.projectId)}`, {
+          method: "GET",
+        }),
+      ),
+  );
+
+  server.registerTool(
+    "update_task_epics",
+    {
+      description:
+        "Replace the full set of epics a task belongs to. Pass an empty array to detach it from every epic.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        epicIds: z.array(nonEmptyString),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/epic/task/${encodeURIComponent(args.taskId)}`, {
+          method: "PUT",
+          body: JSON.stringify({ epicIds: args.epicIds }),
+        }),
+      ),
+  );
+
+  server.registerTool(
     "create_task_relation",
     {
       description:
-        "Create a relation between two tasks. relationType: 'subtask' (sourceTaskId is the parent, targetTaskId the child), 'blocks' (sourceTaskId blocks targetTaskId), or 'related' (bidirectional).",
+        "Create a relation between two tasks. relationType: 'blocks' (sourceTaskId blocks targetTaskId) or 'related' (bidirectional). Parent/child hierarchy is not a relation: use update_task_parent.",
       inputSchema: z.object({
         sourceTaskId: nonEmptyString,
         targetTaskId: nonEmptyString,
-        relationType: z.enum(["subtask", "blocks", "related"]),
+        relationType: z.enum(["blocks", "related"]),
       }),
     },
     async (args) =>
@@ -518,8 +571,7 @@ export function registerTools(
   server.registerTool(
     "get_task_relations",
     {
-      description:
-        "List all relations (subtask/blocks/related) involving a task.",
+      description: "List all relations (blocks/related) involving a task.",
       inputSchema: z.object({ taskId: nonEmptyString }),
     },
     async (args) =>

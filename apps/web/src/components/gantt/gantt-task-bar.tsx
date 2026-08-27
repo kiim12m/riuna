@@ -276,6 +276,27 @@ export function GanttTaskBar({
     window.addEventListener("pointercancel", onCancel);
   };
 
+  // Barra de resumen: la rama de un padre puede empezar antes o acabar despues
+  // que el propio padre, y esa es justo la informacion que un Gantt tiene que
+  // enseñar. Solo se dibuja cuando amplia el tramo propio; si el padre ya
+  // abarca a sus hijas, repetir la misma franja seria ruido.
+  const subtree = task.subtree ?? null;
+  const summaryStart = subtree?.startDate ? new Date(subtree.startDate) : null;
+  const summaryEnd = subtree?.dueDate ? new Date(subtree.dueDate) : null;
+  const summary =
+    subtree &&
+    subtree.descendantCount > 0 &&
+    summaryStart &&
+    summaryEnd &&
+    (subtree.inheritsStartDate || subtree.inheritsDueDate)
+      ? getBarGridColumns(
+          summaryStart,
+          summaryEnd,
+          timeline.rangeStart,
+          trackCount,
+        )
+      : null;
+
   if (!barInView || lineEnd <= lineStart) {
     return null;
   }
@@ -287,8 +308,18 @@ export function GanttTaskBar({
         gridTemplateColumns: timeline.gridTemplateColumns,
       }}
     >
+      {summary?.barInView && summary.lineEnd > summary.lineStart && (
+        <div
+          style={{
+            gridColumn: `${summary.lineStart} / ${summary.lineEnd}`,
+            gridRow: 1,
+          }}
+          className="pointer-events-none mx-1 self-start rounded-full border-x-2 border-t-2 border-primary/45 h-1.5"
+          title={t("tasks:gantt.branchSpan")}
+        />
+      )}
       <div
-        style={{ gridColumn: `${lineStart} / ${lineEnd}` }}
+        style={{ gridColumn: `${lineStart} / ${lineEnd}`, gridRow: 1 }}
         className="group pointer-events-auto relative mx-1 flex min-h-[44px] min-w-0 items-stretch overflow-hidden rounded-md border border-primary/25 bg-background text-left text-sm font-medium leading-none text-foreground shadow-sm transition-colors hover:border-primary/40 sm:h-11 sm:min-h-0"
       >
         <button
@@ -314,6 +345,13 @@ export function GanttTaskBar({
           }}
         >
           <div className="absolute inset-0 z-0 bg-primary/12 transition-colors group-hover:bg-primary/18" />
+          {subtree && subtree.descendantCount > 0 && (
+            <div
+              className="absolute inset-y-0 left-0 z-0 bg-primary/25"
+              style={{ width: `${subtree.progress}%` }}
+              aria-hidden="true"
+            />
+          )}
           <span className="relative z-10 block truncate">{task.title}</span>
         </button>
         <button

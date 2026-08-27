@@ -7,6 +7,7 @@ import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 describe("API integration: task image upload finalize", () => {
@@ -35,6 +36,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "URL test task",
@@ -85,6 +87,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Proxy test",
@@ -135,6 +138,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Fallback test",
@@ -183,6 +187,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Persist test",
@@ -246,6 +251,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Attachment test",
@@ -297,6 +303,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Bad key test",
@@ -342,6 +349,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Auth test",
@@ -397,6 +405,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "RBAC test",

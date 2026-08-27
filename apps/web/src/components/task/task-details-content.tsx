@@ -11,12 +11,12 @@ import useGetActivitiesByTaskId from "@/hooks/queries/activity/use-get-activitie
 import useExternalLinks from "@/hooks/queries/external-link/use-external-links";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTask from "@/hooks/queries/task/use-get-task";
-import useGetTaskRelations from "@/hooks/queries/task-relation/use-get-task-relations";
 import type { ExternalLink } from "@/types/external-link";
 import TaskDescription from "./task-description";
 import TaskRelations from "./task-relations";
 import TaskSubtasks from "./task-subtasks";
 import TaskTitle from "./task-title";
+import TaskTree from "./task-tree";
 
 type TaskDetailsContentProps = {
   taskId: string | undefined;
@@ -38,13 +38,11 @@ export default function TaskDetailsContent({
   const { data: activities = [] } = useGetActivitiesByTaskId(taskId ?? "");
   const { data: externalLinks = [], isLoading: isLoadingExternalLinks } =
     useExternalLinks(taskId ?? "");
-  const { data: relations = [] } = useGetTaskRelations(taskId ?? "");
   const { user } = useAuth();
 
-  const parentRelation = relations.find(
-    (rel) => rel.relationType === "subtask" && rel.targetTaskId === taskId,
-  );
-  const parentTask = parentRelation?.sourceTask;
+  // El padre llega con el detalle: la jerarquia ya no se deduce cruzando
+  // relaciones.
+  const parentTask = task?.parent ?? null;
 
   if (!taskId) return null;
 
@@ -85,6 +83,11 @@ export default function TaskDetailsContent({
             externalLinks={externalLinks as ExternalLink[]}
             isLoading={isLoadingExternalLinks}
           />
+        </div>
+      )}
+      {task && (
+        <div className="mt-4">
+          <TaskTree taskId={taskId} projectId={projectId} />
         </div>
       )}
       <div className="mt-4">

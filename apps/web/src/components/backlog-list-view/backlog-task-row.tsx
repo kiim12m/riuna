@@ -35,6 +35,7 @@ import { useUserPreferencesStore } from "@/store/user-preferences";
 import type Task from "@/types/task";
 import TaskCardContextMenuContent from "../kanban-board/task-card-context-menu/task-card-context-menu-content";
 import { TaskLabels } from "../kanban-board/task-labels";
+import SubtaskBadge from "../task/subtask-badge";
 import { ContextMenu, ContextMenuTrigger } from "../ui/context-menu";
 
 type BacklogTaskRowProps = {
@@ -174,11 +175,10 @@ export default function BacklogTaskRow({ task }: BacklogTaskRowProps) {
                 <span className="text-sm text-foreground truncate">
                   {task.title}
                 </span>
-                {showLabels && (
-                  <div className="flex items-center gap-1">
-                    <TaskLabels labels={task.labels ?? []} />
-                  </div>
-                )}
+                <div className="flex items-center gap-1">
+                  <SubtaskBadge subtree={task.subtree} />
+                  {showLabels && <TaskLabels labels={task.labels ?? []} />}
+                </div>
               </div>
             </div>
 

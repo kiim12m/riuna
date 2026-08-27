@@ -20,6 +20,9 @@ export const projectSchema = v.object({
   isPublic: v.nullable(v.boolean()),
   archivedAt: v.nullable(v.date()),
   position: v.number(),
+  cascadeClose: v.boolean(),
+  cascadeArchive: v.boolean(),
+  maxTaskDepth: v.number(),
 });
 
 export const taskSchema = v.object({

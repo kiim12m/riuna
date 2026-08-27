@@ -4,6 +4,7 @@ import db from "../../database";
 import { columnTable, projectTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { filterAssignableUsers } from "../../utils/assert-assignable-user";
+import { rootTaskTreeFields } from "../tree";
 import {
   coercePriority,
   coerceStatus,
@@ -88,6 +89,9 @@ async function importTasks(
         const [task] = await tx
           .insert(taskTable)
           .values({
+            // La jerarquia en el fichero importado llega en la Fase 5; hasta
+            // entonces toda tarea importada entra como raiz.
+            ...rootTaskTreeFields(),
             projectId,
             userId: assigneeId,
             title: taskData.title,

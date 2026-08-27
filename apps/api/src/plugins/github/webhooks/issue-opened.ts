@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import db from "../../../database";
 import { columnTable, projectTable, taskTable } from "../../../database/schema";
 import { claimTaskNumber } from "../../../task/controllers/claim-task-numbers";
+import { rootTaskTreeFields } from "../../../task/tree";
 import type { GitHubConfig } from "../config";
 import { createExternalLink, findExternalLink } from "../services/link-manager";
 import { findAllIntegrationsByRepo } from "../services/task-service";
@@ -93,6 +94,7 @@ export async function handleIssueOpened(payload: IssueOpenedPayload) {
     });
 
     const taskValues: typeof taskTable.$inferInsert = {
+      ...rootTaskTreeFields(),
       projectId,
       userId: null,
       title: issue.title,

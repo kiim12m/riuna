@@ -42,6 +42,7 @@ export default function GroupControl({
   const groupFields: { field: GroupByField; label: string }[] = [
     { field: "status", label: t("tasks:group.fields.status") },
     { field: "team", label: t("tasks:group.fields.team") },
+    { field: "tree", label: t("tasks:group.fields.tree") },
   ];
   const isActive = !disabled && groupBy !== "status";
   const activeLabel = groupFields.find(

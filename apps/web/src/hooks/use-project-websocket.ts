@@ -63,11 +63,19 @@ export function useProjectWebSocket(projectId: string) {
             message.type === "TASK_LABEL_UPDATED" ||
             message.type === "TASK_MOVED" ||
             message.type === "TASK_RELATION_UPDATED" ||
+            message.type === "EPIC_UPDATED" ||
             message.type === "COMMENT_UPDATED"
           ) {
             queryClient.invalidateQueries({
               queryKey: ["tasks", message.projectId],
             });
+
+            if (message.type === "EPIC_UPDATED") {
+              queryClient.invalidateQueries({
+                queryKey: ["epics", message.projectId],
+              });
+              return;
+            }
 
             if (message.type === "TASK_RELATION_UPDATED") {
               if (message.sourceTaskId) {

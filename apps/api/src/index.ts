@@ -29,6 +29,7 @@ import db, { getDatabase, schema } from "./database";
 import { prepareDatabaseStartup } from "./database/prepare-database-startup";
 import { waitForDatabase } from "./database/wait-for-database";
 import discordIntegration from "./discord-integration";
+import epic from "./epic";
 import { eventContext } from "./events";
 import externalLink from "./external-link";
 import genericWebhookIntegration from "./generic-webhook-integration";
@@ -593,6 +594,7 @@ export function createApp() {
   const projectApi = api.route("/project", project);
   const taskApi = api.route("/task", task);
   const columnApi = api.route("/column", column);
+  const epicApi = api.route("/epic", epic);
   const activityApi = api.route("/activity", activity);
   const commentApi = api.route("/comment", comment);
   const timeEntryApi = api.route("/time-entry", timeEntry);
@@ -772,6 +774,7 @@ export function createApp() {
     commentApi,
     configApi,
     discordIntegrationApi,
+    epicApi,
     externalLinkApi,
     genericWebhookIntegrationApi,
     githubIntegrationApi,
@@ -890,6 +893,7 @@ const {
   commentApi,
   configApi,
   discordIntegrationApi,
+  epicApi,
   externalLinkApi,
   genericWebhookIntegrationApi,
   githubIntegrationApi,
@@ -929,6 +933,7 @@ export type AppType =
   | typeof projectApi
   | typeof taskApi
   | typeof columnApi
+  | typeof epicApi
   | typeof activityApi
   | typeof commentApi
   | typeof timeEntryApi
