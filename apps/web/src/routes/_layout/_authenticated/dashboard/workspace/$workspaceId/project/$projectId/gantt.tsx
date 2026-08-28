@@ -17,17 +17,23 @@ import { useTranslation } from "react-i18next";
 import ProjectLayout from "@/components/common/project-layout";
 import { GanttTaskBar } from "@/components/gantt/gantt-task-bar";
 import PageTitle from "@/components/page-title";
+import FilterBar from "@/components/table-view/filter-bar";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
+import { useFilterableFields } from "@/hooks/use-filterable-fields";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { readFilterParam, useUrlFilter } from "@/hooks/use-url-filter";
 import { cn } from "@/lib/cn";
 import { getStatusLabel } from "@/lib/i18n/domain";
 import { useUserPreferencesStore } from "@/store/user-preferences";
+import type { EditableCondition } from "@/types/task-filter";
 
 type GanttSearchParams = {
   taskId?: string;
+  /** Las condiciones del filtro. Ver `useUrlFilter`. */
+  filter?: EditableCondition[];
 };
 
 export const Route = createFileRoute(
@@ -36,6 +42,7 @@ export const Route = createFileRoute(
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): GanttSearchParams => ({
     taskId: typeof search.taskId === "string" ? search.taskId : undefined,
+    filter: readFilterParam(search.filter),
   }),
 });
 
@@ -48,9 +55,11 @@ function parseTaskDate(value: string | null) {
 function RouteComponent() {
   const { t } = useTranslation();
   const { projectId, workspaceId } = Route.useParams();
-  const { taskId } = Route.useSearch();
+  const { taskId, filter: filterParam } = Route.useSearch();
   const navigate = useNavigate();
-  const { data: project } = useGetTasks(projectId);
+  const { conditions, setConditions, filter } = useUrlFilter(filterParam);
+  const filterableFields = useFilterableFields(projectId, workspaceId);
+  const { data: project } = useGetTasks(projectId, filter);
   const weekStartsOn = useUserPreferencesStore((state) => state.weekStartsOn);
   const [searchQuery, setSearchQuery] = useState("");
   const isMobile = useIsMobile();
@@ -179,6 +188,15 @@ function RouteComponent() {
         hideAppName
       />
       <div className="flex h-full min-h-0 flex-col bg-background">
+        {/* El Gantt tampoco filtraba por nada hasta ahora. Misma barra y mismo
+            motor que la tabla y el calendario. */}
+        <div className="border-border/80 border-b">
+          <FilterBar
+            fields={filterableFields}
+            conditions={conditions}
+            onChange={setConditions}
+          />
+        </div>
         <div className="border-b border-border/80 px-3 py-3 sm:px-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1">

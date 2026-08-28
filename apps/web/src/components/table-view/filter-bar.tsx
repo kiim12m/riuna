@@ -24,8 +24,10 @@ type Props = {
   fields: FilterableField[];
   conditions: EditableCondition[];
   onChange: (conditions: EditableCondition[]) => void;
-  treeMode: TreeMode;
-  onTreeModeChange: (mode: TreeMode) => void;
+  // El modo de jerarquia es propio de la vista Tabla: un calendario no anida
+  // nada, asi que alli el selector no se pinta.
+  treeMode?: TreeMode;
+  onTreeModeChange?: (mode: TreeMode) => void;
 };
 
 function defaultOperatorFor(field: FilterableField): FilterOperator {
@@ -220,21 +222,25 @@ function FilterBar({
       {/* Que hace el filtro con la jerarquia. Sin esto, filtrar una rama deja
           al padre sin las hijas que no casan, que a veces esconde justo lo que
           se estaba buscando. */}
-      <Select
-        value={treeMode}
-        onValueChange={(next) => onTreeModeChange((next ?? "tree") as TreeMode)}
-      >
-        <SelectTrigger className="ml-auto h-6 border-none bg-transparent px-1 text-muted-foreground text-xs shadow-none">
-          <SelectValue>{t(`tasks:table.treeModes.${treeMode}`)}</SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {TREE_MODES.map((mode) => (
-            <SelectItem key={mode} value={mode}>
-              {t(`tasks:table.treeModes.${mode}`)}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {treeMode && onTreeModeChange && (
+        <Select
+          value={treeMode}
+          onValueChange={(next) =>
+            onTreeModeChange((next ?? "tree") as TreeMode)
+          }
+        >
+          <SelectTrigger className="ml-auto h-6 border-none bg-transparent px-1 text-muted-foreground text-xs shadow-none">
+            <SelectValue>{t(`tasks:table.treeModes.${treeMode}`)}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {TREE_MODES.map((mode) => (
+              <SelectItem key={mode} value={mode}>
+                {t(`tasks:table.treeModes.${mode}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 }
