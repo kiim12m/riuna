@@ -17,10 +17,15 @@ import {
   operatorTakesValue,
 } from "@/types/task-filter";
 
+const TREE_MODES = ["tree", "flat", "roots", "withDescendants"] as const;
+export type TreeMode = (typeof TREE_MODES)[number];
+
 type Props = {
   fields: FilterableField[];
   conditions: EditableCondition[];
   onChange: (conditions: EditableCondition[]) => void;
+  treeMode: TreeMode;
+  onTreeModeChange: (mode: TreeMode) => void;
 };
 
 function defaultOperatorFor(field: FilterableField): FilterOperator {
@@ -32,7 +37,13 @@ function defaultOperatorFor(field: FilterableField): FilterOperator {
  * ofrecerlos aqui es interfaz que todavia no hace falta, y una barra que pida
  * elegir el conector antes de escribir la primera condicion se usa peor.
  */
-function FilterBar({ fields, conditions, onChange }: Props) {
+function FilterBar({
+  fields,
+  conditions,
+  onChange,
+  treeMode,
+  onTreeModeChange,
+}: Props) {
   const { t } = useTranslation();
 
   const byKey = new Map(fields.map((field) => [field.key, field]));
@@ -205,6 +216,25 @@ function FilterBar({ fields, conditions, onChange }: Props) {
           {t("common:actions.clearAllFilters")}
         </Button>
       )}
+
+      {/* Que hace el filtro con la jerarquia. Sin esto, filtrar una rama deja
+          al padre sin las hijas que no casan, que a veces esconde justo lo que
+          se estaba buscando. */}
+      <Select
+        value={treeMode}
+        onValueChange={(next) => onTreeModeChange((next ?? "tree") as TreeMode)}
+      >
+        <SelectTrigger className="ml-auto h-6 border-none bg-transparent px-1 text-muted-foreground text-xs shadow-none">
+          <SelectValue>{t(`tasks:table.treeModes.${treeMode}`)}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {TREE_MODES.map((mode) => (
+            <SelectItem key={mode} value={mode}>
+              {t(`tasks:table.treeModes.${mode}`)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

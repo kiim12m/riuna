@@ -104,6 +104,10 @@ const task = new Hono<{
           // El arbol de filtros del motor de vistas, como JSON. Va en la URL
           // para que una vista guardada siga siendo un enlace.
           filter: v.optional(v.string()),
+          // Que hace el filtro con la jerarquia. Ver `GetTasksOptions`.
+          treeScope: v.optional(
+            v.picklist(["matching", "roots", "withDescendants"]),
+          ),
         }),
       ),
     ),
@@ -127,6 +131,7 @@ const task = new Hono<{
         const tasks = await getTasks(projectId, {
           ...filters,
           rootsOnly: filters.rootsOnly === "true",
+          treeScope: filters.treeScope,
           filter,
         });
 

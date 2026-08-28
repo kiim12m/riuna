@@ -2147,6 +2147,12 @@
 				"notIn": "is none of",
 				"isEmpty": "is empty",
 				"isNotEmpty": "is not empty"
+			},
+			"treeModes": {
+				"tree": "Hierarchy",
+				"flat": "Flat list",
+				"roots": "Top level only",
+				"withDescendants": "With subtasks"
 			}
 		}
 	},

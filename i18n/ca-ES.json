@@ -2147,6 +2147,12 @@
 				"notIn": "no es ninguno de",
 				"isEmpty": "está vacío",
 				"isNotEmpty": "no está vacío"
+			},
+			"treeModes": {
+				"tree": "Jerarquía",
+				"flat": "Lista plana",
+				"roots": "Solo raíces",
+				"withDescendants": "Con subtareas"
 			}
 		}
 	},

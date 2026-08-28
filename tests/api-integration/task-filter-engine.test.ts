@@ -81,10 +81,12 @@ async function listTitles(
   app: ReturnType<typeof createApp>["app"],
   projectId: string,
   filter: FilterNode,
+  treeScope?: "matching" | "roots" | "withDescendants",
 ) {
   const query = encodeURIComponent(JSON.stringify(filter));
+  const scope = treeScope ? `&treeScope=${treeScope}` : "";
   const response = await app.request(
-    `/api/task/tasks/${projectId}?filter=${query}`,
+    `/api/task/tasks/${projectId}?filter=${query}${scope}`,
   );
 
   if (response.status !== 200) {
@@ -305,6 +307,126 @@ describe("filter engine against Postgres", () => {
     });
 
     expect(titles).toEqual(["Con comodin"]);
+  });
+
+  // Lo que el filtro hace con la jerarquia. Sin esto, filtrar una rama deja al
+  // padre sin las hijas que no casan, que a veces es lo que se quiere y a
+  // veces esconde justo lo que se buscaba.
+  describe("alcance del arbol", () => {
+    async function seedTree(
+      workspaceId: string,
+      projectId: string,
+      columnId: string,
+    ) {
+      await defineField(workspaceId, projectId, "coste", "number");
+
+      const parent = await insertTask(projectId, columnId, {
+        title: "Padre caro",
+        customFields: { coste: 5000 },
+      });
+      await insertTask(projectId, columnId, {
+        ...childTreeValues(parent),
+        title: "Hija barata",
+        customFields: { coste: 10 },
+      });
+      await insertTask(projectId, columnId, {
+        title: "Suelta barata",
+        customFields: { coste: 20 },
+      });
+
+      return parent;
+    }
+
+    const caro: FilterNode = {
+      type: "condition",
+      field: "custom.coste",
+      operator: "gt",
+      value: 1000,
+    };
+
+    it("por defecto devuelve solo lo que casa", async () => {
+      const { app, workspaceId, projectId, columnId } = await setup();
+      await seedTree(workspaceId, projectId, columnId);
+
+      const { titles } = await listTitles(app, projectId, caro);
+
+      expect(titles).toEqual(["Padre caro"]);
+    });
+
+    it("withDescendants arrastra la rama de lo que casa", async () => {
+      const { app, workspaceId, projectId, columnId } = await setup();
+      await seedTree(workspaceId, projectId, columnId);
+
+      const { titles } = await listTitles(
+        app,
+        projectId,
+        caro,
+        "withDescendants",
+      );
+
+      // La hija no casa por su cuenta; entra porque cuelga de una que si.
+      expect(titles).toEqual(["Hija barata", "Padre caro"]);
+    });
+
+    it("withDescendants no arrastra ramas ajenas", async () => {
+      const { app, workspaceId, projectId, columnId } = await setup();
+      await seedTree(workspaceId, projectId, columnId);
+
+      const { titles } = await listTitles(
+        app,
+        projectId,
+        caro,
+        "withDescendants",
+      );
+
+      expect(titles).not.toContain("Suelta barata");
+    });
+
+    it("roots deja fuera las hijas aunque casen", async () => {
+      const { app, workspaceId, projectId, columnId } = await setup();
+      await defineField(workspaceId, projectId, "coste", "number");
+
+      const parent = await insertTask(projectId, columnId, {
+        title: "Padre caro",
+        customFields: { coste: 5000 },
+      });
+      await insertTask(projectId, columnId, {
+        ...childTreeValues(parent),
+        title: "Hija cara",
+        customFields: { coste: 9000 },
+      });
+
+      const { titles } = await listTitles(app, projectId, caro, "roots");
+
+      expect(titles).toEqual(["Padre caro"]);
+    });
+
+    it("un nieto tambien entra con withDescendants", async () => {
+      const { app, workspaceId, projectId, columnId } = await setup();
+      await defineField(workspaceId, projectId, "coste", "number");
+
+      const parent = await insertTask(projectId, columnId, {
+        title: "Padre caro",
+        customFields: { coste: 5000 },
+      });
+      const child = await insertTask(projectId, columnId, {
+        ...childTreeValues(parent),
+        title: "Hija",
+      });
+      await insertTask(projectId, columnId, {
+        ...childTreeValues(child),
+        title: "Nieta",
+      });
+
+      const { titles } = await listTitles(
+        app,
+        projectId,
+        caro,
+        "withDescendants",
+      );
+
+      expect(titles).toEqual(["Hija", "Nieta", "Padre caro"]);
+    });
   });
 
   describe("errores", () => {
