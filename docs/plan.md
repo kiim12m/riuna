@@ -14,7 +14,7 @@
 | 1 — Uso real y asignación por equipos | 2 | **Cerrada** — una deuda abierta (ver abajo) |
 | 2 — Árbol de tareas y épicas | 4 | **Cerrada** — deuda abierta (ver abajo) |
 | 3 — Campos personalizados | 4 | **Cerrada** — deuda abierta (ver abajo) |
-| 4 — Motor de vistas y vista Tabla | 4 | **En curso** — motor y vista Tabla en pie |
+| 4 — Motor de vistas y vista Tabla | 4 | **Cerrada** — deuda abierta (ver abajo) |
 | 5 — Importación y exportación | 2 | Pendiente |
 | **Subtotal: Riuna diferencial** | **18** | |
 | 6 — Ejecución y productividad personal | 3 | Pendiente |
@@ -224,27 +224,59 @@ gestor de tareas básico y nada propio.
   - El tipo `usuario` mostraba el identificador en crudo y había que teclearlo
     a mano. Ahora se elige de los miembros del espacio.
 
-**Fase 4** (en curso). Hecho: el motor de filtros traduciendo a SQL, la vista
-Tabla con edición en línea, la barra de filtros, los cuatro modos de jerarquía
-y las vistas guardadas ([ADR 014](adr/014-motor-de-filtros.md),
-[ADR 015](adr/015-vistas-guardadas.md)). Pendiente:
+**Fase 4**. Hecho: el motor de filtros traduciendo a SQL, la vista Tabla con
+edición en línea, la barra de filtros, los cuatro modos de jerarquía, las
+vistas guardadas y compartidas, y el filtrado del Calendario y el Gantt
+([ADR 014](adr/014-motor-de-filtros.md),
+[ADR 015](adr/015-vistas-guardadas.md)).
 
-- **Tablero, Lista, Calendario y Gantt siguen sin tocar** —la deuda que arrastra
-  desde la Fase 1—. Su filtrado es del cliente, así que no es conectarlas a un
-  motor sino moverlas al servidor una a una. Es el grueso de lo que queda.
+**El criterio de aceptación no se cumple entero**, y se cierra igual a
+sabiendas. De lo que pedía —«filtras `Presupuesto > 1000 AND estado != Hecho`,
+agrupas por épica, guardas la vista, la compartes, y el mismo filtro funciona
+en tablero, calendario y gantt»— falta agrupar por épica y que el filtro llegue
+al tablero.
+
+- **Tablero, Lista y Backlog siguen filtrando en el cliente.** No es que no
+  filtren: filtran, con sus menús de prioridad, responsable, equipo, fecha y
+  etiqueta, en memoria. Migrarlas **sustituye código que funciona** en las tres
+  vistas de uso diario, y por eso se aplaza en vez de hacerse a última hora de
+  una fase. Calendario y Gantt se hicieron primero justamente porque no
+  filtraban: no había nada que romper.
+
+  Cuando se haga, dos notas que ya están investigadas. El filtro de etiquetas
+  actual **ya filtra por nombre**, implementado como un abanico de ids —
+  `getLabelsByWorkspaceId` devuelve también las filas por tarea, y el menú
+  selecciona todas las que comparten nombre y color—, así que moverlo al motor
+  no cambia los resultados; solo deja de distinguir el color. Y los filtros de
+  fecha relativos («esta semana») se preservan si el navegador traduce el rango
+  a fechas absolutas antes de mandarlo, que es donde ya se calculan hoy.
+
+- **No hay agrupación por épica** ni forma de elegir qué columnas se ven. Por
+  eso una vista guardada solo recuerda el filtro y el modo de jerarquía.
+- **Faltan los agregados del árbol como columnas** ordenables.
 - **La paginación sigue siendo por desplazamiento**, no por cursor.
-- **Faltan los agregados del árbol como columnas** ordenables, la agrupación
-  por épica, y elegir qué columnas se ven. Por eso una vista guardada solo
-  recuerda el filtro y el modo de jerarquía: lo demás todavía no se configura.
 - **GIN no acelera los rangos**, que es el ejemplo estrella del plan. Y la
   consulta de «con subtareas» es un bucle anidado sobre `path`: es la primera
   candidata a mirar con `EXPLAIN`.
-- **Sin medición de rendimiento todavía**: el presupuesto de 50.000 tareas y
-  < 300 ms p95 sigue sin comprobarse.
-- **Los desplegables no se han probado en vivo.** Elegir el tipo de un campo,
-  editar un `multi_select` o cargar una vista del menú son tres gestos que el
-  panel headless no puede dar, porque no compone frames y las transiciones de
-  Base UI no terminan. Lo que hay a cada lado del clic sí está verificado.
+- **El presupuesto de rendimiento sigue sin medirse**: 50.000 tareas y
+  < 300 ms p95. Se arrastra a la Fase 9, que es la otra que lo pedía.
+- **Tres gestos sin probar en vivo**: elegir el tipo de un campo, editar un
+  `multi_select` y cargar una vista del menú. Los tres son desplegables de Base
+  UI, que no abren en un navegador headless porque no compone frames y sus
+  transiciones no terminan. Lo que hay a cada lado del clic sí está verificado.
+- **Lo que la verificación encontró**, que es para lo que estaba:
+  - `state.expanded` de TanStack Table v9 **no siembra** el átomo que lee
+    `getIsExpanded`: el árbol de la tabla no se desplegaba nunca, con typecheck,
+    lint y 172 pruebas en verde. Se arregla con `initialState`.
+  - TanStack Router **parsea la búsqueda con `JSON.parse`**, así que una cadena
+    JSON llega ya convertida en array y comprobar `typeof === "string"` la
+    descartaba en silencio: la URL se limpiaba sola y el filtro no se aplicaba.
+  - `search: {}` al cerrar el detalle **borraba el filtro**: pinchar una fila te
+    dejaba sin el filtro que la había encontrado.
+  - Un 400 se reintentaba dos veces, así que un filtro inválido se veía como
+    «no hay tareas» —cero resultados— en vez de como un error. Ninguna prueba
+    lo habría visto: todas miran el resultado, no cuánto tarda en aparecer.
+
 
 ---
 
@@ -337,7 +369,7 @@ invitaciones, i18n y tema claro/oscuro.
 | **Subtareas reales en árbol**, con agregados y cascada | **Hecho** (fase 2) |
 | **Épicas**: grupos transversales dentro del proyecto | **Hecho** (fase 2) |
 | Campos personalizados | **Hecho** (fase 3) |
-| Motor de vistas: filtros guardados, agrupación, columnas, **vista Tabla editable** | Parcial (fase 4): traductor y vista Tabla sí; vistas guardadas y las cuatro heredadas, no |
+| Motor de vistas: filtros guardados, agrupación, columnas, **vista Tabla editable** | **Hecho** (fase 4), salvo agrupación y columnas configurables |
 | Importación CSV/Excel genérica con mapeo | Hay import/export de tareas; hay que generalizarlo |
 | Dashboards, widgets, informes y objetivos/OKR | No existe |
 | Automatizaciones de usuario | Solo `workflowRule` para eventos de integración |
@@ -403,7 +435,7 @@ las tarjetas.
 **Hecho cuando:** defines "Presupuesto (moneda)" y "Cliente (relación)" en un
 proyecto y los rellenas desde el detalle de la tarea.
 
-### Fase 4 — Motor de vistas y vista Tabla · **en curso**
+### Fase 4 — Motor de vistas y vista Tabla · **cerrada**
 Tabla `view` con `type` + `config jsonb` (árbol de filtros, orden, agrupación,
 columnas), un registro de descriptores que mapea cada campo lógico a su columna
 real o a su ruta JSONB, y un traductor único a SQL de Drizzle con paginación
@@ -541,7 +573,11 @@ destructiva.
 
 ## Siguiente paso
 
-Fase 4: mover al servidor el filtrado de Tablero, Lista, Calendario y Gantt.
-Es el grueso que queda y la deuda más antigua del plan —Calendario y Gantt no
-han filtrado nunca por nada—. El motor y las vistas guardadas ya están; lo que
-falta es que esas cuatro pantallas dejen de descartar tareas en memoria.
+Fase 5: la importación y exportación en CSV y Excel con mapeo de columnas,
+creación automática de campos personalizados e idempotencia vía `external_ref`,
+preservando jerarquía y épicas en los dos sentidos. La exportación a Excel de
+SERVITEC ([ADR 012](adr/012-exportacion-a-excel.md)) entra como caso de prueba
+del motor genérico.
+
+Antes de eso, o en paralelo, queda pendiente de decidir cuándo migrar Tablero,
+Lista y Backlog al motor de filtros. No bloquea la Fase 5.
