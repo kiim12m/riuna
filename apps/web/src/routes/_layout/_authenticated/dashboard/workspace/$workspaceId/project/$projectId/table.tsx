@@ -24,17 +24,12 @@ import useGetFieldDefinitions from "@/hooks/queries/field/use-get-field-definiti
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
 import useGetViews from "@/hooks/queries/view/use-get-views";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
+import { useFilterableFields } from "@/hooks/use-filterable-fields";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { authClient } from "@/lib/auth-client";
-import { getPriorityLabel } from "@/lib/i18n/domain";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
-import {
-  buildFilter,
-  type EditableCondition,
-  type FilterableField,
-  type FilterValueType,
-} from "@/types/task-filter";
+import { buildFilter, type EditableCondition } from "@/types/task-filter";
 
 type TableSearchParams = {
   taskId?: string;
@@ -120,6 +115,7 @@ function RouteComponent() {
   const { data: definitions = [] } = useGetFieldDefinitions(projectId);
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
   const { data: views = [] } = useGetViews(projectId, "table");
+  const filterableFields = useFilterableFields(projectId, workspaceId);
   const { data: session } = authClient.useSession();
   const { mutate: saveView, isPending: isSavingView } = useSaveView(projectId);
   const { mutate: removeView } = useDeleteView(projectId);
@@ -159,85 +155,6 @@ function RouteComponent() {
     [workspaceUsers],
   );
 
-  // Lo que la barra ofrece: los campos fijos que el motor conoce mas los
-  // personalizados del proyecto. Los de tipo relacion se quedan fuera porque
-  // su valor no vive en el JSONB y el motor no los registra.
-  const filterableFields = useMemo<FilterableField[]>(() => {
-    const customTypes: Record<string, FilterValueType | undefined> = {
-      text: "text",
-      number: "number",
-      currency: "number",
-      select: "id",
-      multi_select: "id",
-      date: "date",
-      checkbox: "boolean",
-      user: "id",
-      url: "text",
-    };
-
-    const builtIn: FilterableField[] = [
-      {
-        key: "title",
-        label: t("tasks:table.columns.title"),
-        valueType: "text",
-      },
-      {
-        key: "status",
-        label: t("tasks:table.columns.status"),
-        valueType: "id",
-      },
-      {
-        key: "priority",
-        label: t("tasks:table.columns.priority"),
-        valueType: "id",
-        options: ["urgent", "high", "medium", "low"].map((value) => ({
-          value,
-          label: getPriorityLabel(value),
-        })),
-      },
-      {
-        key: "dueDate",
-        label: t("tasks:table.columns.dueDate"),
-        valueType: "date",
-      },
-      {
-        key: "assignee",
-        label: t("tasks:table.columns.assignee"),
-        valueType: "id",
-        options: members.map((member) => ({
-          value: member.id,
-          label: member.name,
-        })),
-      },
-    ];
-
-    const custom = (definitions as FieldDefinition[]).flatMap((definition) => {
-      const valueType = customTypes[definition.type];
-      if (!valueType) return [];
-
-      const options = Array.isArray(definition.config?.options)
-        ? (definition.config.options as Array<{
-            value: string;
-            label: string;
-          }>)
-        : undefined;
-
-      return [
-        {
-          key: `custom.${definition.key}`,
-          label: definition.name,
-          valueType,
-          options,
-        },
-      ];
-    });
-
-    return [...builtIn, ...custom];
-  }, [definitions, members, t]);
-
-  // Abrir y cerrar una tarea conserva el resto de la busqueda. Escribir
-  // `search: {}` borraria el filtro, asi que pinchar una fila te dejaria sin
-  // el filtro que la habia encontrado.
   // Aplicar una vista es navegar: su `config` es la misma busqueda que ya
   // vive en la URL, asi que cargarla no necesita ningun estado aparte.
   const handleApplyView = useCallback(
