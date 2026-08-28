@@ -13,8 +13,8 @@
 | 0 — Fork, marca y auditoría | 2 | **Cerrada** — dos decisiones aplazadas (ver abajo) |
 | 1 — Uso real y asignación por equipos | 2 | **Cerrada** — una deuda abierta (ver abajo) |
 | 2 — Árbol de tareas y épicas | 4 | **Cerrada** — deuda abierta (ver abajo) |
-| 3 — Campos personalizados | 4 | Pendiente |
-| 4 — Motor de vistas y vista Tabla | 4 | Pendiente |
+| 3 — Campos personalizados | 4 | **Cerrada** — deuda abierta (ver abajo) |
+| 4 — Motor de vistas y vista Tabla | 4 | **En curso** — motor y vista Tabla en pie |
 | 5 — Importación y exportación | 2 | Pendiente |
 | **Subtotal: Riuna diferencial** | **18** | |
 | 6 — Ejecución y productividad personal | 3 | Pendiente |
@@ -192,6 +192,51 @@ gestor de tareas básico y nada propio.
   selector de épicas iba envuelto en un `span`, que Base UI rechaza por perder
   la semántica de botón. Las tres arregladas.
 
+**Fase 3**:
+- **El tipo `relación` no está conectado a nada.** Existe en el vocabulario y
+  la validación lo mantiene fuera del JSONB —su valor son filas de
+  `task_relation`, que sí tiene integridad referencial—, pero nadie lo enlaza.
+  El criterio de aceptación pedía «Cliente (relación)» y esa mitad no está.
+- **Definir campos es cosa de `admin` y `owner`.** El rol `member` heredado
+  tiene `project: ["create", "read"]` y no `update`, así que un miembro puede
+  rellenar valores (`task:update`) pero no crear el campo. No es decisión de
+  esta fase sino el vocabulario heredado, y es el mismo hallazgo que la Fase 1
+  hizo con `task:assign`. Queda documentado en las pruebas y en la
+  [ADR 013](adr/013-campos-personalizados.md).
+- **No hay editor de definiciones.** Se crean desde el «+» de la vista Tabla;
+  renombrar, archivar, borrar y reordenar existen en la API y no en la
+  interfaz. Tampoco hay forma de crear un campo de alcance espacio de trabajo
+  sin llamar a la API.
+- **Cambiar un campo no deja rastro en la actividad**, mientras que cambiar el
+  título sí. Se notará la primera vez que alguien pregunte quién tocó el
+  presupuesto.
+- **MCP no sabe de campos personalizados**: `create_task`, `update_task` y
+  `list_tasks` los ignoran.
+- **Los agregados del árbol no suben los campos numéricos.** Sumar un
+  «Presupuesto» de toda la rama es previsible y no está.
+- **Lo que las pruebas y el navegador encontraron:**
+  - `state.expanded` de TanStack Table v9 **no siembra** el átomo que lee
+    `getIsExpanded`. El árbol de la vista Tabla no se desplegaba nunca —el
+    padre mostraba su contador de hijas y ninguna hija—, y typecheck, lint y
+    172 pruebas pasaban con el fallo dentro. Se arregla con `initialState`.
+  - `multi_select` caía al editor de texto y mandaba una cadena donde la API
+    espera una lista, así que no se podía editar. Ahora es un menú de casillas.
+  - El tipo `usuario` mostraba el identificador en crudo y había que teclearlo
+    a mano. Ahora se elige de los miembros del espacio.
+
+**Fase 4** (en curso):
+- **El motor existe y la interfaz no lo usa.** La vista Tabla trae el proyecto
+  entero y no filtra; el filtro solo se puede ejercer por URL.
+- **No hay tabla `view`**, así que no se pueden guardar ni compartir vistas, y
+  la paginación sigue siendo por desplazamiento en vez de por cursor.
+- **Tablero, Lista, Calendario y Gantt siguen sin tocar** —la deuda que arrastra
+  desde la Fase 1—. Su filtrado es del cliente, así que no es conectarlas a un
+  motor sino moverlas al servidor una a una.
+- **GIN no acelera los rangos**, que es el ejemplo estrella del plan. Ver
+  [ADR 014](adr/014-motor-de-filtros.md).
+- **Sin medición de rendimiento todavía**: el presupuesto de 50.000 tareas y
+  < 300 ms p95 sigue sin comprobarse con `EXPLAIN`.
+
 ---
 
 ## Contexto
@@ -282,8 +327,8 @@ invitaciones, i18n y tema claro/oscuro.
 | Gestión de equipos (crear, renombrar, miembros) | **Hecho** (fase 1) |
 | **Subtareas reales en árbol**, con agregados y cascada | **Hecho** (fase 2) |
 | **Épicas**: grupos transversales dentro del proyecto | **Hecho** (fase 2) |
-| Campos personalizados | No existe |
-| Motor de vistas: filtros guardados, agrupación, columnas, **vista Tabla editable** | No existe |
+| Campos personalizados | **Hecho** (fase 3) |
+| Motor de vistas: filtros guardados, agrupación, columnas, **vista Tabla editable** | Parcial (fase 4): traductor y vista Tabla sí; vistas guardadas y las cuatro heredadas, no |
 | Importación CSV/Excel genérica con mapeo | Hay import/export de tareas; hay que generalizarlo |
 | Dashboards, widgets, informes y objetivos/OKR | No existe |
 | Automatizaciones de usuario | Solo `workflowRule` para eventos de integración |
@@ -339,7 +384,7 @@ en el Gantt. La estimación se edita en el detalle, en horas.
 progreso y fechas reales de su rama, cerrarlo baja en cascada, y filtras un
 tablero por épica. ✔
 
-### Fase 3 — Campos personalizados (≈4 semanas)
+### Fase 3 — Campos personalizados · **cerrada**
 `field_definition` (texto, número, moneda, select, multi-select, fecha,
 checkbox, usuario, URL, relación→`taskRelation`) por proyecto o por workspace,
 y `custom_fields jsonb` con índice GIN en `task`. Validación contra la
@@ -349,7 +394,7 @@ las tarjetas.
 **Hecho cuando:** defines "Presupuesto (moneda)" y "Cliente (relación)" en un
 proyecto y los rellenas desde el detalle de la tarea.
 
-### Fase 4 — Motor de vistas y vista Tabla (≈4 semanas)
+### Fase 4 — Motor de vistas y vista Tabla · **en curso**
 Tabla `view` con `type` + `config jsonb` (árbol de filtros, orden, agrupación,
 columnas), un registro de descriptores que mapea cada campo lógico a su columna
 real o a su ruta JSONB, y un traductor único a SQL de Drizzle con paginación
@@ -487,7 +532,7 @@ destructiva.
 
 ## Siguiente paso
 
-Fase 3: los campos personalizados. `field_definition` por proyecto o por
-espacio y `custom_fields jsonb` con índice GIN en `task`, validando cada valor
-contra su definición. Es la última pieza que le falta al motor de vistas de la
-Fase 4 para tener algo que filtrar más allá de lo que ya trae `task`.
+Fase 4, lo que queda: conectar el filtro a la interfaz —hoy el motor solo se
+ejerce por URL—, la tabla `view` con su `config jsonb` para guardar y compartir
+vistas, la paginación por cursor, y mover al servidor el filtrado de Tablero,
+Lista, Calendario y Gantt, que es el grueso y la deuda más antigua del plan.
