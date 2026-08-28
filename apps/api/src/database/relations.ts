@@ -29,6 +29,7 @@ import {
   userNotificationWorkspaceRuleTable,
   userTable,
   verificationTable,
+  viewTable,
   workflowRuleTable,
   workspaceRoleTable,
   workspaceTable,
@@ -79,6 +80,7 @@ export const workspaceTableRelations = relations(
     projects: many(projectTable),
     assets: many(assetTable),
     fieldDefinitions: many(fieldDefinitionTable),
+    views: many(viewTable),
     invitations: many(invitationTable),
     notificationWorkspaceRules: many(userNotificationWorkspaceRuleTable),
   }),
@@ -192,6 +194,22 @@ export const taskEpicTableRelations = relations(taskEpicTable, ({ one }) => ({
   epic: one(epicTable, {
     fields: [taskEpicTable.epicId],
     references: [epicTable.id],
+  }),
+}));
+
+export const viewTableRelations = relations(viewTable, ({ one }) => ({
+  workspace: one(workspaceTable, {
+    fields: [viewTable.workspaceId],
+    references: [workspaceTable.id],
+  }),
+  // Opcional: sin proyecto, la vista vale en todo el espacio.
+  project: one(projectTable, {
+    fields: [viewTable.projectId],
+    references: [projectTable.id],
+  }),
+  creator: one(userTable, {
+    fields: [viewTable.createdBy],
+    references: [userTable.id],
   }),
 }));
 

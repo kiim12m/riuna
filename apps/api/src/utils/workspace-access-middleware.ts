@@ -20,7 +20,8 @@ type WorkspaceIdSource =
         | "column"
         | "workflowRule"
         | "epic"
-        | "fieldDefinition";
+        | "fieldDefinition"
+        | "view";
       idKey: string;
     }
   | {
@@ -141,7 +142,8 @@ async function lookupWorkspaceId(
     | "column"
     | "workflowRule"
     | "epic"
-    | "fieldDefinition",
+    | "fieldDefinition"
+    | "view",
   id: string,
 ): Promise<string | null> {
   try {
@@ -168,6 +170,15 @@ async function lookupWorkspaceId(
           .where(eq(schema.taskTable.id, id))
           .limit(1);
         return task?.workspaceId || null;
+      }
+
+      case "view": {
+        const [view] = await db
+          .select({ workspaceId: schema.viewTable.workspaceId })
+          .from(schema.viewTable)
+          .where(eq(schema.viewTable.id, id))
+          .limit(1);
+        return view?.workspaceId || null;
       }
 
       case "fieldDefinition": {
@@ -336,6 +347,11 @@ export const workspaceAccess = {
   fromTasks: (idKey = "taskIds") =>
     workspaceAccessMiddleware({
       sources: [{ type: "lookupMany", resource: "task", idKey }],
+    }),
+
+  fromView: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [{ type: "lookup", resource: "view", idKey }],
     }),
 
   fromFieldDefinition: (idKey = "id") =>
