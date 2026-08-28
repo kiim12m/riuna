@@ -36,6 +36,16 @@ type GetTasksOptions = {
   assigneeId?: string;
   epicId?: string;
   rootsOnly?: boolean;
+  /**
+   * Que hace el filtro con la jerarquia.
+   *
+   * - `matching`: solo las tareas que casan. Una rama cuyo padre casa pierde
+   *   las hijas que no casan, que es lo que pasa hoy.
+   * - `roots`: solo las tareas de primer nivel que casan.
+   * - `withDescendants`: las que casan mas todo lo que cuelga de ellas, para
+   *   ver la rama entera de lo que el filtro ha encontrado.
+   */
+  treeScope?: "matching" | "roots" | "withDescendants";
   dueAfter?: string;
   dueBefore?: string;
   limit?: number;
@@ -142,6 +152,10 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     conditions.push(isNull(taskTable.parentId));
   }
 
+  if (options.treeScope === "roots") {
+    conditions.push(isNull(taskTable.parentId));
+  }
+
   if (options.filter) {
     // El registro se construye con las definiciones que aplican al proyecto,
     // que es lo que hace que `custom.presupuesto` exista como campo filtrable
@@ -157,7 +171,27 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     );
 
     if (filterSql) {
-      conditions.push(filterSql);
+      if (options.treeScope === "withDescendants") {
+        // "Lo que casa, mas su rama". El filtro va dentro de su propia
+        // subconsulta, cuyo FROM es `task`: alli `"task"."x"` se resuelve
+        // contra esa copia y no contra la de fuera. En el nivel intermedio el
+        // FROM es `task ancestor`, asi que el `task.path` de en medio si
+        // apunta a la fila externa. Sin ese escalon habria que alias-ar el
+        // traductor entero.
+        conditions.push(
+          sql`(${filterSql} OR EXISTS (
+            SELECT 1 FROM ${taskTable} ancestor
+            WHERE ancestor.project_id = ${projectId}
+              AND ${taskTable.path} LIKE ancestor.path || '_%'
+              AND ancestor.id IN (
+                SELECT id FROM ${taskTable}
+                WHERE ${taskTable.projectId} = ${projectId} AND ${filterSql}
+              )
+          ))`,
+        );
+      } else {
+        conditions.push(filterSql);
+      }
     }
   }
 

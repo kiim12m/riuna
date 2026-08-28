@@ -36,7 +36,16 @@ type TableSearchParams = {
    * === "string"` la descartaba en silencio.
    */
   filter?: EditableCondition[];
+  /**
+   * Que hace el filtro con la jerarquia. `tree` y `flat` piden lo mismo al
+   * servidor y solo cambian como se pinta; `roots` y `withDescendants` cambian
+   * la consulta.
+   */
+  treeMode?: TreeMode;
 };
+
+const TREE_MODES = ["tree", "flat", "roots", "withDescendants"] as const;
+type TreeMode = (typeof TREE_MODES)[number];
 
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/table",
@@ -47,13 +56,16 @@ export const Route = createFileRoute(
     filter: Array.isArray(search.filter)
       ? (search.filter as EditableCondition[])
       : undefined,
+    treeMode: TREE_MODES.includes(search.treeMode as TreeMode)
+      ? (search.treeMode as TreeMode)
+      : undefined,
   }),
 });
 
 function RouteComponent() {
   const { t } = useTranslation();
   const { projectId, workspaceId } = Route.useParams();
-  const { taskId, filter: filterParam } = Route.useSearch();
+  const { taskId, filter: filterParam, treeMode = "tree" } = Route.useSearch();
   const navigate = useNavigate();
 
   // Las condiciones viven en la URL y no en estado local: un tablero filtrado
@@ -80,7 +92,14 @@ function RouteComponent() {
 
   const filter = useMemo(() => buildFilter(conditions), [conditions]);
 
-  const { data: project, error } = useGetTasks(projectId, filter);
+  const { data: project, error } = useGetTasks(projectId, filter, {
+    treeScope:
+      treeMode === "roots"
+        ? "roots"
+        : treeMode === "withDescendants"
+          ? "withDescendants"
+          : "matching",
+  });
   const { data: definitions = [] } = useGetFieldDefinitions(projectId);
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
   const [isAddFieldOpen, setIsAddFieldOpen] = useState(false);
@@ -273,6 +292,17 @@ function RouteComponent() {
             fields={filterableFields}
             conditions={conditions}
             onChange={setConditions}
+            treeMode={treeMode}
+            onTreeModeChange={(next) =>
+              navigate({
+                to: ".",
+                search: (previous: TableSearchParams) => ({
+                  ...previous,
+                  treeMode: next === "tree" ? undefined : next,
+                }),
+                replace: true,
+              })
+            }
           />
           {error && (
             <p className="px-3 pb-2 text-destructive text-xs">
@@ -286,6 +316,7 @@ function RouteComponent() {
           tasks={tasks}
           definitions={definitions as FieldDefinition[]}
           members={members}
+          flatten={treeMode === "flat"}
           canEdit={canEditValues}
           onOpenTask={handleOpenTask}
           onSetCustomField={handleSetCustomField}

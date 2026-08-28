@@ -1,15 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
-import getTasks from "@/fetchers/task/get-tasks";
+import getTasks, { type TaskQueryOptions } from "@/fetchers/task/get-tasks";
 import type { TaskFilter } from "@/types/task-filter";
 
-export function useGetTasks(projectId: string, filter?: TaskFilter | null) {
+export function useGetTasks(
+  projectId: string,
+  filter?: TaskFilter | null,
+  options?: TaskQueryOptions,
+) {
   return useQuery({
-    // El filtro entra en la clave: sin el, cambiar de filtro serviria la
-    // respuesta cacheada del anterior. Va detras de `projectId` para que la
-    // invalidacion por WebSocket, que usa `["tasks", projectId]`, siga
-    // alcanzando todas las variantes por prefijo.
-    queryKey: ["tasks", projectId, filter ? JSON.stringify(filter) : null],
-    queryFn: () => getTasks(projectId, filter),
+    // El filtro y el alcance entran en la clave: sin ellos, cambiar de filtro
+    // serviria la respuesta cacheada del anterior. Van detras de `projectId`
+    // para que la invalidacion por WebSocket, que usa `["tasks", projectId]`,
+    // siga alcanzando todas las variantes por prefijo.
+    queryKey: [
+      "tasks",
+      projectId,
+      filter ? JSON.stringify(filter) : null,
+      options?.treeScope ?? "matching",
+    ],
+    queryFn: () => getTasks(projectId, filter, options),
     refetchInterval: 30000,
     enabled: !!projectId,
   });

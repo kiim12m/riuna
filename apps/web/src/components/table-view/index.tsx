@@ -46,6 +46,8 @@ type Props = {
   tasks: Task[];
   definitions: FieldDefinition[];
   members: FieldMember[];
+  /** Pinta cada tarea como fila propia, sin anidar bajo su padre. */
+  flatten?: boolean;
   canEdit: boolean;
   onOpenTask: (taskId: string) => void;
   onSetCustomField: (taskId: string, key: string, value: unknown) => void;
@@ -97,6 +99,7 @@ function TableView({
   tasks,
   definitions,
   members,
+  flatten = false,
   canEdit,
   onOpenTask,
   onSetCustomField,
@@ -106,9 +109,13 @@ function TableView({
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const data = useMemo(() => {
-    const rows = buildRows(tasks);
+    // Aplanar es cosa de la vista, no de la consulta: son las mismas tareas,
+    // pintadas como filas hermanas en vez de anidadas.
+    const rows = flatten
+      ? tasks.map((task) => ({ ...task, subRows: [] as TableRow[] }))
+      : buildRows(tasks);
     return rows.length > 0 ? rows : EMPTY_ROWS;
-  }, [tasks]);
+  }, [tasks, flatten]);
 
   const columns = useMemo(
     () =>
