@@ -224,18 +224,27 @@ gestor de tareas básico y nada propio.
   - El tipo `usuario` mostraba el identificador en crudo y había que teclearlo
     a mano. Ahora se elige de los miembros del espacio.
 
-**Fase 4** (en curso):
-- **El motor existe y la interfaz no lo usa.** La vista Tabla trae el proyecto
-  entero y no filtra; el filtro solo se puede ejercer por URL.
-- **No hay tabla `view`**, así que no se pueden guardar ni compartir vistas, y
-  la paginación sigue siendo por desplazamiento en vez de por cursor.
+**Fase 4** (en curso). Hecho: el motor de filtros traduciendo a SQL, la vista
+Tabla con edición en línea, la barra de filtros, los cuatro modos de jerarquía
+y las vistas guardadas ([ADR 014](adr/014-motor-de-filtros.md),
+[ADR 015](adr/015-vistas-guardadas.md)). Pendiente:
+
 - **Tablero, Lista, Calendario y Gantt siguen sin tocar** —la deuda que arrastra
   desde la Fase 1—. Su filtrado es del cliente, así que no es conectarlas a un
-  motor sino moverlas al servidor una a una.
-- **GIN no acelera los rangos**, que es el ejemplo estrella del plan. Ver
-  [ADR 014](adr/014-motor-de-filtros.md).
+  motor sino moverlas al servidor una a una. Es el grueso de lo que queda.
+- **La paginación sigue siendo por desplazamiento**, no por cursor.
+- **Faltan los agregados del árbol como columnas** ordenables, la agrupación
+  por épica, y elegir qué columnas se ven. Por eso una vista guardada solo
+  recuerda el filtro y el modo de jerarquía: lo demás todavía no se configura.
+- **GIN no acelera los rangos**, que es el ejemplo estrella del plan. Y la
+  consulta de «con subtareas» es un bucle anidado sobre `path`: es la primera
+  candidata a mirar con `EXPLAIN`.
 - **Sin medición de rendimiento todavía**: el presupuesto de 50.000 tareas y
-  < 300 ms p95 sigue sin comprobarse con `EXPLAIN`.
+  < 300 ms p95 sigue sin comprobarse.
+- **Los desplegables no se han probado en vivo.** Elegir el tipo de un campo,
+  editar un `multi_select` o cargar una vista del menú son tres gestos que el
+  panel headless no puede dar, porque no compone frames y las transiciones de
+  Base UI no terminan. Lo que hay a cada lado del clic sí está verificado.
 
 ---
 
@@ -532,7 +541,7 @@ destructiva.
 
 ## Siguiente paso
 
-Fase 4, lo que queda: conectar el filtro a la interfaz —hoy el motor solo se
-ejerce por URL—, la tabla `view` con su `config jsonb` para guardar y compartir
-vistas, la paginación por cursor, y mover al servidor el filtrado de Tablero,
-Lista, Calendario y Gantt, que es el grueso y la deuda más antigua del plan.
+Fase 4: mover al servidor el filtrado de Tablero, Lista, Calendario y Gantt.
+Es el grueso que queda y la deuda más antigua del plan —Calendario y Gantt no
+han filtrado nunca por nada—. El motor y las vistas guardadas ya están; lo que
+falta es que esas cuatro pantallas dejen de descartar tareas en memoria.
