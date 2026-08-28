@@ -175,6 +175,7 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     path: taskTable.path,
     depth: taskTable.depth,
     estimate: taskTable.estimate,
+    customFields: taskTable.customFields,
   };
 
   const query = db

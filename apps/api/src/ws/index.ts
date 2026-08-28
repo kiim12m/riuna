@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { eq } from "drizzle-orm";
 import type { WSContext } from "hono/ws";
+import db, { schema } from "../database";
 import { subscribeToEvent } from "../events";
 import { isRedisConfigured } from "../redis";
 import type {
@@ -329,6 +331,37 @@ subscribeToEvent<{
     { type: "EPIC_UPDATED", projectId, taskId: "" },
     initiatorId,
   );
+});
+
+subscribeToEvent<{
+  workspaceId: string;
+  projectId: string | null;
+  fieldDefinitionId: string;
+  userId: string;
+  initiatorId?: string;
+}>("field-definition.changed", async (data) => {
+  const { workspaceId, projectId, initiatorId } = data;
+
+  // Un campo de proyecto avisa a su proyecto. Uno de espacio afecta a todos a
+  // la vez y no hay un canal de espacio de trabajo, asi que se resuelven sus
+  // proyectos y se avisa a cada uno. Es una consulta de mas en un evento que
+  // ocurre cuando alguien edita los ajustes, no en la ruta caliente.
+  const projectIds = projectId
+    ? [projectId]
+    : (
+        await db
+          .select({ id: schema.projectTable.id })
+          .from(schema.projectTable)
+          .where(eq(schema.projectTable.workspaceId, workspaceId))
+      ).map((row) => row.id);
+
+  for (const id of projectIds) {
+    broadcastToProject(
+      id,
+      { type: "FIELD_DEFINITION_UPDATED", projectId: id, taskId: "" },
+      initiatorId,
+    );
+  }
 });
 
 subscribeToEvent<{

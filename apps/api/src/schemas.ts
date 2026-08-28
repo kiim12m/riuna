@@ -43,6 +43,7 @@ export const taskSchema = v.object({
   ] as const),
   startDate: v.optional(v.date()),
   dueDate: v.optional(v.date()),
+  customFields: v.record(v.string(), v.unknown()),
   createdAt: v.date(),
 });
 

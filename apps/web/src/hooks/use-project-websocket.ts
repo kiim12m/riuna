@@ -64,11 +64,22 @@ export function useProjectWebSocket(projectId: string) {
             message.type === "TASK_MOVED" ||
             message.type === "TASK_RELATION_UPDATED" ||
             message.type === "EPIC_UPDATED" ||
+            message.type === "FIELD_DEFINITION_UPDATED" ||
             message.type === "COMMENT_UPDATED"
           ) {
             queryClient.invalidateQueries({
               queryKey: ["tasks", message.projectId],
             });
+
+            // Cambiar una definicion cambia lo que el detalle y las tarjetas
+            // tienen que pintar, asi que se invalidan las dos cosas: la lista
+            // de campos y las tareas que los llevan dentro.
+            if (message.type === "FIELD_DEFINITION_UPDATED") {
+              queryClient.invalidateQueries({
+                queryKey: ["field-definitions", message.projectId],
+              });
+              return;
+            }
 
             if (message.type === "EPIC_UPDATED") {
               queryClient.invalidateQueries({

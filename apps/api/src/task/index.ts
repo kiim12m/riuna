@@ -43,6 +43,7 @@ import {
 import updateTask from "./controllers/update-task";
 import updateTaskAssignee from "./controllers/update-task-assignee";
 import updateTaskAssignees from "./controllers/update-task-assignees";
+import updateTaskCustomFields from "./controllers/update-task-custom-fields";
 import updateTaskDescription from "./controllers/update-task-description";
 import updateTaskDueDate from "./controllers/update-task-due-date";
 import updateTaskEstimate from "./controllers/update-task-estimate";
@@ -731,6 +732,37 @@ const task = new Hono<{
       const currentUserId = c.get("userId");
 
       const task = await updateTaskEstimate({ id, estimate, currentUserId });
+
+      return c.json(task);
+    },
+  )
+  .put(
+    "/custom-fields/:id",
+    describeRoute({
+      operationId: "updateTaskCustomFields",
+      tags: ["Tasks"],
+      description:
+        "Set custom field values on a task. Only the keys sent are touched; an empty value clears one.",
+      responses: {
+        200: {
+          description: "Task custom fields updated successfully",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ values: v.record(v.string(), v.unknown()) })),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    requireEntitlement,
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { values } = c.req.valid("json");
+      const currentUserId = c.get("userId");
+
+      const task = await updateTaskCustomFields({ id, values, currentUserId });
 
       return c.json(task);
     },
