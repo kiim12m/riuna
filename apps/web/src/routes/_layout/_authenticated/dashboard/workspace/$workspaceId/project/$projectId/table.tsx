@@ -8,15 +8,24 @@ import type { AddFieldPayload } from "@/components/table-view/add-field-dialog";
 import AddFieldDialog from "@/components/table-view/add-field-dialog";
 import type { FieldDefinition } from "@/components/table-view/custom-field-cell";
 import FilterBar from "@/components/table-view/filter-bar";
+import ViewPicker, {
+  type SavedView,
+} from "@/components/table-view/view-picker";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import {
   useCreateFieldDefinition,
   useUpdateTaskCustomFields,
 } from "@/hooks/mutations/field/use-field-mutations";
+import {
+  useDeleteView,
+  useSaveView,
+} from "@/hooks/mutations/view/use-view-mutations";
 import useGetFieldDefinitions from "@/hooks/queries/field/use-get-field-definitions";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
+import useGetViews from "@/hooks/queries/view/use-get-views";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { authClient } from "@/lib/auth-client";
 import { getPriorityLabel } from "@/lib/i18n/domain";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
@@ -42,6 +51,8 @@ type TableSearchParams = {
    * la consulta.
    */
   treeMode?: TreeMode;
+  /** La vista guardada que se esta mirando, para marcarla en el selector. */
+  viewId?: string;
 };
 
 const TREE_MODES = ["tree", "flat", "roots", "withDescendants"] as const;
@@ -59,13 +70,19 @@ export const Route = createFileRoute(
     treeMode: TREE_MODES.includes(search.treeMode as TreeMode)
       ? (search.treeMode as TreeMode)
       : undefined,
+    viewId: typeof search.viewId === "string" ? search.viewId : undefined,
   }),
 });
 
 function RouteComponent() {
   const { t } = useTranslation();
   const { projectId, workspaceId } = Route.useParams();
-  const { taskId, filter: filterParam, treeMode = "tree" } = Route.useSearch();
+  const {
+    taskId,
+    filter: filterParam,
+    treeMode = "tree",
+    viewId,
+  } = Route.useSearch();
   const navigate = useNavigate();
 
   // Las condiciones viven en la URL y no en estado local: un tablero filtrado
@@ -102,6 +119,10 @@ function RouteComponent() {
   });
   const { data: definitions = [] } = useGetFieldDefinitions(projectId);
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
+  const { data: views = [] } = useGetViews(projectId, "table");
+  const { data: session } = authClient.useSession();
+  const { mutate: saveView, isPending: isSavingView } = useSaveView(projectId);
+  const { mutate: removeView } = useDeleteView(projectId);
   const [isAddFieldOpen, setIsAddFieldOpen] = useState(false);
 
   const { mutate: setCustomField } = useUpdateTaskCustomFields(projectId);
@@ -217,6 +238,52 @@ function RouteComponent() {
   // Abrir y cerrar una tarea conserva el resto de la busqueda. Escribir
   // `search: {}` borraria el filtro, asi que pinchar una fila te dejaria sin
   // el filtro que la habia encontrado.
+  // Aplicar una vista es navegar: su `config` es la misma busqueda que ya
+  // vive en la URL, asi que cargarla no necesita ningun estado aparte.
+  const handleApplyView = useCallback(
+    (view: SavedView) => {
+      navigate({
+        to: ".",
+        search: {
+          filter: Array.isArray(view.config.filter)
+            ? (view.config.filter as EditableCondition[])
+            : undefined,
+          treeMode: (view.config.treeMode as TreeMode | undefined) ?? undefined,
+          viewId: view.id,
+        },
+        replace: true,
+      });
+    },
+    [navigate],
+  );
+
+  const handleSaveView = useCallback(
+    (name: string, isShared: boolean) => {
+      saveView(
+        {
+          name,
+          type: "table",
+          isShared,
+          // Se guarda la busqueda tal cual: lo que se ve es lo que se guarda.
+          config: {
+            ...(conditions.length > 0 ? { filter: conditions } : {}),
+            ...(treeMode !== "tree" ? { treeMode } : {}),
+          },
+        },
+        {
+          onSuccess: () => toast.success(t("tasks:table.views.saved")),
+          onError: (error) =>
+            toast.error(
+              error instanceof Error
+                ? error.message
+                : t("tasks:table.views.saveFailed"),
+            ),
+        },
+      );
+    },
+    [saveView, conditions, treeMode, t],
+  );
+
   const handleOpenTask = useCallback(
     (id: string) => {
       navigate({
@@ -288,6 +355,25 @@ function RouteComponent() {
       <PageTitle title={t("tasks:table.pageTitle", { name: project?.name })} />
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-card">
         <div className="border-border/80 border-b">
+          <div className="flex items-center gap-1 px-3 pt-2">
+            <ViewPicker
+              views={views as SavedView[]}
+              activeViewId={viewId}
+              currentUserId={session?.user?.id}
+              canSave={conditions.length > 0 || treeMode !== "tree"}
+              saving={isSavingView}
+              onApply={handleApplyView}
+              onSave={handleSaveView}
+              onDelete={(id) =>
+                removeView(id, {
+                  onError: (error) =>
+                    toast.error(
+                      error instanceof Error ? error.message : "Error",
+                    ),
+                })
+              }
+            />
+          </div>
           <FilterBar
             fields={filterableFields}
             conditions={conditions}
