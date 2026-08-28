@@ -1800,7 +1800,8 @@
 			"copyTaskBranch": "Copiar la rama de la tarea",
 			"start": "Comenzar",
 			"startDate": "Fecha de inicio",
-			"noDate": "Sin fecha"
+			"noDate": "Sin fecha",
+			"customFields": "Campos personalizados"
 		},
 		"popover": {
 			"assignee": {
@@ -2091,6 +2092,44 @@
 			"allEpics": "Todas las épicas",
 			"emptyProject": "Este proyecto todavía no tiene épicas",
 			"updateError": "No se han podido cambiar las épicas de la tarea"
+		},
+		"table": {
+			"title": "Tabla",
+			"pageTitle": "{{name}} · Tabla",
+			"empty": "No hay tareas que mostrar",
+			"expand": "Desplegar",
+			"collapse": "Plegar",
+			"saveFailed": "No se ha podido guardar el valor",
+			"columns": {
+				"title": "Título",
+				"status": "Estado",
+				"priority": "Prioridad",
+				"assignee": "Responsable",
+				"dueDate": "Fecha límite"
+			},
+			"addField": "Añadir un campo",
+			"addFieldTitle": "Campo personalizado nuevo",
+			"addFieldDescription": "Se convierte en una columna aquí y en un campo de todas las tareas del proyecto.",
+			"fieldName": "Nombre",
+			"fieldNamePlaceholder": "Presupuesto",
+			"fieldType": "Tipo",
+			"fieldOptions": "Opciones",
+			"fieldOptionsPlaceholder": "Una por línea",
+			"fieldCurrency": "Moneda",
+			"createField": "Crear campo",
+			"fieldCreated": "Campo creado",
+			"fieldCreateFailed": "No se ha podido crear el campo",
+			"fieldTypes": {
+				"text": "Texto",
+				"number": "Número",
+				"currency": "Moneda",
+				"select": "Selección",
+				"multi_select": "Selección múltiple",
+				"date": "Fecha",
+				"checkbox": "Casilla",
+				"user": "Persona",
+				"url": "URL"
+			}
 		}
 	},
 	"invitations": {
