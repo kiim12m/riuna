@@ -1800,7 +1800,8 @@
 			"copyTaskBranch": "Copy task branch",
 			"start": "Start",
 			"startDate": "Start date",
-			"noDate": "No date"
+			"noDate": "No date",
+			"customFields": "Custom fields"
 		},
 		"move": {
 			"title": "Move task",
@@ -2091,6 +2092,44 @@
 			"allEpics": "All epics",
 			"emptyProject": "This project has no epics yet",
 			"updateError": "Failed to update the task epics"
+		},
+		"table": {
+			"title": "Table",
+			"pageTitle": "{{name}} · Table",
+			"empty": "No tasks to show",
+			"expand": "Expand",
+			"collapse": "Collapse",
+			"saveFailed": "The value could not be saved",
+			"columns": {
+				"title": "Title",
+				"status": "Status",
+				"priority": "Priority",
+				"assignee": "Assignee",
+				"dueDate": "Due date"
+			},
+			"addField": "Add a field",
+			"addFieldTitle": "New custom field",
+			"addFieldDescription": "It becomes a column here and a field on every task in this project.",
+			"fieldName": "Name",
+			"fieldNamePlaceholder": "Budget",
+			"fieldType": "Type",
+			"fieldOptions": "Options",
+			"fieldOptionsPlaceholder": "One per line",
+			"fieldCurrency": "Currency",
+			"createField": "Create field",
+			"fieldCreated": "Field created",
+			"fieldCreateFailed": "The field could not be created",
+			"fieldTypes": {
+				"text": "Text",
+				"number": "Number",
+				"currency": "Currency",
+				"select": "Select",
+				"multi_select": "Multi-select",
+				"date": "Date",
+				"checkbox": "Checkbox",
+				"user": "Person",
+				"url": "URL"
+			}
 		}
 	},
 	"invitations": {

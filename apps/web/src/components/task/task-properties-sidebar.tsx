@@ -41,6 +41,7 @@ import { getPriorityLabel, getStatusDisplayLabel } from "@/lib/i18n/domain";
 import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
 import TaskAssigneePopover from "./task-assignee-popover";
+import TaskCustomFields from "./task-custom-fields";
 import TaskDueDatePopover from "./task-due-date-popover";
 import TaskEpicsPopover, { TaskEpicsTrigger } from "./task-epics-popover";
 import TaskLabelsPopover from "./task-labels-popover";
@@ -292,9 +293,16 @@ export default function TaskPropertiesSidebar({
                 </TaskTeamPopover>
               )}
               {task && (
-                <TaskEpicsPopover task={task} projectId={projectId}>
-                  <TaskEpicsTrigger task={task} />
-                </TaskEpicsPopover>
+                <>
+                  <TaskEpicsPopover task={task} projectId={projectId}>
+                    <TaskEpicsTrigger task={task} />
+                  </TaskEpicsPopover>
+                  <TaskCustomFields
+                    task={task}
+                    projectId={projectId}
+                    workspaceId={workspaceId}
+                  />
+                </>
               )}
               {task && (
                 <TaskStartDatePopover task={task}>
@@ -502,9 +510,16 @@ export default function TaskPropertiesSidebar({
                   </TaskTeamPopover>
                 )}
                 {task && (
-                  <TaskEpicsPopover task={task} projectId={projectId}>
-                    <TaskEpicsTrigger task={task} />
-                  </TaskEpicsPopover>
+                  <>
+                    <TaskEpicsPopover task={task} projectId={projectId}>
+                      <TaskEpicsTrigger task={task} />
+                    </TaskEpicsPopover>
+                    <TaskCustomFields
+                      task={task}
+                      projectId={projectId}
+                      workspaceId={workspaceId}
+                    />
+                  </>
                 )}
                 {task && (
                   <TaskStartDatePopover task={task}>
@@ -714,9 +729,16 @@ export default function TaskPropertiesSidebar({
                   </TaskTeamPopover>
                 )}
                 {task && (
-                  <TaskEpicsPopover task={task} projectId={projectId}>
-                    <TaskEpicsTrigger task={task} />
-                  </TaskEpicsPopover>
+                  <>
+                    <TaskEpicsPopover task={task} projectId={projectId}>
+                      <TaskEpicsTrigger task={task} />
+                    </TaskEpicsPopover>
+                    <TaskCustomFields
+                      task={task}
+                      projectId={projectId}
+                      workspaceId={workspaceId}
+                    />
+                  </>
                 )}
                 {task && (
                   <TaskStartDatePopover task={task}>

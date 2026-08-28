@@ -73,6 +73,9 @@ type Task = {
   // Estimacion en segundos, la misma unidad que el tiempo registrado.
   estimate?: number | null;
   epics?: TaskEpic[];
+  // Los valores de los campos personalizados, indexados por la `key` de su
+  // definicion. Siempre viene, aunque sea vacio: la columna es NOT NULL.
+  customFields?: Record<string, unknown>;
   subtree?: TaskSubtree | null;
   // Solo en el detalle: la tarea de la que cuelga esta.
   parent?: {
