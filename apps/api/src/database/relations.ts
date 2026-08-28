@@ -8,6 +8,7 @@ import {
   commentTable,
   epicTable,
   externalLinkTable,
+  fieldDefinitionTable,
   githubIntegrationTable,
   integrationTable,
   invitationTable,
@@ -77,6 +78,7 @@ export const workspaceTableRelations = relations(
     members: many(workspaceUserTable),
     projects: many(projectTable),
     assets: many(assetTable),
+    fieldDefinitions: many(fieldDefinitionTable),
     invitations: many(invitationTable),
     notificationWorkspaceRules: many(userNotificationWorkspaceRuleTable),
   }),
@@ -105,6 +107,7 @@ export const projectTableRelations = relations(
     }),
     tasks: many(taskTable),
     epics: many(epicTable),
+    fieldDefinitions: many(fieldDefinitionTable),
     assets: many(assetTable),
     columns: many(columnTable),
     workflowRules: many(workflowRuleTable),
@@ -191,6 +194,22 @@ export const taskEpicTableRelations = relations(taskEpicTable, ({ one }) => ({
     references: [epicTable.id],
   }),
 }));
+
+export const fieldDefinitionTableRelations = relations(
+  fieldDefinitionTable,
+  ({ one }) => ({
+    workspace: one(workspaceTable, {
+      fields: [fieldDefinitionTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    // Opcional a proposito: sin proyecto, la definicion vale para todo el
+    // espacio de trabajo.
+    project: one(projectTable, {
+      fields: [fieldDefinitionTable.projectId],
+      references: [projectTable.id],
+    }),
+  }),
+);
 
 export const taskAssigneeTableRelations = relations(
   taskAssigneeTable,
