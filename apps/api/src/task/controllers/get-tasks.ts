@@ -24,6 +24,9 @@ import {
   userTable,
 } from "../../database/schema";
 import { getEpicsByTask } from "../../epic/controllers/get-epics";
+import { getFieldDefinitionsForProject } from "../../field/controllers/get-field-definitions";
+import { buildFieldRegistry } from "../../view/field-registry";
+import { type FilterNode, filterToSql } from "../../view/filter-to-sql";
 import {
   getProjectSubtreeAggregates,
   serializeAggregate,
@@ -47,6 +50,11 @@ type GetTasksOptions = {
     | "number";
   sortOrder?: "asc" | "desc";
   status?: string;
+  // El arbol de filtros del motor de vistas. Convive con las opciones sueltas
+  // de arriba en vez de sustituirlas: tablero, lista y backlog siguen
+  // mandando las suyas, y migrarlas es trabajo de esta misma fase. Las dos se
+  // combinan con AND, asi que un filtro nuevo nunca ensancha uno viejo.
+  filter?: FilterNode | null;
 };
 
 const priorityCaseExpr = sql<number>`CASE
@@ -132,6 +140,25 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
 
   if (options.rootsOnly) {
     conditions.push(isNull(taskTable.parentId));
+  }
+
+  if (options.filter) {
+    // El registro se construye con las definiciones que aplican al proyecto,
+    // que es lo que hace que `custom.presupuesto` exista como campo filtrable
+    // aqui y no en un proyecto que no lo haya definido.
+    const definitions = await getFieldDefinitionsForProject(
+      project.workspaceId,
+      projectId,
+    );
+
+    const filterSql = filterToSql(
+      options.filter,
+      buildFieldRegistry(definitions),
+    );
+
+    if (filterSql) {
+      conditions.push(filterSql);
+    }
   }
 
   const whereClause = and(...conditions);
