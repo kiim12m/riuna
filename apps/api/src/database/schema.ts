@@ -680,6 +680,73 @@ export const fieldDefinitionTable = pgTable(
   ],
 );
 
+// Una vista guardada: el filtro, el orden, la agrupacion y las columnas con
+// que alguien quiere mirar un proyecto.
+//
+// La propiedad es de quien la crea, no del rol. Cualquiera del espacio puede
+// guardarse una vista y compartirla; solo su dueno —o un administrador— la
+// edita o la borra. Es lo contrario que `field_definition`, y a proposito: un
+// campo cambia la forma de las tareas de todo el mundo, y una vista solo dice
+// como mirarlas. Atar esto a `project:update` repetiria el problema de la
+// Fase 3, donde definir un campo quedo fuera del alcance de un `member`.
+export const viewTable = pgTable(
+  "view",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    // Nula para una vista que vale en todo el espacio de trabajo.
+    projectId: text("project_id").references(() => projectTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    // Que vista la usa: `table`, `board`, `list`, `calendar` o `gantt`. Se
+    // guarda para no ofrecer una vista de tabla como si fuera un calendario.
+    type: text("type").notNull().default("table"),
+    // El arbol de filtros, el modo de jerarquia, el orden, la agrupacion y las
+    // columnas. Va en JSONB porque su forma la decide el motor de vistas y
+    // cambiara con el; una columna por ajuste seria una tabla ancha de nulos.
+    config: jsonb("config")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    // Compartida con el espacio, o solo de quien la creo.
+    isShared: boolean("is_shared").notNull().default(false),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    archivedAt: timestamp("archived_at", { mode: "date" }),
+  },
+  (table) => [
+    index("view_workspaceId_idx").on(table.workspaceId),
+    index("view_projectId_idx").on(table.projectId),
+    index("view_createdBy_idx").on(table.createdBy),
+    // Listar "las mias y las compartidas" de un proyecto es la consulta de
+    // todas las pantallas que usan esto.
+    index("view_workspace_shared_idx").on(table.workspaceId, table.isShared),
+    check(
+      "view_type_valid",
+      sql`${table.type} IN ('table', 'board', 'list', 'calendar', 'gantt')`,
+    ),
+  ],
+);
+
 export const billingReminderSentTable = pgTable(
   "billing_reminder_sent",
   {

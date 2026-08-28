@@ -82,6 +82,7 @@ import {
 } from "./utils/openapi-spec";
 import { seedDefaultWorkspaceRoles } from "./utils/seed-default-workspace-roles";
 import { validateWorkspaceAccess } from "./utils/validate-workspace-access";
+import view from "./view";
 import workflowRule from "./workflow-rule";
 import workspace from "./workspace";
 import {
@@ -597,6 +598,7 @@ export function createApp() {
   const columnApi = api.route("/column", column);
   const epicApi = api.route("/epic", epic);
   const fieldApi = api.route("/field", field);
+  const viewApi = api.route("/view", view);
   const activityApi = api.route("/activity", activity);
   const commentApi = api.route("/comment", comment);
   const timeEntryApi = api.route("/time-entry", timeEntry);
@@ -779,6 +781,7 @@ export function createApp() {
     epicApi,
     externalLinkApi,
     fieldApi,
+    viewApi,
     genericWebhookIntegrationApi,
     githubIntegrationApi,
     giteaIntegrationApi,
@@ -899,6 +902,7 @@ const {
   epicApi,
   externalLinkApi,
   fieldApi,
+  viewApi,
   genericWebhookIntegrationApi,
   githubIntegrationApi,
   giteaIntegrationApi,
@@ -939,6 +943,7 @@ export type AppType =
   | typeof columnApi
   | typeof epicApi
   | typeof fieldApi
+  | typeof viewApi
   | typeof activityApi
   | typeof commentApi
   | typeof timeEntryApi
