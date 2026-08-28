@@ -32,6 +32,7 @@ import discordIntegration from "./discord-integration";
 import epic from "./epic";
 import { eventContext } from "./events";
 import externalLink from "./external-link";
+import field from "./field";
 import genericWebhookIntegration from "./generic-webhook-integration";
 import giteaIntegration, { handleGiteaWebhookRoute } from "./gitea-integration";
 import githubIntegration, {
@@ -595,6 +596,7 @@ export function createApp() {
   const taskApi = api.route("/task", task);
   const columnApi = api.route("/column", column);
   const epicApi = api.route("/epic", epic);
+  const fieldApi = api.route("/field", field);
   const activityApi = api.route("/activity", activity);
   const commentApi = api.route("/comment", comment);
   const timeEntryApi = api.route("/time-entry", timeEntry);
@@ -776,6 +778,7 @@ export function createApp() {
     discordIntegrationApi,
     epicApi,
     externalLinkApi,
+    fieldApi,
     genericWebhookIntegrationApi,
     githubIntegrationApi,
     giteaIntegrationApi,
@@ -895,6 +898,7 @@ const {
   discordIntegrationApi,
   epicApi,
   externalLinkApi,
+  fieldApi,
   genericWebhookIntegrationApi,
   githubIntegrationApi,
   giteaIntegrationApi,
@@ -934,6 +938,7 @@ export type AppType =
   | typeof taskApi
   | typeof columnApi
   | typeof epicApi
+  | typeof fieldApi
   | typeof activityApi
   | typeof commentApi
   | typeof timeEntryApi

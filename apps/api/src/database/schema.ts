@@ -464,6 +464,16 @@ export const taskTable = pgTable(
     // que el agregado del subarbol compare estimado y registrado sin convertir
     // nada por el camino.
     estimate: integer("estimate"),
+    // Los valores de los campos personalizados, indexados por la `key` de su
+    // definicion. Van en la propia fila y no en una tabla de valores porque
+    // el tablero ya esta leyendo esta fila: asi pintar una tarjeta con ocho
+    // campos sigue siendo una consulta y no ocho filas que pivotar. Los
+    // campos de tipo relacion no guardan nada aqui —viven en `task_relation`,
+    // que si tiene integridad referencial—. Ver ADR 013.
+    customFields: jsonb("custom_fields")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()
@@ -481,6 +491,14 @@ export const taskTable = pgTable(
     // use el indice: el operador por defecto depende de la intercalacion de la
     // base de datos y con una que no sea C no sirve para prefijos.
     index("task_path_idx").using("btree", sql`${table.path} text_pattern_ops`),
+    // GIN con la clase por defecto (`jsonb_ops`), no `jsonb_path_ops`: la
+    // primera indexa claves ademas de valores y responde tambien a "esta
+    // tarea tiene el campo X", que es lo que necesita el editor para saber
+    // que hay que rellenar. Ojo: GIN acelera contencion y existencia, no
+    // comparaciones por rango —`presupuesto > 1000` pide un indice de
+    // expresion por campo, y eso se decide en la Fase 4 cuando se sepa que
+    // campos se filtran de verdad. Ver ADR 013.
+    index("task_custom_fields_idx").using("gin", table.customFields),
     unique("task_project_number_unique").on(table.projectId, table.number),
     // Las dos invariantes del arbol, vigiladas por la base de datos y no por
     // la buena memoria de quien anada el proximo `insert(taskTable)`: el
@@ -585,6 +603,80 @@ export const taskEpicTable = pgTable(
     index("task_epic_taskId_idx").on(table.taskId),
     index("task_epic_epicId_idx").on(table.epicId),
     unique("task_epic_unique").on(table.taskId, table.epicId),
+  ],
+);
+
+// El catalogo de campos personalizados. Esta tabla dice que campos existen y
+// de que tipo; los valores viven en `task.custom_fields`.
+//
+// El alcance es una de dos: con `project_id` puesto el campo solo existe en
+// ese proyecto, y con `project_id` nulo existe en todo el espacio. El
+// `workspace_id` esta siempre —regla de Riuna para las tablas nuevas— y
+// ademas es lo que permite listar los campos de un espacio sin recorrer sus
+// proyectos.
+export const fieldDefinitionTable = pgTable(
+  "field_definition",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    projectId: text("project_id").references(() => projectTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+    // `key` es la clave dentro del JSONB y no cambia nunca; `name` es la
+    // etiqueta visible. Separarlas es lo que permite renombrar "Presupuesto"
+    // a "Presupuesto 2026" sin huerfanar el valor guardado en cada tarea.
+    key: text("key").notNull(),
+    name: text("name").notNull(),
+    type: text("type").notNull(),
+    description: text("description"),
+    // Lo que depende del tipo: las opciones de un select, el codigo de moneda,
+    // el minimo y el maximo de un numero. Va en JSONB porque su forma la
+    // decide `type`, y una columna por variante seria una tabla ancha de
+    // nulos.
+    config: jsonb("config")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    required: boolean("required").notNull().default(false),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    // Borrado suave, como en `epic`: archivar una definicion la retira de los
+    // formularios sin borrar el valor que miles de tareas ya tienen guardado.
+    archivedAt: timestamp("archived_at", { mode: "date" }),
+  },
+  (table) => [
+    index("field_definition_workspaceId_idx").on(table.workspaceId),
+    index("field_definition_projectId_idx").on(table.projectId),
+    // Dos indices parciales en vez de un UNIQUE de tres columnas: en SQL
+    // estandar dos filas con `project_id` nulo no colisionan nunca —NULL no
+    // es igual a NULL—, asi que un `unique(workspace_id, project_id, key)`
+    // dejaria repetir la clave de todos los campos de espacio. `NULLS NOT
+    // DISTINCT` lo arreglaria pero solo existe desde Postgres 15.
+    uniqueIndex("field_definition_workspace_key_unique")
+      .on(table.workspaceId, table.key)
+      .where(sql`project_id IS NULL`),
+    uniqueIndex("field_definition_project_key_unique")
+      .on(table.projectId, table.key)
+      .where(sql`project_id IS NOT NULL`),
+    // El vocabulario de tipos, vigilado por la base de datos y no por la
+    // buena memoria de quien anada el proximo `insert`, que es el criterio
+    // que dejo establecido el arbol de la Fase 2.
+    check(
+      "field_definition_type_valid",
+      sql`${table.type} IN ('text', 'number', 'currency', 'select', 'multi_select', 'date', 'checkbox', 'user', 'url', 'relation')`,
+    ),
   ],
 );
 
