@@ -2129,6 +2129,24 @@
 				"checkbox": "Checkbox",
 				"user": "Person",
 				"url": "URL"
+			},
+			"addFilter": "Add a filter",
+			"removeFilter": "Remove this filter",
+			"filterValue": "Value",
+			"filterFailed": "The filter could not be applied",
+			"operators": {
+				"eq": "is",
+				"neq": "is not",
+				"gt": "greater than",
+				"gte": "at least",
+				"lt": "less than",
+				"lte": "at most",
+				"contains": "contains",
+				"startsWith": "starts with",
+				"in": "is one of",
+				"notIn": "is none of",
+				"isEmpty": "is empty",
+				"isNotEmpty": "is not empty"
 			}
 		}
 	},
