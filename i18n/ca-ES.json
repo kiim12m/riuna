@@ -2153,6 +2153,19 @@
 				"flat": "Lista plana",
 				"roots": "Solo raíces",
 				"withDescendants": "Con subtareas"
+			},
+			"views": {
+				"label": "Vistas",
+				"empty": "No hay vistas guardadas",
+				"save": "Guardar esta vista",
+				"saveTitle": "Guardar vista",
+				"saveDescription": "Guarda el filtro y el modo de jerarquía que estás mirando.",
+				"name": "Nombre",
+				"namePlaceholder": "Obras caras",
+				"share": "Compartir con el espacio de trabajo",
+				"saved": "Vista guardada",
+				"saveFailed": "No se ha podido guardar la vista",
+				"delete": "Borrar esta vista"
 			}
 		}
 	},

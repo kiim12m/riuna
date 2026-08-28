@@ -2153,6 +2153,19 @@
 				"flat": "Flat list",
 				"roots": "Top level only",
 				"withDescendants": "With subtasks"
+			},
+			"views": {
+				"label": "Views",
+				"empty": "No saved views",
+				"save": "Save this view",
+				"saveTitle": "Save view",
+				"saveDescription": "Stores the filter and the hierarchy mode you are looking at.",
+				"name": "Name",
+				"namePlaceholder": "Expensive jobs",
+				"share": "Share with the workspace",
+				"saved": "View saved",
+				"saveFailed": "The view could not be saved",
+				"delete": "Delete this view"
 			}
 		}
 	},
