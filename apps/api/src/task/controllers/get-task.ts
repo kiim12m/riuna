@@ -37,6 +37,7 @@ async function getTask(taskId: string) {
       path: taskTable.path,
       depth: taskTable.depth,
       estimate: taskTable.estimate,
+      customFields: taskTable.customFields,
     })
     .from(taskTable)
     .leftJoin(userTable, eq(taskTable.userId, userTable.id))
