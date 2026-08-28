@@ -2129,6 +2129,24 @@
 				"checkbox": "Casilla",
 				"user": "Persona",
 				"url": "URL"
+			},
+			"addFilter": "Añadir un filtro",
+			"removeFilter": "Quitar este filtro",
+			"filterValue": "Valor",
+			"filterFailed": "No se ha podido aplicar el filtro",
+			"operators": {
+				"eq": "es",
+				"neq": "no es",
+				"gt": "mayor que",
+				"gte": "al menos",
+				"lt": "menor que",
+				"lte": "como mucho",
+				"contains": "contiene",
+				"startsWith": "empieza por",
+				"in": "es alguno de",
+				"notIn": "no es ninguno de",
+				"isEmpty": "está vacío",
+				"isNotEmpty": "no está vacío"
 			}
 		}
 	},
