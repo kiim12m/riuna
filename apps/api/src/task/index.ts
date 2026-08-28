@@ -26,6 +26,8 @@ import {
   validateDateRange,
 } from "../utils/validate-dates";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
+import { parseFilterParam } from "../view/filter-schema";
+import { FilterError, type FilterNode } from "../view/filter-to-sql";
 import bulkUpdateTasks from "./controllers/bulk-update-tasks";
 import createTask from "./controllers/create-task";
 import deleteTask from "./controllers/delete-task";
@@ -99,6 +101,9 @@ const task = new Hono<{
           sortOrder: v.optional(v.picklist(["asc", "desc"])),
           dueBefore: v.optional(v.string()),
           dueAfter: v.optional(v.string()),
+          // El arbol de filtros del motor de vistas, como JSON. Va en la URL
+          // para que una vista guardada siga siendo un enlace.
+          filter: v.optional(v.string()),
         }),
       ),
     ),
@@ -107,12 +112,31 @@ const task = new Hono<{
       const { projectId } = c.req.valid("param");
       const filters = c.req.valid("query") || {};
 
-      const tasks = await getTasks(projectId, {
-        ...filters,
-        rootsOnly: filters.rootsOnly === "true",
-      });
+      // Un filtro mal formado o que nombre un campo inexistente es culpa de
+      // quien lo manda, no del servidor: 400 y no 500.
+      let filter: FilterNode | null = null;
+      try {
+        filter = parseFilterParam(filters.filter);
+      } catch (error) {
+        throw new HTTPException(400, {
+          message: error instanceof Error ? error.message : "Invalid filter",
+        });
+      }
 
-      return c.json(tasks);
+      try {
+        const tasks = await getTasks(projectId, {
+          ...filters,
+          rootsOnly: filters.rootsOnly === "true",
+          filter,
+        });
+
+        return c.json(tasks);
+      } catch (error) {
+        if (error instanceof FilterError) {
+          throw new HTTPException(400, { message: error.message });
+        }
+        throw error;
+      }
     },
   )
   .patch(
