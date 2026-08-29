@@ -429,6 +429,147 @@ describe("filter engine against Postgres", () => {
     });
   });
 
+  // El fallo que esto arregla: comparar un array extrayendolo como texto nunca
+  // casa, asi que filtrar por un multi_select no devolvia nada, en silencio.
+  describe("selección múltiple", () => {
+    async function seedTags(
+      workspaceId: string,
+      projectId: string,
+      columnId: string,
+    ) {
+      await defineField(workspaceId, projectId, "etiquetas", "multi_select", {
+        options: [
+          { value: "obra", label: "Obra" },
+          { value: "carpa", label: "Carpa" },
+          { value: "oficina", label: "Oficina" },
+        ],
+      });
+
+      await insertTask(projectId, columnId, {
+        title: "Obra y carpa",
+        customFields: { etiquetas: ["obra", "carpa"] },
+      });
+      await insertTask(projectId, columnId, {
+        title: "Solo oficina",
+        customFields: { etiquetas: ["oficina"] },
+      });
+      await insertTask(projectId, columnId, {
+        title: "Sin etiquetas",
+        customFields: {},
+      });
+    }
+
+    it("encuentra las que contienen una opcion", async () => {
+      const { app, workspaceId, projectId, columnId } = await setup();
+      await seedTags(workspaceId, projectId, columnId);
+
+      const { titles } = await listTitles(app, projectId, {
+        type: "condition",
+        field: "custom.etiquetas",
+        operator: "eq",
+        value: "carpa",
+      });
+
+      expect(titles).toEqual(["Obra y carpa"]);
+    });
+
+    it("encuentra las que contienen alguna de varias", async () => {
+      const { app, workspaceId, projectId, columnId } = await setup();
+      await seedTags(workspaceId, projectId, columnId);
+
+      const { titles } = await listTitles(app, projectId, {
+        type: "condition",
+        field: "custom.etiquetas",
+        operator: "in",
+        value: ["carpa", "oficina"],
+      });
+
+      expect(titles).toEqual(["Obra y carpa", "Solo oficina"]);
+    });
+
+    it("excluye las que la contienen con neq", async () => {
+      const { app, workspaceId, projectId, columnId } = await setup();
+      await seedTags(workspaceId, projectId, columnId);
+
+      const { titles } = await listTitles(app, projectId, {
+        type: "condition",
+        field: "custom.etiquetas",
+        operator: "neq",
+        value: "carpa",
+      });
+
+      expect(titles).toEqual(["Sin etiquetas", "Solo oficina"]);
+    });
+
+    it("distingue tener lista de no tenerla", async () => {
+      const { app, workspaceId, projectId, columnId } = await setup();
+      await seedTags(workspaceId, projectId, columnId);
+
+      const vacias = await listTitles(app, projectId, {
+        type: "condition",
+        field: "custom.etiquetas",
+        operator: "isEmpty",
+      });
+      expect(vacias.titles).toEqual(["Sin etiquetas"]);
+
+      const llenas = await listTitles(app, projectId, {
+        type: "condition",
+        field: "custom.etiquetas",
+        operator: "isNotEmpty",
+      });
+      expect(llenas.titles).toEqual(["Obra y carpa", "Solo oficina"]);
+    });
+
+    // Una lista vacia no es lo mismo que no tener el campo, pero para quien
+    // filtra si lo es.
+    it("trata una lista vacia como no tener nada", async () => {
+      const { app, workspaceId, projectId, columnId } = await setup();
+      await defineField(workspaceId, projectId, "etiquetas", "multi_select", {
+        options: [{ value: "obra", label: "Obra" }],
+      });
+
+      await insertTask(projectId, columnId, {
+        title: "Lista vacia",
+        customFields: { etiquetas: [] },
+      });
+
+      const { titles } = await listTitles(app, projectId, {
+        type: "condition",
+        field: "custom.etiquetas",
+        operator: "isEmpty",
+      });
+
+      expect(titles).toEqual(["Lista vacia"]);
+    });
+
+    // `jsonb_array_length` revienta si el valor no es un array, y eso pasa en
+    // cuanto alguien cambie el tipo de un campo que ya tiene datos.
+    it("sobrevive a un valor que no es una lista", async () => {
+      const { app, workspaceId, projectId, columnId } = await setup();
+      await defineField(workspaceId, projectId, "etiquetas", "multi_select", {
+        options: [{ value: "obra", label: "Obra" }],
+      });
+
+      await insertTask(projectId, columnId, {
+        title: "Torcida",
+        customFields: { etiquetas: "obra" },
+      });
+      await insertTask(projectId, columnId, {
+        title: "Correcta",
+        customFields: { etiquetas: ["obra"] },
+      });
+
+      const { status, titles } = await listTitles(app, projectId, {
+        type: "condition",
+        field: "custom.etiquetas",
+        operator: "isNotEmpty",
+      });
+
+      expect(status).toBe(200);
+      expect(titles).toEqual(["Correcta"]);
+    });
+  });
+
   describe("errores", () => {
     it("answers 400 for a field that does not exist", async () => {
       const { app, projectId } = await setup();

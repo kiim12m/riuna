@@ -38,7 +38,14 @@ export type TaskFilter =
 export type EditableCondition = FilterCondition & { id: string };
 
 /** Como se compara un campo, que decide que operadores se le ofrecen. */
-export type FilterValueType = "text" | "number" | "date" | "boolean" | "id";
+export type FilterValueType =
+  | "text"
+  | "number"
+  | "date"
+  | "boolean"
+  | "id"
+  // Una lista guardada como array: se pregunta que contiene, no se compara.
+  | "idList";
 
 export type FilterableField = {
   /** El nombre que entiende el motor: `status`, `custom.presupuesto`… */
@@ -57,6 +64,8 @@ export const OPERATORS_BY_TYPE: Record<FilterValueType, FilterOperator[]> = {
   number: ["eq", "neq", "gt", "gte", "lt", "lte", "isEmpty", "isNotEmpty"],
   date: ["eq", "neq", "gt", "gte", "lt", "lte", "isEmpty", "isNotEmpty"],
   boolean: ["eq", "neq", "isEmpty", "isNotEmpty"],
+  // Sobre una lista, `eq` es "la contiene" e `in` "contiene alguna de".
+  idList: ["eq", "neq", "in", "notIn", "isEmpty", "isNotEmpty"],
 };
 
 /** Los operadores que no llevan valor. */

@@ -14,7 +14,7 @@ const CUSTOM_FIELD_VALUE_TYPES: Record<string, FilterValueType | undefined> = {
   number: "number",
   currency: "number",
   select: "id",
-  multi_select: "id",
+  multi_select: "idList",
   date: "date",
   checkbox: "boolean",
   user: "id",

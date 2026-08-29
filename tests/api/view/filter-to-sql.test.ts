@@ -18,6 +18,7 @@ const registry = buildFieldRegistry([
   { key: "urgente", type: "checkbox" },
   { key: "revision", type: "date" },
   { key: "fase", type: "select" },
+  { key: "etiquetas", type: "multi_select" },
   { key: "expediente", type: "relation" },
 ]);
 
@@ -124,6 +125,64 @@ describe("filterToSql", () => {
       );
       expect(text).not.toContain("::date");
       expect(text).not.toContain("::timestamp");
+    });
+  });
+
+  // El fallo que esto arregla: un multi_select guarda un array, y compararlo
+  // extrayendo texto nunca casa —un array no es una cadena—, asi que el
+  // filtro no devolvia nada en silencio.
+  describe("selección múltiple", () => {
+    it("pregunta por contencion y no por igualdad", () => {
+      const { sql: text, params } = compile(
+        condition("custom.etiquetas", "eq", "obra"),
+      );
+
+      expect(text).toContain("@>");
+      expect(text).not.toContain("jsonb_typeof");
+      expect(params[0]).toBe('{"etiquetas":["obra"]}');
+    });
+
+    it("convierte in en una alternativa de contenciones", () => {
+      const { sql: text, params } = compile(
+        condition("custom.etiquetas", "in", ["obra", "carpa"]),
+      );
+
+      expect(text.match(/@>/g)).toHaveLength(2);
+      expect(text).toContain(" OR ");
+      expect(params).toEqual([
+        '{"etiquetas":["obra"]}',
+        '{"etiquetas":["carpa"]}',
+      ]);
+    });
+
+    it("niega la contencion para neq y notIn", () => {
+      expect(
+        compile(condition("custom.etiquetas", "neq", "obra")).sql,
+      ).toContain("NOT");
+      expect(
+        compile(condition("custom.etiquetas", "notIn", ["obra"])).sql,
+      ).toContain("NOT");
+    });
+
+    // `jsonb_array_length` revienta si el valor no es un array, y eso pasa en
+    // cuanto alguien cambie el tipo de un campo con datos dentro.
+    it("comprueba que es un array antes de medirlo", () => {
+      const { sql: text } = compile(
+        condition("custom.etiquetas", "isNotEmpty"),
+      );
+
+      expect(text).toContain("jsonb_typeof");
+      expect(text).toContain("= 'array'");
+      expect(text).toContain("jsonb_array_length");
+    });
+
+    it("rechaza los operadores que una lista no puede contestar", () => {
+      expect(() =>
+        compile(condition("custom.etiquetas", "contains", "obra")),
+      ).toThrow(/cannot be used/);
+      expect(() =>
+        compile(condition("custom.etiquetas", "gt", "obra")),
+      ).toThrow(/cannot be used/);
     });
   });
 

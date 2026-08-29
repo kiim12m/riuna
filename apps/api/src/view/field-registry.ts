@@ -6,7 +6,16 @@ import type { FieldType } from "../field/field-types";
 // El tipo de valor decide que operadores tienen sentido y como se compara.
 // No es el tipo del campo personalizado: varios de aquellos comparten forma de
 // comparacion —`currency` se compara como `number`, `url` como `text`—.
-export type ValueType = "text" | "number" | "date" | "boolean" | "id";
+export type ValueType =
+  | "text"
+  | "number"
+  | "date"
+  | "boolean"
+  | "id"
+  // Una lista de identificadores guardada como array en el JSONB. Necesita
+  // tipo propio porque no se compara extrayendo el valor —un array no es una
+  // cadena— sino preguntando si contiene lo que se busca.
+  | "idList";
 
 export type FieldDescriptor =
   // Una columna real de `task`.
@@ -70,7 +79,7 @@ const CUSTOM_FIELD_VALUE_TYPES: Partial<Record<FieldType, ValueType>> = {
   number: "number",
   currency: "number",
   select: "id",
-  multi_select: "id",
+  multi_select: "idList",
   date: "date",
   checkbox: "boolean",
   user: "id",
