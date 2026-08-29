@@ -73,6 +73,10 @@ const OPERATORS_BY_VALUE_TYPE: Record<ValueType, FilterOperator[]> = {
   ],
   date: ["eq", "neq", "gt", "gte", "lt", "lte", "isEmpty", "isNotEmpty"],
   boolean: ["eq", "neq", "isEmpty", "isNotEmpty"],
+  // Sobre una lista, `eq` significa "la contiene" e `in` "contiene alguna de".
+  // No hay `contains` ni rangos: no se compara el array, se pregunta por lo
+  // que hay dentro.
+  idList: ["eq", "neq", "in", "notIn", "isEmpty", "isNotEmpty"],
 };
 
 // `jsonb_typeof` en vez de castear a ciegas. Una clave del JSONB puede tener
@@ -88,6 +92,35 @@ function jsonNumeric(key: string): SQL {
 function jsonText(key: string): SQL {
   return sql`CASE WHEN jsonb_typeof(${taskTable.customFields} -> ${key}) = 'string'
     THEN ${taskTable.customFields} ->> ${key} END`;
+}
+
+// Contencion sobre el objeto entero: es la unica forma correcta de preguntar
+// si un array del JSONB tiene un valor, y ademas es exactamente lo que el
+// indice GIN acelera. Extraerlo como texto —que es lo que hacia antes— nunca
+// casa: un array no es una cadena, asi que la comparacion salia NULL y el
+// filtro no devolvia nada, en silencio.
+function jsonListContains(key: string, value: unknown): SQL {
+  return sql`${taskTable.customFields} @> ${JSON.stringify({ [key]: [value] })}::jsonb`;
+}
+
+// "Tiene algo" es tener un array con al menos un elemento.
+//
+// Va en un CASE y no en un `AND`, por dos razones que las pruebas encontraron:
+//
+// 1. Postgres NO garantiza cortocircuito en `AND`, asi que
+//    `jsonb_typeof(x) = 'array' AND jsonb_array_length(x) > 0` puede evaluar
+//    la longitud sobre algo que no es un array y reventar con un 500. Eso pasa
+//    en cuanto alguien cambie el tipo de un campo con datos dentro. El CASE si
+//    fija el orden.
+// 2. Con la clave ausente, `jsonb_typeof(NULL)` es NULL, y `NOT NULL` es NULL
+//    y no `true`: "esta vacio" no devolvia las tareas sin el campo, que son
+//    justo las que se estaban buscando. El `ELSE false` lo cierra.
+function jsonListHasAny(key: string): SQL {
+  return sql`CASE
+    WHEN jsonb_typeof(${taskTable.customFields} -> ${key}) = 'array'
+    THEN jsonb_array_length(${taskTable.customFields} -> ${key}) > 0
+    ELSE false
+  END`;
 }
 
 function jsonBoolean(key: string): SQL {
@@ -112,6 +145,10 @@ function comparableExpression(descriptor: FieldDescriptor): SQL {
           return jsonNumeric(descriptor.key);
         case "boolean":
           return jsonBoolean(descriptor.key);
+        case "idList":
+          throw new FilterError(
+            "A list field is asked what it contains, not compared as a value",
+          );
         default:
           return jsonText(descriptor.key);
       }
@@ -220,6 +257,39 @@ function conditionToSql(
     throw new FilterError(
       `"${node.operator}" cannot be used on "${node.field}"`,
     );
+  }
+
+  // Una lista se pregunta por contencion, no se compara: va antes de la
+  // maquinaria de comparacion porque no puede pasar por ella.
+  if (descriptor.kind === "json" && descriptor.valueType === "idList") {
+    const { key } = descriptor;
+
+    switch (node.operator) {
+      case "isEmpty":
+        return sql`NOT ${jsonListHasAny(key)}`;
+      case "isNotEmpty":
+        return jsonListHasAny(key);
+      case "eq":
+        return jsonListContains(key, node.value);
+      case "neq":
+        return sql`NOT ${jsonListContains(key, node.value)}`;
+      case "in": {
+        const parts = toList(node.value).map((value) =>
+          jsonListContains(key, value),
+        );
+        return sql`(${sql.join(parts, sql` OR `)})`;
+      }
+      case "notIn": {
+        const parts = toList(node.value).map((value) =>
+          jsonListContains(key, value),
+        );
+        return sql`NOT (${sql.join(parts, sql` OR `)})`;
+      }
+      default:
+        throw new FilterError(
+          `"${node.operator}" cannot be used on "${node.field}"`,
+        );
+    }
   }
 
   const allowed = OPERATORS_BY_VALUE_TYPE[descriptor.valueType];
