@@ -64,6 +64,7 @@ export function useProjectWebSocket(projectId: string) {
             message.type === "TASK_MOVED" ||
             message.type === "TASK_RELATION_UPDATED" ||
             message.type === "EPIC_UPDATED" ||
+            message.type === "VIEW_UPDATED" ||
             message.type === "FIELD_DEFINITION_UPDATED" ||
             message.type === "COMMENT_UPDATED"
           ) {
@@ -81,10 +82,27 @@ export function useProjectWebSocket(projectId: string) {
               return;
             }
 
-            if (message.type === "EPIC_UPDATED") {
+            // Los contadores de una epica (`taskCount`, `doneTaskCount`) los
+            // calcula `getEpics` sobre `task_epic`, asi que cambian tambien
+            // cuando se cuelga o descuelga una tarea, cuando se crea o borra
+            // una, y cuando la cascada cierra media rama —no solo cuando se
+            // edita la epica—. Esa consulta no tiene refresco automatico, asi
+            // que sin esto el editor de epicas se quedaba en "3/8" para
+            // siempre. Es barata y por proyecto.
+            queryClient.invalidateQueries({
+              queryKey: ["epics", message.projectId],
+            });
+
+            // Guardar, compartir o retirar una vista no cambia ninguna tarea:
+            // se invalida su lista y no hay mas que hacer.
+            if (message.type === "VIEW_UPDATED") {
               queryClient.invalidateQueries({
-                queryKey: ["epics", message.projectId],
+                queryKey: ["views", message.projectId],
               });
+              return;
+            }
+
+            if (message.type === "EPIC_UPDATED") {
               return;
             }
 
@@ -114,6 +132,22 @@ export function useProjectWebSocket(projectId: string) {
               queryClient.invalidateQueries({
                 queryKey: ["task", message.taskId],
               });
+
+              // Reparentar cambia el agregado —progreso, fechas, contador de
+              // hijas— de los **dos** padres, no solo de la tarea movida. Quien
+              // tuviera abierta la tarea contenedora seguia leyendo "3/6" para
+              // siempre: esa consulta no tiene refresco automatico y el cliente
+              // global lleva `refetchOnMount:false`.
+              for (const parentId of [
+                message.oldParentId,
+                message.newParentId,
+              ]) {
+                if (parentId) {
+                  queryClient.invalidateQueries({
+                    queryKey: ["task", parentId],
+                  });
+                }
+              }
             }
 
             if (message.type === "TASK_LABEL_UPDATED") {
@@ -122,10 +156,16 @@ export function useProjectWebSocket(projectId: string) {
               });
             }
 
-            if (message.type === "COMMENT_UPDATED") {
+            // La actividad de una tarea crece con cualquier cambio, no solo
+            // con los comentarios: quien tuviera abierta la pestana de
+            // Actividad no veia aparecer los cambios de estado ni de titulo.
+            if (message.taskId) {
               queryClient.invalidateQueries({
                 queryKey: ["activities", message.taskId],
               });
+            }
+
+            if (message.type === "COMMENT_UPDATED") {
               queryClient.invalidateQueries({
                 queryKey: ["comments", message.taskId],
               });

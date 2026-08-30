@@ -821,9 +821,34 @@ export async function runStartupTasks() {
       await migrateSessionColumn();
 
       console.log("🔄 Migrating database...");
-      await migrate(getDatabase(), {
-        migrationsFolder: `${currentDir}/../drizzle`,
-      });
+
+      // Un cerrojo de sesion alrededor de las migraciones, por dos motivos.
+      //
+      // 1. Drizzle lee la ultima migracion aplicada **fuera** de la transaccion
+      //    y luego envuelve el bucle entero en una sola. Con mas de una replica
+      //    arrancando a la vez, las dos ven las mismas pendientes; la segunda
+      //    espera a la primera y despues reejecuta `ALTER TABLE ... ADD COLUMN`,
+      //    que falla con «column already exists» y tumba el proceso.
+      // 2. `lock_timeout` acota lo que se espera por un bloqueo de tabla: sin
+      //    el, un pod viejo que siga sirviendo durante un despliegue progresivo
+      //    se encola detras del `ALTER TABLE` y deja de responder, sin limite.
+      //
+      // El 1524 y el 1148 son los otros dos espacios de nombres de cerrojo del
+      // repositorio (ordenacion de proyectos y escrituras de arbol).
+      const database = getDatabase();
+
+      await database.execute(sql`SET lock_timeout = '30s'`);
+      await database.execute(sql`SELECT pg_advisory_lock(2051)`);
+
+      try {
+        await migrate(database, {
+          migrationsFolder: `${currentDir}/../drizzle`,
+        });
+      } finally {
+        await database.execute(sql`SELECT pg_advisory_unlock(2051)`);
+        await database.execute(sql`SET lock_timeout = DEFAULT`);
+      }
+
       console.log("✅ Database migrated successfully!");
     },
   });

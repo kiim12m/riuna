@@ -62,6 +62,8 @@ async function updateTaskEpics({
     taskId,
     projectId: task.projectId,
     userId: currentUserId,
+    // La actividad necesita saber en que epicas queda, no solo que cambiaron.
+    epicIds: requested,
     type: "epics_changed",
   });
 

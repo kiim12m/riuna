@@ -40,6 +40,18 @@ Tabla `view` con `type` y `config jsonb`, y tres decisiones dentro.
 
 ## Consecuencia
 
+**Corrección de la Fase 4.5, sin cambiar la decisión de fondo.** Gobernar las
+vistas por propiedad y no por el vocabulario de permisos tenía un efecto que
+esta ADR no consideró: `requireWorkspacePermission` es **el único sitio donde
+se comprueba el alcance de una clave de API**, así que salirse de él lo apagaba
+de paso. Una clave emitida para un script de informes, con alcance
+`task:["read"]`, podía crear, compartir y borrar vistas.
+
+Se ha extraído `requireApiKeyScope`, que comprueba **solo** el alcance de la
+clave sin mirar el rol, y se aplica a las tres escrituras. Una clave sin
+alcance acotado pasa, y ninguna sesión de persona se ve afectada: el punto 2 de
+esta decisión sigue en pie.
+
 Una vista guardada solo cubre lo que el motor entiende hoy: filtro y modo de
 jerarquía. El orden, las columnas visibles y la agrupación todavía no se
 guardan porque todavía no se pueden configurar.

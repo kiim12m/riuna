@@ -9,7 +9,9 @@ import {
 } from "../../utils/assert-assignable-user";
 import { childTaskTreeFields, rootTaskTreeFields } from "../tree";
 import { assertValidTaskStatus } from "../validate-task-fields";
+import { syncPrimaryAssignee } from "./assignees";
 import { claimTaskNumber } from "./claim-task-numbers";
+import { lockProjectTree } from "./lock-project-tree";
 import { resolveParentForNewTask } from "./update-task-parent";
 
 async function createTask({
@@ -58,11 +60,6 @@ async function createTask({
       .where(eq(userTable.id, normalizedUserId));
   }
 
-  const parent = await resolveParentForNewTask(projectId, parentId);
-  const treeFields = parent
-    ? childTaskTreeFields(parent)
-    : rootTaskTreeFields();
-
   const column = await db.query.columnTable.findFirst({
     where: and(
       eq(columnTable.projectId, projectId),
@@ -85,6 +82,16 @@ async function createTask({
   const nextPosition = (maxPositionResult?.maxPosition ?? 0) + 1;
 
   const createdTask = await db.transaction(async (tx) => {
+    await lockProjectTree(tx, projectId);
+
+    // El padre se resuelve ya con el cerrojo tomado: resolverlo antes congelaba
+    // su `path`, y si el padre se reparentaba en ese hueco la hija nacia fuera
+    // del subarbol de su propio padre. Ver `lockProjectTree`.
+    const parent = await resolveParentForNewTask(projectId, parentId, tx);
+    const treeFields = parent
+      ? childTaskTreeFields(parent)
+      : rootTaskTreeFields();
+
     const taskNumber = await claimTaskNumber(projectId, tx);
 
     const [task] = await tx
@@ -105,6 +112,10 @@ async function createTask({
         position: nextPosition,
       })
       .returning();
+
+    if (task) {
+      await syncPrimaryAssignee(task.id, null, task.userId, tx);
+    }
 
     return task;
   });

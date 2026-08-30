@@ -62,7 +62,11 @@ function getActivityTypeIcon(type: string) {
       return <UserRound className={iconClass} />;
     case "team_changed":
     case "team_unassigned":
+    case "assignees_changed":
       return <Users className={iconClass} />;
+    case "parent_changed":
+    case "epics_changed":
+      return <History className={iconClass} />;
     default:
       return <History className={iconClass} />;
   }
@@ -374,6 +378,45 @@ function renderActivityContent({
         {t("activity:assignedToTeam", {
           name: String(eventData.newTeam ?? ""),
         })}
+      </span>
+    );
+  }
+
+  // Los tres tipos que la Fase 4.5 devolvio al historial.
+  if (activity.type === "assignees_changed" && eventData) {
+    const names = Array.isArray(eventData.assigneeNames)
+      ? (eventData.assigneeNames as string[])
+      : [];
+
+    return (
+      <span className="text-sm text-muted-foreground">
+        {names.length > 0
+          ? t("activity:assignedTo", { name: names.join(", ") })
+          : t("activity:unassigned")}
+      </span>
+    );
+  }
+
+  if (activity.type === "parent_changed" && eventData) {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {eventData.newParentId
+          ? t("activity:nestedUnderTask")
+          : t("activity:promotedToRoot")}
+      </span>
+    );
+  }
+
+  if (activity.type === "epics_changed" && eventData) {
+    const epicIds = Array.isArray(eventData.epicIds)
+      ? (eventData.epicIds as string[])
+      : [];
+
+    return (
+      <span className="text-sm text-muted-foreground">
+        {epicIds.length > 0
+          ? t("activity:epicsUpdated", { count: epicIds.length })
+          : t("activity:epicsCleared")}
       </span>
     );
   }

@@ -135,28 +135,47 @@ function isCleared(value: unknown) {
   return value === null || value === undefined || value === "";
 }
 
+export type FieldValueChanges = {
+  /** Claves a escribir, ya validadas y normalizadas. */
+  set: Record<string, unknown>;
+  /** Claves a borrar del JSONB. */
+  clear: string[];
+};
+
 /**
- * Valida y normaliza un lote de valores contra las definiciones que aplican.
+ * El delta que pide una peticion, sin necesitar el documento actual.
  *
- * `incoming` es parcial a proposito: lleva solo los campos que la peticion
- * quiere cambiar, y lo que no venga se conserva. Un valor nulo o vacio borra
- * la clave en vez de guardar un nulo, para que el JSONB no acumule lapidas de
- * campos que alguien vacio una vez.
+ * Ninguna decision de aqui depende de lo que la tarea ya tenga guardado: cada
+ * clave se valida contra su definicion y nada mas. Separarlo permite fundir en
+ * SQL —`custom_fields || $set - $clear`— en vez de leer, fundir en JavaScript y
+ * reescribir el documento entero, que es una carrera: dos celdas confirmadas
+ * casi a la vez desde la vista Tabla mandan dos peticiones, y la segunda
+ * reescribiria el documento sin la clave que acaba de guardar la primera.
  */
-export function applyFieldValues({
+export function resolveFieldValueChanges({
   definitions,
-  current,
   incoming,
 }: {
   definitions: FieldDefinitionLike[];
-  current: Record<string, unknown>;
   incoming: Record<string, unknown>;
-}): Record<string, unknown> {
+}): FieldValueChanges {
   const byKey = new Map(definitions.map((d) => [d.key, d]));
-  const result = { ...current };
+  const set: Record<string, unknown> = {};
+  const clear: string[] = [];
 
   for (const [key, rawValue] of Object.entries(incoming)) {
     const definition = byKey.get(key);
+
+    // Vaciar una clave se permite siempre, incluso si su definicion ya no
+    // existe o esta archivada: si no, un valor guardado bajo un campo retirado
+    // seria imposible de borrar, y eso incluye datos personales.
+    if (isCleared(rawValue)) {
+      if (definition?.required) {
+        throw new FieldValidationError(key, `"${definition.name}" is required`);
+      }
+      clear.push(key);
+      continue;
+    }
 
     if (!definition) {
       throw new FieldValidationError(key, `Unknown field "${key}"`);
@@ -169,14 +188,6 @@ export function applyFieldValues({
       );
     }
 
-    if (isCleared(rawValue)) {
-      if (definition.required) {
-        throw new FieldValidationError(key, `"${definition.name}" is required`);
-      }
-      delete result[key];
-      continue;
-    }
-
     const parsed = v.safeParse(buildValueSchema(definition), rawValue);
 
     if (!parsed.success) {
@@ -187,10 +198,10 @@ export function applyFieldValues({
       );
     }
 
-    result[key] = parsed.output;
+    set[key] = parsed.output;
   }
 
-  return result;
+  return { set, clear };
 }
 
 /**

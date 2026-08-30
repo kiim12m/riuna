@@ -62,6 +62,22 @@ se decide cambiando `packages/permissions`. Hoy ningún rol integrado separa
 `member` ninguno—, así que el middleware que elige por fila solo se distingue
 con un rol personalizado, que es como está probado.
 
+**Nota de la Fase 4.5, sobre el punto 5.** El índice de expresión que esta ADR
+deja «para cuando se sepa qué campos se filtran de verdad» **no puede
+funcionar tal como está escrito el traductor**: la expresión que genera es
+`CASE WHEN jsonb_typeof(...) = 'number' THEN (...)::numeric END`, y Postgres
+empareja índices de expresión por igualdad estructural del árbol de expresión.
+Un `CREATE INDEX ON task (((custom_fields->>'presupuesto')::numeric))` no casa
+con ese `CASE`, así que `EXPLAIN` seguiría mostrando un barrido sin causa
+visible. Las dos salidas son definir el índice con **exactamente** la misma
+expresión `CASE` —y entonces esto y el traductor no se pueden tocar por
+separado— o pasar a `jsonpath` (`custom_fields @? '$.k ? (@ > 1000)'`), que sí
+usa el GIN que ya existe y es inmune al tipo equivocado.
+
+Medido con 10.000 tareas, `Presupuesto > 1000` es un barrido de **12 ms**, así
+que la decisión no es urgente. Lo urgente era saber que el remedio anunciado no
+lo era.
+
 Los agregados del árbol **no suben** los campos numéricos por la rama: sumar un
 «Presupuesto» de todo el subárbol es una petición previsible y no está en esta
 fase. La importación y exportación tampoco los conocen todavía: es Fase 5, que

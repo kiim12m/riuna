@@ -4,10 +4,10 @@ import {
   slugifyFieldKey,
 } from "../../../apps/api/src/field/field-types";
 import {
-  applyFieldValues,
   assertRequiredFieldsPresent,
   type FieldDefinitionLike,
   FieldValidationError,
+  resolveFieldValueChanges,
 } from "../../../apps/api/src/field/validate-field-values";
 
 function define(
@@ -22,15 +22,27 @@ function define(
   };
 }
 
+/**
+ * Reproduce en JavaScript lo que el controlador hace en SQL —
+ * `custom_fields || $set - $clear` — para poder afirmar sobre el documento
+ * resultante. La fusion vive en SQL a proposito: ver `resolveFieldValueChanges`.
+ */
 function apply(
   definitions: FieldDefinitionLike[],
   incoming: Record<string, unknown>,
   current: Record<string, unknown> = {},
 ) {
-  return applyFieldValues({ definitions, current, incoming });
+  const { set, clear } = resolveFieldValueChanges({ definitions, incoming });
+  const result = { ...current, ...set };
+
+  for (const key of clear) {
+    delete result[key];
+  }
+
+  return result;
 }
 
-describe("applyFieldValues", () => {
+describe("resolveFieldValueChanges", () => {
   it("rejects a key with no definition behind it", () => {
     expect(() => apply([], { inventado: "x" })).toThrow(FieldValidationError);
   });

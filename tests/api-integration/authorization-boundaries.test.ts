@@ -85,6 +85,98 @@ describe("public project route", () => {
     expect(response.status).toBe(403);
     expect(await response.text()).not.toContain(project.name);
   });
+
+  // Esta ruta se sirve sin sesion, asi que hereda todo lo que se anada al
+  // listado interno. Las Fases 2 y 3 le colaron los campos personalizados, las
+  // epicas, el equipo, la estimacion y la forma del arbol sin que nadie
+  // revisara quien mas llamaba a `getTasks`.
+  it("does not leak internal fields that the task list happens to carry", async () => {
+    const { workspace } = await createWorkspaceMember();
+    const { project, columns } = await createProjectFixture({
+      workspaceId: workspace.id,
+    });
+
+    await db
+      .update(schema.projectTable)
+      .set({ isPublic: true })
+      .where(eq(schema.projectTable.id, project.id));
+
+    await db.insert(schema.fieldDefinitionTable).values({
+      workspaceId: workspace.id,
+      projectId: project.id,
+      key: "presupuesto",
+      name: "Presupuesto",
+      type: "number",
+      config: {},
+    });
+
+    const [team] = await db
+      .insert(schema.teamTable)
+      .values({
+        id: `team-${randomUUID()}`,
+        workspaceId: workspace.id,
+        name: "Legal",
+        createdAt: new Date(),
+      })
+      .returning();
+
+    const tree = taskTreeValues();
+    const [task] = await db
+      .insert(schema.taskTable)
+      .values({
+        ...tree,
+        projectId: project.id,
+        columnId: columns.todo.id,
+        title: "Obra publica",
+        status: "to-do",
+        priority: "medium",
+        number: 1,
+        position: 0,
+        teamId: team.id,
+        estimate: 7200,
+        customFields: { presupuesto: 50000 },
+      })
+      .returning();
+
+    const [epic] = await db
+      .insert(schema.epicTable)
+      .values({
+        projectId: project.id,
+        name: "Secreta",
+        color: "#123456",
+        position: 0,
+      })
+      .returning();
+
+    await db
+      .insert(schema.taskEpicTable)
+      .values({ taskId: task.id, epicId: epic.id });
+
+    const { app } = createApp();
+    const response = await app.request(`/api/public-project/${project.id}`);
+
+    expect(response.status).toBe(200);
+    const body = await response.text();
+
+    // Lo que si se ensena: es un tablero publico.
+    expect(body).toContain("Obra publica");
+
+    // Y lo que no.
+    for (const leaked of [
+      "presupuesto",
+      "customFields",
+      "Secreta",
+      "epics",
+      "Legal",
+      "teamId",
+      "estimate",
+      "workspaceId",
+      "maxTaskDepth",
+      tree.path,
+    ]) {
+      expect(body).not.toContain(leaked);
+    }
+  });
 });
 
 describe("task assignees stay inside the workspace", () => {

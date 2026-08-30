@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
 import { mockAnonymousSession, mockAuthenticatedSession } from "./helpers/auth";
@@ -324,5 +324,275 @@ describe("API integration: multiple task assignees", () => {
 
     expect(response.status).toBe(403);
     await expect(readAssignees(task.id)).resolves.toEqual([]);
+  });
+
+  // `assignees.ts` afirma ser el unico sitio que escribe `task_assignee`, y
+  // durante cuatro fases no lo fue: crear, editar, el lote y la importacion
+  // escribian `assignee_id` a pelo. El conjunto quedaba vacio con la tarjeta
+  // mostrando un responsable, y un filtro por `assignees` no encontraba la
+  // tarea. Un caso por via.
+  describe("every writer of assignee_id keeps the set in sync", () => {
+    it("creating a task with an assignee seeds the set", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const response = await app.request(`/api/task/${project.id}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          title: "Nace asignada",
+          description: "",
+          status: "to-do",
+          priority: "medium",
+          userId: member.user.id,
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      const created = (await response.json()) as { id: string };
+
+      await expect(readAssignees(created.id)).resolves.toEqual([
+        member.user.id,
+      ]);
+      await expect(readPrimaryAssignee(created.id)).resolves.toBe(
+        member.user.id,
+      );
+    });
+
+    it("the generic task update moves the set with the primary assignee", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const second = await addWorkspaceMember(member.workspace.id, "Segunda");
+      const { project, columns } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const task = await createTask(project.id, columns.todo.id);
+
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const assigned = await app.request(`/api/task/${task.id}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          title: task.title,
+          status: "to-do",
+          projectId: project.id,
+          description: "",
+          priority: "medium",
+          position: 0,
+          userId: member.user.id,
+        }),
+      });
+
+      expect(assigned.status).toBe(200);
+      await expect(readAssignees(task.id)).resolves.toEqual([member.user.id]);
+
+      const reassigned = await app.request(`/api/task/${task.id}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          title: task.title,
+          status: "to-do",
+          projectId: project.id,
+          description: "",
+          priority: "medium",
+          position: 0,
+          userId: second.id,
+        }),
+      });
+
+      expect(reassigned.status).toBe(200);
+      await expect(readAssignees(task.id)).resolves.toEqual([second.id]);
+      await expect(readPrimaryAssignee(task.id)).resolves.toBe(second.id);
+    });
+
+    it("the bulk assignee operation moves the set for every task", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const second = await addWorkspaceMember(member.workspace.id, "Segunda");
+      const { project, columns } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+
+      const [first] = await db
+        .insert(schema.taskTable)
+        .values({
+          ...taskTreeValues(),
+          projectId: project.id,
+          title: "Una",
+          status: "to-do",
+          columnId: columns.todo.id,
+          priority: "medium",
+          number: 1,
+          position: 0,
+          userId: member.user.id,
+        })
+        .returning();
+
+      const [other] = await db
+        .insert(schema.taskTable)
+        .values({
+          ...taskTreeValues(),
+          projectId: project.id,
+          title: "Otra",
+          status: "to-do",
+          columnId: columns.todo.id,
+          priority: "medium",
+          number: 2,
+          position: 1,
+        })
+        .returning();
+
+      await db.insert(schema.taskAssigneeTable).values({
+        taskId: first.id,
+        userId: member.user.id,
+      });
+
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const response = await app.request("/api/task/bulk", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          taskIds: [first.id, other.id],
+          operation: "updateAssignee",
+          value: second.id,
+        }),
+      });
+
+      expect(response.status).toBe(200);
+
+      await expect(readAssignees(first.id)).resolves.toEqual([second.id]);
+      await expect(readAssignees(other.id)).resolves.toEqual([second.id]);
+      await expect(readPrimaryAssignee(first.id)).resolves.toBe(second.id);
+      await expect(readPrimaryAssignee(other.id)).resolves.toBe(second.id);
+    });
+
+    it("importing tasks seeds the set for each assigned row", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const response = await app.request(`/api/task/import/${project.id}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          tasks: [
+            { title: "Importada", status: "to-do", userId: member.user.id },
+          ],
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      const body = (await response.json()) as {
+        results: { tasks: { success: boolean; task: { id: string } }[] };
+      };
+
+      const imported = body.results.tasks[0];
+      expect(imported.success).toBe(true);
+
+      await expect(readAssignees(imported.task.id)).resolves.toEqual([
+        member.user.id,
+      ]);
+    });
+  });
+  // `task.assignees_changed` no lo escuchaba nadie: ni el WebSocket, ni la
+  // actividad, ni las notificaciones. Anadir a alguien a una tarea no le
+  // llegaba por ningun canal, y tres meses despues nadie podia responder
+  // "quien me metio en esta tarea".
+  describe("assigning through the multi-assignee route reaches people", () => {
+    it("notifies the people who were added, and only them", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const second = await addWorkspaceMember(member.workspace.id, "Segunda");
+      const third = await addWorkspaceMember(member.workspace.id, "Tercera");
+      const { project, columns } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const task = await createTask(project.id, columns.todo.id);
+
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const first = await app.request(`/api/task/assignees/${task.id}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ userIds: [second.id] }),
+      });
+      expect(first.status).toBe(200);
+
+      // Quitar a nadie y anadir a la tercera: la segunda no vuelve a recibir.
+      const again = await app.request(`/api/task/assignees/${task.id}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ userIds: [second.id, third.id] }),
+      });
+      expect(again.status).toBe(200);
+
+      // Los suscriptores de eventos corren fuera del ciclo de la peticion:
+      // `publishEvent` emite y no espera al manejador.
+      await vi.waitFor(async () => {
+        const notifications = await db
+          .select({
+            userId: schema.notificationTable.userId,
+            type: schema.notificationTable.type,
+          })
+          .from(schema.notificationTable)
+          .where(eq(schema.notificationTable.resourceId, task.id));
+
+        const perUser = notifications.filter(
+          (row) => row.type === "task_assignee_changed",
+        );
+
+        expect(perUser.filter((row) => row.userId === second.id)).toHaveLength(
+          1,
+        );
+        expect(perUser.filter((row) => row.userId === third.id)).toHaveLength(
+          1,
+        );
+        // Quien hace el cambio no se avisa a si mismo.
+        expect(
+          perUser.filter((row) => row.userId === member.user.id),
+        ).toHaveLength(0);
+      });
+    });
+
+    it("leaves a trace in the activity history", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const second = await addWorkspaceMember(member.workspace.id, "Segunda");
+      const { project, columns } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const task = await createTask(project.id, columns.todo.id);
+
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const response = await app.request(`/api/task/assignees/${task.id}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ userIds: [second.id] }),
+      });
+      expect(response.status).toBe(200);
+
+      await vi.waitFor(async () => {
+        const activities = await db
+          .select({ type: schema.activityTable.type })
+          .from(schema.activityTable)
+          .where(eq(schema.activityTable.taskId, task.id));
+
+        expect(activities.map((row) => row.type)).toContain(
+          "assignees_changed",
+        );
+      });
+    });
   });
 });

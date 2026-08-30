@@ -10,6 +10,7 @@ import {
   rootPath,
   subtreePattern,
 } from "../tree";
+import { lockProjectTree } from "./lock-project-tree";
 
 type TaskNode = {
   id: string;
@@ -26,8 +27,13 @@ const REJECTION_MESSAGES: Record<string, string> = {
   "too-deep": "The resulting subtree would exceed the project's depth limit",
 };
 
-async function loadTask(taskId: string): Promise<TaskNode> {
-  const [task] = await db
+type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+async function loadTask(
+  taskId: string,
+  dbOrTx: DbOrTx = db,
+): Promise<TaskNode> {
+  const [task] = await dbOrTx
     .select({
       id: taskTable.id,
       projectId: taskTable.projectId,
@@ -46,8 +52,11 @@ async function loadTask(taskId: string): Promise<TaskNode> {
   return task;
 }
 
-async function getMaxTaskDepth(projectId: string): Promise<number> {
-  const [project] = await db
+async function getMaxTaskDepth(
+  projectId: string,
+  dbOrTx: DbOrTx = db,
+): Promise<number> {
+  const [project] = await dbOrTx
     .select({ maxTaskDepth: projectTable.maxTaskDepth })
     .from(projectTable)
     .where(eq(projectTable.id, projectId))
@@ -60,8 +69,11 @@ async function getMaxTaskDepth(projectId: string): Promise<number> {
  * Cuantos niveles cuelgan por debajo de la tarea: 0 si es una hoja. Se mide
  * antes de mover para no dejar descendientes por debajo del limite.
  */
-async function getSubtreeHeight(task: TaskNode): Promise<number> {
-  const [row] = await db
+async function getSubtreeHeight(
+  task: TaskNode,
+  dbOrTx: DbOrTx = db,
+): Promise<number> {
+  const [row] = await dbOrTx
     .select({ maxDepth: max(taskTable.depth) })
     .from(taskTable)
     .where(
@@ -82,11 +94,12 @@ async function getSubtreeHeight(task: TaskNode): Promise<number> {
 export async function resolveParentForNewTask(
   projectId: string,
   parentId: string | null | undefined,
+  dbOrTx: DbOrTx = db,
 ): Promise<TaskNode | null> {
   const normalized = parentId?.trim();
   if (!normalized) return null;
 
-  const parent = await loadTask(normalized);
+  const parent = await loadTask(normalized, dbOrTx);
 
   if (parent.projectId !== projectId) {
     throw new HTTPException(400, {
@@ -94,7 +107,7 @@ export async function resolveParentForNewTask(
     });
   }
 
-  const maxDepth = await getMaxTaskDepth(projectId);
+  const maxDepth = await getMaxTaskDepth(projectId, dbOrTx);
   if (parent.depth + 2 > maxDepth) {
     throw new HTTPException(400, { message: REJECTION_MESSAGES["too-deep"] });
   }
@@ -105,8 +118,9 @@ export async function resolveParentForNewTask(
 async function nextSiblingPosition(
   projectId: string,
   parentId: string | null,
+  dbOrTx: DbOrTx = db,
 ): Promise<number> {
-  const [row] = await db
+  const [row] = await dbOrTx
     .select({ maxPosition: max(taskTable.position) })
     .from(taskTable)
     .where(
@@ -136,40 +150,56 @@ async function updateTaskParent({
   parentId: string | null;
   currentUserId: string;
 }) {
-  const task = await loadTask(taskId);
   const normalizedParentId = parentId?.trim() || null;
 
-  if (normalizedParentId === task.parentId) {
-    return task;
-  }
+  // Solo para saber que proyecto bloquear. Todo lo demas se relee dentro.
+  const { projectId } = await loadTask(taskId);
 
-  const parent = normalizedParentId ? await loadTask(normalizedParentId) : null;
+  const result = await db.transaction(async (tx) => {
+    await lockProjectTree(tx, projectId);
 
-  const [maxDepth, subtreeHeight] = await Promise.all([
-    getMaxTaskDepth(task.projectId),
-    getSubtreeHeight(task),
-  ]);
+    // Releido ya con el cerrojo: validar contra una foto tomada antes es lo
+    // que dejaba pasar los dos reparentados cruzados que forman un ciclo, y lo
+    // que dejaba `parent_id` y `path` apuntando a sitios distintos cuando el
+    // ancestro se movia por debajo. Ver `lockProjectTree`.
+    const task = await loadTask(taskId, tx);
 
-  const rejection = rejectReparent({
-    task,
-    parent,
-    subtreeHeight,
-    maxDepth,
-  });
+    if (task.projectId !== projectId) {
+      throw new HTTPException(409, {
+        message: "The task changed project while it was being reparented",
+      });
+    }
 
-  if (rejection) {
-    throw new HTTPException(400, { message: REJECTION_MESSAGES[rejection] });
-  }
+    if (normalizedParentId === task.parentId) {
+      return { task, changed: false as const };
+    }
 
-  const oldPath = task.path;
-  const newPath = parent ? childPath(parent.path, task.id) : rootPath(task.id);
-  const depthDelta = (parent ? parent.depth + 1 : 0) - task.depth;
-  const position = await nextSiblingPosition(
-    task.projectId,
-    parent?.id ?? null,
-  );
+    const parent = normalizedParentId
+      ? await loadTask(normalizedParentId, tx)
+      : null;
 
-  const updatedTask = await db.transaction(async (tx) => {
+    const [maxDepth, subtreeHeight] = await Promise.all([
+      getMaxTaskDepth(task.projectId, tx),
+      getSubtreeHeight(task, tx),
+    ]);
+
+    const rejection = rejectReparent({ task, parent, subtreeHeight, maxDepth });
+
+    if (rejection) {
+      throw new HTTPException(400, { message: REJECTION_MESSAGES[rejection] });
+    }
+
+    const oldPath = task.path;
+    const newPath = parent
+      ? childPath(parent.path, task.id)
+      : rootPath(task.id);
+    const depthDelta = (parent ? parent.depth + 1 : 0) - task.depth;
+    const position = await nextSiblingPosition(
+      task.projectId,
+      parent?.id ?? null,
+      tx,
+    );
+
     // Toda la rama de una vez, la propia tarea incluida: `substring` a partir
     // del largo del prefijo viejo conserva el tramo que cuelga por debajo.
     await tx
@@ -190,26 +220,41 @@ async function updateTaskParent({
     const [updated] = await tx
       .update(taskTable)
       .set({ parentId: parent?.id ?? null, position })
-      .where(eq(taskTable.id, taskId))
+      // El predicado de `path` es redundante con el cerrojo y esta a proposito:
+      // si alguien anade un escritor de arbol que no lo tome, esto convierte una
+      // corrupcion silenciosa en cero filas afectadas y un 409.
+      .where(and(eq(taskTable.id, taskId), eq(taskTable.path, newPath)))
       .returning();
 
-    return updated;
+    if (!updated) {
+      throw new HTTPException(409, {
+        message: "The task tree changed while it was being reparented",
+      });
+    }
+
+    return {
+      task: updated,
+      changed: true as const,
+      oldParentId: task.parentId,
+      newParentId: parent?.id ?? null,
+      projectId: task.projectId,
+    };
   });
 
-  if (!updatedTask) {
-    throw new HTTPException(500, { message: "Failed to reparent task" });
+  if (!result.changed) {
+    return result.task;
   }
 
   await publishEvent("task.parent_changed", {
     taskId,
-    projectId: task.projectId,
+    projectId: result.projectId,
     userId: currentUserId,
     type: "parent_changed",
-    oldParentId: task.parentId,
-    newParentId: parent?.id ?? null,
+    oldParentId: result.oldParentId,
+    newParentId: result.newParentId,
   });
 
-  return updatedTask;
+  return result.task;
 }
 
 export default updateTaskParent;

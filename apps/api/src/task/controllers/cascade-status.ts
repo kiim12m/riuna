@@ -84,10 +84,15 @@ export async function cascadeStatusToSubtree({
     )
     .limit(1);
 
+  // Cerrar no saca del archivo. Archivar si alcanza a las cerradas —bajar al
+  // archivo es la direccion correcta—, pero cerrar un padre no puede resucitar
+  // una rama archivada hace meses: reaparece en el tablero, vuelve a todos los
+  // agregados, y el estado anterior ya no se puede recuperar.
   const scope = and(
     eq(taskTable.projectId, task.projectId),
     like(taskTable.path, descendantsPattern(task.path)),
     ne(taskTable.status, status),
+    ...(reason === "close" ? [ne(taskTable.status, "archived")] : []),
   );
 
   // Se leen antes de escribir porque `RETURNING` devolveria ya el estado

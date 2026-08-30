@@ -747,6 +747,64 @@ export const viewTable = pgTable(
   ],
 );
 
+/**
+ * De donde vino una fila que entro de fuera, para que reimportar actualice en
+ * vez de duplicar.
+ *
+ * `AGENTS.md` da la idempotencia por hecha «a traves de `external_ref`» y la
+ * tabla no existia: `import-tasks` no tenia idempotencia de ninguna clase —dos
+ * importaciones del mismo fichero creaban 2N tareas— y los importadores de
+ * GitHub y Gitea la conseguian con un `findFirst` sin bloqueo ni restriccion
+ * unica, que funciona en secuencia y duplica en concurrencia.
+ *
+ * No sirve `external_link` para esto, por tres motivos: exige `integration_id`
+ * con clave foranea (habria que fabricar una integracion falsa por proyecto,
+ * visible en los ajustes), exige `task_id` (y la Fase 5 promete preservar
+ * tambien epicas y crear definiciones de campo), y no tiene unicidad.
+ *
+ * `source` es texto libre —`csv:<hash>`, `xlsx:<nombre>`, `trello`, `jira`—
+ * para que los importadores externos de la Fase 8 la reutilicen sin migrar.
+ */
+export const externalRefTable = pgTable(
+  "external_ref",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    source: text("source").notNull(),
+    entityType: text("entity_type").notNull(),
+    entityId: text("entity_id").notNull(),
+    externalId: text("external_id").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    // La unicidad **es** la idempotencia: sin ella la tabla solo documenta la
+    // procedencia, y una reimportacion concurrente vuelve a duplicar.
+    uniqueIndex("external_ref_source_entity_external_unique").on(
+      table.workspaceId,
+      table.source,
+      table.entityType,
+      table.externalId,
+    ),
+    index("external_ref_entity_idx").on(table.entityType, table.entityId),
+    index("external_ref_workspaceId_idx").on(table.workspaceId),
+    check(
+      "external_ref_entity_type_valid",
+      sql`${table.entityType} IN ('task', 'epic', 'field_definition')`,
+    ),
+  ],
+);
+
 export const billingReminderSentTable = pgTable(
   "billing_reminder_sent",
   {
@@ -1232,6 +1290,18 @@ export const externalLinkTable = pgTable(
     index("external_link_integrationId_idx").on(table.integrationId),
     index("external_link_externalId_idx").on(table.externalId),
     index("external_link_resourceType_idx").on(table.resourceType),
+    // Sus once puntos de escritura hacen leer-y-luego-escribir sin bloqueo, asi
+    // que un webhook concurrente con una importacion creaba dos tareas para la
+    // misma incidencia, de forma permanente: las importaciones posteriores
+    // actualizan una de las dos y la otra queda huerfana para siempre.
+    //
+    // `0020_gitea_dedup_guards.sql` blindo asi `activity` y `label` y se dejo
+    // esta.
+    uniqueIndex("external_link_integration_resource_external_unique").on(
+      table.integrationId,
+      table.resourceType,
+      table.externalId,
+    ),
   ],
 );
 

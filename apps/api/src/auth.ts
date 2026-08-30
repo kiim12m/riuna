@@ -54,6 +54,7 @@ import { getGithubSsoOAuthCredentials } from "./utils/github-sso-env";
 import { isCloud } from "./utils/is-cloud";
 import { isDisposableEmail } from "./utils/is-disposable-email";
 import { isLocalSignInPath } from "./utils/is-local-sign-in-path";
+import { isLocalAccountEmail } from "./utils/local-account";
 import { verifyTurnstile } from "./utils/verify-turnstile";
 
 config();
@@ -602,6 +603,31 @@ export const auth = betterAuth({
           const existingUserCount = userCountRow?.value ?? 0;
           if (existingUserCount === 0) {
             return;
+          }
+
+          // El dominio sintetico de las cuentas locales esta reservado.
+          //
+          // `set-user-email` ya lo rechazaba al asignar un correo a mano, pero
+          // el registro no lo miraba: cualquiera podia darse de alta como
+          // `mgarcia@local.riuna` y la tabla de miembros lo presentaba como una
+          // cuenta creada por el admin —clasifica por dominio—, ademas de
+          // dejarle sin correo de notificacion y de bloquear al admin para
+          // crear despues la cuenta local `mgarcia`.
+          //
+          // `isLocalAccount` es `input: false` en el esquema, asi que una
+          // peticion de registro normal no puede falsificarlo: solo lo trae la
+          // via de `createLocalUser`.
+          const userWithLocalAccount = user as Partial<{
+            isLocalAccount: boolean;
+          }>;
+
+          if (
+            !userWithLocalAccount.isLocalAccount &&
+            isLocalAccountEmail(user.email)
+          ) {
+            throw new APIError("FORBIDDEN", {
+              message: "That email domain is reserved for local accounts",
+            });
           }
 
           const invitationId = normalizeInvitationId(

@@ -7,6 +7,7 @@ import ProjectLayout from "@/components/common/project-layout";
 import KanbanBoard from "@/components/kanban-board";
 import ListView from "@/components/list-view";
 import PageTitle from "@/components/page-title";
+import { ProjectSizeWarning } from "@/components/project/project-size-warning";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import { Input } from "@/components/ui/input";
@@ -243,6 +244,8 @@ function RouteComponent() {
           groupBy={groupBy}
           onGroupByChange={setGroupBy}
         />
+
+        <ProjectSizeWarning project={project} />
 
         <div className="flex h-full flex-1 overflow-hidden bg-background">
           {sortedProject ? (

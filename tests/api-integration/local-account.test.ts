@@ -357,4 +357,34 @@ describe("API integration: local accounts", () => {
 
     expect(unchanged.email).toBe("marta.ruiz@local.riuna");
   });
+  // La otra mitad de la reserva. `set-user-email` ya rechazaba el dominio
+  // sintetico, pero el registro no lo miraba: cualquiera podia ocupar
+  // `usuario@local.riuna` y la tabla de miembros lo presentaba como una cuenta
+  // creada por el admin, porque clasifica por dominio.
+  it("refuses a public signup on the reserved local domain", async () => {
+    const { app } = createApp();
+
+    // Con una cuenta ya existente: la primera alta de la instancia es el
+    // arranque del admin y se salta las comprobaciones de registro.
+    await signUp(app, { email: `admin-${randomUUID()}@example.com` });
+
+    const response = await app.request("/api/auth/sign-up/email", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        email: "intruso@local.riuna",
+        password: "una-contrasena-larga-de-verdad",
+        name: "Intruso",
+      }),
+    });
+
+    expect(response.status).not.toBe(200);
+
+    const [created] = await db
+      .select({ id: schema.userTable.id })
+      .from(schema.userTable)
+      .where(eq(schema.userTable.email, "intruso@local.riuna"));
+
+    expect(created).toBeUndefined();
+  });
 });

@@ -3,6 +3,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ProjectLayout from "@/components/common/project-layout";
 import PageTitle from "@/components/page-title";
+import { ProjectSizeWarning } from "@/components/project/project-size-warning";
 import TableView from "@/components/table-view";
 import type { AddFieldPayload } from "@/components/table-view/add-field-dialog";
 import AddFieldDialog from "@/components/table-view/add-field-dialog";
@@ -307,6 +308,7 @@ function RouteComponent() {
               })
             }
           />
+          <ProjectSizeWarning project={project} />
           {error && (
             <p className="px-3 pb-2 text-destructive text-xs">
               {error instanceof Error

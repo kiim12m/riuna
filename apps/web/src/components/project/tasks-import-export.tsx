@@ -97,10 +97,20 @@ export function TasksImportExport({ project }: TasksImportExportProps) {
       );
 
       if (result.results.failed > 0) {
+        // El motivo de cada fila llega en la respuesta y se estaba tirando: el
+        // usuario veia "N fallidas" sin forma de saber por que. Se ensena el
+        // primero, que en la practica es el mismo para todas.
+        const rawReason = result.results.tasks.find(
+          (row) => !row.success,
+        )?.error;
+        const firstReason =
+          typeof rawReason === "string" ? rawReason : undefined;
+
         toast.error(
           t("settings:tasksImportExport.importPartialError", {
             count: result.results.failed,
           }),
+          firstReason ? { description: firstReason } : undefined,
         );
       }
     } catch (error) {
@@ -192,7 +202,7 @@ export function TasksImportExport({ project }: TasksImportExportProps) {
       "priority": "low",
       "startDate": "2025-04-18T00:00:00.000Z",
       "dueDate": "2025-04-20T00:00:00.000Z",
-      "userId": "user@example.com"
+      "userId": "cm3x9k2p0000abcdefghij"
     }
   ]
 }`}

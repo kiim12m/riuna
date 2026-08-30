@@ -21,13 +21,13 @@ import { formatDateMedium, formatDateShort } from "@/lib/format";
 import { getInitials } from "@/lib/get-initials";
 import { getPriorityIcon } from "@/lib/priority";
 import type { ExternalLink } from "@/types/external-link";
-import type Task from "@/types/task";
+import type { PublicTask } from "@/types/project";
 import { MarkdownRenderer } from "./markdown-renderer";
 import { PublicTaskLabels } from "./public-task-labels";
 
 type PublicTaskDetailModalProps = {
   task:
-    | (Task & {
+    | (PublicTask & {
         labels?: Array<{ id: string; name: string; color: string }>;
         externalLinks?: Array<ExternalLink>;
       })
@@ -288,7 +288,7 @@ export function PublicTaskDetailModal({
                   {t("publicProject:taskDetail.created")}
                 </div>
                 <div className="text-sm text-foreground">
-                  {formatDateMedium(task.createdAt)}
+                  {task.createdAt ? formatDateMedium(task.createdAt) : "—"}
                 </div>
               </div>
               {task.dueDate && (

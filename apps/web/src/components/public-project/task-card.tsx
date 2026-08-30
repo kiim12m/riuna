@@ -9,21 +9,17 @@ import {
 import { formatDateShort } from "@/lib/format";
 import { getInitials } from "@/lib/get-initials";
 import { getPriorityIcon } from "@/lib/priority";
-import type { ExternalLink } from "@/types/external-link";
-import type Task from "@/types/task";
+import type { PublicTask } from "@/types/project";
 import { PublicPRBadge } from "./public-pr-badge";
 import { PublicTaskLabels } from "./public-task-labels";
 
 type PublicTaskCardProps = {
-  task: Task & {
-    labels?: Array<{ id: string; name: string; color: string }>;
-    externalLinks?: Array<ExternalLink>;
-  };
+  task: PublicTask;
   projectSlug: string;
   // Passed by views that hold the column, so completion comes from isFinal
   // rather than the slug fallback.
   isCompleted?: boolean;
-  onTaskClick: (task: Task) => void;
+  onTaskClick: (task: PublicTask) => void;
 };
 
 export function PublicTaskCard({

@@ -74,7 +74,7 @@ export const BUILT_IN_FIELDS: FieldRegistry = {
 
 // Como se compara cada tipo de campo personalizado. `relation` no aparece: su
 // valor no vive en el JSONB, asi que no se filtra por esta via.
-const CUSTOM_FIELD_VALUE_TYPES: Partial<Record<FieldType, ValueType>> = {
+export const CUSTOM_FIELD_VALUE_TYPES: Partial<Record<FieldType, ValueType>> = {
   text: "text",
   number: "number",
   currency: "number",

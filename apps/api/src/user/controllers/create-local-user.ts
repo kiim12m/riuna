@@ -56,6 +56,22 @@ export async function createLocalUser({
     });
   }
 
+  // Y el correo sintetico tambien. Comprobar solo el nombre de usuario dejaba
+  // que una cuenta registrada antes con ese correo hiciera reventar
+  // `auth.api.createUser` contra el indice unico de `email`, con un 500 opaco
+  // en vez de este 409.
+  const [emailTaken] = await db
+    .select({ id: userTable.id })
+    .from(userTable)
+    .where(eq(userTable.email, buildLocalAccountEmail(normalizedUsername)))
+    .limit(1);
+
+  if (emailTaken) {
+    throw new HTTPException(409, {
+      message: `The username "${normalizedUsername}" is already taken`,
+    });
+  }
+
   const created = await auth.api.createUser({
     body: {
       email: buildLocalAccountEmail(normalizedUsername),

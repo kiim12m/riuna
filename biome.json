@@ -25,6 +25,7 @@
 			"!**/.cache",
 			"!**/coverage",
 			"!**/.claude",
+			"!**/.pnpm-store",
 			"!**/.pi",
 			"!**/.pi-subagents",
 			"!**/openapi.json"

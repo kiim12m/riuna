@@ -1,11 +1,13 @@
 import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
+import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import createView from "./controllers/create-view";
 import deleteView from "./controllers/delete-view";
 import getViews from "./controllers/get-views";
 import updateView from "./controllers/update-view";
+import { FILTER_OPERATORS } from "./filter-schema";
 import { requireViewOwner } from "./require-view-owner";
 
 // Las vistas se gobiernan por propiedad y no por el vocabulario de permisos:
@@ -21,7 +23,29 @@ const viewTypeSchema = v.picklist([
   "gantt",
 ]);
 
-const configSchema = v.record(v.string(), v.unknown());
+// El `config` de una vista es lo que la barra de filtros tiene en pantalla
+// (ADR 015), no un saco libre: una lista de condiciones en edicion mas el modo
+// de jerarquia. Ojo, **no** es el `FilterNode` que viaja en la URL: eso es la
+// forma compilada, y lo que se guarda es la editable.
+//
+// Validarlo aqui y no solo al aplicarlo evita guardar —y **compartir**— una
+// vista que el motor rechazara despues con un 400, dejando la pantalla en
+// blanco a todo el equipo con el fallo descubierto en el consumidor y no en el
+// productor. Y acota el tamano: `v.record(v.string(), v.unknown())` aceptaba un
+// config de 20 MB que `getViews` devolvia luego a cada miembro del espacio.
+const conditionSchema = v.object({
+  id: v.pipe(v.string(), v.maxLength(120)),
+  field: v.pipe(v.string(), v.minLength(1), v.maxLength(120)),
+  operator: v.picklist(FILTER_OPERATORS),
+  value: v.optional(v.unknown()),
+});
+
+const configSchema = v.object({
+  filter: v.optional(v.pipe(v.array(conditionSchema), v.maxLength(50))),
+  treeMode: v.optional(
+    v.picklist(["tree", "flat", "roots", "withDescendants"]),
+  ),
+});
 
 const view = new Hono<{
   Variables: {
@@ -86,6 +110,9 @@ const view = new Hono<{
       }),
     ),
     workspaceAccess.fromProject("projectId"),
+    // Guardar una vista compartida cambia lo que ve el espacio entero en ese
+    // proyecto, asi que una clave de API de solo lectura no debe poder.
+    requireApiKeyScope({ project: ["update"] }),
     async (c) => {
       const { projectId } = c.req.valid("param");
       const body = c.req.valid("json");
@@ -130,6 +157,7 @@ const view = new Hono<{
     ),
     workspaceAccess.fromView("id"),
     requireViewOwner,
+    requireApiKeyScope({ project: ["update"] }),
     async (c) => {
       const { id } = c.req.valid("param");
       const body = c.req.valid("json");
@@ -162,6 +190,7 @@ const view = new Hono<{
     validator("param", v.object({ id: v.string() })),
     workspaceAccess.fromView("id"),
     requireViewOwner,
+    requireApiKeyScope({ project: ["update"] }),
     async (c) => {
       const { id } = c.req.valid("param");
       return c.json(await deleteView(id));

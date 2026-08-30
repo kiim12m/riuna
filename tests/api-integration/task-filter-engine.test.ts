@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
@@ -647,5 +648,118 @@ describe("filter engine against Postgres", () => {
     });
 
     expect(titles).toEqual(["Bauhaus"]);
+  });
+  // Los cuatro defectos del motor que encontro la auditoria de la Fase 4.5.
+  // Los cuatro devolvian una respuesta, no un error: el filtro contestaba, y
+  // contestaba mal, que es la forma mas cara de fallar.
+  describe("saneamiento de la Fase 4.5", () => {
+    it("matches a date custom field on the exact day", async () => {
+      const { app, projectId, columnId, workspaceId } = await setup();
+      await defineField(workspaceId, projectId, "revision", "date");
+
+      await insertTask(projectId, columnId, {
+        title: "Ese dia",
+        customFields: { revision: "2026-09-01" },
+      });
+      await insertTask(projectId, columnId, {
+        title: "Otro dia",
+        customFields: { revision: "2026-09-02" },
+      });
+
+      const igual = await listTitles(app, projectId, {
+        type: "condition",
+        field: "custom.revision",
+        operator: "eq",
+        value: "2026-09-01",
+      });
+
+      // Antes: cero resultados, porque el texto guardado se comparaba con un
+      // instante serializado.
+      expect(igual.titles).toEqual(["Ese dia"]);
+
+      const distinto = await listTitles(app, projectId, {
+        type: "condition",
+        field: "custom.revision",
+        operator: "neq",
+        value: "2026-09-01",
+      });
+
+      // Y antes: todas, porque `neq` casaba siempre.
+      expect(distinto.titles).toEqual(["Otro dia"]);
+    });
+
+    it("keeps a saved view working after its field is archived", async () => {
+      const { app, projectId, columnId, workspaceId } = await setup();
+      await defineField(workspaceId, projectId, "presupuesto", "number");
+
+      await insertTask(projectId, columnId, {
+        title: "Obra cara",
+        customFields: { presupuesto: 5000 },
+      });
+      await insertTask(projectId, columnId, {
+        title: "Obra barata",
+        customFields: { presupuesto: 100 },
+      });
+
+      await db
+        .update(schema.fieldDefinitionTable)
+        .set({ archivedAt: new Date() })
+        .where(eq(schema.fieldDefinitionTable.key, "presupuesto"));
+
+      const { status, titles } = await listTitles(app, projectId, {
+        type: "condition",
+        field: "custom.presupuesto",
+        operator: "gt",
+        value: 1000,
+      });
+
+      // Antes: 400 para el listado entero, y la pantalla en blanco.
+      expect(status).toBe(200);
+      expect(titles).toEqual(["Obra cara"]);
+    });
+
+    it("answers 400, not 500, when a membership filter has no value", async () => {
+      const { app, projectId, columnId } = await setup();
+      await insertTask(projectId, columnId, { title: "Cualquiera" });
+
+      const { status } = await listTitles(app, projectId, {
+        type: "condition",
+        field: "epic",
+        operator: "eq",
+      } as FilterNode);
+
+      // Antes: `IN ()`, error de sintaxis de Postgres, y un 500 con su
+      // excepcion en Sentry por un filtro mal formado del cliente.
+      expect(status).toBe(400);
+    });
+
+    it("treats an empty description as empty, not as present", async () => {
+      const { app, projectId, columnId } = await setup();
+      await insertTask(projectId, columnId, {
+        title: "Sin describir",
+        description: "",
+      });
+      await insertTask(projectId, columnId, {
+        title: "Con descripcion",
+        description: "algo",
+      });
+
+      const vacias = await listTitles(app, projectId, {
+        type: "condition",
+        field: "description",
+        operator: "isEmpty",
+      } as FilterNode);
+
+      // `create-task` guarda "" y no NULL, asi que antes esto devolvia cero.
+      expect(vacias.titles).toEqual(["Sin describir"]);
+
+      const llenas = await listTitles(app, projectId, {
+        type: "condition",
+        field: "description",
+        operator: "isNotEmpty",
+      } as FilterNode);
+
+      expect(llenas.titles).toEqual(["Con descripcion"]);
+    });
   });
 });
