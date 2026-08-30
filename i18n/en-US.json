@@ -14,6 +14,10 @@
 			"filter": "Filter",
 			"clearAllFilters": "Clear all filters"
 		},
+		"boolean": {
+			"yes": "Yes",
+			"no": "No"
+		},
 		"a11y": {
 			"toggleSidebar": "Toggle sidebar"
 		},
@@ -1512,6 +1516,10 @@
 	"activity": {
 		"assignedToSelf": "assigned the task to themselves",
 		"assignedToTeam": "assigned the task to the {{name}} team",
+		"nestedUnderTask": "nested the task under another one",
+		"promotedToRoot": "moved the task out to the top level",
+		"epicsUpdated": "updated the task's epics",
+		"epicsCleared": "removed the task from its epics",
 		"teamUnassigned": "removed the task from its team",
 		"unassigned": "unassigned the task",
 		"assignedTo": "assigned the task to {{name}}",
@@ -2167,6 +2175,9 @@
 				"saveFailed": "The view could not be saved",
 				"delete": "Delete this view"
 			}
+		},
+		"projectSize": {
+			"warning": "This project has {{count}} tasks. Views load all of them, so they will feel slow. Filter to narrow the list down."
 		}
 	},
 	"invitations": {

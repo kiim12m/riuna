@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { taskTable } from "../../database/schema";
@@ -6,9 +6,10 @@ import { publishEvent } from "../../events";
 import { getFieldDefinitionsForProject } from "../../field/controllers/get-field-definitions";
 import type { FieldType } from "../../field/field-types";
 import {
-  applyFieldValues,
   type FieldDefinitionLike,
   FieldValidationError,
+  type FieldValueChanges,
+  resolveFieldValueChanges,
 } from "../../field/validate-field-values";
 import {
   assertAssignableUser,
@@ -37,7 +38,6 @@ async function updateTaskCustomFields({
     .select({
       id: taskTable.id,
       projectId: taskTable.projectId,
-      customFields: taskTable.customFields,
     })
     .from(taskTable)
     .where(eq(taskTable.id, id))
@@ -53,10 +53,10 @@ async function updateTaskCustomFields({
     task.projectId,
   );
 
-  let customFields: Record<string, unknown>;
+  let changes: FieldValueChanges;
 
   try {
-    customFields = applyFieldValues({
+    changes = resolveFieldValueChanges({
       definitions: definitions.map(
         (definition): FieldDefinitionLike => ({
           key: definition.key,
@@ -66,7 +66,6 @@ async function updateTaskCustomFields({
           config: definition.config,
         }),
       ),
-      current: task.customFields,
       incoming: values,
     });
   } catch (error) {
@@ -81,16 +80,31 @@ async function updateTaskCustomFields({
   // base. Se reutiliza la misma guarda que protege al responsable de la tarea,
   // de modo que un campo "usuario" no sea una puerta trasera para apuntar a
   // alguien de fuera del espacio.
-  for (const definition of definitions) {
-    if (definition.type !== "user") continue;
-    const value = customFields[definition.key];
+  //
+  // Solo se comprueban las claves que trae la peticion: mirar tambien las que
+  // ya estaban guardadas bloqueaba con un 403 cualquier edicion posterior de
+  // la tarea en cuanto el usuario de un campo dejaba el espacio, con un
+  // mensaje que hablaba del responsable y no del campo culpable.
+  const byKey = new Map(
+    definitions.map((definition) => [definition.key, definition]),
+  );
+
+  for (const [key, value] of Object.entries(changes.set)) {
+    if (byKey.get(key)?.type !== "user") continue;
     if (typeof value !== "string") continue;
     await assertAssignableUser(value, workspaceId);
   }
 
+  // La fusion va en SQL, sobre el valor que la fila tenga en ese momento, en
+  // vez de reescribir el documento leido antes. Ver `resolveFieldValueChanges`.
   const [updatedTask] = await db
     .update(taskTable)
-    .set({ customFields })
+    .set({
+      // `sql.param` en la lista de claves es obligatorio: en una plantilla
+      // `sql`, drizzle expande un array a `($1, $2, ...)` en vez de pasarlo
+      // como un solo parametro, y `- ()::text[]` no compila.
+      customFields: sql`(${taskTable.customFields} || ${JSON.stringify(changes.set)}::jsonb) - ${sql.param(changes.clear)}::text[]`,
+    })
     .where(eq(taskTable.id, id))
     .returning();
 

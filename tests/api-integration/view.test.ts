@@ -76,13 +76,24 @@ describe("saved views", () => {
   it("saves a view with its filter inside the config", async () => {
     const { app, projectId } = await setup();
 
+    // El `config` guarda lo que la barra de filtros tiene en pantalla: una
+    // lista de condiciones en edicion, con su `id` de React. **No** es el
+    // `FilterNode` que viaja en la URL, que es la forma ya compilada.
+    //
+    // Esta prueba guardaba un `FilterNode` y pasaba, porque hasta la Fase 4.5
+    // el `config` era `v.record(v.string(), v.unknown())` y no se validaba
+    // nada. Pero esa forma nunca funciono de punta a punta: `handleApplyView`
+    // solo honra `config.filter` si es un array y descarta lo demas en
+    // silencio, asi que una vista guardada asi se cargaba sin filtro.
     const config = {
-      filter: {
-        type: "condition",
-        field: "custom.presupuesto",
-        operator: "gt",
-        value: 1000,
-      },
+      filter: [
+        {
+          id: "1",
+          field: "custom.presupuesto",
+          operator: "gt",
+          value: 1000,
+        },
+      ],
       treeMode: "withDescendants",
     };
 

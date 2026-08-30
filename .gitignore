@@ -67,3 +67,8 @@ apps/web/.tanstack/
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 apps/api/_direct_dev.log
+
+# Almacen local de pnpm. Sin `.npmrc` que lo situe fuera, `pnpm install` lo crea
+# aqui cuando el directorio del usuario esta en otro sistema de ficheros, y son
+# 1,4 GB de JSON que hacen fallar `biome ci` con mas de mil errores ajenos.
+.pnpm-store/

@@ -1,8 +1,13 @@
 import { PgDialect } from "drizzle-orm/pg-core";
 import { describe, expect, it } from "vitest";
 import {
+  FIELD_TYPES,
+  storesValueInJson,
+} from "../../../apps/api/src/field/field-types";
+import {
   BUILT_IN_FIELDS,
   buildFieldRegistry,
+  CUSTOM_FIELD_VALUE_TYPES,
 } from "../../../apps/api/src/view/field-registry";
 import {
   FilterError,
@@ -125,6 +130,29 @@ describe("filterToSql", () => {
       );
       expect(text).not.toContain("::date");
       expect(text).not.toContain("::timestamp");
+    });
+
+    // Y el otro lado de la comparacion tambien tiene que ser ese texto.
+    //
+    // Esta es la asercion que faltaba: la prueba de arriba miraba el SQL y
+    // nunca los parametros, asi que no vio que el valor viajaba como `Date`.
+    // node-postgres lo serializa a `2026-09-01T00:00:00.000+00:00` en la hora
+    // local del servidor, de modo que `eq` no casaba nunca, `neq` casaba
+    // siempre, y fuera de UTC el rango se desplazaba un dia entero.
+    it("sends a JSONB date as the same YYYY-MM-DD it is stored as", () => {
+      for (const operator of ["eq", "neq", "lt", "gte"] as const) {
+        const { params } = compile(
+          condition("custom.revision", operator, "2026-09-01"),
+        );
+        expect(params.at(-1)).toBe("2026-09-01");
+      }
+    });
+
+    // Una columna `timestamp` si se compara contra un instante: ahi el `Date`
+    // es lo correcto, y confundir los dos casos era el origen del fallo.
+    it("still sends a real Date for a timestamp column", () => {
+      const { params } = compile(condition("dueDate", "lt", "2026-09-01"));
+      expect(params.at(-1)).toBeInstanceOf(Date);
     });
   });
 
@@ -366,5 +394,49 @@ describe("buildFieldRegistry", () => {
   it("leaves relation fields out, since their value is not in the JSONB", () => {
     const built = buildFieldRegistry([{ key: "cliente", type: "relation" }]);
     expect(built["custom.cliente"]).toBeUndefined();
+  });
+});
+
+// El reparto de tipo de campo a tipo de comparacion esta escrito **dos veces**:
+// aqui, en la API, y a mano en `apps/web/src/hooks/use-filterable-fields.ts`.
+// Los dos ficheros lo dicen en un comentario, y ninguno tenia prueba.
+//
+// El commit `7705ab7` («filtrar por seleccion multiple no devolvia nada») fue
+// exactamente esta divergencia: `multi_select` mapeado al tipo equivocado. Su
+// arreglo anadio once pruebas, todas del lado de la API; el espejo del web se
+// cambio a mano en el mismo commit y siguio sin cubrir.
+//
+// El fallo silencioso no es el 400: es que un tipo nuevo que se olvide en el
+// web hace que el campo **desaparezca del menu de filtros** sin error en
+// ninguno de los dos lados.
+describe("the field type vocabulary stays in one piece", () => {
+  it("gives every storable field type a comparison type", () => {
+    const missing = FIELD_TYPES.filter(
+      (type) => storesValueInJson(type) && !CUSTOM_FIELD_VALUE_TYPES[type],
+    );
+
+    expect(missing).toEqual([]);
+  });
+
+  it("does not offer a comparison type for relation fields", () => {
+    // Su valor son filas de `task_relation`, no JSONB: el registro no debe
+    // incluirlo aunque su definicion exista. Ver ADR 013.
+    expect(CUSTOM_FIELD_VALUE_TYPES.relation).toBeUndefined();
+  });
+
+  // Congelado a proposito: si alguien cambia este reparto, tiene que cambiar
+  // tambien el de `use-filterable-fields.ts`, y este test es el recordatorio.
+  it("matches the table the web mirrors by hand", () => {
+    expect(CUSTOM_FIELD_VALUE_TYPES).toEqual({
+      text: "text",
+      number: "number",
+      currency: "number",
+      select: "id",
+      multi_select: "idList",
+      date: "date",
+      checkbox: "boolean",
+      user: "id",
+      url: "text",
+    });
   });
 });

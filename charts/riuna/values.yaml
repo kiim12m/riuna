@@ -132,17 +132,38 @@ riuna:
   #       secretKeyRef:
   #         name: oauth-secret
   #         key: client-id
+  #
+  # Dos que conviene no dejar en `extraEnv` porque se olvidan:
+  #
+  #   - name: NOTIFICATION_SECRET_ENCRYPTION_KEY
+  #     value: ""   # sin ella, guardar un token de ntfy o Gotify responde 500
+  #   - name: RIUNA_LOCAL_ACCOUNT_DOMAIN
+  #     value: "local.riuna"  # queda grabado en el correo sintetico de cada
+  #                           # cuenta local: cambiarlo despues no las migra
+  # El arranque corre las migraciones **antes** de abrir el puerto, asi que no
+  # hay /api/health hasta que terminan. La 0048 reescribe todas las filas de
+  # `task` y la 0049 construye un GIN encima: en una instalacion con datos son
+  # decenas de segundos, y en una grande varios minutos.
+  #
+  # Sin `startupProbe`, el liveness mataba el pod a mitad de migracion, Postgres
+  # hacia rollback, el pod reiniciaba y volvia a empezar: CrashLoopBackOff
+  # indefinido. Con el, el liveness no empieza a contar hasta que el arranque
+  # termina, y el margen es generoso a proposito: 60 intentos x 10 s = 10 min.
+  startupProbe:
+    httpGet:
+      path: /api/health
+      port: riuna
+    periodSeconds: 10
+    failureThreshold: 60
   livenessProbe:
     httpGet:
       path: /api/health
       port: riuna
-    initialDelaySeconds: 60
     periodSeconds: 10
   readinessProbe:
     httpGet:
       path: /api/health
       port: riuna
-    initialDelaySeconds: 30
     periodSeconds: 10
 # Ingress configuration
 ingress:

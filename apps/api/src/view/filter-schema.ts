@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import type { FilterNode } from "./filter-to-sql";
 
-const OPERATORS = [
+export const FILTER_OPERATORS = [
   "eq",
   "neq",
   "gt",
@@ -16,6 +16,14 @@ const OPERATORS = [
   "isNotEmpty",
 ] as const;
 
+// Cuantas condiciones caben en un solo grupo. El traductor acota la
+// profundidad (`MAX_DEPTH`), que es el anidamiento; esto acota la anchura, que
+// no vigilaba nadie: un `and` plano con cientos de `contains` pasa la
+// validacion de profundidad y se evalua por fila sobre un barrido. Hoy el
+// techo efectivo lo pone por accidente el tamano maximo de cabecera de
+// node:http, y un accidente no es una defensa.
+const MAX_CHILDREN_PER_GROUP = 50;
+
 // El arbol es recursivo, asi que el esquema tambien: `v.lazy` es lo que
 // permite referirse a si mismo sin que TypeScript entre en bucle. El limite de
 // profundidad real lo pone el traductor; aqui solo se comprueba la forma.
@@ -23,11 +31,17 @@ export const filterNodeSchema: v.GenericSchema<FilterNode> = v.lazy(() =>
   v.union([
     v.object({
       type: v.literal("and"),
-      children: v.array(filterNodeSchema),
+      children: v.pipe(
+        v.array(filterNodeSchema),
+        v.maxLength(MAX_CHILDREN_PER_GROUP),
+      ),
     }),
     v.object({
       type: v.literal("or"),
-      children: v.array(filterNodeSchema),
+      children: v.pipe(
+        v.array(filterNodeSchema),
+        v.maxLength(MAX_CHILDREN_PER_GROUP),
+      ),
     }),
     v.object({
       type: v.literal("not"),
@@ -36,7 +50,7 @@ export const filterNodeSchema: v.GenericSchema<FilterNode> = v.lazy(() =>
     v.object({
       type: v.literal("condition"),
       field: v.pipe(v.string(), v.minLength(1), v.maxLength(120)),
-      operator: v.picklist(OPERATORS),
+      operator: v.picklist(FILTER_OPERATORS),
       value: v.optional(v.unknown()),
     }),
   ]),

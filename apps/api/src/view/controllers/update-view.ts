@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { viewTable } from "../../database/schema";
+import { publishEvent } from "../../events";
 
 async function updateView({
   id,
@@ -52,6 +53,16 @@ async function updateView({
   if (!updated) {
     throw new HTTPException(404, { message: "View not found" });
   }
+
+  // Una vista compartida es estado visible para el resto del espacio: sin este
+  // evento, quien la comparte se la tiene que anunciar por chat, porque
+  // `["views", projectId]` no tiene refresco automatico y el cliente global
+  // lleva `refetchOnMount:false`.
+  await publishEvent("view.changed", {
+    projectId: updated.projectId,
+    viewId: updated.id,
+    userId: updated.createdBy,
+  });
 
   return updated;
 }

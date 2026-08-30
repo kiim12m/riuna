@@ -131,6 +131,33 @@ export async function hasWorkspacePermission(
   return Boolean(statements && satisfies(statements, permissions));
 }
 
+/**
+ * Comprueba **solo** el alcance de la clave de API, sin mirar el rol.
+ *
+ * `requireWorkspacePermission` es el unico sitio donde se comprobaba el alcance
+ * de una clave, asi que una ruta que se gobierne por otra cosa —las vistas, que
+ * van por propiedad y no por rol (ADR 015)— apagaba de paso esa comprobacion:
+ * una clave emitida para un script de informes, con alcance `task:["read"]`,
+ * podia crear, compartir y borrar vistas.
+ *
+ * Una clave sin `permissions` explicitos pasa, que es como se comportan las
+ * claves sin alcance acotado. Los roles no se tocan: esto no excluye a nadie
+ * que este usando la aplicacion con su sesion.
+ */
+export function requireApiKeyScope(permissions: PermissionMap) {
+  return async (c: Context, next: Next) => {
+    const apiKey = c.get("apiKey") as
+      | { permissions?: Record<string, string[]> | null }
+      | undefined;
+
+    if (apiKey?.permissions && !satisfies(apiKey.permissions, permissions)) {
+      throw new HTTPException(403, { message: "Insufficient API key scope" });
+    }
+
+    return next();
+  };
+}
+
 export function requireWorkspacePermission(permissions: PermissionMap) {
   return async (c: Context, next: Next) => {
     if (!c.get("workspaceId")) {

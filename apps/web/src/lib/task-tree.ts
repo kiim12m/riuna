@@ -62,6 +62,41 @@ export function buildTaskTree(tasks: Task[]): TaskTreeNode[] {
     assignDepth(root, 0);
   }
 
+  // Un ciclo no tiene raiz: si `A` cuelga de `B` y `B` de `A`, los dos
+  // encuentran padre y ninguno entra en `roots`, asi que la rama entera
+  // desaparecia de la vista —sin error, sin hueco, sin aviso— y el proyecto
+  // parecia tener menos tareas de las que tiene.
+  //
+  // No deberia pasar: la base lo impide con `lockProjectTree` y las dos CHECK.
+  // Pero el propio repositorio sabe que es un estado alcanzable —la migracion
+  // 0048 dedica un WITH RECURSIVE a romper ciclos heredados— y perder filas en
+  // silencio es la peor forma de reaccionar. Se promueven a raiz.
+  const reachable = new Set<string>();
+  const markReachable = (node: TaskTreeNode) => {
+    if (reachable.has(node.task.id)) return;
+    reachable.add(node.task.id);
+    for (const child of node.children) markReachable(child);
+  };
+  for (const root of roots) markReachable(root);
+
+  if (reachable.size < nodes.size) {
+    for (const node of nodes.values()) {
+      if (reachable.has(node.task.id)) continue;
+      // Se corta el ciclo por aqui: deja de colgar de nadie y pasa a raiz.
+      const parent = node.task.parentId
+        ? nodes.get(node.task.parentId)
+        : undefined;
+      if (parent) {
+        parent.children = parent.children.filter((child) => child !== node);
+      }
+      roots.push(node);
+      assignDepth(node, 0);
+      markReachable(node);
+    }
+
+    roots.sort((a, b) => comparePosition(a.task, b.task));
+  }
+
   return roots;
 }
 

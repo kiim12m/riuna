@@ -139,14 +139,27 @@ function FilterBar({
               (field?.options ? (
                 <Select
                   value={
-                    typeof condition.value === "string" ? condition.value : ""
+                    typeof condition.value === "boolean"
+                      ? String(condition.value)
+                      : typeof condition.value === "string"
+                        ? condition.value
+                        : ""
                   }
-                  onValueChange={(next) => update(index, { value: next ?? "" })}
+                  onValueChange={(next) =>
+                    update(index, {
+                      // Una casilla se compara con un booleano de verdad: el
+                      // motor rechaza la cadena "true" con un 400.
+                      value:
+                        field.valueType === "boolean"
+                          ? next === "true"
+                          : (next ?? ""),
+                    })
+                  }
                 >
                   <SelectTrigger className="h-6 border-none bg-transparent px-1 text-xs shadow-none">
                     <SelectValue>
                       {field.options.find(
-                        (option) => option.value === condition.value,
+                        (option) => option.value === String(condition.value),
                       )?.label ?? "—"}
                     </SelectValue>
                   </SelectTrigger>

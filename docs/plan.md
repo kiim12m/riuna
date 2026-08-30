@@ -15,13 +15,14 @@
 | 2 — Árbol de tareas y épicas | 4 | **Cerrada** — deuda abierta (ver abajo) |
 | 3 — Campos personalizados | 4 | **Cerrada** — deuda abierta (ver abajo) |
 | 4 — Motor de vistas y vista Tabla | 4 | **Cerrada** — deuda abierta (ver abajo) |
+| 4.5 — Saneamiento | 5 | **Cerrada** — deuda abierta declarada (ver abajo) |
 | 5 — Importación y exportación | 2 | Pendiente |
-| **Subtotal: Riuna diferencial** | **18** | |
+| **Subtotal: Riuna diferencial** | **23** | |
 | 6 — Ejecución y productividad personal | 3 | Pendiente |
 | 7 — Dashboards, informes y objetivos | 3 | Pendiente |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
-| **Total Bloque A** | **29** | |
+| **Total Bloque A** | **34** | |
 
 **Estimación honesta:** 29 semanas nominales a ~8 h/semana son **8-11 meses**
 reales para cerrar el Bloque A. La ventaja del fork no está en la fecha final,
@@ -453,6 +454,166 @@ de escribirlas.
 épica, guardas la vista, la compartes, y el mismo filtro funciona en tablero,
 calendario y gantt.
 
+### Fase 4.5 — Saneamiento · **cerrada**
+
+*No estaba en el plan. Sale de mirar las cuatro fases cerradas en conjunto, que
+es algo que nadie había hecho: cada una documentó su deuda desde dentro.*
+
+**38 problemas, 13 graves**, casi ninguno recogido hasta ahora. No son fallos de
+diseño de las fases: son **huecos entre superficies** —lo que este documento
+llama «seguir un cambio hasta el final»— y **carreras que solo aparecen con más
+de una persona a la vez**, que es justo lo que el dogfooding de la Fase 1
+habilitó.
+
+**Lo que pierde datos** ✔:
+- Cuatro caminos escribían `assignee_id` sin tocar `task_assignee`. El conjunto
+  divergía, los filtros por asignados no veían esas tareas, y MCP podía borrar
+  una asignación que la interfaz restauraba sola después.
+- **Dos reparentados concurrentes creaban un ciclo `A→B→A`** con las dos `CHECK`
+  satisfechas, y las dos ramas desaparecían de la vista. Reproducido: ambas
+  peticiones devolvían 200. Cerrado con un cerrojo por proyecto en los cuatro
+  escritores del árbol, que ahora leen dentro de su transacción
+  ([ADR 016](adr/016-cerrojo-de-arbol-por-proyecto.md)).
+- `moveTask` —la única operación que cruza la frontera de proyecto, y no tenía
+  **ninguna** prueba— se llevaba épicas ajenas, aplanaba el estado de toda la
+  rama (lo terminado se reabría, lo archivado se desarchivaba), ignoraba el
+  límite de profundidad del destino y arrastraba campos del proyecto de origen.
+- La cascada de cierre desarchivaba descendientes.
+- Los campos personalizados se leían, fundían y reescribían sin transacción:
+  tabular entre dos celdas de la vista Tabla podía perder el valor anterior.
+
+**Filtros que devolvían la respuesta equivocada** ✔: las fechas de campo
+personalizado se comparaban como texto contra un instante serializado —`eq` no
+casaba nunca, `neq` casaba siempre—; archivar un campo devolvía 400 en el
+listado **entero** para cualquier vista guardada que lo filtrase; un filtro de
+pertenencia sin valor generaba `IN ()` y un **500**; `isEmpty` sobre una columna
+de texto no encontraba nada; y una casilla no se podía filtrar desde la
+interfaz.
+
+**Seguridad** ✔: el endpoint de proyecto público **sin autenticar** devolvía
+`custom_fields` —donde la ADR 013 pone «Presupuesto» y «Cliente»—, épicas,
+equipo, estimación y la forma del árbol, porque reutilizaba `getTasks` y las
+Fases 2 y 3 le añadieron campos sin revisar quién más lo llamaba. Una clave de
+API de solo lectura podía crear y compartir vistas. Y el dominio sintético de
+las cuentas locales no estaba reservado en el registro.
+
+**Eventos que no escuchaba nadie** ✔: `task.assignees_changed` —el camino que usa
+la interfaz principal— tenía **cero suscriptores**: añadir a alguien a una tarea
+no le llegaba por ningún canal. Asignar a un equipo tampoco avisaba a sus
+miembros, que es literalmente el requisito que motivó la Fase 1. Y tres cambios
+de estado no dejaban rastro en la actividad; la reasignación era además una
+**regresión** respecto a Kaneo.
+
+**Rendimiento, medido por primera vez** ✔. Con el banco de 50.000 tareas y
+árboles de 5 niveles que el plan pide desde la Fase 2:
+
+| Consulta | Antes | Después |
+|---|---|---|
+| Agregados del árbol (cada carga de vista) | **6.769 ms** | **36 ms** |
+| Filtro «con subtareas» | **28.313 ms** | **41 ms** |
+| Importar 5.000 filas | **33,0 s** | **7,1 s** |
+
+Y de punta a punta, con **50.000 tareas en un solo proyecto**, que es el
+escenario que fija el presupuesto:
+
+| Petición | Antes de esta fase | Después |
+|---|---|---|
+| Listado paginado (100 filas) | — | **121 ms** ✔ |
+| Listado paginado con filtro | — | **160 ms** ✔ |
+| Listado con filtro, sin paginar | — | 177 ms ✔ |
+| Listado con filtro + subtareas | — | 308 ms |
+| **Listado completo sin filtro** | — | **1.750 ms** ✘ |
+
+**El servidor cumple el presupuesto cuando se le pide una página.** Lo que no
+cumple es devolver el proyecto entero, que es justo lo que el cliente le pide
+siempre. Esa es ahora la única frase que resume lo que falta.
+
+Medir dio además un tercer hallazgo que no estaba en la auditoría: paginar a
+100 filas solo bajaba de 1.532 ms a 286 ms, porque **242 ms eran fijos** —los
+agregados se calculaban para el proyecto entero aunque la respuesta llevara
+cien filas—. Acotados a las tareas devueltas, esa petición pasó de 286 a
+121 ms. Sin el banco de pruebas, paginar habría parecido no servir de nada.
+
+Los dos primeros eran el mismo error: unir por prefijo de `path` con un patrón
+que depende de la fila externa, que ningún índice puede servir. Los ancestros de
+una tarea son los segmentos de su propio camino, así que la unión se hace por
+igualdad de ids. Los agregados pasaron de 38,2 millones de comparaciones
+descartadas a ninguna, y el filtro dejó de reejecutar un subplan 9.519 veces.
+
+**Un hallazgo se refutó al medirlo**: el índice `(project_id, position)` que la
+auditoría proponía para el tablero. El planificador no lo usa —prefiere el
+barrido por `project_id` y una ordenación en memoria— y el tiempo es idéntico
+(11,9 ms frente a 11,7 ms). No se añade. Es exactamente para esto que el banco
+de pruebas hacía falta.
+
+**Despliegue** ✔: las migraciones 0045-0050 corren en una sola transacción que
+deja `task` bajo `ACCESS EXCLUSIVE`, y el chart no tenía `startupProbe`: en una
+instalación con datos, Kubernetes mataba el pod a mitad de migración y entraba
+en CrashLoopBackOff. Añadidos `startupProbe`, cerrojo consultivo alrededor de
+`migrate()` y `lock_timeout`. Documentadas las 17 variables de entorno que la
+API leía y no estaban en ningún sitio, con una guarda en CI que impide que se
+repita.
+
+**Catalán** ✔: retirado de `supportedLocales`. Tenía las 1.879 claves pero solo
+250 valores (13,3%) traducidos de verdad; el resto era español copiado, y la
+paridad de claves lo disimulaba. Un navegador en catalán cae al español, que es
+lo que ya veía, pero sin la promesa falsa.
+
+**Prerrequisitos de la Fase 5** ✔: creada la tabla `external_ref`, que
+`AGENTS.md` daba por hecha y no existía —`import-tasks` no tenía idempotencia de
+ninguna clase—, y añadido el índice único que le faltaba a `external_link` desde
+la 0009, con la limpieza previa de duplicados que exige una instalación con
+datos.
+
+**Deuda abierta de la Fase 4.5**, declarada a sabiendas:
+
+- **Las vistas no paginan, y se cierra la fase igual.** El cliente no manda
+  `page` ni `limit`, así que cada carga trae el proyecto entero. La decisión se
+  tomó con la curva medida delante:
+
+  | Tareas en un proyecto | Listado sin filtro | |
+  |---|---|---|
+  | 500 | 41 ms | ✔ |
+  | 2.000 | 89 ms | ✔ |
+  | 5.000 | 215 ms | ✔ |
+  | 10.000 | 469 ms | ✘ |
+  | 50.000 | 1.547 ms | ✘ |
+
+  **El presupuesto se cruza en torno a las 6.500 tareas en un mismo proyecto.**
+  Por debajo de eso no hay problema, y llegar ahí a este ritmo lleva años.
+  Paginar de verdad toca las cinco vistas y cambia listas infinitas por
+  paginadas: es una decisión de producto, no un arreglo, y no se toma a las
+  seis semanas de una fase de saneamiento.
+
+  Lo que sí se ha hecho es que el límite **avise solo** en vez de descubrirse
+  como lentitud: `ProjectSizeWarning` sale por encima de 5.000 tareas en el
+  tablero, la lista y la vista Tabla. El caso a vigilar es la propia Fase 5,
+  cuyo criterio de aceptación —importar 5.000 filas— deja un proyecto justo en
+  el borde. La Fase 9 lo retoma si hace falta.
+
+- **`dueDate eq <día>` sobre columnas `timestamp` sigue comparando un
+  instante.** El caso grave —los campos personalizados— está arreglado. Este
+  exige decidir en qué zona horaria vive «un día», que es otra decisión de
+  producto.
+
+- **Los índices de rango sobre `custom_fields`.** El envoltorio `CASE` que
+  protege del tipo equivocado impide que un índice de expresión llegue a usarse
+  ([ADR 013](adr/013-campos-personalizados.md)). Medido: `Presupuesto > 1000` es
+  un barrido de 12 ms sobre 10.000 tareas, así que no corre prisa.
+
+- **Las pruebas de componente del web** no arrancan en el contenedor de
+  desarrollo: los workers de jsdom caducan al iniciarse. Todo lo que sí arranca
+  pasa, y CI las ejecuta enteras.
+- **`dueDate eq <día>` sigue comparando un instante.** Arreglado el caso de los
+  campos personalizados, que era el grave; el de las columnas `timestamp` exige
+  decidir en qué zona horaria vive un «día», y eso es una decisión de producto.
+- **Los índices de rango sobre `custom_fields`.** El envoltorio `CASE` que
+  protege del tipo equivocado impide que un índice de expresión llegue a usarse.
+  Medido: `Presupuesto > 1000` es un barrido, pero de 12 ms sobre 10.000 tareas,
+  así que no es urgente.
+- **Las pruebas de componente del web** no arrancan en el contenedor de
+  desarrollo (los workers de jsdom caducan). Corren en CI.
+
 ### Fase 5 — Importación y exportación (≈2 semanas)
 Generalizar los controladores existentes a **CSV y Excel** con mapeo de
 columnas, creación automática de campos personalizados e idempotencia vía
@@ -573,11 +734,29 @@ destructiva.
 
 ## Siguiente paso
 
-Fase 5: la importación y exportación en CSV y Excel con mapeo de columnas,
-creación automática de campos personalizados e idempotencia vía `external_ref`,
-preservando jerarquía y épicas en los dos sentidos. La exportación a Excel de
-SERVITEC ([ADR 012](adr/012-exportacion-a-excel.md)) entra como caso de prueba
-del motor genérico.
+La **Fase 5**: importación y exportación en CSV y Excel con mapeo de
+columnas, creación automática de campos personalizados e idempotencia vía
+`external_ref` —que ya existe—, preservando jerarquía y épicas en los dos
+sentidos. La exportación a Excel de SERVITEC
+([ADR 012](adr/012-exportacion-a-excel.md)) entra como caso de prueba del motor
+genérico.
 
-Antes de eso, o en paralelo, queda pendiente de decidir cuándo migrar Tablero,
-Lista y Backlog al motor de filtros. No bloquea la Fase 5.
+Tres cosas que la Fase 4.5 dejó averiguadas y que la Fase 5 necesita:
+
+- **No hace falta dependencia nueva.** `exceljs@4.4.0` ya es dependencia de
+  producción y lee `.xlsx` (`Xlsx.load(buffer)`) y CSV (`Csv.read`), además de
+  escribir. Dos avisos: `load()` carga el libro entero en memoria —hay que
+  limitar el tamaño de subida antes de parsear— y `exceljs` no publica desde
+  2023.
+- **El formato no se está generalizando: se está definiendo.** Hoy
+  exportar→importar **pierde las etiquetas en silencio** (el export las emite y
+  el validador del import las descarta) y no sabe nada de jerarquía, épicas,
+  campos personalizados, estimación, equipo ni asignados múltiples.
+- **`packages/planka-import` no aporta lo que hace falta.** Está vivo y bien
+  probado (5 ficheros, 758 líneas), pero habla con Riuna por HTTP y no es
+  idempotente por diseño. Lo aprovechable son unas 30 líneas de `mapping.ts`:
+  la resolución de colisiones de slug, que es el problema de «mapeo de
+  columnas» del enunciado.
+
+Sigue pendiente de decidir cuándo migrar Tablero, Lista y Backlog al motor de
+filtros. No bloquea la Fase 5.

@@ -4,6 +4,17 @@ export type ProjectBroadcastMessage = {
   taskId?: string;
   sourceTaskId?: string;
   targetTaskId?: string;
+  /**
+   * Los dos padres de un reparentado. Su agregado —progreso, fechas, recuento
+   * de hijas— cambia aunque la tarea que se movio sea otra, y esa consulta no
+   * tiene refresco automatico en el cliente.
+   *
+   * Al anadir cualquier clave aqui hay que anadirla tambien a
+   * `broadcastMessageSchema` de `redis-broadcast-adapter.ts`, que es un
+   * `v.object` y descarta lo que no declare.
+   */
+  oldParentId?: string | null;
+  newParentId?: string | null;
 };
 
 export type BroadcastMessage = {

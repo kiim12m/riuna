@@ -37,6 +37,20 @@ jobs:
       - name: Run Biome
         run: pnpm exec biome ci .
 
+      # Ninguno de los dos corria en CI hasta la Fase 4.5: la paridad de
+      # idiomas se comprobaba a mano y las variables de entorno no se
+      # comprobaban en absoluto, de ahi las 17 que la auditoria encontro sin
+      # documentar.
+      #
+      # `i18n:report` sigue fuera a proposito: sale con codigo 1 por 67 claves
+      # dinamicas legitimas, asi que no puede ser una puerta hasta que
+      # distinga.
+      - name: Check locale parity
+        run: pnpm i18n:check
+
+      - name: Check documented environment variables
+        run: pnpm check:env
+
   typecheck:
     runs-on: ubuntu-24.04
     steps:

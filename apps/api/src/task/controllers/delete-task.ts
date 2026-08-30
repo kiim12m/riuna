@@ -6,6 +6,7 @@ import { publishEvent } from "../../events";
 import { deleteS3Keys, getTaskAssetKeys } from "../../storage/cleanup-assets";
 import { subtreePattern, TASK_PATH_SEPARATOR } from "../tree";
 import getTask from "./get-task";
+import { lockProjectTree } from "./lock-project-tree";
 
 async function deleteTask(taskId: string, currentUserId: string) {
   const task = await getTask(taskId);
@@ -27,18 +28,25 @@ async function deleteTask(taskId: string, currentUserId: string) {
   // el subarbol seria irreversible y desproporcionado para un boton que dice
   // "borrar tarea"; dejarlas huerfanas perderia la estructura. Promoverlas
   // conserva las dos cosas.
-  const [node] = await db
-    .select({
-      projectId: taskTable.projectId,
-      parentId: taskTable.parentId,
-      path: taskTable.path,
-      depth: taskTable.depth,
-    })
-    .from(taskTable)
-    .where(eq(taskTable.id, taskId))
-    .limit(1);
-
   const deletedTask = await db.transaction(async (tx) => {
+    await lockProjectTree(tx, task.projectId);
+
+    // La rama se lee ya con el cerrojo tomado: leerla antes dejaba el
+    // `UPDATE ... WHERE path LIKE` sin casar nada si el ancestro se habia
+    // movido por debajo, mientras que el `UPDATE ... WHERE parent_id` si
+    // casaba, dejando hijas con un `path` que contiene el id de una tarea ya
+    // borrada. Ver `lockProjectTree`.
+    const [node] = await tx
+      .select({
+        projectId: taskTable.projectId,
+        parentId: taskTable.parentId,
+        path: taskTable.path,
+        depth: taskTable.depth,
+      })
+      .from(taskTable)
+      .where(eq(taskTable.id, taskId))
+      .limit(1);
+
     if (node) {
       const newParent = node.parentId
         ? await tx.query.taskTable.findFirst({

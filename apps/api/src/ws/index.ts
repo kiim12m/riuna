@@ -264,6 +264,8 @@ type TaskEvent = {
   taskId: string;
   sourceTaskId: string | undefined;
   targetTaskId: string | undefined;
+  oldParentId?: string | null;
+  newParentId?: string | null;
 };
 
 const taskUpdateEvents = [
@@ -276,6 +278,15 @@ const taskUpdateEvents = [
   "task.priority_changed",
   "task.unassigned",
   "task.assignee_changed",
+  // Los tres que faltaban. `assignees_changed` es el que emite la via de
+  // asignacion multiple —la que usa la interfaz principal desde la Fase 1— y no
+  // lo escuchaba **nadie**: ni el WebSocket, ni la actividad, ni las
+  // notificaciones, ni las integraciones. Anadir a alguien a una tarea no le
+  // llegaba por ningun canal. Lo mismo con la asignacion a un equipo, que es
+  // justo el requisito que motivo esa fase.
+  "task.assignees_changed",
+  "task.team_changed",
+  "task.team_unassigned",
   "task.due_date_changed",
   "task.title_changed",
   "task.description_changed",
@@ -329,6 +340,22 @@ subscribeToEvent<{
   broadcastToProject(
     projectId,
     { type: "EPIC_UPDATED", projectId, taskId: "" },
+    initiatorId,
+  );
+});
+
+subscribeToEvent<{
+  projectId: string;
+  viewId: string;
+  userId: string;
+  initiatorId?: string;
+}>("view.changed", async (data) => {
+  const { projectId, initiatorId } = data;
+  if (!projectId) return;
+
+  broadcastToProject(
+    projectId,
+    { type: "VIEW_UPDATED", projectId, taskId: "" },
     initiatorId,
   );
 });
@@ -435,6 +462,9 @@ for (const eventName of taskUpdateEvents) {
         taskId: taskId,
         sourceTaskId: data.sourceTaskId,
         targetTaskId: data.targetTaskId,
+        // Solo los trae `task.parent_changed`; en los demas van indefinidos.
+        oldParentId: data.oldParentId,
+        newParentId: data.newParentId,
       },
       initiatorId,
     );

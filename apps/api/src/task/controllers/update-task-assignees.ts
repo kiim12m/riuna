@@ -44,6 +44,11 @@ async function updateTaskAssignees({
     }
   }
 
+  // Quien ya estaba, para poder avisar solo a los que entran. Sin esto habria
+  // que notificar al conjunto entero en cada cambio, y quitar a una persona
+  // pingaria a las otras cuatro.
+  const previous = new Set(await getAssigneeIds(id));
+
   await replaceAssignees(id, requested);
 
   // El primero de la lista queda como responsable principal en
@@ -77,6 +82,8 @@ async function updateTaskAssignees({
     projectId: updatedTask.projectId,
     userId: currentUserId,
     assigneeIds,
+    addedIds: assigneeIds.filter((userId) => !previous.has(userId)),
+    removedIds: [...previous].filter((userId) => !assigneeIds.includes(userId)),
     assigneeNames: names.map((user) => user.name),
     title: updatedTask.title,
     type: "assignees_changed",

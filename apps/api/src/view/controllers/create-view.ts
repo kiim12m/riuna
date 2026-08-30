@@ -2,6 +2,7 @@ import { and, eq, isNull, max } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { viewTable } from "../../database/schema";
+import { publishEvent } from "../../events";
 
 const VIEW_TYPES = ["table", "board", "list", "calendar", "gantt"] as const;
 export type ViewType = (typeof VIEW_TYPES)[number];
@@ -55,6 +56,16 @@ async function createView({
   if (!view) {
     throw new HTTPException(500, { message: "Failed to create view" });
   }
+
+  // Una vista compartida es estado visible para el resto del espacio: sin este
+  // evento, quien la comparte se la tiene que anunciar por chat, porque
+  // `["views", projectId]` no tiene refresco automatico y el cliente global
+  // lleva `refetchOnMount:false`.
+  await publishEvent("view.changed", {
+    projectId: view.projectId,
+    viewId: view.id,
+    userId: view.createdBy,
+  });
 
   return view;
 }

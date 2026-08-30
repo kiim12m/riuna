@@ -46,10 +46,30 @@ Un **registro de descriptores** más un **traductor único** a SQL de Drizzle.
 
 ## Consecuencia
 
+*(Escrita a mitad de la Fase 4. La vista Tabla, el Calendario y el Gantt se
+conectaron después; Tablero, Lista y Backlog siguen filtrando en el cliente.)*
+
 El motor existe y se ejecuta contra Postgres, pero **la interfaz todavía no lo
 usa**: la vista Tabla sigue trayendo el proyecto entero y filtrando nada.
 Conectar la UI, y con ella Tablero, Lista, Calendario y Gantt, es el grueso que
 queda de la fase.
+
+**Corrección de la Fase 4.5.** Tres afirmaciones de esta ADR resultaron
+incompletas al medirlas:
+
+- El punto 3 —el `CASE` con `jsonb_typeof`— es correcto y necesario, pero tiene
+  un coste que no estaba escrito: **impide que un índice de expresión llegue a
+  usarse**, porque Postgres empareja índices de expresión por igualdad
+  estructural y `CASE WHEN ... THEN (...)::numeric END` no es `(...)::numeric`.
+  Quien intente cerrar la deuda de «GIN no acelera los rangos» creando el índice
+  obvio verá que `EXPLAIN` sigue mostrando un barrido, sin causa visible.
+- Las fechas de campo personalizado **no se comparaban bien**: la expresión era
+  texto y el valor viajaba como `Date`, que node-postgres serializa como
+  instante en la hora local del servidor. `eq` no casaba nunca y `neq` casaba
+  siempre. Arreglado normalizando a `YYYY-MM-DD` en el camino JSONB.
+- El alcance «con subtareas» era un `EXISTS` correlacionado dentro de un `OR`,
+  que Postgres no convierte en semi-join: **28 segundos** con 10.000 tareas.
+  Reescrito uniendo por los segmentos del `path` en vez de por prefijo: 41 ms.
 
 `GIN` **no acelera los rangos**, que es justo el ejemplo estrella del plan
 (`Presupuesto > 1000`). Serviría un índice de expresión por campo, y se decide

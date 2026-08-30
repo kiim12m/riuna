@@ -14,6 +14,15 @@
 
 **Por qué no las alternativas.** Sustituir `assignee_id` por la tabla era el diseño limpio y habría obligado a tocar todos los consumidores heredados de golpe, que es justo el tipo de reescritura que un fork de una persona no se puede permitir. Tratar el equipo como un asignado más —una fila en `task_assignee` apuntando a un equipo— ahorraba una columna y perdía la distinción que hace útil el reparto por departamento: a quién le toca *ahora* frente a de quién *es* el trabajo. Un array en la propia tarea no habría podido consultarse ni indexarse como una relación.
 
+**Corrección de la Fase 4.5.** Esta ADR daba por hecho que `task_assignee` y
+`task.assignee_id` no podían divergir porque un solo módulo los escribía. No era
+cierto: `createTask`, `updateTask`, `bulkUpdateTasks` e `importTasks` escribían
+la columna a pelo. El conjunto quedaba vacío con la tarjeta mostrando un
+responsable, un filtro por `assignees` no encontraba esas tareas, y por MCP se
+podía perder una asignación que la interfaz restauraba sola al abrir el
+selector. Los cuatro pasan ahora por `syncPrimaryAssignee`, dentro de sus
+transacciones, con un caso de integración por vía.
+
 **Consecuencias.**
 
 - **Hay dos verdades sobre quién tiene la tarea y hay que mantenerlas juntas.** El precio de no reescribir lo heredado. Está acotado a un módulo, y los tests de integración de la fase cubren que la vía heredada mantenga la tabla al día.

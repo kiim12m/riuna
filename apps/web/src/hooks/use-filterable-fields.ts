@@ -80,9 +80,22 @@ export function useFilterableFields(projectId: string, workspaceId: string) {
       const valueType = CUSTOM_FIELD_VALUE_TYPES[definition.type];
       if (!valueType) return [];
 
-      const options = Array.isArray(definition.config?.options)
-        ? (definition.config.options as Array<{ value: string; label: string }>)
-        : undefined;
+      // Una casilla no declara opciones —su configuracion esta vacia— pero sin
+      // ellas la barra caia al campo de texto libre, mandaba la cadena "true" y
+      // el motor la rechazaba con un 400: no habia ningun valor tecleable que
+      // funcionase. Se las damos aqui.
+      const options =
+        valueType === "boolean"
+          ? [
+              { value: "true", label: t("common:boolean.yes") },
+              { value: "false", label: t("common:boolean.no") },
+            ]
+          : Array.isArray(definition.config?.options)
+            ? (definition.config.options as Array<{
+                value: string;
+                label: string;
+              }>)
+            : undefined;
 
       return [
         {

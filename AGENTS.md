@@ -37,8 +37,9 @@ These are additions on top of everything above, not replacements.
 - **Complexity budget.** Rule of three before abstracting. Controllers stay under ~150 lines. No new dependency without a one-line justification. A new column only if it is filtered, sorted, grouped, or a foreign key — everything else belongs in `custom_fields`.
 - **Follow Kaneo's conventions, do not introduce competing ones.** A fork with two coexisting styles ages worse than one with an imperfect but consistent style.
 - **Additive over invasive.** New capability arrives as new tables and new modules alongside the inherited ones (`task_assignee`, `epic`, `field_definition`, `view`, `external_ref`), not as rewrites of the existing schema — unless the roadmap explicitly calls for it, as the task tree does.
-- **Every import must be idempotent** through `external_ref`. Re-importing updates; it never duplicates.
-- **Performance budget.** Any new view paginates and answers under 300 ms p95 with 50,000 tasks, including deep trees. Check with `EXPLAIN`.
+- **Every import must be idempotent** through `external_ref`. Re-importing updates; it never duplicates. The table exists since Phase 4.5; the generic CSV/Excel importer that uses it is Phase 5, so `import-tasks` is *not* idempotent yet.
+- **Performance budget.** Any new view paginates and answers under 300 ms p95 with 50,000 tasks, including deep trees. Check with `EXPLAIN`. Seed the volume with `DATABASE_URL=…_bench pnpm --filter @riuna/api db:seed:volume`; the script refuses any database whose name does not end in `_bench` or `_test`. Reasoning about the expected plan is not measuring: Phase 4.5 confirmed two catastrophic queries this way *and refuted* a proposed index that the planner turned out not to use.
+- **Never join a tree by `path` prefix with a pattern that depends on the outer row** (`d.path LIKE a.path || '%'`). No index can serve it, and Postgres degenerates to a nested loop over every pair. The ancestors of a task are the segments of its own `path`, so join on id equality instead: `CROSS JOIN LATERAL unnest(string_to_array(trim(both '/' from d.path), '/'))`. Measured on 10,000 tasks: 6,769 ms → 36 ms.
 - **One ADR per structural decision** in `docs/adr/`, ten lines: context, decision, consequence.
 - **Product UI language is Spanish.** `i18n/en-US.json` remains the key source of truth; Spanish is the default locale.
 
@@ -77,6 +78,7 @@ Not every change touches every surface. Make the decision deliberately rather th
 - Use the client from `@riuna/libs`; do not create a parallel untyped request layer.
 - Define database schema in `apps/api/src/database/schema.ts` and relations in `apps/api/src/database/relations.ts`.
 - Generate migrations with `pnpm --filter @riuna/api db:generate`, inspect the SQL, and include it with the schema change.
+- **Inside a `sql` template, wrap arrays in `sql.param()`.** Drizzle expands a bare array into `($1, $2, …)` — which is what you want for `IN`, and silently wrong everywhere else: `${keys}::text[]` compiles to `($1, $2)::text[]`, and an empty array to `()`, a syntax error. It bit this codebase twice in one afternoon.
 - Prefer inferred TypeScript types and `type` over `interface` unless extension or declaration merging is required.
 - Comments should explain constraints or surprising decisions, not narrate code.
 

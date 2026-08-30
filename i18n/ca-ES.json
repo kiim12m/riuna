@@ -14,6 +14,10 @@
 			"filter": "Filtra",
 			"clearAllFilters": "Elimina tots els filtres"
 		},
+		"boolean": {
+			"yes": "Sí",
+			"no": "No"
+		},
 		"a11y": {
 			"toggleSidebar": "Mostra la barra lateral"
 		},
@@ -1512,6 +1516,10 @@
 	"activity": {
 		"assignedToSelf": "se ha asignado la tarea a sí mismo",
 		"assignedToTeam": "assignada la tasca a l'equip {{name}}",
+		"nestedUnderTask": "colgó la tarea de otra",
+		"promotedToRoot": "sacó la tarea al primer nivel",
+		"epicsUpdated": "cambió las épicas de la tarea",
+		"epicsCleared": "sacó la tarea de sus épicas",
 		"teamUnassigned": "treta la tasca del seu equip",
 		"unassigned": "desasignado la tarea",
 		"assignedTo": "asignada la tarea a {{name}}",
@@ -2167,6 +2175,9 @@
 				"saveFailed": "No se ha podido guardar la vista",
 				"delete": "Borrar esta vista"
 			}
+		},
+		"projectSize": {
+			"warning": "Este proyecto tiene {{count}} tareas. Las vistas las cargan todas, así que irán lentas. Filtra para acotar la lista."
 		}
 	},
 	"invitations": {

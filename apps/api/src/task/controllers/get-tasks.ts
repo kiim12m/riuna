@@ -160,9 +160,17 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     // El registro se construye con las definiciones que aplican al proyecto,
     // que es lo que hace que `custom.presupuesto` exista como campo filtrable
     // aqui y no en un proyecto que no lo haya definido.
+    //
+    // Se incluyen las archivadas. Archivar una definicion la retira de los
+    // formularios sin borrar los valores, que siguen en el JSONB y siguen
+    // siendo filtrables. Excluyendolas, archivar un campo convertia toda vista
+    // guardada que lo filtrase en un 400 **del listado entero** —no se caia la
+    // condicion, se caia la consulta— y dejaba la pantalla en blanco para todo
+    // el equipo, sin decir que campo sobraba.
     const definitions = await getFieldDefinitionsForProject(
       project.workspaceId,
       projectId,
+      true,
     );
 
     const filterSql = filterToSql(
@@ -172,22 +180,33 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
 
     if (filterSql) {
       if (options.treeScope === "withDescendants") {
-        // "Lo que casa, mas su rama". El filtro va dentro de su propia
-        // subconsulta, cuyo FROM es `task`: alli `"task"."x"` se resuelve
-        // contra esa copia y no contra la de fuera. En el nivel intermedio el
-        // FROM es `task ancestor`, asi que el `task.path` de en medio si
-        // apunta a la fila externa. Sin ese escalon habria que alias-ar el
-        // traductor entero.
+        // "Lo que casa, mas su rama".
+        //
+        // El filtro se evalua **una vez**, en su propia subconsulta cuyo FROM
+        // es `task`: alli `"task"."x"` se resuelve contra esa copia y no contra
+        // la de fuera.
+        //
+        // La pertenencia a la rama se resuelve por igualdad de ids y no por
+        // prefijo de `path`: los ancestros de una tarea son exactamente los
+        // segmentos de su propio camino, y los ids son unicos. La forma
+        // anterior —un `EXISTS` correlacionado dentro de un `OR`— Postgres no
+        // la puede convertir en semi-join, asi que la reejecutaba por cada fila
+        // candidata, con un `LIKE` de patron no constante dentro: medido sobre
+        // 10.000 tareas, el subplan corria 9.519 veces y la consulta tardaba
+        // **28 segundos**. Asi son 41 ms, y devuelve exactamente el mismo
+        // conjunto.
         conditions.push(
-          sql`(${filterSql} OR EXISTS (
-            SELECT 1 FROM ${taskTable} ancestor
-            WHERE ancestor.project_id = ${projectId}
-              AND ${taskTable.path} LIKE ancestor.path || '_%'
+          sql`${taskTable.id} IN (
+            SELECT d."id" FROM ${taskTable} d
+            CROSS JOIN LATERAL unnest(
+              string_to_array(trim(both '/' from d."path"), '/')
+            ) AS ancestor(id)
+            WHERE d."project_id" = ${projectId}
               AND ancestor.id IN (
                 SELECT id FROM ${taskTable}
                 WHERE ${taskTable.projectId} = ${projectId} AND ${filterSql}
               )
-          ))`,
+          )`,
         );
       } else {
         conditions.push(filterSql);
@@ -207,12 +226,23 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     options.sortOrder ?? "asc",
   );
 
-  const [taskCount] = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(taskTable)
-    .where(whereClause);
-
-  const total = Number(taskCount?.count ?? 0);
+  // La cuenta solo hace falta cuando se pagina: sin paginacion la consulta
+  // principal va sin LIMIT, asi que el total es el numero de filas devueltas.
+  //
+  // Se ejecutaba siempre, y como el navegador nunca manda `page` ni `limit`,
+  // eso era el 100 % de las peticiones evaluando dos veces la misma clausula
+  // WHERE —filtro de campo personalizado y alcance de arbol incluidos— para un
+  // numero que ya se tenia contando el array.
+  const total = usePagination
+    ? Number(
+        (
+          await db
+            .select({ count: sql<number>`count(*)` })
+            .from(taskTable)
+            .where(whereClause)
+        )[0]?.count ?? 0,
+      )
+    : null;
 
   const taskSelection = {
     id: taskTable.id,
@@ -318,7 +348,12 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
   }
 
   const [aggregates, epicsByTask] = await Promise.all([
-    getProjectSubtreeAggregates(projectId),
+    // Solo las tareas que se van a devolver: el agregado de las demas no lo
+    // pinta nadie, y calcularlo era el coste fijo mas grande de la peticion.
+    getProjectSubtreeAggregates(
+      projectId,
+      paginatedTasks.map((task) => task.id),
+    ),
     getEpicsByTask(projectId),
   ]);
 
@@ -378,15 +413,15 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     },
     pagination: usePagination
       ? {
-          total,
+          total: total ?? 0,
           page,
           pageSize,
-          totalPages: Math.max(1, Math.ceil(total / pageSize)),
+          totalPages: Math.max(1, Math.ceil((total ?? 0) / pageSize)),
         }
       : {
-          total,
+          total: paginatedTasks.length,
           page: 1,
-          pageSize: total,
+          pageSize: paginatedTasks.length,
           totalPages: 1,
         },
   };

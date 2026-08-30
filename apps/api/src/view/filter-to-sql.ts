@@ -159,17 +159,49 @@ function comparableExpression(descriptor: FieldDescriptor): SQL {
   }
 }
 
-function normalizeValue(valueType: ValueType, raw: unknown): unknown {
+/** El dia civil de una fecha, en el mismo `YYYY-MM-DD` que guarda el JSONB. */
+function toIsoDay(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * El valor de la comparacion, en la forma que espera el otro lado.
+ *
+ * Recibe el descriptor y no solo el tipo porque una fecha se compara de dos
+ * maneras distintas segun donde viva. En una columna `timestamp` se compara
+ * contra un `Date`. En el JSONB se guarda como texto `YYYY-MM-DD` —y asi la
+ * compara `jsonText`—, asi que mandar un `Date` era comparar texto contra el
+ * `2026-09-01T00:00:00.000+00:00` que node-postgres serializa: `eq` no casaba
+ * nunca, `neq` casaba siempre, y en un servidor fuera de UTC el rango entero
+ * se desplazaba un dia. Las pruebas no lo veian porque miraban el SQL generado
+ * y nunca los parametros.
+ */
+// La pertenencia nunca llega aqui: se compara por ids, no como valor.
+type ComparableDescriptor = Exclude<FieldDescriptor, { kind: "membership" }>;
+
+function normalizeValue(
+  descriptor: ComparableDescriptor,
+  raw: unknown,
+): unknown {
+  const valueType = descriptor.valueType;
+
   if (valueType === "date") {
-    if (raw instanceof Date) return raw;
-    if (typeof raw === "string" || typeof raw === "number") {
-      const date = new Date(raw);
-      if (Number.isNaN(date.getTime())) {
-        throw new FilterError(`"${String(raw)}" is not a valid date`);
-      }
-      return date;
+    const date =
+      raw instanceof Date
+        ? raw
+        : typeof raw === "string" || typeof raw === "number"
+          ? new Date(raw)
+          : null;
+
+    if (!date) {
+      throw new FilterError("A date filter needs a date");
     }
-    throw new FilterError("A date filter needs a date");
+
+    if (Number.isNaN(date.getTime())) {
+      throw new FilterError(`"${String(raw)}" is not a valid date`);
+    }
+
+    return descriptor.kind === "json" ? toIsoDay(date) : date;
   }
 
   if (valueType === "number") {
@@ -191,6 +223,24 @@ function normalizeValue(valueType: ValueType, raw: unknown): unknown {
   }
 
   return raw;
+}
+
+/**
+ * Los ids de un filtro de pertenencia, comprobados uno a uno.
+ *
+ * Era el unico camino que no normalizaba su valor. Como `value` es opcional en
+ * el esquema, un filtro sin el llegaba aqui como `[undefined]`, y drizzle
+ * omite los `undefined` al expandir un array: el resultado era `IN ()`, un
+ * error de sintaxis de Postgres, y por tanto un **500** en vez del 400 que
+ * corresponde a un filtro mal formado.
+ */
+function toIdList(values: unknown[]): string[] {
+  return values.map((value) => {
+    if (typeof value !== "string" || value === "") {
+      throw new FilterError("A membership filter needs one or more ids");
+    }
+    return value;
+  });
 }
 
 function toList(value: unknown): unknown[] {
@@ -247,11 +297,15 @@ function conditionToSql(
       return membershipExists(descriptor.relation);
     }
     if (node.operator === "eq" || node.operator === "in") {
-      const ids = node.operator === "eq" ? [node.value] : toList(node.value);
+      const ids = toIdList(
+        node.operator === "eq" ? [node.value] : toList(node.value),
+      );
       return membershipCondition(descriptor.relation, ids);
     }
     if (node.operator === "neq" || node.operator === "notIn") {
-      const ids = node.operator === "neq" ? [node.value] : toList(node.value);
+      const ids = toIdList(
+        node.operator === "neq" ? [node.value] : toList(node.value),
+      );
       return sql`NOT ${membershipCondition(descriptor.relation, ids)}`;
     }
     throw new FilterError(
@@ -302,20 +356,30 @@ function conditionToSql(
 
   const expression = comparableExpression(descriptor);
 
+  // Una columna de texto heredada guarda `''`, no NULL: `create-task` escribe
+  // `description: description || ""`. Con solo `IS NULL`, "sin descripcion" no
+  // devolvia ninguna tarea y "con descripcion" las devolvia todas.
+  const emptyIsAlsoBlank =
+    descriptor.kind === "column" && descriptor.valueType === "text";
+
   switch (node.operator) {
     case "isEmpty":
-      return sql`${expression} IS NULL`;
+      return emptyIsAlsoBlank
+        ? sql`(${expression} IS NULL OR ${expression} = '')`
+        : sql`${expression} IS NULL`;
     case "isNotEmpty":
-      return sql`${expression} IS NOT NULL`;
+      return emptyIsAlsoBlank
+        ? sql`(${expression} IS NOT NULL AND ${expression} <> '')`
+        : sql`${expression} IS NOT NULL`;
     case "in": {
       const values = toList(node.value).map((value) =>
-        normalizeValue(descriptor.valueType, value),
+        normalizeValue(descriptor, value),
       );
       return sql`${expression} IN ${values}`;
     }
     case "notIn": {
       const values = toList(node.value).map((value) =>
-        normalizeValue(descriptor.valueType, value),
+        normalizeValue(descriptor, value),
       );
       // `NOT IN` deja fuera las filas nulas, que casi nunca es lo que quien
       // escribe el filtro espera: "prioridad distinta de alta" deberia incluir
@@ -323,19 +387,19 @@ function conditionToSql(
       return sql`(${expression} IS NULL OR ${expression} NOT IN ${values})`;
     }
     case "contains": {
-      const value = normalizeValue(descriptor.valueType, node.value) as string;
+      const value = normalizeValue(descriptor, node.value) as string;
       return sql`${expression} ILIKE ${`%${escapeLike(value)}%`}`;
     }
     case "startsWith": {
-      const value = normalizeValue(descriptor.valueType, node.value) as string;
+      const value = normalizeValue(descriptor, node.value) as string;
       return sql`${expression} ILIKE ${`${escapeLike(value)}%`}`;
     }
     case "neq": {
-      const value = normalizeValue(descriptor.valueType, node.value);
+      const value = normalizeValue(descriptor, node.value);
       return sql`(${expression} IS NULL OR ${expression} <> ${value})`;
     }
     default: {
-      const value = normalizeValue(descriptor.valueType, node.value);
+      const value = normalizeValue(descriptor, node.value);
       const comparison = {
         eq: sql`=`,
         gt: sql`>`,
