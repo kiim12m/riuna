@@ -2,8 +2,8 @@ import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import {
+  activityTable,
   columnTable,
-  commentTable,
   projectTable,
   taskTable,
   workspaceTable,
@@ -105,17 +105,25 @@ async function exportWorkspaceTasks(workspaceId: string) {
 
   const taskIds = tasks.map((task) => task.id);
 
+  // Los comentarios viven en `activity` con `type = 'comment'`, no en la tabla
+  // `comment` heredada de Kaneo, que la aplicacion no escribe desde ninguna
+  // parte. Leer de `comment` dejaba la columna «Comentario» siempre vacia.
   const comments =
     taskIds.length > 0
       ? await db
           .select({
-            taskId: commentTable.taskId,
-            content: commentTable.content,
-            createdAt: commentTable.createdAt,
+            taskId: activityTable.taskId,
+            content: activityTable.content,
+            createdAt: activityTable.createdAt,
           })
-          .from(commentTable)
-          .where(inArray(commentTable.taskId, taskIds))
-          .orderBy(asc(commentTable.createdAt))
+          .from(activityTable)
+          .where(
+            and(
+              inArray(activityTable.taskId, taskIds),
+              eq(activityTable.type, "comment"),
+            ),
+          )
+          .orderBy(asc(activityTable.createdAt))
       : [];
 
   const commentsByTask = new Map<string, string[]>();

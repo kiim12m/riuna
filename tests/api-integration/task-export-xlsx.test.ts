@@ -286,15 +286,29 @@ describe("API integration: workspace tasks spreadsheet export", () => {
       number: 1,
     });
 
-    await db.insert(schema.commentTable).values([
+    // Los comentarios son filas de `activity` con `type = 'comment'`, que es lo
+    // que `createComment` escribe. La tabla `comment` heredada no la toca nadie.
+    await db.insert(schema.activityTable).values([
       {
         taskId: task.id,
+        type: "comment",
         userId: owner.user.id,
         content: "Revisada i **enviada** per corregir",
         createdAt: new Date("2026-08-05T09:00:00Z"),
       },
+      // Un evento del sistema entre medias: no es un comentario y no debe salir
+      // en la columna.
       {
         taskId: task.id,
+        type: "task.status_changed",
+        userId: owner.user.id,
+        content: null,
+        eventData: { oldStatus: "in-progress", newStatus: "done" },
+        createdAt: new Date("2026-08-05T12:00:00Z"),
+      },
+      {
+        taskId: task.id,
+        type: "comment",
         userId: owner.user.id,
         content: "Ok, pero falten pressupostos",
         createdAt: new Date("2026-08-06T09:00:00Z"),
