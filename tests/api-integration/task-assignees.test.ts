@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
+import { proposeMapping } from "../../apps/api/src/task/exchange/map-rows";
 import { mockAnonymousSession, mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
 import {
@@ -482,25 +483,36 @@ describe("API integration: multiple task assignees", () => {
       mockAuthenticatedSession(member.user);
       const { app } = createApp();
 
+      const headers = ["Título", "Estado", "Responsable"];
+      const content = `﻿${[headers, ["Importada", "To Do", member.user.email]]
+        .map((cells) => cells.join(","))
+        .join("\r\n")}\r\n`;
+
+      const form = new FormData();
+      form.append(
+        "file",
+        new File([content], "import.csv", { type: "text/csv" }),
+      );
+      form.append("mapping", JSON.stringify(proposeMapping(headers)));
+
       const response = await app.request(`/api/task/import/${project.id}`, {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          tasks: [
-            { title: "Importada", status: "to-do", userId: member.user.id },
-          ],
-        }),
+        body: form,
       });
 
       expect(response.status).toBe(200);
       const body = (await response.json()) as {
-        results: { tasks: { success: boolean; task: { id: string } }[] };
+        results: {
+          created: number;
+          rows: { outcome: string; taskId: string }[];
+        };
       };
 
-      const imported = body.results.tasks[0];
-      expect(imported.success).toBe(true);
+      expect(body.results.created).toBe(1);
+      const imported = body.results.rows[0];
+      expect(imported.outcome).toBe("created");
 
-      await expect(readAssignees(imported.task.id)).resolves.toEqual([
+      await expect(readAssignees(imported.taskId)).resolves.toEqual([
         member.user.id,
       ]);
     });

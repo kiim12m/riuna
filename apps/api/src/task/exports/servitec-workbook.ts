@@ -1,12 +1,15 @@
 import ExcelJS from "exceljs";
+import { toSheetDate } from "../exchange/sheet-dates";
 
 // The SERVITEC daily task board, reproduced from the hand-maintained
 // `Tareas- SERVITEC 2026.xlsx`: same sheet name, headers, legend row, column
 // widths, status dropdown and conditional colours, so the generated file drops
 // straight into the existing routine.
 //
-// Everything that describes the sheet lives here. The controller only supplies
-// rows.
+// This module only describes the sheet. The day-cutting conversion it first
+// needed —Excel's serial number comes off `getTime()` with no timezone
+// adjustment— now lives in the exchange engine (`exchange/sheet-dates.ts`,
+// ADR 017), which the generic exporter shares.
 
 export type ServitecEstado =
   | "Pendiente"
@@ -24,10 +27,6 @@ export type ServitecRow = {
 };
 
 const SHEET_NAME = "Full1";
-
-// The board is kept by a Spanish office, so days are cut in Madrid time rather
-// than in whatever timezone the container happens to run in.
-export const TIME_ZONE = "Europe/Madrid";
 
 const DATE_FORMAT = "dd/mm/yyyy";
 const FONT = { name: "Aptos Narrow", size: 11 } as const;
@@ -97,34 +96,6 @@ const TITLE_ROW = 1;
 const HEADER_ROW = 2;
 const LEGEND_ROW = 3;
 const FIRST_DATA_ROW = 4;
-
-const dateParts = new Intl.DateTimeFormat("en-CA", {
-  timeZone: TIME_ZONE,
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-});
-
-// Excel stores a day as a serial number, and ExcelJS derives it straight from
-// `getTime()` with no timezone adjustment. So the value has to be UTC midnight
-// of the day a reader in Madrid would name: that lands on a whole serial
-// number, and gives the same day whatever timezone the container runs in.
-function toSheetDate(value: Date | null): Date | null {
-  if (!value) return null;
-  const [year, month, day] = dateParts.format(value).split("-").map(Number);
-  if (!year || !month || !day) return null;
-  return new Date(Date.UTC(year, month - 1, day));
-}
-
-export function formatSheetDate(value: Date): string {
-  const [year, month, day] = dateParts.format(value).split("-");
-  return `${day}/${month}/${year}`;
-}
-
-// `en-CA` already formats as YYYY-MM-DD, which is what filenames want.
-export function formatSheetDateIso(value: Date): string {
-  return dateParts.format(value);
-}
 
 type WorksheetWithDataValidations = {
   dataValidations: {

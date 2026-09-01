@@ -12,7 +12,7 @@ import {
 } from "../tree";
 import { lockProjectTree } from "./lock-project-tree";
 
-type TaskNode = {
+export type TaskNode = {
   id: string;
   projectId: string;
   parentId: string | null;
@@ -20,7 +20,7 @@ type TaskNode = {
   depth: number;
 };
 
-const REJECTION_MESSAGES: Record<string, string> = {
+export const REJECTION_MESSAGES: Record<string, string> = {
   self: "A task cannot be its own parent",
   cycle: "A task cannot be moved inside its own subtree",
   "cross-project": "Parent and child must belong to the same project",
@@ -29,7 +29,7 @@ const REJECTION_MESSAGES: Record<string, string> = {
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-async function loadTask(
+export async function loadTask(
   taskId: string,
   dbOrTx: DbOrTx = db,
 ): Promise<TaskNode> {
@@ -52,7 +52,7 @@ async function loadTask(
   return task;
 }
 
-async function getMaxTaskDepth(
+export async function getMaxTaskDepth(
   projectId: string,
   dbOrTx: DbOrTx = db,
 ): Promise<number> {
@@ -69,7 +69,7 @@ async function getMaxTaskDepth(
  * Cuantos niveles cuelgan por debajo de la tarea: 0 si es una hoja. Se mide
  * antes de mover para no dejar descendientes por debajo del limite.
  */
-async function getSubtreeHeight(
+export async function getSubtreeHeight(
   task: TaskNode,
   dbOrTx: DbOrTx = db,
 ): Promise<number> {
@@ -115,7 +115,7 @@ export async function resolveParentForNewTask(
   return parent;
 }
 
-async function nextSiblingPosition(
+export async function nextSiblingPosition(
   projectId: string,
   parentId: string | null,
   dbOrTx: DbOrTx = db,
@@ -133,6 +133,64 @@ async function nextSiblingPosition(
     );
 
   return (row?.maxPosition ?? 0) + 1;
+}
+
+/**
+ * Reescribe la rama de `task` para que cuelgue de `parent`. La usan tanto el
+ * reparentado interactivo como el importador, que tambien mueve tareas y no
+ * puede permitirse una segunda copia del `substring`: es la sentencia que ya
+ * fallo una vez por no llevar el `::int`.
+ *
+ * Da por hecho que quien llama tiene el cerrojo del proyecto y ha releido
+ * `task` dentro de la transaccion.
+ */
+export async function moveSubtree(
+  tx: DbOrTx,
+  task: TaskNode,
+  parent: TaskNode | null,
+) {
+  const oldPath = task.path;
+  const newPath = parent ? childPath(parent.path, task.id) : rootPath(task.id);
+  const depthDelta = (parent ? parent.depth + 1 : 0) - task.depth;
+  const position = await nextSiblingPosition(
+    task.projectId,
+    parent?.id ?? null,
+    tx,
+  );
+
+  // Toda la rama de una vez, la propia tarea incluida: `substring` a partir
+  // del largo del prefijo viejo conserva el tramo que cuelga por debajo.
+  await tx
+    .update(taskTable)
+    .set({
+      // El `::int` no es adorno: sin el, Postgres no puede decidir entre
+      // `substring(text from int)` y `substring(text from patron)` y falla.
+      path: sql`${newPath} || substring(${taskTable.path} from ${oldPath.length + 1}::int)`,
+      depth: sql`${taskTable.depth} + ${depthDelta}`,
+    })
+    .where(
+      and(
+        eq(taskTable.projectId, task.projectId),
+        like(taskTable.path, subtreePattern(oldPath)),
+      ),
+    );
+
+  const [updated] = await tx
+    .update(taskTable)
+    .set({ parentId: parent?.id ?? null, position })
+    // El predicado de `path` es redundante con el cerrojo y esta a proposito:
+    // si alguien anade un escritor de arbol que no lo tome, esto convierte una
+    // corrupcion silenciosa en cero filas afectadas y un 409.
+    .where(and(eq(taskTable.id, task.id), eq(taskTable.path, newPath)))
+    .returning();
+
+  if (!updated) {
+    throw new HTTPException(409, {
+      message: "The task tree changed while it was being reparented",
+    });
+  }
+
+  return updated;
 }
 
 /**
@@ -189,48 +247,7 @@ async function updateTaskParent({
       throw new HTTPException(400, { message: REJECTION_MESSAGES[rejection] });
     }
 
-    const oldPath = task.path;
-    const newPath = parent
-      ? childPath(parent.path, task.id)
-      : rootPath(task.id);
-    const depthDelta = (parent ? parent.depth + 1 : 0) - task.depth;
-    const position = await nextSiblingPosition(
-      task.projectId,
-      parent?.id ?? null,
-      tx,
-    );
-
-    // Toda la rama de una vez, la propia tarea incluida: `substring` a partir
-    // del largo del prefijo viejo conserva el tramo que cuelga por debajo.
-    await tx
-      .update(taskTable)
-      .set({
-        // El `::int` no es adorno: sin el, Postgres no puede decidir entre
-        // `substring(text from int)` y `substring(text from patron)` y falla.
-        path: sql`${newPath} || substring(${taskTable.path} from ${oldPath.length + 1}::int)`,
-        depth: sql`${taskTable.depth} + ${depthDelta}`,
-      })
-      .where(
-        and(
-          eq(taskTable.projectId, task.projectId),
-          like(taskTable.path, subtreePattern(oldPath)),
-        ),
-      );
-
-    const [updated] = await tx
-      .update(taskTable)
-      .set({ parentId: parent?.id ?? null, position })
-      // El predicado de `path` es redundante con el cerrojo y esta a proposito:
-      // si alguien anade un escritor de arbol que no lo tome, esto convierte una
-      // corrupcion silenciosa en cero filas afectadas y un 409.
-      .where(and(eq(taskTable.id, taskId), eq(taskTable.path, newPath)))
-      .returning();
-
-    if (!updated) {
-      throw new HTTPException(409, {
-        message: "The task tree changed while it was being reparented",
-      });
-    }
+    const updated = await moveSubtree(tx, task, parent);
 
     return {
       task: updated,

@@ -16,7 +16,7 @@
 | 3 — Campos personalizados | 4 | **Cerrada** — deuda abierta (ver abajo) |
 | 4 — Motor de vistas y vista Tabla | 4 | **Cerrada** — deuda abierta (ver abajo) |
 | 4.5 — Saneamiento | 5 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| 5 — Importación y exportación | 2 | Pendiente |
+| 5 — Importación y exportación | 2 | **Cerrada** — deuda abierta (ver abajo) |
 | **Subtotal: Riuna diferencial** | **23** | |
 | 6 — Ejecución y productividad personal | 3 | Pendiente |
 | 7 — Dashboards, informes y objetivos | 3 | Pendiente |
@@ -614,17 +614,115 @@ datos.
 - **Las pruebas de componente del web** no arrancan en el contenedor de
   desarrollo (los workers de jsdom caducan). Corren en CI.
 
-### Fase 5 — Importación y exportación (≈2 semanas)
+**Fase 5**:
+- **El asistente de importación no se ha pasado por el navegador.** La API está
+  probada de punta a punta —19 casos de integración, más el banco de 5.000
+  filas—, pero los cuatro pasos del asistente web (elegir fichero, mapear
+  columnas, confirmar tipos, ver el informe) solo tienen el typecheck. Es la
+  misma deuda que la Fase 4 declaró con los desplegables de Base UI, que no
+  abren en un navegador headless.
+- **Reordenar hermanas solo actúa sobre grupos completos.** Si el fichero no
+  trae todas las hijas de un padre, ese grupo conserva su orden y el informe lo
+  cuenta (`siblingGroupsKept`). Reordenar un grupo a medias mezclaría el orden
+  viejo con el nuevo. Reordenar entre ficheros parciales —una vista filtrada que
+  reordena unas pocas— seguiría necesitando otro mecanismo, y no lo tiene.
+- **Reordenar hermanas mueve también su posición en el tablero**, porque `path`
+  y el tablero comparten la columna `position` desde la Fase 2 ([ADR 011]
+  (adr/011-arbol-de-tareas-y-epicas.md)). Es coherente con el modelo actual, no
+  un efecto secundario nuevo, pero se nota.
+- **La hoja de SERVITEC sigue sin importarse.** Se exporta y ahora comparte la
+  conversión de fechas con el motor, pero no hay camino de vuelta desde ese
+  `.xlsx` concreto: su cabecera doble («Fecha»/«FECHA») y su fila-leyenda no son
+  el formato de intercambio. Entra en la Fase 8 con los importadores externos si
+  hace falta.
+
+### Fase 5 — Importación y exportación (≈2 semanas) · **cerrada**
 Generalizar los controladores existentes a **CSV y Excel** con mapeo de
 columnas, creación automática de campos personalizados e idempotencia vía
 `external_ref`. La jerarquía y las épicas se preservan en ambos sentidos.
 Exportación de cualquier vista con sus filtros aplicados.
 **Hecho cuando:** importas un Excel de 5.000 filas con jerarquía, creando
-campos solo, lo reimportas sin duplicar nada, y exportas una vista filtrada.
-**Adelantado:** la primera plantilla concreta ya está — el cuadro de tareas de
-SERVITEC se exporta en `.xlsx` desde los ajustes del espacio de trabajo
-([ADR 012](adr/012-exportacion-a-excel.md)). La fase la absorberá como caso de
-prueba del motor genérico, no la sustituirá desde cero.
+campos solo, lo reimportas sin duplicar nada, y exportas una vista filtrada. ✔
+
+**El formato no se generalizó: se definió**, y esa fue la mitad del trabajo. La
+decisión y sus costes están en la
+[ADR 017](adr/017-formato-de-intercambio.md). Lo que la hoja heredada perdía en
+silencio —las etiquetas que el export emitía y el validador del import
+descartaba— y lo que no sabía expresar —jerarquía, épicas, campos
+personalizados, estimación, equipo, asignados múltiples— ya viaja.
+
+**La jerarquía va como numeración de esquema** (`1`, `1.1`, `1.1.2`), elegida
+sobre una columna «padre» y sobre columnas por nivel. Es frágil por diseño
+—insertar obliga a renumerar— y por eso lleva cinco reglas explícitas que
+impiden que un número mal escrito reparente en silencio. La que más importa es
+la que hace segura la reimportación de una **vista filtrada**: si el padre que
+el esquema nombra no viene en el fichero, la tarea conserva el que ya tiene.
+
+**Lo hecho y probado:**
+- Motor de intercambio en `apps/api/src/task/exchange/`: vocabulario de
+  columnas, lector de `.csv`/`.xlsx`, escritor, numeración de esquema,
+  inferencia de tipos, mapeo de filas y escritura por lotes.
+- Importador reescrito: idempotente por `ID` y por `Referencia` contra
+  `external_ref` —que estrena escritores—, con jerarquía, épicas, etiquetas,
+  campos personalizados, equipo, asignados múltiples y estimación. Una
+  transacción, cerrojo de proyecto, inserciones de 500 y actualizaciones por
+  lotes con `unnest`.
+- Ensayo en seco (`dryRun`) que recorre el camino real y deshace al final.
+- Subida por multipart con `bodyLimit`, que es **superficie nueva**: hasta ahora
+  la única subida iba por URL prefirmada de S3.
+- Exportación a `.csv`/`.xlsx` de cualquier vista, pasándole la misma búsqueda
+  que vive en la URL, que es el punto 3 de la [ADR 015](adr/015-vistas-guardadas.md).
+- Asistente web de cuatro pasos con mapeo de columnas y tipo confirmado.
+- **No hizo falta migración ni dependencia nueva ni permiso nuevo.**
+
+**Medido** contra la línea base de la 4.5 (5.000 filas, árbol de tres niveles,
+importador viejo: 7,1 s):
+
+| 5.000 filas | Antes (4.5) | Ahora |
+|---|---|---|
+| Importar (alta) | 7,1 s | **6,6 s** |
+| Reimportar (update) | — (nunca medido) | **6,1 s** |
+
+El importador nuevo hace bastante más por fila —jerarquía, épicas, etiquetas,
+campos personalizados, equipo, asignados múltiples, idempotencia vía
+`external_ref`, y ahora el reordenado de hermanas— y aun así entra por debajo del
+viejo, porque el viejo hacía ~4 viajes por fila y este va en una transacción con
+inserciones de 500 y `UPDATE … FROM unnest`. La reimportación reordena las 5.000
+filas y sigue por debajo de la línea base.
+
+**Lo que la verificación encontró** (dos cosas, ninguna de diseño):
+- Una fila **sin la columna `Título`** se rechazaba con «The row has no title»
+  aunque **casara con una tarea existente**. Rompía actualizar por fichero
+  parcial —reimportar una vista filtrada, o un fichero que solo mapea
+  `Etiquetas`—. La exigencia de título pasa a ser solo para filas nuevas, que es
+  lo que ya decía la [ADR 017](adr/017-formato-de-intercambio.md) punto 3: una
+  columna ausente no puede vaciar lo que ya hay. Lo cazó la prueba de que un
+  fichero de solo etiquetas no borra asignados ni épicas.
+- Una prueba de `task-assignees` seguía llamando a la API de import vieja
+  (JSON `{tasks:[…]}`), que la fase sustituyó por multipart; devolvía 400.
+  Reescrita a la nueva, misma aserción.
+
+**SERVITEC absorbido.** La conversión de fechas que su hoja descubrió vive en
+`exchange/sheet-dates.ts` y la comparten el motor y la plantilla; el controlador
+de SERVITEC la importa directa del motor, sin la reexportación puente que había.
+Sus pruebas de formato de fecha pasan a `tests/api/task/exchange/sheet-dates.test.ts`
+—que estrena cobertura de `parseSheetDate`—; en `servitec-workbook.test.ts` queda
+lo que es de la plantilla: el mapeo de estado y la forma del `.xlsx`. La hoja no
+cambia: sigue siendo su propio módulo, que es lo que dice la
+[ADR 017](adr/017-formato-de-intercambio.md) punto 8.
+
+**Hermanas reordenadas al importar.** Con `Esquema` mapeado, el orden de las
+filas decide también el orden entre hermanas, no solo de quién cuelgan. Se aplica
+solo a los grupos que el fichero trae **enteros** —toda hija que Riuna ya tiene
+aparece en el fichero—: reordenar medio grupo entrelazaría el orden viejo con el
+nuevo, así que un grupo incompleto se deja quieto y el informe lo cuenta
+(`siblingGroupsKept`). Es la misma prudencia que la regla 3 del esquema. `position`
+es la columna que comparten árbol y tablero (ADR 011), así que esto reordena
+también esa columna del tablero; no hay una segunda que gastar.
+
+**Adelantado en su día:** el cuadro de tareas de SERVITEC ya se exportaba en
+`.xlsx` desde los ajustes del espacio de trabajo antes de la fase
+([ADR 012](adr/012-exportacion-a-excel.md)).
 
 *Semana 18: Riuna ya es la plataforma diferencial. Lo que sigue es mejora
 incremental sobre algo vivo y en uso.*
@@ -734,29 +832,13 @@ destructiva.
 
 ## Siguiente paso
 
-La **Fase 5**: importación y exportación en CSV y Excel con mapeo de
-columnas, creación automática de campos personalizados e idempotencia vía
-`external_ref` —que ya existe—, preservando jerarquía y épicas en los dos
-sentidos. La exportación a Excel de SERVITEC
-([ADR 012](adr/012-exportacion-a-excel.md)) entra como caso de prueba del motor
-genérico.
+La **Fase 6**: ejecución y productividad personal —«Mi trabajo», bandeja
+unificada, ciclos/sprints con velocidad y burndown sobre el registro de tiempo
+existente, tareas recurrentes y plantillas de proyecto y de árbol.
 
-Tres cosas que la Fase 4.5 dejó averiguadas y que la Fase 5 necesita:
+Dos cosas que la Fase 5 dejó pendientes y que no bloquean la 6:
 
-- **No hace falta dependencia nueva.** `exceljs@4.4.0` ya es dependencia de
-  producción y lee `.xlsx` (`Xlsx.load(buffer)`) y CSV (`Csv.read`), además de
-  escribir. Dos avisos: `load()` carga el libro entero en memoria —hay que
-  limitar el tamaño de subida antes de parsear— y `exceljs` no publica desde
-  2023.
-- **El formato no se está generalizando: se está definiendo.** Hoy
-  exportar→importar **pierde las etiquetas en silencio** (el export las emite y
-  el validador del import las descarta) y no sabe nada de jerarquía, épicas,
-  campos personalizados, estimación, equipo ni asignados múltiples.
-- **`packages/planka-import` no aporta lo que hace falta.** Está vivo y bien
-  probado (5 ficheros, 758 líneas), pero habla con Riuna por HTTP y no es
-  idempotente por diseño. Lo aprovechable son unas 30 líneas de `mapping.ts`:
-  la resolución de colisiones de slug, que es el problema de «mapeo de
-  columnas» del enunciado.
-
-Sigue pendiente de decidir cuándo migrar Tablero, Lista y Backlog al motor de
-filtros. No bloquea la Fase 5.
+- **El asistente de importación no se ha pasado por el navegador.** La API está
+  probada de punta a punta; el asistente web solo tiene el typecheck.
+- **Sigue sin decidirse cuándo migrar Tablero, Lista y Backlog al motor de
+  filtros.** Arrastra desde la Fase 4.

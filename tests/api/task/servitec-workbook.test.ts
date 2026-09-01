@@ -3,10 +3,12 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { resolveEstado } from "../../../apps/api/src/task/controllers/export-workspace-tasks";
 import {
   buildServitecWorkbook,
-  formatSheetDate,
-  formatSheetDateIso,
   type ServitecRow,
 } from "../../../apps/api/src/task/exports/servitec-workbook";
+
+// La conversion de fechas que esta hoja descubrio vive ahora en el motor de
+// intercambio y se prueba en `exchange/sheet-dates.test.ts` (ADR 017). Aqui
+// queda lo que es de la plantilla: el mapeo de estado y la forma del `.xlsx`.
 
 describe("resolveEstado", () => {
   const firstColumn = { isFinal: false, position: 0 };
@@ -50,28 +52,6 @@ describe("resolveEstado", () => {
     );
     expect(resolveEstado("entregado", { isFinal: true, position: 7 })).toBe(
       "Realizado",
-    );
-  });
-});
-
-describe("formatSheetDate", () => {
-  // 00:30 on the 18th in Madrid, still the 17th in UTC. The board is read in
-  // Madrid, so it is the 18th.
-  it("cuts the day in Madrid, not in UTC", () => {
-    expect(formatSheetDate(new Date("2026-08-17T22:30:00Z"))).toBe(
-      "18/08/2026",
-    );
-    expect(formatSheetDateIso(new Date("2026-08-17T22:30:00Z"))).toBe(
-      "2026-08-18",
-    );
-  });
-
-  it("handles a winter date, when the offset is one hour", () => {
-    expect(formatSheetDate(new Date("2026-01-15T23:30:00Z"))).toBe(
-      "16/01/2026",
-    );
-    expect(formatSheetDate(new Date("2026-01-15T22:30:00Z"))).toBe(
-      "15/01/2026",
     );
   });
 });
