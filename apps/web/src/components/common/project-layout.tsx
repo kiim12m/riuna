@@ -138,7 +138,7 @@ export default function ProjectLayout({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <SidebarTrigger className="-ml-1 h-7 w-7 cursor-pointer text-foreground/85 hover:text-foreground" />
+                  <SidebarTrigger className="-ml-1 h-7 w-7 cursor-pointer text-foreground/85 hover:text-foreground md:hidden" />
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="flex items-center gap-2 text-[10px]">
@@ -154,7 +154,7 @@ export default function ProjectLayout({
               </Tooltip>
             </TooltipProvider>
 
-            <div className="h-4 w-px shrink-0 bg-border/80" />
+            <div className="h-4 w-px shrink-0 bg-border/80 md:hidden" />
 
             <div className="hidden min-w-0 items-center gap-1 md:flex">
               <WorkspaceCrumbSelect />
@@ -184,7 +184,7 @@ export default function ProjectLayout({
             </div>
 
             {showViewSwitcher && (
-              <div className="hidden h-8 items-center gap-0.5 rounded-lg border border-border/80 bg-background p-0.5 sm:inline-flex">
+              <div className="hidden h-7 items-center gap-0.5 rounded-lg border border-border/80 bg-background p-0.5 sm:inline-flex">
                 <Button
                   variant="ghost"
                   size="xs"

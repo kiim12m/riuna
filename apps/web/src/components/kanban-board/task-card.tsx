@@ -2,6 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
+import { useReducedMotion } from "framer-motion";
 import {
   Calendar,
   CalendarClock,
@@ -9,7 +10,7 @@ import {
   GitMerge,
   GitPullRequest,
 } from "lucide-react";
-import { type CSSProperties, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertDialog,
@@ -40,6 +41,7 @@ import { toast } from "@/lib/toast";
 import queryClient from "@/query-client";
 import useBulkSelectionStore from "@/store/bulk-selection";
 import useProjectStore from "@/store/project";
+import useRealtimeHighlightStore from "@/store/realtime-highlight";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import type Task from "@/types/task";
 import SubtaskBadge from "../task/subtask-badge";
@@ -79,6 +81,23 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
   const { toggleSelection, isSelected, isFocused } = useBulkSelectionStore();
   const isTaskSelected = isSelected(task.id);
   const isTaskFocused = isFocused(task.id);
+
+  // Resalte cuando otra persona cambia esta tarea (marca §06 principio 5).
+  const pulse = useRealtimeHighlightStore(
+    (state) => state.pulses[task.id] ?? 0,
+  );
+  const reduceMotion = useReducedMotion();
+  const [isFlashing, setIsFlashing] = useState(false);
+  useEffect(() => {
+    if (!pulse) return;
+    setIsFlashing(true);
+    const timeout = setTimeout(() => setIsFlashing(false), 900);
+    return () => clearTimeout(timeout);
+  }, [pulse]);
+  let flashClass = "";
+  if (isFlashing) {
+    flashClass = reduceMotion ? "riuna-flash-static" : "animate-flux";
+  }
 
   const pullRequests = useMemo(() => {
     return (task.externalLinks ?? []).filter(
@@ -180,13 +199,22 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      tabIndex={-1}
+    >
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          {/** biome-ignore lint/a11y/noStaticElementInteractions: false positive for onClick and onKeyDown */}
+          {/** biome-ignore lint/a11y/useSemanticElements: the card holds block-level content and cannot be a native <button> */}
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={task.title}
             onClick={handleTaskCardClick}
-            className={`group relative rounded-lg border bg-background p-3 shadow-xs/5 transition-[background-color,border-color,box-shadow,scale] duration-150 ease-out active:scale-[0.98] ${
+            className={`group relative rounded-lg border bg-background p-(--density-card-pad) shadow-xs/5 outline-none transition-[background-color,border-color,box-shadow,scale] duration-150 ease-out active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
               disableDragDrop ? "cursor-default" : "cursor-move"
             } ${
               isDragging
@@ -196,9 +224,10 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
               isTaskSelected
                 ? "border-ring/40 bg-accent/50 shadow-sm ring-1 ring-inset ring-ring/30"
                 : "border-border"
-            } ${isTaskFocused ? "ring-2 ring-inset ring-ring/50" : ""}`}
+            } ${isTaskFocused ? "ring-2 ring-inset ring-ring/50" : ""} ${flashClass}`}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
                 handleTaskCardClick(e);
               } else if (e.key === "Escape") {
                 handleKeyDown(e);
@@ -212,7 +241,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
             )}
 
             {showAssignees && (
-              <div className="absolute top-3 right-3">
+              <div className="absolute top-(--density-card-pad) right-(--density-card-pad)">
                 {task.userId ? (
                   <Avatar className="h-5 w-5">
                     <AvatarImage
@@ -236,7 +265,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
               </div>
             )}
 
-            <div className="mb-2.5 pr-6">
+            <div className="mb-(--density-stack) pr-6">
               <div
                 className="overflow-hidden break-words leading-5 font-medium text-foreground/95 text-[15px]"
                 style={{
@@ -252,12 +281,12 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
             </div>
 
             {showLabels && (
-              <div className="mb-2.5">
+              <div className="mb-(--density-stack)">
                 <TaskLabels labels={task.labels ?? []} />
               </div>
             )}
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-(--density-gap)">
               <SubtaskBadge subtree={task.subtree} />
               {showPriority && (
                 <span className="inline-flex items-center gap-1 rounded border border-border/70 bg-muted/55 px-2 py-1 text-[10px] font-medium text-muted-foreground">

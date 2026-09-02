@@ -27,6 +27,7 @@ import {
   Folder,
   Forward,
   MoreHorizontal,
+  Plus,
   Settings,
   Trash2,
 } from "lucide-react";
@@ -59,6 +60,8 @@ import useReorderProjects from "@/hooks/mutations/project/use-reorder-projects";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { getInitials } from "@/lib/get-initials";
+import { getProjectBadgeColor } from "@/lib/project-badge-color";
 import { toast } from "@/lib/toast";
 import type { ProjectWithTasks } from "@/types/project";
 import CreateProjectModal from "./shared/modals/create-project-modal";
@@ -214,7 +217,7 @@ export function NavProjects() {
   return (
     <>
       <Collapsible defaultOpen className="group/collapsible">
-        <SidebarGroup className="group-data-[collapsible=icon]:hidden gap-1 p-2 pt-1">
+        <SidebarGroup className="gap-1 p-2 pt-1">
           <CollapsibleTrigger
             className="data-panel-open:[&_svg]:rotate-90"
             render={
@@ -250,12 +253,26 @@ export function NavProjects() {
                           canReorder={canReorder}
                         >
                           <SidebarMenuButton
+                            tooltip={project.name}
                             isActive={isCurrentProject(project.id)}
                             size="default"
-                            className="h-8 gap-0 ps-3.5 text-sm hover:bg-sidebar-accent/60"
+                            className="h-8 ps-2 text-sm hover:bg-sidebar-accent/60 group-data-[collapsible=icon]:justify-center"
                             onClick={() => handleProjectClick(project)}
                           >
-                            <span>{project.name}</span>
+                            <span
+                              aria-hidden="true"
+                              className="flex size-5 shrink-0 items-center justify-center rounded-[4px] font-semibold text-[10px] text-white leading-none"
+                              style={{
+                                backgroundColor: getProjectBadgeColor(
+                                  project.id,
+                                ),
+                              }}
+                            >
+                              {getInitials(project.name)}
+                            </span>
+                            <span className="group-data-[collapsible=icon]:hidden">
+                              {project.name}
+                            </span>
                           </SidebarMenuButton>
 
                           <DropdownMenu>
@@ -350,11 +367,15 @@ export function NavProjects() {
                   {canCreate && (
                     <SidebarMenuItem className="mt-1">
                       <SidebarMenuButton
+                        tooltip={t("navigation:projectList.addProject")}
                         size="default"
-                        className="h-8 ps-3.5 text-sm hover:bg-sidebar-accent/60"
+                        className="h-8 ps-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent/60 group-data-[collapsible=icon]:justify-center"
                         onClick={() => setIsCreateProjectModalOpen(true)}
                       >
-                        <span>{t("navigation:projectList.addProject")}</span>
+                        <Plus className="text-sidebar-foreground/70" />
+                        <span className="group-data-[collapsible=icon]:hidden">
+                          {t("navigation:projectList.addProject")}
+                        </span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )}

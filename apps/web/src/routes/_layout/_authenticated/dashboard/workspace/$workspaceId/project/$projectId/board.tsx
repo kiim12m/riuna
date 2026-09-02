@@ -11,6 +11,7 @@ import { ProjectSizeWarning } from "@/components/project/project-size-warning";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { shortcuts } from "@/constants/shortcuts";
 import useGetLabelsByWorkspace from "@/hooks/queries/label/use-get-labels-by-workspace";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
@@ -50,9 +51,9 @@ function BoardSkeleton() {
       {skeletonColumns.map((col) => (
         <div key={col.key} className="flex w-72 shrink-0 flex-col gap-3">
           <div className="flex items-center gap-2 px-1">
-            <div className="h-3 w-3 rounded-full bg-muted animate-pulse" />
-            <div className="h-4 w-24 rounded bg-muted animate-pulse" />
-            <div className="h-4 w-5 rounded bg-muted animate-pulse" />
+            <Skeleton className="h-3 w-3 rounded-full" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-5" />
           </div>
           <div className="flex flex-col gap-2.5">
             {Array.from({ length: col.cards }, (_, i) => `${col.key}-${i}`).map(
@@ -61,11 +62,11 @@ function BoardSkeleton() {
                   key={cardKey}
                   className="rounded-lg border border-border bg-card p-3 space-y-2.5"
                 >
-                  <div className="h-3.5 w-4/5 rounded bg-muted animate-pulse" />
-                  <div className="h-3 w-3/5 rounded bg-muted animate-pulse" />
+                  <Skeleton className="h-3.5 w-4/5" />
+                  <Skeleton className="h-3 w-3/5" />
                   <div className="flex items-center gap-2 pt-1">
-                    <div className="h-5 w-5 rounded-full bg-muted animate-pulse" />
-                    <div className="h-3 w-16 rounded bg-muted animate-pulse" />
+                    <Skeleton className="h-5 w-5 rounded-full" />
+                    <Skeleton className="h-3 w-16" />
                   </div>
                 </div>
               ),

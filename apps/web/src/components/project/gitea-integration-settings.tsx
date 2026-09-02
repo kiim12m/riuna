@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import type { VerifyGiteaAccessResponse } from "@/fetchers/gitea-integration/verify-gitea-access";
 import {
@@ -406,7 +407,7 @@ export function GiteaIntegrationSettings({ projectId }: { projectId: string }) {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="h-10 bg-muted rounded animate-pulse w-full" />
+        <Skeleton className="h-10 w-full" />
       </div>
     );
   }

@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, LayoutGrid, Mail, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   Collapsible,
@@ -31,6 +31,7 @@ export function NavMain() {
     {
       title: t("navigation:sidebar.projects"),
       url: `/dashboard/workspace/${workspace.id}`,
+      icon: LayoutGrid,
       isActive:
         window.location.pathname === `/dashboard/workspace/${workspace.id}`,
       badge: null,
@@ -38,6 +39,7 @@ export function NavMain() {
     {
       title: t("navigation:sidebar.members"),
       url: `/dashboard/workspace/${workspace.id}/members`,
+      icon: Users,
       isActive:
         window.location.pathname ===
         `/dashboard/workspace/${workspace.id}/members`,
@@ -46,6 +48,7 @@ export function NavMain() {
     {
       title: t("navigation:sidebar.invitations"),
       url: "/dashboard/invitations",
+      icon: Mail,
       isActive: window.location.pathname === "/dashboard/invitations",
       badge: pendingCount > 0 ? pendingCount : null,
     },
@@ -72,12 +75,15 @@ export function NavMain() {
                     tooltip={item.title}
                     isActive={item.isActive}
                     size="default"
-                    className="h-8 ps-3.5 text-sm hover:bg-sidebar-accent/60"
+                    className="h-8 ps-2 text-sm hover:bg-sidebar-accent/60 group-data-[collapsible=icon]:justify-center"
                     onClick={() => navigate({ to: item.url })}
                   >
-                    <span>{item.title}</span>
+                    <item.icon className="text-sidebar-foreground/70" />
+                    <span className="group-data-[collapsible=icon]:hidden">
+                      {item.title}
+                    </span>
                     {item.badge !== null && (
-                      <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-sm border border-sidebar-border/60 px-1 text-[11px] font-medium text-sidebar-foreground/80">
+                      <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-sm border border-sidebar-border/60 px-1 text-[11px] font-medium text-sidebar-foreground/80 group-data-[collapsible=icon]:hidden">
                         {item.badge}
                       </span>
                     )}

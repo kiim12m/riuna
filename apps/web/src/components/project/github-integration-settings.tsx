@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import type { VerifyGithubInstallationResponse } from "@/fetchers/github-integration/verify-github-installation";
 import {
@@ -240,16 +241,16 @@ export function GitHubIntegrationSettings({
       <div className="space-y-4">
         <div className="space-y-4 border border-border rounded-md p-4 bg-sidebar">
           <div className="space-y-4">
-            <div className="h-4 bg-muted rounded animate-pulse w-40" />
-            <div className="h-4 bg-muted rounded animate-pulse w-full" />
-            <div className="h-10 bg-muted rounded animate-pulse w-full" />
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-10 w-full" />
           </div>
         </div>
         <div className="space-y-4 border border-border rounded-md p-4 bg-sidebar">
           <div className="space-y-4">
-            <div className="h-4 bg-muted rounded animate-pulse w-40" />
-            <div className="h-10 bg-muted rounded animate-pulse w-full" />
-            <div className="h-10 bg-muted rounded animate-pulse w-full" />
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { Filter, PanelsTopLeft, Rows3, Users, X } from "lucide-react";
+import { Check, Filter, PanelsTopLeft, Rows3, Users, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import GroupControl from "@/components/common/group-control";
@@ -73,16 +73,18 @@ type BoardToolbarProps = {
   onGroupByChange: (groupBy: GroupByField) => void;
 };
 
+// Indicador visual; el estado real va en aria-checked del botón que lo envuelve.
 function CheckSlot({ checked }: { checked: boolean }) {
   return (
     <span
+      aria-hidden="true"
       className={`inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] border ${
         checked
           ? "border-primary bg-primary text-primary-foreground"
           : "border-input bg-background"
       }`}
     >
-      {checked ? "✓" : null}
+      {checked ? <Check className="size-3" strokeWidth={3} /> : null}
     </span>
   );
 }
