@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { getApiUrl } from "@/fetchers/get-api-url";
 import { authClient } from "@/lib/auth-client";
+import useRealtimeHighlightStore from "@/store/realtime-highlight";
 
 export function getWsUrl(projectId: string) {
   const base = getApiUrl("ws");
@@ -71,6 +72,19 @@ export function useProjectWebSocket(projectId: string) {
             queryClient.invalidateQueries({
               queryKey: ["tasks", message.projectId],
             });
+
+            // Resalte en tiempo real: el servidor no reenvia el evento a la
+            // ventana que lo origino, asi que esto solo se dispara por un cambio
+            // de otra persona (u otra pestana). Solo para cambios sobre una
+            // tarea que ya esta a la vista, no para altas ni bajas.
+            if (
+              message.taskId &&
+              (message.type === "TASK_UPDATED" ||
+                message.type === "TASK_MOVED" ||
+                message.type === "TASK_LABEL_UPDATED")
+            ) {
+              useRealtimeHighlightStore.getState().pulse(message.taskId);
+            }
 
             // Cambiar una definicion cambia lo que el detalle y las tarjetas
             // tienen que pintar, asi que se invalidan las dos cosas: la lista

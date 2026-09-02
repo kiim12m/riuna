@@ -519,6 +519,8 @@
 			"gantt": "Gantt",
 			"sidebarDefault": "Sidebar Default",
 			"sidebarDefaultDescription": "Keep sidebar expanded on startup",
+			"density": "Compact density",
+			"densityDescription": "Tighten spacing in task-heavy views",
 			"displayOptions": "Display options",
 			"displayOptionsDescription": "Choose which information to show in task views",
 			"taskNumbers": "Task Numbers",

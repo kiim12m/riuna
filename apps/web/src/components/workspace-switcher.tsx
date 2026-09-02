@@ -120,19 +120,23 @@ export function WorkspaceSwitcher() {
 
   return (
     <>
-      <div className="flex items-center justify-between w-full gap-2">
+      <div className="flex items-center justify-between w-full gap-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
               <DropdownMenuTrigger
+                title={workspace.name}
                 render={
                   <SidebarMenuButton
-                    className="group h-8 w-full rounded-md px-2 text-sidebar-foreground data-[active=true]:bg-sidebar-accent/50"
+                    className="group h-8 w-full rounded-md px-2 text-sidebar-foreground data-[active=true]:bg-sidebar-accent/50 group-data-[collapsible=icon]:justify-center"
                     size="default"
                   />
                 }
               >
-                <div className="flex items-center min-w-0 w-full">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-[4px] bg-primary text-xs font-semibold text-primary-foreground">
+                  {workspace.name.charAt(0).toUpperCase()}
+                </span>
+                <div className="flex items-center min-w-0 w-full group-data-[collapsible=icon]:hidden">
                   <span
                     className={`truncate text-sm font-medium text-foreground ${isSwitching ? "opacity-50" : ""}`}
                   >
@@ -140,7 +144,7 @@ export function WorkspaceSwitcher() {
                   </span>
                 </div>
                 <ChevronDown
-                  className={`ml-1 size-3.5 text-foreground/70 opacity-90 group-hover:opacity-100 data-[state=open]:opacity-100 data-[state=open]:rotate-180 transition-[rotate,opacity] duration-200 ease-out ${isSwitching ? "animate-spin" : ""}`}
+                  className={`ml-1 size-3.5 text-foreground/70 opacity-90 group-hover:opacity-100 data-[state=open]:opacity-100 data-[state=open]:rotate-180 transition-[rotate,opacity] duration-200 ease-out group-data-[collapsible=icon]:hidden ${isSwitching ? "animate-spin" : ""}`}
                   data-state={isOpen ? "open" : "closed"}
                 />
               </DropdownMenuTrigger>
@@ -201,7 +205,7 @@ export function WorkspaceSwitcher() {
           </SidebarMenuItem>
         </SidebarMenu>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 group-data-[collapsible=icon]:hidden">
           <NotificationDropdown />
           <div className="h-8 w-8 shrink-0">
             <UserAvatar />

@@ -2022,6 +2022,12 @@
 						"sidebarDefaultDescription": {
 							"type": "string"
 						},
+						"density": {
+							"type": "string"
+						},
+						"densityDescription": {
+							"type": "string"
+						},
 						"displayOptions": {
 							"type": "string"
 						},
@@ -2087,6 +2093,8 @@
 						"gantt",
 						"sidebarDefault",
 						"sidebarDefaultDescription",
+						"density",
+						"densityDescription",
 						"displayOptions",
 						"displayOptionsDescription",
 						"taskNumbers",

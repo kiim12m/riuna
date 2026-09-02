@@ -416,6 +416,8 @@
 			"gantt": "Gantt",
 			"sidebarDefault": "Barra lateral por defecto",
 			"sidebarDefaultDescription": "Mantener la barra lateral al iniciar",
+			"density": "Densidad compacta",
+			"densityDescription": "Aprieta el espaciado en las vistas con muchas tareas",
 			"displayOptions": "Ver opciones",
 			"displayOptionsDescription": "Elige qué información ver en las tareas",
 			"taskNumbers": "Número de tarea",

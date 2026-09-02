@@ -43,13 +43,30 @@ input:-webkit-autofill:active {
   [data-riuna-sortable] {
     transition: none !important;
   }
+
+  /* Skeletons: el placeholder se queda visible, sin barrido ni latido. */
+  [data-slot="skeleton"],
+  .animate-pulse {
+    animation: none !important;
+    background: var(--color-muted) !important;
+  }
+
+  /* Resalte en tiempo real: el componente ya usa .riuna-flash-static en su
+     lugar, pero por si acaso la clase animada llega aquí, se corta. */
+  .animate-flux {
+    animation: none !important;
+  }
 }
 
 
 @theme inline {
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --animate-skeleton: skeleton 2s -1s infinite linear;
+  /* Resalte de "cambiado por otra persona" — ADR 021. Baño de teal que decae.
+     Sin fill-mode: al acabar, la tarjeta vuelve a su box-shadow normal. */
+  --animate-flux: riuna-flux var(--motion-settle) var(--ease-out);
   --font-sans: var(--font-sans);
   --font-heading: var(--font-heading);
   --font-mono: var(--font-mono);
@@ -97,6 +114,11 @@ input:-webkit-autofill:active {
   --color-background: var(--background);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
+  --shadow-e1: var(--elevation-1);
+  --shadow-e2: var(--elevation-2);
+  --shadow-e3: var(--elevation-3);
+  --shadow-e4: var(--elevation-4);
+  --inset-shadow-hairline: var(--elevation-hairline);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -106,6 +128,62 @@ input:-webkit-autofill:active {
       background-position: -200% 0;
     }
   }
+  /* El baño se pinta con un inset gigante que compone sobre el fondo real de la
+     tarjeta sin sustituirlo; la elevación se mantiene en los dos fotogramas
+     para que no haya salto al terminar. */
+  @keyframes riuna-flux {
+    0% {
+      box-shadow:
+        var(--elevation-1),
+        inset 0 0 0 100vmax color-mix(in srgb, var(--brand) 15%, transparent),
+        inset 0 0 0 1px color-mix(in srgb, var(--brand) 55%, transparent);
+    }
+    60% {
+      box-shadow:
+        var(--elevation-1),
+        inset 0 0 0 100vmax color-mix(in srgb, var(--brand) 7%, transparent),
+        inset 0 0 0 1px color-mix(in srgb, var(--brand) 22%, transparent);
+    }
+    100% {
+      box-shadow:
+        var(--elevation-1),
+        inset 0 0 0 100vmax transparent,
+        inset 0 0 0 1px transparent;
+    }
+  }
+}
+
+/* Escala tipográfica — marca.md §05. En bloque propio y sin `inline` para que
+   .compact-mode pueda rebajar el cuerpo redefiniendo la variable (ADR 018/019).
+   Convive con las utilidades de tamaño de Tailwind: text-sm/text-xs siguen. */
+@theme {
+  --text-display: 1.875rem;
+  --text-display--line-height: 2.125rem;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 600;
+
+  --text-page: 1.25rem;
+  --text-page--line-height: 1.6rem;
+  --text-page--letter-spacing: -0.01em;
+  --text-page--font-weight: 600;
+
+  --text-section: 1rem;
+  --text-section--line-height: 1.4rem;
+  --text-section--letter-spacing: -0.01em;
+  --text-section--font-weight: 600;
+
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.35rem;
+
+  --text-secondary: 0.75rem;
+  --text-secondary--line-height: 1.1rem;
+
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1rem;
+  --text-label--letter-spacing: 0.06em;
+  --text-label--font-weight: 500;
+
+  --text-mono: 0.8125rem;
 }
 
 :root {
@@ -205,6 +283,55 @@ input:-webkit-autofill:active {
   --code: var(--color-white);
   --code-foreground: var(--foreground);
   --code-highlight: color-mix(in srgb, var(--riuna-navy) 5%, transparent);
+
+  /* Movimiento — ADR 021. Duraciones y paso de stagger; el easing va en @theme
+     para generar la utilidad `ease-out-quart`. Regla: las salidas duran ~65% de
+     la entrada (una entrada base sale con --motion-fast). */
+  --motion-instant: 90ms;
+  --motion-fast: 140ms;
+  --motion-base: 220ms;
+  --motion-slow: 360ms;
+  --motion-settle: 760ms;
+  --stagger-step: 38ms;
+
+  /* Elevación — ADR 020. Sombra con sesgo navy, no negro puro (como los grises
+     de marca.md §04). .dark las redefine. Expuestas como shadow-e1…shadow-e4
+     e inset-shadow-hairline vía @theme inline. */
+  --elevation-1:
+    0 1px 2px -1px color-mix(in srgb, var(--riuna-navy) 24%, transparent),
+    0 1px 1px -1px color-mix(in srgb, var(--riuna-navy) 16%, transparent);
+  --elevation-2:
+    0 2px 6px -2px color-mix(in srgb, var(--riuna-navy) 22%, transparent),
+    0 4px 12px -4px color-mix(in srgb, var(--riuna-navy) 16%, transparent);
+  --elevation-3:
+    0 8px 24px -6px color-mix(in srgb, var(--riuna-navy) 26%, transparent),
+    0 2px 6px -2px color-mix(in srgb, var(--riuna-navy) 18%, transparent);
+  --elevation-4:
+    0 24px 60px -12px color-mix(in srgb, var(--riuna-navy) 38%, transparent),
+    0 8px 20px -8px color-mix(in srgb, var(--riuna-navy) 24%, transparent);
+  --elevation-hairline: inset 0 1px 0 color-mix(in srgb, var(--color-white) 55%, transparent);
+
+  /* Colores de badge de proyecto — identidad, como los colores de etiqueta.
+     Fijos entre temas y elegidos para dar >=4,5:1 con texto blanco. El proyecto
+     se asigna uno de forma determinista por su id. */
+  --pj-1: #2a5c8a;
+  --pj-2: #0b7466;
+  --pj-3: #7c3aed;
+  --pj-4: #be185d;
+  --pj-5: #b45309;
+  --pj-6: #15803d;
+  --pj-7: #b91c1c;
+  --pj-8: #4a6380;
+
+  /* Densidad — ADR 019. Los valores «cómoda» reproducen el espaciado actual
+     al pixel: cambiar de modo no altera nada en cómoda, solo compacta rebaja.
+     row/control quedan para superficies que aún no consumen densidad. */
+  --density-row: 2.25rem;
+  --density-control: 2rem;
+  --density-card-pad: 0.75rem;
+  --density-gap: 0.375rem;
+  --density-stack: 0.625rem;
+  --density-col-gap: 0.5rem;
 }
 
 /* Deep Navy no funciona como color de acción en oscuro: es más oscuro que el
@@ -257,6 +384,36 @@ input:-webkit-autofill:active {
   --code: var(--riuna-raised);
   --code-foreground: var(--foreground);
   --code-highlight: --alpha(var(--color-white) / 5%);
+
+  /* Elevación — ADR 020. Negro con un filo de luz arriba, en vez del sesgo navy
+     del tema claro. */
+  --elevation-1:
+    0 1px 2px -1px --alpha(var(--color-black) / 55%),
+    inset 0 1px 0 --alpha(var(--color-white) / 5%);
+  --elevation-2:
+    0 3px 10px -3px --alpha(var(--color-black) / 55%),
+    inset 0 1px 0 --alpha(var(--color-white) / 6%);
+  --elevation-3:
+    0 10px 28px -8px --alpha(var(--color-black) / 60%),
+    inset 0 1px 0 --alpha(var(--color-white) / 6%);
+  --elevation-4:
+    0 28px 64px -14px --alpha(var(--color-black) / 66%),
+    inset 0 1px 0 --alpha(var(--color-white) / 7%);
+  --elevation-hairline: inset 0 1px 0 --alpha(var(--color-white) / 6%);
+}
+
+/* Densidad compacta — ADR 019. La clase la pone use-user-preferences-effects
+   en <html>; hasta ahora no movía nada. Baja alturas y espaciados, y el cuerpo
+   a 13 px (única desviación de la escala del ADR 018, acotada a este modo). */
+.compact-mode {
+  --density-row: 1.75rem;
+  --density-control: 1.75rem;
+  --density-card-pad: 0.5rem;
+  --density-gap: 0.25rem;
+  --density-stack: 0.375rem;
+  --density-col-gap: 0.375rem;
+  --text-body: 0.8125rem;
+  --text-body--line-height: 1.15rem;
 }
 
 @layer base {
@@ -290,6 +447,16 @@ input:-webkit-autofill:active {
 }
 
 @layer components {
+  /* Camino de movimiento reducido para el resalte en tiempo real (ADR 021):
+     un tinte estático, sin animar, que el componente retira tras ~900 ms.
+     "Nada se pierde en silencio". */
+  .riuna-flash-static {
+    box-shadow:
+      var(--elevation-1),
+      inset 0 0 0 100vmax color-mix(in srgb, var(--brand) 12%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--brand) 30%, transparent) !important;
+  }
+
   .riuna-tiptap-shell {
     position: relative;
   }

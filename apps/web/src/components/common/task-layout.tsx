@@ -61,7 +61,7 @@ export default function TaskLayout({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <SidebarTrigger className="-ml-1 h-7 w-7 cursor-pointer text-foreground/85 hover:text-foreground" />
+                    <SidebarTrigger className="-ml-1 h-7 w-7 cursor-pointer text-foreground/85 hover:text-foreground md:hidden" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="flex items-center gap-2 text-[10px]">
@@ -77,7 +77,7 @@ export default function TaskLayout({
                 </Tooltip>
               </TooltipProvider>
 
-              <div className="h-4 w-px shrink-0 bg-border/80" />
+              <div className="h-4 w-px shrink-0 bg-border/80 md:hidden" />
 
               <div className="min-w-0 items-center gap-1.5 flex">
                 <button

@@ -2,8 +2,9 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
+import { useReducedMotion } from "framer-motion";
 import { Calendar, CalendarClock, CalendarX } from "lucide-react";
-import { type CSSProperties, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertDialog,
@@ -31,6 +32,7 @@ import { toast } from "@/lib/toast";
 import queryClient from "@/query-client";
 import useBacklogBulkSelectionStore from "@/store/backlog-bulk-selection";
 import useProjectStore from "@/store/project";
+import useRealtimeHighlightStore from "@/store/realtime-highlight";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import type Task from "@/types/task";
 import TaskCardContextMenuContent from "../kanban-board/task-card-context-menu/task-card-context-menu-content";
@@ -70,6 +72,23 @@ export default function BacklogTaskRow({ task }: BacklogTaskRowProps) {
     useBacklogBulkSelectionStore();
   const isTaskSelected = isSelected(task.id);
   const isTaskFocused = isFocused(task.id);
+
+  // Resalte cuando otra persona cambia esta tarea (marca §06 principio 5).
+  const pulse = useRealtimeHighlightStore(
+    (state) => state.pulses[task.id] ?? 0,
+  );
+  const reduceMotion = useReducedMotion();
+  const [isFlashing, setIsFlashing] = useState(false);
+  useEffect(() => {
+    if (!pulse) return;
+    setIsFlashing(true);
+    const timeout = setTimeout(() => setIsFlashing(false), 900);
+    return () => clearTimeout(timeout);
+  }, [pulse]);
+  let flashClass = "";
+  if (isFlashing) {
+    flashClass = reduceMotion ? "riuna-flash-static" : "animate-flux";
+  }
 
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(
     workspace?.id ?? "",
@@ -144,6 +163,7 @@ export default function BacklogTaskRow({ task }: BacklogTaskRowProps) {
         isTaskSelected &&
           "bg-accent/60 shadow-sm ring-1 ring-inset ring-ring/30",
         isTaskFocused && "ring-2 ring-inset ring-ring/50",
+        flashClass,
       )}
     >
       <ContextMenu>

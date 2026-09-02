@@ -25,7 +25,7 @@ function LayoutHeader({ children, className }: HeaderProps) {
   return (
     <header
       className={cn(
-        "flex h-10 shrink-0 gap-2 transition-[width,height] ease-in-out group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-8 border-b border-border bg-card p-2",
+        "flex h-10 shrink-0 gap-2 transition-[width,height] ease-in-out border-b border-border bg-card p-2",
         className,
       )}
     >
@@ -43,14 +43,19 @@ function LayoutContent({ children, className }: ContentProps) {
 }
 
 function Layout({ children, className }: LayoutProps) {
-  const { sidebarDefaultOpen } = useUserPreferencesStore();
+  const { sidebarDefaultOpen, setSidebarDefaultOpen } =
+    useUserPreferencesStore();
 
   useUserPreferencesEffects();
 
   return (
     <div className="flex w-full bg-background">
+      {/* Controlado y persistido: cada ruta monta su propio <Layout>, asi que
+          sin esto el estado de la barra volveria al valor por defecto en cada
+          cambio de pestana o de proyecto. */}
       <SidebarProvider
-        defaultOpen={sidebarDefaultOpen}
+        open={sidebarDefaultOpen}
+        onOpenChange={setSidebarDefaultOpen}
         style={
           {
             "--sidebar-width": "calc(var(--spacing) * 60)",
@@ -61,7 +66,7 @@ function Layout({ children, className }: LayoutProps) {
         <AppSidebar />
         <SidebarInset
           className={cn(
-            "m-2 flex flex-1 flex-col overflow-auto rounded-xl border border-border/80 bg-background shadow-sm/5",
+            "m-2 flex min-w-0 flex-1 flex-col overflow-auto overscroll-none rounded-xl border border-border/80 bg-background shadow-sm/5",
             className,
           )}
         >
