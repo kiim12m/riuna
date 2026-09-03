@@ -7766,6 +7766,36 @@
 						},
 						"branchSpan": {
 							"type": "string"
+						},
+						"zoomLabel": {
+							"type": "string"
+						},
+						"zoomDay": {
+							"type": "string"
+						},
+						"zoomWeek": {
+							"type": "string"
+						},
+						"zoomMonth": {
+							"type": "string"
+						},
+						"zoomQuarter": {
+							"type": "string"
+						},
+						"jumpToday": {
+							"type": "string"
+						},
+						"previousRange": {
+							"type": "string"
+						},
+						"nextRange": {
+							"type": "string"
+						},
+						"quarterShort": {
+							"type": "string"
+						},
+						"dependencyBlocks": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -7783,7 +7813,17 @@
 						"resizeStart",
 						"resizeDue",
 						"taskAriaLabel",
-						"branchSpan"
+						"branchSpan",
+						"zoomLabel",
+						"zoomDay",
+						"zoomWeek",
+						"zoomMonth",
+						"zoomQuarter",
+						"jumpToday",
+						"previousRange",
+						"nextRange",
+						"quarterShort",
+						"dependencyBlocks"
 					]
 				},
 				"delete": {
