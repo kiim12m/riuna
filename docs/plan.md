@@ -731,8 +731,9 @@ incremental sobre algo vivo y en uso.*
 
 Pasada de UX previa a la Fase 6 para dar aspecto diferencial. Se decidió sobre
 maquetas HTML ([`design-previews/`](design-previews/)) y quedó escrita en las
-[ADR 018–022](adr/): escala tipográfica, densidad configurable, escala de
-elevación, sistema de movimiento y rail de la barra lateral.
+[ADR 018–023](adr/): escala tipográfica, densidad configurable, escala de
+elevación, sistema de movimiento, rail de la barra lateral y —para el Gantt, la
+única vista que la primera pasada no tocó— zoom y bandas de cabecera.
 
 **Hecho y verificado** (build + typecheck + Biome + pasada manual en navegador):
 resalte en tiempo real (cierra el principio 5 de marca), entrada de tarjeta y
@@ -741,11 +742,23 @@ rail de iconos en la barra lateral, tarjetas del tablero enfocables por teclado,
 casilla real en el filtro del tablero, y densidad compacta conmutable desde
 ajustes (consumida por el tablero).
 
+**Gantt** (segunda entrega del interludio, [ADR 023](adr/023-zoom-y-bandas-del-gantt.md)):
+zoom Día/Semana/Mes/Trimestre con `‹ Hoy ›`, cabecera de dos bandas adaptativa,
+columna del día actual sombreada, barras finas de teal suave sin texto ancladas
+al centro del día de inicio y de fin, con dos grosores (tarea de primer nivel y
+subtarea), filas en orden de árbol con sangría,
+riel de una línea con color de prioridad, estados vacíos con el primitivo
+`Empty`, y una capa **solo lectura** de líneas de dependencia `blocks` (nueva
+lectura `GET /task-relation/project/:projectId`). Crear/editar dependencias
+sigue siendo Fase 6.
+
 **Deuda declarada:** la adopción de los tokens de elevación (`shadow-e1..e4`) y
 de la escala tipográfica es **incremental** —lo dicen las ADR 018 y 020, «no hay
-un corte único»—; hoy los tokens existen y solo el tablero consume densidad. El
-**compositor de tarea en línea** al pie de columna queda para una pasada propia:
-es función nueva, no pulido.
+un corte único»—; hoy los tokens existen y solo el tablero y el Gantt consumen
+densidad. El **compositor de tarea en línea** al pie de columna queda para una
+pasada propia: es función nueva, no pulido. En el Gantt, encajar el arrastre a la
+unidad del zoom (semana/mes) y virtualizar filas quedan pendientes si el
+perfilado lo pide.
 
 ### Fase 6 — Ejecución y productividad personal (≈3 semanas)
 **Mi trabajo** (tareas propias de todos los proyectos), bandeja unificada,
