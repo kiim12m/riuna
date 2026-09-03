@@ -121,6 +121,12 @@ export function useProjectWebSocket(projectId: string) {
             }
 
             if (message.type === "TASK_RELATION_UPDATED") {
+              // La capa de dependencias del Gantt lee las relaciones por
+              // proyecto, con su propia clave; las invalidaciones por tarea de
+              // abajo no la alcanzan.
+              queryClient.invalidateQueries({
+                queryKey: ["task-relations", "project", message.projectId],
+              });
               if (message.sourceTaskId) {
                 queryClient.invalidateQueries({
                   queryKey: ["task", message.sourceTaskId],
