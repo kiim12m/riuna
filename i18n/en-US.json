@@ -2016,7 +2016,17 @@
 			"resizeStart": "Resize start date",
 			"resizeDue": "Resize due date",
 			"taskAriaLabel": "{{title}}: open or drag to move",
-			"branchSpan": "Span of the whole branch"
+			"branchSpan": "Span of the whole branch",
+			"zoomLabel": "Timeline scale",
+			"zoomDay": "Day",
+			"zoomWeek": "Week",
+			"zoomMonth": "Month",
+			"zoomQuarter": "Quarter",
+			"jumpToday": "Today",
+			"previousRange": "Scroll back",
+			"nextRange": "Scroll forward",
+			"quarterShort": "Q{{n}}",
+			"dependencyBlocks": "{{source}} blocks {{target}}"
 		},
 		"delete": {
 			"title": "Delete Task?",

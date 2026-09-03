@@ -1992,7 +1992,17 @@
 			"resizeStart": "Cambiar la fecha de comienzo",
 			"resizeDue": "Cambiar la fecha de vencimiento",
 			"taskAriaLabel": "{{title}}: abrir o arrastrar para mover",
-			"branchSpan": "Tramo de toda la rama"
+			"branchSpan": "Tramo de toda la rama",
+			"zoomLabel": "Escala temporal",
+			"zoomDay": "Día",
+			"zoomWeek": "Semana",
+			"zoomMonth": "Mes",
+			"zoomQuarter": "Trimestre",
+			"jumpToday": "Hoy",
+			"previousRange": "Retroceder",
+			"nextRange": "Avanzar",
+			"quarterShort": "T{{n}}",
+			"dependencyBlocks": "{{source}} bloquea a {{target}}"
 		},
 		"delete": {
 			"title": "¿Eliminar tarea?",
