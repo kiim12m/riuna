@@ -378,6 +378,14 @@
 			"version": "7",
 			"when": 1788524737050,
 			"tag": "0053_secret_lockjaw",
+			"breakpoints": true
+		},
+		{
+			"idx": 54,
+			"version": "7",
+			"when": 1788526602836,
+			"tag": "0054_flaky_santa_claus",
+			"breakpoints": true
 		}
 	]
 }

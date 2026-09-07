@@ -60,6 +60,7 @@ import { getPrivateObject } from "./storage/s3";
 import task from "./task";
 import taskRelation from "./task-relation";
 import telegramIntegration from "./telegram-integration";
+import template from "./template";
 import timeEntry from "./time-entry";
 import user from "./user";
 import getAvatar from "./user/controllers/get-avatar";
@@ -613,6 +614,7 @@ export function createApp() {
   );
   const cycleApi = api.route("/cycle", cycle);
   const recurrenceApi = api.route("/recurrence", recurrence);
+  const templateApi = api.route("/template", template);
   const myWorkApi = api.route("/my-work", myWork);
   const searchApi = api.route("/search", search);
   const githubIntegrationApi = api.route(
@@ -795,6 +797,7 @@ export function createApp() {
     invitationPublicApi,
     cycleApi,
     recurrenceApi,
+    templateApi,
     labelApi,
     myWorkApi,
     notificationApi,
@@ -944,6 +947,7 @@ const {
   invitationPublicApi,
   cycleApi,
   recurrenceApi,
+  templateApi,
   labelApi,
   myWorkApi,
   notificationApi,
@@ -989,6 +993,7 @@ export type AppType =
   | typeof notificationPreferencesApi
   | typeof cycleApi
   | typeof recurrenceApi
+  | typeof templateApi
   | typeof myWorkApi
   | typeof searchApi
   | typeof githubIntegrationApi

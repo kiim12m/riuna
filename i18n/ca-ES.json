@@ -1417,6 +1417,24 @@
 				"5": "Fri",
 				"6": "Sat"
 			}
+		},
+		"projectTemplates": {
+			"applied_one": "{{count}} task created",
+			"applied_other": "{{count}} tasks created",
+			"apply": "Use",
+			"applyError": "The template could not be applied",
+			"description": "Save a project or a task with everything under it, and deploy it again wherever you need. Templates belong to the workspace, so they work across projects.",
+			"kind": {
+				"project": "Project",
+				"task": "Tree"
+			},
+			"name": "Template name",
+			"namePlaceholder": "Name for the new template",
+			"saveProject": "Save this project as a template",
+			"saveTask": "Save as template",
+			"taskCount_one": "{{count}} task",
+			"taskCount_other": "{{count}} tasks",
+			"title": "Templates"
 		}
 	},
 	"navigation": {

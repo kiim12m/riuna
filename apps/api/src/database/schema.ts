@@ -694,6 +694,52 @@ export const cycleTable = pgTable(
 );
 
 /**
+ * Plantillas de proyecto y de arbol.
+ *
+ * Cuelgan del **espacio de trabajo** y no del proyecto, al reves que las epicas
+ * y los ciclos: una plantilla que solo sirviera en el proyecto donde se creo no
+ * seria una plantilla. Es la misma decision que `field_definition` toma con su
+ * `project_id` nulo.
+ *
+ * `content` guarda el arbol entero en `jsonb`. La alternativa —tablas de tareas
+ * plantilla con su propia jerarquia— duplicaria `task`, sus dos CHECK y su
+ * `path`, para datos que no se consultan ni se filtran: se leen enteros al
+ * aplicar la plantilla y nunca por partes. Ver ADR 027.
+ */
+export const templateTable = pgTable(
+  "template",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    description: text("description"),
+    /** `project` trae columnas y epicas ademas del arbol; `task` solo el arbol. */
+    kind: text("kind").notNull(),
+    content: jsonb("content").$type<Record<string, unknown>>().notNull(),
+    createdBy: text("created_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("template_workspaceId_idx").on(table.workspaceId),
+    check("template_kind_valid", sql`${table.kind} IN ('project', 'task')`),
+  ],
+);
+
+/**
  * Tareas recurrentes: la plantilla de lo que hay que crear y cada cuanto.
  *
  * La cadencia se guarda como un **modelo explicito** y no como una cadena

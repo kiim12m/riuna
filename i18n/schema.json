@@ -48,6 +48,12 @@
 						},
 						"clearAllFilters": {
 							"type": "string"
+						},
+						"previous": {
+							"type": "string"
+						},
+						"next": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -61,8 +67,23 @@
 						"remove",
 						"reset",
 						"filter",
-						"clearAllFilters"
+						"clearAllFilters",
+						"previous",
+						"next"
 					]
+				},
+				"boolean": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"yes": {
+							"type": "string"
+						},
+						"no": {
+							"type": "string"
+						}
+					},
+					"required": ["yes", "no"]
 				},
 				"a11y": {
 					"type": "object",
@@ -608,6 +629,7 @@
 			"required": [
 				"appName",
 				"actions",
+				"boolean",
 				"a11y",
 				"sidebar",
 				"empty",
@@ -5003,76 +5025,238 @@
 					"type": "object",
 					"additionalProperties": false,
 					"properties": {
-						"exportTasks": {
+						"analyzeError": {
 							"type": "string"
 						},
-						"importTasks": {
+						"check": {
 							"type": "string"
 						},
-						"dialogTitle": {
+						"checkResult": {
 							"type": "string"
 						},
 						"dialogDescription": {
 							"type": "string"
 						},
-						"expectedFormat": {
+						"dialogTitle": {
 							"type": "string"
 						},
 						"dropHint": {
 							"type": "string"
 						},
-						"selectFile": {
+						"existingField": {
 							"type": "string"
 						},
-						"exporting": {
-							"type": "string"
-						},
-						"exportSuccess": {
+						"exportCsv": {
 							"type": "string"
 						},
 						"exportError": {
 							"type": "string"
 						},
-						"importing": {
+						"exportJson": {
 							"type": "string"
 						},
-						"importSuccess": {
+						"exportSuccess": {
+							"type": "string"
+						},
+						"exportXlsx": {
+							"type": "string"
+						},
+						"exporting": {
+							"type": "string"
+						},
+						"field": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"assignee": {
+									"type": "string"
+								},
+								"assignees": {
+									"type": "string"
+								},
+								"description": {
+									"type": "string"
+								},
+								"descriptionHtml": {
+									"type": "string"
+								},
+								"dueDate": {
+									"type": "string"
+								},
+								"epics": {
+									"type": "string"
+								},
+								"estimateHours": {
+									"type": "string"
+								},
+								"id": {
+									"type": "string"
+								},
+								"labels": {
+									"type": "string"
+								},
+								"outline": {
+									"type": "string"
+								},
+								"priority": {
+									"type": "string"
+								},
+								"reference": {
+									"type": "string"
+								},
+								"startDate": {
+									"type": "string"
+								},
+								"status": {
+									"type": "string"
+								},
+								"team": {
+									"type": "string"
+								},
+								"title": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"assignee",
+								"assignees",
+								"description",
+								"descriptionHtml",
+								"dueDate",
+								"epics",
+								"estimateHours",
+								"id",
+								"labels",
+								"outline",
+								"priority",
+								"reference",
+								"startDate",
+								"status",
+								"team",
+								"title"
+							]
+						},
+						"importError": {
 							"type": "string"
 						},
 						"importPartialError": {
 							"type": "string"
 						},
-						"importError": {
+						"importSuccess": {
 							"type": "string"
 						},
-						"invalidFormat": {
+						"importTasks": {
 							"type": "string"
 						},
 						"noFileDropped": {
 							"type": "string"
 						},
-						"notJsonFile": {
+						"noOutline": {
+							"type": "string"
+						},
+						"outlineIssues": {
+							"type": "string"
+						},
+						"outlineSummary": {
+							"type": "string"
+						},
+						"selectFile": {
+							"type": "string"
+						},
+						"sourceHint": {
+							"type": "string"
+						},
+						"sourceLabel": {
+							"type": "string"
+						},
+						"summary": {
+							"type": "string"
+						},
+						"targetCustom": {
+							"type": "string"
+						},
+						"targetIgnore": {
+							"type": "string"
+						},
+						"type": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"checkbox": {
+									"type": "string"
+								},
+								"currency": {
+									"type": "string"
+								},
+								"date": {
+									"type": "string"
+								},
+								"multi_select": {
+									"type": "string"
+								},
+								"number": {
+									"type": "string"
+								},
+								"select": {
+									"type": "string"
+								},
+								"text": {
+									"type": "string"
+								},
+								"url": {
+									"type": "string"
+								},
+								"user": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"checkbox",
+								"currency",
+								"date",
+								"multi_select",
+								"number",
+								"select",
+								"text",
+								"url",
+								"user"
+							]
+						},
+						"unnamedColumn": {
 							"type": "string"
 						}
 					},
 					"required": [
-						"exportTasks",
-						"importTasks",
-						"dialogTitle",
+						"analyzeError",
+						"check",
+						"checkResult",
 						"dialogDescription",
-						"expectedFormat",
+						"dialogTitle",
 						"dropHint",
-						"selectFile",
-						"exporting",
-						"exportSuccess",
+						"existingField",
+						"exportCsv",
 						"exportError",
-						"importing",
-						"importSuccess",
-						"importPartialError",
+						"exportJson",
+						"exportSuccess",
+						"exportXlsx",
+						"exporting",
+						"field",
 						"importError",
-						"invalidFormat",
+						"importPartialError",
+						"importSuccess",
+						"importTasks",
 						"noFileDropped",
-						"notJsonFile"
+						"noOutline",
+						"outlineIssues",
+						"outlineSummary",
+						"selectFile",
+						"sourceHint",
+						"sourceLabel",
+						"summary",
+						"targetCustom",
+						"targetIgnore",
+						"type",
+						"unnamedColumn"
 					]
 				},
 				"workflowEditor": {
@@ -5275,6 +5459,206 @@
 						"updateError",
 						"deleteError"
 					]
+				},
+				"projectRecurrences": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"taskTitle": {
+							"type": "string"
+						},
+						"taskTitlePlaceholder": {
+							"type": "string"
+						},
+						"frequency": {
+							"type": "string"
+						},
+						"frequencies": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"daily": {
+									"type": "string"
+								},
+								"weekly": {
+									"type": "string"
+								},
+								"monthly": {
+									"type": "string"
+								}
+							},
+							"required": ["daily", "weekly", "monthly"]
+						},
+						"interval": {
+							"type": "string"
+						},
+						"dayOfMonth": {
+							"type": "string"
+						},
+						"weekdays": {
+							"type": "string"
+						},
+						"weekdayShort": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"0": {
+									"type": "string"
+								},
+								"1": {
+									"type": "string"
+								},
+								"2": {
+									"type": "string"
+								},
+								"3": {
+									"type": "string"
+								},
+								"4": {
+									"type": "string"
+								},
+								"5": {
+									"type": "string"
+								},
+								"6": {
+									"type": "string"
+								}
+							},
+							"required": ["0", "1", "2", "3", "4", "5", "6"]
+						},
+						"add": {
+							"type": "string"
+						},
+						"pause": {
+							"type": "string"
+						},
+						"resume": {
+							"type": "string"
+						},
+						"everyDays_one": {
+							"type": "string"
+						},
+						"everyDays_other": {
+							"type": "string"
+						},
+						"everyWeeks_one": {
+							"type": "string"
+						},
+						"everyWeeks_other": {
+							"type": "string"
+						},
+						"everyMonths_one": {
+							"type": "string"
+						},
+						"everyMonths_other": {
+							"type": "string"
+						},
+						"generated_one": {
+							"type": "string"
+						},
+						"generated_other": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"taskTitle",
+						"taskTitlePlaceholder",
+						"frequency",
+						"frequencies",
+						"interval",
+						"dayOfMonth",
+						"weekdays",
+						"weekdayShort",
+						"add",
+						"pause",
+						"resume",
+						"everyDays_one",
+						"everyDays_other",
+						"everyWeeks_one",
+						"everyWeeks_other",
+						"everyMonths_one",
+						"everyMonths_other",
+						"generated_one",
+						"generated_other"
+					]
+				},
+				"projectTemplates": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"kind": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"project": {
+									"type": "string"
+								},
+								"task": {
+									"type": "string"
+								}
+							},
+							"required": ["project", "task"]
+						},
+						"name": {
+							"type": "string"
+						},
+						"namePlaceholder": {
+							"type": "string"
+						},
+						"saveProject": {
+							"type": "string"
+						},
+						"saveTask": {
+							"type": "string"
+						},
+						"apply": {
+							"type": "string"
+						},
+						"applyError": {
+							"type": "string"
+						},
+						"applied_one": {
+							"type": "string"
+						},
+						"applied_other": {
+							"type": "string"
+						},
+						"taskCount_one": {
+							"type": "string"
+						},
+						"taskCount_other": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"kind",
+						"name",
+						"namePlaceholder",
+						"saveProject",
+						"saveTask",
+						"apply",
+						"applyError",
+						"applied_one",
+						"applied_other",
+						"taskCount_one",
+						"taskCount_other"
+					]
 				}
 			},
 			"required": [
@@ -5311,7 +5695,9 @@
 				"workflowEditor",
 				"externalLinks",
 				"projectTree",
-				"projectEpics"
+				"projectEpics",
+				"projectRecurrences",
+				"projectTemplates"
 			]
 		},
 		"navigation": {
@@ -5423,6 +5809,9 @@
 						},
 						"backToBoard": {
 							"type": "string"
+						},
+						"myWork": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -5431,7 +5820,8 @@
 						"members",
 						"invitations",
 						"more",
-						"backToBoard"
+						"backToBoard",
+						"myWork"
 					]
 				},
 				"projectList": {
@@ -5999,6 +6389,18 @@
 				"assignedToTeam": {
 					"type": "string"
 				},
+				"nestedUnderTask": {
+					"type": "string"
+				},
+				"promotedToRoot": {
+					"type": "string"
+				},
+				"epicsUpdated": {
+					"type": "string"
+				},
+				"epicsCleared": {
+					"type": "string"
+				},
 				"teamUnassigned": {
 					"type": "string"
 				},
@@ -6437,6 +6839,10 @@
 			"required": [
 				"assignedToSelf",
 				"assignedToTeam",
+				"nestedUnderTask",
+				"promotedToRoot",
+				"epicsUpdated",
+				"epicsCleared",
 				"teamUnassigned",
 				"unassigned",
 				"assignedTo",
@@ -7135,6 +7541,9 @@
 						},
 						"noDate": {
 							"type": "string"
+						},
+						"customFields": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -7144,7 +7553,8 @@
 						"copyTaskBranch",
 						"start",
 						"startDate",
-						"noDate"
+						"noDate",
+						"customFields"
 					]
 				},
 				"move": {
@@ -8291,6 +8701,310 @@
 						"emptyProject",
 						"updateError"
 					]
+				},
+				"table": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"pageTitle": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"expand": {
+							"type": "string"
+						},
+						"collapse": {
+							"type": "string"
+						},
+						"saveFailed": {
+							"type": "string"
+						},
+						"columns": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"status": {
+									"type": "string"
+								},
+								"priority": {
+									"type": "string"
+								},
+								"assignee": {
+									"type": "string"
+								},
+								"dueDate": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "status", "priority", "assignee", "dueDate"]
+						},
+						"addField": {
+							"type": "string"
+						},
+						"addFieldTitle": {
+							"type": "string"
+						},
+						"addFieldDescription": {
+							"type": "string"
+						},
+						"fieldName": {
+							"type": "string"
+						},
+						"fieldNamePlaceholder": {
+							"type": "string"
+						},
+						"fieldType": {
+							"type": "string"
+						},
+						"fieldOptions": {
+							"type": "string"
+						},
+						"fieldOptionsPlaceholder": {
+							"type": "string"
+						},
+						"fieldCurrency": {
+							"type": "string"
+						},
+						"createField": {
+							"type": "string"
+						},
+						"fieldCreated": {
+							"type": "string"
+						},
+						"fieldCreateFailed": {
+							"type": "string"
+						},
+						"fieldTypes": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"text": {
+									"type": "string"
+								},
+								"number": {
+									"type": "string"
+								},
+								"currency": {
+									"type": "string"
+								},
+								"select": {
+									"type": "string"
+								},
+								"multi_select": {
+									"type": "string"
+								},
+								"date": {
+									"type": "string"
+								},
+								"checkbox": {
+									"type": "string"
+								},
+								"user": {
+									"type": "string"
+								},
+								"url": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"text",
+								"number",
+								"currency",
+								"select",
+								"multi_select",
+								"date",
+								"checkbox",
+								"user",
+								"url"
+							]
+						},
+						"addFilter": {
+							"type": "string"
+						},
+						"removeFilter": {
+							"type": "string"
+						},
+						"filterValue": {
+							"type": "string"
+						},
+						"filterFailed": {
+							"type": "string"
+						},
+						"operators": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"eq": {
+									"type": "string"
+								},
+								"neq": {
+									"type": "string"
+								},
+								"gt": {
+									"type": "string"
+								},
+								"gte": {
+									"type": "string"
+								},
+								"lt": {
+									"type": "string"
+								},
+								"lte": {
+									"type": "string"
+								},
+								"contains": {
+									"type": "string"
+								},
+								"startsWith": {
+									"type": "string"
+								},
+								"in": {
+									"type": "string"
+								},
+								"notIn": {
+									"type": "string"
+								},
+								"isEmpty": {
+									"type": "string"
+								},
+								"isNotEmpty": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"eq",
+								"neq",
+								"gt",
+								"gte",
+								"lt",
+								"lte",
+								"contains",
+								"startsWith",
+								"in",
+								"notIn",
+								"isEmpty",
+								"isNotEmpty"
+							]
+						},
+						"treeModes": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"tree": {
+									"type": "string"
+								},
+								"flat": {
+									"type": "string"
+								},
+								"roots": {
+									"type": "string"
+								},
+								"withDescendants": {
+									"type": "string"
+								}
+							},
+							"required": ["tree", "flat", "roots", "withDescendants"]
+						},
+						"views": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"empty": {
+									"type": "string"
+								},
+								"save": {
+									"type": "string"
+								},
+								"saveTitle": {
+									"type": "string"
+								},
+								"saveDescription": {
+									"type": "string"
+								},
+								"name": {
+									"type": "string"
+								},
+								"namePlaceholder": {
+									"type": "string"
+								},
+								"share": {
+									"type": "string"
+								},
+								"saved": {
+									"type": "string"
+								},
+								"saveFailed": {
+									"type": "string"
+								},
+								"delete": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"label",
+								"empty",
+								"save",
+								"saveTitle",
+								"saveDescription",
+								"name",
+								"namePlaceholder",
+								"share",
+								"saved",
+								"saveFailed",
+								"delete"
+							]
+						}
+					},
+					"required": [
+						"title",
+						"pageTitle",
+						"empty",
+						"expand",
+						"collapse",
+						"saveFailed",
+						"columns",
+						"addField",
+						"addFieldTitle",
+						"addFieldDescription",
+						"fieldName",
+						"fieldNamePlaceholder",
+						"fieldType",
+						"fieldOptions",
+						"fieldOptionsPlaceholder",
+						"fieldCurrency",
+						"createField",
+						"fieldCreated",
+						"fieldCreateFailed",
+						"fieldTypes",
+						"addFilter",
+						"removeFilter",
+						"filterValue",
+						"filterFailed",
+						"operators",
+						"treeModes",
+						"views"
+					]
+				},
+				"projectSize": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"warning": {
+							"type": "string"
+						}
+					},
+					"required": ["warning"]
 				}
 			},
 			"required": [
@@ -8327,7 +9041,9 @@
 				"editor",
 				"team",
 				"tree",
-				"epics"
+				"epics",
+				"table",
+				"projectSize"
 			]
 		},
 		"invitations": {
@@ -9157,6 +9873,400 @@
 				"copyUrl",
 				"branding"
 			]
+		},
+		"myWork": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"pageTitle": {
+					"type": "string"
+				},
+				"count_one": {
+					"type": "string"
+				},
+				"count_other": {
+					"type": "string"
+				},
+				"error": {
+					"type": "string"
+				},
+				"tabs": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"tasks": {
+							"type": "string"
+						},
+						"inbox": {
+							"type": "string"
+						}
+					},
+					"required": ["tasks", "inbox"]
+				},
+				"sections": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"assigned": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"empty": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"title": {
+											"type": "string"
+										},
+										"description": {
+											"type": "string"
+										}
+									},
+									"required": ["title", "description"]
+								}
+							},
+							"required": ["title", "empty"]
+						},
+						"team": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"empty": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"title": {
+											"type": "string"
+										},
+										"description": {
+											"type": "string"
+										}
+									},
+									"required": ["title", "description"]
+								}
+							},
+							"required": ["title", "empty"]
+						}
+					},
+					"required": ["assigned", "team"]
+				},
+				"filters": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"due": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"all": {
+									"type": "string"
+								},
+								"overdue": {
+									"type": "string"
+								},
+								"today": {
+									"type": "string"
+								},
+								"week": {
+									"type": "string"
+								}
+							},
+							"required": ["label", "all", "overdue", "today", "week"]
+						},
+						"project": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"all": {
+									"type": "string"
+								}
+							},
+							"required": ["label", "all"]
+						},
+						"showDone": {
+							"type": "string"
+						}
+					},
+					"required": ["due", "project", "showDone"]
+				},
+				"inbox": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"limitNotice": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"description": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "description"]
+						}
+					},
+					"required": ["limitNotice", "empty"]
+				}
+			},
+			"required": [
+				"pageTitle",
+				"count_one",
+				"count_other",
+				"error",
+				"tabs",
+				"sections",
+				"filters",
+				"inbox"
+			]
+		},
+		"cycles": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"title": {
+					"type": "string"
+				},
+				"pageTitle": {
+					"type": "string"
+				},
+				"status": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"planned": {
+							"type": "string"
+						},
+						"active": {
+							"type": "string"
+						},
+						"closed": {
+							"type": "string"
+						}
+					},
+					"required": ["planned", "active", "closed"]
+				},
+				"unit": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"tasks": {
+							"type": "string"
+						},
+						"hours": {
+							"type": "string"
+						}
+					},
+					"required": ["tasks", "hours"]
+				},
+				"actions": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"start": {
+							"type": "string"
+						},
+						"close": {
+							"type": "string"
+						}
+					},
+					"required": ["start", "close"]
+				},
+				"empty": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "description"]
+				},
+				"stats": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"completed": {
+							"type": "string"
+						},
+						"estimated": {
+							"type": "string"
+						},
+						"velocity": {
+							"type": "string"
+						},
+						"logged": {
+							"type": "string"
+						}
+					},
+					"required": ["completed", "estimated", "velocity", "logged"]
+				},
+				"burndown": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"actual": {
+							"type": "string"
+						},
+						"ideal": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "actual", "ideal"]
+				},
+				"velocity": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"completed": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "completed", "empty"]
+				},
+				"hours": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"unknownPerson": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "empty", "unknownPerson"]
+				},
+				"create": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"name": {
+							"type": "string"
+						},
+						"namePlaceholder": {
+							"type": "string"
+						},
+						"goal": {
+							"type": "string"
+						},
+						"goalPlaceholder": {
+							"type": "string"
+						},
+						"startDate": {
+							"type": "string"
+						},
+						"endDate": {
+							"type": "string"
+						},
+						"datesInvalid": {
+							"type": "string"
+						},
+						"confirm": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"name",
+						"namePlaceholder",
+						"goal",
+						"goalPlaceholder",
+						"startDate",
+						"endDate",
+						"datesInvalid",
+						"confirm"
+					]
+				},
+				"close": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description_one": {
+							"type": "string"
+						},
+						"description_other": {
+							"type": "string"
+						},
+						"descriptionEmpty": {
+							"type": "string"
+						},
+						"moveTo": {
+							"type": "string"
+						},
+						"backlog": {
+							"type": "string"
+						},
+						"confirm": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"description_one",
+						"description_other",
+						"descriptionEmpty",
+						"moveTo",
+						"backlog",
+						"confirm"
+					]
+				}
+			},
+			"required": [
+				"title",
+				"pageTitle",
+				"status",
+				"unit",
+				"actions",
+				"empty",
+				"stats",
+				"burndown",
+				"velocity",
+				"hours",
+				"create",
+				"close"
+			]
 		}
 	},
 	"required": [
@@ -9170,6 +10280,8 @@
 		"invitations",
 		"workspace",
 		"team",
-		"publicProject"
+		"publicProject",
+		"myWork",
+		"cycles"
 	]
 }

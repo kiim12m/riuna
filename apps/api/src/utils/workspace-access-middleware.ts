@@ -21,6 +21,7 @@ type WorkspaceIdSource =
         | "workflowRule"
         | "cycle"
         | "recurrence"
+        | "template"
         | "epic"
         | "fieldDefinition"
         | "view";
@@ -145,6 +146,7 @@ async function lookupWorkspaceId(
     | "workflowRule"
     | "cycle"
     | "recurrence"
+    | "template"
     | "epic"
     | "fieldDefinition"
     | "view",
@@ -192,6 +194,17 @@ async function lookupWorkspaceId(
           .where(eq(schema.fieldDefinitionTable.id, id))
           .limit(1);
         return definition?.workspaceId || null;
+      }
+
+      case "template": {
+        const [row] = await db
+          .select({ workspaceId: schema.templateTable.workspaceId })
+          .from(schema.templateTable)
+          .where(eq(schema.templateTable.id, id))
+          .limit(1);
+        return row?.workspaceId || null;
+      }
+
       case "recurrence": {
         const [row] = await db
           .select({ workspaceId: schema.projectTable.workspaceId })
@@ -431,6 +444,14 @@ export const workspaceAccess = {
     workspaceAccessMiddleware({
       sources: [
         { type: "lookup", resource: "workflowRule", idKey },
+        { type: "query", key: "workspaceId" },
+      ],
+    }),
+
+  fromTemplate: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [
+        { type: "lookup", resource: "template", idKey },
         { type: "query", key: "workspaceId" },
       ],
     }),

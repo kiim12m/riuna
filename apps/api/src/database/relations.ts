@@ -25,6 +25,7 @@ import {
   taskTable,
   teamMemberTable,
   teamTable,
+  templateTable,
   timeEntryTable,
   userNotificationPreferenceTable,
   userNotificationWorkspaceProjectTable,
@@ -83,6 +84,7 @@ export const workspaceTableRelations = relations(
     assets: many(assetTable),
     fieldDefinitions: many(fieldDefinitionTable),
     views: many(viewTable),
+    templates: many(templateTable),
     invitations: many(invitationTable),
     notificationWorkspaceRules: many(userNotificationWorkspaceRuleTable),
   }),
@@ -196,6 +198,15 @@ export const epicTableRelations = relations(epicTable, ({ one, many }) => ({
     references: [projectTable.id],
   }),
   tasks: many(taskEpicTable),
+}));
+
+export const templateTableRelations = relations(templateTable, ({ one }) => ({
+  workspace: one(workspaceTable, {
+    fields: [templateTable.workspaceId],
+    references: [workspaceTable.id],
+  }),
+}));
+
 export const taskRecurrenceTableRelations = relations(
   taskRecurrenceTable,
   ({ one, many }) => ({

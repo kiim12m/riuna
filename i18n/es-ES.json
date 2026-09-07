@@ -1417,6 +1417,24 @@
 				"5": "Vie",
 				"6": "Sáb"
 			}
+		},
+		"projectTemplates": {
+			"applied_one": "{{count}} tarea creada",
+			"applied_other": "{{count}} tareas creadas",
+			"apply": "Usar",
+			"applyError": "No se ha podido aplicar la plantilla",
+			"description": "Guarda un proyecto o una tarea con todo lo que cuelga de ella, y vuelve a desplegarlo donde haga falta. Las plantillas son del espacio de trabajo, así que sirven en cualquier proyecto.",
+			"kind": {
+				"project": "Proyecto",
+				"task": "Árbol"
+			},
+			"name": "Nombre de la plantilla",
+			"namePlaceholder": "Nombre de la nueva plantilla",
+			"saveProject": "Guardar este proyecto como plantilla",
+			"saveTask": "Guardar como plantilla",
+			"taskCount_one": "{{count}} tarea",
+			"taskCount_other": "{{count}} tareas",
+			"title": "Plantillas"
 		}
 	},
 	"navigation": {
