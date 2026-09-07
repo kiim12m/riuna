@@ -973,7 +973,12 @@ const isMainModule =
   import.meta.url === pathToFileURL(entrypoint).href;
 
 if (isMainModule) {
-  void startServer(injectWebSocket);
+  // `PORT` es la convencion que esperan casi todas las plataformas de
+  // despliegue, y es lo que permite levantar una segunda instancia al lado de
+  // la de desarrollo —que es como corre el humo de Playwright sin pisar el
+  // 1337 de quien esta programando—.
+  const port = Number(process.env.PORT) || 1337;
+  void startServer(injectWebSocket, port);
 }
 
 export type AppType =

@@ -72,3 +72,7 @@ apps/api/_direct_dev.log
 # aqui cuando el directorio del usuario esta en otro sistema de ficheros, y son
 # 1,4 GB de JSON que hacen fallar `biome ci` con mas de mil errores ajenos.
 .pnpm-store/
+
+# Playwright
+test-results/
+playwright-report/

@@ -26,6 +26,8 @@
 			"!**/coverage",
 			"!**/.claude",
 			"!**/.pnpm-store",
+			"!**/test-results",
+			"!**/playwright-report",
 			"!**/.pi",
 			"!**/.pi-subagents",
 			"!**/openapi.json"
