@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import PageTitle from "@/components/page-title";
 import ColumnEditor from "@/components/project/column-editor";
 import EpicEditor from "@/components/project/epic-editor";
+import RecurrenceEditor from "@/components/project/recurrence-editor";
 import TreeSettings from "@/components/project/tree-settings";
 import WorkflowEditor from "@/components/project/workflow-editor";
 
@@ -63,6 +64,18 @@ function RouteComponent() {
             </p>
           </div>
           <EpicEditor projectId={projectId} />
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-md font-medium">
+              {t("settings:projectRecurrences.title")}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {t("settings:projectRecurrences.description")}
+            </p>
+          </div>
+          <RecurrenceEditor projectId={projectId} />
         </div>
 
         <div className="space-y-6">

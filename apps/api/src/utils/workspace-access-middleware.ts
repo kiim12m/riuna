@@ -20,6 +20,7 @@ type WorkspaceIdSource =
         | "column"
         | "workflowRule"
         | "cycle"
+        | "recurrence"
         | "epic"
         | "fieldDefinition"
         | "view";
@@ -143,6 +144,7 @@ async function lookupWorkspaceId(
     | "column"
     | "workflowRule"
     | "cycle"
+    | "recurrence"
     | "epic"
     | "fieldDefinition"
     | "view",
@@ -190,6 +192,19 @@ async function lookupWorkspaceId(
           .where(eq(schema.fieldDefinitionTable.id, id))
           .limit(1);
         return definition?.workspaceId || null;
+      case "recurrence": {
+        const [row] = await db
+          .select({ workspaceId: schema.projectTable.workspaceId })
+          .from(schema.taskRecurrenceTable)
+          .innerJoin(
+            schema.projectTable,
+            eq(schema.taskRecurrenceTable.projectId, schema.projectTable.id),
+          )
+          .where(eq(schema.taskRecurrenceTable.id, id))
+          .limit(1);
+        return row?.workspaceId || null;
+      }
+
       case "cycle": {
         const [cycle] = await db
           .select({ workspaceId: schema.projectTable.workspaceId })
@@ -416,6 +431,14 @@ export const workspaceAccess = {
     workspaceAccessMiddleware({
       sources: [
         { type: "lookup", resource: "workflowRule", idKey },
+        { type: "query", key: "workspaceId" },
+      ],
+    }),
+
+  fromRecurrence: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [
+        { type: "lookup", resource: "recurrence", idKey },
         { type: "query", key: "workspaceId" },
       ],
     }),

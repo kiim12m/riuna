@@ -52,6 +52,7 @@ import { initializePlugins } from "./plugins";
 import { migrateGitHubIntegration } from "./plugins/github/migration";
 import project from "./project";
 import { getPublicProject } from "./project/controllers/get-public-project";
+import recurrence from "./recurrence";
 import { initializeScheduler, shutdownScheduler } from "./scheduler";
 import search from "./search";
 import slackIntegration from "./slack-integration";
@@ -611,6 +612,7 @@ export function createApp() {
     notificationPreferences,
   );
   const cycleApi = api.route("/cycle", cycle);
+  const recurrenceApi = api.route("/recurrence", recurrence);
   const myWorkApi = api.route("/my-work", myWork);
   const searchApi = api.route("/search", search);
   const githubIntegrationApi = api.route(
@@ -792,6 +794,7 @@ export function createApp() {
     invitationApi,
     invitationPublicApi,
     cycleApi,
+    recurrenceApi,
     labelApi,
     myWorkApi,
     notificationApi,
@@ -940,6 +943,7 @@ const {
   invitationApi,
   invitationPublicApi,
   cycleApi,
+  recurrenceApi,
   labelApi,
   myWorkApi,
   notificationApi,
@@ -984,6 +988,7 @@ export type AppType =
   | typeof notificationApi
   | typeof notificationPreferencesApi
   | typeof cycleApi
+  | typeof recurrenceApi
   | typeof myWorkApi
   | typeof searchApi
   | typeof githubIntegrationApi

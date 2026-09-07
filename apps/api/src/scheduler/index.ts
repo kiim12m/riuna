@@ -1,6 +1,8 @@
 import * as Sentry from "@sentry/node";
 import { Cron } from "croner";
+import { generateRecurringTasks } from "../recurrence/generate";
 import { checkDueDateReminders } from "./due-date-reminders";
+import { withJobLease } from "./leader-lock";
 import { checkProjectWebhookReminders } from "./project-webhook-reminders";
 import { reconcileWorkspaceSeats } from "./seat-reconciliation";
 import { checkTrialReminders } from "./trial-reminders";
@@ -65,6 +67,20 @@ export function initializeScheduler(): void {
   );
   jobs.push(
     new Cron("23 * * * *", withCheckIn("trial-reminders", checkTrialReminders)),
+  );
+  // Cada cinco minutos, pero **con arrendamiento**: al reves que los
+  // recordatorios, que son idempotentes gracias a su tabla de "ya enviado",
+  // generar una tarea no lo es. Con varias instancias, dos vueltas a la vez
+  // crearian dos tareas para la misma ocurrencia.
+  jobs.push(
+    new Cron(
+      "*/5 * * * *",
+      withCheckIn("recurring-tasks", () =>
+        withJobLease("recurring-tasks", generateRecurringTasks, () => ({
+          degraded: false,
+        })),
+      ),
+    ),
   );
   console.log(
     "⏰ Scheduler started (reminders every 5 minutes, seat reconciliation and trial reminders hourly)",

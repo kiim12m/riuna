@@ -1382,6 +1382,41 @@
 			"createError": "No se ha podido crear la épica",
 			"updateError": "No se ha podido cambiar la épica",
 			"deleteError": "No se ha podido borrar la épica"
+		},
+		"projectRecurrences": {
+			"add": "Añadir tarea recurrente",
+			"dayOfMonth": "Día",
+			"description": "Tareas que Riuna crea sola cada cierto tiempo. Para el parte semanal, la revisión mensual y todo lo que vuelve.",
+			"everyDays_one": "Cada día",
+			"everyDays_other": "Cada {{count}} días",
+			"everyMonths_one": "Cada mes el día {{day}}",
+			"everyMonths_other": "Cada {{count}} meses el día {{day}}",
+			"everyWeeks_one": "Cada semana",
+			"everyWeeks_other": "Cada {{count}} semanas",
+			"frequencies": {
+				"daily": "A diario",
+				"monthly": "Cada mes",
+				"weekly": "Cada semana"
+			},
+			"frequency": "Se repite",
+			"generated_one": "{{count}} tarea creada",
+			"generated_other": "{{count}} tareas creadas",
+			"interval": "Cada",
+			"pause": "Pausar",
+			"resume": "Reanudar",
+			"taskTitle": "Título de la tarea",
+			"taskTitlePlaceholder": "Parte semanal",
+			"title": "Tareas recurrentes",
+			"weekdays": "Días de la semana",
+			"weekdayShort": {
+				"0": "Dom",
+				"1": "Lun",
+				"2": "Mar",
+				"3": "Mié",
+				"4": "Jue",
+				"5": "Vie",
+				"6": "Sáb"
+			}
 		}
 	},
 	"navigation": {

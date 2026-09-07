@@ -480,6 +480,14 @@ export const taskTable = pgTable(
       onDelete: "set null",
       onUpdate: "cascade",
     }),
+    // De que recurrencia salio, si salio de alguna. Borrar la recurrencia no
+    // borra lo que ya genero.
+    recurrenceId: text("recurrence_id").references(
+      () => taskRecurrenceTable.id,
+      { onDelete: "set null", onUpdate: "cascade" },
+    ),
+    /**
+     * Cuando la tarea entro en una columna final. **Lo mantiene un disparador**
      * (`task_completed_at`), no la aplicacion: hay cinco escritores de `status`
      * en el dominio de tareas y otros tantos entre importacion, webhooks y MCP,
      * y la Fase 4.5 ya demostro que cuatro caminos que escriben lo mismo a mano
@@ -685,6 +693,62 @@ export const cycleTable = pgTable(
   ],
 );
 
+/**
+ * Tareas recurrentes: la plantilla de lo que hay que crear y cada cuanto.
+ *
+ * La cadencia se guarda como un **modelo explicito** y no como una cadena
+ * RRULE. RRULE es el estandar y lo cubre todo, pero exige una dependencia nueva
+ * para interpretar casos que aqui no pide nadie ("el ultimo jueves laborable de
+ * cada trimestre"); el modelo explicito —frecuencia, intervalo, dias— cubre lo
+ * que la gente configura de verdad y se lee sin libreria. Ver ADR 026.
+ *
+ * `template` guarda los campos de la tarea a crear, con la misma convencion de
+ * `jsonb` que `field_definition.config` y `view.config`: la alternativa era una
+ * tabla ancha que duplicaria la forma de `task` y envejeceria peor.
+ */
+export const taskRecurrenceTable = pgTable(
+  "task_recurrence",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projectTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    createdBy: text("created_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    // Sin valor por defecto a proposito: una plantilla sin titulo o una
+    // cadencia sin frecuencia no son un estado inicial valido, son una fila
+    // rota. Y con `default '{}'` la CHECK de abajo no comprobaria nada, porque
+    // `'{}'->>'frequency'` es NULL y una CHECK pasa con NULL.
+    template: jsonb("template").$type<Record<string, unknown>>().notNull(),
+    cadence: jsonb("cadence").$type<Record<string, unknown>>().notNull(),
+    /** Cuando toca la proxima. Es la columna que el planificador consulta. */
+    nextRunAt: timestamp("next_run_at", { mode: "date" }).notNull(),
+    lastRunAt: timestamp("last_run_at", { mode: "date" }),
+    /** Opcional: a partir de aqui deja de generar. */
+    endsAt: timestamp("ends_at", { mode: "date" }),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("task_recurrence_projectId_idx").on(table.projectId),
+    // El indice que sirve al planificador: "que toca ya". Parcial, porque una
+    // recurrencia apagada no se mira nunca y no tiene por que ocupar el indice.
+    index("task_recurrence_due_idx").on(table.nextRunAt).where(sql`active`),
+    check(
+      "task_recurrence_frequency_valid",
+      sql`${table.cadence}->>'frequency' IS NOT NULL AND ${table.cadence}->>'frequency' IN ('daily', 'weekly', 'monthly')`,
+    ),
   ],
 );
 

@@ -52,6 +52,7 @@
 		"better-auth": "^1.6.26",
 		"creem": "^1.6.0",
 		"croner": "^10.0.1",
+		"date-fns": "^4.4.0",
 		"drizzle-kit": "^0.31.10",
 		"drizzle-orm": "^0.45.2",
 		"exceljs": "^4.4.0",

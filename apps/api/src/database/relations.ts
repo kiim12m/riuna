@@ -19,6 +19,7 @@ import {
   sessionTable,
   taskAssigneeTable,
   taskEpicTable,
+  taskRecurrenceTable,
   taskRelationTable,
   taskReminderSentTable,
   taskTable,
@@ -111,6 +112,7 @@ export const projectTableRelations = relations(
     tasks: many(taskTable),
     epics: many(epicTable),
     cycles: many(cycleTable),
+    taskRecurrences: many(taskRecurrenceTable),
     fieldDefinitions: many(fieldDefinitionTable),
     assets: many(assetTable),
     columns: many(columnTable),
@@ -182,6 +184,10 @@ export const taskTableRelations = relations(taskTable, ({ one, many }) => ({
     fields: [taskTable.cycleId],
     references: [cycleTable.id],
   }),
+  recurrence: one(taskRecurrenceTable, {
+    fields: [taskTable.recurrenceId],
+    references: [taskRecurrenceTable.id],
+  }),
 }));
 
 export const epicTableRelations = relations(epicTable, ({ one, many }) => ({
@@ -190,6 +196,17 @@ export const epicTableRelations = relations(epicTable, ({ one, many }) => ({
     references: [projectTable.id],
   }),
   tasks: many(taskEpicTable),
+export const taskRecurrenceTableRelations = relations(
+  taskRecurrenceTable,
+  ({ one, many }) => ({
+    project: one(projectTable, {
+      fields: [taskRecurrenceTable.projectId],
+      references: [projectTable.id],
+    }),
+    tasks: many(taskTable),
+  }),
+);
+
 export const cycleTableRelations = relations(cycleTable, ({ one, many }) => ({
   project: one(projectTable, {
     fields: [cycleTable.projectId],

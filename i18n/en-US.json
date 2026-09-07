@@ -1382,6 +1382,41 @@
 			"createError": "Failed to create the epic",
 			"updateError": "Failed to update the epic",
 			"deleteError": "Failed to delete the epic"
+		},
+		"projectRecurrences": {
+			"title": "Recurring tasks",
+			"description": "Tasks that Riuna creates on a schedule. Useful for weekly reports, monthly reviews and anything that comes back.",
+			"taskTitle": "Task title",
+			"taskTitlePlaceholder": "Weekly report",
+			"frequency": "Repeats",
+			"frequencies": {
+				"daily": "Daily",
+				"weekly": "Weekly",
+				"monthly": "Monthly"
+			},
+			"interval": "Every",
+			"dayOfMonth": "Day",
+			"weekdays": "Days of the week",
+			"weekdayShort": {
+				"0": "Sun",
+				"1": "Mon",
+				"2": "Tue",
+				"3": "Wed",
+				"4": "Thu",
+				"5": "Fri",
+				"6": "Sat"
+			},
+			"add": "Add recurring task",
+			"pause": "Pause",
+			"resume": "Resume",
+			"everyDays_one": "Every day",
+			"everyDays_other": "Every {{count}} days",
+			"everyWeeks_one": "Every week",
+			"everyWeeks_other": "Every {{count}} weeks",
+			"everyMonths_one": "Every month on day {{day}}",
+			"everyMonths_other": "Every {{count}} months on day {{day}}",
+			"generated_one": "{{count}} task created",
+			"generated_other": "{{count}} tasks created"
 		}
 	},
 	"navigation": {

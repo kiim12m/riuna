@@ -1382,6 +1382,41 @@
 			"createError": "No se ha podido crear la épica",
 			"updateError": "No se ha podido cambiar la épica",
 			"deleteError": "No se ha podido borrar la épica"
+		},
+		"projectRecurrences": {
+			"add": "Add recurring task",
+			"dayOfMonth": "Day",
+			"description": "Tasks that Riuna creates on a schedule. Useful for weekly reports, monthly reviews and anything that comes back.",
+			"everyDays_one": "Every day",
+			"everyDays_other": "Every {{count}} days",
+			"everyMonths_one": "Every month on day {{day}}",
+			"everyMonths_other": "Every {{count}} months on day {{day}}",
+			"everyWeeks_one": "Every week",
+			"everyWeeks_other": "Every {{count}} weeks",
+			"frequencies": {
+				"daily": "Daily",
+				"monthly": "Monthly",
+				"weekly": "Weekly"
+			},
+			"frequency": "Repeats",
+			"generated_one": "{{count}} task created",
+			"generated_other": "{{count}} tasks created",
+			"interval": "Every",
+			"pause": "Pause",
+			"resume": "Resume",
+			"taskTitle": "Task title",
+			"taskTitlePlaceholder": "Weekly report",
+			"title": "Recurring tasks",
+			"weekdays": "Days of the week",
+			"weekdayShort": {
+				"0": "Sun",
+				"1": "Mon",
+				"2": "Tue",
+				"3": "Wed",
+				"4": "Thu",
+				"5": "Fri",
+				"6": "Sat"
+			}
 		}
 	},
 	"navigation": {
