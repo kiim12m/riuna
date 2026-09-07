@@ -18,7 +18,7 @@
 | 4.5 — Saneamiento | 5 | **Cerrada** — deuda abierta declarada (ver abajo) |
 | 5 — Importación y exportación | 2 | **Cerrada** — deuda abierta (ver abajo) |
 | **Subtotal: Riuna diferencial** | **23** | |
-| 6 — Ejecución y productividad personal | 3 | Pendiente |
+| 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | Pendiente |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
@@ -604,37 +604,6 @@ datos.
 - **Las pruebas de componente del web** no arrancan en el contenedor de
   desarrollo: los workers de jsdom caducan al iniciarse. Todo lo que sí arranca
   pasa, y CI las ejecuta enteras.
-- **`dueDate eq <día>` sigue comparando un instante.** Arreglado el caso de los
-  campos personalizados, que era el grave; el de las columnas `timestamp` exige
-  decidir en qué zona horaria vive un «día», y eso es una decisión de producto.
-- **Los índices de rango sobre `custom_fields`.** El envoltorio `CASE` que
-  protege del tipo equivocado impide que un índice de expresión llegue a usarse.
-  Medido: `Presupuesto > 1000` es un barrido, pero de 12 ms sobre 10.000 tareas,
-  así que no es urgente.
-- **Las pruebas de componente del web** no arrancan en el contenedor de
-  desarrollo (los workers de jsdom caducan). Corren en CI.
-
-**Fase 5**:
-- **El asistente de importación no se ha pasado por el navegador.** La API está
-  probada de punta a punta —19 casos de integración, más el banco de 5.000
-  filas—, pero los cuatro pasos del asistente web (elegir fichero, mapear
-  columnas, confirmar tipos, ver el informe) solo tienen el typecheck. Es la
-  misma deuda que la Fase 4 declaró con los desplegables de Base UI, que no
-  abren en un navegador headless.
-- **Reordenar hermanas solo actúa sobre grupos completos.** Si el fichero no
-  trae todas las hijas de un padre, ese grupo conserva su orden y el informe lo
-  cuenta (`siblingGroupsKept`). Reordenar un grupo a medias mezclaría el orden
-  viejo con el nuevo. Reordenar entre ficheros parciales —una vista filtrada que
-  reordena unas pocas— seguiría necesitando otro mecanismo, y no lo tiene.
-- **Reordenar hermanas mueve también su posición en el tablero**, porque `path`
-  y el tablero comparten la columna `position` desde la Fase 2 ([ADR 011]
-  (adr/011-arbol-de-tareas-y-epicas.md)). Es coherente con el modelo actual, no
-  un efecto secundario nuevo, pero se nota.
-- **La hoja de SERVITEC sigue sin importarse.** Se exporta y ahora comparte la
-  conversión de fechas con el motor, pero no hay camino de vuelta desde ese
-  `.xlsx` concreto: su cabecera doble («Fecha»/«FECHA») y su fila-leyenda no son
-  el formato de intercambio. Entra en la Fase 8 con los importadores externos si
-  hace falta.
 
 ### Fase 5 — Importación y exportación (≈2 semanas) · **cerrada**
 Generalizar los controladores existentes a **CSV y Excel** con mapeo de
@@ -724,6 +693,30 @@ también esa columna del tablero; no hay una segunda que gastar.
 `.xlsx` desde los ajustes del espacio de trabajo antes de la fase
 ([ADR 012](adr/012-exportacion-a-excel.md)).
 
+**Deuda abierta de la Fase 5**, declarada a sabiendas:
+
+- **El asistente de importación no se ha pasado por el navegador.** La API está
+  probada de punta a punta —19 casos de integración, más el banco de 5.000
+  filas—, pero los cuatro pasos del asistente web (elegir fichero, mapear
+  columnas, confirmar tipos, ver el informe) solo tienen el typecheck. Se
+  declaró como la deuda que la Fase 4 tenía con los desplegables de Base UI, y
+  ese motivo ya no vale: el humo de la Fase 6 demuestra que en Playwright abren.
+  Lo que falta es escribir el caso.
+- **Reordenar hermanas solo actúa sobre grupos completos.** Si el fichero no
+  trae todas las hijas de un padre, ese grupo conserva su orden y el informe lo
+  cuenta (`siblingGroupsKept`). Reordenar un grupo a medias mezclaría el orden
+  viejo con el nuevo. Reordenar entre ficheros parciales —una vista filtrada que
+  reordena unas pocas— seguiría necesitando otro mecanismo, y no lo tiene.
+- **Reordenar hermanas mueve también su posición en el tablero**, porque `path`
+  y el tablero comparten la columna `position` desde la Fase 2 ([ADR 011]
+  (adr/011-arbol-de-tareas-y-epicas.md)). Es coherente con el modelo actual, no
+  un efecto secundario nuevo, pero se nota.
+- **La hoja de SERVITEC sigue sin importarse.** Se exporta y ahora comparte la
+  conversión de fechas con el motor, pero no hay camino de vuelta desde ese
+  `.xlsx` concreto: su cabecera doble («Fecha»/«FECHA») y su fila-leyenda no son
+  el formato de intercambio. Entra en la Fase 8 con los importadores externos si
+  hace falta.
+
 *Semana 18: Riuna ya es la plataforma diferencial. Lo que sigue es mejora
 incremental sobre algo vivo y en uso.*
 
@@ -760,12 +753,213 @@ pasada propia: es función nueva, no pulido. En el Gantt, encajar el arrastre a 
 unidad del zoom (semana/mes) y virtualizar filas quedan pendientes si el
 perfilado lo pide.
 
-### Fase 6 — Ejecución y productividad personal (≈3 semanas)
+### Fase 6 — Ejecución y productividad personal (≈3 semanas) · **cerrada**
 **Mi trabajo** (tareas propias de todos los proyectos), bandeja unificada,
 **ciclos/sprints** con velocidad y burndown apoyados en el registro de tiempo
 existente, tareas recurrentes y plantillas de proyecto y de tarea (incluidas
 **plantillas de árbol**, que despliegan su jerarquía completa).
 **Hecho cuando:** cierras un sprint y ves velocidad real y horas por persona.
+
+**Se trocea en cuatro**, porque cinco entregables en una pasada no caben:
+1. **«Mi trabajo» con bandeja** ✔ — hecho, ver abajo.
+2. **Ciclos/sprints con velocidad, burndown y horas por persona** ✔ — hecho,
+   *el criterio de aceptación de la fase*.
+3. **Tareas recurrentes** ✔ — hecho.
+4. **Plantillas de proyecto, de tarea y de árbol** ✔ — hecho.
+
+**Rebanada 2 — ciclos/sprints** ✔
+([ADR 025](adr/025-ciclos-y-completed-at.md)). Tabla `cycle` colgada del
+proyecto, calcada de `epic`; `task.cycle_id`; y `task.completed_at`, que es lo
+que faltaba para poder medir nada: hasta ahora la única huella de cuándo se
+terminó una tarea era una fila de `activity` con el dato dentro de un JSONB.
+
+**La decisión estructural es que `completed_at` lo mantiene un disparador de
+PostgreSQL, no la aplicación.** Hay cinco escritores de `status` en el dominio de
+tareas y otros tantos entre importación, webhooks y MCP: nueve sitios que
+tendrían que acordarse, y la siguiente integración añadiría el décimo sin leer la
+ADR. La Fase 4.5 encontró exactamente ese fallo cuatro veces con `assignee_id`.
+Es la misma lógica que las dos `CHECK` del árbol de la Fase 2.
+
+Hecho además: un solo ciclo activo por proyecto vigilado por un índice parcial
+único (no por una comprobación en el controlador, que dos peticiones simultáneas
+se saltan); cierre transaccional que **pregunta** qué hacer con lo que quedó sin
+terminar en vez de arrastrarlo solo; informe con velocidad, burndown y horas por
+persona; y gráficas con **Recharts**, la primera dependencia de visualización del
+repo.
+
+**Tareas y horas es conmutable, y eso *es* la decisión de no usar doble eje.** Un
+gráfico de dos escalas deja que quien lo dibuja elija la historia; y la unidad no
+puede ser fija porque un burndown de horas es una línea plana en cero cuando el
+equipo no estima, lo que parece un fallo en vez de una ausencia de datos.
+
+**Lo que la verificación encontró:**
+- **El disparador se probó contra la base antes de escribir un solo controlador**,
+  en ocho casos: alta directa en columna final, alta normal, terminar, reabrir,
+  editar el título sin tocar la marca, el respaldo heredado de `done` en un
+  proyecto sin columna final, que **archivar no es terminar**, y el rechazo del
+  segundo sprint activo. Era lógica nueva en un sitio nuevo del que el repo no
+  tenía ningún precedente.
+- **Faltaba la mitad de la función.** La API para meter una tarea en un ciclo
+  existía y **no la llamaba nadie**: no había forma de hacerlo desde la
+  interfaz. Se añadió el selector en las **tres** disposiciones del lateral de
+  propiedades, que es el mismo fallo que la Fase 2 tuvo con la ficha de épicas
+  —solo estaba en una y no salía en la página de detalle—.
+- **`cycleId` no viajaba en las lecturas de tarea**, así que el selector nunca
+  habría sabido qué ciclo tenía. Añadido a `getTask` y `getTasks`; comprobado
+  además que el endpoint público no lo filtra, porque `toPublicTask` es una lista
+  blanca explícita desde la Fase 4.5.
+- Drizzle envuelve los errores de Postgres y deja el código en `cause`, así que
+  la traducción del 23505 a un 409 no saltaba. Lo cazó la prueba.
+
+**Rebanada 3 — tareas recurrentes** ✔
+([ADR 026](adr/026-tareas-recurrentes.md)). Tabla `task_recurrence` con plantilla
+y cadencia en `jsonb`, `task.recurrence_id`, y un trabajo cada cinco minutos.
+**Estrena trabajo programado que crea datos de producto:** hasta ahora el
+planificador solo servía a recordatorios, facturación y reconciliación de
+asientos.
+
+La cadencia es un **modelo explícito** —frecuencia, intervalo, días— y no una
+cadena RRULE: el estándar lo cubre todo pero exige una dependencia para
+interpretar casos que aquí no pide nadie. Sí entra `date-fns` en la API, que ya
+estaba en el monorepo, y por un motivo concreto: `setDate(31)` sobre febrero **no
+falla, se desborda a marzo**, así que una tarea del día 31 aparecería el día 3.
+
+**Lo que la verificación encontró y lo que previno:**
+- La cadencia se escribió como función **pura y se probó antes de conectarla a
+  nada**: 14 casos, incluidos el recorte de fin de mes, el año bisiesto, el salto
+  de intervalos y que la siguiente ocurrencia sea **estrictamente posterior**
+  —si no lo fuera, el planificador generaría la misma tarea en cada vuelta sin
+  avanzar nunca—.
+- El generador **reclama la fecha antes de crear la tarea**, con una condición
+  sobre el valor leído. Probado: correr dos veces seguidas no duplica, y una
+  semana de parada produce **una** tarea, no siete.
+- El `CHECK` de la frecuencia tenía un agujero en la primera versión: con
+  `DEFAULT '{}'`, `'{}'::jsonb->>'frequency'` es NULL y **una `CHECK` pasa con
+  NULL**. Se quitaron los valores por defecto y se añadió el `IS NOT NULL`.
+
+**Rebanada 4 — plantillas** ✔
+([ADR 027](adr/027-plantillas.md)). Tabla `template` colgada del **espacio de
+trabajo** —una plantilla que solo sirviera donde se creó no sería una
+plantilla—, con el árbol entero en `jsonb`. Se captura desde un proyecto o desde
+un subárbol, y se despliega en cualquier proyecto del espacio, opcionalmente
+colgando de una tarea existente.
+
+**Cada tarea se crea con `createTask`**, no con inserciones directas: es lo único
+que toma el cerrojo del proyecto, resuelve `path`/`depth`, reclama el número y
+sincroniza el responsable. Y **la profundidad se comprueba antes de crear nada**,
+porque si no una plantilla más honda que el `maxTaskDepth` del proyecto fallaría
+a mitad y dejaría medio desplegado algo que nadie pidió a medias.
+
+Las épicas y las etiquetas viajan **por nombre** y se crean en destino si faltan.
+Lo que no viaja son responsables, equipos, fechas y tiempo registrado: una
+plantilla dice *qué* hay que hacer, no quién lo hizo.
+
+**Lo que la verificación encontró:** el primer intento devolvía 500 al aplicar.
+No era el controlador: era **el fixture de la prueba**, que insertaba tareas
+directamente sin mover `project.last_task_number`, así que `claimTaskNumber`
+repartía el número 1 otra vez y chocaba con `task_project_number_unique`. Es un
+recordatorio de que un fixture tiene que dejar la base como la dejaría la
+aplicación, no solo con las filas que la prueba mira.
+
+**Deuda declarada de la rebanada 4:** una plantilla de proyecto guarda columnas y
+épicas, pero aplicarla solo despliega el árbol dentro de un proyecto **que ya
+existe**. Crear el proyecto entero desde la plantilla toca `create-project`, que
+hoy siembra siempre las cuatro columnas por defecto.
+
+**Deuda declarada de la rebanada 3:** la plantilla lleva título, descripción,
+prioridad, estimación, responsable y equipo, pero **no** etiquetas, épicas,
+campos personalizados ni subtareas. Ese modelo se generaliza en la rebanada 4
+con las plantillas de árbol; construirlo dos veces sería el error.
+
+**Deuda declarada de la rebanada 2:**
+- **El burndown se dibuja sobre el alcance actual del ciclo.** No se guarda
+  cuándo entró cada tarea, así que una añadida a mitad aparece como si hubiera
+  estado desde el principio. La alternativa son instantáneas diarias: un segundo
+  mecanismo para lo mismo.
+- **Cambiar `is_final` de una columna con tareas dentro** deja sus
+  `completed_at` como estaban hasta el siguiente cambio de estado. Se repara con
+  `UPDATE task SET status = status` sobre el proyecto.
+- ~~Tampoco se ha pasado por el navegador.~~ **Cerrada**: el humo recorre el sprint entero, de estado vacío a cerrado.
+
+**Rebanada 1 — «Mi trabajo» con bandeja** ✔
+([ADR 024](adr/024-mi-trabajo-y-bandeja.md)). Primera a propósito: no estrena
+modelo de dominio —vive sobre `task_assignee` y `task.team_id` de la Fase 1 y
+sobre la tabla `notification` heredada— y cierra el hueco más visible del día a
+día. Hasta ahora **ninguna** consulta de tareas cruzaba proyectos: todas eran
+`client.task.tasks[":projectId"]`.
+
+Hecho: módulo `apps/api/src/my-work/` con una lectura por espacio de trabajo
+paginada desde el día uno, dos secciones separadas —«Asignadas a mí» y «De mis
+equipos»—, la bandeja como pestaña sobre las notificaciones que ya existían, e
+invalidación en tiempo real por el canal de usuario. **Sin migración:** todos los
+predicados los sirven índices que ya estaban.
+
+**Medido** con el banco de 50.000 tareas, 5.062 de ellas asignadas a la misma
+persona y 6.190 a su departamento. Son tiempos del controlador entero, no de la
+consulta suelta:
+
+| Petición | Primera versión | Ahora |
+|---|---|---|
+| Asignadas a mí, página 1 | 270 ms | **62 ms** ✔ |
+| Asignadas a mí, página 20 | — | **75 ms** ✔ |
+| Asignadas a mí, con completadas | 237 ms | **60 ms** ✔ |
+| De mis equipos, página 1 | 28 ms | **29 ms** ✔ |
+
+Medir cambió dos decisiones. La primera versión pasaba el presupuesto pero con
+el margen justo, y por dos motivos que el `EXPLAIN` enseñó y el razonamiento no:
+
+- **El anti-join correlado contra `column` se reejecutaba una vez por tarea** —
+  50.000 vueltas y 100.000 buffers para descartar cuatro filas cada vez— porque
+  el planificador estimaba que sobrevivían 50 filas y sobrevivían 37.589.
+  Resuelto en memoria como una lista de pares `(proyecto, estado)`, es un filtro
+  normal dentro del propio barrido. Y de paso **la regla de «hecho» pasa a estar
+  escrita una sola vez** en lugar de dos, porque el predicado y la bandera
+  `isDone` salen ya de la misma lista.
+- **`OFFSET 0` en la subconsulta de asignados** impide que Postgres la suba a un
+  semi-join y le obliga a arrancar por `taskAssignee_userId_idx`: 197 ms → 47 ms
+  en la consulta principal. El trabajo pasa a ser proporcional a *tus* tareas y
+  no a las del espacio entero, que es lo que esta página necesita para envejecer
+  bien.
+
+**El índice `task (team_id, due_date)` que se había propuesto no se añade.** El
+tramo de equipo sale a 29 ms y el planificador prefiere un `BitmapAnd`, así que
+no lo usaría: es la misma lección que la Fase 4.5, que también refutó un índice
+midiéndolo.
+
+Decisiones tomadas para las rebanadas siguientes, anotadas para no cerrarles la
+puerta: el ciclo será **por proyecto** (calcado de `epic`, más `task.cycle_id`),
+el burndown saldrá de una columna **`task.completed_at`** nueva, y las gráficas
+usarán **Recharts** —que no entra aquí: esta rebanada no tiene ninguna—.
+
+**Lo que la verificación encontró:**
+- **Desasignar dejaba la tarea en la página de quien la perdía.** Tres eventos
+  —`task.unassigned`, `task.team_unassigned` y `task.deleted`— no llevaban el id
+  del lado que *deja* de tenerla, así que no había a quién avisar. Es la línea de
+  «estados inversos» de `AGENTS.md`, y estaba señalado como el fallo más probable
+  antes de escribir una línea. Arreglado con tres campos aditivos.
+- **`team_member` no tiene `unique(team_id, user_id)`**, así que un JOIN habría
+  devuelto la tarea una vez por fila de pertenencia duplicada. Se resuelven los
+  ids de equipo aparte con `selectDistinct`; la prueba que inserta dos filas
+  iguales es lo único que hace visible el arreglo.
+- **El banco de volumen no sembraba asignados ni equipos.** Nació en la Fase 4.5,
+  cuando no había ninguna vista que cruzase proyectos, así que las dos consultas
+  de esta rebanada habrían medido cero filas. Ahora reparte entre diez personas y
+  tres departamentos y refleja `task_assignee`, que es lo que la página lee.
+
+**Deuda declarada de la rebanada 1:**
+- ~~La página no se ha pasado por el navegador.~~ **Cerrada**: cubierta por el
+  humo de Playwright, incluido el gesto que peor cubría la automatización de API
+  —asignar y **desasignar** desde una segunda sesión y ver la fila aparecer y
+  desaparecer sola—.
+- **`getNotifications` sigue topada en 50 filas sin paginar ni filtrar por no
+  leídas.** Invisible en un desplegable, visible a página completa: la bandeja lo
+  avisa en vez de fingir que eso es todo.
+- **El motor de filtros de la Fase 4 no llega aquí.** El registro de campos
+  eclipsa definiciones entre proyecto y espacio y admite tipos distintos por
+  proyecto, así que un `custom.*` filtraría a cero en silencio en unos proyectos
+  y no en otros. Tres controles fijos hasta que eso tenga respuesta.
+- **Sin agregados del árbol:** son por proyecto y cuestan 242 ms fijos medidos.
+  Se pierde el contador de subtareas y las fechas heredadas de la rama.
 
 ### Fase 7 — Dashboards, informes y objetivos (≈3 semanas)
 `dashboard`, `dashboard_widget`, `goal`, `goal_target`. Widgets (recuento por
@@ -831,10 +1025,49 @@ de suscripciones.
 
 ---
 
+## Humo de punta a punta (Playwright)
+
+**El plan daba Playwright por heredado desde la Fase 0 y no existía.** No había
+dependencia ni configuración: la frase de la sección de verificación era falsa, y
+por eso las Fases 4, 5 y 6 pudieron declarar «no pasado por el navegador» tres
+veces seguidas sin que nada lo impidiera. Ahora existe.
+
+`pnpm test:e2e` levanta **su propio par API (1338) + web (5174) contra
+`riuna_e2e_test`**, así que no toca la base de desarrollo ni obliga a parar los
+servidores de quien esté programando. Siete casos que cubren las cuatro
+rebanadas de la Fase 6, en español, que es el idioma que la gente ve.
+
+Lo que hizo falta para que arrancara, y que conviene no volver a descubrir:
+
+- **La API no leía `PORT`**: el puerto estaba fijo en 1337, así que una segunda
+  instancia era imposible. Añadido y documentado en `.env.sample`, que es lo que
+  la guarda de CI de la Fase 4.5 exige.
+- **`tsx watch` con la salida redirigida no abre el puerto** —el síntoma que la
+  skill `verify` ya describía—, así que el humo arranca la API con `tsx` a secas.
+- **Chromium arranca en `en-US`** y la resolución de idioma lo respeta, de modo
+  que sin fijar `locale: "es-ES"` el humo mediría una interfaz que ningún usuario
+  de Riuna ve.
+- **Los desplegables de Base UI sí funcionan** aquí. La nota de la Fase 4 sobre
+  que no abren en headless era de otra herramienta, no de Playwright: ese
+  aplazamiento se puede retirar.
+
+**Lo que encontró**, que es para lo que estaba: el panel de plantillas se quedaba
+en un **esqueleto eterno** cuando el espacio activo no estaba resuelto —la
+consulta queda desactivada y `isPending` no baja nunca—. Ninguna prueba de API lo
+habría visto, porque la API estaba bien.
+
+**Lo que sigue fuera:** el humo de la Fase 0 —«login → crear proyecto → campo
+personalizado → dos subtareas → mover en tablero → filtrar y guardar vista →
+exportar»— y el asistente de importación de la Fase 5. La infraestructura ya
+está; falta escribir esos casos. Y engancharlo a CI, que pide un servicio de
+Postgres y `playwright install`.
+
 ## Verificación
 
-Se aprovecha la infraestructura de pruebas heredada (Vitest unitario e
-integración, Playwright, comprobador de i18n).
+Se aprovecha la infraestructura de pruebas heredada: Vitest unitario e
+integración y el comprobador de i18n. **Playwright no venía heredado** —esta
+sección lo dio por hecho durante seis fases sin que existiera— y se añade en la
+Fase 6; ver «Humo de punta a punta» arriba.
 
 ```bash
 pnpm typecheck && pnpm lint && pnpm test
@@ -865,13 +1098,22 @@ destructiva.
 
 ## Siguiente paso
 
-La **Fase 6**: ejecución y productividad personal —«Mi trabajo», bandeja
-unificada, ciclos/sprints con velocidad y burndown sobre el registro de tiempo
-existente, tareas recurrentes y plantillas de proyecto y de árbol.
+La **Fase 7**: dashboards, informes y objetivos. `dashboard`,
+`dashboard_widget`, `goal`, `goal_target`, con los widgets montados sobre el
+motor de vistas de la Fase 4 más una capa de agregación.
 
-Dos cosas que la Fase 5 dejó pendientes y que no bloquean la 6:
+Llega con dos cosas ya puestas que la Fase 6 dejó: **Recharts** en el web, y
+**`task.completed_at`**, que es lo que permite responder «cuánto se cerró en
+este trimestre» sin recorrer la tabla de actividad.
 
-- **El asistente de importación no se ha pasado por el navegador.** La API está
-  probada de punta a punta; el asistente web solo tiene el typecheck.
+Lo que arrastra la Fase 6, y que conviene cerrar antes o durante la 7:
+
+- ~~Ninguna de las cuatro rebanadas se ha pasado por el navegador.~~ **Cerrada,
+  y con ella la deuda que arrastraban las Fases 4 y 5.** Ver «Humo de punta a
+  punta» más arriba.
+- **Faltan dos casos de humo:** el de la Fase 0 —login → proyecto → campo
+  personalizado → dos subtareas → mover en tablero → filtrar y guardar vista →
+  exportar— y el del asistente de importación de la Fase 5. La infraestructura
+  está; falta escribirlos y engancharlos a CI.
 - **Sigue sin decidirse cuándo migrar Tablero, Lista y Backlog al motor de
   filtros.** Arrastra desde la Fase 4.
