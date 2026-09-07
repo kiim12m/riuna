@@ -19,6 +19,7 @@ type WorkspaceIdSource =
         | "comment"
         | "column"
         | "workflowRule"
+        | "cycle"
         | "epic"
         | "fieldDefinition"
         | "view";
@@ -141,6 +142,7 @@ async function lookupWorkspaceId(
     | "comment"
     | "column"
     | "workflowRule"
+    | "cycle"
     | "epic"
     | "fieldDefinition"
     | "view",
@@ -188,6 +190,17 @@ async function lookupWorkspaceId(
           .where(eq(schema.fieldDefinitionTable.id, id))
           .limit(1);
         return definition?.workspaceId || null;
+      case "cycle": {
+        const [cycle] = await db
+          .select({ workspaceId: schema.projectTable.workspaceId })
+          .from(schema.cycleTable)
+          .innerJoin(
+            schema.projectTable,
+            eq(schema.cycleTable.projectId, schema.projectTable.id),
+          )
+          .where(eq(schema.cycleTable.id, id))
+          .limit(1);
+        return cycle?.workspaceId || null;
       }
 
       case "epic": {
@@ -403,6 +416,14 @@ export const workspaceAccess = {
     workspaceAccessMiddleware({
       sources: [
         { type: "lookup", resource: "workflowRule", idKey },
+        { type: "query", key: "workspaceId" },
+      ],
+    }),
+
+  fromCycle: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [
+        { type: "lookup", resource: "cycle", idKey },
         { type: "query", key: "workspaceId" },
       ],
     }),

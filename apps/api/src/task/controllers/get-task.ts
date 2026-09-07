@@ -37,6 +37,8 @@ async function getTask(taskId: string) {
       path: taskTable.path,
       depth: taskTable.depth,
       estimate: taskTable.estimate,
+      cycleId: taskTable.cycleId,
+      completedAt: taskTable.completedAt,
       customFields: taskTable.customFields,
     })
     .from(taskTable)

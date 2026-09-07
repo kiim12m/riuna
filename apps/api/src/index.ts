@@ -25,6 +25,7 @@ import billing from "./billing";
 import column from "./column";
 import comment from "./comment";
 import config from "./config";
+import cycle from "./cycle";
 import db, { getDatabase, schema } from "./database";
 import { prepareDatabaseStartup } from "./database/prepare-database-startup";
 import { waitForDatabase } from "./database/wait-for-database";
@@ -609,6 +610,7 @@ export function createApp() {
     "/notification-preferences",
     notificationPreferences,
   );
+  const cycleApi = api.route("/cycle", cycle);
   const myWorkApi = api.route("/my-work", myWork);
   const searchApi = api.route("/search", search);
   const githubIntegrationApi = api.route(
@@ -789,6 +791,7 @@ export function createApp() {
     giteaIntegrationApi,
     invitationApi,
     invitationPublicApi,
+    cycleApi,
     labelApi,
     myWorkApi,
     notificationApi,
@@ -936,6 +939,7 @@ const {
   giteaIntegrationApi,
   invitationApi,
   invitationPublicApi,
+  cycleApi,
   labelApi,
   myWorkApi,
   notificationApi,
@@ -979,6 +983,7 @@ export type AppType =
   | typeof labelApi
   | typeof notificationApi
   | typeof notificationPreferencesApi
+  | typeof cycleApi
   | typeof myWorkApi
   | typeof searchApi
   | typeof githubIntegrationApi

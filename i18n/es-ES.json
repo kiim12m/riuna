@@ -2492,5 +2492,68 @@
 			"inbox": "Bandeja",
 			"tasks": "Tareas"
 		}
+	},
+	"cycles": {
+		"actions": {
+			"close": "Cerrar ciclo",
+			"start": "Empezar ciclo"
+		},
+		"burndown": {
+			"actual": "Pendiente",
+			"ideal": "Ideal",
+			"title": "Burndown"
+		},
+		"close": {
+			"backlog": "De vuelta al backlog",
+			"confirm": "Cerrar ciclo",
+			"description_one": "Queda {{count}} tarea sin terminar. ¿Dónde va?",
+			"description_other": "Quedan {{count}} tareas sin terminar. ¿Dónde van?",
+			"descriptionEmpty": "Todo lo de este ciclo está hecho. Al cerrarlo se congela su velocidad.",
+			"moveTo": "Mover las tareas sin terminar a",
+			"title": "Cerrar {{name}}"
+		},
+		"create": {
+			"confirm": "Crear ciclo",
+			"datesInvalid": "La fecha de fin no puede ser anterior a la de inicio.",
+			"description": "Ponle nombre y elige las fechas. Dos semanas es lo habitual.",
+			"endDate": "Termina",
+			"goal": "Objetivo",
+			"goalPlaceholder": "Para qué es este ciclo",
+			"name": "Nombre",
+			"namePlaceholder": "Sprint 1",
+			"startDate": "Empieza",
+			"title": "Nuevo ciclo"
+		},
+		"empty": {
+			"description": "Un ciclo es una caja de tiempo que se llena de tareas antes de empezar. Al cerrarlo sabes cuánto completó el equipo de verdad.",
+			"title": "Todavía no hay ciclos"
+		},
+		"hours": {
+			"empty": "Todavía no hay tiempo registrado en este ciclo.",
+			"title": "Horas por persona",
+			"unknownPerson": "Desconocido"
+		},
+		"pageTitle": "Ciclos",
+		"stats": {
+			"completed": "Completadas",
+			"estimated": "Estimado",
+			"logged": "Registrado",
+			"velocity": "Velocidad"
+		},
+		"status": {
+			"active": "Activo",
+			"closed": "Cerrado",
+			"planned": "Planificado"
+		},
+		"title": "Ciclos",
+		"unit": {
+			"hours": "Horas",
+			"tasks": "Tareas"
+		},
+		"velocity": {
+			"completed": "Completado",
+			"empty": "La velocidad aparece cuando cierras tu primer ciclo.",
+			"title": "Velocidad"
+		}
 	}
 }

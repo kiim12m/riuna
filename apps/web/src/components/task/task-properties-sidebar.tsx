@@ -42,6 +42,7 @@ import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
 import TaskAssigneePopover from "./task-assignee-popover";
 import TaskCustomFields from "./task-custom-fields";
+import TaskCyclePopover, { TaskCycleTrigger } from "./task-cycle-popover";
 import TaskDueDatePopover from "./task-due-date-popover";
 import TaskEpicsPopover, { TaskEpicsTrigger } from "./task-epics-popover";
 import TaskLabelsPopover from "./task-labels-popover";
@@ -294,6 +295,9 @@ export default function TaskPropertiesSidebar({
               )}
               {task && (
                 <>
+                  <TaskCyclePopover task={task} projectId={projectId}>
+                    <TaskCycleTrigger task={task} projectId={projectId} />
+                  </TaskCyclePopover>
                   <TaskEpicsPopover task={task} projectId={projectId}>
                     <TaskEpicsTrigger task={task} />
                   </TaskEpicsPopover>
@@ -511,6 +515,9 @@ export default function TaskPropertiesSidebar({
                 )}
                 {task && (
                   <>
+                    <TaskCyclePopover task={task} projectId={projectId}>
+                      <TaskCycleTrigger task={task} projectId={projectId} />
+                    </TaskCyclePopover>
                     <TaskEpicsPopover task={task} projectId={projectId}>
                       <TaskEpicsTrigger task={task} />
                     </TaskEpicsPopover>
@@ -730,6 +737,9 @@ export default function TaskPropertiesSidebar({
                 )}
                 {task && (
                   <>
+                    <TaskCyclePopover task={task} projectId={projectId}>
+                      <TaskCycleTrigger task={task} projectId={projectId} />
+                    </TaskCyclePopover>
                     <TaskEpicsPopover task={task} projectId={projectId}>
                       <TaskEpicsTrigger task={task} />
                     </TaskEpicsPopover>

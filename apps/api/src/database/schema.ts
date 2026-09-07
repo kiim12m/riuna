@@ -474,6 +474,21 @@ export const taskTable = pgTable(
       .$type<Record<string, unknown>>()
       .notNull()
       .default({}),
+    // El ciclo al que pertenece, o ninguno. Se borra a `null` con el ciclo: la
+    // tarea sobrevive a su sprint.
+    cycleId: text("cycle_id").references(() => cycleTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+     * (`task_completed_at`), no la aplicacion: hay cinco escritores de `status`
+     * en el dominio de tareas y otros tantos entre importacion, webhooks y MCP,
+     * y la Fase 4.5 ya demostro que cuatro caminos que escriben lo mismo a mano
+     * acaban divergiendo.
+     *
+     * **No es la fuente de verdad de "esta hecha"** —eso lo dice la columna—,
+     * solo responde *cuando*. Ver ADR 025.
+     */
+    completedAt: timestamp("completed_at", { mode: "date" }),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()
@@ -482,6 +497,7 @@ export const taskTable = pgTable(
   },
   (table) => [
     index("task_projectId_idx").on(table.projectId),
+    index("task_cycleId_idx").on(table.cycleId),
     index("task_dueDate_idx").on(table.dueDate),
     index("task_assigneeId_idx").on(table.userId),
     index("task_teamId_idx").on(table.teamId),
@@ -603,6 +619,72 @@ export const taskEpicTable = pgTable(
     index("task_epic_taskId_idx").on(table.taskId),
     index("task_epic_epicId_idx").on(table.epicId),
     unique("task_epic_unique").on(table.taskId, table.epicId),
+  ],
+);
+
+/**
+ * Ciclos (sprints): una caja de tiempo con nombre y fechas a la que se le meten
+ * tareas antes de empezar.
+ *
+ * Cuelga del **proyecto**, como la epica, y por el mismo motivo: hereda el
+ * control de acceso, el permiso `project:update`, el canal de tiempo real y la
+ * barra de filtros sin inventar nada. La diferencia con la epica es que la
+ * epica agrupa por *tema* y no caduca, y el ciclo dice *cuando*: una tarea
+ * tiene las dos a la vez.
+ *
+ * A diferencia de `epic` **no lleva `archived_at`**. `closed` ya es el estado
+ * terminal, y un ciclo cerrado tiene que quedarse: es lo que sostiene la
+ * velocidad historica. Tampoco lleva `position`, porque las fechas ya lo
+ * ordenan.
+ */
+export const cycleTable = pgTable(
+  "cycle",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projectTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    /** El objetivo del sprint, en una linea. */
+    goal: text("goal"),
+    status: text("status").notNull().default("planned"),
+    startDate: timestamp("start_date", { mode: "date" }).notNull(),
+    endDate: timestamp("end_date", { mode: "date" }).notNull(),
+    /**
+     * Cuando se cerro. Es lo que congela la velocidad: a partir de aqui el
+     * ciclo no cambia aunque alguien termine una tarea tarde.
+     */
+    closedAt: timestamp("closed_at", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("cycle_projectId_idx").on(table.projectId),
+    index("cycle_projectId_startDate_idx").on(table.projectId, table.startDate),
+    // **Un solo ciclo activo por proyecto**, vigilado por la base de datos y no
+    // por la buena voluntad del controlador: es la misma decision que las dos
+    // CHECK del arbol de la Fase 2. Dos peticiones simultaneas de "activar"
+    // podrian pasar las dos la comprobacion previa y dejar el proyecto con dos
+    // sprints en marcha; el indice parcial las corta en el commit.
+    uniqueIndex("cycle_one_active_per_project")
+      .on(table.projectId)
+      .where(sql`status = 'active'`),
+    check(
+      "cycle_status_valid",
+      sql`${table.status} IN ('planned', 'active', 'closed')`,
+    ),
+    check("cycle_dates_ordered", sql`${table.endDate} >= ${table.startDate}`),
+  ],
+);
+
   ],
 );
 

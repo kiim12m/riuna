@@ -274,6 +274,7 @@ const taskUpdateEvents = [
   "task.updated",
   "task.parent_changed",
   "task.epics_changed",
+  "task.cycle_changed",
   "task.deleted",
   "task.status_changed",
   "task.priority_changed",
@@ -325,6 +326,26 @@ subscribeToEvent<{
   broadcastToProject(
     fromProjectId,
     { type: "TASK_MOVED", projectId: fromProjectId, taskId },
+    initiatorId,
+  );
+});
+
+// El canal de proyecto si valida con un esquema estricto bajo Redis
+// (`broadcastMessageSchema`, un `v.object`), asi que este mensaje se queda en
+// los campos ya declarados: `type`, `projectId` y `taskId`. Un campo nuevo aqui
+// funcionaria en una sola instancia y desapareceria con Redis.
+subscribeToEvent<{
+  projectId: string;
+  cycleId: string;
+  userId: string;
+  initiatorId?: string;
+}>("cycle.changed", async (data) => {
+  const { projectId, initiatorId } = data;
+  if (!projectId) return;
+
+  broadcastToProject(
+    projectId,
+    { type: "CYCLE_UPDATED", projectId, taskId: "" },
     initiatorId,
   );
 });

@@ -266,6 +266,8 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     path: taskTable.path,
     depth: taskTable.depth,
     estimate: taskTable.estimate,
+    cycleId: taskTable.cycleId,
+    completedAt: taskTable.completedAt,
     customFields: taskTable.customFields,
   };
 

@@ -5,6 +5,7 @@ import {
   SquareKanban,
   SquircleDashed,
   Table2,
+  Target,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -33,7 +34,7 @@ type ProjectLayoutProps = {
   headerActions?: ReactNode;
   children: ReactNode;
   showViewSwitcher?: boolean;
-  activeView?: "backlog" | "board" | "calendar" | "gantt" | "table";
+  activeView?: "backlog" | "board" | "calendar" | "gantt" | "table" | "cycles";
 };
 
 // La vista activa se marca con el tinte de --accent y un raíl de 2 px en River
@@ -74,7 +75,9 @@ export default function ProjectLayout({
           ? "gantt"
           : location.pathname.includes("/table")
             ? "table"
-            : "board");
+            : location.pathname.includes("/cycles")
+              ? "cycles"
+              : "board");
 
   const handleNavigateToBacklog = () => {
     navigate({
@@ -111,6 +114,13 @@ export default function ProjectLayout({
     });
   };
 
+  const handleNavigateToCycles = () => {
+    navigate({
+      to: "/dashboard/workspace/$workspaceId/project/$projectId/cycles",
+      params: { workspaceId, projectId },
+    });
+  };
+
   const handleProjectSwitch = (nextProjectId: string) => {
     navigate({
       to:
@@ -122,7 +132,9 @@ export default function ProjectLayout({
               ? "/dashboard/workspace/$workspaceId/project/$projectId/gantt"
               : resolvedView === "table"
                 ? "/dashboard/workspace/$workspaceId/project/$projectId/table"
-                : "/dashboard/workspace/$workspaceId/project/$projectId/board",
+                : resolvedView === "cycles"
+                  ? "/dashboard/workspace/$workspaceId/project/$projectId/cycles"
+                  : "/dashboard/workspace/$workspaceId/project/$projectId/board",
       params: {
         workspaceId,
         projectId: nextProjectId,
@@ -178,6 +190,7 @@ export default function ProjectLayout({
                 onSelectCalendar={handleNavigateToCalendar}
                 onSelectGantt={handleNavigateToGantt}
                 onSelectTable={handleNavigateToTable}
+                onSelectCycles={handleNavigateToCycles}
                 onSelectProject={handleProjectSwitch}
                 onAddProject={() => setIsCreateProjectModalOpen(true)}
               />
@@ -229,6 +242,15 @@ export default function ProjectLayout({
                 >
                   <Table2 className="size-3.5" />
                   {t("tasks:table.title")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={handleNavigateToCycles}
+                  className={viewTabClass(resolvedView === "cycles")}
+                >
+                  <Target className="size-3.5" />
+                  {t("cycles:title")}
                 </Button>
               </div>
             )}

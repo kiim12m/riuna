@@ -65,6 +65,7 @@ export function useProjectWebSocket(projectId: string) {
             message.type === "TASK_MOVED" ||
             message.type === "TASK_RELATION_UPDATED" ||
             message.type === "EPIC_UPDATED" ||
+            message.type === "CYCLE_UPDATED" ||
             message.type === "VIEW_UPDATED" ||
             message.type === "FIELD_DEFINITION_UPDATED" ||
             message.type === "COMMENT_UPDATED"
@@ -106,6 +107,21 @@ export function useProjectWebSocket(projectId: string) {
             queryClient.invalidateQueries({
               queryKey: ["epics", message.projectId],
             });
+
+            // Los recuentos del ciclo se calculan igual que los de la epica, y
+            // cambian tambien al terminar una tarea de dentro. El informe
+            // depende de lo mismo, asi que se invalidan juntos.
+            queryClient.invalidateQueries({
+              queryKey: ["cycles", message.projectId],
+            });
+            queryClient.invalidateQueries({ queryKey: ["cycle-report"] });
+
+            if (message.type === "CYCLE_UPDATED") {
+              queryClient.invalidateQueries({
+                queryKey: ["cycle-velocity", message.projectId],
+              });
+              return;
+            }
 
             // Guardar, compartir o retirar una vista no cambia ninguna tarea:
             // se invalida su lista y no hay mas que hacer.

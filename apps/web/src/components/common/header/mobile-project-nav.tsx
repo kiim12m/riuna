@@ -6,6 +6,7 @@ import {
   Plus,
   SquareKanban,
   Table2,
+  Target,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -21,12 +22,13 @@ import { cn } from "@/lib/cn";
 type MobileProjectNavProps = {
   workspaceId: string;
   projectId: string;
-  activeView: "backlog" | "board" | "calendar" | "gantt" | "table";
+  activeView: "backlog" | "board" | "calendar" | "gantt" | "table" | "cycles";
   onSelectBoard: () => void;
   onSelectBacklog: () => void;
   onSelectCalendar: () => void;
   onSelectGantt: () => void;
   onSelectTable: () => void;
+  onSelectCycles: () => void;
   onSelectProject: (projectId: string) => void;
   onAddProject: () => void;
 };
@@ -40,6 +42,7 @@ export default function MobileProjectNav({
   onSelectCalendar,
   onSelectGantt,
   onSelectTable,
+  onSelectCycles,
   onSelectProject,
   onAddProject,
 }: MobileProjectNavProps) {
@@ -116,6 +119,19 @@ export default function MobileProjectNav({
               >
                 <CalendarDays className="size-3.5" />
                 Gantt
+              </button>
+              <button
+                type="button"
+                onClick={onSelectCycles}
+                className={cn(
+                  "flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
+                  activeView === "cycles"
+                    ? "border-brand/40 bg-accent text-foreground"
+                    : "border-transparent text-muted-foreground hover:bg-accent",
+                )}
+              >
+                <Target className="size-3.5" />
+                {t("cycles:title")}
               </button>
               <button
                 type="button"

@@ -365,6 +365,12 @@
 			"when": 1788055790360,
 			"tag": "0051_nebulous_sasquatch",
 			"breakpoints": true
+		},
+		{
+			"idx": 52,
+			"version": "7",
+			"when": 1788509668368,
+			"tag": "0052_plain_jazinda",
 		}
 	]
 }

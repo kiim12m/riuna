@@ -2492,5 +2492,68 @@
 				"description": "Mentions, assignments and reminders land here."
 			}
 		}
+	},
+	"cycles": {
+		"title": "Cycles",
+		"pageTitle": "Cycles",
+		"status": {
+			"planned": "Planned",
+			"active": "Active",
+			"closed": "Closed"
+		},
+		"unit": {
+			"tasks": "Tasks",
+			"hours": "Hours"
+		},
+		"actions": {
+			"start": "Start cycle",
+			"close": "Close cycle"
+		},
+		"empty": {
+			"title": "No cycles yet",
+			"description": "A cycle is a time box you fill with tasks before it starts. Closing one tells you how much the team really completed."
+		},
+		"stats": {
+			"completed": "Completed",
+			"estimated": "Estimated",
+			"velocity": "Velocity",
+			"logged": "Logged"
+		},
+		"burndown": {
+			"title": "Burndown",
+			"actual": "Remaining",
+			"ideal": "Ideal"
+		},
+		"velocity": {
+			"title": "Velocity",
+			"completed": "Completed",
+			"empty": "Velocity appears once you close your first cycle."
+		},
+		"hours": {
+			"title": "Hours per person",
+			"empty": "No time logged on this cycle yet.",
+			"unknownPerson": "Unknown"
+		},
+		"create": {
+			"title": "New cycle",
+			"description": "Name it and choose the dates. Two weeks is the usual length.",
+			"name": "Name",
+			"namePlaceholder": "Sprint 1",
+			"goal": "Goal",
+			"goalPlaceholder": "What this cycle is for",
+			"startDate": "Starts",
+			"endDate": "Ends",
+			"datesInvalid": "The end date cannot be before the start date.",
+			"confirm": "Create cycle"
+		},
+		"close": {
+			"title": "Close {{name}}",
+			"description_one": "{{count}} task is still unfinished. Where should it go?",
+			"description_other": "{{count}} tasks are still unfinished. Where should they go?",
+			"descriptionEmpty": "Everything in this cycle is done. Closing it freezes its velocity.",
+			"moveTo": "Move the unfinished tasks to",
+			"backlog": "Back to the backlog",
+			"confirm": "Close cycle"
+		}
 	}
 }

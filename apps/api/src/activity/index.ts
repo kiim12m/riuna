@@ -342,6 +342,21 @@ subscribeToEvent<{
   });
 });
 
+// Mover una tarea entre sprints es historia que alguien va a querer: explica
+// por que la velocidad de un ciclo salio como salio.
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  oldCycleId: string | null;
+  newCycleId: string | null;
+  type: string;
+}>("task.cycle_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    oldCycleId: data.oldCycleId,
+    newCycleId: data.newCycleId,
+  });
+});
+
 subscribeToEvent<{
   taskId: string;
   userId: string;
