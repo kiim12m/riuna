@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Notification } from "@/types/notification";
-import {
-  getNotificationContent,
-  getNotificationTitle,
-} from "./notification-dropdown";
+import { getNotificationContent, getNotificationTitle } from "./notification";
 
 const t = (key: string, options?: Record<string, unknown>) => {
   if (key === "notifications:reminderLeadTime.days") {

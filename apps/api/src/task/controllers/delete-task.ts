@@ -100,6 +100,10 @@ async function deleteTask(taskId: string, currentUserId: string) {
     projectId: task.projectId,
     userId: currentUserId,
     title: task.title,
+    // Quien la tenia. La fila ya no existe, asi que este es el ultimo momento
+    // en que se puede saber a quien hay que refrescarle "Mi trabajo".
+    assigneeIds: task.assignees.map((assignee) => assignee.id),
+    teamId: task.teamId,
   });
 
   for (const relation of relations) {

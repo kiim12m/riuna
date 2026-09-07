@@ -71,6 +71,10 @@ async function updateTaskAssignee({
       taskId: updatedTask.id,
       projectId: updatedTask.projectId,
       userId: currentUserId,
+      // Quien deja de tenerla. Sin este id, "Mi trabajo" no sabe a quien
+      // avisar de que la fila ya no es suya y la tarea se le queda en la
+      // pagina hasta el siguiente sondeo.
+      previousAssigneeId: existingTask.userId,
       title: updatedTask.title,
       type: "unassigned",
     });

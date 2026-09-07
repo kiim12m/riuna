@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import type { WSContext } from "hono/ws";
 import db, { schema } from "../database";
 import { subscribeToEvent } from "../events";
+import { MY_WORK_EVENTS, recipientsForMyWork } from "../my-work/recipients";
 import { isRedisConfigured } from "../redis";
 import type {
   BroadcastAdapter,
@@ -420,6 +421,29 @@ subscribeToEvent<{ notificationId: string; userId: string }>(
     }
   },
 );
+
+// "Mi trabajo" cruza proyectos, asi que su invalidacion va por el canal de
+// usuario: la tarea puede cambiar en un proyecto que quien la tiene asignada no
+// esta mirando, y ahi no hay conexion de proyecto que reciba nada.
+//
+// El mensaje no lleva `workspaceId` a proposito: anadirlo obligaria a resolver
+// `project -> workspace` en cada evento, y la clave de consulta del cliente ya
+// lo lleva, asi que invalidar por el prefijo `["my-work"]` solo refresca la
+// consulta que este montada.
+//
+// **El canal de usuario de Redis no necesita ningun cambio.**
+// `userBroadcastSchema` valida el mensaje con `v.looseObject`, asi que conserva
+// las claves que no declara. El aviso escrito en `broadcast-adapter.ts` —el de
+// que un campo nuevo desaparece bajo Redis— es del canal de **proyecto**, cuyo
+// `broadcastMessageSchema` si es un `v.object` estricto. No hay que "arreglar"
+// esto anadiendo un esquema estricto aqui.
+for (const eventName of MY_WORK_EVENTS) {
+  subscribeToEvent<Record<string, unknown>>(eventName, async (data) => {
+    for (const userId of await recipientsForMyWork(eventName, data)) {
+      broadcastToUser(userId, { type: "MY_WORK_INVALIDATED" });
+    }
+  });
+}
 
 for (const eventName of taskUpdateEvents) {
   subscribeToEvent<TaskEvent>(eventName, async (data) => {

@@ -22,7 +22,10 @@ import {
   fieldDefinitionTable,
   labelTable,
   projectTable,
+  taskAssigneeTable,
   taskTable,
+  teamMemberTable,
+  teamTable,
   userTable,
   workspaceTable,
   workspaceUserTable,
@@ -35,6 +38,15 @@ const INSERT_BATCH = 1_000;
 
 const PRIORITIES = ["urgent", "high", "medium", "low", "no-priority"];
 const STATUSES = ["to-do", "in-progress", "in-review", "done"];
+
+// Reparto entre personas y departamentos, que es lo que "Mi trabajo" consulta.
+// El banco nacio en la Fase 4.5, cuando no habia ninguna vista que cruzase
+// proyectos; sin estas filas las dos consultas de la Fase 6 devuelven cero y
+// medirlas no dice nada.
+const USERS = 10;
+const TEAMS = 3;
+/** Que parte de las tareas lleva departamento. El resto se queda sin. */
+const TEAM_SHARE = 0.4;
 
 function assertBenchDatabase() {
   const url = process.env.DATABASE_URL;
@@ -93,6 +105,53 @@ async function main() {
     role: "owner",
     joinedAt: new Date(),
   });
+
+  // Una plantilla pequena y tres departamentos. `userId` —la persona con la que
+  // se mide— es la posicion 0 del reparto y pertenece al equipo 0, asi que le
+  // toca aproximadamente una decima parte de las tareas asignadas y su equipo
+  // es el mas cargado: es el caso que el presupuesto tiene que aguantar.
+  const teammateIds = Array.from(
+    { length: USERS - 1 },
+    () => `user-${createId()}`,
+  );
+  const memberIds = [userId, ...teammateIds];
+
+  await db.insert(userTable).values(
+    teammateIds.map((id, index) => ({
+      id,
+      email: `bench-${index}-${createId()}@example.com`,
+      emailVerified: true,
+      name: `Persona ${index + 1}`,
+    })),
+  );
+
+  await db.insert(workspaceUserTable).values(
+    teammateIds.map((id) => ({
+      workspaceId,
+      userId: id,
+      role: "member",
+      joinedAt: new Date(),
+    })),
+  );
+
+  const teamIds = Array.from({ length: TEAMS }, () => `team-${createId()}`);
+
+  await db.insert(teamTable).values(
+    teamIds.map((id, index) => ({
+      id,
+      workspaceId,
+      name: `Departamento ${index + 1}`,
+      createdAt: new Date(),
+    })),
+  );
+
+  await db.insert(teamMemberTable).values(
+    memberIds.map((member, index) => ({
+      id: `tm-${createId()}`,
+      teamId: teamIds[index % TEAMS],
+      userId: member,
+    })),
+  );
 
   // Dos campos personalizados: uno numerico —el `Presupuesto > 1000` que el
   // plan usa de ejemplo— y uno de seleccion multiple, que es el unico que usa
@@ -176,6 +235,9 @@ async function main() {
 
         const path = parent ? `${parent.path}${id}/` : `/${id}/`;
         const status = STATUSES[Math.floor(random() * STATUSES.length)];
+        const assigneeId = memberIds[Math.floor(random() * USERS)];
+        const teamId =
+          random() < TEAM_SHARE ? teamIds[Math.floor(random() * TEAMS)] : null;
 
         rows.push({
           id,
@@ -187,6 +249,8 @@ async function main() {
           description: "",
           status,
           columnId: columnBySlug.get(status) ?? null,
+          userId: assigneeId,
+          teamId,
           priority: PRIORITIES[Math.floor(random() * PRIORITIES.length)],
           number,
           position: number,
@@ -208,6 +272,18 @@ async function main() {
 
       for (let i = 0; i < rows.length; i += INSERT_BATCH) {
         await db.insert(taskTable).values(rows.slice(i, i + INSERT_BATCH));
+      }
+
+      // `task_assignee` refleja siempre al responsable principal, que es lo que
+      // `syncPrimaryAssignee` garantiza en produccion. Sin estas filas el banco
+      // mentiria: "Mi trabajo" lee esta tabla, no `assignee_id`.
+      for (let i = 0; i < rows.length; i += INSERT_BATCH) {
+        await db.insert(taskAssigneeTable).values(
+          rows.slice(i, i + INSERT_BATCH).map((task) => ({
+            taskId: task.id as string,
+            userId: task.userId as string,
+          })),
+        );
       }
 
       // Una etiqueta en una de cada diez, para que el filtro por etiqueta tenga
@@ -243,10 +319,13 @@ async function main() {
   console.log("ANALYZE...");
   await db.execute(sql`ANALYZE "task"`);
   await db.execute(sql`ANALYZE "label"`);
+  await db.execute(sql`ANALYZE "task_assignee"`);
+  await db.execute(sql`ANALYZE "team_member"`);
 
   const elapsed = ((Date.now() - started) / 1000).toFixed(1);
   console.log(`\nListo: ${seeded} tareas en ${elapsed}s.`);
   console.log(`Espacio de trabajo: ${workspaceId}`);
+  console.log(`Usuario de medicion: ${userId} (equipo ${teamIds[0]})`);
 
   process.exit(0);
 }

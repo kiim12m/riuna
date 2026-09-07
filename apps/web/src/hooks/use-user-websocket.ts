@@ -15,6 +15,14 @@ const BASE_DELAY = 1000;
 const WS_PING_INTERVAL_MS = 30_000;
 
 /**
+ * `PATCH /task/bulk` publica un evento **por tarea**, asi que asignar veinte de
+ * golpe llegaria aqui como veinte mensajes y veinte refetchs de la misma
+ * consulta. Esta ventana los junta en uno, igual que la cola de 100 ms que la
+ * difusion por proyecto ya usa en el servidor.
+ */
+const MY_WORK_DEBOUNCE_MS = 300;
+
+/**
  * Maintains a user-scoped WebSocket connection for receiving user-targeted
  * real-time events (e.g. NOTIFICATION_CREATED). Invalidates TanStack Query
  * caches as needed, so no polling is required.
@@ -26,11 +34,22 @@ export function useUserWebSocket() {
   const retriesRef = useRef(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const myWorkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!session?.user?.id) return;
 
     retriesRef.current = 0;
+
+    function scheduleMyWorkInvalidate() {
+      if (myWorkTimerRef.current) {
+        clearTimeout(myWorkTimerRef.current);
+      }
+      myWorkTimerRef.current = setTimeout(() => {
+        myWorkTimerRef.current = null;
+        queryClient.invalidateQueries({ queryKey: ["my-work"] });
+      }, MY_WORK_DEBOUNCE_MS);
+    }
 
     function clearPing() {
       if (pingIntervalRef.current) {
@@ -62,6 +81,9 @@ export function useUserWebSocket() {
           if (message.type === "NOTIFICATION_CREATED") {
             queryClient.invalidateQueries({ queryKey: ["notifications"] });
           }
+          if (message.type === "MY_WORK_INVALIDATED") {
+            scheduleMyWorkInvalidate();
+          }
         } catch {
           // Ignore malformed messages
         }
@@ -86,6 +108,10 @@ export function useUserWebSocket() {
       clearPing();
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
+      }
+      if (myWorkTimerRef.current) {
+        clearTimeout(myWorkTimerRef.current);
+        myWorkTimerRef.current = null;
       }
       wsRef.current?.close();
     };

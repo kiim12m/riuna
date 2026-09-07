@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronRight, LayoutGrid, Mail, Users } from "lucide-react";
+import { ChevronRight, LayoutGrid, ListTodo, Mail, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   Collapsible,
@@ -28,6 +28,19 @@ export function NavMain() {
   const pendingCount = invitations.length;
 
   const navItems = [
+    {
+      // Primera de la lista: es la pantalla que responde "que me toca hoy", y
+      // la unica que reune el trabajo de todos los proyectos. Sin badge a
+      // proposito: la campana ya lleva ese numero y dos insignias para lo
+      // mismo en la misma pantalla sobran.
+      title: t("navigation:sidebar.myWork"),
+      url: `/dashboard/workspace/${workspace.id}/my-work`,
+      icon: ListTodo,
+      isActive:
+        window.location.pathname ===
+        `/dashboard/workspace/${workspace.id}/my-work`,
+      badge: null,
+    },
     {
       title: t("navigation:sidebar.projects"),
       url: `/dashboard/workspace/${workspace.id}`,

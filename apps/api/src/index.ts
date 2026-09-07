@@ -43,6 +43,7 @@ import invitation from "./invitation";
 import label from "./label";
 import mcpRoutes, { mcpWellKnownRoutes } from "./mcp";
 import { migrateColumns } from "./migrations/column-migration";
+import myWork from "./my-work";
 import notification from "./notification";
 import notificationPreferences from "./notification-preferences";
 import oauth from "./oauth";
@@ -608,6 +609,7 @@ export function createApp() {
     "/notification-preferences",
     notificationPreferences,
   );
+  const myWorkApi = api.route("/my-work", myWork);
   const searchApi = api.route("/search", search);
   const githubIntegrationApi = api.route(
     "/github-integration",
@@ -788,6 +790,7 @@ export function createApp() {
     invitationApi,
     invitationPublicApi,
     labelApi,
+    myWorkApi,
     notificationApi,
     notificationPreferencesApi,
     projectApi,
@@ -934,6 +937,7 @@ const {
   invitationApi,
   invitationPublicApi,
   labelApi,
+  myWorkApi,
   notificationApi,
   notificationPreferencesApi,
   projectApi,
@@ -975,6 +979,7 @@ export type AppType =
   | typeof labelApi
   | typeof notificationApi
   | typeof notificationPreferencesApi
+  | typeof myWorkApi
   | typeof searchApi
   | typeof githubIntegrationApi
   | typeof giteaIntegrationApi

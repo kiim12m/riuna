@@ -54,6 +54,9 @@ async function updateTaskTeam({
       taskId: updatedTask.id,
       projectId: updatedTask.projectId,
       userId: currentUserId,
+      // El departamento que deja de tenerla: es lo unico que permite avisar a
+      // sus miembros de que la fila ya no les toca.
+      oldTeamId: existingTask.teamId,
       title: updatedTask.title,
       type: "team_unassigned",
     });

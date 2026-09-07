@@ -12,7 +12,9 @@
 			"remove": "Elimina",
 			"reset": "Restableix",
 			"filter": "Filtra",
-			"clearAllFilters": "Elimina tots els filtres"
+			"clearAllFilters": "Elimina tots els filtres",
+			"next": "Next",
+			"previous": "Previous"
 		},
 		"boolean": {
 			"yes": "Sí",
@@ -1411,7 +1413,8 @@
 			"members": "Membres",
 			"invitations": "Invitacions",
 			"more": "Més",
-			"backToBoard": "Torna al tauler"
+			"backToBoard": "Torna al tauler",
+			"myWork": "My work"
 		},
 		"projectList": {
 			"viewProject": "Mostra el projecte",
@@ -2441,6 +2444,53 @@
 		},
 		"branding": {
 			"poweredBy": "Powered by"
+		}
+	},
+	"myWork": {
+		"count_one": "{{count}} task",
+		"count_other": "{{count}} tasks",
+		"error": "Your work could not be loaded",
+		"filters": {
+			"due": {
+				"all": "All",
+				"label": "Due date",
+				"overdue": "Overdue",
+				"today": "Today",
+				"week": "This week"
+			},
+			"project": {
+				"all": "All projects",
+				"label": "Project"
+			},
+			"showDone": "Show completed"
+		},
+		"inbox": {
+			"empty": {
+				"description": "Mentions, assignments and reminders land here.",
+				"title": "Your inbox is empty"
+			},
+			"limitNotice": "Showing the 50 most recent"
+		},
+		"pageTitle": "My work",
+		"sections": {
+			"assigned": {
+				"empty": {
+					"description": "Tasks assigned to you in any project show up here.",
+					"title": "Nothing assigned to you"
+				},
+				"title": "Assigned to me"
+			},
+			"team": {
+				"empty": {
+					"description": "Tasks assigned to a team you belong to show up here.",
+					"title": "Nothing on your teams"
+				},
+				"title": "From my teams"
+			}
+		},
+		"tabs": {
+			"inbox": "Inbox",
+			"tasks": "Tasks"
 		}
 	}
 }
