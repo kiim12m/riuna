@@ -29,9 +29,20 @@ async function getProjectStatistics(
   const rows = await db
     .select({
       projectId: taskTable.projectId,
-      totalTasks: count(),
+      // Archivar no es terminar. La forma anterior —`status in ('done',
+      // 'archived')`— contaba como completada una tarea archivada **sin
+      // empezar**, asi que limpiar el backlog subia la barra de progreso.
+      //
+      // Y "hecha" se lee de `completed_at`, que es la definicion unica del
+      // producto: `status = 'done'` ignora que las columnas finales son
+      // configurables por proyecto. El disparador `task_completed_at` la
+      // anula al archivar, asi que las archivadas quedan fuera de las dos
+      // cuentas sin pedirlo aparte. Ver la ADR de la Fase 7.
+      totalTasks: count(
+        sql`case when ${taskTable.status} <> 'archived' then 1 end`,
+      ),
       completedTasks: count(
-        sql`case when ${taskTable.status} in ('done', 'archived') then 1 end`,
+        sql`case when ${taskTable.completedAt} is not null then 1 end`,
       ),
       dueDate: min(taskTable.dueDate),
     })
