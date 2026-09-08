@@ -1467,7 +1467,8 @@
 			"invitations": "Invitations",
 			"more": "More",
 			"backToBoard": "Back to board",
-			"myWork": "My work"
+			"home": "Home",
+			"goals": "Goals"
 		},
 		"projectList": {
 			"viewProject": "View Project",
@@ -2221,7 +2222,9 @@
 				"status": "Status",
 				"priority": "Priority",
 				"assignee": "Assignee",
-				"dueDate": "Due date"
+				"dueDate": "Due date",
+				"done": "Done",
+				"completedAt": "Completed on"
 			},
 			"addField": "Add a field",
 			"addFieldTitle": "New custom field",
@@ -2499,53 +2502,6 @@
 			"poweredBy": "Powered by"
 		}
 	},
-	"myWork": {
-		"pageTitle": "My work",
-		"count_one": "{{count}} task",
-		"count_other": "{{count}} tasks",
-		"error": "Your work could not be loaded",
-		"tabs": {
-			"tasks": "Tasks",
-			"inbox": "Inbox"
-		},
-		"sections": {
-			"assigned": {
-				"title": "Assigned to me",
-				"empty": {
-					"title": "Nothing assigned to you",
-					"description": "Tasks assigned to you in any project show up here."
-				}
-			},
-			"team": {
-				"title": "From my teams",
-				"empty": {
-					"title": "Nothing on your teams",
-					"description": "Tasks assigned to a team you belong to show up here."
-				}
-			}
-		},
-		"filters": {
-			"due": {
-				"label": "Due date",
-				"all": "All",
-				"overdue": "Overdue",
-				"today": "Today",
-				"week": "This week"
-			},
-			"project": {
-				"label": "Project",
-				"all": "All projects"
-			},
-			"showDone": "Show completed"
-		},
-		"inbox": {
-			"limitNotice": "Showing the 50 most recent",
-			"empty": {
-				"title": "Your inbox is empty",
-				"description": "Mentions, assignments and reminders land here."
-			}
-		}
-	},
 	"cycles": {
 		"title": "Cycles",
 		"pageTitle": "Cycles",
@@ -2556,7 +2512,8 @@
 		},
 		"unit": {
 			"tasks": "Tasks",
-			"hours": "Hours"
+			"hours": "Hours",
+			"label": "Burndown unit"
 		},
 		"actions": {
 			"start": "Start cycle",
@@ -2608,5 +2565,138 @@
 			"backlog": "Back to the backlog",
 			"confirm": "Close cycle"
 		}
+	},
+	"panels": {
+		"pageTitle": "Home",
+		"defaultName": "My panel",
+		"empty": {
+			"title": "Your panel is empty",
+			"description": "Add a widget to see how your work is going without opening every project."
+		},
+		"widget": {
+			"add": "Add widget",
+			"edit": "Edit widget",
+			"actions": "Widget actions",
+			"type": "Type",
+			"title": "Title",
+			"scope": "Scope",
+			"wholeWorkspace": "Whole workspace",
+			"groupBy": "Group by",
+			"pickGroupBy": "Pick a grouping",
+			"filter": "Filter",
+			"noData": "Nothing to show yet",
+			"ofTotal": "{{value}} of {{total}}",
+			"goal": "Goal",
+			"pickGoal": "Pick a goal"
+		},
+		"type": {
+			"count": "Count",
+			"breakdown": "Breakdown",
+			"trend": "Trend",
+			"time": "Logged time",
+			"epic_progress": "Epic progress",
+			"table": "Task list",
+			"inbox": "Inbox",
+			"goal": "Goal"
+		},
+		"metric": {
+			"count": "Tasks",
+			"doneCount": "Completed",
+			"doneRatio": "Completed",
+			"sumEstimate": "Estimated",
+			"sumLogged": "Logged"
+		},
+		"groupBy": {
+			"project": "Project",
+			"assignee": "Assignee",
+			"priority": "Priority",
+			"team": "Team",
+			"status": "Status",
+			"done": "Done",
+			"dueWindow": "Due date",
+			"epic": "Epic",
+			"time": "Over time"
+		},
+		"buckets": {
+			"none": "None",
+			"unknown": "Unknown",
+			"done": "Done",
+			"notDone": "Not done",
+			"due": {
+				"none": "No due date",
+				"overdue": "Overdue",
+				"today": "Today",
+				"week": "This week",
+				"later": "Later"
+			},
+			"other": "Others"
+		},
+		"greeting": {
+			"morning": "Good morning, {{name}}.",
+			"afternoon": "Good afternoon, {{name}}.",
+			"evening": "Good evening, {{name}}.",
+			"night": "Still up, {{name}}?",
+			"morningNoName": "Good morning.",
+			"afternoonNoName": "Good afternoon.",
+			"eveningNoName": "Good evening.",
+			"nightNoName": "Still up?",
+			"subtitle": "Everything you have going, in one place."
+		},
+		"inbox": {
+			"error": "Your inbox could not be loaded",
+			"empty": "Your inbox is empty"
+		},
+		"actions": {
+			"share": "Share with the workspace",
+			"unshare": "Stop sharing",
+			"export": "Export",
+			"exportError": "The dashboard could not be exported"
+		},
+		"sharedBy": "Shared by {{name}}"
+	},
+	"goals": {
+		"pageTitle": "Goals",
+		"actions": {
+			"create": "New goal",
+			"addTarget": "Add key result",
+			"menu": "Goal actions",
+			"targetMenu": "Key result actions",
+			"share": "Share with the workspace",
+			"unshare": "Stop sharing"
+		},
+		"empty": {
+			"title": "No goals yet",
+			"description": "A goal is a period plus the key results that measure it. Progress is read from your closed tasks, so it moves on its own.",
+			"noTargets": "No key results yet. A goal without them cannot be measured."
+		},
+		"form": {
+			"createTitle": "New goal",
+			"editTitle": "Edit goal",
+			"description": "The period is what bounds the measurement.",
+			"name": "Name",
+			"namePlaceholder": "Ship the new billing flow",
+			"detail": "Detail",
+			"startsAt": "Starts",
+			"endsAt": "Ends",
+			"datesInvalid": "The end cannot come before the start."
+		},
+		"target": {
+			"createTitle": "New key result",
+			"editTitle": "Edit key result",
+			"description": "A number to reach, measured against the goal's period.",
+			"name": "Name",
+			"namePlaceholder": "Close 40 tasks",
+			"metric": "Measure",
+			"value": "Target",
+			"scope": "Scope",
+			"progress": "{{current}} of {{target}}",
+			"unmeasurable": "Cannot be measured"
+		},
+		"scope": {
+			"all": "The whole workspace",
+			"assigned": "Assigned to me",
+			"team": "My teams"
+		},
+		"shared": "Shared"
 	}
 }

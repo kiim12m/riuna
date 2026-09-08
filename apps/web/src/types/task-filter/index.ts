@@ -94,8 +94,17 @@ export function buildFilter(
 
   // El `id` se queda aqui: la API no lo conoce y su validador rechaza las
   // claves que no espera.
-  const clean: FilterCondition[] = usable.map(({ id: _id, ...condition }) => ({
-    ...condition,
+  //
+  // Y `type` se **pone**, no se propaga. El validador de `view.config` no lo
+  // declara, asi que Valibot lo descarta al guardar: una vista guardada vuelve
+  // sin el, y propagarlo producia un nodo sin `type` que el motor rechazaba con
+  // un 400 —la pantalla en blanco que ese mismo validador queria evitar—.
+  // Ponerlo aqui repara ademas las vistas ya guardadas, sin migracion.
+  const clean: FilterCondition[] = usable.map((condition) => ({
+    type: "condition",
+    field: condition.field,
+    operator: condition.operator,
+    ...(condition.value !== undefined ? { value: condition.value } : {}),
   }));
 
   if (clean.length === 0) return null;

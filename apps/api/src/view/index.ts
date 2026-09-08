@@ -7,7 +7,7 @@ import createView from "./controllers/create-view";
 import deleteView from "./controllers/delete-view";
 import getViews from "./controllers/get-views";
 import updateView from "./controllers/update-view";
-import { FILTER_OPERATORS } from "./filter-schema";
+import { editableFilterSchema } from "./filter-schema";
 import { requireViewOwner } from "./require-view-owner";
 
 // Las vistas se gobiernan por propiedad y no por el vocabulario de permisos:
@@ -33,15 +33,8 @@ const viewTypeSchema = v.picklist([
 // blanco a todo el equipo con el fallo descubierto en el consumidor y no en el
 // productor. Y acota el tamano: `v.record(v.string(), v.unknown())` aceptaba un
 // config de 20 MB que `getViews` devolvia luego a cada miembro del espacio.
-const conditionSchema = v.object({
-  id: v.pipe(v.string(), v.maxLength(120)),
-  field: v.pipe(v.string(), v.minLength(1), v.maxLength(120)),
-  operator: v.picklist(FILTER_OPERATORS),
-  value: v.optional(v.unknown()),
-});
-
 const configSchema = v.object({
-  filter: v.optional(v.pipe(v.array(conditionSchema), v.maxLength(50))),
+  filter: v.optional(editableFilterSchema),
   treeMode: v.optional(
     v.picklist(["tree", "flat", "roots", "withDescendants"]),
   ),

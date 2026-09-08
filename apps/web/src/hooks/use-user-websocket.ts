@@ -41,6 +41,21 @@ export function useUserWebSocket() {
 
     retriesRef.current = 0;
 
+    /**
+     * El canal de usuario avisa cuando cambia **si una tarea es tuya**, que es
+     * lo que decide si aparece o desaparece del panel personal.
+     *
+     * Invalida las dos claves. `["my-work"]` es la lectura de la API, que sigue
+     * publicada; `["dashboard-data"]` es la pantalla, que desde la Fase 7 es
+     * quien la pinta. Sin esto el panel tardaria hasta un minuto en enterarse
+     * de que alguien le ha asignado algo, y "Mi trabajo" si lo enseñaba al
+     * momento: fundir las dos pantallas no puede costar esa propiedad.
+     *
+     * El resto del contenido —prioridad, fecha, titulo— sigue llegando por el
+     * intervalo: son eventos que disparan en cada arrastre y poner una
+     * resolucion de destinatarios en el camino de mutacion mas caliente del
+     * producto es exactamente lo que la ADR 024 descarto.
+     */
     function scheduleMyWorkInvalidate() {
       if (myWorkTimerRef.current) {
         clearTimeout(myWorkTimerRef.current);
@@ -48,6 +63,7 @@ export function useUserWebSocket() {
       myWorkTimerRef.current = setTimeout(() => {
         myWorkTimerRef.current = null;
         queryClient.invalidateQueries({ queryKey: ["my-work"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
       }, MY_WORK_DEBOUNCE_MS);
     }
 

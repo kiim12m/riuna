@@ -1,5 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronRight, LayoutGrid, ListTodo, Mail, Users } from "lucide-react";
+import {
+  ChevronRight,
+  LayoutDashboard,
+  LayoutGrid,
+  Mail,
+  Target,
+  Users,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   Collapsible,
@@ -33,12 +40,24 @@ export function NavMain() {
       // la unica que reune el trabajo de todos los proyectos. Sin badge a
       // proposito: la campana ya lleva ese numero y dos insignias para lo
       // mismo en la misma pantalla sobran.
-      title: t("navigation:sidebar.myWork"),
-      url: `/dashboard/workspace/${workspace.id}/my-work`,
-      icon: ListTodo,
+      title: t("navigation:sidebar.home"),
+      url: `/dashboard/workspace/${workspace.id}/home`,
+      icon: LayoutDashboard,
       isActive:
         window.location.pathname ===
-        `/dashboard/workspace/${workspace.id}/my-work`,
+        `/dashboard/workspace/${workspace.id}/home`,
+      badge: null,
+    },
+    {
+      // Objetivos es una superficie de gestion, no una respuesta a "que me toca
+      // hoy": por eso tiene entrada propia y no se funde con el panel, al reves
+      // que "Mi trabajo" (ADR 031).
+      title: t("navigation:sidebar.goals"),
+      url: `/dashboard/workspace/${workspace.id}/goals`,
+      icon: Target,
+      isActive:
+        window.location.pathname ===
+        `/dashboard/workspace/${workspace.id}/goals`,
       badge: null,
     },
     {

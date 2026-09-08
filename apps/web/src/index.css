@@ -175,8 +175,13 @@ input:-webkit-autofill:active {
   --text-body: 0.875rem;
   --text-body--line-height: 1.35rem;
 
-  --text-secondary: 0.75rem;
-  --text-secondary--line-height: 1.1rem;
+  /* El rol "Secundario" de marca.md §05. Se llama `meta` y no `secondary`
+     porque `--secondary` ya existe como color de shadcn, y en Tailwind v4 el
+     prefijo `text-` lo comparten tamano y color: `text-secondary` compilaba a
+     `color: var(--secondary)` —un gris palido— en vez de a 12 px, asi que el
+     token era inservible tal y como lo nombro la ADR 018. */
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1.1rem;
 
   --text-label: 0.6875rem;
   --text-label--line-height: 1rem;
