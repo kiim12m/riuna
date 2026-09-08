@@ -28,8 +28,11 @@ export function TaskLabels({
 }) {
   if (!labels.length) return null;
 
+  // `span` y no `div`: la fila de "Mi trabajo" es un `<button>`, cuyo modelo de
+  // contenido es contenido de frase. Con `display:flex` se pinta igual en las
+  // cuatro superficies que ya lo usaban.
   return (
-    <div className="flex flex-wrap gap-1">
+    <span className="flex flex-wrap gap-1">
       {labels.map((label: { id: string; name: string; color: string }) => (
         <Badge
           key={label.id}
@@ -45,6 +48,6 @@ export function TaskLabels({
           <span className="max-w-20 truncate">{label.name}</span>
         </Badge>
       ))}
-    </div>
+    </span>
   );
 }

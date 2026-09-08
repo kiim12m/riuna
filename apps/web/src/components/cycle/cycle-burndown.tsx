@@ -1,14 +1,12 @@
 import { useTranslation } from "react-i18next";
+import { Legend, Line, LineChart, ResponsiveContainer } from "recharts";
 import {
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+  CHART_MARGIN,
+  ChartGrid,
+  ChartTooltip,
+  ChartXAxis,
+  ChartYAxis,
+} from "@/components/charts/chart-primitives";
 import type { CycleReport } from "@/fetchers/cycle";
 
 export type BurndownUnit = "tasks" | "hours";
@@ -54,40 +52,14 @@ export function CycleBurndown({
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={data}
-          margin={{ top: 8, right: 8, bottom: 0, left: -16 }}
-        >
+        <LineChart data={data} margin={CHART_MARGIN}>
           {/* Rejilla recesiva: solo horizontales, para leer alturas sin competir
               con los trazos. */}
-          <CartesianGrid
-            horizontal
-            vertical={false}
-            stroke="var(--color-border)"
-          />
-          <XAxis
-            dataKey="label"
-            tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-            tickLine={false}
-            axisLine={{ stroke: "var(--color-border)" }}
-            minTickGap={16}
-          />
-          <YAxis
-            allowDecimals={false}
-            width={48}
-            tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <Tooltip
+          <ChartGrid />
+          <ChartXAxis dataKey="label" minTickGap={16} />
+          <ChartYAxis />
+          <ChartTooltip
             cursor={{ stroke: "var(--color-border)" }}
-            contentStyle={{
-              background: "var(--color-popover)",
-              border: "1px solid var(--color-border)",
-              borderRadius: 8,
-              fontSize: 12,
-              color: "var(--color-popover-foreground)",
-            }}
             formatter={(value, name) => [
               value === null || value === undefined ? "—" : `${value}${suffix}`,
               String(name),

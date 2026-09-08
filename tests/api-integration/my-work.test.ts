@@ -25,7 +25,13 @@ type MyWorkResponse = {
     assignees: Array<{ id: string; name: string }>;
     labels: Array<{ id: string; name: string }>;
   }>;
-  pagination: { page: number; pageSize: number; hasMore: boolean };
+  pagination: {
+    page: number;
+    pageSize: number;
+    hasMore: boolean;
+    total: number;
+    totalIsCapped: boolean;
+  };
 };
 
 function myWorkUrl(params: Record<string, string>) {
@@ -71,6 +77,41 @@ async function createTask({
   }
 
   return task;
+}
+
+/** Insercion en bloque: el caso del tope necesita mas de 500 filas. */
+async function createManyAssignedTasks({
+  projectId,
+  assigneeId,
+  count,
+}: {
+  projectId: string;
+  assigneeId: string;
+  count: number;
+}) {
+  const values = Array.from({ length: count }, () => {
+    taskCounter += 1;
+    return {
+      ...taskTreeValues(),
+      projectId,
+      title: `Tarea ${taskCounter}`,
+      status: "to-do",
+      priority: "medium",
+      number: taskCounter,
+      position: taskCounter,
+      userId: assigneeId,
+      teamId: null,
+    };
+  });
+
+  const inserted = await db
+    .insert(schema.taskTable)
+    .values(values)
+    .returning({ id: schema.taskTable.id });
+
+  await db
+    .insert(schema.taskAssigneeTable)
+    .values(inserted.map((task) => ({ taskId: task.id, userId: assigneeId })));
 }
 
 async function createTeam(workspaceId: string, name = "Desarrollo") {
@@ -367,6 +408,105 @@ describe("API integration: my work", () => {
     // Sin un orden total, dos paginas consecutivas pueden solaparse.
     const ids = [...first.tasks, ...second.tasks].map((task) => task.id);
     expect(new Set(ids).size).toBe(3);
+  });
+
+  it("counts the whole section, not the page", async () => {
+    const member = await createWorkspaceMember({ role: "member" });
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+
+    for (const title of ["Uno", "Dos", "Tres"]) {
+      await createTask({
+        projectId: project.id,
+        title,
+        assigneeId: member.user.id,
+      });
+    }
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const first = (await (
+      await app.request(
+        myWorkUrl({
+          workspaceId: member.workspace.id,
+          scope: "assigned",
+          limit: "2",
+        }),
+      )
+    ).json()) as MyWorkResponse;
+
+    // La pagina trae dos filas; la seccion tiene tres. Decir "2 tareas" aqui
+    // era el defecto que este caso guarda.
+    expect(first.tasks).toHaveLength(2);
+    expect(first.pagination.total).toBe(3);
+    expect(first.pagination.totalIsCapped).toBe(false);
+
+    const second = (await (
+      await app.request(
+        myWorkUrl({
+          workspaceId: member.workspace.id,
+          scope: "assigned",
+          limit: "2",
+          page: "2",
+        }),
+      )
+    ).json()) as MyWorkResponse;
+
+    // El total no cambia al pasar de pagina.
+    expect(second.pagination.total).toBe(3);
+    expect(second.pagination.totalIsCapped).toBe(false);
+  });
+
+  it("tops the count at 500 and says so", async () => {
+    const member = await createWorkspaceMember({ role: "member" });
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+
+    await createManyAssignedTasks({
+      projectId: project.id,
+      assigneeId: member.user.id,
+      count: 501,
+    });
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const payload = (await (
+      await app.request(
+        myWorkUrl({
+          workspaceId: member.workspace.id,
+          scope: "assigned",
+          limit: "10",
+        }),
+      )
+    ).json()) as MyWorkResponse;
+
+    expect(payload.pagination.total).toBe(500);
+    expect(payload.pagination.totalIsCapped).toBe(true);
+    // El tope no toca la paginacion: `hasMore` sigue saliendo de pedir una fila
+    // de mas, no del recuento.
+    expect(payload.pagination.hasMore).toBe(true);
+  });
+
+  it("reports a zero total for a user with nothing assigned", async () => {
+    const member = await createWorkspaceMember({ role: "member" });
+    await createProjectFixture({ workspaceId: member.workspace.id });
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const payload = (await (
+      await app.request(
+        myWorkUrl({ workspaceId: member.workspace.id, scope: "assigned" }),
+      )
+    ).json()) as MyWorkResponse;
+
+    expect(payload.tasks).toHaveLength(0);
+    expect(payload.pagination.total).toBe(0);
+    expect(payload.pagination.totalIsCapped).toBe(false);
   });
 
   it("refuses anyone who is not a member of the workspace", async () => {

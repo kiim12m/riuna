@@ -64,6 +64,25 @@ export const BUILT_IN_FIELDS: FieldRegistry = {
   updatedAt: { kind: "column", column: taskTable.updatedAt, valueType: "date" },
   assignee: { kind: "column", column: taskTable.userId, valueType: "id" },
   team: { kind: "column", column: taskTable.teamId, valueType: "id" },
+  // Sin esto una vista o un widget que cruce proyectos no puede decir "solo
+  // este". Es redundante dentro de un proyecto, no incorrecto.
+  project: { kind: "column", column: taskTable.projectId, valueType: "id" },
+  // "Hecha" con una sola definicion, y la unica que vale en todo el espacio:
+  // `status` es un slug por proyecto y la lista de columnas finales crece con
+  // proyectos x columnas. El disparador `task_completed_at` calcula "final"
+  // con exactamente la misma regla que `getFinalStatuses` reconstruye en
+  // TypeScript, respaldo heredado incluido, asi que esto no es una definicion
+  // rival: es la misma, materializada. Ver ADR 025 y la ADR de la Fase 7.
+  done: {
+    kind: "expression",
+    expression: sql<boolean>`(${taskTable.completedAt} IS NOT NULL)`,
+    valueType: "boolean",
+  },
+  completedAt: {
+    kind: "column",
+    column: taskTable.completedAt,
+    valueType: "date",
+  },
   column: { kind: "column", column: taskTable.columnId, valueType: "id" },
   parent: { kind: "column", column: taskTable.parentId, valueType: "id" },
   depth: { kind: "column", column: taskTable.depth, valueType: "number" },
@@ -100,6 +119,73 @@ export function buildFieldRegistry(
   const registry: FieldRegistry = { ...BUILT_IN_FIELDS };
 
   for (const definition of definitions) {
+    const valueType = CUSTOM_FIELD_VALUE_TYPES[definition.type as FieldType];
+    if (!valueType) continue;
+
+    registry[`custom.${definition.key}`] = {
+      kind: "json",
+      key: definition.key,
+      valueType,
+    };
+  }
+
+  return registry;
+}
+
+/**
+ * Los campos que un nombre significa lo mismo en **todo** el espacio de
+ * trabajo. Es la respuesta a lo que la ADR 024 dejo aplazado.
+ *
+ * El compilador siempre fue agnostico del ambito; el registro no lo era. Estos
+ * seis nombres son los que cambian de significado segun el proyecto:
+ *
+ * - `status` compara contra `task.status`, cuyos valores validos son los
+ *   `column.slug` de **un** proyecto. `status eq "en-curso"` sale cero, sin
+ *   avisar, en un proyecto cuya columna se llama `doing`. Su sustituto entre
+ *   proyectos es `done`.
+ * - `column` es una clave ajena a las columnas de un proyecto.
+ * - `number` y `position` se numeran por proyecto, asi que comparar entre
+ *   proyectos no significa nada.
+ * - `parent` y `depth` describen un arbol que esta acotado al proyecto.
+ *
+ * `epic`, `label` y `assignees` **si** se quedan: casan por id o por nombre,
+ * y los dos son estables en el espacio.
+ */
+const PROJECT_SCOPED_FIELDS = [
+  "status",
+  "column",
+  "number",
+  "position",
+  "parent",
+  "depth",
+] as const;
+
+/**
+ * El registro para un widget o una vista que cruza proyectos.
+ *
+ * Solo entran campos personalizados **del espacio** (`project_id IS NULL`), y
+ * ni siquiera todos: `shadowedKeys` retira los que algun proyecto redefine con
+ * **otro tipo**. Ese caso es el peligroso y no es un error visible —
+ * `get-field-definitions.ts` deja que la definicion del proyecto eclipse a la
+ * del espacio, asi que un `presupuesto` que aqui se compila como numero leeria
+ * un texto en el JSONB de ese proyecto, `jsonb_typeof` no casaria y esas
+ * tareas **desapareceran del recuento en silencio**. No un 400: un numero
+ * equivocado. Para una superficie que informa, "el campo no se ofrece" es el
+ * modo de fallo correcto.
+ */
+export function buildWorkspaceFieldRegistry(
+  workspaceDefinitions: Array<{ key: string; type: string }>,
+  shadowedKeys: ReadonlySet<string> = new Set(),
+): FieldRegistry {
+  const registry: FieldRegistry = { ...BUILT_IN_FIELDS };
+
+  for (const field of PROJECT_SCOPED_FIELDS) {
+    delete registry[field];
+  }
+
+  for (const definition of workspaceDefinitions) {
+    if (shadowedKeys.has(definition.key)) continue;
+
     const valueType = CUSTOM_FIELD_VALUE_TYPES[definition.type as FieldType];
     if (!valueType) continue;
 

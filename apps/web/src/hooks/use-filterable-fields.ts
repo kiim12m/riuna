@@ -72,6 +72,23 @@ export function useFilterableFields(projectId: string, workspaceId: string) {
           label: member.user?.name ?? "",
         })),
       },
+      // "Hecha" es `completed_at IS NOT NULL`, que es la definicion unica del
+      // producto. Filtrar por `status` obliga a saber el slug de la columna
+      // final de **este** proyecto; esto no.
+      {
+        key: "done",
+        label: t("tasks:table.columns.done"),
+        valueType: "boolean",
+        options: [
+          { value: "true", label: t("common:boolean.yes") },
+          { value: "false", label: t("common:boolean.no") },
+        ],
+      },
+      {
+        key: "completedAt",
+        label: t("tasks:table.columns.completedAt"),
+        valueType: "date",
+      },
     ];
 
     // Los de tipo relacion se quedan fuera: su valor no vive en el JSONB y el

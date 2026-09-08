@@ -386,6 +386,34 @@
 			"when": 1788526602836,
 			"tag": "0054_flaky_santa_claus",
 			"breakpoints": true
+		},
+		{
+			"idx": 55,
+			"version": "7",
+			"when": 1788877545484,
+			"tag": "0055_white_flatman",
+			"breakpoints": true
+		},
+		{
+			"idx": 56,
+			"version": "7",
+			"when": 1788877545485,
+			"tag": "0056_final_status_rule",
+			"breakpoints": true
+		},
+		{
+			"idx": 57,
+			"version": "7",
+			"when": 1788898677301,
+			"tag": "0057_colorful_miss_america",
+			"breakpoints": true
+		},
+		{
+			"idx": 58,
+			"version": "7",
+			"when": 1788899799388,
+			"tag": "0058_amused_jack_flag",
+			"breakpoints": true
 		}
 	]
 }

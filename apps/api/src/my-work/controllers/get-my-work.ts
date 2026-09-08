@@ -18,11 +18,12 @@ import {
   projectTable,
   taskAssigneeTable,
   taskTable,
-  teamMemberTable,
   teamTable,
   userTable,
 } from "../../database/schema";
+import { addDays, startOfServerDay } from "../../utils/day-boundaries";
 import { priorityRankExpression } from "../../view/field-registry";
+import { assignedCondition, resolveTeamIds } from "../scope";
 
 export type MyWorkScope = "assigned" | "team";
 export type MyWorkDueWindow = "all" | "overdue" | "today" | "week";
@@ -40,6 +41,18 @@ type GetMyWorkOptions = {
 
 const DEFAULT_PAGE_SIZE = 50;
 const MAX_PAGE_SIZE = 100;
+
+/**
+ * Tope del recuento. Por encima se devuelve el tope con `totalIsCapped`, y la
+ * web escribe "500+".
+ *
+ * El tope es lo que hace asumible la cuenta: el `LIMIT` va **dentro** de la
+ * subconsulta, asi que Postgres para en cuanto junta 501 filas en vez de barrer
+ * el espacio entero. Sin el, esto seria la cuenta siempre encendida que
+ * `get-tasks.ts` documenta como error —evaluar dos veces la misma clausula
+ * WHERE completa—.
+ */
+const TOTAL_CAP = 500;
 
 /** El slug que Kaneo daba por terminado antes de que las columnas fueran configurables. */
 const LEGACY_FINAL_STATUS = "done";
@@ -60,17 +73,14 @@ type ProjectColumns = {
 /**
  * Ventana de vencimiento, en dias del servidor.
  *
- * `due_date` es un `timestamp` sin zona, asi que "hoy" depende de donde se
- * mire. Riuna todavia no ha decidido en que zona horaria vive un dia —esta
- * anotado como deuda abierta de la Fase 4.5, junto con `dueDate eq <dia>`— y
- * aqui se usa el dia del servidor para no estrenar un criterio distinto del que
- * ya aplican las demas vistas.
+ * Las fronteras salen de `utils/day-boundaries`, compartidas con los paneles
+ * de la Fase 7: calcularlas dos veces era pedir que "hoy" acabara significando
+ * cosas distintas en dos pantallas.
  */
 function dueWindowCondition(due: MyWorkDueWindow, now: Date): SQL | undefined {
   if (due === "all") return undefined;
 
-  const startOfToday = new Date(now);
-  startOfToday.setHours(0, 0, 0, 0);
+  const startOfToday = startOfServerDay(now);
 
   // Una fecha nula hace NULL la comparacion, no true, asi que las tareas sin
   // vencimiento quedan fuera de las tres ventanas sin pedirlo explicitamente.
@@ -78,39 +88,12 @@ function dueWindowCondition(due: MyWorkDueWindow, now: Date): SQL | undefined {
     return lt(taskTable.dueDate, startOfToday);
   }
 
-  const endOfWindow = new Date(startOfToday);
-  endOfWindow.setDate(endOfWindow.getDate() + (due === "today" ? 1 : 7));
+  const endOfWindow = addDays(startOfToday, due === "today" ? 1 : 7);
 
   return and(
     gte(taskTable.dueDate, startOfToday),
     lt(taskTable.dueDate, endOfWindow),
   );
-}
-
-/**
- * Los equipos a los que pertenece el usuario, resueltos aparte a proposito.
- *
- * `team_member` no tiene `unique(team_id, user_id)`, asi que unir la consulta
- * principal contra ella devolveria la misma tarea una vez por cada fila de
- * pertenencia duplicada. Resolver los ids antes con `selectDistinct` lo corta
- * en origen y deja la consulta principal sin tocar `team_member`.
- */
-async function resolveTeamIds(
-  workspaceId: string,
-  userId: string,
-): Promise<string[]> {
-  const rows = await db
-    .selectDistinct({ id: teamMemberTable.teamId })
-    .from(teamMemberTable)
-    .innerJoin(teamTable, eq(teamMemberTable.teamId, teamTable.id))
-    .where(
-      and(
-        eq(teamMemberTable.userId, userId),
-        eq(teamTable.workspaceId, workspaceId),
-      ),
-    );
-
-  return rows.map((row) => row.id);
 }
 
 /**
@@ -183,7 +166,16 @@ async function getWorkspaceColumns(
 }
 
 function emptyPage(page: number, pageSize: number) {
-  return { tasks: [], pagination: { page, pageSize, hasMore: false } };
+  return {
+    tasks: [],
+    pagination: {
+      page,
+      pageSize,
+      hasMore: false,
+      total: 0,
+      totalIsCapped: false,
+    },
+  };
 }
 
 async function getMyWork({
@@ -220,30 +212,9 @@ async function getMyWork({
   }
 
   if (scope === "assigned") {
-    // **El `OFFSET 0` es una valla de optimizacion, no un descuido: no lo
-    // quites.**
-    //
-    // Sin el, Postgres convierte esto en un semi-join y decide recorrer las
-    // 50.000 tareas del espacio sondeando `task_assignee` una por una, porque
-    // estima mal cuantas sobreviven. Con la valla no puede subir la subconsulta
-    // y arranca por `taskAssignee_userId_idx`, que es el orden correcto: el
-    // trabajo pasa a ser proporcional a **tus** tareas y no a las del espacio
-    // entero, que es justo lo que una pagina llamada "Mi trabajo" tiene que
-    // hacer.
-    //
-    // Medido con el banco de 50.000 tareas y 5.062 asignadas a una persona:
-    // 197 ms sin la valla, 47 ms con ella, y plano en la pagina 20.
-    //
-    // `task_assignee` incluye siempre al responsable principal porque
-    // `task/controllers/assignees.ts` lo sincroniza, asi que basta esta tabla
-    // para responder "quien tiene esta tarea".
-    conditions.push(
-      sql`${taskTable.id} IN (
-        SELECT ${taskAssigneeTable.taskId} FROM ${taskAssigneeTable}
-        WHERE ${taskAssigneeTable.userId} = ${userId}
-        OFFSET 0
-      )`,
-    );
+    // La valla `OFFSET 0` y su medicion viven en `my-work/scope.ts`, que es
+    // tambien lo que usan los widgets del panel.
+    conditions.push(assignedCondition(userId));
   } else {
     const teamIds = await resolveTeamIds(workspaceId, userId);
 
@@ -281,49 +252,71 @@ async function getMyWork({
     }
   }
 
-  // Se pide una fila de mas en vez de un `count(*)`: el propio `get-tasks.ts`
-  // documenta que la cuenta siempre encendida evaluaba dos veces la misma
-  // clausula WHERE.
-  const rows = await db
-    .select({
-      id: taskTable.id,
-      number: taskTable.number,
-      title: taskTable.title,
-      status: taskTable.status,
-      priority: taskTable.priority,
-      startDate: taskTable.startDate,
-      dueDate: taskTable.dueDate,
-      createdAt: taskTable.createdAt,
-      userId: taskTable.userId,
-      parentId: taskTable.parentId,
-      depth: taskTable.depth,
-      projectId: taskTable.projectId,
-      projectName: projectTable.name,
-      projectSlug: projectTable.slug,
-      projectIcon: projectTable.icon,
-      teamId: taskTable.teamId,
-      teamName: teamTable.name,
-    })
+  // El recuento topado, para que la seccion pueda decir cuanto tienes pendiente
+  // y no cuantas filas caben en la pagina. Va en la misma tanda que la consulta
+  // de pagina para no sumar su latencia a la respuesta.
+  const cappedTotal = db
+    .select({ id: taskTable.id })
     .from(taskTable)
     .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-    .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))
     .where(and(...conditions))
-    // La fecha manda porque la pagina responde "que vence antes", que es su
-    // razon de ser. El id cierra el orden: sin un orden total, dos paginas
-    // consecutivas pueden solaparse o saltarse una fila.
-    .orderBy(
-      sql`${taskTable.dueDate} ASC NULLS LAST`,
-      desc(priorityRankExpression),
-      asc(taskTable.id),
-    )
-    .limit(pageSize + 1)
-    .offset(offset);
+    .limit(TOTAL_CAP + 1)
+    .as("capped_total");
+
+  // `hasMore` sigue saliendo de pedir una fila de mas, no del total: el total
+  // esta topado y a partir del tope no sabria decir si queda pagina siguiente.
+  const [rows, totalRows] = await Promise.all([
+    db
+      .select({
+        id: taskTable.id,
+        number: taskTable.number,
+        title: taskTable.title,
+        status: taskTable.status,
+        priority: taskTable.priority,
+        startDate: taskTable.startDate,
+        dueDate: taskTable.dueDate,
+        createdAt: taskTable.createdAt,
+        userId: taskTable.userId,
+        parentId: taskTable.parentId,
+        depth: taskTable.depth,
+        projectId: taskTable.projectId,
+        projectName: projectTable.name,
+        projectSlug: projectTable.slug,
+        projectIcon: projectTable.icon,
+        teamId: taskTable.teamId,
+        teamName: teamTable.name,
+      })
+      .from(taskTable)
+      .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+      .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))
+      .where(and(...conditions))
+      // La fecha manda porque la pagina responde "que vence antes", que es su
+      // razon de ser. El id cierra el orden: sin un orden total, dos paginas
+      // consecutivas pueden solaparse o saltarse una fila.
+      .orderBy(
+        sql`${taskTable.dueDate} ASC NULLS LAST`,
+        desc(priorityRankExpression),
+        asc(taskTable.id),
+      )
+      .limit(pageSize + 1)
+      .offset(offset),
+    db.select({ count: sql<number>`count(*)` }).from(cappedTotal),
+  ]);
+
+  const countedRows = Number(totalRows[0]?.count ?? 0);
+  const totalIsCapped = countedRows > TOTAL_CAP;
+  const total = totalIsCapped ? TOTAL_CAP : countedRows;
 
   const hasMore = rows.length > pageSize;
   const pageRows = hasMore ? rows.slice(0, pageSize) : rows;
 
   if (pageRows.length === 0) {
-    return emptyPage(page, pageSize);
+    // No es `emptyPage`: esa es la salida de "no hay nada que contar". Aqui la
+    // pagina pedida se ha quedado sin filas, pero el total sigue siendo cierto.
+    return {
+      tasks: [],
+      pagination: { page, pageSize, hasMore: false, total, totalIsCapped },
+    };
   }
 
   const taskIds = pageRows.map((row) => row.id);
@@ -395,7 +388,10 @@ async function getMyWork({
     };
   });
 
-  return { tasks, pagination: { page, pageSize, hasMore } };
+  return {
+    tasks,
+    pagination: { page, pageSize, hasMore, total, totalIsCapped },
+  };
 }
 
 export default getMyWork;

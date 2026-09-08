@@ -35,6 +35,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
 import useGetProjectTaskRelations from "@/hooks/queries/task-relation/use-get-project-task-relations";
 import { useFilterableFields } from "@/hooks/use-filterable-fields";
@@ -333,31 +334,15 @@ function RouteComponent() {
               {t("tasks:gantt.title")}
             </h1>
 
-            {/* biome-ignore lint/a11y/useSemanticElements: control segmentado de zoom, no un fieldset de formulario */}
-            <div
-              className="inline-flex h-7 items-center gap-0.5 rounded-lg border border-border/80 bg-background p-0.5"
-              role="group"
-              aria-label={t("tasks:gantt.zoomLabel")}
-            >
-              {ZOOM_LEVELS.map((level) => (
-                <Button
-                  key={level}
-                  type="button"
-                  variant="ghost"
-                  size="xs"
-                  aria-pressed={zoom === level}
-                  className={cn(
-                    "h-6 rounded-md px-2 text-xs",
-                    zoom === level
-                      ? "bg-accent text-foreground shadow-[inset_0_-2px_0_var(--brand)] hover:bg-accent"
-                      : "text-muted-foreground",
-                  )}
-                  onClick={() => setZoom(level)}
-                >
-                  {t(ZOOM_LABEL_KEY[level])}
-                </Button>
-              ))}
-            </div>
+            <SegmentedControl
+              label={t("tasks:gantt.zoomLabel")}
+              value={zoom}
+              onValueChange={setZoom}
+              options={ZOOM_LEVELS.map((level) => ({
+                value: level,
+                label: t(ZOOM_LABEL_KEY[level]),
+              }))}
+            />
 
             <div className="flex items-center gap-1">
               <Button

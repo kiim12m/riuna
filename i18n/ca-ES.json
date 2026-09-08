@@ -1467,7 +1467,8 @@
 			"invitations": "Invitacions",
 			"more": "Més",
 			"backToBoard": "Torna al tauler",
-			"myWork": "My work"
+			"home": "Panel",
+			"goals": "Objectius"
 		},
 		"projectList": {
 			"viewProject": "Mostra el projecte",
@@ -2221,7 +2222,9 @@
 				"status": "Estado",
 				"priority": "Prioridad",
 				"assignee": "Responsable",
-				"dueDate": "Fecha límite"
+				"dueDate": "Fecha límite",
+				"done": "Hecha",
+				"completedAt": "Fecha de cierre"
 			},
 			"addField": "Añadir un campo",
 			"addFieldTitle": "Campo personalizado nuevo",
@@ -2499,53 +2502,6 @@
 			"poweredBy": "Powered by"
 		}
 	},
-	"myWork": {
-		"count_one": "{{count}} task",
-		"count_other": "{{count}} tasks",
-		"error": "Your work could not be loaded",
-		"filters": {
-			"due": {
-				"all": "All",
-				"label": "Due date",
-				"overdue": "Overdue",
-				"today": "Today",
-				"week": "This week"
-			},
-			"project": {
-				"all": "All projects",
-				"label": "Project"
-			},
-			"showDone": "Show completed"
-		},
-		"inbox": {
-			"empty": {
-				"description": "Mentions, assignments and reminders land here.",
-				"title": "Your inbox is empty"
-			},
-			"limitNotice": "Showing the 50 most recent"
-		},
-		"pageTitle": "My work",
-		"sections": {
-			"assigned": {
-				"empty": {
-					"description": "Tasks assigned to you in any project show up here.",
-					"title": "Nothing assigned to you"
-				},
-				"title": "Assigned to me"
-			},
-			"team": {
-				"empty": {
-					"description": "Tasks assigned to a team you belong to show up here.",
-					"title": "Nothing on your teams"
-				},
-				"title": "From my teams"
-			}
-		},
-		"tabs": {
-			"inbox": "Inbox",
-			"tasks": "Tasks"
-		}
-	},
 	"cycles": {
 		"actions": {
 			"close": "Close cycle",
@@ -2601,12 +2557,146 @@
 		"title": "Cycles",
 		"unit": {
 			"hours": "Hours",
-			"tasks": "Tasks"
+			"tasks": "Tasks",
+			"label": "Unidad del burndown"
 		},
 		"velocity": {
 			"completed": "Completed",
 			"empty": "Velocity appears once you close your first cycle.",
 			"title": "Velocity"
 		}
+	},
+	"panels": {
+		"pageTitle": "Panel",
+		"defaultName": "Mi panel",
+		"empty": {
+			"title": "Tu panel está vacío",
+			"description": "Añade un widget para ver cómo va el trabajo sin entrar proyecto por proyecto."
+		},
+		"widget": {
+			"add": "Añadir widget",
+			"edit": "Editar widget",
+			"actions": "Acciones del widget",
+			"type": "Tipo",
+			"title": "Título",
+			"scope": "Ámbito",
+			"wholeWorkspace": "Todo el espacio",
+			"groupBy": "Agrupar por",
+			"pickGroupBy": "Elige una agrupación",
+			"filter": "Filtro",
+			"noData": "Todavía no hay nada que enseñar",
+			"ofTotal": "{{value}} de {{total}}",
+			"goal": "Objetivo",
+			"pickGoal": "Elige un objetivo"
+		},
+		"type": {
+			"count": "Recuento",
+			"breakdown": "Reparto",
+			"trend": "Tendencia",
+			"time": "Tiempo registrado",
+			"epic_progress": "Avance por épica",
+			"table": "Lista de tareas",
+			"inbox": "Bandeja",
+			"goal": "Objetivo"
+		},
+		"metric": {
+			"count": "Tareas",
+			"doneCount": "Completadas",
+			"doneRatio": "Completadas",
+			"sumEstimate": "Estimado",
+			"sumLogged": "Registrado"
+		},
+		"groupBy": {
+			"project": "Proyecto",
+			"assignee": "Responsable",
+			"priority": "Prioridad",
+			"team": "Equipo",
+			"status": "Estado",
+			"done": "Hecha",
+			"dueWindow": "Vencimiento",
+			"epic": "Épica",
+			"time": "En el tiempo"
+		},
+		"buckets": {
+			"none": "Sin asignar",
+			"unknown": "Desconocido",
+			"done": "Hechas",
+			"notDone": "Sin hacer",
+			"due": {
+				"none": "Sin fecha",
+				"overdue": "Vencidas",
+				"today": "Hoy",
+				"week": "Esta semana",
+				"later": "Más adelante"
+			},
+			"other": "Otros"
+		},
+		"greeting": {
+			"morning": "Buenos días, {{name}}.",
+			"afternoon": "Buenas tardes, {{name}}.",
+			"evening": "Buenas noches, {{name}}.",
+			"night": "¿Todavía en pie, {{name}}?",
+			"morningNoName": "Buenos días.",
+			"afternoonNoName": "Buenas tardes.",
+			"eveningNoName": "Buenas noches.",
+			"nightNoName": "¿Todavía en pie?",
+			"subtitle": "Todo lo que tienes entre manos, en un sitio."
+		},
+		"inbox": {
+			"error": "No se ha podido cargar tu bandeja",
+			"empty": "Tu bandeja está vacía"
+		},
+		"actions": {
+			"share": "Compartir con el espacio",
+			"unshare": "Dejar de compartir",
+			"export": "Exportar",
+			"exportError": "No se ha podido exportar el panel"
+		},
+		"sharedBy": "Compartido por {{name}}"
+	},
+	"goals": {
+		"pageTitle": "Objetivos",
+		"actions": {
+			"create": "Nuevo objetivo",
+			"addTarget": "Añadir resultado clave",
+			"menu": "Acciones del objetivo",
+			"targetMenu": "Acciones del resultado",
+			"share": "Compartir con el espacio",
+			"unshare": "Dejar de compartir"
+		},
+		"empty": {
+			"title": "Todavía no hay objetivos",
+			"description": "Un objetivo es un periodo más los resultados clave que lo miden. El progreso sale de las tareas que cierras, así que avanza solo.",
+			"noTargets": "Sin resultados clave todavía. Un objetivo sin ellos no se puede medir."
+		},
+		"form": {
+			"createTitle": "Nuevo objetivo",
+			"editTitle": "Editar objetivo",
+			"description": "El periodo es lo que acota la medida.",
+			"name": "Nombre",
+			"namePlaceholder": "Cerrar el nuevo flujo de facturación",
+			"detail": "Detalle",
+			"startsAt": "Empieza",
+			"endsAt": "Acaba",
+			"datesInvalid": "El final no puede ir antes del principio."
+		},
+		"target": {
+			"createTitle": "Nuevo resultado clave",
+			"editTitle": "Editar resultado clave",
+			"description": "Un número al que llegar, medido contra el periodo del objetivo.",
+			"name": "Nombre",
+			"namePlaceholder": "Cerrar 40 tareas",
+			"metric": "Medida",
+			"value": "Diana",
+			"scope": "Ámbito",
+			"progress": "{{current}} de {{target}}",
+			"unmeasurable": "No se puede medir"
+		},
+		"scope": {
+			"all": "Todo el espacio",
+			"assigned": "Asignadas a mí",
+			"team": "De mis equipos"
+		},
+		"shared": "Compartido"
 	}
 }
