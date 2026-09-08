@@ -14,7 +14,8 @@
 			"filter": "Filtra",
 			"clearAllFilters": "Elimina tots els filtres",
 			"next": "Next",
-			"previous": "Previous"
+			"previous": "Previous",
+			"edit": "Editar"
 		},
 		"boolean": {
 			"yes": "Sí",
@@ -2652,7 +2653,7 @@
 			"export": "Exportar",
 			"exportError": "No se ha podido exportar el panel"
 		},
-		"sharedBy": "Compartido por {{name}}"
+		"shared": "Compartit"
 	},
 	"goals": {
 		"pageTitle": "Objetivos",
