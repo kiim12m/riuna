@@ -183,37 +183,6 @@ export function WidgetEditor({
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {requiresGoal && (
-                    <div className="space-y-1.5">
-                      <Label htmlFor="widget-goal">
-                        {t("panels:widget.goal")}
-                      </Label>
-                      <Select
-                        value={draft.goalId ?? ""}
-                        onValueChange={(next) =>
-                          setDraft((current) => ({
-                            ...current,
-                            goalId: typeof next === "string" ? next : null,
-                          }))
-                        }
-                      >
-                        <SelectTrigger id="widget-goal">
-                          <SelectValue>
-                            {goals.find((goal) => goal.id === draft.goalId)
-                              ?.name ?? t("panels:widget.pickGoal")}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {goals.map((goal) => (
-                            <SelectItem key={goal.id} value={goal.id}>
-                              {goal.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
                   {!requiresProject && (
                     <SelectItem value="workspace">
                       {t("panels:widget.wholeWorkspace")}
@@ -227,6 +196,35 @@ export function WidgetEditor({
                 </SelectContent>
               </Select>
             </div>
+
+            {requiresGoal && (
+              <div className="space-y-1.5">
+                <Label htmlFor="widget-goal">{t("panels:widget.goal")}</Label>
+                <Select
+                  value={draft.goalId ?? ""}
+                  onValueChange={(next) =>
+                    setDraft((current) => ({
+                      ...current,
+                      goalId: typeof next === "string" ? next : null,
+                    }))
+                  }
+                >
+                  <SelectTrigger id="widget-goal">
+                    <SelectValue>
+                      {goals.find((goal) => goal.id === draft.goalId)?.name ??
+                        t("panels:widget.pickGoal")}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {goals.map((goal) => (
+                      <SelectItem key={goal.id} value={goal.id}>
+                        {goal.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {availableGroupBy.length > 0 && (
               <div className="space-y-1.5">

@@ -29,7 +29,13 @@ test.describe("Panel personal", () => {
     ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Bandeja" })).toBeVisible();
 
-    await expect(page.getByText("Tarea asignada")).toBeVisible();
+    // Acotado a su widget: el titulo tambien sale en el texto de la
+    // notificacion de la bandeja, que es correcto y no una duplicidad.
+    await expect(
+      page
+        .getByRole("region", { name: "Asignadas a mí" })
+        .getByText("Tarea asignada"),
+    ).toBeVisible();
 
     // Y se siembra una sola vez: recargar no duplica nada.
     await page.reload();
@@ -58,7 +64,9 @@ test.describe("Panel personal", () => {
     const bell = page.getByRole("button", { name: /Notificaciones/ });
     await expect(bell).toContainText("1");
 
+    // El de la bandeja, no el de la campana: los dos existen y hacen lo mismo.
     await page
+      .getByRole("region", { name: "Bandeja" })
       .getByRole("button", { name: "Marcar todos como leídos" })
       .click();
 
@@ -78,7 +86,8 @@ test.describe("Panel personal", () => {
     const taskId = await createTask(riuna, "Llega sola");
 
     await page.goto(`/dashboard/workspace/${riuna.workspaceId}/home`);
-    await expect(page.getByText("Llega sola")).toHaveCount(0);
+    const asignadas = page.getByRole("region", { name: "Asignadas a mí" });
+    await expect(asignadas.getByText("Llega sola")).toHaveCount(0);
 
     // Otra sesion, otro navegador: el servidor no reenvia el evento a la
     // ventana que lo origino, asi que hacerlo desde la misma pestaña no
@@ -108,10 +117,10 @@ test.describe("Panel personal", () => {
     };
 
     await assign(riuna.userId);
-    await expect(page.getByText("Llega sola")).toBeVisible();
+    await expect(asignadas.getByText("Llega sola")).toBeVisible();
 
     await assign(null);
-    await expect(page.getByText("Llega sola")).toHaveCount(0);
+    await expect(asignadas.getByText("Llega sola")).toHaveCount(0);
 
     await other.close();
   });

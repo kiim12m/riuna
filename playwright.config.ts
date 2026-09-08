@@ -73,14 +73,20 @@ export default defineConfig({
       },
     },
     {
-      command: "pnpm --filter @riuna/web dev",
+      // El puerto va por linea de ordenes y **no** por `PORT`: Vite no lee esa
+      // variable, y `vite.config.ts` fija 5173 a fuego. Con `PORT` en el
+      // entorno el servidor abria 5173, Playwright esperaba 5174 y el humo
+      // moria en el arranque sin llegar a ninguna prueba. `--strictPort` hace
+      // que un puerto ocupado falle en vez de elegir otro y repetir el enredo.
+      // Sin `--`: pnpm 10 reenvia los argumentos tal cual, y con el llegaban
+      // literales a Vite, que los ignoraba y volvia a abrir 5173.
+      command: `pnpm --filter @riuna/web dev --port ${WEB_PORT} --strictPort`,
       port: WEB_PORT,
       timeout: 120_000,
       reuseExistingServer: !process.env.CI,
       stdout: "pipe",
       stderr: "pipe",
       env: {
-        PORT: String(WEB_PORT),
         VITE_API_URL: `http://localhost:${API_PORT}`,
       },
     },

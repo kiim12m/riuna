@@ -1,5 +1,5 @@
 import { MoreHorizontal, TriangleAlert } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,8 +42,14 @@ export function WidgetCard({
 }) {
   const { t } = useTranslation();
 
+  // Cada widget es una region con nombre: sin `aria-labelledby` un `<section>`
+  // no tiene rol, asi que un panel de ocho tarjetas era para un lector de
+  // pantalla un muro de contenido sin puntos de referencia.
+  const titleId = useId();
+
   return (
     <section
+      aria-labelledby={titleId}
       className={cn(
         "flex min-w-0 flex-col gap-2 rounded-lg border border-border bg-background p-(--density-card-pad)",
         span === 2 && "sm:col-span-2",
@@ -52,7 +58,9 @@ export function WidgetCard({
     >
       <header className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-medium text-body">{title}</h3>
+          <h3 id={titleId} className="truncate font-medium text-body">
+            {title}
+          </h3>
           {subtitle && (
             <p className="truncate text-muted-foreground text-meta">
               {subtitle}

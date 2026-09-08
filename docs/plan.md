@@ -1100,10 +1100,17 @@ sin predicado selectivo.
   código no vio: el `GROUP BY` que Drizzle volvía a enlazar, la reparación
   inservible que prescribía la ADR 025, y el administrador con poder sobre un
   panel personal.
-- **La pasada por navegador cubre la rebanada 1 y no las demás.** El panel se ha
-  visto funcionando —y así salió el token `--text-secondary`—, pero **Objetivos,
-  compartir, el widget de objetivo y el cubo «otros» no se han visto nunca en
-  pantalla**, ni en tema oscuro.
+- ~~**La pasada por navegador cubre la rebanada 1 y no las demás.**~~ **Cerrada**
+  el 2026-09-08. El humo de Playwright, que **nunca había llegado a arrancar**
+  —`vite.config.ts` fija el puerto a fuego y la variable `PORT` que le pasaba la
+  configuración no hacía nada—, corre ahora entero: 10 casos, incluido uno nuevo
+  de objetivos que verifica el criterio de aceptación de la fase contra un
+  navegador de verdad. Encontró un fallo que ninguna prueba de API podía ver: el
+  selector de objetivo del editor de widgets estaba anidado **dentro del
+  desplegable de proyecto**, así que no se podía elegir ninguno.
+
+  Lo que sigue sin mirarse: el **cubo «otros»**, que solo aparece con más de
+  cincuenta grupos.
 - **Un widget de espacio todavía no ofrece los campos personalizados del
   espacio**, que la API sí acepta: falta el fetcher que los lea sin pasar por un
   proyecto. Se dijo que iba en la rebanada 2 y **no entró**; sigue abierto.
