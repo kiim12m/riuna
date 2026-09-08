@@ -91,12 +91,42 @@ describe("API integration: project list payload", () => {
     );
     const payload = (await response.json()) as ProjectListEntry[];
 
-    // done + archived count as completed: 2 of 4 => 50%
+    // Archiving is not finishing. The archived task leaves both counts, and
+    // "done" is read from completed_at, which the trigger stamps on insert for
+    // a task landing in a final column: 1 of 3.
     expect(payload[0].statistics).toMatchObject({
-      totalTasks: 4,
-      completionPercentage: 50,
+      totalTasks: 3,
+      completionPercentage: 33,
     });
     expect(new Date(payload[0].statistics.dueDate as string)).toEqual(earliest);
+  });
+
+  it("does not count an archived unfinished task as completed", async () => {
+    const member = await createWorkspaceMember();
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+
+    // The defect this guards: `status in ('done','archived')` counted an
+    // archived to-do as completed, so clearing the backlog pushed the progress
+    // bar up instead of leaving it alone.
+    await seedTasks(project.id, [
+      { title: "Open", status: "to-do", number: 1 },
+      { title: "Never started", status: "archived", number: 2 },
+    ]);
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const response = await app.request(
+      `/api/project?workspaceId=${member.workspace.id}`,
+    );
+    const payload = (await response.json()) as ProjectListEntry[];
+
+    expect(payload[0].statistics).toMatchObject({
+      totalTasks: 1,
+      completionPercentage: 0,
+    });
   });
 
   it("reports zeroed statistics for a project with no tasks", async () => {
