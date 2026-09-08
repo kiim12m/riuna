@@ -881,6 +881,234 @@ export const fieldDefinitionTable = pgTable(
 // campo cambia la forma de las tareas de todo el mundo, y una vista solo dice
 // como mirarlas. Atar esto a `project:update` repetiria el problema de la
 // Fase 3, donde definir un campo quedo fuera del alcance de un `member`.
+/**
+ * Un panel personal. Fase 7, rebanada 1.
+ *
+ * Cuelga del espacio de trabajo y pertenece a quien lo crea, como las vistas
+ * (ADR 015): un panel dice como mirar, no cambia la forma de nada, asi que se
+ * gobierna por propiedad y no por el vocabulario de permisos. De momento **solo
+ * hay paneles personales**; compartir con el equipo llega despues y sera una
+ * columna mas, no otra tabla.
+ */
+export const dashboardTable = pgTable(
+  "dashboard",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    /**
+     * El panel que se crea solo la primera vez, con una distribucion de
+     * partida. Uno por persona y espacio.
+     */
+    isDefault: boolean("is_default").notNull().default(false),
+    /**
+     * Compartido con todo el espacio. Calcado de `view.is_shared` (ADR 015):
+     * lo comparte quien lo crea, lo ve todo el mundo, y solo su dueño —o un
+     * administrador del espacio— lo edita o lo retira.
+     */
+    isShared: boolean("is_shared").notNull().default(false),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    // "Mis paneles en este espacio" es la unica consulta que hace la pantalla.
+    index("dashboard_workspace_creator_idx").on(
+      table.workspaceId,
+      table.createdBy,
+    ),
+    // El panel de partida se crea al leer, asi que dos cargas simultaneas la
+    // primera vez crearian dos. Lo vigila la base y no el controlador, que es
+    // lo que dos peticiones a la vez se saltan. Mismo patron que
+    // `cycle_one_active_per_project`.
+    uniqueIndex("dashboard_one_default_per_person")
+      .on(table.workspaceId, table.createdBy)
+      .where(sql`is_default`),
+    index("dashboard_workspace_shared_idx").on(
+      table.workspaceId,
+      table.isShared,
+    ),
+  ],
+);
+
+/**
+ * Un widget dentro de un panel.
+ *
+ * **`project_id` nulo es lo que decide el registro de campos**, igual que en
+ * `view` y en `field_definition`: con proyecto se compila contra el registro
+ * completo de ese proyecto —`status`, epicas y sus campos personalizados—, y
+ * sin el contra el registro del espacio, que retira los nombres cuyo
+ * significado cambia de proyecto en proyecto. Es la respuesta a lo que la
+ * ADR 024 dejo aplazado.
+ *
+ * `config` guarda el filtro **en forma editable**, la misma que `view.config`,
+ * mas la agrupacion y la metrica. Se valida al escribir con el mismo esquema
+ * que las vistas, para que una vista guardada pueda alimentar un widget sin
+ * conversion.
+ */
+/**
+ * Un objetivo con periodo: el OKR trimestral de la Fase 7.
+ *
+ * Cuelga del espacio de trabajo y se gobierna por **propiedad**, igual que
+ * `view` y que `dashboard`: compartirlo con el equipo llega con el `is_shared`
+ * de la rebanada 2, que es una columna, no un modelo distinto.
+ *
+ * El periodo no es decoracion: acota la medida. "Cerrar 40 tareas este
+ * trimestre" solo significa algo contra unas fechas, y son estas las que se le
+ * pasan al agregado como ventana de cierre.
+ */
+export const goalTable = pgTable(
+  "goal",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    description: text("description"),
+    /** Mismo criterio que un panel y que una vista. */
+    isShared: boolean("is_shared").notNull().default(false),
+    startsAt: timestamp("starts_at", { mode: "date" }).notNull(),
+    endsAt: timestamp("ends_at", { mode: "date" }).notNull(),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("goal_workspace_creator_idx").on(table.workspaceId, table.createdBy),
+    index("goal_workspace_shared_idx").on(table.workspaceId, table.isShared),
+    check("goal_dates_ordered", sql`${table.endsAt} >= ${table.startsAt}`),
+  ],
+);
+
+/**
+ * Un resultado clave: la consulta de un widget mas un valor diana.
+ *
+ * `config` tiene **la misma forma** que el de un widget —filtro editable,
+ * ambito personal, metrica—, asi que el progreso lo calcula `aggregate()` tal
+ * cual, sin una segunda capa de agregacion que mantener en paralelo. Lo unico
+ * que no lleva es agrupacion: un resultado clave es un numero, no un reparto.
+ */
+export const goalTargetTable = pgTable(
+  "goal_target",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    goalId: text("goal_id")
+      .notNull()
+      .references(() => goalTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    // Nulo = todo el espacio de trabajo, igual que en un widget.
+    projectId: text("project_id").references(() => projectTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+    name: text("name").notNull(),
+    config: jsonb("config")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    /** La diana. Entera: son tareas, horas o puntos, nunca fracciones. */
+    targetValue: integer("target_value").notNull(),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("goal_target_goalId_idx").on(table.goalId),
+    check("goal_target_value_positive", sql`${table.targetValue} > 0`),
+  ],
+);
+
+export const dashboardWidgetTable = pgTable(
+  "dashboard_widget",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    dashboardId: text("dashboard_id")
+      .notNull()
+      .references(() => dashboardTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    // Nulo para un widget que mira todo el espacio de trabajo.
+    projectId: text("project_id").references(() => projectTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+    /**
+     * A que objetivo mira un widget de tipo `goal`.
+     *
+     * Columna y no una clave dentro de `config` porque es una **clave ajena**:
+     * borrar el objetivo tiene que llevarse el widget por delante, y un id
+     * suelto en un JSONB dejaria un widget apuntando a un fantasma.
+     */
+    goalId: text("goal_id").references(() => goalTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    config: jsonb("config")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    position: integer("position").notNull().default(0),
+    /** Cuantas de las tres columnas de la rejilla ocupa. */
+    span: integer("span").notNull().default(1),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("dashboard_widget_dashboardId_idx").on(table.dashboardId),
+    check(
+      "dashboard_widget_type_valid",
+      sql`${table.type} IN ('count', 'breakdown', 'trend', 'time', 'epic_progress', 'table', 'inbox', 'goal')`,
+    ),
+    check("dashboard_widget_span_valid", sql`${table.span} BETWEEN 1 AND 3`),
+  ],
+);
+
 export const viewTable = pgTable(
   "view",
   {

@@ -38,8 +38,32 @@ const DEFAULT_WIDTH = 18;
 export async function buildExchangeWorkbook(
   sheet: ExchangeSheet,
 ): Promise<Buffer> {
+  return buildExchangeWorkbookOf([sheet]);
+}
+
+/**
+ * Varias hojas en un mismo libro.
+ *
+ * Existe porque un informe de panel es **una hoja por widget**, y el escritor de
+ * una sola hoja ya tenia todo el cableado de ExcelJS —formato de fecha, texto
+ * explicito, cabecera congelada, autofiltro—. Copiarlo para la segunda forma
+ * era pedir que las dos divergieran en el primer arreglo.
+ */
+export async function buildExchangeWorkbookOf(
+  sheets: ExchangeSheet[],
+): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   workbook.created = new Date();
+
+  for (const sheet of sheets) {
+    addSheet(workbook, sheet);
+  }
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return Buffer.from(buffer);
+}
+
+function addSheet(workbook: ExcelJS.Workbook, sheet: ExchangeSheet) {
   const worksheet = workbook.addWorksheet(sheet.sheetName);
 
   sheet.columns.forEach((column, index) => {
@@ -109,9 +133,6 @@ export async function buildExchangeWorkbook(
       to: { row: HEADER_ROW, column: sheet.columns.length },
     };
   }
-
-  const buffer = await workbook.xlsx.writeBuffer();
-  return Buffer.from(buffer);
 }
 
 /**

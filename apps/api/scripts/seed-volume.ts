@@ -19,17 +19,33 @@ import { sql } from "drizzle-orm";
 import db from "../src/database";
 import {
   columnTable,
+  epicTable,
   fieldDefinitionTable,
   labelTable,
   projectTable,
   taskAssigneeTable,
+  taskEpicTable,
   taskTable,
   teamMemberTable,
   teamTable,
+  timeEntryTable,
   userTable,
   workspaceTable,
   workspaceUserTable,
 } from "../src/database/schema";
+
+/**
+ * Version del reparto sembrado. La 2 la trae la Fase 7: fechas de vencimiento
+ * tambien en el pasado, `completed_at` repartido sobre un ano, y filas de
+ * `time_entry`, `epic` y `task_epic`.
+ *
+ * **Las cifras medidas antes de la v2 no son comparables** para nada que
+ * dependa de fechas: la v1 sembraba todo el vencimiento en el futuro, asi que
+ * "vencidas" devolvia cero filas, y sellaba todos los `completed_at` en el
+ * instante de la siembra. Los recuentos de `task` no cambian, asi que las
+ * mediciones del arbol y del `path` siguen siendo comparables.
+ */
+const SEED_VERSION = 2;
 
 const TOTAL_TASKS = Number(process.env.SEED_TASKS ?? 50_000);
 const PROJECTS = Number(process.env.SEED_PROJECTS ?? 5);
@@ -47,6 +63,25 @@ const USERS = 10;
 const TEAMS = 3;
 /** Que parte de las tareas lleva departamento. El resto se queda sin. */
 const TEAM_SHARE = 0.4;
+
+// Epicas y registro de tiempo, que es lo que los widgets de la Fase 7 leen.
+// Sin estas filas dos de los seis tipos miden una tabla vacia.
+const EPICS_PER_PROJECT = Number(process.env.SEED_EPICS ?? 8);
+/** Que parte de las tareas entra en una epica. */
+const EPIC_SHARE = 0.6;
+/**
+ * Y que parte de esas entra ademas en una **segunda**. Es deliberado: el
+ * agregado por epica agrupa sobre `task_epic`, cuyo grano multiplica las
+ * tareas, asi que los cubos suman por encima del total. Que el banco lo
+ * reproduzca es lo que hace que eso salga en una prueba y no en produccion.
+ */
+const EPIC_SECOND_SHARE = 0.1;
+/** Que parte de las tareas tiene una entrada de tiempo. */
+const TIME_ENTRY_SHARE = Number(process.env.SEED_TIME_ENTRY_SHARE ?? 0.3);
+
+/** Sobre cuantos dias hacia atras se reparten cierres y registros de tiempo. */
+const HISTORY_DAYS = 365;
+const DAY_MS = 86_400_000;
 
 function assertBenchDatabase() {
   const url = process.env.DATABASE_URL;
@@ -66,7 +101,15 @@ function assertBenchDatabase() {
   return name;
 }
 
-/** Determinista a proposito: dos siembras dan el mismo reparto. */
+/**
+ * Determinista a proposito: dos siembras dan el mismo reparto.
+ *
+ * **Regla: la aleatoriedad nueva sale de un generador nuevo.** Es un unico
+ * flujo consumido en orden, asi que una extraccion de mas metida en medio del
+ * bucle desplaza todas las siguientes y convierte en cifras sobre otra base
+ * todo lo ya medido —«Mi trabajo» 197→47 ms, el arbol 6.769→36 ms, el cruce
+ * del presupuesto a ~6.500 tareas—. El flujo `random` esta congelado.
+ */
 function pseudoRandom(seed: number) {
   let state = seed;
   return () => {
@@ -75,10 +118,22 @@ function pseudoRandom(seed: number) {
   };
 }
 
+/**
+ * Reparte el vencimiento entre -90 y +89 dias a partir de la misma extraccion
+ * que ya decidio que la tarea tiene fecha, reescalando el tramo [0,2; 1) para
+ * no perder resolucion en el pasado.
+ */
+function dueDateFromDraw(draw: number) {
+  const scaled = (draw - 0.2) / 0.8;
+  return new Date(Date.now() + (Math.floor(scaled * 180) - 90) * DAY_MS);
+}
+
 async function main() {
   const name = assertBenchDatabase();
   const started = Date.now();
   const random = pseudoRandom(42);
+  // Flujo aparte para las fechas de la v2, para no desplazar el de arriba.
+  const clock = pseudoRandom(1337);
 
   console.log(`Sembrando ${TOTAL_TASKS} tareas en "${name}"...`);
 
@@ -211,6 +266,17 @@ async function main() {
 
     const columnBySlug = new Map(columns.map((c) => [c.slug, c.id]));
 
+    const epics = await db
+      .insert(epicTable)
+      .values(
+        Array.from({ length: EPICS_PER_PROJECT }, (_, index) => ({
+          projectId: project.id,
+          name: `Epica ${index + 1} del proyecto ${p + 1}`,
+          position: index,
+        })),
+      )
+      .returning({ id: epicTable.id });
+
     // Se guardan las tareas por nivel para poder colgar de ellas el siguiente.
     let previousLevel: { id: string; path: string; depth: number }[] = [];
     let number = 1;
@@ -238,6 +304,7 @@ async function main() {
         const assigneeId = memberIds[Math.floor(random() * USERS)];
         const teamId =
           random() < TEAM_SHARE ? teamIds[Math.floor(random() * TEAMS)] : null;
+        const dueDraw = random();
 
         rows.push({
           id,
@@ -255,9 +322,21 @@ async function main() {
           number,
           position: number,
           estimate: Math.floor(random() * 28_800),
-          dueDate: new Date(
-            Date.now() + Math.floor(random() * 90) * 86_400_000,
-          ),
+          // Una sola extraccion, como la v1, para no mover el flujo: la misma
+          // decide si la tarea tiene fecha y cual. A ambos lados de hoy porque
+          // sembrando solo futuro "vencidas" devolvia cero filas y no habia
+          // nada que medir.
+          dueDate: dueDraw < 0.2 ? null : dueDateFromDraw(dueDraw),
+          // El disparador sella `now()` al insertar si no se le da valor, asi
+          // que la v1 amontonaba todos los cierres en el mismo instante y una
+          // tendencia media un solo cubo. Darselo explicito es lo que la
+          // ADR 025 permite: "manda sobre el *si*, no sobre el *cuando*".
+          completedAt:
+            status === "done"
+              ? new Date(
+                  Date.now() - Math.floor(clock() * HISTORY_DAYS) * DAY_MS,
+                )
+              : null,
           customFields: {
             presupuesto: Math.floor(random() * 20_000),
             areas: random() > 0.5 ? ["obra"] : ["legal", "it"],
@@ -284,6 +363,58 @@ async function main() {
             userId: task.userId as string,
           })),
         );
+      }
+
+      // Pertenencia a epica, con un 10 % de las tareas en dos. La segunda es
+      // deliberada: el agregado por epica agrupa sobre `task_epic`, cuyo grano
+      // multiplica las tareas.
+      const epicRows: (typeof taskEpicTable.$inferInsert)[] = [];
+
+      for (const task of rows) {
+        if (clock() >= EPIC_SHARE) continue;
+        const first = Math.floor(clock() * epics.length);
+        epicRows.push({ taskId: task.id as string, epicId: epics[first].id });
+
+        if (clock() < EPIC_SECOND_SHARE) {
+          const second = (first + 1) % epics.length;
+          epicRows.push({
+            taskId: task.id as string,
+            epicId: epics[second].id,
+          });
+        }
+      }
+
+      for (let i = 0; i < epicRows.length; i += INSERT_BATCH) {
+        await db
+          .insert(taskEpicTable)
+          .values(epicRows.slice(i, i + INSERT_BATCH));
+      }
+
+      // Registro de tiempo, repartido sobre el mismo ano que los cierres: sin
+      // el, el widget de tiempo registrado mide una tabla vacia.
+      const timeRows: (typeof timeEntryTable.$inferInsert)[] = [];
+
+      for (const task of rows) {
+        if (clock() >= TIME_ENTRY_SHARE) continue;
+        const startTime = new Date(
+          Date.now() - Math.floor(clock() * HISTORY_DAYS) * DAY_MS,
+        );
+        const duration = 900 + Math.floor(clock() * 13_500);
+        timeRows.push({
+          taskId: task.id as string,
+          userId: memberIds[Math.floor(clock() * USERS)],
+          startTime,
+          // Cerrada siempre: una entrada en marcha tiene duracion 0 y saltaria
+          // al pararla, que es ruido en una medicion.
+          endTime: new Date(startTime.getTime() + duration * 1000),
+          duration,
+        });
+      }
+
+      for (let i = 0; i < timeRows.length; i += INSERT_BATCH) {
+        await db
+          .insert(timeEntryTable)
+          .values(timeRows.slice(i, i + INSERT_BATCH));
       }
 
       // Una etiqueta en una de cada diez, para que el filtro por etiqueta tenga
@@ -321,9 +452,16 @@ async function main() {
   await db.execute(sql`ANALYZE "label"`);
   await db.execute(sql`ANALYZE "task_assignee"`);
   await db.execute(sql`ANALYZE "team_member"`);
+  await db.execute(sql`ANALYZE "project"`);
+  await db.execute(sql`ANALYZE "column"`);
+  await db.execute(sql`ANALYZE "epic"`);
+  await db.execute(sql`ANALYZE "task_epic"`);
+  await db.execute(sql`ANALYZE "time_entry"`);
 
   const elapsed = ((Date.now() - started) / 1000).toFixed(1);
-  console.log(`\nListo: ${seeded} tareas en ${elapsed}s.`);
+  console.log(
+    `\nListo: ${seeded} tareas en ${elapsed}s (reparto v${SEED_VERSION}).`,
+  );
   console.log(`Espacio de trabajo: ${workspaceId}`);
   console.log(`Usuario de medicion: ${userId} (equipo ${teamIds[0]})`);
 

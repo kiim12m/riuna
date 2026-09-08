@@ -1,13 +1,13 @@
 import { useTranslation } from "react-i18next";
+import { Bar, BarChart, ResponsiveContainer } from "recharts";
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+  CHART_MARGIN,
+  CHART_TOOLTIP_CURSOR,
+  ChartGrid,
+  ChartTooltip,
+  ChartXAxis,
+  ChartYAxis,
+} from "@/components/charts/chart-primitives";
 import type { VelocityPoint } from "@/fetchers/cycle";
 import type { BurndownUnit } from "./cycle-burndown";
 
@@ -40,37 +40,12 @@ export function CycleVelocity({
   return (
     <div className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={data}
-          margin={{ top: 8, right: 8, bottom: 0, left: -16 }}
-        >
-          <CartesianGrid
-            horizontal
-            vertical={false}
-            stroke="var(--color-border)"
-          />
-          <XAxis
-            dataKey="name"
-            tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-            tickLine={false}
-            axisLine={{ stroke: "var(--color-border)" }}
-          />
-          <YAxis
-            allowDecimals={false}
-            width={48}
-            tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <Tooltip
-            cursor={{ fill: "var(--color-muted)", opacity: 0.4 }}
-            contentStyle={{
-              background: "var(--color-popover)",
-              border: "1px solid var(--color-border)",
-              borderRadius: 8,
-              fontSize: 12,
-              color: "var(--color-popover-foreground)",
-            }}
+        <BarChart data={data} margin={CHART_MARGIN}>
+          <ChartGrid />
+          <ChartXAxis dataKey="name" />
+          <ChartYAxis />
+          <ChartTooltip
+            cursor={CHART_TOOLTIP_CURSOR}
             formatter={(value) => [
               `${value ?? 0}${suffix}`,
               t("cycles:velocity.completed"),

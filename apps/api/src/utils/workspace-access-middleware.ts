@@ -24,7 +24,11 @@ type WorkspaceIdSource =
         | "template"
         | "epic"
         | "fieldDefinition"
-        | "view";
+        | "view"
+        | "dashboard"
+        | "dashboardWidget"
+        | "goal"
+        | "goalTarget";
       idKey: string;
     }
   | {
@@ -149,7 +153,11 @@ async function lookupWorkspaceId(
     | "template"
     | "epic"
     | "fieldDefinition"
-    | "view",
+    | "view"
+    | "dashboard"
+    | "dashboardWidget"
+    | "goal"
+    | "goalTarget",
   id: string,
 ): Promise<string | null> {
   try {
@@ -186,7 +194,54 @@ async function lookupWorkspaceId(
           .limit(1);
         return view?.workspaceId || null;
       }
+      case "dashboard": {
+        const [dashboard] = await db
+          .select({ workspaceId: schema.dashboardTable.workspaceId })
+          .from(schema.dashboardTable)
+          .where(eq(schema.dashboardTable.id, id))
+          .limit(1);
+        return dashboard?.workspaceId || null;
+      }
+      // Un widget no lleva `workspace_id`: sube por su panel, que es quien lo
+      // tiene. Es la misma forma que `column` o `task`, que suben por proyecto.
+      case "dashboardWidget": {
+        const [widget] = await db
+          .select({ workspaceId: schema.dashboardTable.workspaceId })
+          .from(schema.dashboardWidgetTable)
+          .innerJoin(
+            schema.dashboardTable,
+            eq(
+              schema.dashboardWidgetTable.dashboardId,
+              schema.dashboardTable.id,
+            ),
+          )
+          .where(eq(schema.dashboardWidgetTable.id, id))
+          .limit(1);
+        return widget?.workspaceId || null;
+      }
 
+      case "goal": {
+        const [goal] = await db
+          .select({ workspaceId: schema.goalTable.workspaceId })
+          .from(schema.goalTable)
+          .where(eq(schema.goalTable.id, id))
+          .limit(1);
+        return goal?.workspaceId || null;
+      }
+      // Un resultado clave no lleva `workspace_id`: sube por su objetivo, que
+      // es quien lo tiene.
+      case "goalTarget": {
+        const [target] = await db
+          .select({ workspaceId: schema.goalTable.workspaceId })
+          .from(schema.goalTargetTable)
+          .innerJoin(
+            schema.goalTable,
+            eq(schema.goalTargetTable.goalId, schema.goalTable.id),
+          )
+          .where(eq(schema.goalTargetTable.id, id))
+          .limit(1);
+        return target?.workspaceId || null;
+      }
       case "fieldDefinition": {
         const [definition] = await db
           .select({ workspaceId: schema.fieldDefinitionTable.workspaceId })
@@ -393,6 +448,32 @@ export const workspaceAccess = {
   fromView: (idKey = "id") =>
     workspaceAccessMiddleware({
       sources: [{ type: "lookup", resource: "view", idKey }],
+    }),
+
+  fromDashboard: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [
+        { type: "lookup", resource: "dashboard", idKey },
+        { type: "query", key: "workspaceId" },
+      ],
+    }),
+
+  fromDashboardWidget: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [{ type: "lookup", resource: "dashboardWidget", idKey }],
+    }),
+
+  fromGoal: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [
+        { type: "lookup", resource: "goal", idKey },
+        { type: "query", key: "workspaceId" },
+      ],
+    }),
+
+  fromGoalTarget: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [{ type: "lookup", resource: "goalTarget", idKey }],
     }),
 
   fromFieldDefinition: (idKey = "id") =>

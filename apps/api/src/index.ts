@@ -26,6 +26,7 @@ import column from "./column";
 import comment from "./comment";
 import config from "./config";
 import cycle from "./cycle";
+import dashboard from "./dashboard";
 import db, { getDatabase, schema } from "./database";
 import { prepareDatabaseStartup } from "./database/prepare-database-startup";
 import { waitForDatabase } from "./database/wait-for-database";
@@ -39,6 +40,7 @@ import giteaIntegration, { handleGiteaWebhookRoute } from "./gitea-integration";
 import githubIntegration, {
   handleGithubWebhookRoute,
 } from "./github-integration";
+import goal from "./goal";
 import getInstanceStatus from "./instance/controllers/get-instance-status";
 import invitation from "./invitation";
 import label from "./label";
@@ -613,6 +615,8 @@ export function createApp() {
     notificationPreferences,
   );
   const cycleApi = api.route("/cycle", cycle);
+  const dashboardApi = api.route("/dashboard", dashboard);
+  const goalApi = api.route("/goal", goal);
   const recurrenceApi = api.route("/recurrence", recurrence);
   const templateApi = api.route("/template", template);
   const myWorkApi = api.route("/my-work", myWork);
@@ -796,6 +800,8 @@ export function createApp() {
     invitationApi,
     invitationPublicApi,
     cycleApi,
+    dashboardApi,
+    goalApi,
     recurrenceApi,
     templateApi,
     labelApi,
@@ -946,6 +952,8 @@ const {
   invitationApi,
   invitationPublicApi,
   cycleApi,
+  dashboardApi,
+  goalApi,
   recurrenceApi,
   templateApi,
   labelApi,
@@ -997,6 +1005,8 @@ export type AppType =
   | typeof notificationApi
   | typeof notificationPreferencesApi
   | typeof cycleApi
+  | typeof dashboardApi
+  | typeof goalApi
   | typeof recurrenceApi
   | typeof templateApi
   | typeof myWorkApi

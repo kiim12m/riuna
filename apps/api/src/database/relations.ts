@@ -7,10 +7,14 @@ import {
   columnTable,
   commentTable,
   cycleTable,
+  dashboardTable,
+  dashboardWidgetTable,
   epicTable,
   externalLinkTable,
   fieldDefinitionTable,
   githubIntegrationTable,
+  goalTable,
+  goalTargetTable,
   integrationTable,
   invitationTable,
   labelTable,
@@ -84,6 +88,8 @@ export const workspaceTableRelations = relations(
     assets: many(assetTable),
     fieldDefinitions: many(fieldDefinitionTable),
     views: many(viewTable),
+    dashboards: many(dashboardTable),
+    goals: many(goalTable),
     templates: many(templateTable),
     invitations: many(invitationTable),
     notificationWorkspaceRules: many(userNotificationWorkspaceRuleTable),
@@ -236,6 +242,66 @@ export const taskEpicTableRelations = relations(taskEpicTable, ({ one }) => ({
     references: [epicTable.id],
   }),
 }));
+
+export const goalTableRelations = relations(goalTable, ({ one, many }) => ({
+  workspace: one(workspaceTable, {
+    fields: [goalTable.workspaceId],
+    references: [workspaceTable.id],
+  }),
+  creator: one(userTable, {
+    fields: [goalTable.createdBy],
+    references: [userTable.id],
+  }),
+  targets: many(goalTargetTable),
+}));
+
+export const goalTargetTableRelations = relations(
+  goalTargetTable,
+  ({ one }) => ({
+    goal: one(goalTable, {
+      fields: [goalTargetTable.goalId],
+      references: [goalTable.id],
+    }),
+    project: one(projectTable, {
+      fields: [goalTargetTable.projectId],
+      references: [projectTable.id],
+    }),
+  }),
+);
+
+export const dashboardTableRelations = relations(
+  dashboardTable,
+  ({ one, many }) => ({
+    workspace: one(workspaceTable, {
+      fields: [dashboardTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    creator: one(userTable, {
+      fields: [dashboardTable.createdBy],
+      references: [userTable.id],
+    }),
+    widgets: many(dashboardWidgetTable),
+  }),
+);
+
+export const dashboardWidgetTableRelations = relations(
+  dashboardWidgetTable,
+  ({ one }) => ({
+    goal: one(goalTable, {
+      fields: [dashboardWidgetTable.goalId],
+      references: [goalTable.id],
+    }),
+    dashboard: one(dashboardTable, {
+      fields: [dashboardWidgetTable.dashboardId],
+      references: [dashboardTable.id],
+    }),
+    // Opcional: sin proyecto, el widget mira todo el espacio.
+    project: one(projectTable, {
+      fields: [dashboardWidgetTable.projectId],
+      references: [projectTable.id],
+    }),
+  }),
+);
 
 export const viewTableRelations = relations(viewTable, ({ one }) => ({
   workspace: one(workspaceTable, {

@@ -57,6 +57,35 @@ export const filterNodeSchema: v.GenericSchema<FilterNode> = v.lazy(() =>
 );
 
 /**
+ * Una condicion **en edicion**: lo que la barra de filtros tiene en pantalla,
+ * con su `id` de interfaz, y no el `FilterNode` compilado que viaja en la URL
+ * (ADR 015).
+ *
+ * Vive aqui y no en `view/index.ts` porque desde la Fase 7 tiene dos
+ * consumidores: el `config` de una vista guardada y el de un widget de panel.
+ * La forma es la misma por construccion, que es lo que permite que una vista
+ * guardada pueda alimentar un widget mas adelante.
+ */
+export const editableConditionSchema = v.object({
+  id: v.pipe(v.string(), v.maxLength(120)),
+  field: v.pipe(v.string(), v.minLength(1), v.maxLength(120)),
+  operator: v.picklist(FILTER_OPERATORS),
+  value: v.optional(v.unknown()),
+});
+
+export type EditableCondition = v.InferOutput<typeof editableConditionSchema>;
+
+/**
+ * La lista de condiciones que se guarda. El tope es el mismo que acota la
+ * anchura de un grupo en el arbol compilado: sin el, un `config` de 20 MB se
+ * guardaba y se devolvia despues a cada miembro del espacio.
+ */
+export const editableFilterSchema = v.pipe(
+  v.array(editableConditionSchema),
+  v.maxLength(MAX_CHILDREN_PER_GROUP),
+);
+
+/**
  * Lee un filtro que viaja como JSON en la cadena de consulta.
  *
  * Va en la URL y no en el cuerpo porque listar tareas es un `GET` y tiene que

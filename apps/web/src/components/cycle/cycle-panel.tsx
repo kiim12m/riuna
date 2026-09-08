@@ -10,7 +10,9 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatTile } from "@/components/ui/stat-tile";
 import type { Cycle } from "@/fetchers/cycle";
 import {
   useCloseCycle,
@@ -27,15 +29,6 @@ import type { BurndownUnit } from "./cycle-burndown";
 import { CycleBurndown } from "./cycle-burndown";
 import { CycleHours } from "./cycle-hours";
 import { CycleVelocity } from "./cycle-velocity";
-
-function StatTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-background px-3 py-2">
-      <p className="text-muted-foreground text-xs">{label}</p>
-      <p className="font-semibold text-lg tabular-nums">{value}</p>
-    </div>
-  );
-}
 
 export function CyclePanel({ projectId }: { projectId: string }) {
   const { t } = useTranslation();
@@ -138,24 +131,15 @@ export function CyclePanel({ projectId }: { projectId: string }) {
 
         <div className="ms-auto flex items-center gap-1">
           {/* Conmutar la unidad es lo que evita el doble eje. */}
-          <div className="inline-flex items-center rounded-lg border border-border bg-muted/40 p-0.5">
-            {(["tasks", "hours"] as BurndownUnit[]).map((option) => (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={unit === option}
-                onClick={() => setUnit(option)}
-                className={cn(
-                  "rounded-md px-2.5 py-1 text-xs transition-colors",
-                  unit === option
-                    ? "bg-background text-foreground shadow-e1"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {t(`cycles:unit.${option}`)}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            label={t("cycles:unit.label")}
+            value={unit}
+            onValueChange={setUnit}
+            options={(["tasks", "hours"] as BurndownUnit[]).map((option) => ({
+              value: option,
+              label: t(`cycles:unit.${option}`),
+            }))}
+          />
 
           {selected?.status === "planned" && (
             <Button

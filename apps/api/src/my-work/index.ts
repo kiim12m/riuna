@@ -50,6 +50,10 @@ const myWorkResponseSchema = v.object({
     page: v.number(),
     pageSize: v.number(),
     hasMore: v.boolean(),
+    /** Numero de filas que casan el filtro, topado en 500. */
+    total: v.number(),
+    /** Cierto cuando hay mas de 500: `total` es entonces el tope, no el numero real. */
+    totalIsCapped: v.boolean(),
   }),
 });
 
@@ -83,7 +87,8 @@ const myWork = new Hono<{
       "List the current user's tasks across every project of a workspace, either assigned to them or to one of their teams",
     responses: {
       200: {
-        description: "A page of the user's tasks",
+        description:
+          "A page of the user's tasks. `pagination.total` counts the matching rows up to 500; above that it returns 500 with `totalIsCapped` set",
         content: {
           "application/json": { schema: resolver(myWorkResponseSchema) },
         },
