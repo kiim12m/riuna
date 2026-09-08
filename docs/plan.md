@@ -19,7 +19,7 @@
 | 5 — Importación y exportación | 2 | **Cerrada** — deuda abierta (ver abajo) |
 | **Subtotal: Riuna diferencial** | **23** | |
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
-| 7 — Dashboards, informes y objetivos | 3 | Pendiente |
+| 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **34** | |
@@ -946,6 +946,61 @@ usarán **Recharts** —que no entra aquí: esta rebanada no tiene ninguna—.
   de esta rebanada habrían medido cero filas. Ahora reparte entre diez personas y
   tres departamentos y refleja `task_assignee`, que es lo que la página lee.
 
+**Las dos pantallas se funden** ([ADR 031](adr/031-panel-personal-unificado.md),
+que modifica la 024). «Mi trabajo» y «Panel» eran dos respuestas a la misma
+pregunta en dos entradas contiguas de la barra lateral: una lista que no se podía
+cambiar y una rejilla que había que montar. Ahora hay una sola pantalla, `home`,
+con una distribución de partida que se siembra la primera vez —tres tarjetas de
+cifra, la lista de lo asignado, la bandeja y una tendencia— y que a partir de ahí
+es del usuario. El ámbito personal deja de ser una pantalla y pasa a ser
+`config.scope` de cualquier widget, sobre los mismos predicados medidos. `/my-work`
+y `/panel` redirigen, y `MY_WORK_INVALIDATED` invalida también el panel para no
+perder la actualización en vivo que la página vieja sí tenía.
+
+De la imagen de referencia se toma la arquitectura de información y **no** la
+estética: el magenta no está en la paleta y `marca.md` §04 está cerrado. Tres de
+sus cinco tarjetas —objetivos, notas, finanzas— no tienen módulo detrás; los
+objetivos son la rebanada 3 de esta misma fase.
+
+**Rebanada 3 — objetivos/OKR** ✔
+([ADR 032](adr/032-objetivos-medidos-al-leer.md)). `goal` con periodo y
+`goal_target` con diana. La economía de la rebanada es que **un resultado clave
+es la consulta de un widget más un número**: misma forma de `config`, mismo
+`aggregate()`, y el progreso **no se guarda en ninguna parte** — se mide al leer.
+Eso es lo que hace que «avanza al cerrar tareas» no necesite ni disparador nuevo
+ni recalculo programado: cerrar una tarea mueve `completed_at` y la siguiente
+lectura cuenta distinto. Con esto la fase llega a su criterio de aceptación.
+
+Deuda de esta rebanada: **un OKR solo lo ve quien lo crea** —compartir llega con
+el `is_shared` de la rebanada 2, a la vez para paneles y objetivos—, no hay
+widget de objetivo en el panel (exige tocar el `CHECK` de tipos y la 0057 ya está
+aplicada), y `sumLogged` queda fuera de las métricas por medir sobre el registro
+de tiempo y no sobre el cierre.
+
+**Rebanada 4 — informe del panel en Excel** ✔
+([ADR 034](adr/034-informe-del-panel-en-excel.md)). Una hoja por widget, y el
+libro sale de **`getDashboardData`, la misma lectura que pinta la pantalla**: es
+lo que impide que la hoja y el panel digan números distintos. Solo xlsx, porque
+un CSV es una tabla y un panel son varias. `buildExchangeWorkbook` se generaliza
+a varias hojas en vez de copiarse.
+
+Montar la ruta destapó un fallo de la rebanada 2: `/:id/data` seguía pidiendo
+propiedad, así que **un panel compartido se pintaba con todos los widgets en
+403**. La lectura tiene ahora su propio gate.
+
+**Rebanada 2 — compartir, cubo «otros» y widget de objetivo** ✔
+([ADR 033](adr/033-compartir-paneles-y-objetivos.md)). `is_shared` en `dashboard`
+y en `goal`, calcado de `view`; los repartos suman la cola en un cubo «otros» en
+vez de cortar en silencio; y `dashboard_widget.goal_id` deja mirar un objetivo
+desde el panel.
+
+Dos cosas que la rebanada **no** trae, y no por olvido: la tabla embebida sigue
+sin paginar —la ADR 030 argumentó que paginar dentro de una tarjeta es una
+ficción y darle la vuelta pide una razón que no ha aparecido— y `widget.view_id`
+tampoco, porque su valor declarado —que `view.config` y `widget.config` sean la
+misma forma— ya estaba conseguido, y lo que quedaba choca con que las vistas son
+por proyecto mientras los widgets cruzan proyectos.
+
 **Deuda declarada de la rebanada 1:**
 - ~~La página no se ha pasado por el navegador.~~ **Cerrada**: cubierta por el
   humo de Playwright, incluido el gesto que peor cubría la automatización de API
@@ -961,13 +1016,117 @@ usarán **Recharts** —que no entra aquí: esta rebanada no tiene ninguna—.
 - **Sin agregados del árbol:** son por proyecto y cuestan 242 ms fijos medidos.
   Se pierde el contador de subtareas y las fechas heredadas de la rama.
 
-### Fase 7 — Dashboards, informes y objetivos (≈3 semanas)
+### Fase 7 — Dashboards, informes y objetivos (≈3 semanas) · **cerrada**
 `dashboard`, `dashboard_widget`, `goal`, `goal_target`. Widgets (recuento por
 filtro, tarta/barras, tendencia, tiempo registrado, avance por épica, tabla
 embebida) sobre el **motor de vistas de la Fase 4** más una capa de agregación.
 Objetivos con progreso automático. Exportación de informes a Excel.
 **Hecho cuando:** montas un panel de 5 widgets que se recalculan solos y un OKR
 trimestral que avanza al cerrar tareas.
+
+**Se trocea en cuatro**, como la Fase 6:
+1. **Panel personal configurable** ✔ — ver abajo.
+2. **Compartir, cubo «otros» y widget de objetivo** ✔ — la tabla paginada y
+   `widget.view_id` se descartaron con razones, ver abajo.
+3. **Objetivos/OKR** ✔ — *el criterio de aceptación de la fase*.
+4. Exportación de informes a Excel, sobre `export-task-sheet.ts`. ✔
+
+**Rebanada 1 — panel personal configurable**
+([ADR 030](adr/030-paneles-personales-y-la-definicion-de-hecho.md)). Tablas
+`dashboard` y `dashboard_widget`, rejilla de tres columnas reordenable con el
+dnd-kit que ya estaba, los seis tipos de widget y una capa de agregación con un
+solo endpoint por lote.
+
+**Las dos decisiones estructurales llegaron antes que cualquier widget.** La
+primera responde a lo que la ADR 024 dejó aplazado: **el ámbito de un widget
+elige su registro de campos**, con `project_id` nulo o no, igual que `view` y
+`field_definition`. El agujero que había que cerrar no era el 400 sino el
+silencio: un campo del espacio eclipsado por uno de proyecto **con otro tipo** no
+falla, hace que esas tareas desaparezcan del recuento.
+
+La segunda es que **«hecha» pasa a ser `completed_at IS NOT NULL` en todas
+partes**. Había tres definiciones que no coincidían, y la de las estadísticas de
+proyecto tenía un fallo de verdad: contaba como completada cualquier tarea
+archivada, así que **archivar el backlog subía la barra de progreso**. Corregirlo
+mueve los porcentajes de todos los proyectos, casi siempre hacia abajo.
+
+De paso se cerró el riesgo declarado de la ADR 025 —cambiar `is_final` dejaba
+`completed_at` obsoleto— y se extrajeron tres piezas que ya estaban duplicadas:
+`StatTile`, los ejes y tooltips de Recharts (esta era la tercera copia) y las
+fronteras del día del servidor, que «Mi trabajo» y los paneles no pueden calcular
+por separado sin que «hoy» acabe significando cosas distintas.
+
+**Un fallo anterior que destapó la prueba de paridad de `buildFilter`:** el
+validador de `view.config` no declara `type`, así que Valibot lo descartaba al
+guardar, y **volver a aplicar una vista guardada producía un filtro que el motor
+rechazaba con un 400 del listado entero** — justo la pantalla en blanco que ese
+validador decía querer evitar. Se repara haciendo que las dos implementaciones
+**pongan** el `type` en vez de propagarlo, lo que sana también las vistas ya
+guardadas sin migración.
+
+**Deuda declarada de la rebanada 1:**
+
+**Medido** (2026-09-08, banco `riuna_bench` con `SEED_VERSION = 2`, dos pasadas
+por consulta, la segunda apuntada). La tabla `task` tenía **100.000 filas** —las
+50.000 de la v1 más las 50.000 de la v2— y el espacio medido, 50.000: más duro
+que lo que el presupuesto pide.
+
+| Consulta | ms |
+|---|---|
+| Recuento, espacio entero | 36,7 |
+| Recuento, solo mías | 38,6 |
+| Reparto por proyecto | 22,3 |
+| Reparto por responsable | 25,1 |
+| Ventana de vencimiento, solo mías | 39,6 |
+| Tendencia semanal, solo mías | 43,1 |
+| Progreso hechas/total, solo mías | 52,0 |
+| Tiempo registrado por persona | 36,7 |
+| Avance por épica | 54,1 |
+| Tabla embebida (top 20), solo mías | 38,9 |
+
+**Los widgets del panel por omisión suman 212 ms**, dentro del presupuesto de
+300 ms. Es exactamente la banda que el plan predijo —«si sale a 30-50 ms, cinco
+widgets en serie van a 150-250 ms y se sigue»—, así que **el endpoint por lote con
+cálculo en serie se confirma** y no hace falta la palanca de colapsar widgets en
+un barrido con varios `count(*) FILTER`. Ningún plan usa un índice: todos son
+`Hash Join` más `Aggregate` o `Sort`, que es lo que se esperaba de una consulta
+sin predicado selectivo.
+- **Las cifras anteriores a `SEED_VERSION = 2` no son comparables** para nada que
+  dependa de fechas: la v1 sembraba todo el vencimiento en el futuro. Los
+  recuentos de `task` no cambian, así que las mediciones del árbol y del `path`
+  siguen valiendo.
+- ~~**Las pruebas de integración están escritas y sin ejecutar.**~~ **Ejecutadas**
+  el 2026-09-08 contra PostgreSQL. Encontraron tres fallos que la lectura del
+  código no vio: el `GROUP BY` que Drizzle volvía a enlazar, la reparación
+  inservible que prescribía la ADR 025, y el administrador con poder sobre un
+  panel personal.
+- **La pasada por navegador cubre la rebanada 1 y no las demás.** El panel se ha
+  visto funcionando —y así salió el token `--text-secondary`—, pero **Objetivos,
+  compartir, el widget de objetivo y el cubo «otros» no se han visto nunca en
+  pantalla**, ni en tema oscuro.
+- **Un widget de espacio todavía no ofrece los campos personalizados del
+  espacio**, que la API sí acepta: falta el fetcher que los lea sin pasar por un
+  proyecto. Se dijo que iba en la rebanada 2 y **no entró**; sigue abierto.
+- **El resellado de `completed_at` destapó que la ADR 025 prescribía una
+  reparación inservible** —`SET status = status`, que el propio disparador se
+  salta por su atajo de "si `status` no cambia, no recalcules"—. Lo encontró una
+  prueba de integración, no la lectura del código. La regla se extrae a
+  `task_status_is_final` (migración 0056) y la usan disparador y resellado.
+- **La primera superficie que consume la escala tipográfica destapó que
+  `--text-secondary` era inservible.** En Tailwind v4 `text-` lo comparten tamaño
+  y color, y `--secondary` ya existía: la utilidad compilaba a un gris pálido en
+  vez de a 12 px, y medio panel salía lavado. Renombrado a `--text-meta`; la
+  [ADR 018](adr/018-escala-tipografica.md) lo recoge. No daba error, daba otro
+  estilo — que es el modo de fallo a vigilar al pasar el resto del web a la
+  escala.
+- **Se pierden los filtros de página de «Mi trabajo»** —vencimiento, proyecto,
+  completadas— que valían para toda la pantalla. Cada widget lleva ahora el suyo,
+  que es más flexible y menos inmediato.
+- **`GET /api/my-work/tasks` se queda sin consumidor web.** Sigue publicada,
+  documentada y probada; retirarla es una decisión sobre la superficie pública
+  que no se toma de paso.
+- **El índice `task (completed_at)` está declarado y no construido**, con la
+  condición que lo justificaría escrita en la ADR 030.
 
 ### Fase 8 — Automatizaciones e importadores externos (≈3 semanas)
 Motor disparador → condición → acción (`automation`, `automation_run`) sobre
@@ -1098,15 +1257,22 @@ destructiva.
 
 ## Siguiente paso
 
-La **Fase 7**: dashboards, informes y objetivos. `dashboard`,
-`dashboard_widget`, `goal`, `goal_target`, con los widgets montados sobre el
-motor de vistas de la Fase 4 más una capa de agregación.
+La **Fase 8**: automatizaciones e importadores externos. Motor disparador →
+condición → acción sobre los eventos que Kaneo ya emite, e importadores de
+Trello, Jira, Asana y Notion.
 
-Llega con dos cosas ya puestas que la Fase 6 dejó: **Recharts** en el web, y
-**`task.completed_at`**, que es lo que permite responder «cuánto se cerró en
-este trimestre» sin recorrer la tabla de actividad.
+**Antes de empezarla hay dos cosas de la Fase 7 que conviene cerrar**, y son de
+verificación, no de código:
 
-Lo que arrastra la Fase 6, y que conviene cerrar antes o durante la 7:
+- **Objetivos, compartir, el widget de objetivo y el cubo «otros» no se han visto
+  nunca en pantalla**, ni en tema oscuro. La única superficie de la fase que ha
+  pasado por el navegador es el panel de la rebanada 1 — y de ahí salió el token
+  `--text-secondary` roto, que ninguna prueba habría encontrado.
+- **El humo de Playwright no se ha ejecutado.** `home.spec.ts` se reescribió para
+  la fusión de pantallas y sigue sin correr, igual que `cycles` y
+  `recurrence-and-templates` desde entonces.
+
+Lo que arrastra la Fase 6, y que sigue abierto:
 
 - ~~Ninguna de las cuatro rebanadas se ha pasado por el navegador.~~ **Cerrada,
   y con ella la deuda que arrastraban las Fases 4 y 5.** Ver «Humo de punta a
@@ -1117,3 +1283,35 @@ Lo que arrastra la Fase 6, y que conviene cerrar antes o durante la 7:
   está; falta escribirlos y engancharlos a CI.
 - **Sigue sin decidirse cuándo migrar Tablero, Lista y Backlog al motor de
   filtros.** Arrastra desde la Fase 4.
+- **Repaso de diseño de «Mi trabajo» (2026-09-07).** La pantalla se construyó al
+  final de la Fase 6, después de que las ADR 018-021 fijaran la escala, la
+  densidad, la elevación y el movimiento en tokens, y la capa visual se escribió
+  saltándoselas. Veinte hallazgos contra [`marca.md`](marca.md) y esas ADR;
+  aplicados todos menos los tres de abajo. Lo gordo eran cuatro cosas visibles: la
+  página no tenía margen lateral, en tema oscuro no se distinguía el filtro
+  activo, el control de filtros no tenía foco de teclado y el contador de cada
+  sección contaba la página en vez de la sección. De paso se extrae el control
+  segmentado a un primitivo y convergen los tres sitios que lo tenían a mano
+  ([ADR 028](adr/028-control-segmentado.md)).
+
+  **Deuda que deja el repaso:**
+
+  - ~~**El recuento topado en 500 está sin medir.**~~ **Medido y confirmado**
+    (2026-09-08, banco con 100.000 tareas): el `count(*)` sobre la subconsulta
+    con `LIMIT 501` sale a **11 ms y 1.607 bloques**, frente a **37,7 ms y 5.367
+    bloques** del mismo recuento sin topar. El tope **sí** acota el barrido —3,4
+    veces más rápido y un tercio de los bloques— y, al ir en paralelo con la
+    consulta de página (39,9 ms), no suma latencia. El razonamiento era correcto,
+    y ahora está comprobado en vez de supuesto.
+  - **El resalte de tiempo real no se puede enganchar aquí.**
+    `useRealtimeHighlightStore` existe y lo usa la vista Lista, pero solo lo
+    dispara `use-project-websocket`. «Mi trabajo» se refresca con
+    `MY_WORK_INVALIDATED`, que **no lleva el id de la tarea a propósito**
+    (ws/index.ts): añadirlo obligaría a resolver `project → workspace` en cada
+    evento. Cumplir el principio 5 de `marca.md` en esta página exige cambiar la
+    forma del mensaje, que es una decisión de protocolo, no de diseño.
+  - **Los tamaños de texto arbitrarios siguen.** `text-[10px]` y `text-[11px]`
+    suman 106 usos en 20 ficheros. «Mi trabajo» ya consume `text-body`,
+    `text-section` y `text-secondary`; el resto del web sigue con las utilidades
+    de Tailwind. La [ADR 018](adr/018-escala-tipografica.md) previó migración
+    incremental y esto es lo que queda de ella.
