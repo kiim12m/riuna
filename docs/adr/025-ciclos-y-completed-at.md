@@ -66,3 +66,26 @@ disparador de PostgreSQL**, no la aplicación.
 - **Sin herramienta MCP**, por el mismo motivo que «Mi trabajo»: un agente
   gestionando sprints es plausible pero infrecuente, y costaría un esquema en
   `packages/mcp` y otro en la API.
+
+---
+
+**Corrección de la Fase 7 (2026-09-08).** La reparación que esta ADR prescribía
+para el riesgo de arriba —«se repara con `UPDATE task SET status = status` sobre
+el proyecto»— **no funciona**, y no funcionaba desde que se escribió: el propio
+disparador corta por lo sano cuando `status` no cambia, que es lo que evita que
+un arrastre dentro de la misma columna pague una consulta. `SET status = status`
+no cambia `status`, así que el recálculo no llegaba a ejecutarse nunca.
+
+Lo destapó una prueba de integración al conectar el resellado a la edición de
+columnas, no la lectura del código: el razonamiento parecía correcto en los dos
+sitios por separado.
+
+La regla de «esta columna es final» se extrae a la función
+`task_status_is_final(project_id, status)` (migración 0056), que ahora usan
+**los dos**: el disparador por fila y el resellado por proyecto. Sigue habiendo
+una sola copia en la base, y el atajo del disparador se conserva intacto.
+
+**Y queda clavado un comportamiento que sorprende:** desmarcar la *única* columna
+final de un proyecto no deja sus tareas sin fecha, porque el respaldo heredado
+dice que un proyecto sin columnas finales sigue entendiendo el slug `done`. No
+hay forma de distinguir «nunca se configuró» de «se desconfiguró a propósito».

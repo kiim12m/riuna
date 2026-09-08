@@ -23,3 +23,24 @@ segunda familia: Geist hace display, cuerpo y monoespaciada.
   superficie se pasa. No hay un corte único.
 - Referencia visual: [`design-previews/sistema-base.html`](../design-previews/sistema-base.html),
   sección «Tipografía».
+
+---
+
+**Corrección de la Fase 7 (2026-09-08).** El token `--text-secondary` **no
+funciona con el nombre que le puso esta ADR**, y no funcionaba desde el día que
+se escribió: en Tailwind v4 el prefijo `text-` lo comparten el tamaño y el color,
+y `--secondary` ya existe como color de shadcn. La utilidad `text-secondary`
+compilaba a `color: var(--secondary)` —un gris pálido— en vez de a 12 px.
+
+No se había notado porque **nadie había consumido la escala todavía**: la ADR
+previó una migración incremental y la primera superficie en pasarse fue el panel
+de la Fase 7. Se vio en pantalla, con medio panel lavado, y se confirmó
+compilando el CSS y leyendo la regla emitida.
+
+El rol se renombra a **`--text-meta`** —«metadatos, fechas, contadores, ayudas»,
+que es literalmente lo que `marca.md` §05 le asigna— y así deja de colisionar.
+Los otros seis roles se comprobaron uno a uno y no chocan con ningún color.
+
+**La lección, para la próxima superficie que se pase a la escala:** un token
+`--text-*` cuyo nombre coincida con un color existente es inservible en silencio.
+No da error: da otro estilo.
