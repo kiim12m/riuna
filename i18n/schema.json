@@ -54,6 +54,9 @@
 						},
 						"next": {
 							"type": "string"
+						},
+						"edit": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -69,7 +72,8 @@
 						"filter",
 						"clearAllFilters",
 						"previous",
-						"next"
+						"next",
+						"edit"
 					]
 				},
 				"boolean": {
@@ -10446,7 +10450,7 @@
 					},
 					"required": ["share", "unshare", "export", "exportError"]
 				},
-				"sharedBy": {
+				"shared": {
 					"type": "string"
 				}
 			},
@@ -10462,7 +10466,7 @@
 				"greeting",
 				"inbox",
 				"actions",
-				"sharedBy"
+				"shared"
 			]
 		},
 		"goals": {

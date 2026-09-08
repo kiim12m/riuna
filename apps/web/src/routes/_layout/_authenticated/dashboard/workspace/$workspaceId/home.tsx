@@ -29,6 +29,13 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Widget } from "@/fetchers/dashboard";
 import { exportDashboard } from "@/fetchers/dashboard";
@@ -63,7 +70,16 @@ function HomeComponent() {
   const navigate = useNavigate();
 
   const { data: dashboards, isPending } = useGetDashboards(workspaceId);
-  const dashboard = dashboards?.[0];
+
+  // El panel que se mira. Por defecto **el propio**, no el primero de la lista:
+  // desde que se pueden compartir, la lista trae tambien los de otros, y coger
+  // el primero significaba que si un companero comparte el suyo y ordena antes,
+  // abrias tu inicio y veias el panel de otra persona.
+  const [openId, setOpenId] = useState<string | null>(null);
+  const mine = dashboards?.find((item) => item.createdBy === user?.id);
+  const dashboard =
+    dashboards?.find((item) => item.id === openId) ?? mine ?? dashboards?.[0];
+  const isMine = dashboard?.createdBy === user?.id;
   const { data, isPending: isDataPending } = useGetDashboardData(dashboard?.id);
 
   const mutations = useDashboardMutations(workspaceId);
@@ -135,7 +151,32 @@ function HomeComponent() {
         title={t("panels:pageTitle")}
         headerActions={
           <>
-            {dashboard && dashboard.createdBy === user?.id && (
+            {dashboards && dashboards.length > 1 && (
+              <Select
+                value={dashboard?.id ?? ""}
+                onValueChange={(next) =>
+                  setOpenId(typeof next === "string" ? next : null)
+                }
+              >
+                <SelectTrigger
+                  className="h-7 w-52"
+                  aria-label={t("panels:pageTitle")}
+                >
+                  <SelectValue>{dashboard?.name}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {dashboards.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.createdBy === user?.id
+                        ? item.name
+                        : `${item.name} · ${t("panels:shared")}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {dashboard && isMine && (
               <Button
                 variant="ghost"
                 size="xs"
@@ -165,15 +206,17 @@ function HomeComponent() {
                 {t("panels:actions.export")}
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="xs"
-              className="gap-1"
-              onClick={addWidget}
-            >
-              <Plus className="size-3" />
-              {t("panels:widget.add")}
-            </Button>
+            {isMine && (
+              <Button
+                variant="outline"
+                size="xs"
+                className="gap-1"
+                onClick={addWidget}
+              >
+                <Plus className="size-3" />
+                {t("panels:widget.add")}
+              </Button>
+            )}
           </>
         }
       >
