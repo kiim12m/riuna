@@ -1733,33 +1733,133 @@
 		}
 	},
 	"tasks": {
-		"status": {
-			"label": "Status",
-			"to-do": "To Do",
-			"in-progress": "In Progress",
-			"in-review": "In Review",
-			"done": "Done",
-			"archived": "Archived",
-			"planned": "Planned"
+		"actions": {
+			"archive": "Archive",
+			"markAsPlanned": "Mark as planned",
+			"delete": "Delete..."
 		},
-		"priority": {
-			"label": "Priority",
-			"no-priority": "No priority",
-			"low": "Low",
-			"medium": "Medium",
-			"high": "High",
-			"urgent": "Urgent"
+		"archive": {
+			"success": "Archived {{count}} tasks"
+		},
+		"assignee": {
+			"label": "Assignee",
+			"unassigned": "Unassigned"
+		},
+		"backlog": {
+			"addFilter": "Add filter...",
+			"addTask": "Add task",
+			"filter": "Filter",
+			"filters": {
+				"priority": "Priority: {{name}}",
+				"assignee": "Assignee: {{name}}",
+				"due": "Due: {{date}}",
+				"label": "Label: {{name}}",
+				"dueThisWeek": "Due this week",
+				"dueNextWeek": "Due next week",
+				"noDueDate": "No due date",
+				"team": "Team: {{name}}"
+			},
+			"moveAll": "Move All",
+			"moveAllConfirm": "Move the {{count}} planned tasks to the first column?",
+			"moveAllSuccess": "{{count}} tasks moved to the first column",
+			"moveAllTooltip": "Move every planned task to the first column",
+			"noTasksInSection": "No {{section}} tasks",
+			"noTasksToMove": "No planned tasks to move",
+			"pageTitle": "{{name}}'s backlog",
+			"plan": "Plan",
+			"sections": {
+				"planned": "Planned",
+				"archived": "Archived"
+			},
+			"title": "Backlog"
+		},
+		"board": {
+			"title": "Tasks"
+		},
+		"boardFilters": {
+			"filterBy": "Filter By",
+			"allStatuses": "All statuses",
+			"allPriorities": "All priorities",
+			"allAssignees": "All assignees",
+			"allDueDates": "All due dates",
+			"allLabels": "All labels",
+			"selectedCount": "{{count}} selected",
+			"subjects": {
+				"status": "Status",
+				"priority": "Priority",
+				"assignee": "Assignee",
+				"dueDate": "Due date",
+				"labels": "Labels",
+				"team": "Team"
+			},
+			"operators": {
+				"isAnyOf": "is any of",
+				"includeAnyOf": "include any of"
+			},
+			"allTeams": "All teams"
 		},
 		"boardSearchPlaceholder": "Search tickets...",
-		"view": {
-			"board": "Board",
-			"list": "List"
+		"bulk": {
+			"selectedCount": "{{count}} selected",
+			"moveToBacklog": "Move to Backlog",
+			"moveToBacklogSuccess": "{{count}} tasks moved to backlog",
+			"moveToBacklogError": "Failed to move tasks to backlog",
+			"moveToBoard": "Move to Board",
+			"moveToBoardSuccess": "{{count}} tasks moved to board",
+			"moveToBoardError": "Failed to move tasks to board",
+			"delete": "Delete tasks",
+			"deleteConfirm": "Delete {{count}} tasks? This action cannot be undone.",
+			"deleteSuccess": "{{count}} tasks deleted",
+			"deleteError": "Failed to delete tasks",
+			"archive": "Archive tasks",
+			"archiveSuccess": "{{count}} tasks archived",
+			"archiveError": "Failed to archive tasks",
+			"updateSuccess": "{{count}} tasks updated",
+			"updateError": "Failed to update tasks",
+			"assignTo": "Assign to",
+			"assignSuccess": "{{count}} tasks assigned",
+			"assignError": "Failed to assign tasks",
+			"setPriority": "Set Priority",
+			"updatePriorityError": "Failed to update priority",
+			"addLabel": "Add Label",
+			"addLabelSuccess": "Label added to {{count}} tasks",
+			"addLabelError": "Failed to add label",
+			"setDueDate": "Set Due Date",
+			"updateDueDateError": "Failed to update due date",
+			"actions": "Actions",
+			"searchActions": "Search actions...",
+			"noActionsFound": "No actions found.",
+			"changeStatus": "Change Status"
+		},
+		"calendar": {
+			"pageTitle": "{{name}} – Calendar",
+			"title": "Calendar",
+			"previousMonth": "Previous month",
+			"nextMonth": "Next month",
+			"today": "Today",
+			"noTasks": "No scheduled tasks",
+			"noTasksSubtitle": "Add a start date, due date, or both to tasks to place them on the calendar.",
+			"moreTasks": "+{{count}} more",
+			"loadError": "Failed to load tasks.",
+			"dayTasksAriaLabel": "Show all tasks for {{date}}",
+			"taskAriaLabel": "{{title}}, {{range}}: open task"
 		},
 		"common": {
 			"selectTask": "Select task",
 			"loadingTask": "Loading task...",
 			"taskNotFound": "Task not found",
 			"taskNotFoundDescription": "The task you are looking for does not exist or has been deleted."
+		},
+		"contextMenu": {
+			"copyLink": "Copy link",
+			"copyLinkSuccess": "Task link copied!"
+		},
+		"delete": {
+			"title": "Delete Task?",
+			"description": "This will permanently remove the task and all its data. You can't undo this action.",
+			"action": "Delete Task",
+			"success": "Task deleted successfully",
+			"error": "Failed to delete task"
 		},
 		"detail": {
 			"subtaskOf": "Subtask of",
@@ -1867,49 +1967,85 @@
 				}
 			}
 		},
+		"dueDate": {
+			"label": "Due date",
+			"clear": "Clear date",
+			"updateSuccess": "Task due date updated successfully",
+			"updateError": "Failed to update task due date",
+			"clearSuccess": "Task due date cleared",
+			"clearError": "Failed to clear due date"
+		},
+		"editor": {
+			"table": {
+				"addColumnBefore": "Insert column left",
+				"addColumnAfter": "Insert column right",
+				"deleteColumn": "Delete column",
+				"addRowBefore": "Insert row above",
+				"addRowAfter": "Insert row below",
+				"deleteRow": "Delete row",
+				"deleteTable": "Delete table"
+			}
+		},
 		"entity": {
 			"task": "Task"
 		},
-		"relations": {
-			"title": "Relations",
-			"tasksInProject": "Tasks in project",
-			"linkError": "Failed to link task",
-			"empty": "No related tasks",
-			"searchPlaceholder": "Search tasks to link...",
+		"epics": {
+			"title": "Epics",
+			"none": "No epic",
+			"count": "{{count}} epics",
+			"allEpics": "All epics",
+			"emptyProject": "This project has no epics yet",
+			"updateError": "Failed to update the task epics"
+		},
+		"gantt": {
+			"pageTitle": "{{name}} – Gantt",
+			"title": "Gantt Timeline",
+			"searchPlaceholder": "Search scheduled tickets...",
+			"hideTasks": "Hide tasks",
+			"showTasks": "Show tasks",
+			"noTasks": "No scheduled tasks",
+			"noTasksSubtitle": "Add a start date, due date, or both to tasks to place them on the project timeline.",
 			"noTasksFound": "No tasks found",
-			"openTask": "Open task",
-			"removeRelation": "Remove relation",
-			"related": "Related",
-			"blocks": "Blocks",
-			"selectTask": "Select a task to link",
-			"types": {
-				"blocks": "blocks",
-				"blocked_by": "blocked by",
-				"related": "relates to"
+			"noTasksMatch": "No scheduled tasks match \"{{query}}\"",
+			"taskHeader": "Task",
+			"updateDatesError": "Failed to update task dates",
+			"resizeStart": "Resize start date",
+			"resizeDue": "Resize due date",
+			"taskAriaLabel": "{{title}}: open or drag to move",
+			"branchSpan": "Span of the whole branch",
+			"zoomLabel": "Timeline scale",
+			"zoomDay": "Day",
+			"zoomWeek": "Week",
+			"zoomMonth": "Month",
+			"zoomQuarter": "Quarter",
+			"jumpToday": "Today",
+			"previousRange": "Scroll back",
+			"nextRange": "Scroll forward",
+			"quarterShort": "Q{{n}}",
+			"dependencyBlocks": "{{source}} blocks {{target}}"
+		},
+		"group": {
+			"label": "Group",
+			"by": "Group By",
+			"noTeam": "No team",
+			"boardHint": "The board already groups by status, in columns",
+			"fields": {
+				"status": "Status",
+				"team": "Team",
+				"tree": "Hierarchy"
 			}
 		},
-		"subtasks": {
-			"title": "Sub-tasks",
-			"inputPlaceholder": "Subtask title...",
-			"addAction": "Add",
-			"empty": "No subtasks yet",
-			"createError": "Failed to create subtask",
-			"deleteSuccess": "Task deleted successfully",
-			"deleteError": "Failed to delete task",
-			"deleteDialogTitle": "Delete Task?",
-			"deleteDialogDescription": "This will permanently remove the task and all its data. You can't undo this action.",
-			"deleteAction": "Delete Task",
-			"completeAria": "Mark subtask complete"
+		"kanban": {
+			"addTask": "Add task"
 		},
-		"properties": {
-			"title": "Properties",
-			"labels": "Labels",
-			"copyTaskLink": "Copy task link",
-			"copyTaskBranch": "Copy task branch",
-			"start": "Start",
-			"startDate": "Start date",
-			"noDate": "No date",
-			"customFields": "Custom fields"
+		"labels": {
+			"label": "Labels",
+			"empty": "No labels available"
+		},
+		"listView": {
+			"addTask": "Add task",
+			"archiveAllTooltip": "Archive all completed tasks",
+			"noTasks": "No tasks"
 		},
 		"move": {
 			"title": "Move task",
@@ -1971,31 +2107,51 @@
 				}
 			}
 		},
-		"backlog": {
-			"pageTitle": "{{name}}'s backlog",
-			"noTasksToMove": "No planned tasks to move",
-			"moveAllConfirm": "Move all {{count}} planned tasks to To Do?",
-			"moveAllSuccess": "Moved {{count}} tasks to To Do",
-			"plan": "Plan",
-			"moveAllTooltip": "Move All Planned to To Do",
-			"moveAll": "Move All",
-			"addTask": "Add task",
-			"filter": "Filter",
-			"addFilter": "Add filter...",
-			"sections": {
-				"planned": "Planned",
-				"archived": "Archived"
-			},
-			"noTasksInSection": "No {{section}} tasks",
-			"filters": {
-				"priority": "Priority: {{name}}",
-				"assignee": "Assignee: {{name}}",
-				"due": "Due: {{date}}",
-				"label": "Label: {{name}}",
-				"dueThisWeek": "Due this week",
-				"dueNextWeek": "Due next week",
-				"noDueDate": "No due date",
-				"team": "Team: {{name}}"
+		"pr": {
+			"merged": "Merged",
+			"draft": "Draft",
+			"open": "Open",
+			"label": "Pull Request",
+			"count_one": "{{count}} PR",
+			"count_other": "{{count}} PRs"
+		},
+		"priority": {
+			"label": "Priority",
+			"no-priority": "No priority",
+			"low": "Low",
+			"medium": "Medium",
+			"high": "High",
+			"urgent": "Urgent"
+		},
+		"projectSize": {
+			"warning": "This project has {{count}} tasks. Views load all of them, so they will feel slow. Filter to narrow the list down."
+		},
+		"properties": {
+			"title": "Properties",
+			"labels": "Labels",
+			"copyTaskLink": "Copy task link",
+			"copyTaskBranch": "Copy task branch",
+			"start": "Start",
+			"startDate": "Start date",
+			"noDate": "No date",
+			"customFields": "Custom fields"
+		},
+		"relations": {
+			"title": "Relations",
+			"tasksInProject": "Tasks in project",
+			"linkError": "Failed to link task",
+			"empty": "No related tasks",
+			"searchPlaceholder": "Search tasks to link...",
+			"noTasksFound": "No tasks found",
+			"openTask": "Open task",
+			"removeRelation": "Remove relation",
+			"related": "Related",
+			"blocks": "Blocks",
+			"selectTask": "Select a task to link",
+			"types": {
+				"blocks": "blocks",
+				"blocked_by": "blocked by",
+				"related": "relates to"
 			}
 		},
 		"sort": {
@@ -2013,203 +2169,27 @@
 				"number": "Task number"
 			}
 		},
-		"group": {
-			"label": "Group",
-			"by": "Group By",
-			"noTeam": "No team",
-			"boardHint": "The board already groups by status, in columns",
-			"fields": {
-				"status": "Status",
-				"team": "Team",
-				"tree": "Hierarchy"
-			}
+		"status": {
+			"label": "Status",
+			"to-do": "To Do",
+			"in-progress": "In Progress",
+			"in-review": "In Review",
+			"done": "Done",
+			"archived": "Archived",
+			"planned": "Planned"
 		},
-		"boardFilters": {
-			"filterBy": "Filter By",
-			"allStatuses": "All statuses",
-			"allPriorities": "All priorities",
-			"allAssignees": "All assignees",
-			"allDueDates": "All due dates",
-			"allLabels": "All labels",
-			"selectedCount": "{{count}} selected",
-			"subjects": {
-				"status": "Status",
-				"priority": "Priority",
-				"assignee": "Assignee",
-				"dueDate": "Due date",
-				"labels": "Labels",
-				"team": "Team"
-			},
-			"operators": {
-				"isAnyOf": "is any of",
-				"includeAnyOf": "include any of"
-			},
-			"allTeams": "All teams"
-		},
-		"calendar": {
-			"pageTitle": "{{name}} – Calendar",
-			"title": "Calendar",
-			"previousMonth": "Previous month",
-			"nextMonth": "Next month",
-			"today": "Today",
-			"noTasks": "No scheduled tasks",
-			"noTasksSubtitle": "Add a start date, due date, or both to tasks to place them on the calendar.",
-			"moreTasks": "+{{count}} more",
-			"loadError": "Failed to load tasks.",
-			"dayTasksAriaLabel": "Show all tasks for {{date}}",
-			"taskAriaLabel": "{{title}}, {{range}}: open task"
-		},
-		"gantt": {
-			"pageTitle": "{{name}} – Gantt",
-			"title": "Gantt Timeline",
-			"searchPlaceholder": "Search scheduled tickets...",
-			"hideTasks": "Hide tasks",
-			"showTasks": "Show tasks",
-			"noTasks": "No scheduled tasks",
-			"noTasksSubtitle": "Add a start date, due date, or both to tasks to place them on the project timeline.",
-			"noTasksFound": "No tasks found",
-			"noTasksMatch": "No scheduled tasks match \"{{query}}\"",
-			"taskHeader": "Task",
-			"updateDatesError": "Failed to update task dates",
-			"resizeStart": "Resize start date",
-			"resizeDue": "Resize due date",
-			"taskAriaLabel": "{{title}}: open or drag to move",
-			"branchSpan": "Span of the whole branch",
-			"zoomLabel": "Timeline scale",
-			"zoomDay": "Day",
-			"zoomWeek": "Week",
-			"zoomMonth": "Month",
-			"zoomQuarter": "Quarter",
-			"jumpToday": "Today",
-			"previousRange": "Scroll back",
-			"nextRange": "Scroll forward",
-			"quarterShort": "Q{{n}}",
-			"dependencyBlocks": "{{source}} blocks {{target}}"
-		},
-		"delete": {
-			"title": "Delete Task?",
-			"description": "This will permanently remove the task and all its data. You can't undo this action.",
-			"action": "Delete Task",
-			"success": "Task deleted successfully",
-			"error": "Failed to delete task"
-		},
-		"archive": {
-			"success": "Archived {{count}} tasks"
-		},
-		"listView": {
-			"addTask": "Add task",
-			"archiveAllTooltip": "Archive all completed tasks",
-			"noTasks": "No tasks"
-		},
-		"kanban": {
-			"addTask": "Add task"
-		},
-		"pr": {
-			"merged": "Merged",
-			"draft": "Draft",
-			"open": "Open",
-			"label": "Pull Request",
-			"count_one": "{{count}} PR",
-			"count_other": "{{count}} PRs"
-		},
-		"assignee": {
-			"label": "Assignee",
-			"unassigned": "Unassigned"
-		},
-		"dueDate": {
-			"label": "Due date",
-			"clear": "Clear date",
-			"updateSuccess": "Task due date updated successfully",
-			"updateError": "Failed to update task due date",
-			"clearSuccess": "Task due date cleared",
-			"clearError": "Failed to clear due date"
-		},
-		"labels": {
-			"label": "Labels",
-			"empty": "No labels available"
-		},
-		"update": {
-			"success": "Task updated successfully",
-			"error": "Failed to update task"
-		},
-		"contextMenu": {
-			"copyLink": "Copy link",
-			"copyLinkSuccess": "Task link copied!"
-		},
-		"actions": {
-			"archive": "Archive",
-			"markAsPlanned": "Mark as planned",
-			"delete": "Delete..."
-		},
-		"bulk": {
-			"selectedCount": "{{count}} selected",
-			"moveToBacklog": "Move to Backlog",
-			"moveToBacklogSuccess": "{{count}} tasks moved to backlog",
-			"moveToBacklogError": "Failed to move tasks to backlog",
-			"moveToBoard": "Move to Board",
-			"moveToBoardSuccess": "{{count}} tasks moved to board",
-			"moveToBoardError": "Failed to move tasks to board",
-			"delete": "Delete tasks",
-			"deleteConfirm": "Delete {{count}} tasks? This action cannot be undone.",
-			"deleteSuccess": "{{count}} tasks deleted",
-			"deleteError": "Failed to delete tasks",
-			"archive": "Archive tasks",
-			"archiveSuccess": "{{count}} tasks archived",
-			"archiveError": "Failed to archive tasks",
-			"updateSuccess": "{{count}} tasks updated",
-			"updateError": "Failed to update tasks",
-			"assignTo": "Assign to",
-			"assignSuccess": "{{count}} tasks assigned",
-			"assignError": "Failed to assign tasks",
-			"setPriority": "Set Priority",
-			"updatePriorityError": "Failed to update priority",
-			"addLabel": "Add Label",
-			"addLabelSuccess": "Label added to {{count}} tasks",
-			"addLabelError": "Failed to add label",
-			"setDueDate": "Set Due Date",
-			"updateDueDateError": "Failed to update due date",
-			"actions": "Actions",
-			"searchActions": "Search actions...",
-			"noActionsFound": "No actions found.",
-			"changeStatus": "Change Status"
-		},
-		"editor": {
-			"table": {
-				"addColumnBefore": "Insert column left",
-				"addColumnAfter": "Insert column right",
-				"deleteColumn": "Delete column",
-				"addRowBefore": "Insert row above",
-				"addRowAfter": "Insert row below",
-				"deleteRow": "Delete row",
-				"deleteTable": "Delete table"
-			}
-		},
-		"team": {
-			"label": "Team",
-			"unknown": "Unknown team"
-		},
-		"tree": {
-			"title": "Branch",
-			"expand": "Expand branch",
-			"collapse": "Collapse branch",
-			"detach": "Unnest",
-			"branchProgress": "Closed in this branch",
-			"branchDates": "Branch dates",
-			"branchTime": "Logged / estimated",
-			"estimateLabel": "Estimate",
-			"hoursShort": "h",
-			"estimateError": "Failed to save the estimate",
-			"reparentError": "Failed to move the task",
-			"cycleError": "A task cannot be nested inside its own branch",
-			"progressTooltip": "{{done}} of {{total}} subtasks closed"
-		},
-		"epics": {
-			"title": "Epics",
-			"none": "No epic",
-			"count": "{{count}} epics",
-			"allEpics": "All epics",
-			"emptyProject": "This project has no epics yet",
-			"updateError": "Failed to update the task epics"
+		"subtasks": {
+			"title": "Sub-tasks",
+			"inputPlaceholder": "Subtask title...",
+			"addAction": "Add",
+			"empty": "No subtasks yet",
+			"createError": "Failed to create subtask",
+			"deleteSuccess": "Task deleted successfully",
+			"deleteError": "Failed to delete task",
+			"deleteDialogTitle": "Delete Task?",
+			"deleteDialogDescription": "This will permanently remove the task and all its data. You can't undo this action.",
+			"deleteAction": "Delete Task",
+			"completeAria": "Mark subtask complete"
 		},
 		"table": {
 			"title": "Table",
@@ -2288,8 +2268,32 @@
 				"delete": "Delete this view"
 			}
 		},
-		"projectSize": {
-			"warning": "This project has {{count}} tasks. Views load all of them, so they will feel slow. Filter to narrow the list down."
+		"team": {
+			"label": "Team",
+			"unknown": "Unknown team"
+		},
+		"tree": {
+			"title": "Branch",
+			"expand": "Expand branch",
+			"collapse": "Collapse branch",
+			"detach": "Unnest",
+			"branchProgress": "Closed in this branch",
+			"branchDates": "Branch dates",
+			"branchTime": "Logged / estimated",
+			"estimateLabel": "Estimate",
+			"hoursShort": "h",
+			"estimateError": "Failed to save the estimate",
+			"reparentError": "Failed to move the task",
+			"cycleError": "A task cannot be nested inside its own branch",
+			"progressTooltip": "{{done}} of {{total}} subtasks closed"
+		},
+		"update": {
+			"success": "Task updated successfully",
+			"error": "Failed to update task"
+		},
+		"view": {
+			"board": "Board",
+			"list": "List"
 		}
 	},
 	"invitations": {
@@ -2504,46 +2508,24 @@
 		}
 	},
 	"cycles": {
-		"title": "Cycles",
-		"pageTitle": "Cycles",
-		"status": {
-			"planned": "Planned",
-			"active": "Active",
-			"closed": "Closed"
-		},
-		"unit": {
-			"tasks": "Tasks",
-			"hours": "Hours",
-			"label": "Burndown unit"
-		},
 		"actions": {
 			"start": "Start cycle",
 			"close": "Close cycle"
 		},
-		"empty": {
-			"title": "No cycles yet",
-			"description": "A cycle is a time box you fill with tasks before it starts. Closing one tells you how much the team really completed."
-		},
-		"stats": {
-			"completed": "Completed",
-			"estimated": "Estimated",
-			"velocity": "Velocity",
-			"logged": "Logged"
-		},
+		"assignError": "Could not move the task to that cycle",
 		"burndown": {
 			"title": "Burndown",
 			"actual": "Remaining",
 			"ideal": "Ideal"
 		},
-		"velocity": {
-			"title": "Velocity",
-			"completed": "Completed",
-			"empty": "Velocity appears once you close your first cycle."
-		},
-		"hours": {
-			"title": "Hours per person",
-			"empty": "No time logged on this cycle yet.",
-			"unknownPerson": "Unknown"
+		"close": {
+			"title": "Close {{name}}",
+			"description_one": "{{count}} task is still unfinished. Where should it go?",
+			"description_other": "{{count}} tasks are still unfinished. Where should they go?",
+			"descriptionEmpty": "Everything in this cycle is done. Closing it freezes its velocity.",
+			"moveTo": "Move the unfinished tasks to",
+			"backlog": "Back to the backlog",
+			"confirm": "Close cycle"
 		},
 		"create": {
 			"title": "New cycle",
@@ -2557,14 +2539,39 @@
 			"datesInvalid": "The end date cannot be before the start date.",
 			"confirm": "Create cycle"
 		},
-		"close": {
-			"title": "Close {{name}}",
-			"description_one": "{{count}} task is still unfinished. Where should it go?",
-			"description_other": "{{count}} tasks are still unfinished. Where should they go?",
-			"descriptionEmpty": "Everything in this cycle is done. Closing it freezes its velocity.",
-			"moveTo": "Move the unfinished tasks to",
-			"backlog": "Back to the backlog",
-			"confirm": "Close cycle"
+		"empty": {
+			"title": "No cycles yet",
+			"description": "A cycle is a time box you fill with tasks before it starts. Closing one tells you how much the team really completed."
+		},
+		"hours": {
+			"title": "Hours per person",
+			"empty": "No time logged on this cycle yet.",
+			"unknownPerson": "Unknown"
+		},
+		"none": "No cycle",
+		"noneAvailable": "This project has no cycles yet",
+		"pageTitle": "Cycles",
+		"stats": {
+			"completed": "Completed",
+			"estimated": "Estimated",
+			"velocity": "Velocity",
+			"logged": "Logged"
+		},
+		"status": {
+			"planned": "Planned",
+			"active": "Active",
+			"closed": "Closed"
+		},
+		"title": "Cycles",
+		"unit": {
+			"tasks": "Tasks",
+			"hours": "Hours",
+			"label": "Burndown unit"
+		},
+		"velocity": {
+			"title": "Velocity",
+			"completed": "Completed",
+			"empty": "Velocity appears once you close your first cycle."
 		}
 	},
 	"panels": {
