@@ -1,6 +1,6 @@
 import { coercePriority, coerceStatus } from "../validate-task-fields";
 import { matchPriority } from "./format";
-import { type ImportLookups, normalizeLookupKey } from "./lookups";
+import { type ImportLookups, normalizeLookupKey, statusKeys } from "./lookups";
 import type { ColumnMapping, MappedRow } from "./map-rows";
 import type { LabelLink, Link } from "./reconcile-links";
 import type { UpdatableField } from "./write-tasks";
@@ -35,9 +35,11 @@ export function resolveStatus(
     return lookups.validStatuses[0] ?? "planned";
   }
 
-  const bySlug = lookups.statusByName.get(normalizeLookupKey(row.status));
-  if (bySlug) {
-    return bySlug;
+  for (const clave of statusKeys(row.status)) {
+    const bySlug = lookups.statusByName.get(clave);
+    if (bySlug) {
+      return bySlug;
+    }
   }
 
   const { status, warning } = coerceStatus(row.status, lookups.validStatuses);
