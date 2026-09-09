@@ -321,6 +321,7 @@ function RouteComponent() {
           tasks={tasks}
           definitions={definitions as FieldDefinition[]}
           members={members}
+          columns={project?.columns ?? []}
           flatten={treeMode === "flat"}
           canEdit={canEditValues}
           onOpenTask={handleOpenTask}

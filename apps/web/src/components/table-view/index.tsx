@@ -46,6 +46,8 @@ type Props = {
   tasks: Task[];
   definitions: FieldDefinition[];
   members: FieldMember[];
+  /** Las columnas del proyecto, para poder resolver `status` a su nombre. */
+  columns: { slug: string; name: string }[];
   /** Pinta cada tarea como fila propia, sin anidar bajo su padre. */
   flatten?: boolean;
   canEdit: boolean;
@@ -99,6 +101,9 @@ function TableView({
   tasks,
   definitions,
   members,
+  // `columns` ya nombra aqui la definicion de las columnas de la tabla, que es
+  // otra cosa que las columnas del tablero.
+  columns: projectColumns,
   flatten = false,
   canEdit,
   onOpenTask,
@@ -116,6 +121,11 @@ function TableView({
       : buildRows(tasks);
     return rows.length > 0 ? rows : EMPTY_ROWS;
   }, [tasks, flatten]);
+
+  const columnNames = useMemo(
+    () => new Map(projectColumns.map((column) => [column.slug, column.name])),
+    [projectColumns],
+  );
 
   const columns = useMemo(
     () =>
@@ -158,7 +168,7 @@ function TableView({
                 {row.original.title}
               </button>
               {row.original.subRows.length > 0 && (
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-meta text-muted-foreground">
                   {row.original.subRows.length}
                 </span>
               )}
@@ -168,9 +178,19 @@ function TableView({
         helper.accessor("status", {
           id: "status",
           header: t("tasks:table.columns.status"),
-          cell: ({ getValue }) => (
-            <span className="text-xs">{String(getValue() ?? "")}</span>
-          ),
+          // `status` guarda el **slug** de la columna, no su nombre. Pintarlo
+          // crudo dejaba `to-do` e `in-progress` en una tabla donde la celda de
+          // prioridad de al lado si resuelve icono y etiqueta. Si la columna ya
+          // no existe —se archivo— se cae al slug antes que dejar la celda
+          // vacia: un dato feo dice mas que ninguno.
+          cell: ({ getValue }) => {
+            const slug = String(getValue() ?? "");
+            if (!slug) return null;
+
+            return (
+              <span className="text-meta">{columnNames.get(slug) ?? slug}</span>
+            );
+          },
         }),
         helper.accessor("priority", {
           id: "priority",
@@ -194,7 +214,7 @@ function TableView({
               <span className="flex items-center gap-1.5 text-xs">
                 <Avatar className="size-5">
                   <AvatarImage src={row.original.assigneeImage ?? ""} alt="" />
-                  <AvatarFallback className="text-[9px]">
+                  <AvatarFallback className="text-label">
                     {getInitials(row.original.assigneeName)}
                   </AvatarFallback>
                 </Avatar>
@@ -232,7 +252,15 @@ function TableView({
           ),
         ),
       ]),
-    [definitions, members, canEdit, onOpenTask, onSetCustomField, t],
+    [
+      definitions,
+      members,
+      canEdit,
+      onOpenTask,
+      onSetCustomField,
+      columnNames,
+      t,
+    ],
   );
 
   const table = useTable({
