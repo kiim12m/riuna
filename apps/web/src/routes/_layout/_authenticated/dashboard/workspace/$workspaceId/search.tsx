@@ -78,7 +78,9 @@ function SearchComponent() {
           </Link>
         }
       >
-        <div className="space-y-6">
+        {/* `p-4` como el resto de pantallas de espacio: sin el, el texto de
+            ayuda de debajo del buscador sangraba hasta el borde del viewport. */}
+        <div className="space-y-6 p-4">
           <div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />

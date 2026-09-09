@@ -741,6 +741,13 @@ input:-webkit-autofill:active {
 
   .riuna-tiptap-content .ProseMirror p {
     margin: 0.2rem 0;
+    /* La medida de lectura de marca.md §05. Va en el parrafo y no en el
+       editor entero a proposito: una tabla, un bloque de codigo o una imagen
+       dentro de la descripcion siguen usando todo el ancho, que es lo que
+       necesitan. Sin esto la descripcion crecia con la ventana —736 px en una
+       de 1600, y mas en un monitor grande—, que es donde el ojo empieza a
+       perder el renglon al volver. */
+    max-width: 65ch;
   }
 
   .riuna-tiptap-content .ProseMirror h1,
