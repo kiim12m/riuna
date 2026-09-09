@@ -67,7 +67,7 @@ export function WidgetTaskRow({
         {task.title}
       </span>
 
-      <span className="hidden shrink-0 items-center gap-1 text-[10px] text-muted-foreground lg:flex">
+      <span className="hidden shrink-0 items-center gap-1 text-meta text-muted-foreground lg:flex">
         <ProjectIcon className="size-3" />
         <span className="max-w-24 truncate">{task.projectName}</span>
       </span>
@@ -75,7 +75,7 @@ export function WidgetTaskRow({
       {task.dueDate && (
         <span
           className={cn(
-            "flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px]",
+            "flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-label",
             dueDateStatusColors[dueStatus],
           )}
         >

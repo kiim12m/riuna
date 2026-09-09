@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useId, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -14,6 +14,7 @@ type TaskTitleProps = {
 
 export default function TaskTitle({ taskId }: TaskTitleProps) {
   const { t } = useTranslation();
+  const tituloId = useId();
   const { data: task } = useGetTask(taskId);
   const { mutateAsync: updateTaskTitle } = useUpdateTaskTitle();
   const { canUpdateTasks } = useWorkspacePermission();
@@ -76,6 +77,13 @@ export default function TaskTitle({ taskId }: TaskTitleProps) {
 
   return (
     <Form {...form}>
+      {/* El titulo de la tarea es un `input` editable, asi que la pagina se
+          quedaba sin encabezado de primer nivel que la nombrara: un lector de
+          pantalla no tenia por donde entrar. Este `h1` lo da sin cambiar nada de
+          lo que se ve, y el input lo referencia como etiqueta. */}
+      <h1 id={tituloId} className="sr-only">
+        {form.getValues("title") || t("tasks:detail.titlePlaceholder")}
+      </h1>
       <FormField
         control={form.control}
         name="title"
@@ -83,9 +91,10 @@ export default function TaskTitle({ taskId }: TaskTitleProps) {
           <input
             {...field}
             type="text"
+            aria-labelledby={tituloId}
             placeholder={t("tasks:detail.titlePlaceholder")}
             readOnly={!canEdit}
-            className="block h-auto w-full appearance-none border-0 bg-transparent p-0 font-heading text-[2rem] leading-[1.15] font-semibold tracking-[-0.02em] text-foreground outline-none placeholder:text-foreground/45"
+            className="block h-auto w-full appearance-none border-0 bg-transparent p-0 font-heading text-display leading-[1.15] font-semibold tracking-[-0.02em] text-foreground outline-none placeholder:text-foreground/45"
             onChange={(e) => {
               field.onChange(e);
               handleTitleChange(e.target.value);

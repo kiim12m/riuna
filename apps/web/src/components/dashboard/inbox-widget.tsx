@@ -114,12 +114,12 @@ export function InboxWidget() {
                   >
                     {getNotificationTitle(notification, t)}
                   </span>
-                  <span className="ml-auto shrink-0 text-[10px] text-muted-foreground/70">
+                  <span className="ml-auto shrink-0 text-meta text-muted-foreground/70">
                     {formatRelativeTime(notification.createdAt)}
                   </span>
                 </span>
                 {getNotificationContent(notification, t) && (
-                  <span className="line-clamp-1 block text-[10px] text-muted-foreground">
+                  <span className="line-clamp-1 block text-meta text-muted-foreground">
                     {getNotificationContent(notification, t)}
                   </span>
                 )}

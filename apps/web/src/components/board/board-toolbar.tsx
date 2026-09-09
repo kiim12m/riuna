@@ -198,7 +198,7 @@ export default function BoardToolbar({
           src={member?.user?.image ?? ""}
           alt={member?.user?.name || ""}
         />
-        <AvatarFallback className="border border-border/30 text-[9px] font-medium">
+        <AvatarFallback className="border border-border/30 text-label font-medium">
           {getInitials(member?.user?.name)}
         </AvatarFallback>
       </Avatar>
@@ -310,7 +310,7 @@ export default function BoardToolbar({
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="start">
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+                  <DropdownMenuLabel className="text-label uppercase">
                     {t("tasks:boardFilters.filterBy")}
                   </DropdownMenuLabel>
                 </DropdownMenuGroup>
@@ -442,7 +442,7 @@ export default function BoardToolbar({
                                 src={member.user?.image ?? ""}
                                 alt={member.user?.name || ""}
                               />
-                              <AvatarFallback className="border border-border/30 text-[10px] font-medium">
+                              <AvatarFallback className="border border-border/30 text-label font-medium">
                                 {getInitials(member.user?.name)}
                               </AvatarFallback>
                             </Avatar>

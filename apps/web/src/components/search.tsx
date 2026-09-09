@@ -38,7 +38,7 @@ export default function Search() {
             {t("navigation:commandPalette.search")}
           </span>
         </span>
-        <kbd className="-me-0.5 ms-6 inline-flex h-4 max-h-full items-center rounded border border-border/70 bg-background px-1 font-[inherit] font-medium text-[0.625rem] text-muted-foreground/60 group-data-[collapsible=icon]:hidden">
+        <kbd className="-me-0.5 ms-6 inline-flex h-4 max-h-full items-center rounded border border-border/70 bg-background px-1 font-[inherit] font-medium text-label text-muted-foreground/60 group-data-[collapsible=icon]:hidden">
           {shortcuts.search.prefix}
         </kbd>
       </button>

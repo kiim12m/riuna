@@ -440,7 +440,7 @@ function RouteComponent() {
                       className="sticky left-0 z-50 flex shrink-0 items-end border-border border-r bg-background px-3 pb-1"
                       style={{ width: railWidthRem }}
                     >
-                      <span className="text-[0.6875rem] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                      <span className="text-label font-medium uppercase tracking-[0.06em] text-muted-foreground">
                         {t("tasks:gantt.taskHeader")}
                       </span>
                     </div>
@@ -453,7 +453,7 @@ function RouteComponent() {
                       {headerBands.top.map((segment) => (
                         <div
                           key={segment.key}
-                          className="absolute inset-y-0 flex items-center truncate pl-1 text-[0.6875rem] uppercase tracking-[0.06em] text-muted-foreground"
+                          className="absolute inset-y-0 flex items-center truncate pl-1 text-label uppercase tracking-[0.06em] text-muted-foreground"
                           style={{
                             left: segment.leftPx,
                             width: segment.widthPx,
@@ -469,7 +469,7 @@ function RouteComponent() {
                           key={segment.key}
                           aria-current={segment.isCurrent ? "date" : undefined}
                           className={cn(
-                            "absolute inset-y-0 flex items-center justify-center overflow-hidden border-border/50 border-l text-[0.6875rem] text-muted-foreground",
+                            "absolute inset-y-0 flex items-center justify-center overflow-hidden border-border/50 border-l text-label text-muted-foreground",
                             segment.isCurrent &&
                               "bg-brand/10 font-semibold text-brand-strong",
                           )}
@@ -586,14 +586,14 @@ function RouteComponent() {
                                     style={{ width: `${depth * 0.85}rem` }}
                                   />
                                 )}
-                                <span className="shrink-0 font-mono text-[0.6875rem] text-muted-foreground tabular-nums">
+                                <span className="shrink-0 font-mono text-label text-muted-foreground tabular-nums">
                                   {project?.slug}-{task.number}
                                 </span>
                                 <span className="min-w-0 flex-1 truncate font-medium text-foreground text-xs">
                                   {task.title}
                                 </span>
                                 {progress != null && (
-                                  <span className="shrink-0 text-[0.6875rem] text-muted-foreground tabular-nums opacity-0 transition-opacity group-hover/row:opacity-100">
+                                  <span className="shrink-0 text-label text-muted-foreground tabular-nums opacity-0 transition-opacity group-hover/row:opacity-100">
                                     {progress}%
                                   </span>
                                 )}

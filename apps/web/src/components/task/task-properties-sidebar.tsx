@@ -257,7 +257,7 @@ export default function TaskPropertiesSidebar({
                           src={assignee?.user?.image ?? ""}
                           alt={assignee?.user?.name || ""}
                         />
-                        <AvatarFallback className="text-[9px] font-medium border border-border/30 flex-shrink-0 h-[16px] w-[16px]">
+                        <AvatarFallback className="text-label font-medium border border-border/30 flex-shrink-0 h-[16px] w-[16px]">
                           {getInitials(
                             assignee?.user?.name || task.assigneeName,
                           )}
@@ -268,7 +268,7 @@ export default function TaskPropertiesSidebar({
                         className="w-[16px] h-[16px] rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0"
                         title={t("tasks:popover.assignee.unassigned")}
                       >
-                        <span className="text-[8px] font-medium">?</span>
+                        <span className="text-label font-medium">?</span>
                       </div>
                     )}
                     <span className="text-xs font-semibold truncate max-w-[100px]">
@@ -477,7 +477,7 @@ export default function TaskPropertiesSidebar({
                             src={assignee?.user?.image ?? ""}
                             alt={assignee?.user?.name || ""}
                           />
-                          <AvatarFallback className="text-[9px] font-medium border border-border/30 shrink-0 h-[16px] w-[16px]">
+                          <AvatarFallback className="text-label font-medium border border-border/30 shrink-0 h-[16px] w-[16px]">
                             {getInitials(
                               assignee?.user?.name || task.assigneeName,
                             )}
@@ -488,7 +488,7 @@ export default function TaskPropertiesSidebar({
                           className="w-[16px] h-[16px] rounded-full bg-muted border border-border flex items-center justify-center shrink-0"
                           title={t("tasks:popover.assignee.unassigned")}
                         >
-                          <span className="text-[8px] font-medium">?</span>
+                          <span className="text-label font-medium">?</span>
                         </div>
                       )}
                       <span className="text-xs font-semibold truncate max-w-[100px]">
@@ -699,7 +699,7 @@ export default function TaskPropertiesSidebar({
                             src={assignee?.user?.image ?? ""}
                             alt={assignee?.user?.name || ""}
                           />
-                          <AvatarFallback className="text-[9px] font-medium border border-border/30 shrink-0 h-[16px] w-[16px]">
+                          <AvatarFallback className="text-label font-medium border border-border/30 shrink-0 h-[16px] w-[16px]">
                             {getInitials(
                               assignee?.user?.name || task.assigneeName,
                             )}
@@ -710,7 +710,7 @@ export default function TaskPropertiesSidebar({
                           className="w-[16px] h-[16px] rounded-full bg-muted border border-border flex items-center justify-center shrink-0"
                           title={t("tasks:popover.assignee.unassigned")}
                         >
-                          <span className="text-[8px] font-medium">?</span>
+                          <span className="text-label font-medium">?</span>
                         </div>
                       )}
                       <span className="text-xs font-semibold truncate max-w-[100px]">
@@ -835,7 +835,7 @@ export default function TaskPropertiesSidebar({
                     >
                       <Badge
                         variant="outline"
-                        className="flex items-center gap-1 px-1.5 py-0.5 cursor-pointer hover:bg-accent/50 transition-colors text-[10px]"
+                        className="flex items-center gap-1 px-1.5 py-0.5 cursor-pointer hover:bg-accent/50 transition-colors text-label"
                       >
                         <span
                           className="w-1.5 h-1.5 rounded-full flex-shrink-0"

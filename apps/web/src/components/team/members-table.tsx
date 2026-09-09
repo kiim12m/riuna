@@ -235,7 +235,7 @@ function MembersTable({ workspaceId, invitations, users }: Props) {
                         src={member.user.image ?? ""}
                         alt={member.user.name ?? ""}
                       />
-                      <AvatarFallback className="bg-transparent text-[11px] font-medium">
+                      <AvatarFallback className="bg-transparent text-label font-medium">
                         {getInitials(member.user.name)}
                       </AvatarFallback>
                     </Avatar>
@@ -250,12 +250,12 @@ function MembersTable({ workspaceId, invitations, users }: Props) {
                           </span>
                         ) : null}
                         {instanceUsers?.get(member.userId)?.banned ? (
-                          <span className="rounded border border-destructive/40 bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
+                          <span className="rounded border border-destructive/40 bg-destructive/10 px-1.5 py-0.5 text-label font-medium text-destructive">
                             {t("team:members.blocked")}
                           </span>
                         ) : null}
                         {isLocalAccount(member.user.email) ? (
-                          <span className="rounded border border-border/70 bg-muted/55 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                          <span className="rounded border border-border/70 bg-muted/55 px-1.5 py-0.5 text-label font-medium text-muted-foreground">
                             {t("team:members.localAccount")}
                           </span>
                         ) : null}
@@ -387,7 +387,7 @@ function MembersTable({ workspaceId, invitations, users }: Props) {
                       <Badge
                         variant="outline"
                         size="sm"
-                        className="font-mono text-[9px] uppercase tracking-wider"
+                        className="font-mono text-label uppercaser"
                       >
                         {t("team:invitations.pendingBadge", {
                           defaultValue: "pending",

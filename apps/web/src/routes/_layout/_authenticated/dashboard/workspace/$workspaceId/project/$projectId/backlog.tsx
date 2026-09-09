@@ -614,7 +614,7 @@ function RouteComponent() {
                       </>
                     )}
                     <DropdownMenuGroup>
-                      <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+                      <DropdownMenuLabel className="text-label uppercase">
                         {t("tasks:priority.label")}
                       </DropdownMenuLabel>
                     </DropdownMenuGroup>
@@ -638,7 +638,7 @@ function RouteComponent() {
 
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                      <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+                      <DropdownMenuLabel className="text-label uppercase">
                         {t("tasks:assignee.label")}
                       </DropdownMenuLabel>
                     </DropdownMenuGroup>
@@ -669,7 +669,7 @@ function RouteComponent() {
 
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                      <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+                      <DropdownMenuLabel className="text-label uppercase">
                         {t("tasks:team.label")}
                       </DropdownMenuLabel>
                     </DropdownMenuGroup>
@@ -689,7 +689,7 @@ function RouteComponent() {
 
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                      <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+                      <DropdownMenuLabel className="text-label uppercase">
                         {t("tasks:dueDate.label")}
                       </DropdownMenuLabel>
                     </DropdownMenuGroup>
@@ -721,7 +721,7 @@ function RouteComponent() {
 
                     <DropdownMenuSeparator />
                     <DropdownMenuGroup>
-                      <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+                      <DropdownMenuLabel className="text-label uppercase">
                         {t("tasks:labels.label")}
                       </DropdownMenuLabel>
                     </DropdownMenuGroup>

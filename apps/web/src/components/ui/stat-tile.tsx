@@ -26,7 +26,9 @@ export function StatTile({
       )}
     >
       <p className="text-muted-foreground text-meta">{label}</p>
-      <p className="font-semibold text-lg tabular-nums">{value}</p>
+      {/* `text-page`, no `text-lg`: 18 px no es ninguno de los siete papeles de
+          marca.md §05, y la cifra de una tarjeta es el elemento que la encabeza. */}
+      <p className="text-page tabular-nums">{value}</p>
       {hint && (
         <p className="mt-0.5 text-muted-foreground/70 text-meta">{hint}</p>
       )}

@@ -52,7 +52,7 @@ function TaskCustomFields({ task, projectId, workspaceId }: Props) {
 
   return (
     <div className="space-y-1">
-      <p className="px-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="px-1.5 text-label font-medium uppercase text-muted-foreground">
         {t("tasks:properties.customFields")}
       </p>
       {(definitions as FieldDefinition[]).map((definition) => (
