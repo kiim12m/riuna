@@ -229,21 +229,27 @@ export function WidgetBody({
     );
   }
 
+  // Barras **horizontales**. Los nombres de categoria de Riuna son largos
+  // —«Rediseño web», «Infraestructura»— y en una tarjeta de 300 px el eje
+  // vertical se saltaba etiquetas: una barra sin rotular solo se identifica por
+  // su color, que es lo que la regla de datos prohibe, y dos tonos de la paleta
+  // quedan ademas por debajo de 3:1 en tema claro. En horizontal el nombre se
+  // lee entero y cada barra dice quien es.
   return (
     <div className="h-40 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} margin={CHART_MARGIN}>
+        <BarChart data={chartData} layout="vertical" margin={CHART_MARGIN}>
           <ChartGrid />
-          <ChartXAxis dataKey="name" />
-          <ChartYAxis />
+          <ChartXAxis type="number" />
+          <ChartYAxis categoryKey="name" width={104} />
           <ChartTooltip
             cursor={CHART_TOOLTIP_CURSOR}
             formatter={(value) => [format(Number(value)), ""]}
           />
           <Bar
             dataKey="value"
-            radius={[4, 4, 0, 0]}
-            maxBarSize={36}
+            radius={[0, 4, 4, 0]}
+            maxBarSize={18}
             isAnimationActive={false}
           >
             {chartData.map((entry, index) => (
