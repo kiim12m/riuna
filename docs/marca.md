@@ -365,6 +365,54 @@ colores que elige quien usa Riuna, no la marca, y van siempre sobre un chip
 neutro. Una excepción: **«Sage» apunta a `emerald-600` y colisiona con el teal**
 igual que el verde de éxito. Debe reapuntarse.
 
+### Paleta de gráficas — propuesta, pendiente de aprobar
+
+Esta sección no existía, y era el único hueco del sistema de color. Lo que había
+en `index.css` no derivaba de la marca —violeta `#7C3AED` y rosa `#BE185D`— y el
+tercer tono era exactamente el color de aviso, así que un cubo cualquiera de un
+reparto parecía una advertencia.
+
+**Ocho tonos, en orden fijo.** El orden *es* el mecanismo de seguridad para
+daltonismo: no se reordena para que quede más bonito. El primero es River Teal,
+para que la serie principal sea de marca; los siete restantes salen de una paleta
+validada, no elegidos a ojo.
+
+| Slot | Tono       | Claro     | Oscuro    |
+|------|------------|-----------|-----------|
+| 1    | Teal       | `#0E8A7A` | `#1FA891` |
+| 2    | Naranja    | `#EB6834` | `#D95926` |
+| 3    | Azul       | `#2A78D6` | `#3987E5` |
+| 4    | Ámbar      | `#EDA100` | `#C98500` |
+| 5    | Magenta    | `#E87BA4` | `#D55181` |
+| 6    | Verde      | `#008300` | `#008300` |
+| 7    | Violeta    | `#4A3AA7` | `#9085E9` |
+| 8    | Rojo       | `#E34948` | `#E66767` |
+| —    | «Otros»    | `mid`     | `mid-night` |
+
+El tema oscuro **no es un volteo automático**: son los mismos ocho tonos
+escalonados para el fondo oscuro. El teal baja a `#1FA891` porque `teal-300` se
+sale por arriba de la banda de luminosidad del modo oscuro (L 0,69 sobre un techo
+de 0,67).
+
+Verificado con el validador de la skill `dataviz` en los dos temas: banda de
+luminosidad, suelo de croma, separación bajo protanopia y deuteranopia (ΔE OKLab
+×100 ≥ 8), suelo de visión normal (≥ 15) y contraste sobre superficie.
+
+**Tres cosas que no son negociables aquí:**
+
+1. **No se cicla.** A partir del noveno la cola va al neutro de «otros», que es lo
+   que el agregado ya suma aparte. Repetir un tono haría que dos series
+   compartieran identidad, que es peor que no distinguirlas.
+2. **El color va con la entidad, nunca con su posición.** Un filtro que cambia el
+   número de series no puede repintar las que sobreviven.
+3. **Los colores semánticos están reservados.** Éxito, aviso, error e info no se
+   reutilizan como «serie 4», y siempre llevan icono y texto.
+
+El 4 y el 5 quedan por debajo de 3:1 sobre fondo claro. La regla los admite solo
+con relevo —rótulo visible o vista de tabla—, y hoy el eje se salta etiquetas
+cuando la tarjeta es estrecha. Queda anotado en
+[la revisión estética](revision-estetica-2026-09.md), no resuelto.
+
 ### Regla de oro
 
 > Navy sostiene. Teal actúa. Todo lo demás calla.
