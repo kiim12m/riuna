@@ -153,7 +153,7 @@ export default function ProjectLayout({
                   <SidebarTrigger className="-ml-1 h-7 w-7 cursor-pointer text-foreground/85 hover:text-foreground md:hidden" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="flex items-center gap-2 text-[10px]">
+                  <p className="flex items-center gap-2 text-meta">
                     Toggle sidebar
                     <KbdSequence
                       keys={[
@@ -205,7 +205,7 @@ export default function ProjectLayout({
                   className={viewTabClass(resolvedView === "backlog")}
                 >
                   <SquircleDashed className="size-3.5" />
-                  Backlog
+                  {t("tasks:backlog.title")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -214,7 +214,7 @@ export default function ProjectLayout({
                   className={viewTabClass(resolvedView === "board")}
                 >
                   <SquareKanban className="size-3.5" />
-                  Tasks
+                  {t("tasks:board.title")}
                 </Button>
                 <Button
                   variant="ghost"
