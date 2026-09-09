@@ -42,6 +42,27 @@ export function normalizeLookupKey(value: string): string {
   return value.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
 }
 
+/**
+ * Las claves con las que una columna se deja reconocer al importar.
+ *
+ * La normal, mas una que **colapsa los separadores**, para que el nombre y el
+ * slug de la misma columna caigan juntos: `normalizeLookupKey` solo quita
+ * tildes y espacios de los extremos, asi que «To Do» daba `to do` y su slug
+ * `to-do` — dos claves distintas para la misma cosa. Con las columnas por
+ * defecto ya en castellano, una hoja que diga «To Do» o «in progress» sigue
+ * entrando por el slug, que es estable y no se traduce.
+ *
+ * Va solo en el estado, **no** en personas ni etiquetas: colapsar separadores
+ * en un nombre propio juntaria a «Ana Ruiz» con «Anaruiz», y ahi un falso
+ * positivo asigna trabajo a quien no toca.
+ */
+export function statusKeys(value: string): string[] {
+  const base = normalizeLookupKey(value);
+  const colapsada = base.replace(/[\s_-]+/g, "");
+
+  return colapsada === base ? [base] : [base, colapsada];
+}
+
 export async function loadImportLookups(
   projectId: string,
   workspaceId: string,
@@ -110,8 +131,12 @@ export async function loadImportLookups(
   const columnIdBySlug = new Map<string, string>();
   for (const column of columns) {
     columnIdBySlug.set(column.slug, column.id);
-    statusByName.set(normalizeLookupKey(column.name), column.slug);
-    statusByName.set(normalizeLookupKey(column.slug), column.slug);
+    for (const clave of statusKeys(column.name)) {
+      statusByName.set(clave, column.slug);
+    }
+    for (const clave of statusKeys(column.slug)) {
+      statusByName.set(clave, column.slug);
+    }
   }
 
   const userByHandle = new Map<string, string>();
