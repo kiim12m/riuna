@@ -43,14 +43,18 @@ export function ChartGrid() {
 export function ChartXAxis({
   dataKey,
   minTickGap,
+  type,
 }: {
-  dataKey: string;
+  dataKey?: string;
   /** Solo cuando las etiquetas son fechas y se pisan. */
   minTickGap?: number;
+  /** `number` en una grafica de barras horizontales, donde el eje mide. */
+  type?: "number" | "category";
 }) {
   return (
     <XAxis
       dataKey={dataKey}
+      type={type}
       minTickGap={minTickGap}
       tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
       tickLine={false}
@@ -62,14 +66,24 @@ export function ChartXAxis({
 export function ChartYAxis({
   allowDecimals = false,
   width = 48,
+  categoryKey,
 }: {
   allowDecimals?: boolean;
   width?: number;
+  /** Puesto, el eje pasa a rotular categorias en vez de numeros. */
+  categoryKey?: string;
 }) {
   return (
     <YAxis
       allowDecimals={allowDecimals}
       width={width}
+      {...(categoryKey
+        ? // `interval={0}` obliga a pintar **todas** las etiquetas. Sin el,
+          // Recharts se salta las que no caben, y una barra sin rotulo solo se
+          // puede identificar por su color: justo lo que la regla prohibe, y
+          // ademas dos tonos de la paleta quedan por debajo de 3:1 en claro.
+          { type: "category" as const, dataKey: categoryKey, interval: 0 }
+        : { type: "number" as const })}
       tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
       tickLine={false}
       axisLine={false}
