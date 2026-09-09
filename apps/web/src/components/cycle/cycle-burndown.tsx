@@ -90,7 +90,7 @@ export function CycleBurndown({
             type="monotone"
             dataKey="actual"
             name={t("cycles:burndown.actual")}
-            stroke="var(--color-chart-1)"
+            stroke="var(--chart-1)"
             strokeWidth={2}
             dot={false}
             // Un punto por dia satura una serie de dos semanas; el marcador
