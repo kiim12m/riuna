@@ -568,14 +568,14 @@ export function GiteaIntegrationSettings({ projectId }: { projectId: string }) {
                   <p className="text-muted-foreground">
                     {t("settings:giteaIntegration.webhookHint")}
                   </p>
-                  <code className="block break-all rounded bg-muted px-2 py-1 text-[11px]">
+                  <code className="block break-all rounded bg-muted px-2 py-1 text-label">
                     {integration.webhookUrl}
                   </code>
                   <p className="text-muted-foreground mt-2">
                     {t("settings:giteaIntegration.webhookSecretLabel")}
                   </p>
                   <div className="flex items-start gap-2">
-                    <code className="block flex-1 break-all rounded bg-muted px-2 py-1 text-[11px]">
+                    <code className="block flex-1 break-all rounded bg-muted px-2 py-1 text-label">
                       {showWebhookSecret
                         ? integration.webhookSecret
                         : "••••••••••••••••••••••••••••••••"}

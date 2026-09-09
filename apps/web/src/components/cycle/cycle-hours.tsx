@@ -42,7 +42,7 @@ export function CycleHours({
           >
             <Avatar className="h-6 w-6 shrink-0">
               <AvatarImage src={person.image ?? undefined} />
-              <AvatarFallback className="text-[10px]">
+              <AvatarFallback className="text-label">
                 {getInitials(person.name)}
               </AvatarFallback>
             </Avatar>

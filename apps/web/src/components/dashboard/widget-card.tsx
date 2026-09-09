@@ -58,9 +58,15 @@ export function WidgetCard({
     >
       <header className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <h3 id={titleId} className="truncate font-medium text-body">
+          {/* `h2`, no `h3`: el widget es el grupo de primer nivel bajo el
+              saludo, que es el `h1` de la pagina. Saltarse el `h2` deja a un
+              lector de pantalla sin el escalon intermedio para navegar.
+              Y `text-section`, no `text-body`: a 14 px con peso 500 el titulo
+              de un widget era tipograficamente identico al texto que lo rodea,
+              asi que la jerarquia no la sostenia nada. */}
+          <h2 id={titleId} className="truncate text-section">
             {title}
-          </h3>
+          </h2>
           {subtitle && (
             <p className="truncate text-muted-foreground text-meta">
               {subtitle}

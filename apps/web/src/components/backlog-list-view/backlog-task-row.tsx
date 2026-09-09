@@ -204,7 +204,7 @@ export default function BacklogTaskRow({ task }: BacklogTaskRowProps) {
 
             {showDueDates && task.dueDate && (
               <div
-                className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded flex-shrink-0 ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
+                className={`flex items-center gap-1 text-label px-2 py-1 rounded flex-shrink-0 ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
               >
                 {getDueDateStatus(task.dueDate, taskIsCompleted) ===
                   "overdue" && <CalendarX className="w-3 h-3" />}
@@ -235,7 +235,7 @@ export default function BacklogTaskRow({ task }: BacklogTaskRowProps) {
                     className="w-6 h-6 rounded-full bg-muted border border-border flex items-center justify-center"
                     title={t("tasks:assignee.unassigned")}
                   >
-                    <span className="text-[10px] font-medium text-muted-foreground">
+                    <span className="text-label font-medium text-muted-foreground">
                       ?
                     </span>
                   </div>

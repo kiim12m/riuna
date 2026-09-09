@@ -30,7 +30,7 @@ export default function SubtaskBadge({
         total: subtree.descendantCount,
       })}
       className={cn(
-        "inline-flex flex-shrink-0 items-center gap-1 rounded border border-border/60 px-1.5 py-0.5 text-[10px] font-medium tabular-nums",
+        "inline-flex flex-shrink-0 items-center gap-1 rounded border border-border/60 px-1.5 py-0.5 text-label font-medium tabular-nums",
         isComplete ? "text-success-foreground" : "text-muted-foreground",
         className,
       )}

@@ -152,7 +152,7 @@ export function WidgetBody({
                 <span className="min-w-0 truncate text-meta">
                   {label(bucket.key)}
                 </span>
-                <span className="shrink-0 text-muted-foreground text-[10px] tabular-nums">
+                <span className="shrink-0 text-muted-foreground text-meta tabular-nums">
                   {bucket.value}/{total}
                 </span>
               </div>

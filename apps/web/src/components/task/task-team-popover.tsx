@@ -81,7 +81,7 @@ export default function TaskTeamPopover({
               className="w-6 h-6 rounded-full bg-muted border border-border flex items-center justify-center"
               title={t("tasks:popover.team.unassigned")}
             >
-              <span className="text-[10px] font-medium text-muted-foreground">
+              <span className="text-label font-medium text-muted-foreground">
                 ?
               </span>
             </div>

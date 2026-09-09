@@ -104,7 +104,7 @@ const NotificationDropdown = forwardRef<NotificationDropdownRef>(
                   <Button variant="ghost" size="icon" className="relative">
                     <Bell className="h-4 w-4" />
                     {unreadNotifications.length > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-semibold leading-none text-white ring-2 ring-sidebar transition-[scale,opacity] duration-200 ease-out starting:scale-75 starting:opacity-0 motion-reduce:starting:scale-100">
+                      <span className="absolute -top-0.5 -right-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-1 text-label font-semibold leading-none text-white ring-2 ring-sidebar transition-[scale,opacity] duration-200 ease-out starting:scale-75 starting:opacity-0 motion-reduce:starting:scale-100">
                         {unreadNotifications.length > 99
                           ? "99+"
                           : unreadNotifications.length}
@@ -179,7 +179,7 @@ const NotificationDropdown = forwardRef<NotificationDropdownRef>(
                             >
                               {getNotificationTitle(notification, t)}
                             </span>
-                            <span className="ml-auto shrink-0 text-[11px] text-muted-foreground/70">
+                            <span className="ml-auto shrink-0 text-label text-muted-foreground/70">
                               {formatRelativeTime(notification.createdAt)}
                             </span>
                             {!notification.isRead && (

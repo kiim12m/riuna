@@ -82,7 +82,7 @@ export default function GroupControl({
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-48" align="start">
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+          <DropdownMenuLabel className="text-label uppercase">
             {t("tasks:group.by")}
           </DropdownMenuLabel>
         </DropdownMenuGroup>

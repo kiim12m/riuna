@@ -62,7 +62,7 @@ export function PublicTaskRow({
                 src={task.assigneeImage ?? ""}
                 alt={task.assigneeName ?? ""}
               />
-              <AvatarFallback className="text-[10px] font-medium border border-border/30">
+              <AvatarFallback className="text-label font-medium border border-border/30">
                 {getInitials(task.assigneeName)}
               </AvatarFallback>
             </Avatar>
@@ -74,7 +74,7 @@ export function PublicTaskRow({
 
         {task.dueDate && (
           <div
-            className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
+            className={`flex items-center gap-1 text-label px-2 py-1 rounded ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
           >
             {getDueDateStatus(task.dueDate, taskIsCompleted) === "overdue" && (
               <CalendarX className="w-3 h-3" />
@@ -91,7 +91,7 @@ export function PublicTaskRow({
         )}
 
         {task.priority && (
-          <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-[10px] font-medium text-muted-foreground">
+          <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-label font-medium text-muted-foreground">
             {getPriorityIcon(task.priority)}
           </div>
         )}

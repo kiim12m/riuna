@@ -261,7 +261,7 @@ export function NavProjects() {
                           >
                             <span
                               aria-hidden="true"
-                              className="flex size-5 shrink-0 items-center justify-center rounded-[4px] font-semibold text-[10px] text-white leading-none"
+                              className="flex size-5 shrink-0 items-center justify-center rounded-[4px] font-semibold text-label text-white leading-none"
                               style={{
                                 backgroundColor: getProjectBadgeColor(
                                   project.id,

@@ -294,7 +294,7 @@ export default function TaskRelations({
         <CollapsibleContent>
           {Object.entries(groupedRelations).map(([type, items]) => (
             <div key={type} className="mt-1.5">
-              <span className="text-[11px] text-muted-foreground/70 px-2">
+              <span className="text-label text-muted-foreground/70 px-2">
                 {t(`tasks:relations.types.${type}`, {
                   defaultValue: type.replace(/_/g, " "),
                 })}
@@ -350,7 +350,7 @@ export default function TaskRelations({
                                     src={assignee?.user?.image ?? ""}
                                     alt={assignee?.user?.name || ""}
                                   />
-                                  <AvatarFallback className="text-[9px] font-medium border border-border/30">
+                                  <AvatarFallback className="text-label font-medium border border-border/30">
                                     {getInitials(assignee?.user?.name)}
                                   </AvatarFallback>
                                 </Avatar>
@@ -359,7 +359,7 @@ export default function TaskRelations({
                                   className="flex h-5 w-5 items-center justify-center rounded-full border border-dashed border-border/70"
                                   title={t("tasks:popover.assignee.unassigned")}
                                 >
-                                  <span className="text-[9px] font-medium text-muted-foreground">
+                                  <span className="text-label font-medium text-muted-foreground">
                                     ?
                                   </span>
                                 </div>

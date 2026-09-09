@@ -121,7 +121,7 @@ export function CyclePanel({ projectId }: { projectId: string }) {
               {cycle.name}
               <Badge
                 variant={cycle.status === "active" ? "default" : "outline"}
-                className="px-1.5 py-0 text-[10px]"
+                className="px-1.5 py-0 text-label"
               >
                 {t(`cycles:status.${cycle.status}`)}
               </Badge>
