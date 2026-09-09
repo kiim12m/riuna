@@ -53,7 +53,7 @@ export function CycleVelocity({
           />
           <Bar
             dataKey="value"
-            fill="var(--color-chart-1)"
+            fill="var(--chart-1)"
             // Extremo redondeado de 4 px anclado a la linea base, no una capsula:
             // la barra tiene que arrancar del cero sin curva.
             radius={[4, 4, 0, 0]}

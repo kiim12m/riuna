@@ -217,7 +217,7 @@ export function WidgetBody({
             <Line
               type="monotone"
               dataKey="value"
-              stroke="var(--color-chart-1)"
+              stroke="var(--chart-1)"
               strokeWidth={2}
               dot={false}
               isAnimationActive={false}

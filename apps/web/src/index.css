@@ -75,6 +75,10 @@ input:-webkit-autofill:active {
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+  --color-chart-other: var(--chart-other);
   --color-warning-foreground: var(--warning-foreground);
   --color-warning: var(--warning);
   --color-success-foreground: var(--success-foreground);
@@ -270,11 +274,30 @@ input:-webkit-autofill:active {
   --success-foreground: #15803d;
   --warning: #d97706;
   --warning-foreground: #b45309;
+  /* Paleta de datos — docs/marca.md §04. Ocho tonos en orden fijo: el orden
+     *es* el mecanismo de seguridad para daltonismo y no se reordena. El 1 es
+     River Teal para que la serie principal sea de marca; los siete restantes
+     salen de una paleta validada, no elegidos a ojo.
+     Verificado con el validador de la skill `dataviz`: banda de luminosidad,
+     suelo de croma, separación bajo protanopia y deuteranopia (ΔE OKLab ×100),
+     suelo de visión normal y contraste sobre la superficie.
+     El 4 y el 5 quedan por debajo de 3:1 sobre fondo claro (2,11 y 2,62), y la
+     regla los admite solo con relevo: rótulo visible o vista de tabla. Hoy el
+     eje se salta etiquetas cuando no caben, así que el relevo **no está
+     garantizado** en una tarjeta estrecha. Anotado en
+     docs/revision-estetica-2026-09.md; no cambies el orden para taparlo, que el
+     orden es el mecanismo de seguridad para daltonismo. */
   --chart-1: var(--riuna-teal);
-  --chart-2: #2a5c8a;
-  --chart-3: #d97706;
-  --chart-4: #7c3aed;
-  --chart-5: #be185d;
+  --chart-2: #eb6834;
+  --chart-3: #2a78d6;
+  --chart-4: #eda100;
+  --chart-5: #e87ba4;
+  --chart-6: #008300;
+  --chart-7: #4a3aa7;
+  --chart-8: #e34948;
+  /* La cola de un reparto de alta cardinalidad. Neutro a propósito: «otros» no
+     es una categoría más, así que no gasta un tono de identidad. */
+  --chart-other: var(--riuna-mid);
   --sidebar: var(--riuna-surface);
   --sidebar-foreground: var(--riuna-mid);
   --sidebar-primary: var(--riuna-navy);
@@ -373,11 +396,18 @@ input:-webkit-autofill:active {
   --success-foreground: #55d486;
   --warning: #d97706;
   --warning-foreground: #f0a83c;
-  --chart-1: var(--riuna-teal-light);
-  --chart-2: #6e9bc7;
-  --chart-3: #f0a83c;
-  --chart-4: #a78bfa;
-  --chart-5: #f472b6;
+  /* Los mismos ocho tonos, escalonados para el fondo oscuro; no es un volteo
+     automático del claro. El teal baja a #1fa891 porque el -light se sale por
+     arriba de la banda de luminosidad que exige el modo oscuro (L 0,69 > 0,67). */
+  --chart-1: #1fa891;
+  --chart-2: #d95926;
+  --chart-3: #3987e5;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+  --chart-6: #008300;
+  --chart-7: #9085e9;
+  --chart-8: #e66767;
+  --chart-other: var(--riuna-mid-night);
   --sidebar: var(--riuna-sunken);
   --sidebar-foreground: var(--riuna-mid-night);
   --sidebar-primary: var(--riuna-text-night);
