@@ -20,9 +20,10 @@
 | **Subtotal: Riuna diferencial** | **23** | |
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
+| 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
-| **Total Bloque A** | **34** | |
+| **Total Bloque A** | **35** | |
 
 **Estimación honesta:** 29 semanas nominales a ~8 h/semana son **8-11 meses**
 reales para cerrar el Bloque A. La ventaja del fork no está en la fecha final,
@@ -1135,6 +1136,93 @@ sin predicado selectivo.
 - **El índice `task (completed_at)` está declarado y no construido**, con la
   condición que lo justificaría escrita en la ADR 030.
 
+### Fase 7.5 — Revisión estética (≈1 semana) · **cerrada**
+
+Repaso de acabado de las 24 pantallas con dos sistemas externos —
+[impeccable](https://github.com/pbakaus/impeccable) y
+[ui-ux-pro-max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)— contra
+[`marca.md`](marca.md), que sigue siendo la autoridad. El inventario completo
+está en [la revisión](revision-estetica-2026-09.md); aquí queda lo que cambia el
+plan.
+
+Las dos skills se instalaron **a nivel de usuario y no en el repo**: traen 22 MB
+de fuentes, CSV y binarios que no tienen por qué versionarse con Riuna, y sus
+*hooks* globales se dispararían en todos los proyectos.
+
+**El método importa más que el recuento.** Tres barridos: el detector estático
+sobre `apps/web/src` —2 avisos, ambos falsos positivos—, el de runtime **ruta por
+ruta** sobre la aplicación en marcha, y medición directa del DOM. Escanear varias
+URL en un lote infravalora muchísimo: 1 hallazgo por ruta frente a 58 en
+solitario, porque el detector no espera al render. Y la mitad del trabajo fue
+**descartar**: el «1,1:1» de las cabeceras del calendario da 7,47:1 al muestrear
+píxeles —el mínimo era el borde antialiasado de los glifos—, y el «cyan neon
+sobre fondo oscuro» que marca 162 veces es River Teal, una marca deliberada que
+un detector entrenado contra plantillas de SaaS no distingue de un tic
+generativo.
+
+**Cierra el único hueco que quedaba del sistema de color.** `marca.md` §04
+definía marca, escala derivada, tema oscuro, semánticos y las nueve etiquetas —y
+de gráficas no decía nada—. Lo que había en `index.css` no derivaba de la marca
+(violeta, rosa) y el tercer tono era exactamente el color de aviso. Ahora son
+ocho tonos en orden fijo con River Teal el primero, escalonados aparte para el
+tema oscuro y verificados en los dos: banda de luminosidad, croma, separación
+bajo protanopia y deuteranopia, y contraste sobre superficie. **No ciclan**: la
+cola cae en un neutro de «otros». La decisión vive en §04 con su gobernanza.
+
+**Cierra también la deuda incremental del Interludio.** Las ADR 018 y 020 dejaron
+escrito que la adopción de la escala tipográfica sería incremental, «sin un corte
+único». Este es el corte para la interfaz: **119 tamaños arbitrarios** —incluidos
+8 px y 9 px, y 61 `text-[10px]`— devueltos a los siete papeles de §05, repartidos
+por familia y no con un `sed`. Cero `text-[Npx]` en el código. Quedan fuera y
+**contadas** 48 clases de tamaño de Tailwind en pantallas que la revisión no
+recorrió.
+
+**Dos modos de fallo silencioso que conviene no repetir**, porque ninguno da
+error y los dos se ven «casi bien»:
+
+1. **Tailwind poda `@theme inline`.** Una variable que ninguna fuente nombre
+   literalmente no llega a `:root`. `chartColor` construía
+   `var(--color-chart-${n})` en tiempo de ejecución, así que solo sobrevivía la
+   1 y cuatro de cada cinco barras se pintaban en negro. El DOM estaba bien
+   —anchura correcta, `style` en su sitio—: fallaba **solo el color computado**,
+   que es lo que ninguna prueba sobre clases puede ver. La prueba que lo fija
+   afirma sobre `getComputedStyle`.
+2. **tailwind-merge clasificaba la escala como color.** Los siete papeles son
+   nombres propios (`label`, `meta`, `section`…), no una escala que reconozca,
+   así que caían en el mismo grupo que `text-muted-foreground` y **el tamaño
+   desaparecía** en cada chip de estado y en cada título de tarea cerrada. Es la
+   misma trampa del prefijo `text-` que documenta la [ADR 018](adr/018-escala-tipografica.md),
+   por el otro lado: allí un tamaño compilaba a color, aquí un tamaño se
+   descartaba *como si* fuera color. Había además **dos `cn()`** —uno usado por
+   109 ficheros y otro por 2—, y el arreglo aterrizó primero en el que no era.
+
+**Lo demás que entró:** la tabla dejando de enseñar slugs crudos de estado, las
+columnas por defecto con los nombres que ya fijaba §06 —sin romper la
+importación de hojas en inglés, que casa por slug colapsando separadores—, el
+calendario y la zona peligrosa traducidos al castellano y al catalán, tres claves
+que no existían en **ningún** idioma, y la medida de lectura de la descripción de
+tarea, que no tenía tope alguno y crecía con la ventana.
+
+**Deuda declarada:**
+
+- **48 clases de tamaño de Tailwind fuera de los siete papeles** —`text-lg` (23),
+  `text-2xl` (24), `text-4xl` (1)— en acceso, alta, invitaciones y proyecto
+  público. Medidas y acotadas, no barridas a ciegas: son pantallas que esta
+  revisión no recorrió.
+- **La escala del editor TipTap va aparte**: 28 `font-size` en CSS con valores
+  propios. Es prosa, no interfaz densa, y se deja como excepción **declarada**.
+- **`i18n:check` no detecta claves usadas que no existen** en ningún idioma:
+  comprueba paridad, no existencia. Las tres de ciclos estaban igual de ausentes
+  en los tres, así que pasaban por «en sync». La puerta de CI tiene ese hueco.
+- **Las leyendas que cada página de ajustes escribe en línea** siguen sin acotar;
+  las primitivas compartidas sí. Son leyendas de escaneo, no prosa de lectura.
+- **La búsqueda pinta `result.status` crudo**, como hacía la tabla. Resolverlo
+  cruza proyectos y necesita una consulta que hoy no se hace.
+- **Las preferencias viven solo en `localStorage`** y se pierden al cambiar de
+  navegador, aunque la pantalla cuelgue de «Ajustes › Cuenta». De ahí sale también
+  que el calendario empiece en domingo. Es una decisión de producto con el rótulo
+  desalineado, no un fallo.
+
 ### Fase 8 — Automatizaciones e importadores externos (≈3 semanas)
 Motor disparador → condición → acción (`automation`, `automation_run`) sobre
 los eventos que Kaneo ya emite, ampliando su `workflowRule` en lugar de
@@ -1201,7 +1289,8 @@ veces seguidas sin que nada lo impidiera. Ahora existe.
 `pnpm test:e2e` levanta **su propio par API (1338) + web (5174) contra
 `riuna_e2e_test`**, así que no toca la base de desarrollo ni obliga a parar los
 servidores de quien esté programando. Siete casos que cubren las cuatro
-rebanadas de la Fase 6, en español, que es el idioma que la gente ve.
+rebanadas de la Fase 6, en español, que es el idioma que la gente ve. Con las
+Fases 7 y 7.5 son **trece**: se suman objetivos, panel y la paleta de datos.
 
 Lo que hizo falta para que arrancara, y que conviene no volver a descubrir:
 
@@ -1268,16 +1357,18 @@ La **Fase 8**: automatizaciones e importadores externos. Motor disparador →
 condición → acción sobre los eventos que Kaneo ya emite, e importadores de
 Trello, Jira, Asana y Notion.
 
-**Antes de empezarla hay dos cosas de la Fase 7 que conviene cerrar**, y son de
-verificación, no de código:
+**Las dos cosas que la Fase 7 dejaba abiertas están cerradas**, y las cerró la
+Fase 7.5:
 
-- **Objetivos, compartir, el widget de objetivo y el cubo «otros» no se han visto
-  nunca en pantalla**, ni en tema oscuro. La única superficie de la fase que ha
-  pasado por el navegador es el panel de la rebanada 1 — y de ahí salió el token
-  `--text-secondary` roto, que ninguna prueba habría encontrado.
-- **El humo de Playwright no se ha ejecutado.** `home.spec.ts` se reescribió para
-  la fusión de pantallas y sigue sin correr, igual que `cycles` y
-  `recurrence-and-templates` desde entonces.
+- ~~Objetivos, compartir y el widget de objetivo no se han visto nunca en
+  pantalla.~~ **Vistos**, en los dos temas y a 1440 y 390 px. De ahí salió que el
+  selector de objetivo del editor estaba anidado dentro de otro desplegable, así
+  que **el widget de objetivo era increable** — un fallo que solo un navegador
+  podía encontrar. Sigue sin verse el **cubo «otros»**, que necesita más de
+  cincuenta grupos y no se provoca con datos de prueba razonables.
+- ~~El humo de Playwright no se ha ejecutado.~~ **Ejecutado, y no arrancaba:**
+  `vite.config.ts` fija el puerto a fuego y no lee `PORT`, así que el web abría
+  5173 mientras Playwright esperaba 5174. Ahora son **13 casos en verde**.
 
 Lo que arrastra la Fase 6, y que sigue abierto:
 
