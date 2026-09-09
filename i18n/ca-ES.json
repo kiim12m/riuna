@@ -370,25 +370,25 @@
 			"avatar": {
 				"hint": "PNG, JPEG, or WebP. Cropped to a square and resized to 256x256.",
 				"remove": "Remove",
-				"removeError": "Failed to remove profile picture",
-				"removeSuccess": "Profile picture removed",
-				"updateError": "Failed to update profile picture",
-				"updateSuccess": "Profile picture updated",
-				"change": "Change avatar",
-				"edit": "Change your profile picture"
+				"removeError": "No s’ha pogut treure la foto de perfil",
+				"removeSuccess": "Foto de perfil treta",
+				"updateError": "No s’ha pogut actualitzar la foto de perfil",
+				"updateSuccess": "Foto de perfil actualitzada",
+				"change": "Canvia la foto",
+				"edit": "Canvia la teva foto de perfil"
 			},
 			"deleteAccount": {
-				"confirm": "Delete account",
+				"confirm": "Elimina el compte",
 				"confirmLabel": "Confirm your email address",
-				"description": "Workspaces only you belong to are deleted with your account. Elsewhere, your tasks stay and become unassigned, and your comments are removed.",
-				"error": "Failed to delete account",
+				"description": "Els espais de treball on estiguis sol s’eliminen amb el teu compte. A la resta, les teves tasques es queden i passen a estar sense assignar, i els teus comentaris s’esborren.",
+				"error": "No s’ha pogut eliminar el compte",
 				"modalDescription": "This cannot be undone. Type {{email}} to confirm.",
-				"modalTitle": "Delete your account?",
-				"sectionSubtitle": "Permanent actions that affect your whole account.",
-				"sectionTitle": "Danger zone",
-				"success": "Your account has been deleted",
-				"title": "Delete account",
-				"sessionTooOld": "For security, sign out and sign back in before deleting your account."
+				"modalTitle": "Vols eliminar el teu compte?",
+				"sectionSubtitle": "Accions permanents que afecten tot el teu compte.",
+				"sectionTitle": "Zona perillosa",
+				"success": "El teu compte s’ha eliminat",
+				"title": "Elimina el compte",
+				"sessionTooOld": "Per seguretat, tanca la sessió i torna a entrar abans d’eliminar el teu compte."
 			}
 		},
 		"preferencesPage": {
@@ -421,7 +421,7 @@
 			"sidebarDefaultDescription": "Mantener la barra lateral al iniciar",
 			"density": "Densidad compacta",
 			"densityDescription": "Aprieta el espaciado en las vistas con muchas tareas",
-			"displayOptions": "Ver opciones",
+			"displayOptions": "Opcions de vista",
 			"displayOptionsDescription": "Elige qué información ver en las tareas",
 			"taskNumbers": "Número de tarea",
 			"taskNumbersDescription": "Mostrar el ID y el número de las tareas",
@@ -1733,33 +1733,133 @@
 		}
 	},
 	"tasks": {
-		"status": {
-			"label": "Estado",
-			"to-do": "To Do",
-			"in-progress": "En progreso",
-			"in-review": "En revisión",
-			"done": "Hecho",
-			"archived": "Archivado",
-			"planned": "Planeado"
+		"actions": {
+			"archive": "Archivar",
+			"markAsPlanned": "Marcar como planeada",
+			"delete": "Eliminar..."
 		},
-		"priority": {
-			"label": "Prioridad",
-			"no-priority": "Sin prioridad",
-			"low": "Baja",
-			"medium": "Media",
-			"high": "Alta",
-			"urgent": "Urgente"
+		"archive": {
+			"success": "Se han archivado {{count}} tareas"
+		},
+		"assignee": {
+			"label": "Asignado",
+			"unassigned": "Sin asignar"
+		},
+		"backlog": {
+			"addFilter": "Añadir filtro...",
+			"addTask": "Añadir tarea",
+			"filter": "Filtrar",
+			"filters": {
+				"priority": "Prioridad: {{name}}",
+				"assignee": "Asignado: {{name}}",
+				"due": "Vencimiento: {{date}}",
+				"label": "Etiqueta: {{name}}",
+				"dueThisWeek": "Para esta semana",
+				"dueNextWeek": "Para la semana que viene",
+				"noDueDate": "Sin fecha de vencimiento",
+				"team": "Equip: {{name}}"
+			},
+			"moveAll": "Mover todas",
+			"moveAllConfirm": "Vols moure les {{count}} tasques planificades a la primera columna?",
+			"moveAllSuccess": "{{count}} tasques mogudes a la primera columna",
+			"moveAllTooltip": "Mou totes les planificades a la primera columna",
+			"noTasksInSection": "No hay tareas en {{section}}",
+			"noTasksToMove": "No hay tareas planeadas para mover",
+			"pageTitle": "Backlog de {{name}}",
+			"plan": "Planear",
+			"sections": {
+				"planned": "Planeadas",
+				"archived": "Archivadas"
+			},
+			"title": "Backlog"
+		},
+		"board": {
+			"title": "Tasques"
+		},
+		"boardFilters": {
+			"filterBy": "Filtrar por",
+			"allStatuses": "Todos los estados",
+			"allPriorities": "Todas las prioridades",
+			"allAssignees": "Todos los asignados",
+			"allDueDates": "Todas las fechas de vencimiento",
+			"allLabels": "Todas las etiquetas",
+			"selectedCount": "{{count}} selecionadas",
+			"subjects": {
+				"status": "Estado",
+				"priority": "Prioridad",
+				"assignee": "Asignado",
+				"dueDate": "Fecha de vencimiento",
+				"labels": "Etiquetas",
+				"team": "Equip"
+			},
+			"operators": {
+				"isAnyOf": "es alguno de",
+				"includeAnyOf": "incluye alguno de"
+			},
+			"allTeams": "Tots els equips"
 		},
 		"boardSearchPlaceholder": "Buscar tickets...",
-		"view": {
-			"board": "Tablero",
-			"list": "Lista"
+		"bulk": {
+			"selectedCount": "{{count}} seleccionadas",
+			"moveToBacklog": "Mover al backlog",
+			"moveToBacklogSuccess": "Se han movido {{count}} tareas al backlog",
+			"moveToBacklogError": "Error al mover tareas al backlog",
+			"moveToBoard": "Mover al tablero",
+			"moveToBoardSuccess": "Se han movido {{count}} tareas al tablero",
+			"moveToBoardError": "Error al mover tareas al tablero",
+			"delete": "Eliminar tareas",
+			"deleteConfirm": "¿Eliminar {{count}} tareas? Esta acción no puede deshacerse.",
+			"deleteSuccess": "{{count}} tareas eliminadas",
+			"deleteError": "Error al eliminar tareas",
+			"archive": "Archivar tareas",
+			"archiveSuccess": "{{count}} tareas archivadas",
+			"archiveError": "Error al archivar tareas",
+			"updateSuccess": "{{count}} tareas actualizadas",
+			"updateError": "Error al actualizar tareas",
+			"assignTo": "Asignar a",
+			"assignSuccess": "{{count}} tareas asignadas",
+			"assignError": "Error al asignar tareas",
+			"setPriority": "Modificar prioridad",
+			"updatePriorityError": "Error al actualizar la prioridad",
+			"addLabel": "Añadir etiqueta",
+			"addLabelSuccess": "Etiqueta añadida a {{count}} tareas",
+			"addLabelError": "Error al añadir etiqueta",
+			"setDueDate": "Modificar fecha de vencimiento",
+			"updateDueDateError": "Error al actualizar fecha de vencimiento",
+			"actions": "Actiones",
+			"searchActions": "Buscar acciones...",
+			"noActionsFound": "No se han encontrado acciones.",
+			"changeStatus": "Cambiar estado"
+		},
+		"calendar": {
+			"dayTasksAriaLabel": "Mostra totes les tasques del {{date}}",
+			"moreTasks": "+{{count}} més",
+			"nextMonth": "Mes següent",
+			"noTasks": "No hi ha tasques planificades",
+			"noTasksSubtitle": "Posa’ls data d’inici, de venciment o totes dues perquè apareguin al calendari.",
+			"pageTitle": "{{name}} – Calendari",
+			"previousMonth": "Mes anterior",
+			"taskAriaLabel": "{{title}}, {{range}}: obre la tasca",
+			"title": "Calendari",
+			"today": "Avui",
+			"loadError": "No s’han pogut carregar les tasques."
 		},
 		"common": {
 			"selectTask": "Seleccionar tarea",
 			"loadingTask": "Cargando tarea...",
 			"taskNotFound": "Tarea no encontrada",
 			"taskNotFoundDescription": "La tarea que buscas no existe o ha sido eliminada."
+		},
+		"contextMenu": {
+			"copyLink": "Copiar enlace",
+			"copyLinkSuccess": "¡Enlace a la tarea copiado!"
+		},
+		"delete": {
+			"title": "¿Eliminar tarea?",
+			"description": "Esto eliminará permanentemente la tarea y sus datos. Esta acción no puede deshacerse.",
+			"action": "Eliminar tarea",
+			"success": "Tarea eliminada correctamente",
+			"error": "Error al eliminar la tarea"
 		},
 		"detail": {
 			"subtaskOf": "Subtarea de",
@@ -1867,49 +1967,96 @@
 				}
 			}
 		},
+		"dueDate": {
+			"label": "Fecha de vencimiento",
+			"clear": "Eliminar fecha",
+			"updateSuccess": "Fecha de vencimiento actualizada correctamente",
+			"updateError": "Error al actualizar fecha de vencimiento",
+			"clearSuccess": "Fecha de vencimiento eliminada correctamente",
+			"clearError": "Error al eliminar fecha de vencimiento"
+		},
+		"editor": {
+			"table": {
+				"addColumnBefore": "Insertar columna a la izquierda",
+				"addColumnAfter": "Insertar columna a la derecha",
+				"deleteColumn": "Eliminar columna",
+				"addRowBefore": "Insertar fila encima",
+				"addRowAfter": "Insertar fila debajo",
+				"deleteRow": "Eliminar fila",
+				"deleteTable": "Eliminar tabla"
+			}
+		},
 		"entity": {
 			"task": "Tarea"
 		},
-		"relations": {
-			"title": "Relaciones",
-			"tasksInProject": "Tareas en el proyecto",
-			"linkError": "Error al vincular tarea",
-			"empty": "No hay tareas relacionadas",
-			"searchPlaceholder": "Buscar tareas para vincular...",
+		"epics": {
+			"title": "Épicas",
+			"none": "Sin épica",
+			"count": "{{count}} épicas",
+			"allEpics": "Todas las épicas",
+			"emptyProject": "Este proyecto todavía no tiene épicas",
+			"updateError": "No se han podido cambiar las épicas de la tarea"
+		},
+		"gantt": {
+			"pageTitle": "{{name}} – Gantt",
+			"title": "Diagrama de Gantt",
+			"searchPlaceholder": "Cerca tasques planificades…",
+			"hideTasks": "Esconder tareas",
+			"showTasks": "Mostrar tareas",
+			"noTasks": "No hay tareas planificadas",
+			"noTasksSubtitle": "Añade una fecha de comienzo, fecha de vencimiento o ambas para a las tareas para mostrarlas en la línea temporal del proyecto.",
 			"noTasksFound": "No se han encontrado tareas",
-			"openTask": "Abrir tarea",
-			"removeRelation": "Eliminar relación",
-			"related": "Relacionadas",
-			"blocks": "Bloquea",
-			"selectTask": "Selecciona una tarea para vincular",
-			"types": {
-				"blocks": "bloquea",
-				"related": "relacionada con",
-				"blocked_by": "bloqueada por"
+			"noTasksMatch": "Ninguna tarea encaja con \"{{query}}\"",
+			"taskHeader": "Tarea",
+			"updateDatesError": "Error al actualizar las fechas de la tarea",
+			"resizeStart": "Cambiar la fecha de comienzo",
+			"resizeDue": "Cambiar la fecha de vencimiento",
+			"taskAriaLabel": "{{title}}: abrir o arrastrar para mover",
+			"branchSpan": "Tramo de toda la rama",
+			"zoomLabel": "Escala temporal",
+			"zoomDay": "Día",
+			"zoomWeek": "Semana",
+			"zoomMonth": "Mes",
+			"zoomQuarter": "Trimestre",
+			"jumpToday": "Hoy",
+			"previousRange": "Retroceder",
+			"nextRange": "Avanzar",
+			"quarterShort": "T{{n}}",
+			"dependencyBlocks": "{{source}} bloquea a {{target}}"
+		},
+		"group": {
+			"label": "Agrupar",
+			"by": "Agrupar per",
+			"noTeam": "Sense equip",
+			"boardHint": "El tauler ja agrupa per estat, en columnes",
+			"fields": {
+				"status": "Estat",
+				"team": "Equip",
+				"tree": "Jerarquía"
 			}
 		},
-		"subtasks": {
-			"title": "Sub-tareas",
-			"inputPlaceholder": "Título de la subtarea...",
-			"addAction": "Añadir",
-			"empty": "No hay subtareas aún",
-			"createError": "Error al crear subtarea",
-			"deleteSuccess": "Tarea eliminada correctamente",
-			"deleteError": "Error al eliminar tarea",
-			"deleteDialogTitle": "¿Eliminar tarea?",
-			"deleteDialogDescription": "Esto eliminará permanentemente la tarea y sus datos. Esta acción no puede deshacerse.",
-			"deleteAction": "Eliminar tarea",
-			"completeAria": "Marcar subtarea como completada"
+		"kanban": {
+			"addTask": "Añadir tarea"
 		},
-		"properties": {
-			"title": "Propiedades",
-			"labels": "Etiquetas",
-			"copyTaskLink": "Copiar enlace a tarea",
-			"copyTaskBranch": "Copiar la rama de la tarea",
-			"start": "Comenzar",
-			"startDate": "Fecha de inicio",
-			"noDate": "Sin fecha",
-			"customFields": "Campos personalizados"
+		"labels": {
+			"label": "Etiquetas",
+			"empty": "No hay etiquetas disponibles"
+		},
+		"listView": {
+			"addTask": "Añadir tarea",
+			"archiveAllTooltip": "Archivar todas las tareas completadas",
+			"noTasks": "No hay tareas"
+		},
+		"move": {
+			"title": "Mover tarea",
+			"projectLabel": "Proyecto de destino",
+			"projectPlaceholder": "Selecciona un proyecto",
+			"statusLabel": "Estado de destino",
+			"statusHintKeep": "El flujo de trabajo de este proyecto ya admite el estado actual.",
+			"statusHintAdjust": "Elige el estado que se usará en el proyecto de destino.",
+			"action": "Mover tarea",
+			"success": "Tarea movida correctamente",
+			"error": "Error al mover la tarea"
 		},
 		"popover": {
 			"assignee": {
@@ -1960,31 +2107,51 @@
 				}
 			}
 		},
-		"backlog": {
-			"pageTitle": "Backlog de {{name}}",
-			"noTasksToMove": "No hay tareas planeadas para mover",
-			"moveAllConfirm": "Mover las {{count}} tareas planeadas a To Do?",
-			"moveAllSuccess": "{{count}} tareas movidas correctamente a To Do",
-			"plan": "Planear",
-			"moveAllTooltip": "Mover todas las planeadas a To Do",
-			"moveAll": "Mover todas",
-			"addTask": "Añadir tarea",
-			"filter": "Filtrar",
-			"addFilter": "Añadir filtro...",
-			"sections": {
-				"planned": "Planeadas",
-				"archived": "Archivadas"
-			},
-			"noTasksInSection": "No hay tareas en {{section}}",
-			"filters": {
-				"priority": "Prioridad: {{name}}",
-				"assignee": "Asignado: {{name}}",
-				"due": "Vencimiento: {{date}}",
-				"label": "Etiqueta: {{name}}",
-				"dueThisWeek": "Para esta semana",
-				"dueNextWeek": "Para la semana que viene",
-				"noDueDate": "Sin fecha de vencimiento",
-				"team": "Equip: {{name}}"
+		"pr": {
+			"merged": "Mergeada",
+			"draft": "Borrador",
+			"open": "Abierta",
+			"label": "Pull Request",
+			"count_one": "{{count}} PR",
+			"count_other": "{{count}} PRs"
+		},
+		"priority": {
+			"label": "Prioridad",
+			"no-priority": "Sin prioridad",
+			"low": "Baja",
+			"medium": "Media",
+			"high": "Alta",
+			"urgent": "Urgente"
+		},
+		"projectSize": {
+			"warning": "Este proyecto tiene {{count}} tareas. Las vistas las cargan todas, así que irán lentas. Filtra para acotar la lista."
+		},
+		"properties": {
+			"title": "Propiedades",
+			"labels": "Etiquetas",
+			"copyTaskLink": "Copiar enlace a tarea",
+			"copyTaskBranch": "Copiar la rama de la tarea",
+			"start": "Comenzar",
+			"startDate": "Fecha de inicio",
+			"noDate": "Sin fecha",
+			"customFields": "Campos personalizados"
+		},
+		"relations": {
+			"title": "Relaciones",
+			"tasksInProject": "Tareas en el proyecto",
+			"linkError": "Error al vincular tarea",
+			"empty": "No hay tareas relacionadas",
+			"searchPlaceholder": "Buscar tareas para vincular...",
+			"noTasksFound": "No se han encontrado tareas",
+			"openTask": "Abrir tarea",
+			"removeRelation": "Eliminar relación",
+			"related": "Relacionadas",
+			"blocks": "Bloquea",
+			"selectTask": "Selecciona una tarea para vincular",
+			"types": {
+				"blocks": "bloquea",
+				"related": "relacionada con",
+				"blocked_by": "bloqueada por"
 			}
 		},
 		"sort": {
@@ -2002,214 +2169,27 @@
 				"number": "Número de tarea"
 			}
 		},
-		"group": {
-			"label": "Agrupar",
-			"by": "Agrupar per",
-			"noTeam": "Sense equip",
-			"boardHint": "El tauler ja agrupa per estat, en columnes",
-			"fields": {
-				"status": "Estat",
-				"team": "Equip",
-				"tree": "Jerarquía"
-			}
+		"status": {
+			"label": "Estado",
+			"to-do": "To Do",
+			"in-progress": "En progreso",
+			"in-review": "En revisión",
+			"done": "Hecho",
+			"archived": "Archivado",
+			"planned": "Planeado"
 		},
-		"boardFilters": {
-			"filterBy": "Filtrar por",
-			"allStatuses": "Todos los estados",
-			"allPriorities": "Todas las prioridades",
-			"allAssignees": "Todos los asignados",
-			"allDueDates": "Todas las fechas de vencimiento",
-			"allLabels": "Todas las etiquetas",
-			"selectedCount": "{{count}} selecionadas",
-			"subjects": {
-				"status": "Estado",
-				"priority": "Prioridad",
-				"assignee": "Asignado",
-				"dueDate": "Fecha de vencimiento",
-				"labels": "Etiquetas",
-				"team": "Equip"
-			},
-			"operators": {
-				"isAnyOf": "es alguno de",
-				"includeAnyOf": "incluye alguno de"
-			},
-			"allTeams": "Tots els equips"
-		},
-		"gantt": {
-			"pageTitle": "{{name}} – Gantt",
-			"title": "Diagrama de Gantt",
-			"searchPlaceholder": "Buscar tickets planificados...",
-			"hideTasks": "Esconder tareas",
-			"showTasks": "Mostrar tareas",
-			"noTasks": "No hay tareas planificadas",
-			"noTasksSubtitle": "Añade una fecha de comienzo, fecha de vencimiento o ambas para a las tareas para mostrarlas en la línea temporal del proyecto.",
-			"noTasksFound": "No se han encontrado tareas",
-			"noTasksMatch": "Ninguna tarea encaja con \"{{query}}\"",
-			"taskHeader": "Tarea",
-			"updateDatesError": "Error al actualizar las fechas de la tarea",
-			"resizeStart": "Cambiar la fecha de comienzo",
-			"resizeDue": "Cambiar la fecha de vencimiento",
-			"taskAriaLabel": "{{title}}: abrir o arrastrar para mover",
-			"branchSpan": "Tramo de toda la rama",
-			"zoomLabel": "Escala temporal",
-			"zoomDay": "Día",
-			"zoomWeek": "Semana",
-			"zoomMonth": "Mes",
-			"zoomQuarter": "Trimestre",
-			"jumpToday": "Hoy",
-			"previousRange": "Retroceder",
-			"nextRange": "Avanzar",
-			"quarterShort": "T{{n}}",
-			"dependencyBlocks": "{{source}} bloquea a {{target}}"
-		},
-		"delete": {
-			"title": "¿Eliminar tarea?",
-			"description": "Esto eliminará permanentemente la tarea y sus datos. Esta acción no puede deshacerse.",
-			"action": "Eliminar tarea",
-			"success": "Tarea eliminada correctamente",
-			"error": "Error al eliminar la tarea"
-		},
-		"archive": {
-			"success": "Se han archivado {{count}} tareas"
-		},
-		"listView": {
-			"addTask": "Añadir tarea",
-			"archiveAllTooltip": "Archivar todas las tareas completadas",
-			"noTasks": "No hay tareas"
-		},
-		"kanban": {
-			"addTask": "Añadir tarea"
-		},
-		"pr": {
-			"merged": "Mergeada",
-			"draft": "Borrador",
-			"open": "Abierta",
-			"label": "Pull Request",
-			"count_one": "{{count}} PR",
-			"count_other": "{{count}} PRs"
-		},
-		"assignee": {
-			"label": "Asignado",
-			"unassigned": "Sin asignar"
-		},
-		"dueDate": {
-			"label": "Fecha de vencimiento",
-			"clear": "Eliminar fecha",
-			"updateSuccess": "Fecha de vencimiento actualizada correctamente",
-			"updateError": "Error al actualizar fecha de vencimiento",
-			"clearSuccess": "Fecha de vencimiento eliminada correctamente",
-			"clearError": "Error al eliminar fecha de vencimiento"
-		},
-		"labels": {
-			"label": "Etiquetas",
-			"empty": "No hay etiquetas disponibles"
-		},
-		"update": {
-			"success": "Tarea actualizada correctamente",
-			"error": "Error al actualizar tarea"
-		},
-		"contextMenu": {
-			"copyLink": "Copiar enlace",
-			"copyLinkSuccess": "¡Enlace a la tarea copiado!"
-		},
-		"actions": {
-			"archive": "Archivar",
-			"markAsPlanned": "Marcar como planeada",
-			"delete": "Eliminar..."
-		},
-		"bulk": {
-			"selectedCount": "{{count}} seleccionadas",
-			"moveToBacklog": "Mover al backlog",
-			"moveToBacklogSuccess": "Se han movido {{count}} tareas al backlog",
-			"moveToBacklogError": "Error al mover tareas al backlog",
-			"moveToBoard": "Mover al tablero",
-			"moveToBoardSuccess": "Se han movido {{count}} tareas al tablero",
-			"moveToBoardError": "Error al mover tareas al tablero",
-			"delete": "Eliminar tareas",
-			"deleteConfirm": "¿Eliminar {{count}} tareas? Esta acción no puede deshacerse.",
-			"deleteSuccess": "{{count}} tareas eliminadas",
-			"deleteError": "Error al eliminar tareas",
-			"archive": "Archivar tareas",
-			"archiveSuccess": "{{count}} tareas archivadas",
-			"archiveError": "Error al archivar tareas",
-			"updateSuccess": "{{count}} tareas actualizadas",
-			"updateError": "Error al actualizar tareas",
-			"assignTo": "Asignar a",
-			"assignSuccess": "{{count}} tareas asignadas",
-			"assignError": "Error al asignar tareas",
-			"setPriority": "Modificar prioridad",
-			"updatePriorityError": "Error al actualizar la prioridad",
-			"addLabel": "Añadir etiqueta",
-			"addLabelSuccess": "Etiqueta añadida a {{count}} tareas",
-			"addLabelError": "Error al añadir etiqueta",
-			"setDueDate": "Modificar fecha de vencimiento",
-			"updateDueDateError": "Error al actualizar fecha de vencimiento",
-			"actions": "Actiones",
-			"searchActions": "Buscar acciones...",
-			"noActionsFound": "No se han encontrado acciones.",
-			"changeStatus": "Cambiar estado"
-		},
-		"move": {
-			"title": "Mover tarea",
-			"projectLabel": "Proyecto de destino",
-			"projectPlaceholder": "Selecciona un proyecto",
-			"statusLabel": "Estado de destino",
-			"statusHintKeep": "El flujo de trabajo de este proyecto ya admite el estado actual.",
-			"statusHintAdjust": "Elige el estado que se usará en el proyecto de destino.",
-			"action": "Mover tarea",
-			"success": "Tarea movida correctamente",
-			"error": "Error al mover la tarea"
-		},
-		"editor": {
-			"table": {
-				"addColumnBefore": "Insertar columna a la izquierda",
-				"addColumnAfter": "Insertar columna a la derecha",
-				"deleteColumn": "Eliminar columna",
-				"addRowBefore": "Insertar fila encima",
-				"addRowAfter": "Insertar fila debajo",
-				"deleteRow": "Eliminar fila",
-				"deleteTable": "Eliminar tabla"
-			}
-		},
-		"calendar": {
-			"dayTasksAriaLabel": "Show all tasks for {{date}}",
-			"moreTasks": "+{{count}} more",
-			"nextMonth": "Next month",
-			"noTasks": "No scheduled tasks",
-			"noTasksSubtitle": "Add a start date, due date, or both to tasks to place them on the calendar.",
-			"pageTitle": "{{name}} – Calendar",
-			"previousMonth": "Previous month",
-			"taskAriaLabel": "{{title}}, {{range}}: open task",
-			"title": "Calendar",
-			"today": "Today",
-			"loadError": "Failed to load tasks."
-		},
-		"team": {
-			"label": "Equip",
-			"unknown": "Equip desconegut"
-		},
-		"tree": {
-			"title": "Rama",
-			"expand": "Desplegar la rama",
-			"collapse": "Plegar la rama",
-			"detach": "Descolgar",
-			"branchProgress": "Cerradas en esta rama",
-			"branchDates": "Fechas de la rama",
-			"branchTime": "Registrado / estimado",
-			"estimateLabel": "Estimación",
-			"hoursShort": "h",
-			"estimateError": "No se ha podido guardar la estimación",
-			"reparentError": "No se ha podido mover la tarea",
-			"cycleError": "Una tarea no puede colgar de su propia rama",
-			"progressTooltip": "{{done}} de {{total}} subtareas cerradas"
-		},
-		"epics": {
-			"title": "Épicas",
-			"none": "Sin épica",
-			"count": "{{count}} épicas",
-			"allEpics": "Todas las épicas",
-			"emptyProject": "Este proyecto todavía no tiene épicas",
-			"updateError": "No se han podido cambiar las épicas de la tarea"
+		"subtasks": {
+			"title": "Sub-tareas",
+			"inputPlaceholder": "Título de la subtarea...",
+			"addAction": "Añadir",
+			"empty": "No hay subtareas aún",
+			"createError": "Error al crear subtarea",
+			"deleteSuccess": "Tarea eliminada correctamente",
+			"deleteError": "Error al eliminar tarea",
+			"deleteDialogTitle": "¿Eliminar tarea?",
+			"deleteDialogDescription": "Esto eliminará permanentemente la tarea y sus datos. Esta acción no puede deshacerse.",
+			"deleteAction": "Eliminar tarea",
+			"completeAria": "Marcar subtarea como completada"
 		},
 		"table": {
 			"title": "Tabla",
@@ -2288,8 +2268,32 @@
 				"delete": "Borrar esta vista"
 			}
 		},
-		"projectSize": {
-			"warning": "Este proyecto tiene {{count}} tareas. Las vistas las cargan todas, así que irán lentas. Filtra para acotar la lista."
+		"team": {
+			"label": "Equip",
+			"unknown": "Equip desconegut"
+		},
+		"tree": {
+			"title": "Rama",
+			"expand": "Desplegar la rama",
+			"collapse": "Plegar la rama",
+			"detach": "Descolgar",
+			"branchProgress": "Cerradas en esta rama",
+			"branchDates": "Fechas de la rama",
+			"branchTime": "Registrado / estimado",
+			"estimateLabel": "Estimación",
+			"hoursShort": "h",
+			"estimateError": "No se ha podido guardar la estimación",
+			"reparentError": "No se ha podido mover la tarea",
+			"cycleError": "Una tarea no puede colgar de su propia rama",
+			"progressTooltip": "{{done}} de {{total}} subtareas cerradas"
+		},
+		"update": {
+			"success": "Tarea actualizada correctamente",
+			"error": "Error al actualizar tarea"
+		},
+		"view": {
+			"board": "Tablero",
+			"list": "Lista"
 		}
 	},
 	"invitations": {
@@ -2357,8 +2361,8 @@
 			"startDescription": "Escribe algún término para encontrar tareas entre todos los proyectos",
 			"quickSearchesLabel": "Búsqueda rápida:",
 			"suggestionHighPriority": "Alta prioridad",
-			"suggestionBug": "Bugs",
-			"suggestionFeature": "Features",
+			"suggestionBug": "Errors",
+			"suggestionFeature": "Millores",
 			"suggestionInProgress": "En progreso",
 			"suggestionCompleted": "Completadas"
 		},
@@ -2508,6 +2512,7 @@
 			"close": "Close cycle",
 			"start": "Start cycle"
 		},
+		"assignError": "No s’ha pogut moure la tasca a aquest cicle",
 		"burndown": {
 			"actual": "Remaining",
 			"ideal": "Ideal",
@@ -2543,6 +2548,8 @@
 			"title": "Hours per person",
 			"unknownPerson": "Unknown"
 		},
+		"none": "Sense cicle",
+		"noneAvailable": "Aquest projecte encara no té cicles",
 		"pageTitle": "Cycles",
 		"stats": {
 			"completed": "Completed",

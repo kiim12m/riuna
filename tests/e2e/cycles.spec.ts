@@ -112,11 +112,14 @@ test.describe("Ciclos", () => {
       `/dashboard/workspace/${riuna.workspaceId}/project/${riuna.projectId}/cycles`,
     );
 
-    const tasksButton = page.getByRole("button", {
+    // Acotado al control, no a la pagina: «Tareas» tambien rotula la pestaña de
+    // proyecto, asi que buscarlo suelto encontraba dos botones distintos.
+    const unidad = page.getByRole("group", { name: "Unidad del burndown" });
+    const tasksButton = unidad.getByRole("button", {
       name: "Tareas",
       exact: true,
     });
-    const hoursButton = page.getByRole("button", {
+    const hoursButton = unidad.getByRole("button", {
       name: "Horas",
       exact: true,
     });
