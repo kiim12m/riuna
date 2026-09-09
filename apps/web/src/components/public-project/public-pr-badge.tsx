@@ -58,7 +58,7 @@ export function PublicPRBadge({ externalLinks }: PublicPRBadgeProps) {
               e.stopPropagation();
               window.open(pullRequests[0].url, "_blank");
             }}
-            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-[10px] font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-label font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
           >
             {getPRInfo(pullRequests[0]).icon}
             <span>#{pullRequests[0].externalId}</span>
@@ -102,7 +102,7 @@ export function PublicPRBadge({ externalLinks }: PublicPRBadgeProps) {
           <button
             type="button"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-[10px] font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-label font-medium text-muted-foreground hover:bg-muted/50 transition-colors"
           >
             <GitPullRequest className={`h-3 w-3 ${iconColor}`} />
             <span>{t("tasks:pr.count", { count: pullRequests.length })}</span>
@@ -125,7 +125,7 @@ export function PublicPRBadge({ externalLinks }: PublicPRBadgeProps) {
                   onClick={() => window.open(pr.url, "_blank")}
                   className="w-full px-2 py-1.5 text-left hover:bg-muted/50 rounded transition-colors"
                 >
-                  <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-1.5 text-label text-muted-foreground">
                     {prInfo.icon}
                     <span>
                       {repoName}#{pr.externalId}
@@ -134,7 +134,7 @@ export function PublicPRBadge({ externalLinks }: PublicPRBadgeProps) {
                   <p className="text-xs leading-tight line-clamp-2 mt-0.5">
                     {pr.title || t("tasks:pr.label")}
                   </p>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-meta text-muted-foreground">
                     {prInfo.status}
                   </span>
                 </button>

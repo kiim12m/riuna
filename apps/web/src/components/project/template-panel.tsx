@@ -55,7 +55,7 @@ export default function TemplatePanel({ projectId }: { projectId: string }) {
                   })}
                 </p>
               </div>
-              <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
+              <Badge variant="outline" className="px-1.5 py-0 text-label">
                 {t(`settings:projectTemplates.kind.${template.kind}`)}
               </Badge>
               <Button

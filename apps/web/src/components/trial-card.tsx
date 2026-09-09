@@ -82,7 +82,7 @@ export function TrialCard() {
             : `${left} ${left === 1 ? "day" : "days"} left in trial`}
         </span>
       </div>
-      <p className="mt-1 text-[0.7rem] leading-snug opacity-80">
+      <p className="mt-1 text-label leading-snug opacity-80">
         {expired
           ? "Subscribe to keep creating and editing."
           : "Upgrade anytime to keep your workspace after the trial."}

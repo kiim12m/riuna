@@ -173,7 +173,7 @@ function CustomFieldCell({
             <span className="flex items-center gap-1.5">
               <Avatar className="size-4">
                 <AvatarImage src={member.image ?? ""} alt="" />
-                <AvatarFallback className="text-[8px]">
+                <AvatarFallback className="text-label">
                   {member.name.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -198,7 +198,7 @@ function CustomFieldCell({
             >
               <Avatar className="size-5">
                 <AvatarImage src={entry.image ?? ""} alt="" />
-                <AvatarFallback className="text-[9px]">
+                <AvatarFallback className="text-label">
                   {entry.name.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>

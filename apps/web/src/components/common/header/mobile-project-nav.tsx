@@ -65,7 +65,7 @@ export default function MobileProjectNav({
       <PopoverContent align="start" className="w-72 p-2">
         <div className="space-y-3">
           <div className="space-y-1">
-            <p className="px-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+            <p className="px-1 text-label font-medium tracking-wide text-muted-foreground uppercase">
               View
             </p>
             <div className="grid grid-cols-4 gap-1">
@@ -150,7 +150,7 @@ export default function MobileProjectNav({
           </div>
 
           <div className="space-y-1">
-            <p className="px-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+            <p className="px-1 text-label font-medium tracking-wide text-muted-foreground uppercase">
               Projects
             </p>
             <div className="max-h-56 space-y-0.5 overflow-y-auto">

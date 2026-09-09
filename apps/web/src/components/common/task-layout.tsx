@@ -64,7 +64,7 @@ export default function TaskLayout({
                     <SidebarTrigger className="-ml-1 h-7 w-7 cursor-pointer text-foreground/85 hover:text-foreground md:hidden" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="flex items-center gap-2 text-[10px]">
+                    <p className="flex items-center gap-2 text-meta">
                       Toggle sidebar
                       <KbdSequence
                         keys={[

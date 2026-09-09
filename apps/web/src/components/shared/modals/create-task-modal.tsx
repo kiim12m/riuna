@@ -821,7 +821,7 @@ function CreateTaskModal({
                             src={selectedUser?.user?.image ?? ""}
                             alt={selectedUser?.user?.name || ""}
                           />
-                          <AvatarFallback className="text-[10px] font-medium border border-border/30">
+                          <AvatarFallback className="text-label font-medium border border-border/30">
                             {getInitials(selectedUser?.user?.name)}
                           </AvatarFallback>
                         </Avatar>
@@ -848,7 +848,7 @@ function CreateTaskModal({
                           "common:modals.createTask.assignUnassignedTitle",
                         )}
                       >
-                        <span className="text-[10px] font-medium text-muted-foreground">
+                        <span className="text-meta font-medium text-muted-foreground">
                           ?
                         </span>
                       </div>

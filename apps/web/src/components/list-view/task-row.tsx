@@ -311,7 +311,7 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
                             e.stopPropagation();
                             window.open(pullRequests[0].url, "_blank");
                           }}
-                          className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-[10px] font-medium text-muted-foreground"
+                          className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-label font-medium text-muted-foreground"
                         >
                           {getPRInfo(pullRequests[0]).icon}
                           <span>#{pullRequests[0].externalId}</span>
@@ -357,7 +357,7 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
                             <button
                               type="button"
                               onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-[10px] font-medium text-muted-foreground"
+                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-label font-medium text-muted-foreground"
                             >
                               <GitPullRequest
                                 className={`h-3 w-3 ${iconColor}`}
@@ -392,7 +392,7 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
                                     }
                                     className="w-full px-2 py-1.5 text-left hover:bg-muted/50 rounded transition-colors"
                                   >
-                                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                    <div className="flex items-center gap-1.5 text-label text-muted-foreground">
                                       {prInfo.icon}
                                       <span>
                                         {repoName}#{pr.externalId}
@@ -401,7 +401,7 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
                                     <p className="text-xs leading-tight line-clamp-2 mt-0.5">
                                       {pr.title || t("tasks:pr.label")}
                                     </p>
-                                    <span className="text-[10px] text-muted-foreground">
+                                    <span className="text-meta text-muted-foreground">
                                       {prInfo.status}
                                     </span>
                                   </button>
@@ -417,7 +417,7 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
             </div>
 
             {statusColumn && (
-              <div className="flex items-center gap-1 text-[10px] text-muted-foreground flex-shrink-0 rounded border border-border/60 px-1.5 py-0.5 [&_svg]:h-3 [&_svg]:w-3">
+              <div className="flex items-center gap-1 text-label text-muted-foreground flex-shrink-0 rounded border border-border/60 px-1.5 py-0.5 [&_svg]:h-3 [&_svg]:w-3">
                 {getColumnIcon(
                   statusColumn.id,
                   statusColumn.isFinal ?? undefined,
@@ -429,7 +429,7 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
 
             {showDueDates && task.dueDate && (
               <div
-                className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded flex-shrink-0 ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
+                className={`flex items-center gap-1 text-label px-2 py-1 rounded flex-shrink-0 ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
               >
                 {getDueDateStatus(task.dueDate, taskIsCompleted) ===
                   "overdue" && <CalendarX className="w-3 h-3" />}
@@ -460,7 +460,7 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
                     className="w-6 h-6 rounded-full bg-muted border border-border flex items-center justify-center"
                     title={t("tasks:assignee.unassigned")}
                   >
-                    <span className="text-[10px] font-medium text-muted-foreground">
+                    <span className="text-label font-medium text-muted-foreground">
                       ?
                     </span>
                   </div>
