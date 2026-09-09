@@ -12,6 +12,35 @@ export type KeyLabel = {
 };
 
 /**
+ * La agrupacion con la que el servidor calculo de verdad los cubos.
+ *
+ * No siempre es `config.groupBy`: para varios tipos la deriva `resolveWidget`
+ * en `dashboard/widget-config.ts` y **no la guarda en el `config`**. Una
+ * tendencia agrupa siempre por tiempo, pero su `config` no lo dice, asi que
+ * leer `config.groupBy` a secas devolvia `undefined` y todo eje de tendencia se
+ * rotulaba «Desconocido» con los datos correctos debajo.
+ *
+ * Es la misma tabla que el servidor; si alli se anade un tipo, aqui tambien.
+ */
+export function effectiveGroupBy(
+  type: string,
+  config: { groupBy?: WidgetGroupBy },
+): WidgetGroupBy | undefined {
+  switch (type) {
+    case "trend":
+      return "time";
+    case "time":
+      return config.groupBy ?? "assignee";
+    case "epic_progress":
+      return "epic";
+    case "breakdown":
+      return config.groupBy;
+    default:
+      return undefined;
+  }
+}
+
+/**
  * El rotulo de un cubo.
  *
  * Los agregados devuelven claves opacas y la API resuelve solo las que viven en
