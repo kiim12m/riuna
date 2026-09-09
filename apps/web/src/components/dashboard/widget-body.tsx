@@ -20,7 +20,7 @@ import { Progress } from "@/components/ui/progress";
 import { StatTile } from "@/components/ui/stat-tile";
 import type { Widget, WidgetConfig, WidgetPayload } from "@/fetchers/dashboard";
 import { InboxWidget } from "./inbox-widget";
-import { bucketLabel, toHours } from "./widget-labels";
+import { bucketLabel, effectiveGroupBy, toHours } from "./widget-labels";
 import { WidgetTaskRow } from "./widget-task-row";
 
 /**
@@ -44,8 +44,9 @@ export function WidgetBody({
   const config = widget.config as WidgetConfig;
   const buckets = data.buckets ?? [];
 
+  const groupBy = effectiveGroupBy(widget.type, config);
   const label = (key: string | null) =>
-    bucketLabel(key, config.groupBy, data.labels, t, i18n.language);
+    bucketLabel(key, groupBy, data.labels, t, i18n.language);
 
   const isHours = widget.type === "time";
   const format = (value: number) =>
