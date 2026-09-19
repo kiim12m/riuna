@@ -143,10 +143,10 @@ function InvitationsPage() {
       <Layout>
         <Layout.Header>
           <div className="flex items-center gap-1 w-full">
-            <SidebarTrigger className="-ml-1 h-6 w-6" />
+            <SidebarTrigger className="-ml-1 h-6 w-6 md:hidden" />
             <Separator
               orientation="vertical"
-              className="mx-1.5 data-[orientation=vertical]:h-2.5"
+              className="mx-1.5 data-[orientation=vertical]:h-2.5 md:hidden"
             />
             <h1 className="text-xs text-card-foreground">
               {t("invitations:pendingInvitations")}

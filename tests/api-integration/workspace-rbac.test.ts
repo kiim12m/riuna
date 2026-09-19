@@ -8,6 +8,7 @@ import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 type CreateTaskBody = {
@@ -25,6 +26,7 @@ async function seedTask(
   const [task] = await db
     .insert(schema.taskTable)
     .values({
+      ...taskTreeValues(),
       projectId,
       title: "Seeded task",
       description: "Existing",

@@ -7,11 +7,11 @@ import type {
   UserBroadcast,
 } from "./broadcast-adapter";
 
-const CHANNEL_PREFIX = "kaneo:ws:";
+const CHANNEL_PREFIX = "riuna:ws:";
 const CHANNEL_SUFFIX = ":broadcast";
 const CHANNEL_PATTERN = `${CHANNEL_PREFIX}*${CHANNEL_SUFFIX}`;
 
-const USER_CHANNEL_PREFIX = "kaneo:ws-user:";
+const USER_CHANNEL_PREFIX = "riuna:ws-user:";
 const USER_CHANNEL_PATTERN = `${USER_CHANNEL_PREFIX}*${CHANNEL_SUFFIX}`;
 
 const broadcastMessageSchema = v.object({
@@ -22,6 +22,12 @@ const broadcastMessageSchema = v.object({
     taskId: v.optional(v.string()),
     sourceTaskId: v.optional(v.string()),
     targetTaskId: v.optional(v.string()),
+    // Reparentar cambia el agregado de los dos padres, no solo el de la tarea
+    // movida. Ojo: este esquema es un `v.object`, asi que **descarta** las
+    // claves que no declare. Anadir un campo al mensaje sin anadirlo aqui
+    // funciona en instancia unica y se pierde en cuanto hay Redis.
+    oldParentId: v.optional(v.nullable(v.string())),
+    newParentId: v.optional(v.nullable(v.string())),
   }),
   excludeInitiatorId: v.optional(v.string()),
 });

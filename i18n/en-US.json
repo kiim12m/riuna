@@ -1,8 +1,9 @@
 {
 	"common": {
-		"appName": "Kaneo",
+		"appName": "Riuna",
 		"actions": {
 			"cancel": "Cancel",
+			"save": "Save",
 			"close": "Close",
 			"clearAll": "Clear all",
 			"delete": "Delete",
@@ -11,7 +12,14 @@
 			"remove": "Remove",
 			"reset": "Reset",
 			"filter": "Filter",
-			"clearAllFilters": "Clear all filters"
+			"clearAllFilters": "Clear all filters",
+			"previous": "Previous",
+			"next": "Next",
+			"edit": "Edit"
+		},
+		"boolean": {
+			"yes": "Yes",
+			"no": "No"
 		},
 		"a11y": {
 			"toggleSidebar": "Toggle sidebar"
@@ -100,7 +108,7 @@
 				"errorToast": "Failed to create project"
 			},
 			"createWorkspace": {
-				"breadcrumbKaneo": "KANEO",
+				"breadcrumbAppName": "RIUNA",
 				"title": "Create a new workspace",
 				"description": "Create a new workspace by providing a name for your workspace.",
 				"namePlaceholder": "Workspace name",
@@ -195,7 +203,9 @@
 			"emailPlaceholder": "me@example.com",
 			"passwordPlaceholder": "••••••••",
 			"showPassword": "Show password",
-			"hidePassword": "Hide password"
+			"hidePassword": "Hide password",
+			"identifier": "Email or username",
+			"identifierPlaceholder": "me@example.com or myusername"
 		},
 		"checkEmail": {
 			"pageTitle": "Check Your Email",
@@ -219,7 +229,7 @@
 			"toggleMessage": "Already have an account?",
 			"toggleLink": "Sign in",
 			"instanceStatusError": "Couldn't reach the server. Please retry in a moment.",
-			"instanceAdminTitle": "Set up your Kaneo instance",
+			"instanceAdminTitle": "Set up your Riuna instance",
 			"instanceAdminSubtitle": "This account becomes the instance administrator with full access."
 		},
 		"verifyOtp": {
@@ -277,7 +287,7 @@
 			"workspaceLabel": "Workspace: {{workspaceName}}",
 			"joinWorkspace": "Join {{workspaceName}}",
 			"inviteBodySignedIn": "<inviter>{{inviterName}}</inviter> has invited you to join their workspace.",
-			"inviteBodySignedOut": "<inviter>{{inviterName}}</inviter> has invited you to join their workspace on Kaneo.",
+			"inviteBodySignedOut": "<inviter>{{inviterName}}</inviter> has invited you to join their workspace on Riuna.",
 			"createAccountOrSignIn": "Create an account to accept this invitation, or sign in if you already have one.",
 			"createAccount": "Create Account",
 			"accepting": "Accepting...",
@@ -293,7 +303,7 @@
 			}
 		},
 		"onboarding": {
-			"pageTitle": "Welcome to Kaneo",
+			"pageTitle": "Welcome to Riuna",
 			"workspacePageTitle": "Create Workspace",
 			"createWorkspaceTitle": "Create workspace",
 			"createWorkspaceSubtitle": "Set up your workspace to start managing projects",
@@ -385,7 +395,7 @@
 		"notificationsPage": {
 			"pageTitle": "Notifications",
 			"title": "Notifications",
-			"subtitle": "Choose how Kaneo delivers your account notifications and which channels to use.",
+			"subtitle": "Choose how Riuna delivers your account notifications and which channels to use.",
 			"statusConnected": "Connected",
 			"statusPaused": "Paused",
 			"emailTitle": "Email",
@@ -418,10 +428,10 @@
 			"webhookDescription": "Send account notifications to your own endpoint as JSON.",
 			"endpointUrl": "Endpoint URL",
 			"signingSecret": "Signing secret",
-			"webhookUrlPlaceholder": "https://example.com/webhooks/kaneo",
+			"webhookUrlPlaceholder": "https://example.com/webhooks/riuna",
 			"webhookSecretPlaceholder": "Optional shared secret",
 			"webhookSecretHintConfigured": "A signing secret is already configured ({{masked}}). Enter a new one to replace it.",
-			"webhookSecretHintOptional": "Optional. Kaneo signs the request body when a secret is set.",
+			"webhookSecretHintOptional": "Optional. Riuna signs the request body when a secret is set.",
 			"connectWebhook": "Connect webhook",
 			"workspaceRulesTitle": "Workspace delivery rules",
 			"workspaceRulesDescription": "Reuse your global channels, then decide which workspaces and projects are allowed to send account notifications.",
@@ -486,7 +496,7 @@
 		},
 		"preferencesPage": {
 			"title": "Preferences",
-			"subtitle": "Customize your Kaneo experience.",
+			"subtitle": "Customize your Riuna experience.",
 			"appearanceTitle": "Appearance",
 			"appearanceSubtitle": "Visual settings and layout preferences.",
 			"theme": "Theme",
@@ -512,6 +522,8 @@
 			"gantt": "Gantt",
 			"sidebarDefault": "Sidebar Default",
 			"sidebarDefaultDescription": "Keep sidebar expanded on startup",
+			"density": "Compact density",
+			"densityDescription": "Tighten spacing in task-heavy views",
 			"displayOptions": "Display options",
 			"displayOptionsDescription": "Choose which information to show in task views",
 			"taskNumbers": "Task Numbers",
@@ -530,7 +542,7 @@
 			"title": "Developer Settings",
 			"subtitle": "Manage your API keys and developer resources.",
 			"apiKeysCardTitle": "API Keys",
-			"apiKeysCardDescription": "Create and manage API keys for programmatic access to Kaneo.",
+			"apiKeysCardDescription": "Create and manage API keys for programmatic access to Riuna.",
 			"createApiKey": "Create API Key",
 			"unnamedKey": "Unnamed Key"
 		},
@@ -569,7 +581,7 @@
 			},
 			"createDialog": {
 				"title": "Create API Key",
-				"description": "Create a new API key to access the Kaneo API programmatically.",
+				"description": "Create a new API key to access the Riuna API programmatically.",
 				"nameLabel": "Name",
 				"namePlaceholder": "My API Key",
 				"nameDescription": "A descriptive name for this API key",
@@ -633,6 +645,16 @@
 				"transferring": "Transferring…",
 				"confirm": "Transfer ownership"
 			}
+		},
+		"workspaceTasksExport": {
+			"title": "Export tasks to Excel",
+			"subtitle": "Download every task in this workspace as the SERVITEC board spreadsheet.",
+			"spreadsheet": "Task board (.xlsx)",
+			"spreadsheetDescription": "One sheet with every task across all projects, including status, dates and comments.",
+			"exportButton": "Export",
+			"exporting": "Exporting tasks...",
+			"exportSuccess": "Tasks exported successfully",
+			"exportError": "Could not export tasks"
 		},
 		"workspaceRoles": {
 			"pageTitle": "Roles",
@@ -770,6 +792,34 @@
 				"title": "Delete role",
 				"description": "This will permanently delete the role \"{{role}}\". Members assigned to this role will lose its permissions."
 			}
+		},
+		"workspaceTeams": {
+			"title": "Teams",
+			"subtitle": "Group people into departments and assign whole teams to tasks.",
+			"cardDescription": "A task can be assigned to a team as well as to a person.",
+			"empty": "No teams yet. Create one to start assigning work to a whole department.",
+			"createTeam": "Create Team",
+			"createDescription": "Name the department or group.",
+			"createSuccess": "Team created",
+			"createError": "Failed to create team",
+			"name": "Name",
+			"namePlaceholder": "Design",
+			"rename": "Rename team",
+			"save": "Save",
+			"updateSuccess": "Team updated",
+			"updateError": "Failed to update team",
+			"delete": "Delete team",
+			"deleteTitle": "Delete team?",
+			"deleteDescription": "Tasks assigned to this team keep their individual assignee but lose the team.",
+			"deleteSuccess": "Team deleted",
+			"deleteError": "Failed to delete team",
+			"manageMembers": "Members",
+			"membersTitle": "Team members",
+			"noMembers": "This team has no members yet.",
+			"addMember": "Add a member",
+			"addMemberError": "Failed to add member",
+			"removeMember": "Remove from team",
+			"removeMemberError": "Failed to remove member"
 		},
 		"workspaceLabels": {
 			"pageTitle": "Label Settings",
@@ -923,7 +973,7 @@
 				"removeError": "Failed to remove GitHub integration",
 				"issuesImported": "Issues imported successfully",
 				"importError": "Failed to import issues",
-				"commentOnEnabled": "Kaneo will comment with a task link on new issues",
+				"commentOnEnabled": "Riuna will comment with a task link on new issues",
 				"commentOnDisabled": "Task link comments on new issues are turned off",
 				"settingsUpdateError": "Failed to update GitHub integration"
 			},
@@ -934,8 +984,8 @@
 			"badgeNotConnected": "Not Connected",
 			"repository": "Repository",
 			"repositoryHint": "Connected GitHub repository",
-			"commentTaskLinkTitle": "Comment Kaneo link on new issues",
-			"commentTaskLinkHint": "When enabled, Kaneo posts a comment on each new GitHub issue with a link to the task.",
+			"commentTaskLinkTitle": "Comment Riuna link on new issues",
+			"commentTaskLinkHint": "When enabled, Riuna posts a comment on each new GitHub issue with a link to the task.",
 			"appStatusTitle": "GitHub App Status",
 			"appStatusHint": "Installation and permissions status",
 			"statusProperlyConfigured": "Properly configured",
@@ -988,7 +1038,7 @@
 				"removeError": "Failed to remove Gitea integration",
 				"issuesImported": "Issues imported successfully",
 				"importError": "Failed to import issues",
-				"commentOnEnabled": "Kaneo will comment with a task link on new issues",
+				"commentOnEnabled": "Riuna will comment with a task link on new issues",
 				"commentOnDisabled": "Task link comments on new issues are turned off",
 				"settingsUpdateError": "Failed to update Gitea integration",
 				"secretCopied": "Copied",
@@ -1004,8 +1054,8 @@
 			"badgeNotConnected": "Not connected",
 			"repository": "Repository",
 			"repositoryHint": "Linked Gitea repository",
-			"commentTaskLinkTitle": "Comment Kaneo link on new issues",
-			"commentTaskLinkHint": "When enabled, Kaneo posts a comment on each new issue with a link to the task.",
+			"commentTaskLinkTitle": "Comment Riuna link on new issues",
+			"commentTaskLinkHint": "When enabled, Riuna posts a comment on each new issue with a link to the task.",
 			"webhookTitle": "Webhook",
 			"webhookHint": "In your Gitea repository, add a webhook with this URL and secret. Enable push, pull request, issues, issue comments, and create (for labels).",
 			"webhookSecretLabel": "Secret (must match the webhook secret in Gitea)",
@@ -1129,15 +1179,15 @@
 				"removeError": "Failed to remove generic webhook integration"
 			},
 			"connectionTitle": "Outgoing webhook connection",
-			"connectionHint": "Send task events to your own endpoint as JSON. A signed X-Kaneo-Signature header is included when a secret is configured.",
+			"connectionHint": "Send task events to your own endpoint as JSON. A signed X-Riuna-Signature header is included when a secret is configured.",
 			"connected": "Connected",
 			"paused": "Paused",
 			"webhookLabel": "Endpoint URL",
-			"webhookPlaceholder": "https://example.com/webhooks/kaneo",
-			"webhookHint": "Kaneo sends POST requests with a JSON payload for each enabled event.",
+			"webhookPlaceholder": "https://example.com/webhooks/riuna",
+			"webhookHint": "Riuna sends POST requests with a JSON payload for each enabled event.",
 			"secretLabel": "Signing secret",
 			"secretPlaceholder": "Optional shared secret",
-			"secretHint": "Optional. If provided, Kaneo signs the request body and sends the hex digest in the X-Kaneo-Signature header.",
+			"secretHint": "Optional. If provided, Riuna signs the request body and sends the hex digest in the X-Riuna-Signature header.",
 			"secretHintConfigured": "A signing secret is already configured ({{secret}}). Enter a new one to replace it.",
 			"eventsTitle": "Event notifications",
 			"eventsHint": "Choose which project changes should trigger outgoing webhooks.",
@@ -1191,7 +1241,7 @@
 			"threadIdHint": "Optional. Use this for forum topics inside Telegram groups.",
 			"chatLabelLabel": "Chat label",
 			"chatLabelPlaceholder": "Engineering Updates",
-			"chatLabelHint": "Optional label for your reference inside Kaneo.",
+			"chatLabelHint": "Optional label for your reference inside Riuna.",
 			"eventsTitle": "Event notifications",
 			"eventsHint": "Choose which project changes should post to Telegram.",
 			"events": {
@@ -1226,23 +1276,63 @@
 			"relativeDaysAgo": "{{count}}d ago"
 		},
 		"tasksImportExport": {
-			"exportTasks": "Export Tasks",
-			"importTasks": "Import Tasks",
-			"dialogTitle": "Import Tasks",
-			"dialogDescription": "Upload a JSON file containing tasks to import into this project.",
-			"expectedFormat": "Expected format:",
-			"dropHint": "Drag and drop your JSON file here",
-			"selectFile": "Select File",
-			"exporting": "Exporting tasks...",
-			"exportSuccess": "Tasks exported successfully",
+			"analyzeError": "The file could not be read",
+			"check": "Check",
+			"checkResult": "{{created}} will be created, {{updated}} updated, {{failed}} with errors.",
+			"dialogDescription": "Upload a CSV or Excel file. The first row must name the columns.",
+			"dialogTitle": "Import tasks",
+			"dropHint": "Drag and drop your CSV or Excel file here",
+			"existingField": "Existing field",
+			"exportCsv": "Export to CSV",
 			"exportError": "Failed to export tasks",
-			"importing": "Importing tasks...",
-			"importSuccess": "Imported {{count}} tasks successfully",
-			"importPartialError": "Failed to import {{count}} tasks",
+			"exportJson": "Export JSON backup",
+			"exportSuccess": "Tasks exported successfully",
+			"exportXlsx": "Export to Excel",
+			"exporting": "Exporting tasks...",
+			"field": {
+				"assignee": "Assignee",
+				"assignees": "Assignees",
+				"description": "Description",
+				"descriptionHtml": "Description (HTML)",
+				"dueDate": "Due date",
+				"epics": "Epics",
+				"estimateHours": "Estimate (h)",
+				"id": "ID",
+				"labels": "Labels",
+				"outline": "Outline",
+				"priority": "Priority",
+				"reference": "Reference",
+				"startDate": "Start date",
+				"status": "Status",
+				"team": "Team",
+				"title": "Title"
+			},
 			"importError": "Failed to import tasks",
-			"invalidFormat": "Invalid import file format",
+			"importPartialError": "Failed to import {{count}} rows",
+			"importSuccess": "{{created}} tasks created and {{updated}} updated",
+			"importTasks": "Import Tasks",
 			"noFileDropped": "No file was dropped",
-			"notJsonFile": "Please upload a JSON file"
+			"noOutline": "The file has no outline column, so the hierarchy will not be touched.",
+			"outlineIssues": "{{count}} rows have an outline problem and will not change parent.",
+			"outlineSummary": "{{roots}} root tasks, {{depth}} levels deep.",
+			"selectFile": "Select file",
+			"sourceHint": "Reimporting under the same source name updates the rows it created instead of duplicating them.",
+			"sourceLabel": "Source name",
+			"summary": "{{rows}} rows: {{matched}} already exist, {{fresh}} are new.",
+			"targetCustom": "Custom field",
+			"targetIgnore": "Do not import",
+			"type": {
+				"checkbox": "Checkbox",
+				"currency": "Currency",
+				"date": "Date",
+				"multi_select": "Multi-select",
+				"number": "Number",
+				"select": "Select",
+				"text": "Text",
+				"url": "URL",
+				"user": "User"
+			},
+			"unnamedColumn": "(unnamed column)"
 		},
 		"workflowEditor": {
 			"loading": "Loading...",
@@ -1269,6 +1359,83 @@
 			"merged": "Merged",
 			"draft": "Draft",
 			"open": "Open"
+		},
+		"projectTree": {
+			"title": "Hierarchy",
+			"description": "How the task tree behaves in this project: how deep it may go, and whether closing or archiving a task carries its branch along.",
+			"cascadeCloseLabel": "Closing cascades down",
+			"cascadeCloseHint": "Moving a task to a done column moves every task below it too.",
+			"cascadeArchiveLabel": "Archiving cascades down",
+			"cascadeArchiveHint": "Archiving a task archives every task below it too.",
+			"depthLabel": "Depth limit",
+			"depthHint": "How many levels a branch may have. Past five, indentation eats the list.",
+			"updateError": "Failed to update the hierarchy settings"
+		},
+		"projectEpics": {
+			"title": "Epics",
+			"description": "Epics cut across the project: they group tasks from any branch and any column.",
+			"namePlaceholder": "Epic name",
+			"addAction": "Add",
+			"empty": "No epics yet",
+			"archiveAction": "Archive epic",
+			"unarchiveAction": "Restore epic",
+			"deleteAction": "Delete epic",
+			"createError": "Failed to create the epic",
+			"updateError": "Failed to update the epic",
+			"deleteError": "Failed to delete the epic"
+		},
+		"projectRecurrences": {
+			"title": "Recurring tasks",
+			"description": "Tasks that Riuna creates on a schedule. Useful for weekly reports, monthly reviews and anything that comes back.",
+			"taskTitle": "Task title",
+			"taskTitlePlaceholder": "Weekly report",
+			"frequency": "Repeats",
+			"frequencies": {
+				"daily": "Daily",
+				"weekly": "Weekly",
+				"monthly": "Monthly"
+			},
+			"interval": "Every",
+			"dayOfMonth": "Day",
+			"weekdays": "Days of the week",
+			"weekdayShort": {
+				"0": "Sun",
+				"1": "Mon",
+				"2": "Tue",
+				"3": "Wed",
+				"4": "Thu",
+				"5": "Fri",
+				"6": "Sat"
+			},
+			"add": "Add recurring task",
+			"pause": "Pause",
+			"resume": "Resume",
+			"everyDays_one": "Every day",
+			"everyDays_other": "Every {{count}} days",
+			"everyWeeks_one": "Every week",
+			"everyWeeks_other": "Every {{count}} weeks",
+			"everyMonths_one": "Every month on day {{day}}",
+			"everyMonths_other": "Every {{count}} months on day {{day}}",
+			"generated_one": "{{count}} task created",
+			"generated_other": "{{count}} tasks created"
+		},
+		"projectTemplates": {
+			"title": "Templates",
+			"description": "Save a project or a task with everything under it, and deploy it again wherever you need. Templates belong to the workspace, so they work across projects.",
+			"kind": {
+				"project": "Project",
+				"task": "Tree"
+			},
+			"name": "Template name",
+			"namePlaceholder": "Name for the new template",
+			"saveProject": "Save this project as a template",
+			"saveTask": "Save as template",
+			"apply": "Use",
+			"applyError": "The template could not be applied",
+			"applied_one": "{{count}} task created",
+			"applied_other": "{{count}} tasks created",
+			"taskCount_one": "{{count}} task",
+			"taskCount_other": "{{count}} tasks"
 		}
 	},
 	"navigation": {
@@ -1300,7 +1467,9 @@
 			"members": "Members",
 			"invitations": "Invitations",
 			"more": "More",
-			"backToBoard": "Back to board"
+			"backToBoard": "Back to board",
+			"home": "Home",
+			"goals": "Goals"
 		},
 		"projectList": {
 			"viewProject": "View Project",
@@ -1446,6 +1615,12 @@
 	},
 	"activity": {
 		"assignedToSelf": "assigned the task to themselves",
+		"assignedToTeam": "assigned the task to the {{name}} team",
+		"nestedUnderTask": "nested the task under another one",
+		"promotedToRoot": "moved the task out to the top level",
+		"epicsUpdated": "updated the task's epics",
+		"epicsCleared": "removed the task from its epics",
+		"teamUnassigned": "removed the task from its team",
 		"unassigned": "unassigned the task",
 		"assignedTo": "assigned the task to {{name}}",
 		"changedStatus": "changed status from {{from}} to {{to}}",
@@ -1558,33 +1733,133 @@
 		}
 	},
 	"tasks": {
-		"status": {
-			"label": "Status",
-			"to-do": "To Do",
-			"in-progress": "In Progress",
-			"in-review": "In Review",
-			"done": "Done",
-			"archived": "Archived",
-			"planned": "Planned"
+		"actions": {
+			"archive": "Archive",
+			"markAsPlanned": "Mark as planned",
+			"delete": "Delete..."
 		},
-		"priority": {
-			"label": "Priority",
-			"no-priority": "No priority",
-			"low": "Low",
-			"medium": "Medium",
-			"high": "High",
-			"urgent": "Urgent"
+		"archive": {
+			"success": "Archived {{count}} tasks"
+		},
+		"assignee": {
+			"label": "Assignee",
+			"unassigned": "Unassigned"
+		},
+		"backlog": {
+			"addFilter": "Add filter...",
+			"addTask": "Add task",
+			"filter": "Filter",
+			"filters": {
+				"priority": "Priority: {{name}}",
+				"assignee": "Assignee: {{name}}",
+				"due": "Due: {{date}}",
+				"label": "Label: {{name}}",
+				"dueThisWeek": "Due this week",
+				"dueNextWeek": "Due next week",
+				"noDueDate": "No due date",
+				"team": "Team: {{name}}"
+			},
+			"moveAll": "Move All",
+			"moveAllConfirm": "Move the {{count}} planned tasks to the first column?",
+			"moveAllSuccess": "{{count}} tasks moved to the first column",
+			"moveAllTooltip": "Move every planned task to the first column",
+			"noTasksInSection": "No {{section}} tasks",
+			"noTasksToMove": "No planned tasks to move",
+			"pageTitle": "{{name}}'s backlog",
+			"plan": "Plan",
+			"sections": {
+				"planned": "Planned",
+				"archived": "Archived"
+			},
+			"title": "Backlog"
+		},
+		"board": {
+			"title": "Tasks"
+		},
+		"boardFilters": {
+			"filterBy": "Filter By",
+			"allStatuses": "All statuses",
+			"allPriorities": "All priorities",
+			"allAssignees": "All assignees",
+			"allDueDates": "All due dates",
+			"allLabels": "All labels",
+			"selectedCount": "{{count}} selected",
+			"subjects": {
+				"status": "Status",
+				"priority": "Priority",
+				"assignee": "Assignee",
+				"dueDate": "Due date",
+				"labels": "Labels",
+				"team": "Team"
+			},
+			"operators": {
+				"isAnyOf": "is any of",
+				"includeAnyOf": "include any of"
+			},
+			"allTeams": "All teams"
 		},
 		"boardSearchPlaceholder": "Search tickets...",
-		"view": {
-			"board": "Board",
-			"list": "List"
+		"bulk": {
+			"selectedCount": "{{count}} selected",
+			"moveToBacklog": "Move to Backlog",
+			"moveToBacklogSuccess": "{{count}} tasks moved to backlog",
+			"moveToBacklogError": "Failed to move tasks to backlog",
+			"moveToBoard": "Move to Board",
+			"moveToBoardSuccess": "{{count}} tasks moved to board",
+			"moveToBoardError": "Failed to move tasks to board",
+			"delete": "Delete tasks",
+			"deleteConfirm": "Delete {{count}} tasks? This action cannot be undone.",
+			"deleteSuccess": "{{count}} tasks deleted",
+			"deleteError": "Failed to delete tasks",
+			"archive": "Archive tasks",
+			"archiveSuccess": "{{count}} tasks archived",
+			"archiveError": "Failed to archive tasks",
+			"updateSuccess": "{{count}} tasks updated",
+			"updateError": "Failed to update tasks",
+			"assignTo": "Assign to",
+			"assignSuccess": "{{count}} tasks assigned",
+			"assignError": "Failed to assign tasks",
+			"setPriority": "Set Priority",
+			"updatePriorityError": "Failed to update priority",
+			"addLabel": "Add Label",
+			"addLabelSuccess": "Label added to {{count}} tasks",
+			"addLabelError": "Failed to add label",
+			"setDueDate": "Set Due Date",
+			"updateDueDateError": "Failed to update due date",
+			"actions": "Actions",
+			"searchActions": "Search actions...",
+			"noActionsFound": "No actions found.",
+			"changeStatus": "Change Status"
+		},
+		"calendar": {
+			"pageTitle": "{{name}} – Calendar",
+			"title": "Calendar",
+			"previousMonth": "Previous month",
+			"nextMonth": "Next month",
+			"today": "Today",
+			"noTasks": "No scheduled tasks",
+			"noTasksSubtitle": "Add a start date, due date, or both to tasks to place them on the calendar.",
+			"moreTasks": "+{{count}} more",
+			"loadError": "Failed to load tasks.",
+			"dayTasksAriaLabel": "Show all tasks for {{date}}",
+			"taskAriaLabel": "{{title}}, {{range}}: open task"
 		},
 		"common": {
 			"selectTask": "Select task",
 			"loadingTask": "Loading task...",
 			"taskNotFound": "Task not found",
 			"taskNotFoundDescription": "The task you are looking for does not exist or has been deleted."
+		},
+		"contextMenu": {
+			"copyLink": "Copy link",
+			"copyLinkSuccess": "Task link copied!"
+		},
+		"delete": {
+			"title": "Delete Task?",
+			"description": "This will permanently remove the task and all its data. You can't undo this action.",
+			"action": "Delete Task",
+			"success": "Task deleted successfully",
+			"error": "Failed to delete task"
 		},
 		"detail": {
 			"subtaskOf": "Subtask of",
@@ -1692,48 +1967,85 @@
 				}
 			}
 		},
+		"dueDate": {
+			"label": "Due date",
+			"clear": "Clear date",
+			"updateSuccess": "Task due date updated successfully",
+			"updateError": "Failed to update task due date",
+			"clearSuccess": "Task due date cleared",
+			"clearError": "Failed to clear due date"
+		},
+		"editor": {
+			"table": {
+				"addColumnBefore": "Insert column left",
+				"addColumnAfter": "Insert column right",
+				"deleteColumn": "Delete column",
+				"addRowBefore": "Insert row above",
+				"addRowAfter": "Insert row below",
+				"deleteRow": "Delete row",
+				"deleteTable": "Delete table"
+			}
+		},
 		"entity": {
 			"task": "Task"
 		},
-		"relations": {
-			"title": "Relations",
-			"tasksInProject": "Tasks in project",
-			"linkError": "Failed to link task",
-			"empty": "No related tasks",
-			"searchPlaceholder": "Search tasks to link...",
+		"epics": {
+			"title": "Epics",
+			"none": "No epic",
+			"count": "{{count}} epics",
+			"allEpics": "All epics",
+			"emptyProject": "This project has no epics yet",
+			"updateError": "Failed to update the task epics"
+		},
+		"gantt": {
+			"pageTitle": "{{name}} – Gantt",
+			"title": "Gantt Timeline",
+			"searchPlaceholder": "Search scheduled tickets...",
+			"hideTasks": "Hide tasks",
+			"showTasks": "Show tasks",
+			"noTasks": "No scheduled tasks",
+			"noTasksSubtitle": "Add a start date, due date, or both to tasks to place them on the project timeline.",
 			"noTasksFound": "No tasks found",
-			"openTask": "Open task",
-			"removeRelation": "Remove relation",
-			"related": "Related",
-			"blocks": "Blocks",
-			"selectTask": "Select a task to link",
-			"types": {
-				"blocks": "blocks",
-				"blocked_by": "blocked by",
-				"related": "relates to"
+			"noTasksMatch": "No scheduled tasks match \"{{query}}\"",
+			"taskHeader": "Task",
+			"updateDatesError": "Failed to update task dates",
+			"resizeStart": "Resize start date",
+			"resizeDue": "Resize due date",
+			"taskAriaLabel": "{{title}}: open or drag to move",
+			"branchSpan": "Span of the whole branch",
+			"zoomLabel": "Timeline scale",
+			"zoomDay": "Day",
+			"zoomWeek": "Week",
+			"zoomMonth": "Month",
+			"zoomQuarter": "Quarter",
+			"jumpToday": "Today",
+			"previousRange": "Scroll back",
+			"nextRange": "Scroll forward",
+			"quarterShort": "Q{{n}}",
+			"dependencyBlocks": "{{source}} blocks {{target}}"
+		},
+		"group": {
+			"label": "Group",
+			"by": "Group By",
+			"noTeam": "No team",
+			"boardHint": "The board already groups by status, in columns",
+			"fields": {
+				"status": "Status",
+				"team": "Team",
+				"tree": "Hierarchy"
 			}
 		},
-		"subtasks": {
-			"title": "Sub-tasks",
-			"inputPlaceholder": "Subtask title...",
-			"addAction": "Add",
-			"empty": "No subtasks yet",
-			"createError": "Failed to create subtask",
-			"deleteSuccess": "Task deleted successfully",
-			"deleteError": "Failed to delete task",
-			"deleteDialogTitle": "Delete Task?",
-			"deleteDialogDescription": "This will permanently remove the task and all its data. You can't undo this action.",
-			"deleteAction": "Delete Task",
-			"completeAria": "Mark subtask complete"
+		"kanban": {
+			"addTask": "Add task"
 		},
-		"properties": {
-			"title": "Properties",
-			"labels": "Labels",
-			"copyTaskLink": "Copy task link",
-			"copyTaskBranch": "Copy task branch",
-			"start": "Start",
-			"startDate": "Start date",
-			"noDate": "No date"
+		"labels": {
+			"label": "Labels",
+			"empty": "No labels available"
+		},
+		"listView": {
+			"addTask": "Add task",
+			"archiveAllTooltip": "Archive all completed tasks",
+			"noTasks": "No tasks"
 		},
 		"move": {
 			"title": "Move task",
@@ -1749,7 +2061,12 @@
 		"popover": {
 			"assignee": {
 				"unassigned": "Unassigned",
-				"updateError": "Failed to update task assignee"
+				"updateError": "Failed to update task assignee",
+				"multiple": "{{total}} assignees"
+			},
+			"team": {
+				"unassigned": "No team",
+				"updateError": "Failed to update the team"
 			},
 			"status": {
 				"updateError": "Failed to update task status"
@@ -1790,30 +2107,51 @@
 				}
 			}
 		},
-		"backlog": {
-			"pageTitle": "{{name}}'s backlog",
-			"noTasksToMove": "No planned tasks to move",
-			"moveAllConfirm": "Move all {{count}} planned tasks to To Do?",
-			"moveAllSuccess": "Moved {{count}} tasks to To Do",
-			"plan": "Plan",
-			"moveAllTooltip": "Move All Planned to To Do",
-			"moveAll": "Move All",
-			"addTask": "Add task",
-			"filter": "Filter",
-			"addFilter": "Add filter...",
-			"sections": {
-				"planned": "Planned",
-				"archived": "Archived"
-			},
-			"noTasksInSection": "No {{section}} tasks",
-			"filters": {
-				"priority": "Priority: {{name}}",
-				"assignee": "Assignee: {{name}}",
-				"due": "Due: {{date}}",
-				"label": "Label: {{name}}",
-				"dueThisWeek": "Due this week",
-				"dueNextWeek": "Due next week",
-				"noDueDate": "No due date"
+		"pr": {
+			"merged": "Merged",
+			"draft": "Draft",
+			"open": "Open",
+			"label": "Pull Request",
+			"count_one": "{{count}} PR",
+			"count_other": "{{count}} PRs"
+		},
+		"priority": {
+			"label": "Priority",
+			"no-priority": "No priority",
+			"low": "Low",
+			"medium": "Medium",
+			"high": "High",
+			"urgent": "Urgent"
+		},
+		"projectSize": {
+			"warning": "This project has {{count}} tasks. Views load all of them, so they will feel slow. Filter to narrow the list down."
+		},
+		"properties": {
+			"title": "Properties",
+			"labels": "Labels",
+			"copyTaskLink": "Copy task link",
+			"copyTaskBranch": "Copy task branch",
+			"start": "Start",
+			"startDate": "Start date",
+			"noDate": "No date",
+			"customFields": "Custom fields"
+		},
+		"relations": {
+			"title": "Relations",
+			"tasksInProject": "Tasks in project",
+			"linkError": "Failed to link task",
+			"empty": "No related tasks",
+			"searchPlaceholder": "Search tasks to link...",
+			"noTasksFound": "No tasks found",
+			"openTask": "Open task",
+			"removeRelation": "Remove relation",
+			"related": "Related",
+			"blocks": "Blocks",
+			"selectTask": "Select a task to link",
+			"types": {
+				"blocks": "blocks",
+				"blocked_by": "blocked by",
+				"related": "relates to"
 			}
 		},
 		"sort": {
@@ -1831,164 +2169,143 @@
 				"number": "Task number"
 			}
 		},
-		"boardFilters": {
-			"filterBy": "Filter By",
-			"allStatuses": "All statuses",
-			"allPriorities": "All priorities",
-			"allAssignees": "All assignees",
-			"allDueDates": "All due dates",
-			"allLabels": "All labels",
-			"selectedCount": "{{count}} selected",
-			"subjects": {
+		"status": {
+			"label": "Status",
+			"to-do": "To Do",
+			"in-progress": "In Progress",
+			"in-review": "In Review",
+			"done": "Done",
+			"archived": "Archived",
+			"planned": "Planned"
+		},
+		"subtasks": {
+			"title": "Sub-tasks",
+			"inputPlaceholder": "Subtask title...",
+			"addAction": "Add",
+			"empty": "No subtasks yet",
+			"createError": "Failed to create subtask",
+			"deleteSuccess": "Task deleted successfully",
+			"deleteError": "Failed to delete task",
+			"deleteDialogTitle": "Delete Task?",
+			"deleteDialogDescription": "This will permanently remove the task and all its data. You can't undo this action.",
+			"deleteAction": "Delete Task",
+			"completeAria": "Mark subtask complete"
+		},
+		"table": {
+			"title": "Table",
+			"pageTitle": "{{name}} · Table",
+			"empty": "No tasks to show",
+			"expand": "Expand",
+			"collapse": "Collapse",
+			"saveFailed": "The value could not be saved",
+			"columns": {
+				"title": "Title",
 				"status": "Status",
 				"priority": "Priority",
 				"assignee": "Assignee",
 				"dueDate": "Due date",
-				"labels": "Labels"
+				"done": "Done",
+				"completedAt": "Completed on"
 			},
+			"addField": "Add a field",
+			"addFieldTitle": "New custom field",
+			"addFieldDescription": "It becomes a column here and a field on every task in this project.",
+			"fieldName": "Name",
+			"fieldNamePlaceholder": "Budget",
+			"fieldType": "Type",
+			"fieldOptions": "Options",
+			"fieldOptionsPlaceholder": "One per line",
+			"fieldCurrency": "Currency",
+			"createField": "Create field",
+			"fieldCreated": "Field created",
+			"fieldCreateFailed": "The field could not be created",
+			"fieldTypes": {
+				"text": "Text",
+				"number": "Number",
+				"currency": "Currency",
+				"select": "Select",
+				"multi_select": "Multi-select",
+				"date": "Date",
+				"checkbox": "Checkbox",
+				"user": "Person",
+				"url": "URL"
+			},
+			"addFilter": "Add a filter",
+			"removeFilter": "Remove this filter",
+			"filterValue": "Value",
+			"filterFailed": "The filter could not be applied",
 			"operators": {
-				"isAnyOf": "is any of",
-				"includeAnyOf": "include any of"
+				"eq": "is",
+				"neq": "is not",
+				"gt": "greater than",
+				"gte": "at least",
+				"lt": "less than",
+				"lte": "at most",
+				"contains": "contains",
+				"startsWith": "starts with",
+				"in": "is one of",
+				"notIn": "is none of",
+				"isEmpty": "is empty",
+				"isNotEmpty": "is not empty"
+			},
+			"treeModes": {
+				"tree": "Hierarchy",
+				"flat": "Flat list",
+				"roots": "Top level only",
+				"withDescendants": "With subtasks"
+			},
+			"views": {
+				"label": "Views",
+				"empty": "No saved views",
+				"save": "Save this view",
+				"saveTitle": "Save view",
+				"saveDescription": "Stores the filter and the hierarchy mode you are looking at.",
+				"name": "Name",
+				"namePlaceholder": "Expensive jobs",
+				"share": "Share with the workspace",
+				"saved": "View saved",
+				"saveFailed": "The view could not be saved",
+				"delete": "Delete this view"
 			}
 		},
-		"calendar": {
-			"pageTitle": "{{name}} – Calendar",
-			"title": "Calendar",
-			"previousMonth": "Previous month",
-			"nextMonth": "Next month",
-			"today": "Today",
-			"noTasks": "No scheduled tasks",
-			"noTasksSubtitle": "Add a start date, due date, or both to tasks to place them on the calendar.",
-			"moreTasks": "+{{count}} more",
-			"loadError": "Failed to load tasks.",
-			"dayTasksAriaLabel": "Show all tasks for {{date}}",
-			"taskAriaLabel": "{{title}}, {{range}}: open task"
+		"team": {
+			"label": "Team",
+			"unknown": "Unknown team"
 		},
-		"gantt": {
-			"pageTitle": "{{name}} – Gantt",
-			"title": "Gantt Timeline",
-			"searchPlaceholder": "Search scheduled tickets...",
-			"hideTasks": "Hide tasks",
-			"showTasks": "Show tasks",
-			"noTasks": "No scheduled tasks",
-			"noTasksSubtitle": "Add a start date, due date, or both to tasks to place them on the project timeline.",
-			"noTasksFound": "No tasks found",
-			"noTasksMatch": "No scheduled tasks match \"{{query}}\"",
-			"taskHeader": "Task",
-			"updateDatesError": "Failed to update task dates",
-			"resizeStart": "Resize start date",
-			"resizeDue": "Resize due date",
-			"taskAriaLabel": "{{title}}: open or drag to move"
-		},
-		"delete": {
-			"title": "Delete Task?",
-			"description": "This will permanently remove the task and all its data. You can't undo this action.",
-			"action": "Delete Task",
-			"success": "Task deleted successfully",
-			"error": "Failed to delete task"
-		},
-		"archive": {
-			"success": "Archived {{count}} tasks"
-		},
-		"listView": {
-			"addTask": "Add task",
-			"archiveAllTooltip": "Archive all completed tasks",
-			"noTasks": "No tasks"
-		},
-		"kanban": {
-			"addTask": "Add task"
-		},
-		"pr": {
-			"merged": "Merged",
-			"draft": "Draft",
-			"open": "Open",
-			"label": "Pull Request",
-			"count_one": "{{count}} PR",
-			"count_other": "{{count}} PRs"
-		},
-		"assignee": {
-			"label": "Assignee",
-			"unassigned": "Unassigned"
-		},
-		"dueDate": {
-			"label": "Due date",
-			"clear": "Clear date",
-			"updateSuccess": "Task due date updated successfully",
-			"updateError": "Failed to update task due date",
-			"clearSuccess": "Task due date cleared",
-			"clearError": "Failed to clear due date"
-		},
-		"labels": {
-			"label": "Labels",
-			"empty": "No labels available"
+		"tree": {
+			"title": "Branch",
+			"expand": "Expand branch",
+			"collapse": "Collapse branch",
+			"detach": "Unnest",
+			"branchProgress": "Closed in this branch",
+			"branchDates": "Branch dates",
+			"branchTime": "Logged / estimated",
+			"estimateLabel": "Estimate",
+			"hoursShort": "h",
+			"estimateError": "Failed to save the estimate",
+			"reparentError": "Failed to move the task",
+			"cycleError": "A task cannot be nested inside its own branch",
+			"progressTooltip": "{{done}} of {{total}} subtasks closed"
 		},
 		"update": {
 			"success": "Task updated successfully",
 			"error": "Failed to update task"
 		},
-		"contextMenu": {
-			"copyLink": "Copy link",
-			"copyLinkSuccess": "Task link copied!"
-		},
-		"actions": {
-			"archive": "Archive",
-			"markAsPlanned": "Mark as planned",
-			"delete": "Delete..."
-		},
-		"bulk": {
-			"selectedCount": "{{count}} selected",
-			"moveToBacklog": "Move to Backlog",
-			"moveToBacklogSuccess": "{{count}} tasks moved to backlog",
-			"moveToBacklogError": "Failed to move tasks to backlog",
-			"moveToBoard": "Move to Board",
-			"moveToBoardSuccess": "{{count}} tasks moved to board",
-			"moveToBoardError": "Failed to move tasks to board",
-			"delete": "Delete tasks",
-			"deleteConfirm": "Delete {{count}} tasks? This action cannot be undone.",
-			"deleteSuccess": "{{count}} tasks deleted",
-			"deleteError": "Failed to delete tasks",
-			"archive": "Archive tasks",
-			"archiveSuccess": "{{count}} tasks archived",
-			"archiveError": "Failed to archive tasks",
-			"updateSuccess": "{{count}} tasks updated",
-			"updateError": "Failed to update tasks",
-			"assignTo": "Assign to",
-			"assignSuccess": "{{count}} tasks assigned",
-			"assignError": "Failed to assign tasks",
-			"setPriority": "Set Priority",
-			"updatePriorityError": "Failed to update priority",
-			"addLabel": "Add Label",
-			"addLabelSuccess": "Label added to {{count}} tasks",
-			"addLabelError": "Failed to add label",
-			"setDueDate": "Set Due Date",
-			"updateDueDateError": "Failed to update due date",
-			"actions": "Actions",
-			"searchActions": "Search actions...",
-			"noActionsFound": "No actions found.",
-			"changeStatus": "Change Status"
-		},
-		"editor": {
-			"table": {
-				"addColumnBefore": "Insert column left",
-				"addColumnAfter": "Insert column right",
-				"deleteColumn": "Delete column",
-				"addRowBefore": "Insert row above",
-				"addRowAfter": "Insert row below",
-				"deleteRow": "Delete row",
-				"deleteTable": "Delete table"
-			}
+		"view": {
+			"board": "Board",
+			"list": "List"
 		}
 	},
 	"invitations": {
 		"email": {
-			"subject": "{{inviterName}} invited you to join {{workspaceName}} on Kaneo",
-			"preview": "You're invited to {{workspaceName}} on Kaneo",
+			"subject": "{{inviterName}} invited you to join {{workspaceName}} on Riuna",
+			"preview": "You're invited to {{workspaceName}} on Riuna",
 			"title": "Join {{workspaceName}}",
-			"subtitle": "{{inviterName}} ({{inviterEmail}}) invited you to collaborate in Kaneo.",
+			"subtitle": "{{inviterName}} ({{inviterEmail}}) invited you to collaborate in Riuna.",
 			"cta": "Accept invitation",
 			"sameEmail": "You can accept with the same email that received this message.",
 			"ignore": "If this wasn't expected, you can safely ignore this email.",
-			"footer": "Kaneo workspace invitation"
+			"footer": "Riuna workspace invitation"
 		},
 		"pageTitle": "Invitations",
 		"pendingInvitations": "Pending Invitations",
@@ -2074,7 +2391,10 @@
 		"members": {
 			"pageTitle": "Members",
 			"inviteMember": "Invite member",
-			"you": "You"
+			"you": "You",
+			"createLocalUser": "Create local account",
+			"localAccount": "Local",
+			"blocked": "Blocked"
 		},
 		"invitations": {
 			"pendingBadge": "pending",
@@ -2119,7 +2439,35 @@
 			"cancelInviteSuccess": "Invitation cancelled successfully",
 			"cancelInviteError": "Failed to cancel invitation",
 			"roleUpdateSuccess": "Role updated",
-			"roleUpdateError": "Failed to update role"
+			"roleUpdateError": "Failed to update role",
+			"manageAccount": "Manage account"
+		},
+		"localUserModal": {
+			"title": "Create local account",
+			"description": "An account with a username and password, with no email. It gets no email notifications and cannot reset its own password: the admin changes it.",
+			"usernameLabel": "Username",
+			"usernamePlaceholder": "ana.torres",
+			"displayNameLabel": "Display name",
+			"displayNamePlaceholder": "Ana Torres",
+			"passwordLabel": "Password",
+			"roleLabel": "Role",
+			"submit": "Create account",
+			"created": "Local account {{username}} created",
+			"error": "The local account could not be created"
+		},
+		"manageAccount": {
+			"title": "Manage account",
+			"nameLabel": "Display name",
+			"emailLabel": "Email",
+			"emailPlaceholder": "ana@example.com",
+			"emailHelp": "Assigning an email stops the account being local: it gets notifications back and can sign in with the email or the username.",
+			"passwordLabel": "New password",
+			"passwordPlaceholder": "Leave empty to keep it",
+			"shortPassword": "At least 8 characters",
+			"blockLabel": "Block access",
+			"blockHelp": "Ends their open sessions and stops them signing in, without deleting anything.",
+			"saved": "Account updated",
+			"error": "The account could not be updated"
 		}
 	},
 	"publicProject": {
@@ -2158,5 +2506,205 @@
 		"branding": {
 			"poweredBy": "Powered by"
 		}
+	},
+	"cycles": {
+		"actions": {
+			"start": "Start cycle",
+			"close": "Close cycle"
+		},
+		"assignError": "Could not move the task to that cycle",
+		"burndown": {
+			"title": "Burndown",
+			"actual": "Remaining",
+			"ideal": "Ideal"
+		},
+		"close": {
+			"title": "Close {{name}}",
+			"description_one": "{{count}} task is still unfinished. Where should it go?",
+			"description_other": "{{count}} tasks are still unfinished. Where should they go?",
+			"descriptionEmpty": "Everything in this cycle is done. Closing it freezes its velocity.",
+			"moveTo": "Move the unfinished tasks to",
+			"backlog": "Back to the backlog",
+			"confirm": "Close cycle"
+		},
+		"create": {
+			"title": "New cycle",
+			"description": "Name it and choose the dates. Two weeks is the usual length.",
+			"name": "Name",
+			"namePlaceholder": "Sprint 1",
+			"goal": "Goal",
+			"goalPlaceholder": "What this cycle is for",
+			"startDate": "Starts",
+			"endDate": "Ends",
+			"datesInvalid": "The end date cannot be before the start date.",
+			"confirm": "Create cycle"
+		},
+		"empty": {
+			"title": "No cycles yet",
+			"description": "A cycle is a time box you fill with tasks before it starts. Closing one tells you how much the team really completed."
+		},
+		"hours": {
+			"title": "Hours per person",
+			"empty": "No time logged on this cycle yet.",
+			"unknownPerson": "Unknown"
+		},
+		"none": "No cycle",
+		"noneAvailable": "This project has no cycles yet",
+		"pageTitle": "Cycles",
+		"stats": {
+			"completed": "Completed",
+			"estimated": "Estimated",
+			"velocity": "Velocity",
+			"logged": "Logged"
+		},
+		"status": {
+			"planned": "Planned",
+			"active": "Active",
+			"closed": "Closed"
+		},
+		"title": "Cycles",
+		"unit": {
+			"tasks": "Tasks",
+			"hours": "Hours",
+			"label": "Burndown unit"
+		},
+		"velocity": {
+			"title": "Velocity",
+			"completed": "Completed",
+			"empty": "Velocity appears once you close your first cycle."
+		}
+	},
+	"panels": {
+		"pageTitle": "Home",
+		"defaultName": "My panel",
+		"empty": {
+			"title": "Your panel is empty",
+			"description": "Add a widget to see how your work is going without opening every project."
+		},
+		"widget": {
+			"add": "Add widget",
+			"edit": "Edit widget",
+			"actions": "Widget actions",
+			"type": "Type",
+			"title": "Title",
+			"scope": "Scope",
+			"wholeWorkspace": "Whole workspace",
+			"groupBy": "Group by",
+			"pickGroupBy": "Pick a grouping",
+			"filter": "Filter",
+			"noData": "Nothing to show yet",
+			"ofTotal": "{{value}} of {{total}}",
+			"goal": "Goal",
+			"pickGoal": "Pick a goal"
+		},
+		"type": {
+			"count": "Count",
+			"breakdown": "Breakdown",
+			"trend": "Trend",
+			"time": "Logged time",
+			"epic_progress": "Epic progress",
+			"table": "Task list",
+			"inbox": "Inbox",
+			"goal": "Goal"
+		},
+		"metric": {
+			"count": "Tasks",
+			"doneCount": "Completed",
+			"doneRatio": "Completed",
+			"sumEstimate": "Estimated",
+			"sumLogged": "Logged"
+		},
+		"groupBy": {
+			"project": "Project",
+			"assignee": "Assignee",
+			"priority": "Priority",
+			"team": "Team",
+			"status": "Status",
+			"done": "Done",
+			"dueWindow": "Due date",
+			"epic": "Epic",
+			"time": "Over time"
+		},
+		"buckets": {
+			"none": "None",
+			"unknown": "Unknown",
+			"done": "Done",
+			"notDone": "Not done",
+			"due": {
+				"none": "No due date",
+				"overdue": "Overdue",
+				"today": "Today",
+				"week": "This week",
+				"later": "Later"
+			},
+			"other": "Others"
+		},
+		"greeting": {
+			"morning": "Good morning, {{name}}.",
+			"afternoon": "Good afternoon, {{name}}.",
+			"evening": "Good evening, {{name}}.",
+			"night": "Still up, {{name}}?",
+			"morningNoName": "Good morning.",
+			"afternoonNoName": "Good afternoon.",
+			"eveningNoName": "Good evening.",
+			"nightNoName": "Still up?",
+			"subtitle": "Everything you have going, in one place."
+		},
+		"inbox": {
+			"error": "Your inbox could not be loaded",
+			"empty": "Your inbox is empty"
+		},
+		"actions": {
+			"share": "Share with the workspace",
+			"unshare": "Stop sharing",
+			"export": "Export",
+			"exportError": "The dashboard could not be exported"
+		},
+		"shared": "Shared"
+	},
+	"goals": {
+		"pageTitle": "Goals",
+		"actions": {
+			"create": "New goal",
+			"addTarget": "Add key result",
+			"menu": "Goal actions",
+			"targetMenu": "Key result actions",
+			"share": "Share with the workspace",
+			"unshare": "Stop sharing"
+		},
+		"empty": {
+			"title": "No goals yet",
+			"description": "A goal is a period plus the key results that measure it. Progress is read from your closed tasks, so it moves on its own.",
+			"noTargets": "No key results yet. A goal without them cannot be measured."
+		},
+		"form": {
+			"createTitle": "New goal",
+			"editTitle": "Edit goal",
+			"description": "The period is what bounds the measurement.",
+			"name": "Name",
+			"namePlaceholder": "Ship the new billing flow",
+			"detail": "Detail",
+			"startsAt": "Starts",
+			"endsAt": "Ends",
+			"datesInvalid": "The end cannot come before the start."
+		},
+		"target": {
+			"createTitle": "New key result",
+			"editTitle": "Edit key result",
+			"description": "A number to reach, measured against the goal's period.",
+			"name": "Name",
+			"namePlaceholder": "Close 40 tasks",
+			"metric": "Measure",
+			"value": "Target",
+			"scope": "Scope",
+			"progress": "{{current}} of {{target}}",
+			"unmeasurable": "Cannot be measured"
+		},
+		"scope": {
+			"all": "The whole workspace",
+			"assigned": "Assigned to me",
+			"team": "My teams"
+		},
+		"shared": "Shared"
 	}
 }

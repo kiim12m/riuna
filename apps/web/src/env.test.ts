@@ -3,8 +3,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const placeholderPattern = "[`\\\"']KANEO_TURNSTILE_SITE_KEY[`\\\"']";
-const turnstilePlaceholder = "KANEO_TURNSTILE_SITE_KEY";
+const placeholderPattern = "[`\\\"']RIUNA_TURNSTILE_SITE_KEY[`\\\"']";
+const turnstilePlaceholder = "RIUNA_TURNSTILE_SITE_KEY";
 
 describe("runtime environment replacement", () => {
   it("strips unset placeholders regardless of the quote emitted by the bundler", () => {
@@ -12,7 +12,7 @@ describe("runtime environment replacement", () => {
       `const doubleQuoted = "${turnstilePlaceholder}";`,
       `const singleQuoted = '${turnstilePlaceholder}';`,
       `const templateLiteral = \`${turnstilePlaceholder}\`;`,
-      `const required = "KANEO_API_URL";`,
+      `const required = "RIUNA_API_URL";`,
       `const configured = "https://example.com";`,
     ].join("\n");
 
@@ -21,8 +21,8 @@ describe("runtime environment replacement", () => {
       encoding: "utf8",
     });
 
-    expect(result).not.toContain("KANEO_TURNSTILE_SITE_KEY");
-    expect(result).toContain(`const required = "KANEO_API_URL";`);
+    expect(result).not.toContain("RIUNA_TURNSTILE_SITE_KEY");
+    expect(result).toContain(`const required = "RIUNA_API_URL";`);
     expect(result).toContain(`const doubleQuoted = "";`);
     expect(result).toContain(`const singleQuoted = "";`);
     expect(result).toContain(`const templateLiteral = "";`);
@@ -36,7 +36,7 @@ describe("runtime environment replacement", () => {
     );
 
     expect(entrypoint).toContain(
-      `sed -i -E 's#[\`"'"'"']KANEO_TURNSTILE_SITE_KEY[\`"'"'"']#""#g' {} +`,
+      `sed -i -E 's#[\`"'"'"']RIUNA_TURNSTILE_SITE_KEY[\`"'"'"']#""#g' {} +`,
     );
   });
 });

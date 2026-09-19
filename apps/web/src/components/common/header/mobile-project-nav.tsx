@@ -5,6 +5,8 @@ import {
   Menu,
   Plus,
   SquareKanban,
+  Table2,
+  Target,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -20,11 +22,13 @@ import { cn } from "@/lib/cn";
 type MobileProjectNavProps = {
   workspaceId: string;
   projectId: string;
-  activeView: "backlog" | "board" | "calendar" | "gantt";
+  activeView: "backlog" | "board" | "calendar" | "gantt" | "table" | "cycles";
   onSelectBoard: () => void;
   onSelectBacklog: () => void;
   onSelectCalendar: () => void;
   onSelectGantt: () => void;
+  onSelectTable: () => void;
+  onSelectCycles: () => void;
   onSelectProject: (projectId: string) => void;
   onAddProject: () => void;
 };
@@ -37,6 +41,8 @@ export default function MobileProjectNav({
   onSelectBacklog,
   onSelectCalendar,
   onSelectGantt,
+  onSelectTable,
+  onSelectCycles,
   onSelectProject,
   onAddProject,
 }: MobileProjectNavProps) {
@@ -59,7 +65,7 @@ export default function MobileProjectNav({
       <PopoverContent align="start" className="w-72 p-2">
         <div className="space-y-3">
           <div className="space-y-1">
-            <p className="px-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+            <p className="px-1 text-label font-medium tracking-wide text-muted-foreground uppercase">
               View
             </p>
             <div className="grid grid-cols-4 gap-1">
@@ -69,7 +75,7 @@ export default function MobileProjectNav({
                 className={cn(
                   "flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
                   activeView === "backlog"
-                    ? "border-border bg-secondary text-foreground"
+                    ? "border-brand/40 bg-accent text-foreground"
                     : "border-transparent text-muted-foreground hover:bg-accent",
                 )}
               >
@@ -81,7 +87,7 @@ export default function MobileProjectNav({
                 className={cn(
                   "flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
                   activeView === "board"
-                    ? "border-border bg-secondary text-foreground"
+                    ? "border-brand/40 bg-accent text-foreground"
                     : "border-transparent text-muted-foreground hover:bg-accent",
                 )}
               >
@@ -94,7 +100,7 @@ export default function MobileProjectNav({
                 className={cn(
                   "flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
                   activeView === "calendar"
-                    ? "border-border bg-secondary text-foreground"
+                    ? "border-brand/40 bg-accent text-foreground"
                     : "border-transparent text-muted-foreground hover:bg-accent",
                 )}
               >
@@ -107,18 +113,44 @@ export default function MobileProjectNav({
                 className={cn(
                   "flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
                   activeView === "gantt"
-                    ? "border-border bg-secondary text-foreground"
+                    ? "border-brand/40 bg-accent text-foreground"
                     : "border-transparent text-muted-foreground hover:bg-accent",
                 )}
               >
                 <CalendarDays className="size-3.5" />
                 Gantt
               </button>
+              <button
+                type="button"
+                onClick={onSelectCycles}
+                className={cn(
+                  "flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
+                  activeView === "cycles"
+                    ? "border-brand/40 bg-accent text-foreground"
+                    : "border-transparent text-muted-foreground hover:bg-accent",
+                )}
+              >
+                <Target className="size-3.5" />
+                {t("cycles:title")}
+              </button>
+              <button
+                type="button"
+                onClick={onSelectTable}
+                className={cn(
+                  "flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
+                  activeView === "table"
+                    ? "border-brand/40 bg-accent text-foreground"
+                    : "border-transparent text-muted-foreground hover:bg-accent",
+                )}
+              >
+                <Table2 className="size-3.5" />
+                {t("tasks:table.title")}
+              </button>
             </div>
           </div>
 
           <div className="space-y-1">
-            <p className="px-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+            <p className="px-1 text-label font-medium tracking-wide text-muted-foreground uppercase">
               Projects
             </p>
             <div className="max-h-56 space-y-0.5 overflow-y-auto">

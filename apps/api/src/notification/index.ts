@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import db from "../database";
-import { projectTable, taskTable } from "../database/schema";
+import { projectTable, taskTable, teamMemberTable } from "../database/schema";
 import { subscribeToEvent } from "../events";
 import { notificationSchema } from "../schemas";
 import clearNotifications from "./controllers/clear-notifications";
@@ -274,6 +274,95 @@ subscribeToEvent<{
       eventData: {
         taskTitle: data.title,
         projectId: task?.projectId ?? null,
+        workspaceId: project?.workspaceId ?? null,
+      },
+      resourceId: data.taskId,
+      resourceType: "task",
+    });
+  }
+});
+
+// La via de asignacion multiple, que es la que usa el detalle de la tarea
+// desde la Fase 1. Sin esto, anadir a alguien a una tarea no le avisaba por
+// ningun canal: ni in-app, ni correo, ni ntfy, ni Gotify, ni webhook.
+//
+// Se avisa solo a quien entra (`addedIds`), no al conjunto entero: quitar a una
+// persona no puede pingar a las otras cuatro.
+subscribeToEvent<{
+  taskId: string;
+  projectId: string;
+  userId: string;
+  addedIds: string[];
+  title: string;
+}>("task.assignees_changed", async (data) => {
+  const added = (data.addedIds ?? []).filter(
+    (userId) => userId && userId !== data.userId,
+  );
+
+  if (added.length === 0) return;
+
+  const [project] = await db
+    .select({ workspaceId: projectTable.workspaceId })
+    .from(projectTable)
+    .where(eq(projectTable.id, data.projectId))
+    .limit(1);
+
+  for (const userId of added) {
+    await createNotification({
+      userId,
+      type: "task_assignee_changed",
+      eventData: {
+        taskTitle: data.title,
+        projectId: data.projectId,
+        workspaceId: project?.workspaceId ?? null,
+      },
+      resourceId: data.taskId,
+      resourceType: "task",
+    });
+  }
+});
+
+// Asignar a un equipo avisa a sus miembros. Era el requisito que motivo la
+// Fase 1 —«repartir trabajo a un departamento entero»— y no notificaba a
+// nadie.
+//
+// Ojo al abanico: un equipo de treinta personas son treinta notificaciones y
+// treinta entregas. Se reutiliza `task_assignee_changed` a proposito, para que
+// respete la preferencia de asignacion que la gente ya tiene configurada en
+// vez de estrenar un tipo que nadie ha activado.
+subscribeToEvent<{
+  taskId: string;
+  projectId: string;
+  userId: string;
+  newTeamId: string;
+  title: string;
+}>("task.team_changed", async (data) => {
+  if (!data.newTeamId) return;
+
+  const members = await db
+    .select({ userId: teamMemberTable.userId })
+    .from(teamMemberTable)
+    .where(eq(teamMemberTable.teamId, data.newTeamId));
+
+  const recipients = members
+    .map((member) => member.userId)
+    .filter((userId) => userId && userId !== data.userId);
+
+  if (recipients.length === 0) return;
+
+  const [project] = await db
+    .select({ workspaceId: projectTable.workspaceId })
+    .from(projectTable)
+    .where(eq(projectTable.id, data.projectId))
+    .limit(1);
+
+  for (const userId of recipients) {
+    await createNotification({
+      userId,
+      type: "task_assignee_changed",
+      eventData: {
+        taskTitle: data.title,
+        projectId: data.projectId,
         workspaceId: project?.workspaceId ?? null,
       },
       resourceId: data.taskId,

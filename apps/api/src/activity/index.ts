@@ -270,6 +270,96 @@ subscribeToEvent<{
 subscribeToEvent<{
   taskId: string;
   userId: string;
+  title: string;
+  type: string;
+}>("task.team_unassigned", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {});
+});
+
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  oldTeamId: string | null;
+  newTeam: string;
+  newTeamId: string;
+  title: string;
+  type: string;
+}>("task.team_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    newTeamId: data.newTeamId,
+    newTeam: data.newTeam,
+  });
+});
+
+// Los tres cambios de estado que las Fases 1 y 2 dejaron sin historial.
+//
+// El de asignados es ademas una **regresion**: la via heredada de un solo
+// responsable si escribia actividad, y al mover la interfaz al endpoint plural
+// dejo de hacerlo, en silencio. Con varias personas y meses de historia, «quien
+// estaba en esto en marzo y quien lo solto» no se reconstruye desde ningun otro
+// sitio.
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  assigneeIds: string[];
+  addedIds: string[];
+  removedIds: string[];
+  assigneeNames: string[];
+  title: string;
+  type: string;
+}>("task.assignees_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    assigneeIds: data.assigneeIds,
+    assigneeNames: data.assigneeNames,
+    addedIds: data.addedIds ?? [],
+    removedIds: data.removedIds ?? [],
+  });
+});
+
+// Reparentar mueve la rama entera y cambia los agregados de dos ramas. Un
+// tablero que se reorganiza cada trimestre perdia el porque de cada movimiento.
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  oldParentId: string | null;
+  newParentId: string | null;
+  type: string;
+}>("task.parent_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    oldParentId: data.oldParentId,
+    newParentId: data.newParentId,
+  });
+});
+
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  epicIds: string[];
+  type: string;
+}>("task.epics_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    epicIds: data.epicIds ?? [],
+  });
+});
+
+// Mover una tarea entre sprints es historia que alguien va a querer: explica
+// por que la velocidad de un ciclo salio como salio.
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  oldCycleId: string | null;
+  newCycleId: string | null;
+  type: string;
+}>("task.cycle_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    oldCycleId: data.oldCycleId,
+    newCycleId: data.newCycleId,
+  });
+});
+
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
   oldDueDate: Date | null;
   newDueDate: Date;
   title: string;

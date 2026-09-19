@@ -4,8 +4,8 @@ export type ParsedArgs = {
   plankaPassword?: string;
   plankaToken?: string;
   plankaApiKey?: string;
-  kaneoUrl?: string;
-  kaneoApiKey?: string;
+  riunaUrl?: string;
+  riunaApiKey?: string;
   workspace?: string;
   projects: string[];
   icon?: string;
@@ -24,8 +24,8 @@ const STRING_FLAGS: Record<string, keyof ParsedArgs> = {
   "--planka-password": "plankaPassword",
   "--planka-token": "plankaToken",
   "--planka-api-key": "plankaApiKey",
-  "--kaneo-url": "kaneoUrl",
-  "--kaneo-api-key": "kaneoApiKey",
+  "--riuna-url": "riunaUrl",
+  "--riuna-api-key": "riunaApiKey",
   "--workspace": "workspace",
   "--icon": "icon",
   "--report": "report",
@@ -102,12 +102,12 @@ export function parseArgs(argv: string[]): ParsedArgs {
   return parsed;
 }
 
-export const DEFAULT_KANEO_URL = "https://cloud.kaneo.app";
+export const DEFAULT_RIUNA_URL = "http://localhost:1337";
 
-export const HELP_TEXT = `kaneo-planka-import: migrate PLANKA boards into Kaneo
+export const HELP_TEXT = `riuna-planka-import: migrate PLANKA boards into Riuna
 
 Usage:
-  npx @kaneo/planka-import --planka-url <url> --kaneo-api-key <key> [options]
+  npx @riuna/planka-import --planka-url <url> --riuna-api-key <key> [options]
 
 PLANKA source:
   --planka-url <url>        PLANKA instance URL (required)
@@ -118,9 +118,9 @@ PLANKA source:
                             Best option for SSO-only accounts, which have no
                             password to log in with
 
-Kaneo target:
-  --kaneo-url <url>         Kaneo instance URL (default ${DEFAULT_KANEO_URL})
-  --kaneo-api-key <key>     Kaneo API key (env KANEO_API_KEY)
+Riuna target:
+  --riuna-url <url>         Riuna instance URL (default ${DEFAULT_RIUNA_URL})
+  --riuna-api-key <key>     Riuna API key (env RIUNA_API_KEY)
   --workspace <id>          Target workspace ID (prompted if omitted)
 
 Selection:
@@ -137,7 +137,7 @@ Behaviour:
   -v, --version             Show the version
 
 Examples:
-  npx @kaneo/planka-import --planka-url https://planka.acme.com --dry-run
-  npx @kaneo/planka-import --planka-url https://planka.acme.com \\
-    --kaneo-api-key kaneo_xxx --workspace ws_123 --all
+  npx @riuna/planka-import --planka-url https://planka.acme.com --dry-run
+  npx @riuna/planka-import --planka-url https://planka.acme.com \\
+    --riuna-api-key riuna_xxx --workspace ws_123 --all
 `;

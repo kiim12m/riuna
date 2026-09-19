@@ -5,7 +5,15 @@ export type ExternalLinkMetadata = {
   draft?: boolean;
   branch?: string;
   author?: string;
-  createdFrom?: "github" | "kaneo" | "gitea" | "gitea-import" | "github-import";
+  // "kaneo" is the pre-rename value; still present on links created before
+  // the Kaneo->Riuna rename, so both are accepted.
+  createdFrom?:
+    | "github"
+    | "riuna"
+    | "kaneo"
+    | "gitea"
+    | "gitea-import"
+    | "github-import";
   lastCommit?: {
     sha: string;
     message: string;

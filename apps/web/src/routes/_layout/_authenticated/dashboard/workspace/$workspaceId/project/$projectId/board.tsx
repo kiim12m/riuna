@@ -7,16 +7,20 @@ import ProjectLayout from "@/components/common/project-layout";
 import KanbanBoard from "@/components/kanban-board";
 import ListView from "@/components/list-view";
 import PageTitle from "@/components/page-title";
+import { ProjectSizeWarning } from "@/components/project/project-size-warning";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { shortcuts } from "@/constants/shortcuts";
 import useGetLabelsByWorkspace from "@/hooks/queries/label/use-get-labels-by-workspace";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
+import useGetTeams from "@/hooks/queries/team/use-get-teams";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { useBoardSort } from "@/hooks/use-board-sort";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useTaskFiltersWithLabelsSupport } from "@/hooks/use-task-filters-with-labels-support";
+import { useTaskGrouping } from "@/hooks/use-task-grouping";
 import { sortTasks } from "@/lib/sort-tasks";
 import useProjectStore from "@/store/project";
 import { useUserPreferencesStore } from "@/store/user-preferences";
@@ -47,9 +51,9 @@ function BoardSkeleton() {
       {skeletonColumns.map((col) => (
         <div key={col.key} className="flex w-72 shrink-0 flex-col gap-3">
           <div className="flex items-center gap-2 px-1">
-            <div className="h-3 w-3 rounded-full bg-muted animate-pulse" />
-            <div className="h-4 w-24 rounded bg-muted animate-pulse" />
-            <div className="h-4 w-5 rounded bg-muted animate-pulse" />
+            <Skeleton className="h-3 w-3 rounded-full" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-5" />
           </div>
           <div className="flex flex-col gap-2.5">
             {Array.from({ length: col.cards }, (_, i) => `${col.key}-${i}`).map(
@@ -58,11 +62,11 @@ function BoardSkeleton() {
                   key={cardKey}
                   className="rounded-lg border border-border bg-card p-3 space-y-2.5"
                 >
-                  <div className="h-3.5 w-4/5 rounded bg-muted animate-pulse" />
-                  <div className="h-3 w-3/5 rounded bg-muted animate-pulse" />
+                  <Skeleton className="h-3.5 w-4/5" />
+                  <Skeleton className="h-3 w-3/5" />
                   <div className="flex items-center gap-2 pt-1">
-                    <div className="h-5 w-5 rounded-full bg-muted animate-pulse" />
-                    <div className="h-3 w-16 rounded bg-muted animate-pulse" />
+                    <Skeleton className="h-5 w-5 rounded-full" />
+                    <Skeleton className="h-3 w-16" />
                   </div>
                 </div>
               ),
@@ -89,9 +93,11 @@ function RouteComponent() {
   const [boardSearchInput, setBoardSearchInput] =
     useState<HTMLInputElement | null>(null);
   const { sort, setSort } = useBoardSort(projectId);
+  const { groupBy, setGroupBy } = useTaskGrouping(projectId);
 
   const { data: users } = useGetActiveWorkspaceUsers(workspaceId);
   const { data: workspaceLabels = [] } = useGetLabelsByWorkspace(workspaceId);
+  const { data: teams = [] } = useGetTeams({ workspaceId });
 
   const handleCloseTaskSheet = useCallback(() => {
     navigate({
@@ -230,12 +236,17 @@ function RouteComponent() {
           clearFilters={clearFilters}
           hasActiveFilters={hasActiveFilters}
           users={users}
+          teams={teams}
           workspaceLabels={workspaceLabels}
           viewMode={viewMode}
           setViewMode={setViewMode}
           sort={sort}
           onSortChange={setSort}
+          groupBy={groupBy}
+          onGroupByChange={setGroupBy}
         />
+
+        <ProjectSizeWarning project={project} />
 
         <div className="flex h-full flex-1 overflow-hidden bg-background">
           {sortedProject ? (
@@ -248,6 +259,7 @@ function RouteComponent() {
               <ListView
                 project={sortedProject}
                 disableDragDrop={sort.field !== "position"}
+                groupBy={groupBy}
               />
             )
           ) : (

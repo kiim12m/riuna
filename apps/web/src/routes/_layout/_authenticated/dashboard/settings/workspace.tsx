@@ -5,7 +5,7 @@ import {
   redirect,
   useLocation,
 } from "@tanstack/react-router";
-import { CreditCard, Settings, Shield, Tag } from "lucide-react";
+import { CreditCard, Settings, Shield, Tag, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import SettingsSidebar from "@/components/SettingsSidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -79,6 +79,11 @@ function RouteComponent() {
       title: t("settings:workspaceRoles.title", { defaultValue: "Roles" }),
       url: "/dashboard/settings/workspace/roles",
       icon: Shield,
+    },
+    {
+      title: t("settings:workspaceTeams.title", { defaultValue: "Teams" }),
+      url: "/dashboard/settings/workspace/teams",
+      icon: Users,
     },
     {
       title: t("settings:workspaceLabels.title", { defaultValue: "Labels" }),

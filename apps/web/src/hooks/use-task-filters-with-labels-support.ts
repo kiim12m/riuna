@@ -9,16 +9,20 @@ const DEFAULT_FILTERS: BoardFilters = {
   status: null,
   priority: null,
   assignee: null,
+  team: null,
   dueDate: null,
   labels: null,
+  epics: null,
 };
 
 const FILTER_KEYS: Array<keyof BoardFilters> = [
   "status",
   "priority",
   "assignee",
+  "team",
   "dueDate",
   "labels",
+  "epics",
 ];
 
 function normalizeFilters(raw: unknown): BoardFilters {
@@ -46,7 +50,7 @@ export function useTaskFiltersWithLabelsSupport(
   textQuery?: string,
 ) {
   const weekStartsOn = useUserPreferencesStore((state) => state.weekStartsOn);
-  const storageKey = projectId ? `kaneo:board-filters:${projectId}` : null;
+  const storageKey = projectId ? `riuna:board-filters:${projectId}` : null;
   const [filters, setFilters] = useState<BoardFilters>(DEFAULT_FILTERS);
 
   useEffect(() => {
@@ -121,6 +125,14 @@ export function useTaskFiltersWithLabelsSupport(
           return false;
         }
 
+        if (
+          filters.team &&
+          filters.team.length > 0 &&
+          !filters.team.includes(task.teamId ?? "")
+        ) {
+          return false;
+        }
+
         if (filters.dueDate && filters.dueDate.length > 0) {
           const today = new Date();
           const taskDate = task.dueDate ? new Date(task.dueDate) : null;
@@ -161,6 +173,14 @@ export function useTaskFiltersWithLabelsSupport(
           });
 
           if (!matchesAnyDueDate) {
+            return false;
+          }
+        }
+
+        // Una tarea puede servir a varias epicas: basta con que coincida una.
+        if (filters.epics && filters.epics.length > 0) {
+          const taskEpicIds = (task.epics ?? []).map((epic) => epic.id);
+          if (!filters.epics.some((epicId) => taskEpicIds.includes(epicId))) {
             return false;
           }
         }

@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 env:
-  CHART_PATH: charts/kaneo
+  CHART_PATH: charts/riuna
 
 jobs:
   validate:
@@ -18,34 +18,34 @@ jobs:
         include:
           - name: default
             args: >-
-              --set kaneo.env.authSecret=secure-auth-secret-at-least-32-characters
+              --set riuna.env.authSecret=secure-auth-secret-at-least-32-characters
           - name: ingress
             args: >-
               --set ingress.enabled=true
-              --set kaneo.env.authSecret=secure-auth-secret-at-least-32-characters
+              --set riuna.env.authSecret=secure-auth-secret-at-least-32-characters
               --set postgresql.auth.password=secure-db-password
           - name: gateway
             args: >-
               --set gateway.enabled=true
               --set gateway.parentRefs[0].name=gateway
-              --set kaneo.env.authSecret=secure-auth-secret-at-least-32-characters
+              --set riuna.env.authSecret=secure-auth-secret-at-least-32-characters
               --set postgresql.auth.password=secure-db-password
           - name: autoscaling
             args: >-
               --set autoscaling.enabled=true
-              --set kaneo.resources.requests.cpu=100m
-              --set kaneo.env.authSecret=secure-auth-secret-at-least-32-characters
+              --set riuna.resources.requests.cpu=100m
+              --set riuna.env.authSecret=secure-auth-secret-at-least-32-characters
           - name: external-database
             args: >-
               --set postgresql.enabled=false
-              --set kaneo.env.database.external.enabled=true
-              --set kaneo.env.database.external.host=db.example.com
-              --set kaneo.env.database.external.password=secure-db-password
-              --set kaneo.env.authSecret=secure-auth-secret-at-least-32-characters
+              --set riuna.env.database.external.enabled=true
+              --set riuna.env.database.external.host=db.example.com
+              --set riuna.env.database.external.password=secure-db-password
+              --set riuna.env.authSecret=secure-auth-secret-at-least-32-characters
           - name: bundled-postgresql-secret
             args: >-
-              --set postgresql.auth.existingSecret=kaneo-secrets
-              --set kaneo.env.authSecret=secure-auth-secret-at-least-32-characters
+              --set postgresql.auth.existingSecret=riuna-secrets
+              --set riuna.env.authSecret=secure-auth-secret-at-least-32-characters
 
     steps:
       - name: Checkout repository
@@ -60,4 +60,4 @@ jobs:
         run: helm lint "$CHART_PATH"
 
       - name: Render chart (${{ matrix.name }})
-        run: helm template kaneo "$CHART_PATH" ${{ matrix.args }}
+        run: helm template riuna "$CHART_PATH" ${{ matrix.args }}

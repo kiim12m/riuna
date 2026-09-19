@@ -6,15 +6,15 @@ import PageTitle from "@/components/page-title";
 import { CopyUrlButton } from "@/components/public-project/copy-url-button";
 import { ErrorView } from "@/components/public-project/error-view";
 import { PublicKanbanView } from "@/components/public-project/kanban-view";
-import { KaneoBranding } from "@/components/public-project/kaneo-branding";
 import { PublicListView } from "@/components/public-project/list-view";
 import { LoadingSkeleton } from "@/components/public-project/loading-skeleton";
+import { RiunaBranding } from "@/components/public-project/riuna-branding";
 import { PublicTaskDetailModal } from "@/components/public-project/task-detail-modal";
 import { ThemeToggle } from "@/components/public-project/theme-toggle";
 import { Button } from "@/components/ui/button";
 import icons from "@/constants/project-icons";
 import useGetPublicProject from "@/hooks/queries/project/use-get-public-project";
-import type Task from "@/types/task";
+import type { PublicTask } from "@/types/project";
 
 export const Route = createFileRoute("/public-project/$projectId")({
   component: RouteComponent,
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/public-project/$projectId")({
 
 type ViewMode = "kanban" | "list";
 
-const VIEW_MODE_STORAGE_KEY = "kaneo-public-view-mode";
+const VIEW_MODE_STORAGE_KEY = "riuna-public-view-mode";
 
 function RouteComponent() {
   const { t } = useTranslation();
@@ -37,14 +37,14 @@ function RouteComponent() {
     return "kanban";
   });
 
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<PublicTask | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode);
   }, [viewMode]);
 
-  const handleTaskClick = (task: Task) => {
+  const handleTaskClick = (task: PublicTask) => {
     setSelectedTask(task);
     setIsTaskModalOpen(true);
   };
@@ -83,7 +83,7 @@ function RouteComponent() {
                     <h1 className="text-lg font-semibold text-foreground truncate">
                       {project.name}
                     </h1>
-                    <span className="px-1.5 py-0.5 text-[10px] bg-muted text-muted-foreground rounded font-medium shrink-0">
+                    <span className="px-1.5 py-0.5 text-label bg-muted text-muted-foreground rounded font-medium shrink-0">
                       {t("publicProject:badge")}
                     </span>
                   </div>
@@ -135,7 +135,7 @@ function RouteComponent() {
         <footer className="border-t border-border">
           <div className="px-6 py-3">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <KaneoBranding />
+              <RiunaBranding />
               <span>{t("publicProject:readOnly")}</span>
             </div>
           </div>

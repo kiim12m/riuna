@@ -80,8 +80,8 @@ export function isDisallowedAddress(address: string): boolean {
 
 function privateDestinationsAllowed(): boolean {
   return (
-    process.env.KANEO_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS === "true" ||
-    process.env.KANEO_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS === "1"
+    process.env.RIUNA_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS === "true" ||
+    process.env.RIUNA_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS === "1"
   );
 }
 

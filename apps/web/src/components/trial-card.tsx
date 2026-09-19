@@ -11,7 +11,7 @@ function daysLeft(value: string | null | undefined) {
   return Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)));
 }
 
-const DISMISS_KEY = "kaneo:trial-card-dismissed";
+const DISMISS_KEY = "riuna:trial-card-dismissed";
 
 export function TrialCard() {
   const { data: workspace } = useActiveWorkspace();
@@ -82,7 +82,7 @@ export function TrialCard() {
             : `${left} ${left === 1 ? "day" : "days"} left in trial`}
         </span>
       </div>
-      <p className="mt-1 text-[0.7rem] leading-snug opacity-80">
+      <p className="mt-1 text-label leading-snug opacity-80">
         {expired
           ? "Subscribe to keep creating and editing."
           : "Upgrade anytime to keep your workspace after the trial."}

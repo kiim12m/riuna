@@ -1,4 +1,4 @@
-import { client } from "@kaneo/libs";
+import { client } from "@riuna/libs";
 
 async function getColumns(projectId: string) {
   const response = await client.column[":projectId"].$get({

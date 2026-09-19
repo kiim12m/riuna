@@ -1,4 +1,4 @@
-import { AlertTriangle, ExternalLink, RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   getCorsTroubleshootingSteps,
@@ -85,18 +85,6 @@ export function ErrorDisplay({
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 {t("common:error.tryAgain")}
-              </Button>
-            )}
-
-            {parsedError.type === "cors" && (
-              <Button
-                onClick={() => window.open("https://kaneo.app/docs", "_blank")}
-                variant="outline"
-                size="icon"
-                className="w-full"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                {t("common:error.viewDeploymentGuide")}
               </Button>
             )}
 

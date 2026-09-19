@@ -12,8 +12,8 @@ const mocks = vi.hoisted(() => ({
   canCreateTasks: vi.fn(),
   canUpdateTasks: vi.fn(),
   createTask: vi.fn(),
-  createRelation: vi.fn(),
   getColumns: vi.fn(),
+  getTask: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-router", () => ({ useNavigate: () => vi.fn() }));
@@ -26,9 +26,6 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/hooks/mutations/task/use-create-task", () => ({
   default: () => ({ mutateAsync: mocks.createTask, isPending: false }),
 }));
-vi.mock("@/hooks/mutations/task-relation/use-create-task-relation", () => ({
-  default: () => ({ mutateAsync: mocks.createRelation }),
-}));
 vi.mock("@/hooks/mutations/task/use-delete-task", () => ({
   useDeleteTask: () => ({ mutateAsync: vi.fn() }),
 }));
@@ -38,8 +35,8 @@ vi.mock("@/hooks/mutations/task/use-update-task-status", () => ({
 vi.mock("@/hooks/queries/column/use-get-columns", () => ({
   useGetColumns: () => mocks.getColumns(),
 }));
-vi.mock("@/hooks/queries/task-relation/use-get-task-relations", () => ({
-  default: () => ({ data: [] }),
+vi.mock("@/hooks/queries/task/use-get-task", () => ({
+  default: () => mocks.getTask(),
 }));
 vi.mock("@/hooks/queries/workspace/use-active-workspace", () => ({
   default: () => ({ data: { id: "workspace-1" } }),
@@ -68,6 +65,9 @@ beforeEach(() => {
     ],
     isLoading: false,
   });
+  // Las subtareas ya no son relaciones: son las hijas que el detalle de la
+  // tarea trae consigo.
+  mocks.getTask.mockReturnValue({ data: { id: "parent-1", children: [] } });
 });
 
 afterEach(() => {
@@ -78,7 +78,6 @@ afterEach(() => {
 describe("TaskSubtasks", () => {
   it("creates a subtask as planned when its parent is planned", async () => {
     mocks.createTask.mockResolvedValue({ id: "subtask-1" });
-    mocks.createRelation.mockResolvedValue({});
 
     render(
       <TaskSubtasks
@@ -104,13 +103,12 @@ describe("TaskSubtasks", () => {
 
     await waitFor(() => expect(mocks.createTask).toHaveBeenCalledTimes(1));
     expect(mocks.createTask).toHaveBeenCalledWith(
-      expect.objectContaining({ status: "planned" }),
+      expect.objectContaining({ status: "planned", parentId: "parent-1" }),
     );
   });
 
   it("uses the project's first active column for an active parent", async () => {
     mocks.createTask.mockResolvedValue({ id: "subtask-2" });
-    mocks.createRelation.mockResolvedValue({});
 
     render(
       <TaskSubtasks
@@ -136,7 +134,7 @@ describe("TaskSubtasks", () => {
 
     await waitFor(() => expect(mocks.createTask).toHaveBeenCalledTimes(1));
     expect(mocks.createTask).toHaveBeenCalledWith(
-      expect.objectContaining({ status: "to-do" }),
+      expect.objectContaining({ status: "to-do", parentId: "parent-2" }),
     );
   });
 

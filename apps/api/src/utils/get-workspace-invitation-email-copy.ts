@@ -1,24 +1,20 @@
-import deDE from "../../../../i18n/de-DE.json";
+import caES from "../../../../i18n/ca-ES.json";
 import enUS from "../../../../i18n/en-US.json";
-import frFR from "../../../../i18n/fr-FR.json";
-import ptBR from "../../../../i18n/pt-BR.json";
-import viVN from "../../../../i18n/vi-VN.json";
+import esES from "../../../../i18n/es-ES.json";
 
 const messages = {
-  de: deDE.invitations.email,
+  ca: caES.invitations.email,
   en: enUS.invitations.email,
-  fr: frFR.invitations.email,
-  pt: ptBR.invitations.email,
-  vi: viVN.invitations.email,
+  es: esES.invitations.email,
 } as const;
 
+// El español es el idioma por defecto de Riuna, y por tanto el de reserva
+// también en los correos de invitación.
 export function getWorkspaceInvitationEmailCopy(locale?: string | null) {
   const normalizedLocale = locale?.toLowerCase();
 
-  if (normalizedLocale?.startsWith("de")) return messages.de;
-  if (normalizedLocale?.startsWith("fr")) return messages.fr;
-  if (normalizedLocale?.startsWith("pt")) return messages.pt;
-  if (normalizedLocale?.startsWith("vi")) return messages.vi;
+  if (normalizedLocale?.startsWith("ca")) return messages.ca;
+  if (normalizedLocale?.startsWith("en")) return messages.en;
 
-  return messages.en;
+  return messages.es;
 }
