@@ -25,7 +25,8 @@
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** | |
 
-**Estimación honesta:** 29 semanas nominales a ~8 h/semana son **8-11 meses**
+**Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
+6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
 reales para cerrar el Bloque A. La ventaja del fork no está en la fecha final,
 sino en cuándo llega el valor: Riuna fue usable en la **semana 2** y la
 plataforma diferencial —árbol, campos personalizados, vistas e importación—
@@ -1408,8 +1409,8 @@ Lo que arrastra la Fase 6, y que sigue abierto:
     (ws/index.ts): añadirlo obligaría a resolver `project → workspace` en cada
     evento. Cumplir el principio 5 de `marca.md` en esta página exige cambiar la
     forma del mensaje, que es una decisión de protocolo, no de diseño.
-  - **Los tamaños de texto arbitrarios siguen.** `text-[10px]` y `text-[11px]`
-    suman 106 usos en 20 ficheros. «Mi trabajo» ya consume `text-body`,
-    `text-section` y `text-secondary`; el resto del web sigue con las utilidades
-    de Tailwind. La [ADR 018](adr/018-escala-tipografica.md) previó migración
-    incremental y esto es lo que queda de ella.
+  - ~~**Los tamaños de texto arbitrarios siguen.**~~ **Cerrada** por la Fase
+    7.5: los 119 tamaños arbitrarios volvieron a los siete papeles de §05 y no
+    queda ningún `text-[Npx]` en `apps/web/src`. Lo que sigue fuera son las 48
+    clases de tamaño de Tailwind de pantallas que esa revisión no recorrió; ver
+    su deuda declarada.
