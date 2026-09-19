@@ -18,19 +18,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Goal, GoalMetric, GoalTarget } from "@/fetchers/goal";
+import type {
+  Goal,
+  GoalMetric,
+  GoalTarget,
+  TargetConfig,
+} from "@/fetchers/goal";
+import { currentQuarter } from "@/lib/current-quarter";
 
 const METRICS: GoalMetric[] = ["doneCount", "sumEstimate"];
-
-/** Trimestre en curso, que es el periodo que la fase pide por defecto. */
-function currentQuarter() {
-  const now = new Date();
-  const firstMonth = Math.floor(now.getMonth() / 3) * 3;
-  const start = new Date(now.getFullYear(), firstMonth, 1);
-  const end = new Date(now.getFullYear(), firstMonth + 3, 0);
-  const iso = (date: Date) => date.toISOString().slice(0, 10);
-  return { start: iso(start), end: iso(end) };
-}
 
 export function GoalDialog({
   open,
@@ -160,13 +156,20 @@ export function TargetDialog({
   onSubmit: (values: {
     name: string;
     targetValue: number;
-    config: { metric: GoalMetric; scope?: "assigned" | "team" };
+    config: TargetConfig;
   }) => void;
 }) {
   const { t } = useTranslation();
-  const existing = (target?.config ?? {}) as {
-    metric?: GoalMetric;
-    scope?: "assigned" | "team";
+  const existing = (target?.config ?? {}) as TargetConfig;
+
+  // Se parte del `config` que el resultado ya tenia: el dialogo no edita el
+  // filtro, y la API sustituye el `config` entero, asi que mandar solo metrica y
+  // ambito borraba el filtro de quien lo hubiera puesto por la API.
+  const nextConfig = (): TargetConfig => {
+    const next: TargetConfig = { ...existing, metric };
+    if (scope === "all") delete next.scope;
+    else next.scope = scope;
+    return next;
   };
 
   const [name, setName] = useState(target?.name ?? "");
@@ -270,10 +273,7 @@ export function TargetDialog({
               onSubmit({
                 name: name.trim(),
                 targetValue: parsed,
-                config: {
-                  metric,
-                  ...(scope !== "all" ? { scope } : {}),
-                },
+                config: nextConfig(),
               })
             }
           >

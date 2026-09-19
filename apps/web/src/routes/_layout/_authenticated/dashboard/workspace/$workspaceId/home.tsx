@@ -44,6 +44,7 @@ import {
   useGetDashboardData,
   useGetDashboards,
 } from "@/hooks/queries/dashboard/use-dashboards";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { toast } from "@/lib/toast";
 
 export const Route = createFileRoute(
@@ -82,6 +83,18 @@ function HomeComponent() {
   const isMine = dashboard?.createdBy === user?.id;
   const { data, isPending: isDataPending } = useGetDashboardData(dashboard?.id);
 
+  // La regla de la API (`require-dashboard-owner.ts`): lo toca quien lo creo,
+  // y un panel compartido tambien quien modera el espacio. Ensenar editar,
+  // quitar y arrastrar a cualquier otro solo le daba un 403 sin explicacion.
+  const { canModerateShared } = useWorkspacePermission();
+  const canEdit =
+    isMine || (Boolean(dashboard?.isShared) && canModerateShared());
+
+  const onError = (error: unknown) =>
+    toast.error(
+      error instanceof Error ? error.message : t("panels:errors.saveFailed"),
+    );
+
   const mutations = useDashboardMutations(workspaceId);
   const [editing, setEditing] = useState<Widget | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -105,16 +118,22 @@ function HomeComponent() {
       params: { workspaceId, projectId, taskId },
     });
 
+  // El editor se cierra cuando el servidor acepta, no al enviar: si lo rechaza,
+  // lo configurado sigue ahi y el error se ve.
   const save = (draft: WidgetDraft) => {
     if (editing) {
-      mutations.editWidget.mutate({ id: editing.id, ...draft });
-      setEditing(null);
+      mutations.editWidget.mutate(
+        { id: editing.id, ...draft },
+        { onSuccess: () => setEditing(null), onError },
+      );
       return;
     }
 
     if (!dashboard) return;
-    mutations.addWidget.mutate({ dashboardId: dashboard.id, ...draft });
-    setIsAdding(false);
+    mutations.addWidget.mutate(
+      { dashboardId: dashboard.id, ...draft },
+      { onSuccess: () => setIsAdding(false), onError },
+    );
   };
 
   const [isExporting, setIsExporting] = useState(false);
@@ -182,10 +201,10 @@ function HomeComponent() {
                 size="xs"
                 className="gap-1"
                 onClick={() =>
-                  mutations.editDashboard.mutate({
-                    id: dashboard.id,
-                    isShared: !dashboard.isShared,
-                  })
+                  mutations.editDashboard.mutate(
+                    { id: dashboard.id, isShared: !dashboard.isShared },
+                    { onError },
+                  )
                 }
               >
                 {dashboard.isShared ? <Users className="size-3" /> : null}
@@ -239,22 +258,26 @@ function HomeComponent() {
                   {t("panels:empty.description")}
                 </EmptyDescription>
               </EmptyHeader>
-              <EmptyContent>
-                <Button onClick={addWidget}>
-                  <Plus />
-                  {t("panels:widget.add")}
-                </Button>
-              </EmptyContent>
+              {/* Sin panel todavia, anadir crea el propio; con uno ajeno, no. */}
+              {(canEdit || !dashboard) && (
+                <EmptyContent>
+                  <Button onClick={addWidget}>
+                    <Plus />
+                    {t("panels:widget.add")}
+                  </Button>
+                </EmptyContent>
+              )}
             </Empty>
           ) : (
             <DashboardGrid
               ids={widgets.map((widget) => widget.id)}
+              disabled={!canEdit}
               onReorder={(widgetIds) =>
                 dashboard &&
-                mutations.reorder.mutate({
-                  dashboardId: dashboard.id,
-                  widgetIds,
-                })
+                mutations.reorder.mutate(
+                  { dashboardId: dashboard.id, widgetIds },
+                  { onError },
+                )
               }
             >
               {widgets.map((widget) => {
@@ -267,8 +290,15 @@ function HomeComponent() {
                       span={widget.span}
                       isLoading={isDataPending}
                       error={entry?.error}
-                      onEdit={() => setEditing(widget)}
-                      onDelete={() => mutations.removeWidget.mutate(widget.id)}
+                      {...(canEdit
+                        ? {
+                            onEdit: () => setEditing(widget),
+                            onDelete: () =>
+                              mutations.removeWidget.mutate(widget.id, {
+                                onError,
+                              }),
+                          }
+                        : {})}
                     >
                       <WidgetBody
                         widget={widget}

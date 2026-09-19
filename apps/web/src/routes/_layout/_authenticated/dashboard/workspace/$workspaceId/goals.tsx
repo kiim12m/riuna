@@ -6,6 +6,7 @@ import WorkspaceLayout from "@/components/common/workspace-layout";
 import { GoalCard } from "@/components/goal/goal-card";
 import { GoalDialog, TargetDialog } from "@/components/goal/goal-dialogs";
 import PageTitle from "@/components/page-title";
+import { useAuth } from "@/components/providers/auth-provider/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -26,6 +27,8 @@ import {
   useUpdateGoal,
   useUpdateTarget,
 } from "@/hooks/queries/goal/use-goals";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { toast } from "@/lib/toast";
 
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/workspace/$workspaceId/goals",
@@ -52,6 +55,21 @@ function GoalsComponent() {
     goalId: string;
     target: GoalTarget | null;
   } | null>(null);
+
+  const { user } = useAuth();
+  const { canModerateShared } = useWorkspacePermission();
+
+  // La regla de la API (`require-goal-owner.ts`): lo toca quien lo creo, y un
+  // compartido tambien quien modera el espacio. Ensenar las acciones a
+  // cualquier otro solo le daba un 403 sin explicacion.
+  const canEdit = (goal: Goal) =>
+    goal.createdBy === user?.id ||
+    (Boolean(goal.isShared) && canModerateShared());
+
+  const onError = (error: unknown) =>
+    toast.error(
+      error instanceof Error ? error.message : t("goals:errors.saveFailed"),
+    );
 
   return (
     <>
@@ -101,21 +119,23 @@ function GoalsComponent() {
                 <GoalCard
                   key={goal.id}
                   goal={goal}
-                  onEdit={() => setGoalDialog({ goal })}
-                  onDelete={() => deleteGoal.mutate(goal.id)}
-                  onToggleShare={() =>
-                    updateGoal.mutate({
-                      id: goal.id,
-                      isShared: !goal.isShared,
-                    })
-                  }
-                  onAddTarget={() =>
-                    setTargetDialog({ goalId: goal.id, target: null })
-                  }
-                  onEditTarget={(target) =>
-                    setTargetDialog({ goalId: goal.id, target })
-                  }
-                  onDeleteTarget={(target) => deleteTarget.mutate(target.id)}
+                  {...(canEdit(goal)
+                    ? {
+                        onEdit: () => setGoalDialog({ goal }),
+                        onDelete: () => deleteGoal.mutate(goal.id, { onError }),
+                        onToggleShare: () =>
+                          updateGoal.mutate(
+                            { id: goal.id, isShared: !goal.isShared },
+                            { onError },
+                          ),
+                        onAddTarget: () =>
+                          setTargetDialog({ goalId: goal.id, target: null }),
+                        onEditTarget: (target: GoalTarget) =>
+                          setTargetDialog({ goalId: goal.id, target }),
+                        onDeleteTarget: (target: GoalTarget) =>
+                          deleteTarget.mutate(target.id, { onError }),
+                      }
+                    : {})}
                 />
               ))}
             </div>
@@ -129,13 +149,18 @@ function GoalsComponent() {
           goal={goalDialog.goal}
           isPending={createGoal.isPending || updateGoal.isPending}
           onClose={() => setGoalDialog(null)}
+          // Se cierra cuando el servidor acepta, no al enviar: si lo rechaza, lo
+          // escrito sigue en el dialogo y el error se ve.
           onSubmit={(values) => {
+            const handlers = { onSuccess: () => setGoalDialog(null), onError };
             if (goalDialog.goal) {
-              updateGoal.mutate({ id: goalDialog.goal.id, ...values });
+              updateGoal.mutate(
+                { id: goalDialog.goal.id, ...values },
+                handlers,
+              );
             } else {
-              createGoal.mutate({ workspaceId, ...values });
+              createGoal.mutate({ workspaceId, ...values }, handlers);
             }
-            setGoalDialog(null);
           }}
         />
       )}
@@ -147,12 +172,21 @@ function GoalsComponent() {
           isPending={createTarget.isPending || updateTarget.isPending}
           onClose={() => setTargetDialog(null)}
           onSubmit={(values) => {
+            const handlers = {
+              onSuccess: () => setTargetDialog(null),
+              onError,
+            };
             if (targetDialog.target) {
-              updateTarget.mutate({ id: targetDialog.target.id, ...values });
+              updateTarget.mutate(
+                { id: targetDialog.target.id, ...values },
+                handlers,
+              );
             } else {
-              createTarget.mutate({ goalId: targetDialog.goalId, ...values });
+              createTarget.mutate(
+                { goalId: targetDialog.goalId, ...values },
+                handlers,
+              );
             }
-            setTargetDialog(null);
           }}
         />
       )}

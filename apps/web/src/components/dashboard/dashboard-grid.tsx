@@ -28,10 +28,13 @@ import type { CSSProperties, ReactNode } from "react";
 export function DashboardGrid({
   ids,
   onReorder,
+  disabled = false,
   children,
 }: {
   ids: string[];
   onReorder: (ids: string[]) => void;
+  /** Sin arrastre: el panel es de otra persona y la API no deja reordenarlo. */
+  disabled?: boolean;
   children: ReactNode;
 }) {
   const sensors = useSensors(
@@ -65,7 +68,11 @@ export function DashboardGrid({
       onDragEnd={handleDragEnd}
       onDragCancel={() => document.body.classList.remove("riuna-dragging")}
     >
-      <SortableContext items={ids} strategy={rectSortingStrategy}>
+      <SortableContext
+        items={ids}
+        strategy={rectSortingStrategy}
+        disabled={disabled}
+      >
         <div className="grid grid-cols-1 gap-(--density-col-gap) sm:grid-cols-2 lg:grid-cols-3">
           {children}
         </div>

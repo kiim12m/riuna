@@ -25,6 +25,9 @@ const CAPABILITIES = {
   updateLabels: { label: ["update"] },
   deleteLabels: { label: ["delete"] },
   manageWorkspace: { workspace: ["update", "manage_settings"] },
+  // La regla del API para lo compartido (paneles y objetivos): quien no es su
+  // autor solo puede tocarlo con este permiso. Ver `require-dashboard-owner.ts`.
+  moderateShared: { workspace: ["manage_settings"] },
   deleteWorkspace: { workspace: ["delete"] },
   inviteUsers: { invitation: ["create"] },
   manageTeam: { member: ["update", "delete"] },
@@ -103,6 +106,7 @@ export function useWorkspacePermission() {
       canUpdateLabels: () => can.updateLabels,
       canDeleteLabels: () => can.deleteLabels,
       canManageWorkspace: () => can.manageWorkspace,
+      canModerateShared: () => can.moderateShared,
       canDeleteWorkspace: () => can.deleteWorkspace,
       canInviteUsers: () => can.inviteUsers,
       canManageTeam: () => can.manageTeam,

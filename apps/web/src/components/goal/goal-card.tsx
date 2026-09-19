@@ -28,12 +28,14 @@ export function GoalCard({
   onToggleShare,
 }: {
   goal: Goal;
-  onAddTarget: () => void;
-  onEditTarget: (target: GoalTarget) => void;
-  onDeleteTarget: (target: GoalTarget) => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  onToggleShare: () => void;
+  // Sin acciones, la tarjeta es de solo lectura: es como se ve un objetivo
+  // compartido de otra persona, que la API no deja tocar.
+  onAddTarget?: () => void;
+  onEditTarget?: (target: GoalTarget) => void;
+  onDeleteTarget?: (target: GoalTarget) => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onToggleShare?: () => void;
 }) {
   const { t, i18n } = useTranslation();
 
@@ -71,35 +73,45 @@ export function GoalCard({
           </span>
         )}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                aria-label={t("goals:actions.menu")}
-              >
-                <MoreHorizontal />
-              </Button>
-            }
-          />
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem onClick={onAddTarget}>
-              {t("goals:actions.addTarget")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onEdit}>
-              {t("common:actions.edit")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onToggleShare}>
-              {goal.isShared
-                ? t("goals:actions.unshare")
-                : t("goals:actions.share")}
-            </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onClick={onDelete}>
-              {t("common:actions.delete")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {(onAddTarget || onEdit || onToggleShare || onDelete) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={t("goals:actions.menu")}
+                >
+                  <MoreHorizontal />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-44">
+              {onAddTarget && (
+                <DropdownMenuItem onClick={onAddTarget}>
+                  {t("goals:actions.addTarget")}
+                </DropdownMenuItem>
+              )}
+              {onEdit && (
+                <DropdownMenuItem onClick={onEdit}>
+                  {t("common:actions.edit")}
+                </DropdownMenuItem>
+              )}
+              {onToggleShare && (
+                <DropdownMenuItem onClick={onToggleShare}>
+                  {goal.isShared
+                    ? t("goals:actions.unshare")
+                    : t("goals:actions.share")}
+                </DropdownMenuItem>
+              )}
+              {onDelete && (
+                <DropdownMenuItem variant="destructive" onClick={onDelete}>
+                  {t("common:actions.delete")}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </header>
 
       {goal.description && (
@@ -116,8 +128,8 @@ export function GoalCard({
             <li key={target.id}>
               <TargetRow
                 target={target}
-                onEdit={() => onEditTarget(target)}
-                onDelete={() => onDeleteTarget(target)}
+                onEdit={onEditTarget && (() => onEditTarget(target))}
+                onDelete={onDeleteTarget && (() => onDeleteTarget(target))}
               />
             </li>
           ))}
@@ -133,8 +145,8 @@ function TargetRow({
   onDelete,
 }: {
   target: GoalTarget;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }) {
   const { t } = useTranslation();
   const failed = target.current === null;
@@ -165,27 +177,33 @@ function TargetRow({
           </span>
         )}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                aria-label={t("goals:actions.targetMenu")}
-              >
-                <MoreHorizontal />
-              </Button>
-            }
-          />
-          <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem onClick={onEdit}>
-              {t("common:actions.edit")}
-            </DropdownMenuItem>
-            <DropdownMenuItem variant="destructive" onClick={onDelete}>
-              {t("common:actions.delete")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {(onEdit || onDelete) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={t("goals:actions.targetMenu")}
+                >
+                  <MoreHorizontal />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-40">
+              {onEdit && (
+                <DropdownMenuItem onClick={onEdit}>
+                  {t("common:actions.edit")}
+                </DropdownMenuItem>
+              )}
+              {onDelete && (
+                <DropdownMenuItem variant="destructive" onClick={onDelete}>
+                  {t("common:actions.delete")}
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {!failed && <Progress value={percent} className="h-1.5" />}
