@@ -1,4 +1,4 @@
-import { client } from "@kaneo/libs";
+import { client } from "@riuna/libs";
 
 export type DetachLabelFromTaskRequest = {
   labelId: string;
