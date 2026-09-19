@@ -1,14 +1,18 @@
-import { and, asc, eq, max } from "drizzle-orm";
+import { and, asc, eq, inArray, like, max, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import {
   assetTable,
   columnTable,
   projectTable,
+  taskEpicTable,
   taskTable,
 } from "../../database/schema";
 import { publishEvent } from "../../events";
-import { claimTaskNumber } from "./claim-task-numbers";
+import { getFieldDefinitionsForProject } from "../../field/controllers/get-field-definitions";
+import { rebasePath, rootPath, subtreePattern } from "../tree";
+import claimTaskNumbers from "./claim-task-numbers";
+import { lockProjectTree } from "./lock-project-tree";
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -19,11 +23,9 @@ function isSameProjectMove(
   return sourceProjectId === destinationProjectId;
 }
 
-async function resolveDestinationStatus(
-  destinationProjectId: string,
-  currentStatus: string,
-  requestedStatus?: string,
-) {
+type DestinationColumn = { id: string; slug: string; position: number };
+
+async function loadDestinationColumns(destinationProjectId: string) {
   const destinationColumns = await db
     .select({
       id: columnTable.id,
@@ -34,12 +36,33 @@ async function resolveDestinationStatus(
     .where(eq(columnTable.projectId, destinationProjectId))
     .orderBy(asc(columnTable.position));
 
-  const [firstColumn] = destinationColumns;
-
-  if (!firstColumn) {
+  if (destinationColumns.length === 0) {
     throw new HTTPException(400, {
       message: "Destination project does not have a workflow",
     });
+  }
+
+  return destinationColumns;
+}
+
+/**
+ * A que columna del destino va una tarea, dado el estado que trae.
+ *
+ * Es pura y se aplica **por tarea**, no una vez para toda la rama: estampar
+ * sobre los descendientes el estado resuelto para la raiz reabria lo terminado
+ * y desarchivaba lo archivado, perdiendo el trabajo de la rama sin aviso.
+ *
+ * `requestedStatus` solo lo pide quien mueve, y solo se aplica a la raiz.
+ */
+function pickDestinationColumn(
+  destinationColumns: DestinationColumn[],
+  currentStatus: string,
+  requestedStatus?: string,
+): DestinationColumn | null {
+  // `archived` no es una columna: es un estado al margen del flujo. Se
+  // conserva tal cual, con `column_id` nulo, como hace la cascada.
+  if (!requestedStatus && currentStatus === "archived") {
+    return null;
   }
 
   const requestedColumn = requestedStatus
@@ -56,7 +79,16 @@ async function resolveDestinationStatus(
     (column) => column.slug === currentStatus,
   );
 
-  return requestedColumn ?? matchingCurrentColumn ?? firstColumn;
+  // `loadDestinationColumns` ya garantiza que hay al menos una.
+  return (
+    requestedColumn ?? matchingCurrentColumn ?? destinationColumns[0] ?? null
+  );
+}
+
+function statusFieldsFor(column: DestinationColumn | null) {
+  return column
+    ? { status: column.slug, columnId: column.id }
+    : { status: "archived", columnId: null };
 }
 
 async function getNextTaskPosition(
@@ -127,31 +159,102 @@ async function moveTask({
     });
   }
 
-  const resolvedColumn = await resolveDestinationStatus(
+  const destinationColumns = await loadDestinationColumns(destinationProjectId);
+
+  // Las claves de campo personalizado que siguen teniendo definicion en el
+  // destino. Los de alcance espacio sobreviven; los de alcance proyecto se van
+  // con su proyecto. Se incluyen las archivadas: archivar retira el campo de
+  // los formularios, no invalida el valor guardado.
+  const destinationDefinitions = await getFieldDefinitionsForProject(
+    destinationProject.workspaceId,
     destinationProjectId,
-    existingTask.status,
-    destinationStatus,
+    true,
+  );
+  const allowedFieldKeys = destinationDefinitions.map(
+    (definition) => definition.key,
   );
 
   const movedTask = await db.transaction(async (tx) => {
-    const [nextTaskNumber, nextPosition] = await Promise.all([
-      claimTaskNumber(destinationProjectId, tx),
-      getNextTaskPosition(
-        tx,
-        destinationProjectId,
-        resolvedColumn.slug,
-        resolvedColumn.id,
-      ),
+    // Se toma sobre el proyecto de origen, que es de donde se arranca la rama.
+    await lockProjectTree(tx, existingTask.projectId);
+
+    // Padre e hija comparten proyecto siempre (ADR 011), asi que mover una
+    // tarea es mover su rama entera. La tarea movida pasa a ser raiz en el
+    // destino: su padre se queda donde estaba.
+    //
+    // La rama se lee ya dentro de la transaccion y con el cerrojo tomado: leerla
+    // antes dejaba fuera lo que se hubiera colgado de ella mientras tanto, y esa
+    // hija se quedaba en el proyecto de origen con `parent_id` apuntando a una
+    // tarea del destino.
+    const subtree = await tx
+      .select({
+        id: taskTable.id,
+        path: taskTable.path,
+        depth: taskTable.depth,
+        status: taskTable.status,
+      })
+      .from(taskTable)
+      .where(
+        and(
+          eq(taskTable.projectId, existingTask.projectId),
+          like(taskTable.path, subtreePattern(existingTask.path)),
+        ),
+      )
+      .orderBy(asc(taskTable.depth));
+
+    const [root] = subtree;
+
+    if (!root) {
+      throw new HTTPException(404, { message: "Task not found" });
+    }
+
+    // La altura de la rama tras aterrizar, contando desde 1. El limite del
+    // destino guarda esta puerta igual que `rejectReparent` guarda la otra: sin
+    // esto, una rama de cinco niveles cae en un proyecto que declara dos y deja
+    // el limite incoherente de forma permanente.
+    const deepest = subtree.reduce((max, node) => Math.max(max, node.depth), 0);
+    const subtreeHeight = deepest - root.depth;
+
+    if (subtreeHeight + 1 > destinationProject.maxTaskDepth) {
+      throw new HTTPException(400, {
+        message:
+          "The branch is deeper than the destination project's task depth limit",
+      });
+    }
+
+    const descendants = subtree.filter((node) => node.id !== taskId);
+    const subtreeIds = subtree.map((node) => node.id);
+    const newRootPath = rootPath(taskId);
+
+    const rootColumn = pickDestinationColumn(
+      destinationColumns,
+      root.status,
+      destinationStatus,
+    );
+    const rootStatus = statusFieldsFor(rootColumn);
+
+    const [firstNumber, nextPosition] = await Promise.all([
+      claimTaskNumbers(destinationProjectId, subtree.length, tx),
+      rootColumn
+        ? getNextTaskPosition(
+            tx,
+            destinationProjectId,
+            rootColumn.slug,
+            rootColumn.id,
+          )
+        : Promise.resolve(1),
     ]);
 
     const [updatedTask] = await tx
       .update(taskTable)
       .set({
         projectId: destinationProjectId,
-        status: resolvedColumn.slug,
-        columnId: resolvedColumn.id,
-        number: nextTaskNumber,
+        ...rootStatus,
+        number: firstNumber,
         position: nextPosition,
+        parentId: null,
+        path: newRootPath,
+        depth: 0,
       })
       .where(eq(taskTable.id, taskId))
       .returning();
@@ -162,10 +265,51 @@ async function moveTask({
       });
     }
 
+    // Los descendientes conservan su forma —quien cuelga de quien— y su
+    // estado. Solo cambian de proyecto, de numero y de raiz del camino.
+    let number = firstNumber + 1;
+    for (const descendant of descendants) {
+      await tx
+        .update(taskTable)
+        .set({
+          projectId: destinationProjectId,
+          ...statusFieldsFor(
+            pickDestinationColumn(destinationColumns, descendant.status),
+          ),
+          number: number++,
+          path: rebasePath(descendant.path, existingTask.path, newRootPath),
+          depth: descendant.depth - existingTask.depth,
+        })
+        .where(eq(taskTable.id, descendant.id));
+    }
+
+    // Las epicas son por proyecto: conservarlas dejaba la rama colgada de
+    // epicas del origen, que el detalle mostraba, el tablero del destino no, y
+    // cuyos contadores seguian incluyendo tareas que ya no estaban alli.
+    await tx
+      .delete(taskEpicTable)
+      .where(inArray(taskEpicTable.taskId, subtreeIds));
+
+    // Y los valores de campos que el destino no define quedaban invisibles en
+    // el editor e imposibles de borrar por la API.
+    await tx
+      .update(taskTable)
+      .set({
+        // `sql.param` es obligatorio aqui: en una plantilla `sql`, drizzle
+        // expande un array a `($1, $2, ...)` en vez de pasarlo como un solo
+        // parametro, y `()::text[]` no compila.
+        customFields: sql`(
+          SELECT coalesce(jsonb_object_agg(entry.key, entry.value), '{}'::jsonb)
+          FROM jsonb_each(${taskTable.customFields}) AS entry(key, value)
+          WHERE entry.key = ANY(${sql.param(allowedFieldKeys)}::text[])
+        )`,
+      })
+      .where(inArray(taskTable.id, subtreeIds));
+
     await tx
       .update(assetTable)
       .set({ projectId: destinationProjectId })
-      .where(eq(assetTable.taskId, taskId));
+      .where(inArray(assetTable.taskId, subtreeIds));
 
     return updatedTask;
   });
@@ -179,7 +323,7 @@ async function moveTask({
     toProjectId: destinationProject.id,
     toProjectName: destinationProject.name,
     oldStatus: existingTask.status,
-    newStatus: resolvedColumn.slug,
+    newStatus: movedTask.status,
   });
 
   return {

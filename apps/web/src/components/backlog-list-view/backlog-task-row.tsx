@@ -2,8 +2,9 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
+import { useReducedMotion } from "framer-motion";
 import { Calendar, CalendarClock, CalendarX } from "lucide-react";
-import { type CSSProperties, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertDialog,
@@ -31,10 +32,12 @@ import { toast } from "@/lib/toast";
 import queryClient from "@/query-client";
 import useBacklogBulkSelectionStore from "@/store/backlog-bulk-selection";
 import useProjectStore from "@/store/project";
+import useRealtimeHighlightStore from "@/store/realtime-highlight";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import type Task from "@/types/task";
 import TaskCardContextMenuContent from "../kanban-board/task-card-context-menu/task-card-context-menu-content";
 import { TaskLabels } from "../kanban-board/task-labels";
+import SubtaskBadge from "../task/subtask-badge";
 import { ContextMenu, ContextMenuTrigger } from "../ui/context-menu";
 
 type BacklogTaskRowProps = {
@@ -69,6 +72,23 @@ export default function BacklogTaskRow({ task }: BacklogTaskRowProps) {
     useBacklogBulkSelectionStore();
   const isTaskSelected = isSelected(task.id);
   const isTaskFocused = isFocused(task.id);
+
+  // Resalte cuando otra persona cambia esta tarea (marca §06 principio 5).
+  const pulse = useRealtimeHighlightStore(
+    (state) => state.pulses[task.id] ?? 0,
+  );
+  const reduceMotion = useReducedMotion();
+  const [isFlashing, setIsFlashing] = useState(false);
+  useEffect(() => {
+    if (!pulse) return;
+    setIsFlashing(true);
+    const timeout = setTimeout(() => setIsFlashing(false), 900);
+    return () => clearTimeout(timeout);
+  }, [pulse]);
+  let flashClass = "";
+  if (isFlashing) {
+    flashClass = reduceMotion ? "riuna-flash-static" : "animate-flux";
+  }
 
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(
     workspace?.id ?? "",
@@ -143,6 +163,7 @@ export default function BacklogTaskRow({ task }: BacklogTaskRowProps) {
         isTaskSelected &&
           "bg-accent/60 shadow-sm ring-1 ring-inset ring-ring/30",
         isTaskFocused && "ring-2 ring-inset ring-ring/50",
+        flashClass,
       )}
     >
       <ContextMenu>
@@ -174,17 +195,16 @@ export default function BacklogTaskRow({ task }: BacklogTaskRowProps) {
                 <span className="text-sm text-foreground truncate">
                   {task.title}
                 </span>
-                {showLabels && (
-                  <div className="flex items-center gap-1">
-                    <TaskLabels labels={task.labels ?? []} />
-                  </div>
-                )}
+                <div className="flex items-center gap-1">
+                  <SubtaskBadge subtree={task.subtree} />
+                  {showLabels && <TaskLabels labels={task.labels ?? []} />}
+                </div>
               </div>
             </div>
 
             {showDueDates && task.dueDate && (
               <div
-                className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded flex-shrink-0 ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
+                className={`flex items-center gap-1 text-label px-2 py-1 rounded flex-shrink-0 ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
               >
                 {getDueDateStatus(task.dueDate, taskIsCompleted) ===
                   "overdue" && <CalendarX className="w-3 h-3" />}
@@ -215,7 +235,7 @@ export default function BacklogTaskRow({ task }: BacklogTaskRowProps) {
                     className="w-6 h-6 rounded-full bg-muted border border-border flex items-center justify-center"
                     title={t("tasks:assignee.unassigned")}
                   >
-                    <span className="text-[10px] font-medium text-muted-foreground">
+                    <span className="text-label font-medium text-muted-foreground">
                       ?
                     </span>
                   </div>

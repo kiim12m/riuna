@@ -9,6 +9,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { VersionDisplay } from "@/components/version-display";
@@ -30,8 +31,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar
-      collapsible="offcanvas"
-      variant="inset"
+      collapsible="icon"
+      variant="sidebar"
       className="border-none pt-1.5"
       {...props}
     >
@@ -45,9 +46,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <TrialCard />
-        <div className="flex items-center justify-between">
-          <VersionDisplay />
-          <ThemeToggleDropdown />
+        <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
+          <span className="group-data-[collapsible=icon]:hidden">
+            <VersionDisplay />
+          </span>
+          <div className="flex items-center gap-1">
+            <span className="group-data-[collapsible=icon]:hidden">
+              <ThemeToggleDropdown />
+            </span>
+            <SidebarTrigger className="size-7 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
+          </div>
         </div>
       </SidebarFooter>
     </Sidebar>

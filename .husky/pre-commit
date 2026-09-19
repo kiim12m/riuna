@@ -1,2 +1,11 @@
 set -e
-pnpm exec biome ci .
+
+# `biome ci .` no comprueba nada cuando la raiz del arbol de trabajo cuelga de
+# .claude: biome.json ignora `**/.claude`, y al resolver "." a esa ruta descarta
+# el arbol entero, sale con codigo 1 y bloquea el commit. Pasa en cualquier
+# worktree de Claude Code, que es donde se crean por defecto.
+#
+# Enumerar las entradas de primer nivel evita que se resuelva "." y comprueba
+# exactamente el mismo conjunto de ficheros. El glob recoge solo cualquier
+# directorio nuevo; los dos ocultos van aparte porque no los captura.
+pnpm exec biome ci * .devcontainer .vscode

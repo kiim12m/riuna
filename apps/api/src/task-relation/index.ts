@@ -10,6 +10,7 @@ import { validateWorkspaceAccess } from "../utils/validate-workspace-access";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import createTaskRelation from "./controllers/create-task-relation";
 import deleteTaskRelation from "./controllers/delete-task-relation";
+import getProjectTaskRelations from "./controllers/get-project-task-relations";
 import getTaskRelations from "./controllers/get-task-relations";
 
 const taskRelationSchema = v.object({
@@ -20,12 +21,48 @@ const taskRelationSchema = v.object({
   createdAt: v.date(),
 });
 
+const projectRelationSchema = v.array(
+  v.object({
+    id: v.string(),
+    sourceTaskId: v.string(),
+    targetTaskId: v.string(),
+    relationType: v.string(),
+  }),
+);
+
 const taskRelation = new Hono<{
   Variables: {
     userId: string;
     workspaceId: string;
   };
 }>()
+  .get(
+    "/project/:projectId",
+    describeRoute({
+      operationId: "getProjectTaskRelations",
+      tags: ["Task Relations"],
+      description:
+        "Get every task relation whose two endpoints are in the project (read-only, for the Gantt)",
+      responses: {
+        200: {
+          description: "Task relations within the project",
+          content: {
+            "application/json": { schema: resolver(projectRelationSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ projectId: v.string() })),
+    workspaceAccess.fromProject("projectId"),
+    async (c) => {
+      const { projectId } = c.req.valid("param");
+      const relations = await getProjectTaskRelations(
+        projectId,
+        c.get("workspaceId"),
+      );
+      return c.json(relations);
+    },
+  )
   .get(
     "/:taskId",
     describeRoute({
@@ -69,7 +106,9 @@ const taskRelation = new Hono<{
       v.object({
         sourceTaskId: v.string(),
         targetTaskId: v.string(),
-        relationType: v.picklist(["subtask", "blocks", "related"]),
+        // `subtask` se retiro en la Fase 2: la jerarquia vive en el arbol
+        // (`task.parent_id`), no en una relacion entre pares. Ver ADR 011.
+        relationType: v.picklist(["blocks", "related"]),
       }),
     ),
     async (c, next) => {

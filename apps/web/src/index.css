@@ -40,16 +40,33 @@ input:-webkit-autofill:active {
 
   /* dnd-kit writes the shuffle transition inline, so this needs !important. The
      dragged element still tracks the pointer; only the reflow is neutralized. */
-  [data-kaneo-sortable] {
+  [data-riuna-sortable] {
     transition: none !important;
+  }
+
+  /* Skeletons: el placeholder se queda visible, sin barrido ni latido. */
+  [data-slot="skeleton"],
+  .animate-pulse {
+    animation: none !important;
+    background: var(--color-muted) !important;
+  }
+
+  /* Resalte en tiempo real: el componente ya usa .riuna-flash-static en su
+     lugar, pero por si acaso la clase animada llega aquí, se corta. */
+  .animate-flux {
+    animation: none !important;
   }
 }
 
 
 @theme inline {
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --animate-skeleton: skeleton 2s -1s infinite linear;
+  /* Resalte de "cambiado por otra persona" — ADR 021. Baño de teal que decae.
+     Sin fill-mode: al acabar, la tarjeta vuelve a su box-shadow normal. */
+  --animate-flux: riuna-flux var(--motion-settle) var(--ease-out);
   --font-sans: var(--font-sans);
   --font-heading: var(--font-heading);
   --font-mono: var(--font-mono);
@@ -58,6 +75,10 @@ input:-webkit-autofill:active {
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+  --color-chart-other: var(--chart-other);
   --color-warning-foreground: var(--warning-foreground);
   --color-warning: var(--warning);
   --color-success-foreground: var(--success-foreground);
@@ -90,10 +111,18 @@ input:-webkit-autofill:active {
   --color-code-foreground: var(--code-foreground);
   --color-code-highlight: var(--code-highlight);
   --color-code: var(--code);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand: var(--brand);
   --color-border: var(--border);
   --color-background: var(--background);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
+  --shadow-e1: var(--elevation-1);
+  --shadow-e2: var(--elevation-2);
+  --shadow-e3: var(--elevation-3);
+  --shadow-e4: var(--elevation-4);
+  --inset-shadow-hairline: var(--elevation-hairline);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -103,6 +132,67 @@ input:-webkit-autofill:active {
       background-position: -200% 0;
     }
   }
+  /* El baño se pinta con un inset gigante que compone sobre el fondo real de la
+     tarjeta sin sustituirlo; la elevación se mantiene en los dos fotogramas
+     para que no haya salto al terminar. */
+  @keyframes riuna-flux {
+    0% {
+      box-shadow:
+        var(--elevation-1),
+        inset 0 0 0 100vmax color-mix(in srgb, var(--brand) 15%, transparent),
+        inset 0 0 0 1px color-mix(in srgb, var(--brand) 55%, transparent);
+    }
+    60% {
+      box-shadow:
+        var(--elevation-1),
+        inset 0 0 0 100vmax color-mix(in srgb, var(--brand) 7%, transparent),
+        inset 0 0 0 1px color-mix(in srgb, var(--brand) 22%, transparent);
+    }
+    100% {
+      box-shadow:
+        var(--elevation-1),
+        inset 0 0 0 100vmax transparent,
+        inset 0 0 0 1px transparent;
+    }
+  }
+}
+
+/* Escala tipográfica — marca.md §05. En bloque propio y sin `inline` para que
+   .compact-mode pueda rebajar el cuerpo redefiniendo la variable (ADR 018/019).
+   Convive con las utilidades de tamaño de Tailwind: text-sm/text-xs siguen. */
+@theme {
+  --text-display: 1.875rem;
+  --text-display--line-height: 2.125rem;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 600;
+
+  --text-page: 1.25rem;
+  --text-page--line-height: 1.6rem;
+  --text-page--letter-spacing: -0.01em;
+  --text-page--font-weight: 600;
+
+  --text-section: 1rem;
+  --text-section--line-height: 1.4rem;
+  --text-section--letter-spacing: -0.01em;
+  --text-section--font-weight: 600;
+
+  --text-body: 0.875rem;
+  --text-body--line-height: 1.35rem;
+
+  /* El rol "Secundario" de marca.md §05. Se llama `meta` y no `secondary`
+     porque `--secondary` ya existe como color de shadcn, y en Tailwind v4 el
+     prefijo `text-` lo comparten tamano y color: `text-secondary` compilaba a
+     `color: var(--secondary)` —un gris palido— en vez de a 12 px, asi que el
+     token era inservible tal y como lo nombro la ADR 018. */
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1.1rem;
+
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1rem;
+  --text-label--letter-spacing: 0.06em;
+  --text-label--font-weight: 500;
+
+  --text-mono: 0.8125rem;
 }
 
 :root {
@@ -123,107 +213,242 @@ input:-webkit-autofill:active {
     "Courier New",
     monospace;
   --radius: 0.625rem;
-  --accent: --alpha(var(--color-black) / 4%);
-  --accent-foreground: var(--color-neutral-800);
+
+  /* Paleta de marca — docs/marca.md §04. Valores fijos, independientes del
+     tema: lo que cambia entre claro y oscuro son los tokens semánticos de
+     abajo. Los componentes consumen los tokens, nunca estos valores.
+     Los tres neutros llevan sesgo azul a propósito: un gris neutro puro al
+     lado del navy delata que no se eligió. */
+  --riuna-navy: #1b3a5c;
+  --riuna-ink: #141d2b;
+  --riuna-mid: #4a6380;
+  --riuna-surface: #f6f7f9;
+  /* River Teal da 4,25:1 sobre blanco: sirve para trazo, icono, borde y anillo
+     de foco (umbral 3:1), no para texto. Lo que lleva texto encima —o es
+     texto— usa la variante -strong, que da 5,67:1. */
+  --riuna-teal: #0e8a7a;
+  --riuna-teal-strong: #0b7466;
+  --riuna-teal-light: #2ab39f;
+  /* Teal claro de texto para el estado activo en oscuro: 7,6:1 sobre la
+     barra lateral teñida, donde el -light se queda en 5,3:1. */
+  --riuna-teal-lighter: #5fd3c0;
+  /* Tema oscuro: casi-negro con el mismo sesgo azul, nunca negro neutro. */
+  --riuna-ground: #0b141f;
+  --riuna-raised: #101c2a;
+  --riuna-sunken: #0e1825;
+  --riuna-text-night: #e6edf4;
+  --riuna-mid-night: #8fa7c0;
+
+  /* Opción B, ADR 007: el teal entra en los estados de interacción. El
+     hover deja de ser un tinte de navy y lo tiñe River Teal al 10%. */
+  --accent: color-mix(in srgb, var(--riuna-teal) 10%, transparent);
+  --accent-foreground: var(--riuna-ink);
   --background: var(--color-white);
-  --border: --alpha(var(--color-black) / 8%);
+  /* 17% sobre blanco reproduce el #D8DDE5 del manual y además se adapta
+     cuando el borde cae sobre una superficie que no es blanca. */
+  --border: color-mix(in srgb, var(--riuna-navy) 17%, transparent);
+  --brand: var(--riuna-teal);
+  --brand-strong: var(--riuna-teal-strong);
+  --brand-foreground: var(--color-white);
   --card: var(--color-white);
-  --card-foreground: var(--color-neutral-800);
-  --destructive: var(--color-red-500);
-  --destructive-foreground: var(--color-red-700);
-  --foreground: var(--color-neutral-800);
-  --info: var(--color-blue-500);
-  --info-foreground: var(--color-blue-700);
-  --input: --alpha(var(--color-black) / 10%);
-  --muted: --alpha(var(--color-black) / 4%);
-  --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-black));
+  --card-foreground: var(--riuna-ink);
+  --destructive: #dc2626;
+  --destructive-foreground: #b91c1c;
+  --foreground: var(--riuna-ink);
+  --info: #2563eb;
+  --info-foreground: #1d4ed8;
+  --input: color-mix(in srgb, var(--riuna-navy) 22%, transparent);
+  --muted: color-mix(in srgb, var(--riuna-navy) 5%, transparent);
+  --muted-foreground: var(--riuna-mid);
   --popover: var(--color-white);
-  --popover-foreground: var(--color-neutral-800);
-  --primary: var(--color-neutral-800);
-  --primary-foreground: var(--color-neutral-50);
-  --ring: var(--color-neutral-400);
-  --secondary: --alpha(var(--color-black) / 4%);
-  --secondary-foreground: var(--color-neutral-800);
-  --success: var(--color-emerald-500);
-  --success-foreground: var(--color-emerald-700);
-  --warning: var(--color-amber-500);
-  --warning-foreground: var(--color-amber-700);
-  --chart-1: var(--color-orange-600);
-  --chart-2: var(--color-teal-600);
-  --chart-3: var(--color-cyan-900);
-  --chart-4: var(--color-amber-400);
-  --chart-5: var(--color-amber-500);
-  --sidebar: var(--color-neutral-50);
-  --sidebar-foreground: color-mix(
-    in srgb,
-    var(--color-neutral-800) 64%,
-    var(--sidebar)
-  );
-  --sidebar-primary: var(--color-neutral-800);
-  --sidebar-primary-foreground: var(--color-neutral-50);
-  --sidebar-accent: --alpha(var(--color-black) / 4%);
-  --sidebar-accent-foreground: var(--color-neutral-800);
-  --sidebar-border: --alpha(var(--color-black) / 6%);
-  --sidebar-ring: var(--color-neutral-400);
+  --popover-foreground: var(--riuna-ink);
+  --primary: var(--riuna-navy);
+  --primary-foreground: var(--color-white);
+  --ring: var(--riuna-teal);
+  --secondary: color-mix(in srgb, var(--riuna-navy) 6%, transparent);
+  --secondary-foreground: var(--riuna-navy);
+  /* Verde puro (142°), no esmeralda (160°): con River Teal como color de
+     acción, el esmeralda quedaba a doce grados y confundía «esto es un botón»
+     con «esto ha salido bien». */
+  --success: #16a34a;
+  --success-foreground: #15803d;
+  --warning: #d97706;
+  --warning-foreground: #b45309;
+  /* Paleta de datos — docs/marca.md §04. Ocho tonos en orden fijo: el orden
+     *es* el mecanismo de seguridad para daltonismo y no se reordena. El 1 es
+     River Teal para que la serie principal sea de marca; los siete restantes
+     salen de una paleta validada, no elegidos a ojo.
+     Verificado con el validador de la skill `dataviz`: banda de luminosidad,
+     suelo de croma, separación bajo protanopia y deuteranopia (ΔE OKLab ×100),
+     suelo de visión normal y contraste sobre la superficie.
+     El 4 y el 5 quedan por debajo de 3:1 sobre fondo claro (2,11 y 2,62), y la
+     regla los admite solo con relevo: rótulo visible o vista de tabla. Hoy el
+     eje se salta etiquetas cuando no caben, así que el relevo **no está
+     garantizado** en una tarjeta estrecha. Anotado en
+     docs/revision-estetica-2026-09.md; no cambies el orden para taparlo, que el
+     orden es el mecanismo de seguridad para daltonismo. */
+  --chart-1: var(--riuna-teal);
+  --chart-2: #eb6834;
+  --chart-3: #2a78d6;
+  --chart-4: #eda100;
+  --chart-5: #e87ba4;
+  --chart-6: #008300;
+  --chart-7: #4a3aa7;
+  --chart-8: #e34948;
+  /* La cola de un reparto de alta cardinalidad. Neutro a propósito: «otros» no
+     es una categoría más, así que no gasta un tono de identidad. */
+  --chart-other: var(--riuna-mid);
+  --sidebar: var(--riuna-surface);
+  --sidebar-foreground: var(--riuna-mid);
+  --sidebar-primary: var(--riuna-navy);
+  --sidebar-primary-foreground: var(--color-white);
+  /* Hover y elemento activo comparten token en la barra lateral, así que
+     comparten tinte. El texto va en -strong: 4,57:1 sobre el tinte al 12%. */
+  --sidebar-accent: color-mix(in srgb, var(--riuna-teal) 12%, transparent);
+  --sidebar-accent-foreground: var(--riuna-teal-strong);
+  --sidebar-border: color-mix(in srgb, var(--riuna-navy) 12%, transparent);
+  --sidebar-ring: var(--riuna-teal);
   --code: var(--color-white);
   --code-foreground: var(--foreground);
-  --code-highlight: --alpha(var(--color-black) / 4%);
+  --code-highlight: color-mix(in srgb, var(--riuna-navy) 5%, transparent);
+
+  /* Movimiento — ADR 021. Duraciones y paso de stagger; el easing va en @theme
+     para generar la utilidad `ease-out-quart`. Regla: las salidas duran ~65% de
+     la entrada (una entrada base sale con --motion-fast). */
+  --motion-instant: 90ms;
+  --motion-fast: 140ms;
+  --motion-base: 220ms;
+  --motion-slow: 360ms;
+  --motion-settle: 760ms;
+  --stagger-step: 38ms;
+
+  /* Elevación — ADR 020. Sombra con sesgo navy, no negro puro (como los grises
+     de marca.md §04). .dark las redefine. Expuestas como shadow-e1…shadow-e4
+     e inset-shadow-hairline vía @theme inline. */
+  --elevation-1:
+    0 1px 2px -1px color-mix(in srgb, var(--riuna-navy) 24%, transparent),
+    0 1px 1px -1px color-mix(in srgb, var(--riuna-navy) 16%, transparent);
+  --elevation-2:
+    0 2px 6px -2px color-mix(in srgb, var(--riuna-navy) 22%, transparent),
+    0 4px 12px -4px color-mix(in srgb, var(--riuna-navy) 16%, transparent);
+  --elevation-3:
+    0 8px 24px -6px color-mix(in srgb, var(--riuna-navy) 26%, transparent),
+    0 2px 6px -2px color-mix(in srgb, var(--riuna-navy) 18%, transparent);
+  --elevation-4:
+    0 24px 60px -12px color-mix(in srgb, var(--riuna-navy) 38%, transparent),
+    0 8px 20px -8px color-mix(in srgb, var(--riuna-navy) 24%, transparent);
+  --elevation-hairline: inset 0 1px 0 color-mix(in srgb, var(--color-white) 55%, transparent);
+
+  /* Colores de badge de proyecto — identidad, como los colores de etiqueta.
+     Fijos entre temas y elegidos para dar >=4,5:1 con texto blanco. El proyecto
+     se asigna uno de forma determinista por su id. */
+  --pj-1: #2a5c8a;
+  --pj-2: #0b7466;
+  --pj-3: #7c3aed;
+  --pj-4: #be185d;
+  --pj-5: #b45309;
+  --pj-6: #15803d;
+  --pj-7: #b91c1c;
+  --pj-8: #4a6380;
+
+  /* Densidad — ADR 019. Los valores «cómoda» reproducen el espaciado actual
+     al pixel: cambiar de modo no altera nada en cómoda, solo compacta rebaja.
+     row/control quedan para superficies que aún no consumen densidad. */
+  --density-row: 2.25rem;
+  --density-control: 2rem;
+  --density-card-pad: 0.75rem;
+  --density-gap: 0.375rem;
+  --density-stack: 0.625rem;
+  --density-col-gap: 0.5rem;
 }
 
+/* Deep Navy no funciona como color de acción en oscuro: es más oscuro que el
+   propio fondo elevado. Aquí el peso de marca lo lleva el teal claro y el navy
+   se retira a las superficies. Los rellenos semánticos no cambian de valor
+   —se usan siempre al 10-15% de opacidad—; lo que se aclara es su variante de
+   texto. Ver docs/marca.md §04. */
 .dark {
-  --accent: --alpha(var(--color-white) / 4%);
-  --accent-foreground: var(--color-neutral-100);
-  --background: color-mix(
-    in srgb,
-    var(--color-neutral-950) 96%,
-    var(--color-white)
-  );
-  --border: --alpha(var(--color-white) / 6%);
-  --card: color-mix(in srgb, var(--background) 98%, var(--color-white));
-  --card-foreground: var(--color-neutral-100);
-  --destructive: color-mix(in srgb, var(--color-red-500) 90%, var(--color-white));
-  --destructive-foreground: var(--color-red-400);
-  --foreground: var(--color-neutral-100);
-  --info: var(--color-blue-500);
-  --info-foreground: var(--color-blue-400);
-  --input: --alpha(var(--color-white) / 8%);
-  --muted: --alpha(var(--color-white) / 4%);
-  --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 90%, var(--color-white));
-  --popover: color-mix(in srgb, var(--background) 98%, var(--color-white));
-  --popover-foreground: var(--color-neutral-100);
-  --primary: var(--color-neutral-100);
-  --primary-foreground: var(--color-neutral-800);
-  --ring: var(--color-neutral-500);
-  --secondary: --alpha(var(--color-white) / 4%);
-  --secondary-foreground: var(--color-neutral-100);
-  --success: var(--color-emerald-500);
-  --success-foreground: var(--color-emerald-400);
-  --warning: var(--color-amber-500);
-  --warning-foreground: var(--color-amber-400);
-  --chart-1: var(--color-blue-700);
-  --chart-2: var(--color-emerald-500);
-  --chart-3: var(--color-amber-500);
-  --chart-4: var(--color-purple-500);
-  --chart-5: var(--color-rose-500);
-  --sidebar: color-mix(
-    in srgb,
-    var(--color-neutral-950) 97%,
-    var(--color-white)
-  );
-  --sidebar-foreground: color-mix(
-    in srgb,
-    var(--color-neutral-100) 64%,
-    var(--sidebar)
-  );
-  --sidebar-primary: var(--color-neutral-100);
-  --sidebar-primary-foreground: var(--color-neutral-800);
-  --sidebar-accent: --alpha(var(--color-white) / 4%);
-  --sidebar-accent-foreground: var(--color-neutral-100);
-  --sidebar-border: --alpha(var(--color-white) / 5%);
-  --sidebar-ring: var(--color-neutral-400);
-  --code: color-mix(in srgb, var(--background) 98%, var(--color-white));
+  --accent: --alpha(var(--riuna-teal-light) / 14%);
+  --accent-foreground: var(--riuna-text-night);
+  --background: var(--riuna-ground);
+  --border: --alpha(var(--color-white) / 10%);
+  --brand: var(--riuna-teal-light);
+  --brand-strong: var(--riuna-teal-light);
+  --brand-foreground: #062a25;
+  --card: var(--riuna-raised);
+  --card-foreground: var(--riuna-text-night);
+  --destructive: #dc2626;
+  --destructive-foreground: #f26d6d;
+  --foreground: var(--riuna-text-night);
+  --info: #2563eb;
+  --info-foreground: #7ca9f5;
+  --input: --alpha(var(--color-white) / 12%);
+  --muted: --alpha(var(--color-white) / 5%);
+  --muted-foreground: var(--riuna-mid-night);
+  --popover: var(--riuna-raised);
+  --popover-foreground: var(--riuna-text-night);
+  --primary: var(--riuna-text-night);
+  --primary-foreground: #14293f;
+  --ring: var(--riuna-teal-light);
+  --secondary: --alpha(var(--color-white) / 6%);
+  --secondary-foreground: var(--riuna-text-night);
+  --success: #16a34a;
+  --success-foreground: #55d486;
+  --warning: #d97706;
+  --warning-foreground: #f0a83c;
+  /* Los mismos ocho tonos, escalonados para el fondo oscuro; no es un volteo
+     automático del claro. El teal baja a #1fa891 porque el -light se sale por
+     arriba de la banda de luminosidad que exige el modo oscuro (L 0,69 > 0,67). */
+  --chart-1: #1fa891;
+  --chart-2: #d95926;
+  --chart-3: #3987e5;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+  --chart-6: #008300;
+  --chart-7: #9085e9;
+  --chart-8: #e66767;
+  --chart-other: var(--riuna-mid-night);
+  --sidebar: var(--riuna-sunken);
+  --sidebar-foreground: var(--riuna-mid-night);
+  --sidebar-primary: var(--riuna-text-night);
+  --sidebar-primary-foreground: #14293f;
+  --sidebar-accent: --alpha(var(--riuna-teal-light) / 16%);
+  --sidebar-accent-foreground: var(--riuna-teal-lighter);
+  --sidebar-border: --alpha(var(--color-white) / 8%);
+  --sidebar-ring: var(--riuna-teal-light);
+  --code: var(--riuna-raised);
   --code-foreground: var(--foreground);
-  --code-highlight: --alpha(var(--color-white) / 4%);
+  --code-highlight: --alpha(var(--color-white) / 5%);
+
+  /* Elevación — ADR 020. Negro con un filo de luz arriba, en vez del sesgo navy
+     del tema claro. */
+  --elevation-1:
+    0 1px 2px -1px --alpha(var(--color-black) / 55%),
+    inset 0 1px 0 --alpha(var(--color-white) / 5%);
+  --elevation-2:
+    0 3px 10px -3px --alpha(var(--color-black) / 55%),
+    inset 0 1px 0 --alpha(var(--color-white) / 6%);
+  --elevation-3:
+    0 10px 28px -8px --alpha(var(--color-black) / 60%),
+    inset 0 1px 0 --alpha(var(--color-white) / 6%);
+  --elevation-4:
+    0 28px 64px -14px --alpha(var(--color-black) / 66%),
+    inset 0 1px 0 --alpha(var(--color-white) / 7%);
+  --elevation-hairline: inset 0 1px 0 --alpha(var(--color-white) / 6%);
+}
+
+/* Densidad compacta — ADR 019. La clase la pone use-user-preferences-effects
+   en <html>; hasta ahora no movía nada. Baja alturas y espaciados, y el cuerpo
+   a 13 px (única desviación de la escala del ADR 018, acotada a este modo). */
+.compact-mode {
+  --density-row: 1.75rem;
+  --density-control: 1.75rem;
+  --density-card-pad: 0.5rem;
+  --density-gap: 0.25rem;
+  --density-stack: 0.375rem;
+  --density-col-gap: 0.375rem;
+  --text-body: 0.8125rem;
+  --text-body--line-height: 1.15rem;
 }
 
 @layer base {
@@ -257,20 +482,30 @@ input:-webkit-autofill:active {
 }
 
 @layer components {
-  .kaneo-tiptap-shell {
+  /* Camino de movimiento reducido para el resalte en tiempo real (ADR 021):
+     un tinte estático, sin animar, que el componente retira tras ~900 ms.
+     "Nada se pierde en silencio". */
+  .riuna-flash-static {
+    box-shadow:
+      var(--elevation-1),
+      inset 0 0 0 100vmax color-mix(in srgb, var(--brand) 12%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--brand) 30%, transparent) !important;
+  }
+
+  .riuna-tiptap-shell {
     position: relative;
   }
 
-  .kaneo-tiptap-shell:focus-within {
+  .riuna-tiptap-shell:focus-within {
     outline: none;
   }
 
-  .kaneo-tiptap-shell.is-drag-active,
-  .kaneo-comment-editor-shell.is-drag-active {
+  .riuna-tiptap-shell.is-drag-active,
+  .riuna-comment-editor-shell.is-drag-active {
     z-index: 90;
   }
 
-  .kaneo-editor-quick-attach {
+  .riuna-editor-quick-attach {
     position: absolute;
     right: 0.75rem;
     bottom: 0.7rem;
@@ -292,21 +527,21 @@ input:-webkit-autofill:active {
       transform 0.15s ease;
   }
 
-  .kaneo-editor-quick-attach:hover {
+  .riuna-editor-quick-attach:hover {
     border-color: color-mix(in srgb, var(--foreground) 18%, var(--border));
     background: color-mix(in srgb, var(--accent) 72%, transparent);
     color: var(--foreground);
     transform: translateY(-1px);
   }
 
-  .kaneo-editor-quick-attach:focus-visible {
+  .riuna-editor-quick-attach:focus-visible {
     outline: none;
     box-shadow:
       0 0 0 2px color-mix(in srgb, var(--ring) 24%, transparent),
       0 4px 16px color-mix(in srgb, var(--background) 68%, transparent);
   }
 
-  .kaneo-tiptap-bubble {
+  .riuna-tiptap-bubble {
     display: inline-flex;
     align-items: center;
     gap: 0.1rem;
@@ -319,13 +554,13 @@ input:-webkit-autofill:active {
       0 1px 2px --alpha(var(--color-black) / 9%);
   }
 
-  .kaneo-tiptap-bubble-btn {
+  .riuna-tiptap-bubble-btn {
     height: 1.6rem;
     width: 1.6rem;
     padding: 0;
   }
 
-  .kaneo-tiptap-bubble-separator {
+  .riuna-tiptap-bubble-separator {
     display: block;
     width: 1px;
     height: 1rem;
@@ -333,7 +568,7 @@ input:-webkit-autofill:active {
     margin: 0 0.15rem;
   }
 
-  .kaneo-codeblock-language {
+  .riuna-codeblock-language {
     position: fixed;
     z-index: 40;
     display: inline-flex;
@@ -342,7 +577,7 @@ input:-webkit-autofill:active {
     transform: translateX(-100%);
   }
 
-  .kaneo-codeblock-language-trigger {
+  .riuna-codeblock-language-trigger {
     display: inline-flex;
     max-width: 10rem;
     align-items: center;
@@ -361,22 +596,22 @@ input:-webkit-autofill:active {
       background-color 0.12s ease;
   }
 
-  .kaneo-codeblock-language-trigger:hover {
+  .riuna-codeblock-language-trigger:hover {
     border-color: color-mix(in srgb, var(--ring) 42%, var(--border));
     color: var(--foreground);
     background: color-mix(in srgb, var(--background) 96%, transparent);
   }
 
-  .kaneo-codeblock-copy-trigger {
+  .riuna-codeblock-copy-trigger {
     min-width: 4.6rem;
     justify-content: center;
   }
 
-  .kaneo-codeblock-copy-trigger > span {
+  .riuna-codeblock-copy-trigger > span {
     line-height: 1;
   }
 
-  .kaneo-tiptap-content .ProseMirror {
+  .riuna-tiptap-content .ProseMirror {
     min-height: 1.85rem;
     padding: 0.2rem 0 2.9rem;
     font-family: var(--font-sans);
@@ -388,7 +623,7 @@ input:-webkit-autofill:active {
     outline: none;
   }
 
-  .kaneo-tiptap-slash-menu {
+  .riuna-tiptap-slash-menu {
     position: fixed;
     z-index: 50;
     min-width: 16rem;
@@ -401,13 +636,13 @@ input:-webkit-autofill:active {
       0 1px 2px --alpha(var(--color-black) / 10%);
   }
 
-  .kaneo-tiptap-slash-group + .kaneo-tiptap-slash-group {
+  .riuna-tiptap-slash-group + .riuna-tiptap-slash-group {
     margin-top: 0.2rem;
     border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
     padding-top: 0.2rem;
   }
 
-  .kaneo-tiptap-slash-group-title {
+  .riuna-tiptap-slash-group-title {
     padding: 0.22rem 0.42rem 0.3rem;
     font-size: 0.68rem;
     font-weight: 600;
@@ -416,7 +651,7 @@ input:-webkit-autofill:active {
     color: color-mix(in srgb, var(--foreground) 48%, transparent);
   }
 
-  .kaneo-tiptap-slash-item {
+  .riuna-tiptap-slash-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -429,26 +664,26 @@ input:-webkit-autofill:active {
     color: color-mix(in srgb, var(--foreground) 88%, transparent);
   }
 
-  .kaneo-tiptap-slash-label {
+  .riuna-tiptap-slash-label {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .kaneo-tiptap-slash-shortcut {
+  .riuna-tiptap-slash-shortcut {
     flex-shrink: 0;
     font-size: 0.68rem;
     color: color-mix(in srgb, var(--foreground) 52%, transparent);
   }
 
-  .kaneo-tiptap-slash-item:hover,
-  .kaneo-tiptap-slash-item.is-selected {
+  .riuna-tiptap-slash-item:hover,
+  .riuna-tiptap-slash-item.is-selected {
     background: var(--accent);
     color: var(--accent-foreground);
   }
 
-  .kaneo-mention {
+  .riuna-mention {
     display: inline-flex;
     align-items: baseline;
     border-radius: 0.3rem;
@@ -459,12 +694,12 @@ input:-webkit-autofill:active {
     white-space: nowrap;
   }
 
-  .kaneo-mention-popup {
+  .riuna-mention-popup {
     position: absolute;
     z-index: 50;
   }
 
-  .kaneo-mention-list {
+  .riuna-mention-list {
     display: flex;
     flex-direction: column;
     gap: 0.1rem;
@@ -480,7 +715,7 @@ input:-webkit-autofill:active {
       0 1px 2px --alpha(var(--color-black) / 10%);
   }
 
-  .kaneo-mention-item {
+  .riuna-mention-item {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -492,25 +727,32 @@ input:-webkit-autofill:active {
     color: color-mix(in srgb, var(--foreground) 88%, transparent);
   }
 
-  .kaneo-mention-item:hover,
-  .kaneo-mention-item.is-active {
+  .riuna-mention-item:hover,
+  .riuna-mention-item.is-active {
     background: var(--accent);
     color: var(--accent-foreground);
   }
 
-  .kaneo-tiptap-slash-empty {
+  .riuna-tiptap-slash-empty {
     padding: 0.4rem 0.55rem;
     font-size: 0.76rem;
     color: color-mix(in srgb, var(--foreground) 56%, transparent);
   }
 
-  .kaneo-tiptap-content .ProseMirror p {
+  .riuna-tiptap-content .ProseMirror p {
     margin: 0.2rem 0;
+    /* La medida de lectura de marca.md §05. Va en el parrafo y no en el
+       editor entero a proposito: una tabla, un bloque de codigo o una imagen
+       dentro de la descripcion siguen usando todo el ancho, que es lo que
+       necesitan. Sin esto la descripcion crecia con la ventana —736 px en una
+       de 1600, y mas en un monitor grande—, que es donde el ojo empieza a
+       perder el renglon al volver. */
+    max-width: 65ch;
   }
 
-  .kaneo-tiptap-content .ProseMirror h1,
-  .kaneo-tiptap-content .ProseMirror h2,
-  .kaneo-tiptap-content .ProseMirror h3 {
+  .riuna-tiptap-content .ProseMirror h1,
+  .riuna-tiptap-content .ProseMirror h2,
+  .riuna-tiptap-content .ProseMirror h3 {
     margin: 1.05rem 0 0.45rem;
     font-family: var(--font-heading);
     font-weight: 600;
@@ -519,59 +761,59 @@ input:-webkit-autofill:active {
     color: var(--foreground);
   }
 
-  .kaneo-tiptap-content .ProseMirror h1 {
+  .riuna-tiptap-content .ProseMirror h1 {
     font-size: 1.24rem;
   }
 
-  .kaneo-tiptap-content .ProseMirror h2 {
+  .riuna-tiptap-content .ProseMirror h2 {
     font-size: 1.12rem;
   }
 
-  .kaneo-tiptap-content .ProseMirror h3 {
+  .riuna-tiptap-content .ProseMirror h3 {
     font-size: 1.02rem;
   }
 
-  .kaneo-tiptap-content .ProseMirror ul,
-  .kaneo-tiptap-content .ProseMirror ol {
+  .riuna-tiptap-content .ProseMirror ul,
+  .riuna-tiptap-content .ProseMirror ol {
     margin: 0.3rem 0;
     padding-inline-start: 1.35rem;
   }
 
-  .kaneo-tiptap-content .ProseMirror ul {
+  .riuna-tiptap-content .ProseMirror ul {
     list-style-type: disc;
   }
 
-  .kaneo-tiptap-content .ProseMirror ol {
+  .riuna-tiptap-content .ProseMirror ol {
     list-style-type: decimal;
   }
 
-  .kaneo-tiptap-content .ProseMirror ul ul {
+  .riuna-tiptap-content .ProseMirror ul ul {
     list-style-type: circle;
   }
 
-  .kaneo-tiptap-content .ProseMirror ul ul ul {
+  .riuna-tiptap-content .ProseMirror ul ul ul {
     list-style-type: square;
   }
 
-  .kaneo-tiptap-content .ProseMirror ol ol {
+  .riuna-tiptap-content .ProseMirror ol ol {
     list-style-type: lower-alpha;
   }
 
-  .kaneo-tiptap-content .ProseMirror li::marker {
+  .riuna-tiptap-content .ProseMirror li::marker {
     color: color-mix(in srgb, var(--foreground) 70%, transparent);
   }
 
-  .kaneo-tiptap-content .ProseMirror li {
+  .riuna-tiptap-content .ProseMirror li {
     margin: 0.1rem 0;
   }
 
-  .kaneo-tiptap-content .ProseMirror ul[data-type="taskList"] {
+  .riuna-tiptap-content .ProseMirror ul[data-type="taskList"] {
     list-style: none;
     margin: 0.3rem 0;
     padding-inline-start: 0;
   }
 
-  .kaneo-tiptap-content .ProseMirror li[data-type="taskItem"] {
+  .riuna-tiptap-content .ProseMirror li[data-type="taskItem"] {
     display: flex;
     align-items: flex-start;
     justify-content: flex-start;
@@ -580,46 +822,46 @@ input:-webkit-autofill:active {
     text-align: left;
   }
 
-  .kaneo-tiptap-content
+  .riuna-tiptap-content
     .ProseMirror
     li[data-type="taskItem"]
-    > :is(label, .kaneo-task-item-checkbox) {
+    > :is(label, .riuna-task-item-checkbox) {
     margin-top: 0.15rem;
     display: inline-flex;
     flex-shrink: 0;
     cursor: pointer;
   }
 
-  .kaneo-tiptap-content .ProseMirror li[data-type="taskItem"] > div {
+  .riuna-tiptap-content .ProseMirror li[data-type="taskItem"] > div {
     flex: 0 1 auto;
     min-width: 0;
     text-align: left;
   }
 
-  .kaneo-tiptap-content .ProseMirror li[data-type="taskItem"] > div > * {
+  .riuna-tiptap-content .ProseMirror li[data-type="taskItem"] > div > * {
     margin-inline: 0;
   }
 
-  .kaneo-tiptap-content .ProseMirror li[data-type="taskItem"] ul,
-  .kaneo-tiptap-content .ProseMirror li[data-type="taskItem"] ol {
+  .riuna-tiptap-content .ProseMirror li[data-type="taskItem"] ul,
+  .riuna-tiptap-content .ProseMirror li[data-type="taskItem"] ol {
     margin-top: 0.2rem;
   }
 
-  .kaneo-tiptap-content .ProseMirror li[data-type="taskItem"] [data-slot="checkbox"] {
+  .riuna-tiptap-content .ProseMirror li[data-type="taskItem"] [data-slot="checkbox"] {
     margin-top: 0;
   }
 
-  .kaneo-tiptap-content .ProseMirror li[data-type="taskItem"] > div p {
+  .riuna-tiptap-content .ProseMirror li[data-type="taskItem"] > div p {
     margin: 0;
     line-height: 1.45;
   }
 
-  .kaneo-tiptap-content .ProseMirror li[data-type="taskItem"][data-checked="true"] > div p {
+  .riuna-tiptap-content .ProseMirror li[data-type="taskItem"][data-checked="true"] > div p {
     color: color-mix(in srgb, var(--foreground) 62%, transparent);
     text-decoration: line-through;
   }
 
-  .kaneo-tiptap-content .ProseMirror a {
+  .riuna-tiptap-content .ProseMirror a {
     color: var(--primary);
     text-decoration-line: underline;
     text-decoration-thickness: 1px;
@@ -634,12 +876,12 @@ input:-webkit-autofill:active {
       text-decoration-color 0.12s ease;
   }
 
-  .kaneo-tiptap-content .ProseMirror a:hover {
+  .riuna-tiptap-content .ProseMirror a:hover {
     color: color-mix(in srgb, var(--primary) 84%, var(--foreground));
     text-decoration-color: currentColor;
   }
 
-  .kaneo-tiptap-content .ProseMirror :not(pre) > code {
+  .riuna-tiptap-content .ProseMirror :not(pre) > code {
     border: 1px solid var(--border);
     border-radius: 0.34rem;
     background: var(--code-highlight);
@@ -648,7 +890,7 @@ input:-webkit-autofill:active {
     padding: 0.11rem 0.32rem;
   }
 
-  .kaneo-tiptap-content .ProseMirror pre {
+  .riuna-tiptap-content .ProseMirror pre {
     margin: 0.45rem 0;
     border: 1px solid var(--border);
     border-radius: calc(var(--radius) - 3px);
@@ -656,13 +898,13 @@ input:-webkit-autofill:active {
     padding: 0.75rem 0.9rem;
   }
 
-  .kaneo-tiptap-content .ProseMirror pre code {
+  .riuna-tiptap-content .ProseMirror pre code {
     font-family: var(--font-mono);
     font-size: 0.85rem;
     color: var(--code-foreground);
   }
 
-  .kaneo-mermaid-preview {
+  .riuna-mermaid-preview {
     margin: 0.45rem 0;
     border: 1px solid var(--border);
     border-radius: calc(var(--radius) - 3px);
@@ -672,24 +914,24 @@ input:-webkit-autofill:active {
     text-align: center;
   }
 
-  .kaneo-mermaid-preview svg {
+  .riuna-mermaid-preview svg {
     max-width: 100%;
     height: auto;
   }
 
-  .kaneo-mermaid-preview[data-state="loading"] {
+  .riuna-mermaid-preview[data-state="loading"] {
     display: none;
   }
 
-  .kaneo-tiptap-content .ProseMirror blockquote {
+  .riuna-tiptap-content .ProseMirror blockquote {
     margin: 0.5rem 0;
     border-left: 2px solid var(--border);
     padding-left: 0.75rem;
     color: color-mix(in srgb, var(--foreground) 78%, transparent);
   }
 
-  .kaneo-tiptap-content .ProseMirror img.kaneo-editor-image,
-  .kaneo-comment-editor-prose img.kaneo-editor-image {
+  .riuna-tiptap-content .ProseMirror img.riuna-editor-image,
+  .riuna-comment-editor-prose img.riuna-editor-image {
     display: block;
     max-width: min(100%, 44rem);
     width: auto;
@@ -702,12 +944,12 @@ input:-webkit-autofill:active {
     overflow: hidden;
   }
 
-  .kaneo-create-task-modal .kaneo-comment-editor-prose img.kaneo-editor-image {
+  .riuna-create-task-modal .riuna-comment-editor-prose img.riuna-editor-image {
     max-height: min(50vh, 28rem);
     width: 100%;
   }
 
-  .kaneo-tiptap-content .ProseMirror .is-editor-empty:first-child::before {
+  .riuna-tiptap-content .ProseMirror .is-editor-empty:first-child::before {
     pointer-events: none;
     content: attr(data-placeholder);
     height: 0;
@@ -715,7 +957,7 @@ input:-webkit-autofill:active {
     color: color-mix(in srgb, var(--foreground) 40%, transparent);
   }
 
-  .kaneo-tiptap-content .ProseMirror table {
+  .riuna-tiptap-content .ProseMirror table {
     border-collapse: collapse;
     margin: 0.7rem 0;
     overflow: hidden;
@@ -725,21 +967,21 @@ input:-webkit-autofill:active {
     border-radius: calc(var(--radius) - 3px);
   }
 
-  .kaneo-tiptap-content .ProseMirror table td,
-  .kaneo-tiptap-content .ProseMirror table th {
+  .riuna-tiptap-content .ProseMirror table td,
+  .riuna-tiptap-content .ProseMirror table th {
     min-width: 1em;
     border: 1px solid color-mix(in srgb, var(--border) 84%, transparent);
     padding: 0.45rem 0.55rem;
     vertical-align: top;
   }
 
-  .kaneo-tiptap-content .ProseMirror table th {
+  .riuna-tiptap-content .ProseMirror table th {
     background: color-mix(in srgb, var(--accent) 70%, transparent);
     font-weight: 600;
     text-align: left;
   }
 
-  .kaneo-tiptap-content .ProseMirror .selectedCell:after {
+  .riuna-tiptap-content .ProseMirror .selectedCell:after {
     pointer-events: none;
     position: absolute;
     inset: 0;
@@ -748,11 +990,11 @@ input:-webkit-autofill:active {
     background: color-mix(in srgb, var(--primary) 16%, transparent);
   }
 
-  .kaneo-tiptap-content .ProseMirror .tableWrapper {
+  .riuna-tiptap-content .ProseMirror .tableWrapper {
     overflow-x: auto;
   }
 
-  .kaneo-tiptap-content .ProseMirror [data-type="kaneo-embed"] {
+  .riuna-tiptap-content .ProseMirror [data-type="riuna-embed"] {
     margin: 0.65rem 0;
     border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
     border-radius: calc(var(--radius) - 2px);
@@ -763,7 +1005,7 @@ input:-webkit-autofill:active {
       box-shadow 0.12s ease;
   }
 
-  .kaneo-tiptap-content .ProseMirror [data-type="kaneo-embed"] iframe {
+  .riuna-tiptap-content .ProseMirror [data-type="riuna-embed"] iframe {
     width: 100%;
     aspect-ratio: 16 / 9;
     border: 0;
@@ -771,7 +1013,7 @@ input:-webkit-autofill:active {
     background: black;
   }
 
-  .kaneo-tiptap-content .ProseMirror [data-type="kaneo-embed"] > a {
+  .riuna-tiptap-content .ProseMirror [data-type="riuna-embed"] > a {
     display: block;
     padding: 0.6rem 0.7rem;
     color: var(--foreground);
@@ -780,26 +1022,26 @@ input:-webkit-autofill:active {
     word-break: break-word;
   }
 
-  .kaneo-tiptap-content .ProseMirror
-    [data-type="kaneo-embed"].ProseMirror-selectednode {
+  .riuna-tiptap-content .ProseMirror
+    [data-type="riuna-embed"].ProseMirror-selectednode {
     border-color: color-mix(in srgb, var(--ring) 82%, var(--border));
     box-shadow:
       0 0 0 2px color-mix(in srgb, var(--ring) 38%, transparent),
       0 0 0 1px color-mix(in srgb, var(--ring) 70%, transparent) inset;
   }
 
-  .kaneo-tiptap-content .ProseMirror [data-type="kaneo-embed"] .kaneo-embed-unsupported {
+  .riuna-tiptap-content .ProseMirror [data-type="riuna-embed"] .riuna-embed-unsupported {
     padding: 0.62rem 0.72rem;
     font-size: 0.78rem;
     color: color-mix(in srgb, var(--foreground) 62%, transparent);
   }
 
-  .kaneo-issue-link-node {
+  .riuna-issue-link-node {
     display: inline-flex;
     vertical-align: baseline;
   }
 
-  .kaneo-issue-link-chip {
+  .riuna-issue-link-chip {
     display: inline-flex;
     max-width: min(26rem, 85vw);
     align-items: center;
@@ -814,19 +1056,19 @@ input:-webkit-autofill:active {
     transform: translateY(-0.02rem);
   }
 
-  .kaneo-issue-link-chip:hover {
+  .riuna-issue-link-chip:hover {
     border-color: color-mix(in srgb, var(--ring) 56%, var(--border));
     background: color-mix(in srgb, var(--accent) 34%, transparent);
   }
 
-  .kaneo-issue-link-key {
+  .riuna-issue-link-key {
     flex-shrink: 0;
     font-size: 0.76rem;
     font-weight: 500;
     color: color-mix(in srgb, var(--foreground) 64%, transparent);
   }
 
-  .kaneo-issue-link-title {
+  .riuna-issue-link-title {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -836,7 +1078,7 @@ input:-webkit-autofill:active {
     color: var(--foreground);
   }
 
-  .kaneo-issue-link-preview {
+  .riuna-issue-link-preview {
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -846,7 +1088,7 @@ input:-webkit-autofill:active {
     text-wrap: pretty;
   }
 
-  .kaneo-issue-link-preview-top {
+  .riuna-issue-link-preview-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -855,12 +1097,12 @@ input:-webkit-autofill:active {
     color: color-mix(in srgb, var(--foreground) 68%, transparent);
   }
 
-  .kaneo-issue-link-preview-key {
+  .riuna-issue-link-preview-key {
     font-weight: 500;
     letter-spacing: 0.01em;
   }
 
-  .kaneo-issue-link-preview-title {
+  .riuna-issue-link-preview-title {
     margin-top: 0.45rem;
     font-size: 0.9rem;
     line-height: 1.35;
@@ -868,7 +1110,7 @@ input:-webkit-autofill:active {
     color: var(--foreground);
   }
 
-  .kaneo-issue-link-preview-meta {
+  .riuna-issue-link-preview-meta {
     margin-top: 0.55rem;
     display: flex;
     align-items: center;
@@ -879,14 +1121,14 @@ input:-webkit-autofill:active {
     color: color-mix(in srgb, var(--foreground) 72%, transparent);
   }
 
-  .kaneo-attachment-node {
+  .riuna-attachment-node {
     display: inline-flex;
     max-width: 100%;
     vertical-align: middle;
     margin: 0.35rem 0;
   }
 
-  .kaneo-attachment-card {
+  .riuna-attachment-card {
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
@@ -907,7 +1149,7 @@ input:-webkit-autofill:active {
       transform 0.18s ease;
   }
 
-  .kaneo-attachment-card:hover {
+  .riuna-attachment-card:hover {
     border-color: color-mix(in srgb, var(--foreground) 18%, var(--border));
     background: linear-gradient(
       180deg,
@@ -917,7 +1159,7 @@ input:-webkit-autofill:active {
     transform: translateY(-1px);
   }
 
-  .kaneo-attachment-card-icon {
+  .riuna-attachment-card-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -929,13 +1171,13 @@ input:-webkit-autofill:active {
     flex-shrink: 0;
   }
 
-  .kaneo-attachment-card-content {
+  .riuna-attachment-card-content {
     display: flex;
     min-width: 0;
     flex-direction: column;
   }
 
-  .kaneo-attachment-card-title {
+  .riuna-attachment-card-title {
     color: var(--foreground);
     font-size: 0.96rem;
     font-weight: 600;
@@ -945,7 +1187,7 @@ input:-webkit-autofill:active {
     text-overflow: ellipsis;
   }
 
-  .kaneo-attachment-card-meta {
+  .riuna-attachment-card-meta {
     margin-top: 0.18rem;
     color: color-mix(in srgb, var(--foreground) 58%, transparent);
     font-size: 0.76rem;
@@ -955,12 +1197,12 @@ input:-webkit-autofill:active {
     text-overflow: ellipsis;
   }
 
-  .kaneo-tiptap-content .ProseMirror [data-type="kaneo-embed"]:focus-within {
+  .riuna-tiptap-content .ProseMirror [data-type="riuna-embed"]:focus-within {
     border-color: color-mix(in srgb, var(--ring) 80%, var(--border));
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 34%, transparent);
   }
 
-  .kaneo-embed-composer {
+  .riuna-embed-composer {
     position: fixed;
     z-index: 60;
     width: min(16.5rem, calc(100vw - 2rem));
@@ -973,20 +1215,20 @@ input:-webkit-autofill:active {
       0 1px 2px --alpha(var(--color-black) / 10%);
   }
 
-  .kaneo-embed-composer-form {
+  .riuna-embed-composer-form {
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
   }
 
-  .kaneo-embed-choice-menu {
+  .riuna-embed-choice-menu {
     display: flex;
     min-width: 0;
     flex-direction: column;
     gap: 0.2rem;
   }
 
-  .kaneo-embed-choice-item {
+  .riuna-embed-choice-item {
     display: flex;
     width: 100%;
     align-items: center;
@@ -999,31 +1241,31 @@ input:-webkit-autofill:active {
     color: color-mix(in srgb, var(--foreground) 90%, transparent);
   }
 
-  .kaneo-embed-choice-item:hover,
-  .kaneo-embed-choice-item.is-primary {
+  .riuna-embed-choice-item:hover,
+  .riuna-embed-choice-item.is-primary {
     background: var(--accent);
     color: var(--accent-foreground);
   }
 
-  .kaneo-embed-choice-hint {
+  .riuna-embed-choice-hint {
     flex-shrink: 0;
     font-size: 0.68rem;
     color: color-mix(in srgb, currentColor 62%, transparent);
   }
 
-  .kaneo-embed-composer-actions {
+  .riuna-embed-composer-actions {
     display: flex;
     align-items: center;
     gap: 0.35rem;
     justify-content: flex-end;
   }
 
-  .kaneo-embed-composer-error {
+  .riuna-embed-composer-error {
     font-size: 0.72rem;
     color: var(--destructive);
   }
 
-  .kaneo-comment-composer {
+  .riuna-comment-composer {
     border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
     border-radius: 0.62rem;
     background: color-mix(in srgb, var(--background) 96%, transparent);
@@ -1032,12 +1274,12 @@ input:-webkit-autofill:active {
       box-shadow 0.14s ease;
   }
 
-  .kaneo-comment-composer:focus-within {
+  .riuna-comment-composer:focus-within {
     border-color: color-mix(in srgb, var(--ring) 64%, var(--border));
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 20%, transparent);
   }
 
-  .kaneo-comment-card-body {
+  .riuna-comment-card-body {
     border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
     border-radius: 0.6rem;
     background: color-mix(in srgb, var(--card) 82%, transparent);
@@ -1045,17 +1287,17 @@ input:-webkit-autofill:active {
     position: relative;
   }
 
-  .kaneo-comment-editor-shell {
+  .riuna-comment-editor-shell {
     position: relative;
     isolation: isolate;
     z-index: 1;
   }
 
-  .kaneo-comment-editor-shell:focus-within {
+  .riuna-comment-editor-shell:focus-within {
     z-index: 80;
   }
 
-  .kaneo-editor-drop-indicator {
+  .riuna-editor-drop-indicator {
     pointer-events: none;
     position: absolute;
     left: 0.75rem;
@@ -1068,15 +1310,15 @@ input:-webkit-autofill:active {
     box-shadow: 0 0 0 1px color-mix(in srgb, var(--background) 88%, transparent);
   }
 
-  .kaneo-editor-drop-indicator span {
+  .riuna-editor-drop-indicator span {
     display: none;
   }
 
-  .kaneo-comment-editor-shell-readonly {
+  .riuna-comment-editor-shell-readonly {
     pointer-events: auto;
   }
 
-  .kaneo-comment-editor-content .ProseMirror {
+  .riuna-comment-editor-content .ProseMirror {
     min-height: 2.2rem;
     max-height: 18rem;
     overflow-y: auto;
@@ -1090,71 +1332,71 @@ input:-webkit-autofill:active {
     outline: none;
   }
 
-  .kaneo-comment-editor-shell-readonly .kaneo-comment-editor-content .ProseMirror {
+  .riuna-comment-editor-shell-readonly .riuna-comment-editor-content .ProseMirror {
     min-height: 0;
     max-height: none;
     overflow: visible;
     padding: 0.62rem 0.75rem;
   }
 
-  .kaneo-comment-viewer .kaneo-comment-editor-content .ProseMirror {
+  .riuna-comment-viewer .riuna-comment-editor-content .ProseMirror {
     max-height: none;
     overflow: visible;
     padding-bottom: 0.8rem;
   }
 
-  .kaneo-comment-editor-prose p {
+  .riuna-comment-editor-prose p {
     margin: 0;
   }
 
-  .kaneo-comment-editor-prose h1,
-  .kaneo-comment-editor-prose h2,
-  .kaneo-comment-editor-prose h3 {
+  .riuna-comment-editor-prose h1,
+  .riuna-comment-editor-prose h2,
+  .riuna-comment-editor-prose h3 {
     margin: 0.12rem 0 0;
     line-height: 1.32;
   }
 
-  .kaneo-comment-editor-prose ul,
-  .kaneo-comment-editor-prose ol {
+  .riuna-comment-editor-prose ul,
+  .riuna-comment-editor-prose ol {
     margin: 0.12rem 0 0;
     padding-inline-start: 1.2rem;
   }
 
-  .kaneo-comment-editor-prose ul {
+  .riuna-comment-editor-prose ul {
     list-style-type: disc;
   }
 
-  .kaneo-comment-editor-prose ol {
+  .riuna-comment-editor-prose ol {
     list-style-type: decimal;
   }
 
-  .kaneo-comment-editor-prose ul ul {
+  .riuna-comment-editor-prose ul ul {
     list-style-type: circle;
   }
 
-  .kaneo-comment-editor-prose ul ul ul {
+  .riuna-comment-editor-prose ul ul ul {
     list-style-type: square;
   }
 
-  .kaneo-comment-editor-prose ol ol {
+  .riuna-comment-editor-prose ol ol {
     list-style-type: lower-alpha;
   }
 
-  .kaneo-comment-editor-prose li::marker {
+  .riuna-comment-editor-prose li::marker {
     color: color-mix(in srgb, var(--foreground) 70%, transparent);
   }
 
-  .kaneo-comment-editor-prose li {
+  .riuna-comment-editor-prose li {
     margin: 0.08rem 0;
   }
 
-  .kaneo-comment-editor-prose ul[data-type="taskList"] {
+  .riuna-comment-editor-prose ul[data-type="taskList"] {
     list-style: none;
     margin: 0.12rem 0 0;
     padding-inline-start: 0;
   }
 
-  .kaneo-comment-editor-prose li[data-type="taskItem"] {
+  .riuna-comment-editor-prose li[data-type="taskItem"] {
     display: flex;
     align-items: flex-start;
     justify-content: flex-start;
@@ -1163,46 +1405,46 @@ input:-webkit-autofill:active {
     text-align: left;
   }
 
-  .kaneo-comment-editor-prose
+  .riuna-comment-editor-prose
     li[data-type="taskItem"]
-    > :is(label, .kaneo-task-item-checkbox) {
+    > :is(label, .riuna-task-item-checkbox) {
     margin-top: 0.15rem;
     display: inline-flex;
     flex-shrink: 0;
     cursor: pointer;
   }
 
-  .kaneo-comment-editor-prose li[data-type="taskItem"] > div {
+  .riuna-comment-editor-prose li[data-type="taskItem"] > div {
     flex: 0 1 auto;
     min-width: 0;
     text-align: left;
   }
 
-  .kaneo-comment-editor-prose li[data-type="taskItem"] > div > * {
+  .riuna-comment-editor-prose li[data-type="taskItem"] > div > * {
     margin-inline: 0;
   }
 
-  .kaneo-comment-editor-prose li[data-type="taskItem"] ul,
-  .kaneo-comment-editor-prose li[data-type="taskItem"] ol {
+  .riuna-comment-editor-prose li[data-type="taskItem"] ul,
+  .riuna-comment-editor-prose li[data-type="taskItem"] ol {
     margin-top: 0.16rem;
   }
 
-  .kaneo-comment-editor-prose li[data-type="taskItem"] [data-slot="checkbox"] {
+  .riuna-comment-editor-prose li[data-type="taskItem"] [data-slot="checkbox"] {
     margin-top: 0;
   }
 
-  .kaneo-comment-editor-prose li[data-type="taskItem"] > div p {
+  .riuna-comment-editor-prose li[data-type="taskItem"] > div p {
     margin: 0;
     line-height: 1.45;
   }
 
-  .kaneo-comment-editor-prose li[data-type="taskItem"][data-checked="true"] > div p {
+  .riuna-comment-editor-prose li[data-type="taskItem"][data-checked="true"] > div p {
     color: color-mix(in srgb, var(--foreground) 62%, transparent);
     text-decoration: line-through;
   }
 
-  .kaneo-comment-editor-prose a,
-  .kaneo-tiptap-prose a {
+  .riuna-comment-editor-prose a,
+  .riuna-tiptap-prose a {
     color: color-mix(in srgb, var(--foreground) 88%, #4c9aff 12%);
     cursor: pointer;
     text-decoration: underline;
@@ -1210,7 +1452,7 @@ input:-webkit-autofill:active {
     text-underline-offset: 2px;
   }
 
-  .kaneo-comment-editor-prose :not(pre) > code {
+  .riuna-comment-editor-prose :not(pre) > code {
     border: 1px solid color-mix(in srgb, var(--border) 86%, transparent);
     border-radius: 0.34rem;
     background: color-mix(in srgb, var(--accent) 40%, transparent);
@@ -1219,7 +1461,7 @@ input:-webkit-autofill:active {
     font-family: var(--font-mono);
   }
 
-  .kaneo-comment-editor-prose pre {
+  .riuna-comment-editor-prose pre {
     margin: 0.12rem 0 0;
     border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
     border-radius: 0.45rem;
@@ -1231,7 +1473,7 @@ input:-webkit-autofill:active {
     line-height: 1.55;
   }
 
-  .kaneo-comment-editor-prose [data-type="kaneo-embed"] {
+  .riuna-comment-editor-prose [data-type="riuna-embed"] {
     margin: 0.12rem 0 0;
     border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
     border-radius: calc(var(--radius) - 2px);
@@ -1242,7 +1484,7 @@ input:-webkit-autofill:active {
       box-shadow 0.12s ease;
   }
 
-  .kaneo-comment-editor-prose [data-type="kaneo-embed"] iframe {
+  .riuna-comment-editor-prose [data-type="riuna-embed"] iframe {
     width: 100%;
     aspect-ratio: 16 / 9;
     border: 0;
@@ -1250,7 +1492,7 @@ input:-webkit-autofill:active {
     background: black;
   }
 
-  .kaneo-comment-editor-prose [data-type="kaneo-embed"] > a {
+  .riuna-comment-editor-prose [data-type="riuna-embed"] > a {
     display: block;
     padding: 0.6rem 0.7rem;
     color: var(--foreground);
@@ -1259,20 +1501,20 @@ input:-webkit-autofill:active {
     word-break: break-word;
   }
 
-  .kaneo-comment-editor-prose
-    [data-type="kaneo-embed"].ProseMirror-selectednode {
+  .riuna-comment-editor-prose
+    [data-type="riuna-embed"].ProseMirror-selectednode {
     border-color: color-mix(in srgb, var(--ring) 82%, var(--border));
     box-shadow:
       0 0 0 2px color-mix(in srgb, var(--ring) 38%, transparent),
       0 0 0 1px color-mix(in srgb, var(--ring) 70%, transparent) inset;
   }
 
-  .kaneo-comment-editor-prose [data-type="kaneo-embed"]:focus-within {
+  .riuna-comment-editor-prose [data-type="riuna-embed"]:focus-within {
     border-color: color-mix(in srgb, var(--ring) 80%, var(--border));
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 34%, transparent);
   }
 
-  .kaneo-comment-editor-prose table {
+  .riuna-comment-editor-prose table {
     width: 100%;
     table-layout: fixed;
     border-collapse: collapse;
@@ -1282,25 +1524,25 @@ input:-webkit-autofill:active {
     overflow: hidden;
   }
 
-  .kaneo-comment-editor-prose table td,
-  .kaneo-comment-editor-prose table th {
+  .riuna-comment-editor-prose table td,
+  .riuna-comment-editor-prose table th {
     min-width: 1em;
     border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
     padding: 0.4rem 0.5rem;
     vertical-align: top;
   }
 
-  .kaneo-comment-editor-prose table th {
+  .riuna-comment-editor-prose table th {
     background: color-mix(in srgb, var(--accent) 65%, transparent);
     font-weight: 600;
     text-align: left;
   }
 
-  .kaneo-comment-editor-prose .tableWrapper {
+  .riuna-comment-editor-prose .tableWrapper {
     overflow-x: auto;
   }
 
-  .kaneo-comment-editor-prose .is-editor-empty:first-child::before {
+  .riuna-comment-editor-prose .is-editor-empty:first-child::before {
     content: attr(data-placeholder);
     color: color-mix(in srgb, var(--foreground) 42%, transparent);
     pointer-events: none;
@@ -1308,11 +1550,11 @@ input:-webkit-autofill:active {
     height: 0;
   }
 
-  .kaneo-comment-editor-prose p > .ProseMirror-trailingBreak {
+  .riuna-comment-editor-prose p > .ProseMirror-trailingBreak {
     line-height: 1;
   }
 
-  .kaneo-comment-editor-bubble {
+  .riuna-comment-editor-bubble {
     display: inline-flex;
     align-items: center;
     gap: 0.12rem;
@@ -1325,13 +1567,13 @@ input:-webkit-autofill:active {
       0 1px 2px --alpha(var(--color-black) / 9%);
   }
 
-  .kaneo-comment-editor-bubble-btn {
+  .riuna-comment-editor-bubble-btn {
     height: 1.58rem;
     width: 1.58rem;
     padding: 0;
   }
 
-  .kaneo-comment-editor-shell .kaneo-tiptap-slash-menu {
+  .riuna-comment-editor-shell .riuna-tiptap-slash-menu {
     position: absolute;
     z-index: 120;
     opacity: 1;
@@ -1340,13 +1582,13 @@ input:-webkit-autofill:active {
     backdrop-filter: none;
   }
 
-  .kaneo-tiptap-content .ProseMirror ::selection {
+  .riuna-tiptap-content .ProseMirror ::selection {
     background: color-mix(in srgb, var(--primary) 18%, transparent);
   }
 
   /* Descendants too, or the cursor reverts to that of the row under it. */
-  body.kaneo-dragging,
-  body.kaneo-dragging * {
+  body.riuna-dragging,
+  body.riuna-dragging * {
     cursor: grabbing !important;
   }
 

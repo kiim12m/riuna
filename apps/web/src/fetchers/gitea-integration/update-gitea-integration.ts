@@ -1,4 +1,4 @@
-import { client } from "@kaneo/libs";
+import { client } from "@riuna/libs";
 import type { InferRequestType } from "hono";
 
 export type UpdateGiteaIntegrationRequest = InferRequestType<

@@ -25,22 +25,28 @@ import billing from "./billing";
 import column from "./column";
 import comment from "./comment";
 import config from "./config";
+import cycle from "./cycle";
+import dashboard from "./dashboard";
 import db, { getDatabase, schema } from "./database";
 import { prepareDatabaseStartup } from "./database/prepare-database-startup";
 import { waitForDatabase } from "./database/wait-for-database";
 import discordIntegration from "./discord-integration";
+import epic from "./epic";
 import { eventContext } from "./events";
 import externalLink from "./external-link";
+import field from "./field";
 import genericWebhookIntegration from "./generic-webhook-integration";
 import giteaIntegration, { handleGiteaWebhookRoute } from "./gitea-integration";
 import githubIntegration, {
   handleGithubWebhookRoute,
 } from "./github-integration";
+import goal from "./goal";
 import getInstanceStatus from "./instance/controllers/get-instance-status";
 import invitation from "./invitation";
 import label from "./label";
 import mcpRoutes, { mcpWellKnownRoutes } from "./mcp";
 import { migrateColumns } from "./migrations/column-migration";
+import myWork from "./my-work";
 import notification from "./notification";
 import notificationPreferences from "./notification-preferences";
 import oauth from "./oauth";
@@ -48,6 +54,7 @@ import { initializePlugins } from "./plugins";
 import { migrateGitHubIntegration } from "./plugins/github/migration";
 import project from "./project";
 import { getPublicProject } from "./project/controllers/get-public-project";
+import recurrence from "./recurrence";
 import { initializeScheduler, shutdownScheduler } from "./scheduler";
 import search from "./search";
 import slackIntegration from "./slack-integration";
@@ -55,12 +62,14 @@ import { getPrivateObject } from "./storage/s3";
 import task from "./task";
 import taskRelation from "./task-relation";
 import telegramIntegration from "./telegram-integration";
+import template from "./template";
 import timeEntry from "./time-entry";
 import user from "./user";
 import getAvatar from "./user/controllers/get-avatar";
 import { authenticateApiRequest } from "./utils/authenticate-api-request";
 import { authorizeAssetAccess } from "./utils/authorize-asset-access";
 import { getInvitationDetails } from "./utils/check-registration-allowed";
+import { buildContentDisposition } from "./utils/content-disposition";
 import { migrateApiKeyReferenceId } from "./utils/migrate-apikey-reference-id";
 import { migrateNotificationPreferencesSchema } from "./utils/migrate-notification-preferences-schema";
 import { migrateSessionColumn } from "./utils/migrate-session-column";
@@ -79,6 +88,7 @@ import {
 } from "./utils/openapi-spec";
 import { seedDefaultWorkspaceRoles } from "./utils/seed-default-workspace-roles";
 import { validateWorkspaceAccess } from "./utils/validate-workspace-access";
+import view from "./view";
 import workflowRule from "./workflow-rule";
 import workspace from "./workspace";
 import {
@@ -128,29 +138,6 @@ const SAFE_INLINE_ASSET_TYPES = new Set([
   "image/webp",
 ]);
 
-function buildContentDisposition(filename: string, inline: boolean) {
-  const normalized = filename
-    .normalize("NFC")
-    .replace(/[\r\n"]/g, "")
-    .trim();
-  const safeFilename = normalized || "file";
-  const asciiFallback =
-    safeFilename
-      .normalize("NFKD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[\\/]/g, "-")
-      .replace(/[^\x20-\x7E]+/g, "_")
-      .replace(/\s+/g, " ")
-      .trim() || "file";
-  const encodedFilename = encodeURIComponent(safeFilename).replace(
-    /['()*]/g,
-    (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`,
-  );
-
-  const disposition = inline ? "inline" : "attachment";
-  return `${disposition}; filename="${asciiFallback}"; filename*=UTF-8''${encodedFilename}`;
-}
-
 export function createApp() {
   const app = new Hono<AppVariables>();
 
@@ -170,7 +157,7 @@ export function createApp() {
   const { upgradeWebSocket, injectWebSocket } = nodeWs;
   const corsOriginSource = [
     process.env.CORS_ORIGINS,
-    process.env.KANEO_CLIENT_URL,
+    process.env.RIUNA_CLIENT_URL,
   ].find((value) => value?.trim());
   const corsOrigins = corsOriginSource
     ?.split(",")
@@ -181,7 +168,7 @@ export function createApp() {
 
   if (!corsOrigins && !reflectUnconfiguredOrigins) {
     console.warn(
-      "[cors] Neither CORS_ORIGINS nor KANEO_CLIENT_URL is set, so cross-origin requests are refused. Same-origin deployments (the bundled image) are unaffected; set KANEO_CLIENT_URL if the web app is served from another origin.",
+      "[cors] Neither CORS_ORIGINS nor RIUNA_CLIENT_URL is set, so cross-origin requests are refused. Same-origin deployments (the bundled image) are unaffected; set RIUNA_CLIENT_URL if the web app is served from another origin.",
     );
   }
 
@@ -189,6 +176,9 @@ export function createApp() {
     "*",
     cors({
       credentials: true,
+      // Downloads carry their filename here, and a separately hosted web app
+      // cannot read it unless the header is exposed.
+      exposeHeaders: ["Content-Disposition"],
       origin: (origin) => {
         // Reflecting an arbitrary origin alongside credentials lets any site
         // read authenticated responses, so it stays a development convenience.
@@ -415,17 +405,17 @@ export function createApp() {
     documentation: {
       openapi: "3.0.3",
       info: {
-        title: "Kaneo API",
+        title: "Riuna API",
         version: "1.0.0",
         description:
-          "Kaneo Project Management API - Manage projects, tasks, labels, and more",
+          "Riuna Project Management API - Manage projects, tasks, labels, and more",
       },
       servers: [
         {
           url: normalizeApiServerUrl(
-            process.env.KANEO_API_URL || "https://cloud.kaneo.app",
+            process.env.RIUNA_API_URL || "http://localhost:1337",
           ),
-          description: "Kaneo API Server",
+          description: "Riuna API Server",
         },
       ],
       components: {
@@ -533,7 +523,7 @@ export function createApp() {
       // Optional `ui=1` forces redirect when Sec-Fetch-* headers are missing (e.g. some clients).
       if (forceUiRedirect || secFetchDest === "document") {
         const clientUrl = (
-          process.env.KANEO_CLIENT_URL || "http://localhost:5173"
+          process.env.RIUNA_CLIENT_URL || "http://localhost:5173"
         ).replace(/\/$/, "");
         const deviceUrl = new URL(`${clientUrl}/device`);
         if (userCode) {
@@ -590,7 +580,7 @@ export function createApp() {
       Sentry.setUser(null);
       try {
         await authenticateApiRequest(c);
-        const windowId = c.req.header("X-Kaneo-Window-Id");
+        const windowId = c.req.header("X-Riuna-Window-Id");
         const userId = c.get("userId");
         const initiatorId = windowId ? `${userId}:${windowId}` : userId;
         return await eventContext.run({ initiatorId }, next);
@@ -612,6 +602,9 @@ export function createApp() {
   const projectApi = api.route("/project", project);
   const taskApi = api.route("/task", task);
   const columnApi = api.route("/column", column);
+  const epicApi = api.route("/epic", epic);
+  const fieldApi = api.route("/field", field);
+  const viewApi = api.route("/view", view);
   const activityApi = api.route("/activity", activity);
   const commentApi = api.route("/comment", comment);
   const timeEntryApi = api.route("/time-entry", timeEntry);
@@ -621,6 +614,12 @@ export function createApp() {
     "/notification-preferences",
     notificationPreferences,
   );
+  const cycleApi = api.route("/cycle", cycle);
+  const dashboardApi = api.route("/dashboard", dashboard);
+  const goalApi = api.route("/goal", goal);
+  const recurrenceApi = api.route("/recurrence", recurrence);
+  const templateApi = api.route("/template", template);
+  const myWorkApi = api.route("/my-work", myWork);
   const searchApi = api.route("/search", search);
   const githubIntegrationApi = api.route(
     "/github-integration",
@@ -650,7 +649,7 @@ export function createApp() {
   app.route(
     "/",
     mcpWellKnownRoutes(
-      (process.env.KANEO_API_URL || "http://localhost:1337").replace(
+      (process.env.RIUNA_API_URL || "http://localhost:1337").replace(
         /\/api\/?$/,
         "",
       ),
@@ -791,13 +790,22 @@ export function createApp() {
     commentApi,
     configApi,
     discordIntegrationApi,
+    epicApi,
     externalLinkApi,
+    fieldApi,
+    viewApi,
     genericWebhookIntegrationApi,
     githubIntegrationApi,
     giteaIntegrationApi,
     invitationApi,
     invitationPublicApi,
+    cycleApi,
+    dashboardApi,
+    goalApi,
+    recurrenceApi,
+    templateApi,
     labelApi,
+    myWorkApi,
     notificationApi,
     notificationPreferencesApi,
     projectApi,
@@ -831,9 +839,34 @@ export async function runStartupTasks() {
       await migrateSessionColumn();
 
       console.log("🔄 Migrating database...");
-      await migrate(getDatabase(), {
-        migrationsFolder: `${currentDir}/../drizzle`,
-      });
+
+      // Un cerrojo de sesion alrededor de las migraciones, por dos motivos.
+      //
+      // 1. Drizzle lee la ultima migracion aplicada **fuera** de la transaccion
+      //    y luego envuelve el bucle entero en una sola. Con mas de una replica
+      //    arrancando a la vez, las dos ven las mismas pendientes; la segunda
+      //    espera a la primera y despues reejecuta `ALTER TABLE ... ADD COLUMN`,
+      //    que falla con «column already exists» y tumba el proceso.
+      // 2. `lock_timeout` acota lo que se espera por un bloqueo de tabla: sin
+      //    el, un pod viejo que siga sirviendo durante un despliegue progresivo
+      //    se encola detras del `ALTER TABLE` y deja de responder, sin limite.
+      //
+      // El 1524 y el 1148 son los otros dos espacios de nombres de cerrojo del
+      // repositorio (ordenacion de proyectos y escrituras de arbol).
+      const database = getDatabase();
+
+      await database.execute(sql`SET lock_timeout = '30s'`);
+      await database.execute(sql`SELECT pg_advisory_lock(2051)`);
+
+      try {
+        await migrate(database, {
+          migrationsFolder: `${currentDir}/../drizzle`,
+        });
+      } finally {
+        await database.execute(sql`SELECT pg_advisory_unlock(2051)`);
+        await database.execute(sql`SET lock_timeout = DEFAULT`);
+      }
+
       console.log("✅ Database migrated successfully!");
     },
   });
@@ -872,7 +905,7 @@ export async function startServer(
     },
     () => {
       console.log(
-        `⚡ API is running at ${process.env.KANEO_API_URL || "http://localhost:1337"}`,
+        `⚡ API is running at ${process.env.RIUNA_API_URL || "http://localhost:1337"}`,
       );
     },
   );
@@ -909,13 +942,22 @@ const {
   commentApi,
   configApi,
   discordIntegrationApi,
+  epicApi,
   externalLinkApi,
+  fieldApi,
+  viewApi,
   genericWebhookIntegrationApi,
   githubIntegrationApi,
   giteaIntegrationApi,
   invitationApi,
   invitationPublicApi,
+  cycleApi,
+  dashboardApi,
+  goalApi,
+  recurrenceApi,
+  templateApi,
   labelApi,
+  myWorkApi,
   notificationApi,
   notificationPreferencesApi,
   projectApi,
@@ -939,7 +981,12 @@ const isMainModule =
   import.meta.url === pathToFileURL(entrypoint).href;
 
 if (isMainModule) {
-  void startServer(injectWebSocket);
+  // `PORT` es la convencion que esperan casi todas las plataformas de
+  // despliegue, y es lo que permite levantar una segunda instancia al lado de
+  // la de desarrollo —que es como corre el humo de Playwright sin pisar el
+  // 1337 de quien esta programando—.
+  const port = Number(process.env.PORT) || 1337;
+  void startServer(injectWebSocket, port);
 }
 
 export type AppType =
@@ -948,12 +995,21 @@ export type AppType =
   | typeof projectApi
   | typeof taskApi
   | typeof columnApi
+  | typeof epicApi
+  | typeof fieldApi
+  | typeof viewApi
   | typeof activityApi
   | typeof commentApi
   | typeof timeEntryApi
   | typeof labelApi
   | typeof notificationApi
   | typeof notificationPreferencesApi
+  | typeof cycleApi
+  | typeof dashboardApi
+  | typeof goalApi
+  | typeof recurrenceApi
+  | typeof templateApi
+  | typeof myWorkApi
   | typeof searchApi
   | typeof githubIntegrationApi
   | typeof giteaIntegrationApi

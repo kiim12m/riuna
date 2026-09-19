@@ -6,7 +6,7 @@ const { default: verifyGiteaAccess } = await import(
 
 // ponytail: capture the env var so we don't leak the SSRF bypass across tests.
 const originalAllowPrivate =
-  process.env.KANEO_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS;
+  process.env.RIUNA_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS;
 
 function makeResponse(status: number, body: string | object = ""): Response {
   const text = typeof body === "string" ? body : JSON.stringify(body);
@@ -19,14 +19,14 @@ function makeResponse(status: number, body: string | object = ""): Response {
 beforeEach(() => {
   // Bypass the SSRF DNS check so the test does not depend on outbound DNS
   // resolving gitea.example. Without this, the real lookup would fail in CI.
-  process.env.KANEO_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS = "true";
+  process.env.RIUNA_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS = "true";
 });
 
 afterEach(() => {
   if (originalAllowPrivate === undefined) {
-    delete process.env.KANEO_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS;
+    delete process.env.RIUNA_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS;
   } else {
-    process.env.KANEO_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS = originalAllowPrivate;
+    process.env.RIUNA_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS = originalAllowPrivate;
   }
   vi.unstubAllGlobals();
 });

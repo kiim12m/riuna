@@ -1,4 +1,4 @@
-import { client } from "@kaneo/libs";
+import { client } from "@riuna/libs";
 
 async function deleteAvatar() {
   const response = await client.user.avatar.$delete();

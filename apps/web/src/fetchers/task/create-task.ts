@@ -1,4 +1,4 @@
-import { client } from "@kaneo/libs";
+import { client } from "@riuna/libs";
 import type { InferRequestType } from "hono/client";
 
 export type CreateTaskRequest = InferRequestType<
@@ -15,6 +15,9 @@ async function createTask(
   startDate: Date | undefined,
   dueDate: Date | undefined,
   priority: CreateTaskRequest["priority"],
+  // Ultimo y opcional a proposito: los ocho sitios que ya crean tareas sueltas
+  // no tienen que saber nada del arbol.
+  options?: { parentId?: string | null },
 ) {
   if (!projectId) {
     throw new Error("No project selected for task creation");
@@ -29,6 +32,7 @@ async function createTask(
       startDate: startDate?.toISOString() || undefined,
       dueDate: dueDate?.toISOString() || undefined,
       priority,
+      ...(options?.parentId ? { parentId: options.parentId } : {}),
     },
     param: { projectId },
   });

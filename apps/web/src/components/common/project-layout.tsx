@@ -4,6 +4,8 @@ import {
   CalendarRange,
   SquareKanban,
   SquircleDashed,
+  Table2,
+  Target,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -32,8 +34,19 @@ type ProjectLayoutProps = {
   headerActions?: ReactNode;
   children: ReactNode;
   showViewSwitcher?: boolean;
-  activeView?: "backlog" | "board" | "calendar" | "gantt";
+  activeView?: "backlog" | "board" | "calendar" | "gantt" | "table" | "cycles";
 };
+
+// La vista activa se marca con el tinte de --accent y un raíl de 2 px en River
+// Teal (ADR 007). El hover de las inactivas ya lo pone el botón ghost.
+function viewTabClass(isActive: boolean) {
+  return cn(
+    "h-6 gap-1.5 rounded-md px-2 text-xs",
+    isActive
+      ? "bg-accent text-foreground shadow-[inset_0_-2px_0_var(--brand)] hover:bg-accent"
+      : "text-muted-foreground",
+  );
+}
 
 export default function ProjectLayout({
   projectId,
@@ -60,7 +73,11 @@ export default function ProjectLayout({
         ? "calendar"
         : location.pathname.includes("/gantt")
           ? "gantt"
-          : "board");
+          : location.pathname.includes("/table")
+            ? "table"
+            : location.pathname.includes("/cycles")
+              ? "cycles"
+              : "board");
 
   const handleNavigateToBacklog = () => {
     navigate({
@@ -90,6 +107,20 @@ export default function ProjectLayout({
     });
   };
 
+  const handleNavigateToTable = () => {
+    navigate({
+      to: "/dashboard/workspace/$workspaceId/project/$projectId/table",
+      params: { workspaceId, projectId },
+    });
+  };
+
+  const handleNavigateToCycles = () => {
+    navigate({
+      to: "/dashboard/workspace/$workspaceId/project/$projectId/cycles",
+      params: { workspaceId, projectId },
+    });
+  };
+
   const handleProjectSwitch = (nextProjectId: string) => {
     navigate({
       to:
@@ -99,7 +130,11 @@ export default function ProjectLayout({
             ? "/dashboard/workspace/$workspaceId/project/$projectId/calendar"
             : resolvedView === "gantt"
               ? "/dashboard/workspace/$workspaceId/project/$projectId/gantt"
-              : "/dashboard/workspace/$workspaceId/project/$projectId/board",
+              : resolvedView === "table"
+                ? "/dashboard/workspace/$workspaceId/project/$projectId/table"
+                : resolvedView === "cycles"
+                  ? "/dashboard/workspace/$workspaceId/project/$projectId/cycles"
+                  : "/dashboard/workspace/$workspaceId/project/$projectId/board",
       params: {
         workspaceId,
         projectId: nextProjectId,
@@ -115,10 +150,10 @@ export default function ProjectLayout({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <SidebarTrigger className="-ml-1 h-7 w-7 cursor-pointer text-foreground/85 hover:text-foreground" />
+                  <SidebarTrigger className="-ml-1 h-7 w-7 cursor-pointer text-foreground/85 hover:text-foreground md:hidden" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="flex items-center gap-2 text-[10px]">
+                  <p className="flex items-center gap-2 text-meta">
                     Toggle sidebar
                     <KbdSequence
                       keys={[
@@ -131,7 +166,7 @@ export default function ProjectLayout({
               </Tooltip>
             </TooltipProvider>
 
-            <div className="h-4 w-px shrink-0 bg-border/80" />
+            <div className="h-4 w-px shrink-0 bg-border/80 md:hidden" />
 
             <div className="hidden min-w-0 items-center gap-1 md:flex">
               <WorkspaceCrumbSelect />
@@ -154,60 +189,68 @@ export default function ProjectLayout({
                 onSelectBoard={handleNavigateToBoard}
                 onSelectCalendar={handleNavigateToCalendar}
                 onSelectGantt={handleNavigateToGantt}
+                onSelectTable={handleNavigateToTable}
+                onSelectCycles={handleNavigateToCycles}
                 onSelectProject={handleProjectSwitch}
                 onAddProject={() => setIsCreateProjectModalOpen(true)}
               />
             </div>
 
             {showViewSwitcher && (
-              <div className="hidden h-8 items-center gap-0.5 rounded-lg border border-border/80 bg-background p-0.5 sm:inline-flex">
+              <div className="hidden h-7 items-center gap-0.5 rounded-lg border border-border/80 bg-background p-0.5 sm:inline-flex">
                 <Button
-                  variant={resolvedView === "backlog" ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="xs"
                   onClick={handleNavigateToBacklog}
-                  className={cn(
-                    "h-6 gap-1.5 rounded-md px-2 text-xs",
-                    resolvedView !== "backlog" && "text-muted-foreground",
-                  )}
+                  className={viewTabClass(resolvedView === "backlog")}
                 >
                   <SquircleDashed className="size-3.5" />
-                  Backlog
+                  {t("tasks:backlog.title")}
                 </Button>
                 <Button
-                  variant={resolvedView === "board" ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="xs"
                   onClick={handleNavigateToBoard}
-                  className={cn(
-                    "h-6 gap-1.5 rounded-md px-2 text-xs",
-                    resolvedView !== "board" && "text-muted-foreground",
-                  )}
+                  className={viewTabClass(resolvedView === "board")}
                 >
                   <SquareKanban className="size-3.5" />
-                  Tasks
+                  {t("tasks:board.title")}
                 </Button>
                 <Button
-                  variant={resolvedView === "calendar" ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="xs"
                   onClick={handleNavigateToCalendar}
-                  className={cn(
-                    "h-6 gap-1.5 rounded-md px-2 text-xs",
-                    resolvedView !== "calendar" && "text-muted-foreground",
-                  )}
+                  className={viewTabClass(resolvedView === "calendar")}
                 >
                   <CalendarRange className="size-3.5" />
                   {t("tasks:calendar.title")}
                 </Button>
                 <Button
-                  variant={resolvedView === "gantt" ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="xs"
                   onClick={handleNavigateToGantt}
-                  className={cn(
-                    "h-6 gap-1.5 rounded-md px-2 text-xs",
-                    resolvedView !== "gantt" && "text-muted-foreground",
-                  )}
+                  className={viewTabClass(resolvedView === "gantt")}
                 >
                   <CalendarDays className="size-3.5" />
                   Gantt
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={handleNavigateToTable}
+                  className={viewTabClass(resolvedView === "table")}
+                >
+                  <Table2 className="size-3.5" />
+                  {t("tasks:table.title")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={handleNavigateToCycles}
+                  className={viewTabClass(resolvedView === "cycles")}
+                >
+                  <Target className="size-3.5" />
+                  {t("cycles:title")}
                 </Button>
               </div>
             )}

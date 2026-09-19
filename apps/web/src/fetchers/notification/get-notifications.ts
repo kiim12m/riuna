@@ -1,4 +1,4 @@
-import { client } from "@kaneo/libs";
+import { client } from "@riuna/libs";
 
 async function getNotifications() {
   const response = await client.notification.$get();

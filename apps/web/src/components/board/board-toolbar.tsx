@@ -1,6 +1,7 @@
-import { Filter, PanelsTopLeft, Rows3, X } from "lucide-react";
+import { Check, Filter, PanelsTopLeft, Rows3, Users, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import GroupControl from "@/components/common/group-control";
 import SortControl from "@/components/common/sort-control";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -16,12 +17,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/menu";
 import labelColors from "@/constants/label-colors";
+import useGetEpics from "@/hooks/queries/epic/use-get-epics";
 import {
   type BoardFilters,
   DUE_DATE_FILTER_VALUES,
 } from "@/hooks/use-task-filters";
 import { getColumnIcon } from "@/lib/column";
+import { resolveEpicColor } from "@/lib/epic-color";
 import { getInitials } from "@/lib/get-initials";
+import type { GroupByField } from "@/lib/group-tasks";
 import { getPriorityLabel } from "@/lib/i18n/domain";
 import { getPriorityIcon } from "@/lib/priority";
 import type { SortConfig } from "@/lib/sort-tasks";
@@ -31,6 +35,11 @@ type WorkspaceLabel = {
   id: string;
   name: string;
   color: string;
+};
+
+type WorkspaceTeam = {
+  id: string;
+  name: string;
 };
 
 type ActiveUsers = {
@@ -54,23 +63,28 @@ type BoardToolbarProps = {
   clearFilters: () => void;
   hasActiveFilters: boolean;
   users?: ActiveUsers;
+  teams?: WorkspaceTeam[];
   workspaceLabels: WorkspaceLabel[];
   viewMode: "board" | "list";
   setViewMode: (mode: "board" | "list") => void;
   sort: SortConfig;
   onSortChange: (sort: SortConfig) => void;
+  groupBy: GroupByField;
+  onGroupByChange: (groupBy: GroupByField) => void;
 };
 
+// Indicador visual; el estado real va en aria-checked del botón que lo envuelve.
 function CheckSlot({ checked }: { checked: boolean }) {
   return (
     <span
+      aria-hidden="true"
       className={`inline-flex size-4 shrink-0 items-center justify-center rounded-[4px] border ${
         checked
           ? "border-primary bg-primary text-primary-foreground"
           : "border-input bg-background"
       }`}
     >
-      {checked ? "✓" : null}
+      {checked ? <Check className="size-3" strokeWidth={3} /> : null}
     </span>
   );
 }
@@ -138,17 +152,23 @@ export default function BoardToolbar({
   clearFilters,
   hasActiveFilters,
   users,
+  teams,
   workspaceLabels,
   viewMode,
   setViewMode,
   sort,
   onSortChange,
+  groupBy,
+  onGroupByChange,
 }: BoardToolbarProps) {
   const { t } = useTranslation();
+  const { data: epics = [] } = useGetEpics(project?.id ?? "");
   const selectedStatusIds = filters.status ?? [];
   const selectedPriorityIds = filters.priority ?? [];
   const selectedAssigneeIds = filters.assignee ?? [];
+  const selectedTeamIds = filters.team ?? [];
   const selectedDueDateFilters = filters.dueDate ?? [];
+  const selectedEpicIds = filters.epics ?? [];
 
   const getStatusDisplayName = (statusId: string) => {
     const column = project?.columns?.find((col) => col.id === statusId);
@@ -166,6 +186,10 @@ export default function BoardToolbar({
     const member = users?.members?.find((m) => m.userId === userId);
     return member?.user?.name || t("common:people.unknown");
   };
+  const getTeamDisplayName = (teamId: string) => {
+    const team = teams?.find((item) => item.id === teamId);
+    return team?.name || t("tasks:team.unknown");
+  };
   const getAssigneeAvatar = (userId: string) => {
     const member = users?.members?.find((m) => m.userId === userId);
     return (
@@ -174,7 +198,7 @@ export default function BoardToolbar({
           src={member?.user?.image ?? ""}
           alt={member?.user?.name || ""}
         />
-        <AvatarFallback className="border border-border/30 text-[9px] font-medium">
+        <AvatarFallback className="border border-border/30 text-label font-medium">
           {getInitials(member?.user?.name)}
         </AvatarFallback>
       </Avatar>
@@ -220,6 +244,22 @@ export default function BoardToolbar({
       ? selectedAssigneeIds.filter((id) => id !== userId)
       : [...selectedAssigneeIds, userId];
     updateFilter("assignee", next.length > 0 ? next : null);
+  };
+
+  const toggleTeamFilter = (teamId: string) => {
+    const exists = selectedTeamIds.includes(teamId);
+    const next = exists
+      ? selectedTeamIds.filter((id) => id !== teamId)
+      : [...selectedTeamIds, teamId];
+    updateFilter("team", next.length > 0 ? next : null);
+  };
+
+  const toggleEpicFilter = (epicId: string) => {
+    const exists = selectedEpicIds.includes(epicId);
+    const next = exists
+      ? selectedEpicIds.filter((id) => id !== epicId)
+      : [...selectedEpicIds, epicId];
+    updateFilter("epics", next.length > 0 ? next : null);
   };
 
   const toggleDueDateFilter = (dueDate: string) => {
@@ -270,7 +310,7 @@ export default function BoardToolbar({
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="start">
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel className="text-[11px] uppercase tracking-wide">
+                  <DropdownMenuLabel className="text-label uppercase">
                     {t("tasks:boardFilters.filterBy")}
                   </DropdownMenuLabel>
                 </DropdownMenuGroup>
@@ -402,11 +442,53 @@ export default function BoardToolbar({
                                 src={member.user?.image ?? ""}
                                 alt={member.user?.name || ""}
                               />
-                              <AvatarFallback className="border border-border/30 text-[10px] font-medium">
+                              <AvatarFallback className="border border-border/30 text-label font-medium">
                                 {getInitials(member.user?.name)}
                               </AvatarFallback>
                             </Avatar>
                             <span>{member.user?.name}</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="h-8 rounded-md text-sm">
+                    {t("tasks:boardFilters.subjects.team")}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-64">
+                    <div className="grid grid-cols-1 gap-1 p-1">
+                      <button
+                        className={`inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-left text-xs ${
+                          selectedTeamIds.length === 0
+                            ? "bg-accent text-accent-foreground"
+                            : "text-foreground/90 hover:bg-accent/60 hover:text-foreground"
+                        }`}
+                        onClick={() => updateFilter("team", null)}
+                        type="button"
+                      >
+                        <CheckSlot checked={selectedTeamIds.length === 0} />
+                        {t("tasks:boardFilters.allTeams")}
+                      </button>
+                      {teams?.map((team) => (
+                        <button
+                          key={team.id}
+                          className={`inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-left text-xs ${
+                            selectedTeamIds.includes(team.id)
+                              ? "bg-accent text-accent-foreground"
+                              : "text-foreground/90 hover:bg-accent/60 hover:text-foreground"
+                          }`}
+                          onClick={() => toggleTeamFilter(team.id)}
+                          type="button"
+                        >
+                          <CheckSlot
+                            checked={selectedTeamIds.includes(team.id)}
+                          />
+                          <span className="inline-flex items-center gap-2">
+                            <Users className="size-3.5 text-muted-foreground" />
+                            <span className="truncate">{team.name}</span>
                           </span>
                         </button>
                       ))}
@@ -461,6 +543,58 @@ export default function BoardToolbar({
                                   : "noDueDate"
                             }`,
                           )}
+                        </button>
+                      ))}
+                    </div>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="h-8 rounded-md text-sm">
+                    {t("tasks:epics.title")}
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-64">
+                    <div className="grid grid-cols-1 gap-1 p-1">
+                      <button
+                        className={`inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-left text-xs ${
+                          selectedEpicIds.length === 0
+                            ? "bg-accent text-accent-foreground"
+                            : "text-foreground/90 hover:bg-accent/60 hover:text-foreground"
+                        }`}
+                        onClick={() => updateFilter("epics", null)}
+                        type="button"
+                      >
+                        <CheckSlot checked={selectedEpicIds.length === 0} />
+                        {t("tasks:epics.allEpics")}
+                      </button>
+                      {epics.length === 0 && (
+                        <span className="px-2 py-2 text-center text-xs text-muted-foreground">
+                          {t("tasks:epics.emptyProject")}
+                        </span>
+                      )}
+                      {epics.map((epic) => (
+                        <button
+                          key={epic.id}
+                          className={`inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-left text-xs ${
+                            selectedEpicIds.includes(epic.id)
+                              ? "bg-accent text-accent-foreground"
+                              : "text-foreground/90 hover:bg-accent/60 hover:text-foreground"
+                          }`}
+                          onClick={() => toggleEpicFilter(epic.id)}
+                          type="button"
+                        >
+                          <CheckSlot
+                            checked={selectedEpicIds.includes(epic.id)}
+                          />
+                          <span className="inline-flex items-center gap-2">
+                            <span
+                              className="size-2.5 shrink-0 rounded-full"
+                              style={{
+                                backgroundColor: resolveEpicColor(epic.color),
+                              }}
+                            />
+                            <span className="truncate">{epic.name}</span>
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -529,6 +663,13 @@ export default function BoardToolbar({
             </DropdownMenu>
 
             <SortControl sort={sort} onSortChange={onSortChange} />
+
+            <GroupControl
+              groupBy={groupBy}
+              onGroupByChange={onGroupByChange}
+              disabled={viewMode === "board"}
+              disabledHint={t("tasks:group.boardHint")}
+            />
 
             {selectedStatusIds.length > 0 && (
               <ActiveFilterChip
@@ -606,6 +747,21 @@ export default function BoardToolbar({
               />
             )}
 
+            {selectedTeamIds.length > 0 && (
+              <ActiveFilterChip
+                subject={t("tasks:boardFilters.subjects.team")}
+                operator={t("tasks:boardFilters.operators.isAnyOf")}
+                value={
+                  selectedTeamIds.length === 1
+                    ? getTeamDisplayName(selectedTeamIds[0])
+                    : t("tasks:boardFilters.selectedCount", {
+                        count: selectedTeamIds.length,
+                      })
+                }
+                onClear={() => updateFilter("team", null)}
+              />
+            )}
+
             {selectedDueDateFilters.length > 0 && (
               <ActiveFilterChip
                 subject={t("tasks:boardFilters.subjects.dueDate")}
@@ -631,6 +787,21 @@ export default function BoardToolbar({
               />
             )}
 
+            {selectedEpicIds.length > 0 && (
+              <ActiveFilterChip
+                subject={t("tasks:epics.title")}
+                operator={t("tasks:boardFilters.operators.isAnyOf")}
+                value={
+                  selectedEpicIds.length === 1
+                    ? (epics.find((epic) => epic.id === selectedEpicIds[0])
+                        ?.name ?? selectedEpicIds[0])
+                    : t("tasks:boardFilters.selectedCount", {
+                        count: selectedEpicIds.length,
+                      })
+                }
+                onClear={() => updateFilter("epics", null)}
+              />
+            )}
             {filters.labels && filters.labels.length > 0 && (
               <ActiveFilterChip
                 subject={t("tasks:boardFilters.subjects.labels")}

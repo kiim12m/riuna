@@ -9,6 +9,7 @@ import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 async function addMember(workspaceId: string, role: string) {
@@ -100,6 +101,7 @@ describe("API integration: account deletion", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: guest.id,
         title: "Assigned to the leaving user",

@@ -3,6 +3,7 @@ import db from "../../../database";
 import { columnTable, projectTable, taskTable } from "../../../database/schema";
 import { publishEvent } from "../../../events";
 import { claimTaskNumber } from "../../../task/controllers/claim-task-numbers";
+import { rootTaskTreeFields } from "../../../task/tree";
 import {
   createExternalLink,
   findExternalLink,
@@ -104,6 +105,7 @@ export async function handleGiteaIssueOpened(
     });
 
     const taskValues: typeof taskTable.$inferInsert = {
+      ...rootTaskTreeFields(),
       projectId,
       userId: null,
       title: issue.title,
@@ -159,7 +161,7 @@ export async function handleGiteaIssueOpened(
       continue;
     }
 
-    const clientUrl = process.env.KANEO_CLIENT_URL || "http://localhost:5173";
+    const clientUrl = process.env.RIUNA_CLIENT_URL || "http://localhost:5173";
     const taskUrl = `${clientUrl}/dashboard/workspace/${project.workspaceId}/project/${projectId}/task/${createdTask.id}`;
     const taskIdentifier = `${project.slug.toUpperCase()}-${createdTask.number}`;
 

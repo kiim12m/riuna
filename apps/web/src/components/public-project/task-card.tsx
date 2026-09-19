@@ -9,21 +9,17 @@ import {
 import { formatDateShort } from "@/lib/format";
 import { getInitials } from "@/lib/get-initials";
 import { getPriorityIcon } from "@/lib/priority";
-import type { ExternalLink } from "@/types/external-link";
-import type Task from "@/types/task";
+import type { PublicTask } from "@/types/project";
 import { PublicPRBadge } from "./public-pr-badge";
 import { PublicTaskLabels } from "./public-task-labels";
 
 type PublicTaskCardProps = {
-  task: Task & {
-    labels?: Array<{ id: string; name: string; color: string }>;
-    externalLinks?: Array<ExternalLink>;
-  };
+  task: PublicTask;
   projectSlug: string;
   // Passed by views that hold the column, so completion comes from isFinal
   // rather than the slug fallback.
   isCompleted?: boolean;
-  onTaskClick: (task: Task) => void;
+  onTaskClick: (task: PublicTask) => void;
 };
 
 export function PublicTaskCard({
@@ -80,7 +76,7 @@ export function PublicTaskCard({
       onClick={handleClick}
       aria-label={`View details for task ${task.title}`}
     >
-      <div className="text-[10px] font-mono text-muted-foreground mb-2">
+      <div className="text-label font-mono text-muted-foreground mb-2">
         {projectSlug}-{task.number}
       </div>
 
@@ -91,11 +87,11 @@ export function PublicTaskCard({
               src={task.assigneeImage ?? ""}
               alt={task.assigneeName ?? ""}
             />
-            <AvatarFallback className="text-[10px] font-medium border border-border/30">
+            <AvatarFallback className="text-label font-medium border border-border/30">
               {getInitials(task.assigneeName)}
             </AvatarFallback>
           </Avatar>
-          <span className="text-[10px] text-muted-foreground font-medium truncate">
+          <span className="text-meta text-muted-foreground font-medium truncate">
             {task.assigneeName}
           </span>
         </div>
@@ -124,14 +120,14 @@ export function PublicTaskCard({
 
       <div className="flex items-center gap-2">
         {task.priority && (
-          <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-[10px] font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-label font-medium text-muted-foreground">
             {getPriorityIcon(task.priority ?? "")}
           </span>
         )}
 
         {task.dueDate && (
           <div
-            className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
+            className={`flex items-center gap-1 text-label px-2 py-1 rounded ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
           >
             {getDueDateStatus(task.dueDate, taskIsCompleted) === "overdue" && (
               <CalendarX className="w-3 h-3" />

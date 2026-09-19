@@ -24,7 +24,7 @@ function billing(overrides: Partial<Billing>): Billing {
   } as Billing;
 }
 
-const CLOUD_KEYS = ["KANEO_CLOUD", "CREEM_API_KEY", "CREEM_WEBHOOK_SECRET"];
+const CLOUD_KEYS = ["RIUNA_CLOUD", "CREEM_API_KEY", "CREEM_WEBHOOK_SECRET"];
 let saved: Record<string, string | undefined>;
 
 beforeEach(() => {
@@ -32,7 +32,7 @@ beforeEach(() => {
   for (const key of CLOUD_KEYS) {
     saved[key] = process.env[key];
   }
-  process.env.KANEO_CLOUD = "true";
+  process.env.RIUNA_CLOUD = "true";
   process.env.CREEM_API_KEY = "key";
   process.env.CREEM_WEBHOOK_SECRET = "secret";
 });

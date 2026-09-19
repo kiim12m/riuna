@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { WorkspaceTasksExport } from "@/components/workspace/workspace-tasks-export";
 import useDeleteWorkspace from "@/hooks/mutations/workspace/use-delete-workspace";
 import useTransferWorkspaceOwnership from "@/hooks/mutations/workspace/use-transfer-workspace-ownership";
 import useUpdateWorkspace from "@/hooks/mutations/workspace/use-update-workspace";
@@ -402,6 +403,10 @@ function RouteComponent() {
             </Form>
           </div>
         </div>
+
+        {workspace?.id ? (
+          <WorkspaceTasksExport workspaceId={workspace.id} />
+        ) : null}
 
         {isOwner ? (
           <div className="space-y-6">

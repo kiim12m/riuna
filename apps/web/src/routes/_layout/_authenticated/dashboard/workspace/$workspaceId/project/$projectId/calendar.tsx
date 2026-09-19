@@ -7,16 +7,22 @@ import MonthGrid from "@/components/calendar/month-grid";
 import { buildMonthWeeks } from "@/components/calendar/month-grid-model";
 import ProjectLayout from "@/components/common/project-layout";
 import PageTitle from "@/components/page-title";
+import FilterBar from "@/components/table-view/filter-bar";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import { shortcuts } from "@/constants/shortcuts";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
+import { useFilterableFields } from "@/hooks/use-filterable-fields";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { readFilterParam, useUrlFilter } from "@/hooks/use-url-filter";
 import { toScheduledTasks } from "@/lib/task-schedule";
 import { useUserPreferencesStore } from "@/store/user-preferences";
+import type { EditableCondition } from "@/types/task-filter";
 
 type CalendarSearchParams = {
   taskId?: string;
+  /** Las condiciones del filtro. Ver `useUrlFilter`. */
+  filter?: EditableCondition[];
 };
 
 export const Route = createFileRoute(
@@ -25,6 +31,7 @@ export const Route = createFileRoute(
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): CalendarSearchParams => ({
     taskId: typeof search.taskId === "string" ? search.taskId : undefined,
+    filter: readFilterParam(search.filter),
   }),
 });
 
@@ -36,9 +43,11 @@ const MAX_LANES_MOBILE = 2;
 function RouteComponent() {
   const { t } = useTranslation();
   const { projectId, workspaceId } = Route.useParams();
-  const { taskId } = Route.useSearch();
+  const { taskId, filter: filterParam } = Route.useSearch();
   const navigate = useNavigate();
-  const { data: project, isLoading, isError } = useGetTasks(projectId);
+  const { conditions, setConditions, filter } = useUrlFilter(filterParam);
+  const filterableFields = useFilterableFields(projectId, workspaceId);
+  const { data: project, isLoading, isError } = useGetTasks(projectId, filter);
   const weekStartsOn = useUserPreferencesStore((state) => state.weekStartsOn);
   const setViewMode = useUserPreferencesStore((state) => state.setViewMode);
   const isMobile = useIsMobile();
@@ -127,6 +136,17 @@ function RouteComponent() {
           onNextMonth={handleNextMonth}
           onToday={handleToday}
         />
+
+        {/* Hasta ahora el calendario no filtraba por nada: la deuda que el
+            plan arrastra desde la Fase 1. Usa el mismo motor que la tabla, asi
+            que un filtro escrito aqui vale igual alla. */}
+        <div className="border-border/80 border-b">
+          <FilterBar
+            fields={filterableFields}
+            conditions={conditions}
+            onChange={setConditions}
+          />
+        </div>
 
         {isLoading ? (
           <div className="border-b border-border/80 px-4 py-3 text-center">

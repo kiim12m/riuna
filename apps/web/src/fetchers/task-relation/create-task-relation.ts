@@ -1,4 +1,4 @@
-import { client } from "@kaneo/libs";
+import { client } from "@riuna/libs";
 
 async function createTaskRelation({
   sourceTaskId,
@@ -7,7 +7,7 @@ async function createTaskRelation({
 }: {
   sourceTaskId: string;
   targetTaskId: string;
-  relationType: "subtask" | "blocks" | "related";
+  relationType: "blocks" | "related";
 }) {
   const response = await client["task-relation"].$post({
     json: {

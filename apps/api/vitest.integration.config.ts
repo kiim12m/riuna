@@ -20,7 +20,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@kaneo/email": resolve(
+      "@riuna/email": resolve(
         __dirname,
         "../../tests/api-integration/mocks/email.ts",
       ),
