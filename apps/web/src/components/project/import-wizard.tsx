@@ -291,6 +291,21 @@ export function ImportWizard({
                       )}
                       {t("settings:tasksImportExport.selectFile")}
                     </Button>
+                    {/* El boton abre este campo. Sin el, importar solo se podia
+                        arrastrando, y con el teclado no se podia. */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                      className="hidden"
+                      onChange={(event) => {
+                        const chosen = event.target.files?.[0];
+                        // Se limpia para que elegir el mismo fichero otra vez
+                        // vuelva a disparar el cambio.
+                        event.target.value = "";
+                        if (chosen) chooseFile(chosen);
+                      }}
+                    />
                   </div>
                 </div>
               </>

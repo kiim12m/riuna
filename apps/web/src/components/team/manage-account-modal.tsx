@@ -75,7 +75,9 @@ function ManageAccountModal({ account, workspaceId, onClose }: Props) {
     if (!account) return;
 
     const email = values.email.trim();
-    const password = values.password.trim();
+    // La contrasena va tal cual: recortarla guardaba una distinta de la que se
+    // escribio, y quien la recibia no podia entrar con ella.
+    const password = values.password;
 
     if (password && password.length < 8) {
       form.setError("password", {

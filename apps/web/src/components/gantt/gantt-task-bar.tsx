@@ -96,7 +96,10 @@ export function GanttTaskBar({
 
   const bindWindowDrag = (
     onMove: (deltaDays: number) => void,
-    onEnd: (deltaDays: number, cancelled: boolean) => void,
+    // `movedPx` es el recorrido real del puntero: el que decide si el gesto ha
+    // sido un clic no puede salir de los dias redondeados, que en la escala de
+    // Dia convierten 15 px en un dia y en la de Trimestre un dia en 1 px.
+    onEnd: (deltaDays: number, cancelled: boolean, movedPx: number) => void,
     originX: number,
   ) => {
     const toDelta = (clientX: number) =>
@@ -104,7 +107,11 @@ export function GanttTaskBar({
     const move = (ev: PointerEvent) => onMove(toDelta(ev.clientX));
     const up = (ev: PointerEvent) => {
       detach();
-      onEnd(toDelta(ev.clientX), ev.type === "pointercancel");
+      onEnd(
+        toDelta(ev.clientX),
+        ev.type === "pointercancel",
+        Math.abs(ev.clientX - originX),
+      );
     };
     const detach = () => {
       window.removeEventListener("pointermove", move);
@@ -183,9 +190,8 @@ export function GanttTaskBar({
           end: addDays(nextStart, durationDays),
         });
       },
-      async (delta, cancelled) => {
+      async (delta, cancelled, movedPx) => {
         if (cancelled) return setDragDisplay(null);
-        const movedPx = Math.abs(delta * pxPerDay);
         if (movedPx < moveThresholdPx) {
           setDragDisplay(null);
           onOpenTask();

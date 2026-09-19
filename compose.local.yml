@@ -50,6 +50,13 @@ services:
       - "1337:1337"
     env_file:
       - .env
+    # El .env compartido apunta a localhost:5433, que es como se alcanza
+    # Postgres **desde fuera** de Docker. Dentro de la red de Compose el
+    # servidor es `postgres:5432`, asi que sin esto el contenedor se buscaba a
+    # si mismo y se quedaba reiniciandose.
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
     depends_on:
       postgres:
         condition: service_healthy
