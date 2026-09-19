@@ -155,7 +155,10 @@ export default async function getDashboardData(
       }
 
       const resolved = resolveWidget(type, config, widget.projectId);
-      const range = type === "trend" ? trendRange(config, now) : undefined;
+      // Toda serie por fecha lleva ventana, no solo la tendencia: el tiempo
+      // agrupado por fecha sin ella se quedaba con los cubos mas antiguos.
+      const range =
+        resolved.groupBy === "time" ? trendRange(config, now) : undefined;
 
       const result = await aggregate({
         workspaceId,

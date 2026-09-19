@@ -17,9 +17,11 @@ async function unwrap<T>(response: {
 /**
  * Un resultado clave se configura como un widget **menos la agrupacion**: es un
  * numero, no un reparto. `sumLogged` queda fuera porque mide sobre el registro
- * de tiempo y no sobre el cierre, asi que el periodo significaria otra cosa.
+ * de tiempo y no sobre el cierre, asi que el periodo significaria otra cosa; y
+ * `count` y `doneRatio` tampoco, porque sobre una ventana de cierre median lo
+ * mismo que `doneCount` (ADR 032).
  */
-export type GoalMetric = "count" | "doneCount" | "doneRatio" | "sumEstimate";
+export type GoalMetric = "doneCount" | "sumEstimate";
 
 export type TargetConfig = {
   filter?: EditableCondition[];

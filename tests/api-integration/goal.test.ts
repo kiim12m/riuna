@@ -127,6 +127,67 @@ describe("API integration: goals", () => {
     expect(after[0].targets[0].current).toBe(3);
   });
 
+  // El dia final del periodo es del periodo. La fecha llega como dia sin hora,
+  // que es la medianoche de ese dia: usada como fin exclusivo, lo que se
+  // cerraba ese dia no contaba, y un objetivo de un solo dia media siempre 0.
+  it("counts a task closed on the last day of the period", async () => {
+    const { app, member, project } = await setup();
+
+    const oneDay = (await (
+      await app.request("/api/goal", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          workspaceId: member.workspace.id,
+          name: "Un dia",
+          startsAt: "2026-09-30",
+          endsAt: "2026-09-30",
+        }),
+      })
+    ).json()) as Goal;
+
+    await app.request(`/api/goal/${oneDay.id}/target`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Cerrar una",
+        targetValue: 1,
+        config: { scope: "assigned", metric: "doneCount" },
+      }),
+    });
+
+    await seedTask(project.id, member.user.id, new Date("2026-09-30T15:00Z"));
+    await seedTask(project.id, member.user.id, new Date("2026-10-01T15:00Z"));
+
+    const goals = (await (
+      await app.request(`/api/goal?workspaceId=${member.workspace.id}`)
+    ).json()) as Goal[];
+
+    expect(goals.find((g) => g.id === oneDay.id)?.targets[0].current).toBe(1);
+  });
+
+  // El periodo es una ventana de cierre (ADR 032), asi que "tareas" y "ratio de
+  // hechas" median lo mismo que "hechas". Solo se ofrece lo que tiene sentido.
+  it("offers only the metrics a closing window can measure", async () => {
+    const { app, goal } = await setup();
+
+    const create = (metric: string) =>
+      app.request(`/api/goal/${goal.id}/target`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name: metric,
+          targetValue: 5,
+          config: { metric },
+        }),
+      });
+
+    expect((await create("count")).status).toBe(400);
+    expect((await create("doneRatio")).status).toBe(400);
+    expect((await create("doneCount")).status).toBe(200);
+    expect((await create("sumEstimate")).status).toBe(200);
+  });
+
   it("carries a per-target error instead of failing the whole goal", async () => {
     const { app, member, goal } = await setup();
 

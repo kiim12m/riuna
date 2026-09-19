@@ -73,6 +73,19 @@ export function resolveWidget(
 ): ResolvedWidget {
   const granularity = config.granularity ?? "week";
 
+  // El agregado de tiempo registrado solo sabe agrupar por persona, proyecto o
+  // fecha, y su grano es la entrada y no la tarea. En un recuento o un reparto
+  // devolvia cifras de otra cosa bajo etiquetas que no eran suyas; tiene su
+  // propio tipo de widget.
+  if (
+    (type === "count" || type === "breakdown") &&
+    config.metric === "sumLogged"
+  ) {
+    throw new HTTPException(400, {
+      message: "Logged time has its own widget type: use `time`",
+    });
+  }
+
   switch (type) {
     case "count":
       return { metric: config.metric ?? "count", groupBy: undefined };

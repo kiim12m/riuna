@@ -258,6 +258,78 @@ describe("API integration: personal dashboards", () => {
     expect(response.status).toBe(400);
   });
 
+  // El agregado de tiempo solo sabe agrupar por persona, proyecto o fecha: en
+  // un recuento o un reparto por prioridad devolvia cifras de otra cosa.
+  it("refuses logged time on a count or a breakdown widget", async () => {
+    const member = await createWorkspaceMember({ role: "member" });
+    const dashboard = await seedDashboard(member.workspace.id, member.user.id);
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const count = await app.request(
+      `/api/dashboard/${dashboard.id}/widget`,
+      json({ type: "count", title: "Horas", config: { metric: "sumLogged" } }),
+    );
+    const breakdown = await app.request(
+      `/api/dashboard/${dashboard.id}/widget`,
+      json({
+        type: "breakdown",
+        title: "Horas por prioridad",
+        config: { metric: "sumLogged", groupBy: "priority" },
+      }),
+    );
+
+    expect(count.status).toBe(400);
+    expect(breakdown.status).toBe(400);
+  });
+
+  // Crear un widget de objetivo ya lo comprobaba; editarlo no, y guardaba un
+  // objetivo ajeno o ninguno.
+  it("checks the goal again when a goal widget is edited", async () => {
+    const member = await createWorkspaceMember({ role: "member" });
+    const stranger = await createWorkspaceMember({ role: "member" });
+    const dashboard = await seedDashboard(member.workspace.id, member.user.id);
+
+    const [mine, foreign] = await db
+      .insert(schema.goalTable)
+      .values([
+        {
+          workspaceId: member.workspace.id,
+          createdBy: member.user.id,
+          name: "Mio",
+          startsAt: new Date("2026-07-01"),
+          endsAt: new Date("2026-09-30"),
+        },
+        {
+          workspaceId: stranger.workspace.id,
+          createdBy: stranger.user.id,
+          name: "Ajeno",
+          startsAt: new Date("2026-07-01"),
+          endsAt: new Date("2026-09-30"),
+        },
+      ])
+      .returning();
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const widget = (await (
+      await app.request(
+        `/api/dashboard/${dashboard.id}/widget`,
+        json({ type: "goal", title: "OKR", goalId: mine.id, config: {} }),
+      )
+    ).json()) as { id: string };
+
+    const edit = (goalId: string | null) =>
+      app.request(`/api/dashboard/widget/${widget.id}`, {
+        ...json({ goalId }),
+        method: "PATCH",
+      });
+
+    expect((await edit(foreign.id)).status).toBe(404);
+    expect((await edit(null)).status).toBe(400);
+  });
+
   it("reorders widgets and refuses ids from another dashboard", async () => {
     const member = await createWorkspaceMember({ role: "member" });
     const mine = await seedDashboard(member.workspace.id, member.user.id);

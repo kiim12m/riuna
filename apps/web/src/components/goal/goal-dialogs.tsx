@@ -20,12 +20,7 @@ import {
 } from "@/components/ui/select";
 import type { Goal, GoalMetric, GoalTarget } from "@/fetchers/goal";
 
-const METRICS: GoalMetric[] = [
-  "doneCount",
-  "count",
-  "doneRatio",
-  "sumEstimate",
-];
+const METRICS: GoalMetric[] = ["doneCount", "sumEstimate"];
 
 /** Trimestre en curso, que es el periodo que la fase pide por defecto. */
 function currentQuarter() {

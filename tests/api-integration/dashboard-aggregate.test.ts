@@ -232,6 +232,41 @@ describe("API integration: dashboard aggregates", () => {
     expect(bucketsOf(payload, timeId).buckets?.[0]?.value).toBe(5_400);
   });
 
+  // Agrupar el tiempo registrado por fecha repetia la clave con parametros en el
+  // GROUP BY y moria con "must appear in the GROUP BY clause". Y sin ventana
+  // se habria quedado con los 90 cubos mas antiguos, no con los recientes.
+  it("groups logged time by date over the recent window", async () => {
+    const { member, project, dashboard, app } = await setup();
+    const task = await createTask({ projectId: project.id });
+
+    const DAY = 86_400_000;
+    for (const [daysAgo, seconds] of [
+      [0, 3_600],
+      [400, 1_800],
+    ] as const) {
+      const startTime = new Date(Date.now() - daysAgo * DAY);
+      await db.insert(schema.timeEntryTable).values({
+        taskId: task.id,
+        userId: member.user.id,
+        startTime,
+        endTime: new Date(startTime.getTime() + seconds * 1000),
+        duration: seconds,
+      });
+    }
+
+    const timeId = await addWidget(app, dashboard.id, {
+      type: "time",
+      title: "Por dia",
+      config: { groupBy: "time", granularity: "day" },
+    });
+
+    const payload = await readData(app, dashboard.id);
+
+    expect(bucketsOf(payload, timeId).buckets?.map((b) => b.value)).toEqual([
+      3_600,
+    ]);
+  });
+
   it("counts a task in every epic it belongs to, so buckets can outsum the total", async () => {
     const { project, dashboard, app } = await setup();
 

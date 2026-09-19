@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import { WIDGET_METRICS } from "../dashboard/aggregate";
+import type { WIDGET_METRICS } from "../dashboard/aggregate";
 import { editableFilterSchema } from "../view/filter-schema";
 
 /** Cuantos resultados clave caben en un objetivo. Un tope, no una invariante. */
@@ -16,15 +16,20 @@ export const MAX_TARGETS_PER_GOAL = 8;
  * sobre el cierre de la tarea, asi que el periodo del objetivo significaria otra
  * cosa que en el resto de metricas. Cuando haga falta, entra con su propia
  * ventana y dicho en la ADR, no de tapadillo.
+ *
+ * `count` y `doneRatio` tampoco: el periodo es una ventana de **cierre**, asi
+ * que solo quedan tareas cerradas y las dos median lo mismo que `doneCount` —y
+ * `doneRatio` ensenaba un recuento, no una proporcion—. Ver la ADR 032.
  */
-export const GOAL_METRICS = WIDGET_METRICS.filter(
-  (metric) => metric !== "sumLogged",
-);
+export const GOAL_METRICS = [
+  "doneCount",
+  "sumEstimate",
+] as const satisfies readonly (typeof WIDGET_METRICS)[number][];
 
 export const targetConfigSchema = v.object({
   filter: v.optional(editableFilterSchema),
   scope: v.optional(v.picklist(["assigned", "team"])),
-  metric: v.optional(v.picklist(GOAL_METRICS as [string, ...string[]])),
+  metric: v.optional(v.picklist(GOAL_METRICS)),
 });
 
 export type TargetConfig = v.InferOutput<typeof targetConfigSchema>;

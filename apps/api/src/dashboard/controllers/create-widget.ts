@@ -107,7 +107,7 @@ export async function assertProjectBelongsToWorkspace(
  * cualquier objetivo de cualquier espacio: sin esto, un id ajeno se guardaria y
  * el lote lo serviria a quien no le toca.
  */
-async function assertGoalIsVisible(
+export async function assertGoalIsVisible(
   goalId: string | null | undefined,
   workspaceId: string,
   type: string,

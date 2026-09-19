@@ -28,6 +28,15 @@ mismo `aggregate()` en la lectura. No se guarda ninguna cifra derivada.
   .start_time` y no sobre el cierre de la tarea, así que el periodo significaría
   otra cosa que en el resto. Entrará con su propia ventana y dicho aquí, no de
   tapadillo.
+- **`count` y `doneRatio` tampoco** (añadido el 2026-09-19). Sobre una ventana de
+  cierre solo quedan tareas cerradas, así que las dos medían lo mismo que
+  `doneCount`, y `doneRatio` enseñaba un recuento en vez de una proporción. Un
+  resultado clave es `doneCount` o `sumEstimate`; la migración 0059 pasa los que
+  había a `doneCount`, que es la cifra que ya mostraban. «Qué parte del trabajo
+  del trimestre está hecha» pide otra ventana —las tareas abiertas en algún
+  momento del periodo— y entraría como métrica propia.
+- **El último día del periodo cuenta.** `ends_at` llega como día sin hora; el
+  agregado recibe el día siguiente como fin exclusivo.
 - **Un resultado que no se puede medir lleva su error y no tumba el objetivo**,
   igual que un widget roto no tumba el panel. Es el mismo fallo que `get-tasks.ts`
   documenta: archivar una definición de campo no puede dejar una pantalla en

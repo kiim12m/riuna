@@ -12,6 +12,8 @@ import { FilterError } from "../../view/filter-to-sql";
 import { getWorkspaceFieldRegistry } from "../../view/workspace-registry";
 import type { TargetConfig } from "../target-config";
 
+const DAY_MS = 86_400_000;
+
 /**
  * Los objetivos de quien pregunta, con el progreso ya calculado.
  *
@@ -114,9 +116,13 @@ export default async function getGoals(workspaceId: string, userId: string) {
                 (config.metric as Parameters<typeof aggregate>[0]["metric"]) ??
                 "doneCount",
               // El periodo del objetivo **es** la ventana de medida. Sin el,
-              // "cerrar 40 este trimestre" contaria las de siempre.
+              // "cerrar 40 este trimestre" contaria las de siempre. El dia
+              // final es del periodo: llega como dia sin hora, su medianoche
+              // UTC, y el agregado trata `to` como fin exclusivo. Se suman
+              // milisegundos y no `addDays`, que en un cambio de hora
+              // desplazaria el corte una hora.
               from: goal.startsAt,
-              to: goal.endsAt,
+              to: new Date(goal.endsAt.getTime() + DAY_MS),
             });
 
             return {

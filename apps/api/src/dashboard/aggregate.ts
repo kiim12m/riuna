@@ -412,10 +412,13 @@ async function aggregateLoggedTime({
     .innerJoin(taskTable, eq(taskTable.id, timeEntryTable.taskId))
     .innerJoin(projectTable, eq(projectTable.id, taskTable.projectId))
     .where(and(...scoped))
-    .groupBy(key)
+    // Por ordinal cuando la clave lleva parametros, como en `aggregate()`:
+    // repetir el `date_trunc` en el GROUP BY lo volvia a enlazar y la consulta
+    // moria con "must appear in the GROUP BY clause".
+    .groupBy(...groupByFor(groupBy, key))
     .orderBy(
       groupBy === "time"
-        ? asc(key)
+        ? asc(sql`1`)
         : desc(sql`COALESCE(SUM(${timeEntryTable.duration}), 0)`),
     )
     .limit(bucketCap(groupBy ?? "assignee") + 1);

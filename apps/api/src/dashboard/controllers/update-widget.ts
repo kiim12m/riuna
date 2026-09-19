@@ -7,7 +7,10 @@ import {
   type WidgetConfig,
   type WidgetType,
 } from "../widget-config";
-import { assertProjectBelongsToWorkspace } from "./create-widget";
+import {
+  assertGoalIsVisible,
+  assertProjectBelongsToWorkspace,
+} from "./create-widget";
 
 export default async function updateWidget({
   id,
@@ -38,6 +41,12 @@ export default async function updateWidget({
     projectId !== undefined ? projectId : existing.projectId;
 
   await assertProjectBelongsToWorkspace(nextProjectId, workspaceId);
+
+  // La misma comprobacion que al crear: sin ella, editar un widget de objetivo
+  // guardaba uno de otro espacio, o ninguno.
+  if (goalId !== undefined) {
+    await assertGoalIsVisible(goalId, workspaceId, existing.type);
+  }
 
   // Se revalida con la combinacion resultante y no solo con lo que llega:
   // quitarle el proyecto a un widget de epicas lo dejaria imposible de calcular.
