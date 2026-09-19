@@ -1,11 +1,10 @@
 import { getColumnIcon } from "@/lib/column";
-import type { ProjectWithTasks } from "@/types/project";
-import type Task from "@/types/task";
+import type { PublicProject, PublicTask } from "@/types/project";
 import { PublicTaskRow } from "./task-row";
 
 type PublicListViewProps = {
-  project: ProjectWithTasks;
-  onTaskClick: (task: Task) => void;
+  project: PublicProject;
+  onTaskClick: (task: PublicTask) => void;
 };
 
 export function PublicListView({ project, onTaskClick }: PublicListViewProps) {

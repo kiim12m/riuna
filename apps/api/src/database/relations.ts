@@ -6,25 +6,37 @@ import {
   assetTable,
   columnTable,
   commentTable,
+  cycleTable,
+  dashboardTable,
+  dashboardWidgetTable,
+  epicTable,
   externalLinkTable,
+  fieldDefinitionTable,
   githubIntegrationTable,
+  goalTable,
+  goalTargetTable,
   integrationTable,
   invitationTable,
   labelTable,
   notificationTable,
   projectTable,
   sessionTable,
+  taskAssigneeTable,
+  taskEpicTable,
+  taskRecurrenceTable,
   taskRelationTable,
   taskReminderSentTable,
   taskTable,
   teamMemberTable,
   teamTable,
+  templateTable,
   timeEntryTable,
   userNotificationPreferenceTable,
   userNotificationWorkspaceProjectTable,
   userNotificationWorkspaceRuleTable,
   userTable,
   verificationTable,
+  viewTable,
   workflowRuleTable,
   workspaceRoleTable,
   workspaceTable,
@@ -74,6 +86,11 @@ export const workspaceTableRelations = relations(
     members: many(workspaceUserTable),
     projects: many(projectTable),
     assets: many(assetTable),
+    fieldDefinitions: many(fieldDefinitionTable),
+    views: many(viewTable),
+    dashboards: many(dashboardTable),
+    goals: many(goalTable),
+    templates: many(templateTable),
     invitations: many(invitationTable),
     notificationWorkspaceRules: many(userNotificationWorkspaceRuleTable),
   }),
@@ -101,6 +118,10 @@ export const projectTableRelations = relations(
       references: [workspaceTable.id],
     }),
     tasks: many(taskTable),
+    epics: many(epicTable),
+    cycles: many(cycleTable),
+    taskRecurrences: many(taskRecurrenceTable),
+    fieldDefinitions: many(fieldDefinitionTable),
     assets: many(assetTable),
     columns: many(columnTable),
     workflowRules: many(workflowRuleTable),
@@ -142,6 +163,10 @@ export const taskTableRelations = relations(taskTable, ({ one, many }) => ({
     fields: [taskTable.userId],
     references: [userTable.id],
   }),
+  team: one(teamTable, {
+    fields: [taskTable.teamId],
+    references: [teamTable.id],
+  }),
   column: one(columnTable, {
     fields: [taskTable.columnId],
     references: [columnTable.id],
@@ -155,7 +180,174 @@ export const taskTableRelations = relations(taskTable, ({ one, many }) => ({
   sourceRelations: many(taskRelationTable, { relationName: "sourceTask" }),
   targetRelations: many(taskRelationTable, { relationName: "targetTask" }),
   remindersSent: many(taskReminderSentTable),
+  assignees: many(taskAssigneeTable),
+  parent: one(taskTable, {
+    fields: [taskTable.parentId],
+    references: [taskTable.id],
+    relationName: "taskTree",
+  }),
+  children: many(taskTable, { relationName: "taskTree" }),
+  epics: many(taskEpicTable),
+  cycle: one(cycleTable, {
+    fields: [taskTable.cycleId],
+    references: [cycleTable.id],
+  }),
+  recurrence: one(taskRecurrenceTable, {
+    fields: [taskTable.recurrenceId],
+    references: [taskRecurrenceTable.id],
+  }),
 }));
+
+export const epicTableRelations = relations(epicTable, ({ one, many }) => ({
+  project: one(projectTable, {
+    fields: [epicTable.projectId],
+    references: [projectTable.id],
+  }),
+  tasks: many(taskEpicTable),
+}));
+
+export const templateTableRelations = relations(templateTable, ({ one }) => ({
+  workspace: one(workspaceTable, {
+    fields: [templateTable.workspaceId],
+    references: [workspaceTable.id],
+  }),
+}));
+
+export const taskRecurrenceTableRelations = relations(
+  taskRecurrenceTable,
+  ({ one, many }) => ({
+    project: one(projectTable, {
+      fields: [taskRecurrenceTable.projectId],
+      references: [projectTable.id],
+    }),
+    tasks: many(taskTable),
+  }),
+);
+
+export const cycleTableRelations = relations(cycleTable, ({ one, many }) => ({
+  project: one(projectTable, {
+    fields: [cycleTable.projectId],
+    references: [projectTable.id],
+  }),
+  tasks: many(taskTable),
+}));
+
+export const taskEpicTableRelations = relations(taskEpicTable, ({ one }) => ({
+  task: one(taskTable, {
+    fields: [taskEpicTable.taskId],
+    references: [taskTable.id],
+  }),
+  epic: one(epicTable, {
+    fields: [taskEpicTable.epicId],
+    references: [epicTable.id],
+  }),
+}));
+
+export const goalTableRelations = relations(goalTable, ({ one, many }) => ({
+  workspace: one(workspaceTable, {
+    fields: [goalTable.workspaceId],
+    references: [workspaceTable.id],
+  }),
+  creator: one(userTable, {
+    fields: [goalTable.createdBy],
+    references: [userTable.id],
+  }),
+  targets: many(goalTargetTable),
+}));
+
+export const goalTargetTableRelations = relations(
+  goalTargetTable,
+  ({ one }) => ({
+    goal: one(goalTable, {
+      fields: [goalTargetTable.goalId],
+      references: [goalTable.id],
+    }),
+    project: one(projectTable, {
+      fields: [goalTargetTable.projectId],
+      references: [projectTable.id],
+    }),
+  }),
+);
+
+export const dashboardTableRelations = relations(
+  dashboardTable,
+  ({ one, many }) => ({
+    workspace: one(workspaceTable, {
+      fields: [dashboardTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    creator: one(userTable, {
+      fields: [dashboardTable.createdBy],
+      references: [userTable.id],
+    }),
+    widgets: many(dashboardWidgetTable),
+  }),
+);
+
+export const dashboardWidgetTableRelations = relations(
+  dashboardWidgetTable,
+  ({ one }) => ({
+    goal: one(goalTable, {
+      fields: [dashboardWidgetTable.goalId],
+      references: [goalTable.id],
+    }),
+    dashboard: one(dashboardTable, {
+      fields: [dashboardWidgetTable.dashboardId],
+      references: [dashboardTable.id],
+    }),
+    // Opcional: sin proyecto, el widget mira todo el espacio.
+    project: one(projectTable, {
+      fields: [dashboardWidgetTable.projectId],
+      references: [projectTable.id],
+    }),
+  }),
+);
+
+export const viewTableRelations = relations(viewTable, ({ one }) => ({
+  workspace: one(workspaceTable, {
+    fields: [viewTable.workspaceId],
+    references: [workspaceTable.id],
+  }),
+  // Opcional: sin proyecto, la vista vale en todo el espacio.
+  project: one(projectTable, {
+    fields: [viewTable.projectId],
+    references: [projectTable.id],
+  }),
+  creator: one(userTable, {
+    fields: [viewTable.createdBy],
+    references: [userTable.id],
+  }),
+}));
+
+export const fieldDefinitionTableRelations = relations(
+  fieldDefinitionTable,
+  ({ one }) => ({
+    workspace: one(workspaceTable, {
+      fields: [fieldDefinitionTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    // Opcional a proposito: sin proyecto, la definicion vale para todo el
+    // espacio de trabajo.
+    project: one(projectTable, {
+      fields: [fieldDefinitionTable.projectId],
+      references: [projectTable.id],
+    }),
+  }),
+);
+
+export const taskAssigneeTableRelations = relations(
+  taskAssigneeTable,
+  ({ one }) => ({
+    task: one(taskTable, {
+      fields: [taskAssigneeTable.taskId],
+      references: [taskTable.id],
+    }),
+    user: one(userTable, {
+      fields: [taskAssigneeTable.userId],
+      references: [userTable.id],
+    }),
+  }),
+);
 
 export const timeEntryTableRelations = relations(timeEntryTable, ({ one }) => ({
   task: one(taskTable, {
@@ -283,6 +475,7 @@ export const teamTableRelations = relations(teamTable, ({ one, many }) => ({
     references: [workspaceTable.id],
   }),
   teamMembers: many(teamMemberTable),
+  tasks: many(taskTable),
 }));
 
 export const teamMemberTableRelations = relations(

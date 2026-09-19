@@ -6,17 +6,44 @@
 	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
 	"features": {
 		"ghcr.io/devcontainers/features/git:1": {},
-		"ghcr.io/shyim/devcontainers-features/bun:0": {}
-	}
+		"ghcr.io/shyim/devcontainers-features/bun:0": {},
+		// The image tops out at Node 22 and the root package.json requires >=24.
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "24"
+		}
+	},
 
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
+	// Every node_modules is a named volume rather than part of the bind-mounted
+	// worktree. On a Windows host the two toolchains cannot share one tree: a
+	// container install writes WSL symlinks (reparse tag 0xa000001d) pointing at
+	// absolute /workspaces paths, which Windows Node cannot traverse, and a host
+	// install writes junctions the container cannot use. Shadowing these paths
+	// lets each side keep its own install of the same lockfile.
+	"mounts": [
+		"source=riuna-nm-root,target=${containerWorkspaceFolder}/node_modules,type=volume",
+		"source=riuna-nm-apps-api,target=${containerWorkspaceFolder}/apps/api/node_modules,type=volume",
+		"source=riuna-nm-apps-web,target=${containerWorkspaceFolder}/apps/web/node_modules,type=volume",
+		"source=riuna-nm-pkg-email,target=${containerWorkspaceFolder}/packages/email/node_modules,type=volume",
+		"source=riuna-nm-pkg-libs,target=${containerWorkspaceFolder}/packages/libs/node_modules,type=volume",
+		"source=riuna-nm-pkg-mcp,target=${containerWorkspaceFolder}/packages/mcp/node_modules,type=volume",
+		"source=riuna-nm-pkg-permissions,target=${containerWorkspaceFolder}/packages/permissions/node_modules,type=volume",
+		"source=riuna-nm-pkg-planka-import,target=${containerWorkspaceFolder}/packages/planka-import/node_modules,type=volume",
+		"source=riuna-nm-pkg-typescript-config,target=${containerWorkspaceFolder}/packages/typescript-config/node_modules,type=volume",
+		// Survives rebuilds so a fresh container reinstalls from cache, not the network.
+		"source=riuna-pnpm-store,target=/home/node/.pnpm-store,type=volume"
+	],
+
+	"containerEnv": {
+		"npm_config_store_dir": "/home/node/.pnpm-store"
+	},
+
+	// Docker creates empty named volumes owned by root; pnpm runs as `node`.
+	"onCreateCommand": "sudo chown node:node /home/node/.pnpm-store ${containerWorkspaceFolder}/node_modules ${containerWorkspaceFolder}/apps/*/node_modules ${containerWorkspaceFolder}/packages/*/node_modules",
+
+	"postCreateCommand": "corepack enable pnpm && pnpm install"
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
-
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "yarn install",
 
 	// Configure tool-specific properties.
 	// "customizations": {},

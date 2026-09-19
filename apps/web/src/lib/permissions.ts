@@ -7,4 +7,4 @@ export {
   owner,
   statement,
   viewer,
-} from "@kaneo/permissions";
+} from "@riuna/permissions";

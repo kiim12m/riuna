@@ -1,0 +1,1271 @@
+<title>Sistema base de Riuna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+
+<style>
+  /* =========================================================================
+     TOKENS ACTUALES — copiados textualmente de apps/web/src/index.css
+     (bloques :root y .dark). Aquí solo cambia el mecanismo de conmutación de
+     tema para que el selector de arriba funcione dentro del artifact.
+     ========================================================================= */
+  :root {
+    --color-white: #fff;
+    --color-black: #000;
+    --color-stone-500: #78716c;
+    --color-slate-500: #64748b;
+    --color-violet-500: #8b5cf6;
+    --color-cyan-600: #0891b2;
+    --color-green-600: #16a34a;
+    --color-amber-600: #d97706;
+    --color-orange-600: #ea580c;
+    --color-rose-600: #e11d48;
+    --color-red-600: #dc2626;
+
+    --font-sans: "Geist", "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+    --font-heading: var(--font-sans);
+    --font-mono: "Geist Mono", "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --radius: 0.625rem;
+
+    /* Paleta de marca — docs/marca.md §04. Valores fijos, independientes del tema. */
+    --riuna-navy: #1b3a5c;
+    --riuna-ink: #141d2b;
+    --riuna-mid: #4a6380;
+    --riuna-surface: #f6f7f9;
+    --riuna-teal: #0e8a7a;
+    --riuna-teal-strong: #0b7466;
+    --riuna-teal-light: #2ab39f;
+    --riuna-teal-lighter: #5fd3c0;
+    --riuna-ground: #0b141f;
+    --riuna-raised: #101c2a;
+    --riuna-sunken: #0e1825;
+    --riuna-text-night: #e6edf4;
+    --riuna-mid-night: #8fa7c0;
+
+    --accent: color-mix(in srgb, var(--riuna-teal) 10%, transparent);
+    --accent-foreground: var(--riuna-ink);
+    --background: var(--color-white);
+    --border: color-mix(in srgb, var(--riuna-navy) 17%, transparent);
+    --brand: var(--riuna-teal);
+    --brand-strong: var(--riuna-teal-strong);
+    --brand-foreground: var(--color-white);
+    --card: var(--color-white);
+    --card-foreground: var(--riuna-ink);
+    --destructive: #dc2626;
+    --destructive-foreground: #b91c1c;
+    --foreground: var(--riuna-ink);
+    --info: #2563eb;
+    --info-foreground: #1d4ed8;
+    --input: color-mix(in srgb, var(--riuna-navy) 22%, transparent);
+    --muted: color-mix(in srgb, var(--riuna-navy) 5%, transparent);
+    --muted-foreground: var(--riuna-mid);
+    --popover: var(--color-white);
+    --popover-foreground: var(--riuna-ink);
+    --primary: var(--riuna-navy);
+    --primary-foreground: var(--color-white);
+    --ring: var(--riuna-teal);
+    --secondary: color-mix(in srgb, var(--riuna-navy) 6%, transparent);
+    --secondary-foreground: var(--riuna-navy);
+    --success: #16a34a;
+    --success-foreground: #15803d;
+    --warning: #d97706;
+    --warning-foreground: #b45309;
+    --chart-1: var(--riuna-teal);
+    --chart-2: #2a5c8a;
+    --chart-3: #d97706;
+    --chart-4: #7c3aed;
+    --chart-5: #be185d;
+    --sidebar: var(--riuna-surface);
+    --sidebar-foreground: var(--riuna-mid);
+    --sidebar-primary: var(--riuna-navy);
+    --sidebar-accent: color-mix(in srgb, var(--riuna-teal) 12%, transparent);
+    --sidebar-accent-foreground: var(--riuna-teal-strong);
+    --sidebar-border: color-mix(in srgb, var(--riuna-navy) 12%, transparent);
+    --code: var(--color-white);
+    --code-highlight: color-mix(in srgb, var(--riuna-navy) 5%, transparent);
+
+    /* ---- Tokens PROPUESTOS en esta preview (no existen aún en index.css) ---- */
+
+    /* Escala tipográfica — marca.md §05, hoy aplicada a mano sin tokens */
+    --text-display: 1.875rem;   --lh-display: 2.125rem;   --tr-display: -0.02em;
+    --text-page: 1.25rem;       --lh-page: 1.6rem;        --tr-page: -0.01em;
+    --text-section: 1rem;       --lh-section: 1.4rem;     --tr-section: -0.01em;
+    --text-body: 0.875rem;      --lh-body: 1.35rem;
+    --text-secondary: 0.75rem;  --lh-secondary: 1.1rem;
+    --text-label: 0.6875rem;    --lh-label: 1rem;         --tr-label: 0.06em;
+    --text-mono: 0.8125rem;
+
+    /* Densidad — propuesta de lo que .compact-mode debería mover (hoy no mueve nada) */
+    --density-row: 2.25rem;      /* alto de fila de lista */
+    --density-control: 2rem;     /* alto de botón/campo sm */
+    --density-card-pad: 0.75rem;
+    --density-gap: 0.5rem;
+    --density-stack: 0.625rem;   /* separación vertical entre metadatos */
+
+    /* Elevación — no existe escala; hoy son defaults de Tailwind + un before: a mano.
+       Sombra teñida de navy, nunca negro puro. */
+    --elevation-1:
+      0 1px 2px -1px color-mix(in srgb, var(--riuna-navy) 24%, transparent),
+      0 1px 1px -1px color-mix(in srgb, var(--riuna-navy) 16%, transparent);
+    --elevation-2:
+      0 2px 6px -2px color-mix(in srgb, var(--riuna-navy) 22%, transparent),
+      0 4px 12px -4px color-mix(in srgb, var(--riuna-navy) 16%, transparent);
+    --elevation-3:
+      0 8px 24px -6px color-mix(in srgb, var(--riuna-navy) 26%, transparent),
+      0 2px 6px -2px color-mix(in srgb, var(--riuna-navy) 18%, transparent);
+    --elevation-4:
+      0 24px 60px -12px color-mix(in srgb, var(--riuna-navy) 38%, transparent),
+      0 8px 20px -8px color-mix(in srgb, var(--riuna-navy) 24%, transparent);
+    --elevation-hairline: inset 0 1px 0 color-mix(in srgb, var(--color-white) 55%, transparent);
+
+    /* Movimiento — hoy hay 2 easings y 1 keyframe (shimmer). El resto es fade plano. */
+    --motion-instant: 90ms;
+    --motion-fast: 140ms;
+    --motion-base: 220ms;
+    --motion-slow: 360ms;
+    --motion-settle: 760ms;      /* decaimiento del resalte en tiempo real */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);        /* ya en index.css */
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);    /* ya en index.css */
+    --stagger-step: 38ms;
+  }
+
+  /* Tema oscuro por defecto del sistema (sin elección explícita) */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --accent: color-mix(in srgb, var(--riuna-teal-light) 14%, transparent);
+      --accent-foreground: var(--riuna-text-night);
+      --background: var(--riuna-ground);
+      --border: color-mix(in srgb, var(--color-white) 10%, transparent);
+      --brand: var(--riuna-teal-light);
+      --brand-strong: var(--riuna-teal-light);
+      --brand-foreground: #062a25;
+      --card: var(--riuna-raised);
+      --card-foreground: var(--riuna-text-night);
+      --destructive: #dc2626;
+      --destructive-foreground: #f26d6d;
+      --foreground: var(--riuna-text-night);
+      --info: #2563eb;
+      --info-foreground: #7ca9f5;
+      --input: color-mix(in srgb, var(--color-white) 12%, transparent);
+      --muted: color-mix(in srgb, var(--color-white) 5%, transparent);
+      --muted-foreground: var(--riuna-mid-night);
+      --popover: var(--riuna-raised);
+      --popover-foreground: var(--riuna-text-night);
+      --primary: var(--riuna-text-night);
+      --primary-foreground: #14293f;
+      --ring: var(--riuna-teal-light);
+      --secondary: color-mix(in srgb, var(--color-white) 6%, transparent);
+      --secondary-foreground: var(--riuna-text-night);
+      --success: #16a34a;
+      --success-foreground: #55d486;
+      --warning: #d97706;
+      --warning-foreground: #f0a83c;
+      --chart-1: var(--riuna-teal-light);
+      --chart-2: #6e9bc7;
+      --chart-3: #f0a83c;
+      --chart-4: #a78bfa;
+      --chart-5: #f472b6;
+      --sidebar: var(--riuna-sunken);
+      --sidebar-foreground: var(--riuna-mid-night);
+      --sidebar-primary: var(--riuna-text-night);
+      --sidebar-accent: color-mix(in srgb, var(--riuna-teal-light) 16%, transparent);
+      --sidebar-accent-foreground: var(--riuna-teal-lighter);
+      --sidebar-border: color-mix(in srgb, var(--color-white) 8%, transparent);
+      --code: var(--riuna-raised);
+      --code-highlight: color-mix(in srgb, var(--color-white) 5%, transparent);
+      --elevation-1:
+        0 1px 2px -1px color-mix(in srgb, var(--color-black) 55%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--color-white) 5%, transparent);
+      --elevation-2:
+        0 3px 10px -3px color-mix(in srgb, var(--color-black) 55%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--color-white) 6%, transparent);
+      --elevation-3:
+        0 10px 28px -8px color-mix(in srgb, var(--color-black) 60%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--color-white) 6%, transparent);
+      --elevation-4:
+        0 28px 64px -14px color-mix(in srgb, var(--color-black) 66%, transparent),
+        inset 0 1px 0 color-mix(in srgb, var(--color-white) 7%, transparent);
+      --elevation-hairline: inset 0 1px 0 color-mix(in srgb, var(--color-white) 6%, transparent);
+    }
+  }
+
+  /* Elección explícita: oscuro */
+  :root[data-theme="dark"] {
+    --accent: color-mix(in srgb, var(--riuna-teal-light) 14%, transparent);
+    --accent-foreground: var(--riuna-text-night);
+    --background: var(--riuna-ground);
+    --border: color-mix(in srgb, var(--color-white) 10%, transparent);
+    --brand: var(--riuna-teal-light);
+    --brand-strong: var(--riuna-teal-light);
+    --brand-foreground: #062a25;
+    --card: var(--riuna-raised);
+    --card-foreground: var(--riuna-text-night);
+    --destructive: #dc2626;
+    --destructive-foreground: #f26d6d;
+    --foreground: var(--riuna-text-night);
+    --info: #2563eb;
+    --info-foreground: #7ca9f5;
+    --input: color-mix(in srgb, var(--color-white) 12%, transparent);
+    --muted: color-mix(in srgb, var(--color-white) 5%, transparent);
+    --muted-foreground: var(--riuna-mid-night);
+    --popover: var(--riuna-raised);
+    --popover-foreground: var(--riuna-text-night);
+    --primary: var(--riuna-text-night);
+    --primary-foreground: #14293f;
+    --ring: var(--riuna-teal-light);
+    --secondary: color-mix(in srgb, var(--color-white) 6%, transparent);
+    --secondary-foreground: var(--riuna-text-night);
+    --success: #16a34a;
+    --success-foreground: #55d486;
+    --warning: #d97706;
+    --warning-foreground: #f0a83c;
+    --chart-1: var(--riuna-teal-light);
+    --chart-2: #6e9bc7;
+    --chart-3: #f0a83c;
+    --chart-4: #a78bfa;
+    --chart-5: #f472b6;
+    --sidebar: var(--riuna-sunken);
+    --sidebar-foreground: var(--riuna-mid-night);
+    --sidebar-primary: var(--riuna-text-night);
+    --sidebar-accent: color-mix(in srgb, var(--riuna-teal-light) 16%, transparent);
+    --sidebar-accent-foreground: var(--riuna-teal-lighter);
+    --sidebar-border: color-mix(in srgb, var(--color-white) 8%, transparent);
+    --code: var(--riuna-raised);
+    --code-highlight: color-mix(in srgb, var(--color-white) 5%, transparent);
+    --elevation-1:
+      0 1px 2px -1px color-mix(in srgb, var(--color-black) 55%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-white) 5%, transparent);
+    --elevation-2:
+      0 3px 10px -3px color-mix(in srgb, var(--color-black) 55%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-white) 6%, transparent);
+    --elevation-3:
+      0 10px 28px -8px color-mix(in srgb, var(--color-black) 60%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-white) 6%, transparent);
+    --elevation-4:
+      0 28px 64px -14px color-mix(in srgb, var(--color-black) 66%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-white) 7%, transparent);
+    --elevation-hairline: inset 0 1px 0 color-mix(in srgb, var(--color-white) 6%, transparent);
+  }
+
+  /* Elección explícita: claro — red de seguridad para que el conmutador gane
+     también cuando el SO está en oscuro. Refleja los valores base de :root. */
+  :root[data-theme="light"] {
+    --background: var(--color-white);
+    --foreground: var(--riuna-ink);
+    --card: var(--color-white);
+    --card-foreground: var(--riuna-ink);
+    --popover: var(--color-white);
+    --border: color-mix(in srgb, var(--riuna-navy) 17%, transparent);
+    --brand: var(--riuna-teal);
+    --brand-strong: var(--riuna-teal-strong);
+    --primary: var(--riuna-navy);
+    --primary-foreground: var(--color-white);
+    --accent: color-mix(in srgb, var(--riuna-teal) 10%, transparent);
+    --accent-foreground: var(--riuna-ink);
+    --muted-foreground: var(--riuna-mid);
+    --ring: var(--riuna-teal);
+  }
+
+  /* Densidad compacta — propuesta de reglas reales para .compact-mode */
+  :root[data-density="compact"] {
+    --density-row: 1.75rem;
+    --density-control: 1.75rem;
+    --density-card-pad: 0.5rem;
+    --density-gap: 0.375rem;
+    --density-stack: 0.4rem;
+    --text-body: 0.8125rem;
+    --lh-body: 1.15rem;
+  }
+
+  /* Movimiento reducido — por preferencia del SO o por el selector de la página */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+  :root[data-motion="reduced"] *,
+  :root[data-motion="reduced"] *::before,
+  :root[data-motion="reduced"] *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  /* =========================================================================
+     CHROME DE LA PÁGINA
+     ========================================================================= */
+  * { box-sizing: border-box; }
+  html { scrollbar-color: var(--border) transparent; }
+
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--lh-body);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  a { color: var(--brand-strong); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  code, .mono {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono);
+    font-variant-ligatures: none;
+  }
+
+  .wrap { max-width: 74rem; margin: 0 auto; padding: 0 1.5rem; }
+  .prose { max-width: 42rem; }
+
+  /* --- barra de control fija --- */
+  .topbar {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--background) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-inner {
+    max-width: 74rem; margin: 0 auto; padding: 0.6rem 1.5rem;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem;
+  }
+  .topbar .mark { display: flex; align-items: center; gap: 0.55rem; font-weight: 600; letter-spacing: -0.03em; font-size: var(--text-page); }
+  .topbar .ctl-group { display: flex; align-items: center; gap: 0.5rem; }
+  .topbar .ctl-label {
+    font-size: var(--text-label); line-height: var(--lh-label);
+    text-transform: uppercase; letter-spacing: var(--tr-label);
+    color: var(--muted-foreground); font-weight: 500;
+  }
+  .topbar .spacer { flex: 1; }
+  .topbar .hint { font-size: var(--text-secondary); color: var(--muted-foreground); }
+
+  .seg {
+    display: inline-flex; padding: 2px; gap: 2px;
+    border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px);
+    background: var(--card);
+  }
+  .seg button {
+    appearance: none; border: 0; cursor: pointer;
+    font: inherit; font-size: var(--text-secondary); font-weight: 500;
+    padding: 0.25rem 0.6rem; border-radius: calc(var(--radius) - 4px);
+    color: var(--muted-foreground); background: transparent;
+    transition: color var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out);
+  }
+  .seg button:hover { color: var(--foreground); }
+  .seg button[aria-pressed="true"] {
+    background: var(--accent); color: var(--accent-foreground);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 30%, transparent);
+  }
+  .seg button:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+
+  /* --- hero / tesis --- */
+  .hero { padding: 4.5rem 0 3rem; border-bottom: 1px solid var(--border); }
+  .eyebrow {
+    font-size: var(--text-label); line-height: var(--lh-label);
+    text-transform: uppercase; letter-spacing: var(--tr-label);
+    color: var(--brand-strong); font-weight: 600;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 1.4rem + 2.6vw, 3.15rem);
+    line-height: 1.04; letter-spacing: -0.028em; margin: 0.9rem 0 0;
+    max-width: 20ch;
+  }
+  .hero p { margin: 1.1rem 0 0; color: var(--muted-foreground); font-size: 1rem; line-height: 1.6; max-width: 46rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin-top: 1.75rem; }
+
+  .tag {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    font-size: var(--text-label); line-height: 1;
+    text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;
+    padding: 0.32rem 0.5rem; border-radius: calc(var(--radius) - 4px);
+    border: 1px solid var(--border);
+  }
+  .tag::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+  .tag.actual { color: var(--muted-foreground); }
+  .tag.prop { color: var(--brand-strong); border-color: color-mix(in srgb, var(--brand) 35%, transparent); background: var(--accent); }
+
+  /* --- secciones --- */
+  section.facet { padding: 3.25rem 0; border-bottom: 1px solid var(--border); }
+  .facet-head { display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap; }
+  .facet-head .eyebrow { color: var(--muted-foreground); }
+  .facet h2 { font-size: var(--text-page); line-height: var(--lh-page); letter-spacing: var(--tr-page); }
+  .facet-intro { margin: 0.75rem 0 1.75rem; color: var(--muted-foreground); max-width: 44rem; }
+  .facet-intro strong { color: var(--foreground); font-weight: 500; }
+
+  .subhead {
+    font-size: var(--text-label); line-height: var(--lh-label); font-weight: 600;
+    text-transform: uppercase; letter-spacing: var(--tr-label);
+    color: var(--muted-foreground); margin: 2rem 0 0.85rem;
+  }
+  .subhead:first-child { margin-top: 0; }
+
+  .grid { display: grid; gap: 0.75rem; }
+  .cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 980px) { .cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 720px) { .cols-2, .cols-3, .cols-4 { grid-template-columns: 1fr; } }
+
+  /* --- panes de comparación de tema --- */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+  /* Contenedor de acotado, sin elevación: las tarjetas de dentro son el sujeto. */
+  .pane {
+    border: 1px solid color-mix(in srgb, var(--border) 65%, transparent); border-radius: var(--radius);
+    padding: 1rem; overflow: hidden;
+  }
+  .pane > .pane-label {
+    font-size: var(--text-label); text-transform: uppercase; letter-spacing: var(--tr-label);
+    font-weight: 600; color: var(--muted-foreground); display: block; margin-bottom: 0.8rem;
+  }
+  /* Estos dos bloques fijan el juego completo de tokens para poder enseñar claro y
+     oscuro a la vez. Reflejan index.css: si allí cambia un valor, aquí también. */
+  .theme-light {
+    color-scheme: light;
+    --background: #fff; --foreground: var(--riuna-ink); --card: #fff; --card-foreground: var(--riuna-ink);
+    --muted: color-mix(in srgb, var(--riuna-navy) 5%, transparent); --muted-foreground: var(--riuna-mid);
+    --border: color-mix(in srgb, var(--riuna-navy) 17%, transparent);
+    --accent: color-mix(in srgb, var(--riuna-teal) 10%, transparent); --accent-foreground: var(--riuna-ink);
+    --primary: var(--riuna-navy); --primary-foreground: #fff;
+    --brand: var(--riuna-teal); --brand-strong: var(--riuna-teal-strong); --brand-foreground: #fff;
+    --ring: var(--riuna-teal); --popover: #fff; --popover-foreground: var(--riuna-ink);
+    --secondary: color-mix(in srgb, var(--riuna-navy) 6%, transparent); --secondary-foreground: var(--riuna-navy);
+    --sidebar: var(--riuna-surface); --sidebar-foreground: var(--riuna-mid);
+    --success-foreground: #15803d; --warning-foreground: #b45309; --destructive-foreground: #b91c1c; --info-foreground: #1d4ed8;
+    --elevation-1: 0 1px 2px -1px color-mix(in srgb, var(--riuna-navy) 24%, transparent), 0 1px 1px -1px color-mix(in srgb, var(--riuna-navy) 16%, transparent);
+    --elevation-2: 0 2px 6px -2px color-mix(in srgb, var(--riuna-navy) 22%, transparent), 0 4px 12px -4px color-mix(in srgb, var(--riuna-navy) 16%, transparent);
+    --elevation-3: 0 8px 24px -6px color-mix(in srgb, var(--riuna-navy) 26%, transparent), 0 2px 6px -2px color-mix(in srgb, var(--riuna-navy) 18%, transparent);
+    --elevation-4: 0 24px 60px -12px color-mix(in srgb, var(--riuna-navy) 38%, transparent), 0 8px 20px -8px color-mix(in srgb, var(--riuna-navy) 24%, transparent);
+    background: var(--background); color: var(--foreground);
+  }
+  .theme-dark {
+    color-scheme: dark;
+    --background: var(--riuna-ground); --foreground: var(--riuna-text-night);
+    --card: var(--riuna-raised); --card-foreground: var(--riuna-text-night);
+    --muted: color-mix(in srgb, #fff 5%, transparent); --muted-foreground: var(--riuna-mid-night);
+    --border: color-mix(in srgb, #fff 10%, transparent);
+    --accent: color-mix(in srgb, var(--riuna-teal-light) 14%, transparent); --accent-foreground: var(--riuna-text-night);
+    --primary: var(--riuna-text-night); --primary-foreground: #14293f;
+    --brand: var(--riuna-teal-light); --brand-strong: var(--riuna-teal-light); --brand-foreground: #062a25;
+    --ring: var(--riuna-teal-light); --popover: var(--riuna-raised); --popover-foreground: var(--riuna-text-night);
+    --secondary: color-mix(in srgb, #fff 6%, transparent); --secondary-foreground: var(--riuna-text-night);
+    --sidebar: var(--riuna-sunken); --sidebar-foreground: var(--riuna-mid-night);
+    --success-foreground: #55d486; --warning-foreground: #f0a83c; --destructive-foreground: #f26d6d; --info-foreground: #7ca9f5;
+    --elevation-1: 0 1px 2px -1px color-mix(in srgb, #000 55%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent);
+    --elevation-2: 0 3px 10px -3px color-mix(in srgb, #000 55%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+    --elevation-3: 0 10px 28px -8px color-mix(in srgb, #000 60%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+    --elevation-4: 0 28px 64px -14px color-mix(in srgb, #000 66%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent);
+    background: var(--background); color: var(--foreground);
+  }
+
+  /* --- swatches de color --- */
+  .swatch {
+    border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px);
+    overflow: hidden; background: var(--card);
+  }
+  .swatch .chip { height: 3.25rem; display: flex; align-items: flex-end; padding: 0.4rem 0.55rem; }
+  .swatch .meta { padding: 0.55rem; display: grid; gap: 0.15rem; }
+  .swatch .name { font-weight: 500; font-size: var(--text-secondary); }
+  .swatch .val { font-size: var(--text-label); color: var(--muted-foreground); }
+  .swatch .ratio { font-size: var(--text-label); color: var(--muted-foreground); }
+  .swatch .ratio b { color: var(--foreground); font-weight: 600; }
+
+  /* --- tabla de tokens --- */
+  table.tok { width: 100%; border-collapse: collapse; font-size: var(--text-secondary); }
+  table.tok th { text-align: left; font-weight: 600; color: var(--muted-foreground); padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); font-size: var(--text-label); text-transform: uppercase; letter-spacing: var(--tr-label); }
+  table.tok td { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  table.tok td.mono { color: var(--muted-foreground); }
+  table.tok tr:last-child td { border-bottom: 0; }
+  .tok-wrap { border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; }
+  table.tok, .tnum, .swatch .ratio, .swatch .val, .swatch .name { font-variant-numeric: tabular-nums; }
+
+  /* --- specimens compartidos --- */
+  .btn {
+    position: relative;
+    appearance: none; cursor: pointer; font: inherit; font-weight: 500;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+    height: var(--density-control); padding: 0 0.75rem;
+    border-radius: calc(var(--radius) - 2px); border: 1px solid var(--primary);
+    background: var(--primary); color: var(--primary-foreground);
+    font-size: var(--text-secondary);
+    transition: box-shadow var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out);
+    box-shadow: var(--elevation-1);
+  }
+  .btn:hover { background: color-mix(in srgb, var(--primary) 90%, transparent); }
+  .btn:active { transform: scale(0.97); }
+  .btn:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+  .btn.ghost { background: transparent; border-color: transparent; color: var(--foreground); box-shadow: none; }
+  .btn.ghost:hover { background: var(--accent); }
+  .btn.outline { background: var(--card); border-color: var(--input); color: var(--foreground); }
+  .btn.outline:hover { background: var(--accent); }
+  .btn.brand { background: var(--brand-strong); border-color: var(--brand-strong); color: var(--brand-foreground); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+  .btn[data-loading] { color: transparent; pointer-events: none; }
+  .btn[data-loading] .spinner { position: absolute; inset: 0; margin: auto; width: 0.9rem; height: 0.9rem; }
+  .btn.is-hover { filter: brightness(0.93); }
+  .btn.is-focus { outline: 2px solid var(--ring); outline-offset: 1px; }
+  .btn.is-active { transform: scale(0.97); }
+
+  .state-grid { display: grid; grid-template-columns: max-content 1fr; gap: 0.55rem 1.25rem; align-items: center; margin-bottom: 0.75rem; }
+  .state-grid .sk { font-size: var(--text-label); text-transform: uppercase; letter-spacing: var(--tr-label); color: var(--muted-foreground); font-weight: 600; }
+  .state-row { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+  @media (max-width: 560px) { .state-grid { grid-template-columns: 1fr; gap: 0.3rem 0; } .state-grid .sk { margin-top: 0.6rem; } }
+
+  .field {
+    height: var(--density-control); padding: 0 0.6rem; width: 100%;
+    border-radius: calc(var(--radius) - 2px); border: 1px solid var(--input);
+    background: var(--card); color: var(--foreground); font: inherit; font-size: var(--text-secondary);
+    transition: box-shadow var(--motion-fast) var(--ease-out), border-color var(--motion-fast) var(--ease-out);
+  }
+  .field:focus-visible { outline: none; border-color: color-mix(in srgb, var(--brand) 60%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent); }
+
+  .card {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--card); color: var(--card-foreground); padding: var(--density-card-pad);
+    box-shadow: var(--elevation-1);
+  }
+
+  /* tarjeta de tarea, versión reducida para specimens */
+  .taskcard {
+    border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px);
+    background: var(--card); padding: var(--density-card-pad);
+    box-shadow: var(--elevation-1);
+    display: grid; gap: var(--density-stack);
+    transition: border-color var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out);
+  }
+  .taskcard:hover { border-color: color-mix(in srgb, var(--brand) 45%, transparent); box-shadow: var(--elevation-2); }
+  .taskcard .tnum { font-family: var(--font-mono); font-size: var(--text-label); color: var(--muted-foreground); }
+  .taskcard .ttitle { font-weight: 500; font-size: var(--text-body); line-height: 1.3; color: color-mix(in srgb, var(--foreground) 95%, transparent); }
+  .taskcard .tmeta { display: flex; align-items: center; gap: var(--density-gap); flex-wrap: wrap; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    font-size: var(--text-label); line-height: 1; font-weight: 500;
+    padding: 0.28rem 0.45rem; border-radius: calc(var(--radius) - 5px);
+    border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    background: color-mix(in srgb, var(--muted) 55%, transparent);
+    color: var(--muted-foreground);
+  }
+  .dot { width: 7px; height: 7px; border-radius: 999px; flex: none; }
+
+  .lbl {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    font-size: var(--text-label); font-weight: 500; line-height: 1;
+    padding: 0.26rem 0.5rem; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--card); color: var(--foreground);
+  }
+
+  .icon { width: 1rem; height: 1rem; display: inline-block; vertical-align: -0.18em; }
+  .icon-sm { width: 0.875rem; height: 0.875rem; }
+
+  .avatar {
+    width: 1.25rem; height: 1.25rem; border-radius: 999px; flex: none;
+    display: grid; place-items: center; font-size: 0.625rem; font-weight: 600;
+    background: var(--accent); color: var(--brand-strong);
+    border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+  }
+
+  .note {
+    font-size: var(--text-secondary); color: var(--muted-foreground);
+    border-left: 0; padding: 0.75rem 0.9rem; margin-top: 1rem;
+    background: var(--muted); border-radius: calc(var(--radius) - 3px);
+  }
+  .note b { color: var(--foreground); font-weight: 600; }
+
+  .row-demo { display: grid; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .row {
+    display: flex; align-items: center; gap: 0.6rem;
+    min-height: var(--density-row); padding: 0 0.75rem;
+    background: var(--card); font-size: var(--text-body);
+  }
+  .row:hover { background: var(--accent); }
+  .row .rtitle { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* --- motion demos --- */
+  .demo {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 1rem; background: var(--card); display: grid; gap: 0.85rem;
+  }
+  .demo-top { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+  .demo-top .dn { font-weight: 500; font-size: var(--text-body); }
+  .demo-top .dd { font-size: var(--text-secondary); color: var(--muted-foreground); }
+  .demo-stage { border: 1px dashed var(--border); border-radius: calc(var(--radius) - 3px); padding: 0.85rem; background: var(--background); min-height: 3.5rem; display: grid; align-content: center; gap: 0.4rem; }
+
+  @keyframes riuna-enter { from { opacity: 0; transform: translateY(6px) scale(0.985); } to { opacity: 1; transform: none; } }
+  @keyframes riuna-flux {
+    0%   { background-color: color-mix(in srgb, var(--brand) 22%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 55%, transparent); }
+    60%  { background-color: color-mix(in srgb, var(--brand) 10%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand) 24%, transparent); }
+    100% { background-color: transparent; box-shadow: inset 0 0 0 1px transparent; }
+  }
+  @keyframes riuna-skeleton { to { background-position: -200% 0; } }
+
+  .anim-enter { animation: riuna-enter var(--motion-base) var(--ease-out-quart) both; }
+  .anim-flux  { animation: riuna-flux var(--motion-settle) var(--ease-out) both; }
+  .stagger > * { animation: riuna-enter var(--motion-base) var(--ease-out-quart) both; animation-delay: calc(var(--i, 0) * var(--stagger-step)); }
+
+  .skel {
+    height: 0.75rem; border-radius: 999px;
+    background: linear-gradient(90deg, var(--muted) 25%, color-mix(in srgb, var(--muted-foreground) 22%, var(--muted)) 37%, var(--muted) 63%);
+    background-size: 200% 100%;
+    animation: riuna-skeleton 1.6s linear infinite;
+  }
+  .skel.pulse { animation: none; background: var(--muted); opacity: 0.7; animation: pulse-op 1.6s ease-in-out infinite; }
+  @keyframes pulse-op { 0%,100% { opacity: 0.45; } 50% { opacity: 0.8; } }
+  .spinner {
+    width: 1.1rem; height: 1.1rem; border-radius: 999px;
+    border: 2px solid var(--border); border-top-color: var(--brand);
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* --- toasts --- */
+  .toast {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    border: 1px solid var(--border); border-radius: calc(var(--radius) - 1px);
+    background: var(--popover); color: var(--popover-foreground);
+    padding: 0.7rem 0.85rem; box-shadow: var(--elevation-3), var(--elevation-hairline);
+    font-size: var(--text-secondary); max-width: 22rem;
+  }
+  .toast .ti { flex: none; margin-top: 0.05rem; }
+  .toast .tt { font-weight: 600; font-size: var(--text-body); display: block; margin-bottom: 0.1rem; }
+  .toast.ok .ti { color: var(--success-foreground); }
+  .toast.err .ti { color: var(--destructive-foreground); }
+  .toast.info .ti { color: var(--info-foreground); }
+  .toast.warn .ti { color: var(--warning-foreground); }
+
+  /* --- empty state --- */
+  .empty {
+    text-align: center; border: 1px dashed var(--border); border-radius: var(--radius);
+    padding: 2.5rem 1.5rem; display: grid; gap: 0.5rem; justify-items: center;
+    background: color-mix(in srgb, var(--muted) 40%, transparent);
+  }
+  .empty .em-media {
+    width: 3rem; height: 3rem; display: grid; place-items: center;
+    border-radius: calc(var(--radius) - 2px); border: 1px solid var(--border);
+    background: var(--card); color: var(--muted-foreground); box-shadow: var(--elevation-1);
+    margin-bottom: 0.35rem;
+  }
+  .empty .em-title { font-weight: 600; font-size: var(--text-section); }
+  .empty .em-desc { color: var(--muted-foreground); max-width: 26rem; }
+
+  .popover {
+    display: inline-block; border: 1px solid var(--border); border-radius: calc(var(--radius) - 1px);
+    background: var(--popover); color: var(--popover-foreground);
+    box-shadow: var(--elevation-3), var(--elevation-hairline);
+    padding: 0.35rem; min-width: 12rem; font-size: var(--text-secondary);
+  }
+  .popover .pi { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.5rem; border-radius: calc(var(--radius) - 4px); cursor: default; }
+  .popover .pi:hover { background: var(--accent); }
+  .popover .pi[aria-selected="true"] { color: var(--brand-strong); font-weight: 500; }
+
+  .flex { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+  .stack { display: grid; gap: 0.6rem; }
+  .muted { color: var(--muted-foreground); }
+  .measure { max-width: 44rem; }
+
+  footer { padding: 2.5rem 0 4rem; color: var(--muted-foreground); font-size: var(--text-secondary); }
+  footer code { background: var(--muted); padding: 0.1rem 0.35rem; border-radius: 4px; }
+
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+</style>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <span class="mark" aria-hidden="true">
+      <svg class="icon" viewBox="0 0 32 32" fill="none" style="width:1.4rem;height:1.4rem">
+        <path d="M8.93 23.07A10 10 0 0 1 23.07 8.93" stroke="var(--primary)" stroke-width="2.6" stroke-linecap="round"/>
+        <path d="M23.07 8.93A10 10 0 0 1 8.93 23.07" stroke="var(--brand)" stroke-width="3.6" stroke-linecap="round"/>
+        <circle cx="8.93" cy="23.07" r="3.7" fill="var(--brand)"/>
+        <circle cx="23.07" cy="8.93" r="3.7" fill="var(--primary)"/>
+      </svg>
+      riuna
+    </span>
+
+    <div class="ctl-group">
+      <span class="ctl-label">Tema</span>
+      <div class="seg" id="seg-theme" role="group" aria-label="Tema">
+        <button type="button" data-v="system" aria-pressed="true">Sistema</button>
+        <button type="button" data-v="light" aria-pressed="false">Claro</button>
+        <button type="button" data-v="dark" aria-pressed="false">Oscuro</button>
+      </div>
+    </div>
+
+    <div class="ctl-group">
+      <span class="ctl-label">Densidad</span>
+      <div class="seg" id="seg-density" role="group" aria-label="Densidad">
+        <button type="button" data-v="comfortable" aria-pressed="true">Cómoda</button>
+        <button type="button" data-v="compact" aria-pressed="false">Compacta</button>
+      </div>
+    </div>
+
+    <div class="ctl-group">
+      <span class="ctl-label">Movimiento</span>
+      <div class="seg" id="seg-motion" role="group" aria-label="Movimiento">
+        <button type="button" data-v="full" aria-pressed="true">Normal</button>
+        <button type="button" data-v="reduced" aria-pressed="false">Reducido</button>
+      </div>
+    </div>
+
+    <span class="spacer"></span>
+    <span class="hint">Preview 1 de 3</span>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="hero">
+      <span class="eyebrow">Rediseño · lenguaje compartido</span>
+      <h1>El sistema base que heredan el shell y el tablero.</h1>
+      <p>
+        La marca ya está cerrada: seis colores, Geist, «navy sostiene, teal actúa», densidad a
+        propósito. Lo que falta no es identidad, es ejecución. Esta página fija en tokens lo que
+        hoy se aplica a mano y propone lo que no existe todavía: escala tipográfica, densidad real,
+        una escala de elevación y un sistema de movimiento. Todo se ve en los dos temas y las dos
+        densidades desde la barra de arriba.
+      </p>
+      <div class="legend">
+        <span class="tag actual">Actual</span>
+        <span class="muted" style="font-size:var(--text-secondary)">valor que ya vive en <code>index.css</code> o en un componente.</span>
+      </div>
+      <div class="legend" style="margin-top:0.5rem">
+        <span class="tag prop">Propuesto</span>
+        <span class="muted" style="font-size:var(--text-secondary)">token o regla nueva que decidimos aquí antes de tocar código.</span>
+      </div>
+    </section>
+
+    <!-- ============ COLOR ============ -->
+    <section class="facet">
+      <div class="facet-head">
+        <span class="eyebrow">Color</span>
+        <span class="tag actual">Actual</span>
+      </div>
+      <h2>Los tokens semánticos, sin cambiar un valor</h2>
+      <p class="facet-intro">
+        Referencia de lo que hay. Cada token se resuelve en los dos temas; el ratio es contra su
+        fondo natural. <strong>River Teal da 4,25:1 sobre blanco</strong>, así que es color de
+        trazo, borde y foco, nunca de texto de párrafo: para texto se usa <code>brand-strong</code>.
+      </p>
+
+      <div class="subhead" role="heading" aria-level="3">Superficie y texto</div>
+      <div class="grid cols-4">
+        <div class="swatch"><div class="chip" style="background:var(--background);border-bottom:1px solid var(--border)"></div><div class="meta"><span class="name">background</span><span class="val mono">#fff · #0b141f</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--card);border-bottom:1px solid var(--border)"></div><div class="meta"><span class="name">card</span><span class="val mono">#fff · #101c2a</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--foreground)"></div><div class="meta"><span class="name">foreground</span><span class="ratio"><b>16,3:1</b> · 15,7:1</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--muted-foreground)"></div><div class="meta"><span class="name">muted-foreground</span><span class="ratio"><b>6,2:1</b> · 7,5:1</span></div></div>
+      </div>
+
+      <div class="subhead" role="heading" aria-level="3">Marca y acción</div>
+      <div class="grid cols-4">
+        <div class="swatch"><div class="chip" style="background:var(--primary)"><span style="color:var(--primary-foreground);font-size:var(--text-label)">primary</span></div><div class="meta"><span class="name">primary · navy</span><span class="ratio"><b>11,6:1</b> texto blanco</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--brand)"></div><div class="meta"><span class="name">brand · teal</span><span class="ratio">3:1 componente</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--brand-strong)"><span style="color:#fff;font-size:var(--text-label)">brand-strong</span></div><div class="meta"><span class="name">brand-strong</span><span class="ratio"><b>5,67:1</b> texto blanco</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--accent)"></div><div class="meta"><span class="name">accent</span><span class="val">teal 10–14 % · hover, fila activa</span></div></div>
+      </div>
+
+      <div class="subhead" role="heading" aria-level="3">Semánticos — texto sobre claro</div>
+      <div class="grid cols-4">
+        <div class="swatch"><div class="chip" style="background:var(--success-foreground)"></div><div class="meta"><span class="name">success</span><span class="val">verde 142°, no esmeralda</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--warning-foreground)"></div><div class="meta"><span class="name">warning</span><span class="val">única temperatura cálida</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--destructive-foreground)"></div><div class="meta"><span class="name">destructive</span><span class="val">&nbsp;</span></div></div>
+        <div class="swatch"><div class="chip" style="background:var(--info-foreground)"></div><div class="meta"><span class="name">info</span><span class="val">azul lejos del navy</span></div></div>
+      </div>
+
+      <div class="subhead" role="heading" aria-level="3">Los dos temas, lado a lado</div>
+      <div class="compare">
+        <div class="pane theme-light">
+          <span class="pane-label">Claro</span>
+          <div class="stack">
+            <div class="taskcard">
+              <span class="tnum">RIU-142</span>
+              <span class="ttitle">Revisar el traductor de filtros a SQL</span>
+              <div class="tmeta"><span class="pill"><span class="dot" style="background:var(--info-foreground)"></span>Media</span><span class="pill">3 subtareas</span><span class="avatar">Mq</span></div>
+            </div>
+            <div class="flex"><button class="btn">Acción primaria</button><button class="btn outline">Secundaria</button><button class="btn ghost">Fantasma</button></div>
+          </div>
+        </div>
+        <div class="pane theme-dark">
+          <span class="pane-label">Oscuro</span>
+          <div class="stack">
+            <div class="taskcard">
+              <span class="tnum">RIU-142</span>
+              <span class="ttitle">Revisar el traductor de filtros a SQL</span>
+              <div class="tmeta"><span class="pill"><span class="dot" style="background:var(--info-foreground)"></span>Media</span><span class="pill">3 subtareas</span><span class="avatar">Mq</span></div>
+            </div>
+            <div class="flex"><button class="btn">Acción primaria</button><button class="btn outline">Secundaria</button><button class="btn ghost">Fantasma</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="note"><b>Sin cambios propuestos aquí.</b> El sistema de color está cerrado (ADR 007) y en uso. Se incluye como referencia y para verificar contraste al tocar el resto.</div>
+    </section>
+
+    <!-- ============ TIPOGRAFÍA ============ -->
+    <section class="facet">
+      <div class="facet-head">
+        <span class="eyebrow">Tipografía</span>
+        <span class="tag prop">Propuesto</span>
+      </div>
+      <h2>La escala de marca.md §05, por fin en tokens</h2>
+      <p class="facet-intro">
+        La escala está especificada pero solo se aplica <strong>ad hoc</strong> con utilidades:
+        <code>text-sm</code> y <code>text-xs</code> suman 796 de 890 usos. Propongo siete tokens
+        (<code>--text-display</code> … <code>--text-mono</code>) con su interlínea y su interletrado,
+        para que «cuerpo» sea una decisión y no una costumbre.
+      </p>
+
+      <div class="tok-wrap">
+        <table class="tok">
+          <thead><tr><th>Rol</th><th>Muestra</th><th>Token</th><th>px · peso · interletr.</th></tr></thead>
+          <tbody>
+            <tr><td>Display</td><td><span style="font-size:var(--text-display);line-height:var(--lh-display);letter-spacing:var(--tr-display);font-weight:600">Un solo cauce</span></td><td class="mono">--text-display</td><td class="mono">30 · 600 · −0.02em</td></tr>
+            <tr><td>Título de página</td><td><span style="font-size:var(--text-page);line-height:var(--lh-page);letter-spacing:var(--tr-page);font-weight:600">Nombre de proyecto</span></td><td class="mono">--text-page</td><td class="mono">20 · 600 · −0.01em</td></tr>
+            <tr><td>Título de sección</td><td><span style="font-size:var(--text-section);line-height:var(--lh-section);letter-spacing:var(--tr-section);font-weight:600">Grupo dentro de una página</span></td><td class="mono">--text-section</td><td class="mono">16 · 600 · −0.01em</td></tr>
+            <tr><td>Cuerpo</td><td><span style="font-size:var(--text-body);line-height:var(--lh-body)">Interfaz, tarjetas, tablas, formularios</span></td><td class="mono">--text-body</td><td class="mono">14 · 400 · 0</td></tr>
+            <tr><td>Secundario</td><td><span style="font-size:var(--text-secondary);line-height:var(--lh-secondary);color:var(--muted-foreground)">Metadatos, fechas, contadores</span></td><td class="mono">--text-secondary</td><td class="mono">12 · 400 · 0</td></tr>
+            <tr><td>Etiqueta</td><td><span style="font-size:var(--text-label);line-height:var(--lh-label);letter-spacing:var(--tr-label);text-transform:uppercase;font-weight:500;color:var(--muted-foreground)">Encabezado de columna</span></td><td class="mono">--text-label</td><td class="mono">11 · 500 · +0.06em</td></tr>
+            <tr><td>Monoespaciada</td><td><span class="mono">RIU-142 · api_key_1a2b</span></td><td class="mono">--text-mono</td><td class="mono">13 · 400 · 0</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subhead" role="heading" aria-level="3">Medida de la prosa</div>
+      <p class="facet-intro measure" style="margin:0">
+        La prosa larga (descripción de tarea, comentarios) se limita a unos 65 caracteres de medida
+        y los titulares llevan <code>text-wrap: balance</code>. Este párrafo está a esa medida para
+        que se vea. Nada de esto necesita una segunda familia: Geist hace display, cuerpo y
+        monoespaciada, y esa fue la razón de elegirla sobre Inter.
+      </p>
+    </section>
+
+    <!-- ============ DENSIDAD ============ -->
+    <section class="facet">
+      <div class="facet-head">
+        <span class="eyebrow">Densidad</span>
+        <span class="tag prop">Propuesto</span>
+      </div>
+      <h2>Que «compacta» compacte de verdad</h2>
+      <p class="facet-intro">
+        Hoy <code>use-user-preferences-effects.ts</code> pone la clase <code>.compact-mode</code>
+        en <code>&lt;html&gt;</code> y <strong>no hay ni una regla CSS detrás</strong>. Propongo un
+        grupo <code>--density-*</code> que mueva alto de fila, relleno de tarjeta, alto de control
+        y separaciones, y un pequeño ajuste de cuerpo a 13 px. Cambia el selector «Densidad» de
+        arriba y mira esta sección.
+      </p>
+
+      <div class="compare">
+        <div class="pane">
+          <span class="pane-label">Lista</span>
+          <div class="row-demo">
+            <div class="row"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg><span class="rtitle">Cerrar los defectos de la auditoría fase 0–4</span><span class="muted mono">RIU-98</span></div>
+            <div class="row"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="var(--brand-strong)" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5" fill="var(--brand-strong)"/></svg><span class="rtitle">Importación y exportación en CSV y Excel</span><span class="muted mono">RIU-131</span></div>
+            <div class="row"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="rtitle">Filtrar por selección múltiple no devolvía nada</span><span class="muted mono">RIU-127</span></div>
+            <div class="row"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="var(--success-foreground)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span class="rtitle">La columna comentario del cuadro SERVITEC salía vacía</span><span class="muted mono">RIU-124</span></div>
+          </div>
+        </div>
+        <div class="pane">
+          <span class="pane-label">Tarjeta</span>
+          <div class="taskcard">
+            <span class="tnum">RIU-142</span>
+            <span class="ttitle">Revisar el traductor de filtros a SQL con árboles de 5 niveles</span>
+            <div class="tmeta">
+              <span class="pill"><span class="dot" style="background:var(--warning-foreground)"></span>Alta</span>
+              <span class="pill">2 subtareas</span>
+              <span class="pill"><svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>12 sep</span>
+              <span class="avatar">Mq</span>
+            </div>
+          </div>
+          <div style="height:0.6rem"></div>
+          <div class="flex">
+            <button class="btn">Guardar</button>
+            <button class="btn outline">Cancelar</button>
+            <input class="field" style="max-width:12rem" placeholder="Buscar tareas" aria-label="Buscar">
+          </div>
+        </div>
+      </div>
+      <div class="note"><b>Regla de oro:</b> ver 30 tareas sin scroll vale más que el aire entre dos. «Compacta» no es una versión degradada, es la que usa quien tiene el tablero lleno.</div>
+    </section>
+
+    <!-- ============ ELEVACIÓN ============ -->
+    <section class="facet">
+      <div class="facet-head">
+        <span class="eyebrow">Elevación</span>
+        <span class="tag prop">Propuesto</span>
+      </div>
+      <h2>Una escala de sombra, teñida de navy</h2>
+      <p class="facet-intro">
+        No hay escala: son los <code>shadow-xs/sm/md</code> de Tailwind más un <code>before:</code>
+        con un pelo de sombra repetido a mano en Card, Frame, Dialog, Tooltip y Toast. Propongo
+        cuatro niveles y un <em>hairline</em> con nombre. En claro la sombra lleva sesgo navy (no
+        negro puro, como los grises); en oscuro es negro con un filo de luz arriba.
+      </p>
+
+      <div class="compare">
+        <div class="pane theme-light">
+          <span class="pane-label">Claro</span>
+          <div class="grid cols-2" style="gap:1.1rem">
+            <div class="card" style="box-shadow:var(--elevation-1)"><b style="font-size:var(--text-secondary)">1 · tarjeta</b><div class="muted" style="font-size:var(--text-label)">reposo, fila, chip</div></div>
+            <div class="card" style="box-shadow:var(--elevation-2)"><b style="font-size:var(--text-secondary)">2 · elevada</b><div class="muted" style="font-size:var(--text-label)">hover, arrastrando</div></div>
+            <div class="card" style="box-shadow:var(--elevation-3)"><b style="font-size:var(--text-secondary)">3 · popover</b><div class="muted" style="font-size:var(--text-label)">menú, tooltip, toast</div></div>
+            <div class="card" style="box-shadow:var(--elevation-4)"><b style="font-size:var(--text-secondary)">4 · overlay</b><div class="muted" style="font-size:var(--text-label)">dialog, drawer</div></div>
+          </div>
+        </div>
+        <div class="pane theme-dark">
+          <span class="pane-label">Oscuro</span>
+          <div class="grid cols-2" style="gap:1.1rem">
+            <div class="card" style="box-shadow:var(--elevation-1)"><b style="font-size:var(--text-secondary)">1 · tarjeta</b><div class="muted" style="font-size:var(--text-label)">reposo, fila, chip</div></div>
+            <div class="card" style="box-shadow:var(--elevation-2)"><b style="font-size:var(--text-secondary)">2 · elevada</b><div class="muted" style="font-size:var(--text-label)">hover, arrastrando</div></div>
+            <div class="card" style="box-shadow:var(--elevation-3)"><b style="font-size:var(--text-secondary)">3 · popover</b><div class="muted" style="font-size:var(--text-label)">menú, tooltip, toast</div></div>
+            <div class="card" style="box-shadow:var(--elevation-4)"><b style="font-size:var(--text-secondary)">4 · overlay</b><div class="muted" style="font-size:var(--text-label)">dialog, drawer</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ RADIOS ============ -->
+    <section class="facet">
+      <div class="facet-head">
+        <span class="eyebrow">Radios</span>
+        <span class="tag actual">Actual</span>
+      </div>
+      <h2>La escala que ya hay, sobre controles reales</h2>
+      <p class="facet-intro">
+        <code>--radius: 0.625rem</code> (10 px) y de ahí salen sm 6 · md 8 · lg 10 · xl 14. Card y
+        Dialog usan el <code>rounded-2xl</code> de Tailwind (16). Mi recomendación es
+        <strong>no tocarla</strong>: el radio no es donde conviene gastar la dirección atrevida.
+        Se muestra para confirmarlo.
+      </p>
+      <div class="flex" style="gap:1.25rem">
+        <div class="stack" style="justify-items:center"><div style="width:4rem;height:2.5rem;border:1px solid var(--border);border-radius:6px;background:var(--card)"></div><span class="muted mono" style="font-size:var(--text-label)">sm · 6</span></div>
+        <div class="stack" style="justify-items:center"><div style="width:4rem;height:2.5rem;border:1px solid var(--border);border-radius:8px;background:var(--card)"></div><span class="muted mono" style="font-size:var(--text-label)">md · 8</span></div>
+        <div class="stack" style="justify-items:center"><div style="width:4rem;height:2.5rem;border:1px solid var(--border);border-radius:10px;background:var(--card)"></div><span class="muted mono" style="font-size:var(--text-label)">lg · 10</span></div>
+        <div class="stack" style="justify-items:center"><div style="width:4rem;height:2.5rem;border:1px solid var(--border);border-radius:14px;background:var(--card)"></div><span class="muted mono" style="font-size:var(--text-label)">xl · 14</span></div>
+        <div class="stack" style="justify-items:center"><div style="width:4rem;height:2.5rem;border:1px solid var(--border);border-radius:16px;background:var(--card)"></div><span class="muted mono" style="font-size:var(--text-label)">2xl · 16</span></div>
+      </div>
+    </section>
+
+    <!-- ============ CONTROLES ============ -->
+    <section class="facet">
+      <div class="facet-head">
+        <span class="eyebrow">Controles</span>
+        <span class="tag prop">Propuesto</span>
+      </div>
+      <h2>La matriz de estados, entera</h2>
+      <p class="facet-intro">
+        Cada control interactivo tiene su repertorio: reposo, hover, foco, activo, desactivado,
+        cargando y error. Hoy se implementan a medias y de forma distinta entre superficies (el
+        botón de guardar no se ve igual en dos sitios). Esto es lo que heredan el shell y el
+        tablero, con los mismos tokens de elevación y movimiento.
+      </p>
+
+      <div class="subhead" role="heading" aria-level="3">Botón primario</div>
+      <div class="state-grid">
+        <span class="sk">Reposo</span><span class="state-row"><button class="btn">Guardar vista</button></span>
+        <span class="sk">Hover</span><span class="state-row"><button class="btn is-hover">Guardar vista</button></span>
+        <span class="sk">Foco</span><span class="state-row"><button class="btn is-focus">Guardar vista</button></span>
+        <span class="sk">Activo</span><span class="state-row"><button class="btn is-active">Guardar vista</button></span>
+        <span class="sk">Desactivado</span><span class="state-row"><button class="btn" disabled>Guardar vista</button></span>
+        <span class="sk">Cargando</span><span class="state-row"><button class="btn" data-loading aria-disabled="true">Guardar vista<span class="spinner" style="border-color:color-mix(in srgb, var(--primary-foreground) 30%, transparent);border-top-color:var(--primary-foreground)"></span></button></span>
+      </div>
+
+      <div class="subhead" role="heading" aria-level="3">Campo de texto</div>
+      <div class="state-grid">
+        <span class="sk">Reposo</span><span class="state-row"><input class="field" style="max-width:16rem" value="Presupuesto" aria-label="Campo en reposo"></span>
+        <span class="sk">Foco</span><span class="state-row"><input class="field" style="max-width:16rem;border-color:color-mix(in srgb, var(--brand) 60%, transparent);box-shadow:0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent)" value="Presupuesto" aria-label="Campo con foco"></span>
+        <span class="sk">Desactivado</span><span class="state-row"><input class="field" style="max-width:16rem;opacity:0.5;cursor:not-allowed" value="Presupuesto" disabled aria-label="Campo desactivado"></span>
+        <span class="sk">Error</span><span class="state-row" style="align-items:flex-start;flex-direction:column;gap:0.3rem"><input class="field" style="max-width:16rem;border-color:color-mix(in srgb, var(--destructive) 45%, transparent)" value="RI UNA" aria-invalid="true" aria-describedby="ctl-err-msg" aria-label="Clave del proyecto"><span id="ctl-err-msg" role="alert" style="color:var(--destructive-foreground);font-size:var(--text-secondary);font-weight:500">La clave no admite espacios. Usa de 2 a 5 letras.</span></span>
+      </div>
+
+      <div class="note"><b>Regla:</b> ningún control se envía con la mitad de sus estados. Si «cargando» o «desactivado» no está pensado, falta trabajo, no es una decisión.</div>
+    </section>
+
+    <!-- ============ MOVIMIENTO ============ -->
+    <section class="facet">
+      <div class="facet-head">
+        <span class="eyebrow">Movimiento</span>
+        <span class="tag prop">Propuesto</span>
+      </div>
+      <h2>De un fade plano a un sistema con nombre</h2>
+      <p class="facet-intro">
+        Hoy: un <code>@keyframes</code> a mano (el shimmer), <code>framer-motion</code> en 8
+        ficheros y siempre el mismo fade. Sin transiciones de ruta, sin <em>stagger</em>, y los
+        cambios en tiempo real <strong>aparecen de golpe</strong>, que incumple el principio 5 de
+        marca. Propongo cinco duraciones, un <em>easing</em> más y transiciones con nombre. Con
+        «Movimiento: Reducido» o la preferencia del SO: el resalte en tiempo real deja un tinte
+        estático breve en vez de un baño animado, y el resto es instantáneo. Nada se pierde en
+        silencio.
+      </p>
+
+      <div class="tok-wrap" style="margin-bottom:1.5rem">
+        <table class="tok">
+          <thead><tr><th>Token</th><th>Valor</th><th>Para</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">--motion-instant</td><td class="mono">90ms</td><td>press, cambio de estado de un control</td></tr>
+            <tr><td class="mono">--motion-fast</td><td class="mono">140ms</td><td>hover, foco, tinte de fila</td></tr>
+            <tr><td class="mono">--motion-base</td><td class="mono">220ms</td><td>entrada de fila/tarjeta, popover</td></tr>
+            <tr><td class="mono">--motion-slow</td><td class="mono">360ms</td><td>drawer, dialog, cambio de vista</td></tr>
+            <tr><td class="mono">--motion-settle</td><td class="mono">760ms</td><td>decaimiento del resalte en tiempo real</td></tr>
+            <tr><td class="mono">--ease-out-quart</td><td class="mono">cubic-bezier(.25,1,.5,1)</td><td>entradas; sin rebote, marca no es juguetona</td></tr>
+            <tr><td class="mono">--stagger-step</td><td class="mono">38ms</td><td>retardo entre hermanos al cargar</td></tr>
+            <tr><td class="mono">salida</td><td class="mono">≈ 65 % de la entrada</td><td>una salida usa <code>--motion-fast</code> donde la entrada usó <code>--motion-base</code>: cerrar se siente más rápido que abrir</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid cols-2">
+        <div class="demo">
+          <div class="demo-top"><div><span class="dn">Entrada de tarjeta</span><br><span class="dd">fade + 6px + escala 0.985 → 1 · base</span></div><button class="btn outline" data-demo="enter">Reproducir</button></div>
+          <div class="demo-stage" id="stage-enter">
+            <div class="taskcard"><span class="tnum">RIU-160</span><span class="ttitle">Bandeja unificada de «Mi trabajo»</span></div>
+          </div>
+        </div>
+
+        <div class="demo">
+          <div class="demo-top"><div><span class="dn">Cambiada por otra persona</span><br><span class="dd">baño de teal que decae · settle · cierra el principio 5</span></div><button class="btn outline" data-demo="flux">Simular</button></div>
+          <div class="demo-stage" id="stage-flux">
+            <div class="row" style="border-radius:calc(var(--radius) - 4px)"><span class="avatar" style="background:var(--muted);color:var(--muted-foreground);border-color:var(--border)">AR</span><span class="rtitle">Ana movió esta tarea a «En curso»</span></div>
+          </div>
+        </div>
+
+        <div class="demo">
+          <div class="demo-top"><div><span class="dn">Stagger al cargar una columna</span><br><span class="dd">38ms entre filas · total &lt; 400ms</span></div><button class="btn outline" data-demo="stagger">Reproducir</button></div>
+          <div class="demo-stage" id="stage-stagger">
+            <div class="stack" data-stagger style="gap:0.4rem">
+              <div class="row" style="border-radius:6px">Descomponer el árbol de tareas</div>
+              <div class="row" style="border-radius:6px">Agregados del subárbol</div>
+              <div class="row" style="border-radius:6px">Cascada configurable por proyecto</div>
+              <div class="row" style="border-radius:6px">Épicas transversales</div>
+              <div class="row" style="border-radius:6px">Vista Tabla editable</div>
+              <div class="row" style="border-radius:6px">Exportar la vista filtrada</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo">
+          <div class="demo-top"><div><span class="dn">Popover</span><br><span class="dd">actual (escala + opacidad) vs. propuesto (+ 3px direccional)</span></div><button class="btn outline" data-demo="pop">Reproducir</button></div>
+          <div class="demo-stage" id="stage-pop" style="min-height:8.5rem">
+            <div class="flex" style="align-items:flex-start;gap:1.25rem">
+              <div class="popover" data-variant="now"><div class="pi" aria-selected="true"><span class="dot" style="background:var(--brand-strong)"></span>En curso</div><div class="pi">En revisión</div><div class="pi">Hecha</div></div>
+              <div class="popover" data-variant="next"><div class="pi" aria-selected="true"><span class="dot" style="background:var(--brand-strong)"></span>En curso</div><div class="pi">En revisión</div><div class="pi">Hecha</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo">
+          <div class="demo-top"><div><span class="dn">Foco de teclado</span><br><span class="dd">anillo ring-2, transición fast · pulsa Tab en los controles</span></div></div>
+          <div class="demo-stage"><div class="flex"><button class="btn">Botón</button><button class="btn outline">Otro</button><input class="field" style="max-width:11rem" placeholder="Campo" aria-label="Campo de ejemplo"></div></div>
+        </div>
+
+        <div class="demo">
+          <div class="demo-top"><div><span class="dn">Press</span><br><span class="dd">scale 0.97 en botón, 0.98 en tarjeta · instant</span></div></div>
+          <div class="demo-stage"><div class="flex"><button class="btn brand">Mantén pulsado</button><div class="taskcard" style="cursor:pointer"><span class="ttitle">Pulsa esta tarjeta</span></div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ESTADOS ============ -->
+    <section class="facet">
+      <div class="facet-head">
+        <span class="eyebrow">Estados</span>
+        <span class="tag prop">Propuesto</span>
+      </div>
+      <h2>Un patrón por estado, no tres</h2>
+      <p class="facet-intro">
+        Conviven tres formas de «cargando» (shimmer, <code>animate-pulse</code>, spinner) y el
+        componente <code>Empty</code> existe pero muchas vistas lo reescriben a mano. Elijo:
+        <strong>shimmer para skeletons</strong>, <strong>Empty para vacíos</strong>, spinner solo
+        dentro de un botón.
+      </p>
+
+      <div class="subhead" role="heading" aria-level="3">Cargando — se elige el de la izquierda</div>
+      <div class="grid cols-3">
+        <div class="card"><span class="muted" style="font-size:var(--text-label)">shimmer · elegido</span><div class="stack" style="margin-top:0.6rem"><div class="skel" style="width:40%"></div><div class="skel" style="width:85%"></div><div class="skel" style="width:70%"></div></div></div>
+        <div class="card"><span class="muted" style="font-size:var(--text-label)">animate-pulse · se retira</span><div class="stack" style="margin-top:0.6rem"><div class="skel pulse" style="width:40%"></div><div class="skel pulse" style="width:85%"></div><div class="skel pulse" style="width:70%"></div></div></div>
+        <div class="card"><span class="muted" style="font-size:var(--text-label)">spinner · solo en botón</span><div class="flex" style="margin-top:0.6rem;min-height:2.5rem"><div class="spinner"></div><span class="muted">Cargando…</span></div></div>
+      </div>
+
+      <div class="subhead" role="heading" aria-level="3">Skeleton en contexto</div>
+      <div class="grid cols-2">
+        <div class="taskcard"><div class="skel" style="width:30%"></div><div class="skel" style="width:90%;height:0.9rem"></div><div class="flex" style="margin-top:0.2rem"><div class="skel" style="width:3.5rem"></div><div class="skel" style="width:2.5rem"></div></div></div>
+        <div class="row-demo">
+          <div class="row"><div class="skel" style="width:1rem;height:1rem"></div><div class="skel" style="flex:1;max-width:60%"></div></div>
+          <div class="row"><div class="skel" style="width:1rem;height:1rem"></div><div class="skel" style="flex:1;max-width:45%"></div></div>
+          <div class="row"><div class="skel" style="width:1rem;height:1rem"></div><div class="skel" style="flex:1;max-width:70%"></div></div>
+        </div>
+      </div>
+
+      <div class="subhead" role="heading" aria-level="3">Vacío — un solo patrón</div>
+      <div class="grid cols-2">
+        <div class="empty">
+          <div class="em-media"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 3h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+          <span class="em-title">Aún no hay proyectos</span>
+          <span class="em-desc">Crea el primero para empezar a repartir trabajo.</span>
+          <button class="btn" style="margin-top:0.6rem">Crear proyecto</button>
+        </div>
+        <div class="empty">
+          <div class="em-media"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
+          <span class="em-title">Ninguna tarea cumple el filtro</span>
+          <span class="em-desc">Ajusta o quita alguna condición para ver resultados.</span>
+          <button class="btn outline" style="margin-top:0.6rem">Limpiar filtros</button>
+        </div>
+      </div>
+
+      <div class="subhead" role="heading" aria-level="3">Toasts y error en contexto</div>
+      <div class="grid cols-2">
+        <div class="stack">
+          <div class="toast ok"><span class="ti"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span><span><span class="tt">Proyecto creado</span>Riuna 0.1 ya está en tu espacio.</span></div>
+          <div class="toast err"><span class="ti"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg></span><span><span class="tt">No se ha podido mover la tarea</span>El proyecto de destino tiene menos niveles de los que necesita esta rama.</span></div>
+        </div>
+        <div class="card">
+          <label class="muted" style="font-size:var(--text-label);display:block;margin-bottom:0.3rem" for="ex-key">Clave del proyecto</label>
+          <input class="field" id="ex-key" value="RI UNA" aria-invalid="true" aria-describedby="ex-key-msg" style="border-color:color-mix(in srgb, var(--destructive) 45%, transparent)">
+          <span id="ex-key-msg" role="alert" style="color:var(--destructive-foreground);font-size:var(--text-secondary);font-weight:500;display:block;margin-top:0.35rem">La clave no admite espacios. Usa de 2 a 5 letras.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VOCABULARIO ============ -->
+    <section class="facet" style="border-bottom:0">
+      <div class="facet-head">
+        <span class="eyebrow">Vocabulario visual</span>
+        <span class="tag actual">Actual</span>
+      </div>
+      <h2>Iconos de columna, prioridad y etiqueta</h2>
+      <p class="facet-intro">
+        La progresión de iconos cuenta la historia sin leer la etiqueta. Prioridad ya está
+        alineada con marca.md §06 en <code>constants/priority-colors.ts</code> (antes media y alta
+        eran el mismo ámbar). Se muestra para que el tablero herede lo mismo.
+      </p>
+
+      <div class="subhead" role="heading" aria-level="3">Progresión de estado</div>
+      <div class="flex" style="gap:1.5rem">
+        <span class="flex" style="gap:0.4rem"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg> Por hacer</span>
+        <span class="flex" style="gap:0.4rem"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--brand-strong)" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5" fill="var(--brand-strong)"/></svg> En curso</span>
+        <span class="flex" style="gap:0.4rem"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg> En revisión</span>
+        <span class="flex" style="gap:0.4rem"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--success-foreground)" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg> Hecha</span>
+        <span class="flex" style="gap:0.4rem"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" stroke-width="2" stroke-dasharray="3 3"><circle cx="12" cy="12" r="9"/></svg> Planificada</span>
+      </div>
+
+      <div class="subhead" role="heading" aria-level="3">Prioridad — icono + color + texto</div>
+      <div class="flex" style="gap:0.6rem">
+        <span class="pill"><span class="dot" style="background:var(--muted-foreground)"></span>Baja</span>
+        <span class="pill"><span class="dot" style="background:var(--info-foreground)"></span>Media</span>
+        <span class="pill"><span class="dot" style="background:var(--warning-foreground)"></span>Alta</span>
+        <span class="pill"><span class="dot" style="background:var(--destructive-foreground)"></span>Urgente</span>
+      </div>
+
+      <div class="subhead" role="heading" aria-level="3">Etiquetas — color de dato sobre chip neutro</div>
+      <div class="flex" style="gap:0.5rem">
+        <span class="lbl"><span class="dot" style="background:var(--color-slate-500)"></span>plataforma</span>
+        <span class="lbl"><span class="dot" style="background:var(--color-violet-500)"></span>diseño</span>
+        <span class="lbl"><span class="dot" style="background:var(--color-cyan-600)"></span>rendimiento</span>
+        <span class="lbl"><span class="dot" style="background:var(--color-amber-600)"></span>deuda</span>
+        <span class="lbl"><span class="dot" style="background:var(--color-rose-600)"></span>regresión</span>
+      </div>
+    </section>
+
+    <footer>
+      Preview 1 de 3 · Sistema base. Los tokens actuales salen de <code>apps/web/src/index.css</code> y
+      <code>docs/marca.md</code>. Lo marcado «Propuesto» se decide sobre esta página y, al cerrarse,
+      va a <code>docs/design-previews/</code> más un ADR. Siguen: Shell y Tablero.
+    </footer>
+  </div>
+</main>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+
+    // Los iconos son decorativos: fuera del árbol de accesibilidad.
+    document.querySelectorAll("svg").forEach(function (s) {
+      if (!s.hasAttribute("role") && !s.hasAttribute("aria-label")) {
+        s.setAttribute("aria-hidden", "true");
+        s.setAttribute("focusable", "false");
+      }
+    });
+
+    function prefersReduced() {
+      return window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+        root.getAttribute("data-motion") === "reduced";
+    }
+
+    function wireSeg(id, apply) {
+      var seg = document.getElementById(id);
+      if (!seg) return;
+      seg.addEventListener("click", function (e) {
+        var btn = e.target.closest("button[data-v]");
+        if (!btn) return;
+        seg.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", String(b === btn)); });
+        apply(btn.dataset.v);
+      });
+    }
+
+    wireSeg("seg-theme", function (v) {
+      if (v === "system") root.removeAttribute("data-theme");
+      else root.setAttribute("data-theme", v);
+    });
+    wireSeg("seg-density", function (v) {
+      if (v === "compact") root.setAttribute("data-density", "compact");
+      else root.removeAttribute("data-density");
+    });
+    wireSeg("seg-motion", function (v) {
+      if (v === "reduced") root.setAttribute("data-motion", "reduced");
+      else root.removeAttribute("data-motion");
+    });
+
+    // Motion demos: re-trigger CSS animations by cloning / toggling classes.
+    function restart(el, cls) {
+      el.classList.remove(cls);
+      void el.offsetWidth;
+      el.classList.add(cls);
+    }
+
+    document.querySelectorAll("[data-demo]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var kind = btn.dataset.demo;
+        if (kind === "enter") {
+          restart(document.querySelector("#stage-enter .taskcard"), "anim-enter");
+        } else if (kind === "flux") {
+          var rowEl = document.querySelector("#stage-flux .row");
+          if (prefersReduced()) {
+            // Tinte estático, sin animar; se retira solo. Nada se pierde en silencio.
+            rowEl.style.transition = "none";
+            rowEl.style.background = "color-mix(in srgb, var(--brand) 18%, transparent)";
+            setTimeout(function () { rowEl.style.background = ""; }, 1100);
+          } else {
+            restart(rowEl, "anim-flux");
+          }
+        } else if (kind === "stagger") {
+          var wrap = document.querySelector("[data-stagger]");
+          Array.prototype.slice.call(wrap.children).forEach(function (k, i) {
+            k.style.setProperty("--i", i);
+          });
+          wrap.classList.remove("stagger");
+          void wrap.offsetWidth;
+          wrap.classList.add("stagger");
+        } else if (kind === "pop") {
+          document.querySelectorAll("#stage-pop .popover").forEach(function (p) {
+            var dir = p.dataset.variant === "next" ? "translateY(3px)" : "none";
+            p.style.transition = "none";
+            p.style.opacity = "0";
+            p.style.transform = "scale(0.98) " + dir;
+            void p.offsetWidth;
+            p.style.transition = "opacity var(--motion-base) var(--ease-out-quart), transform var(--motion-base) var(--ease-out-quart)";
+            p.style.opacity = "1";
+            p.style.transform = "none";
+          });
+        }
+      });
+    });
+  })();
+</script>

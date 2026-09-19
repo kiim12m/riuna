@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import type { VerifyGiteaAccessResponse } from "@/fetchers/gitea-integration/verify-gitea-access";
 import {
@@ -406,7 +407,7 @@ export function GiteaIntegrationSettings({ projectId }: { projectId: string }) {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="h-10 bg-muted rounded animate-pulse w-full" />
+        <Skeleton className="h-10 w-full" />
       </div>
     );
   }
@@ -567,14 +568,14 @@ export function GiteaIntegrationSettings({ projectId }: { projectId: string }) {
                   <p className="text-muted-foreground">
                     {t("settings:giteaIntegration.webhookHint")}
                   </p>
-                  <code className="block break-all rounded bg-muted px-2 py-1 text-[11px]">
+                  <code className="block break-all rounded bg-muted px-2 py-1 text-label">
                     {integration.webhookUrl}
                   </code>
                   <p className="text-muted-foreground mt-2">
                     {t("settings:giteaIntegration.webhookSecretLabel")}
                   </p>
                   <div className="flex items-start gap-2">
-                    <code className="block flex-1 break-all rounded bg-muted px-2 py-1 text-[11px]">
+                    <code className="block flex-1 break-all rounded bg-muted px-2 py-1 text-label">
                       {showWebhookSecret
                         ? integration.webhookSecret
                         : "••••••••••••••••••••••••••••••••"}

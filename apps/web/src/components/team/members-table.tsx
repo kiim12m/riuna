@@ -1,16 +1,19 @@
-import { DEFAULT_ROLE_NAMES } from "@kaneo/permissions";
+import { DEFAULT_ROLE_NAMES } from "@riuna/permissions";
 import {
   CopyIcon,
   EllipsisIcon,
   MailIcon,
   ShieldIcon,
   TrashIcon,
+  UserRoundCog,
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import useCancelInvitation from "@/hooks/mutations/workspace-user/use-cancel-invitation";
 import useDeleteWorkspaceUser from "@/hooks/mutations/workspace-user/use-delete-workspace-user";
 import useUpdateWorkspaceUserRole from "@/hooks/mutations/workspace-user/use-update-workspace-user-role";
+import useGetConfig from "@/hooks/queries/config/use-get-config";
+import useGetInstanceUsers from "@/hooks/queries/user/use-get-instance-users";
 import useWorkspaceRoles from "@/hooks/queries/workspace/use-workspace-roles";
 import { useCopyInvitationLink } from "@/hooks/use-copy-invitation-link";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
@@ -51,6 +54,9 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import ManageAccountModal, {
+  type ManagedAccount,
+} from "./manage-account-modal";
 
 type Props = {
   workspaceId: string;
@@ -99,6 +105,18 @@ function MembersTable({ workspaceId, invitations, users }: Props) {
     useState<WorkspaceUserInvitation | null>(null);
 
   const { user: currentUser } = useAuth();
+  const isInstanceAdmin = currentUser?.role === "admin";
+  const { data: instanceUsers } = useGetInstanceUsers(isInstanceAdmin);
+  const [accountToManage, setAccountToManage] = useState<ManagedAccount | null>(
+    null,
+  );
+  const { data: config } = useGetConfig();
+  // Una cuenta local se reconoce por su correo sintetico, y el dominio
+  // reservado lo decide el servidor: el cliente lo recibe en la configuracion.
+  const localAccountDomain = config?.localAccountDomain;
+  const isLocalAccount = (email: string) =>
+    Boolean(localAccountDomain) &&
+    email.toLowerCase().endsWith(`@${localAccountDomain?.toLowerCase()}`);
   const { mutateAsync: deleteWorkspaceUser, isPending: isDeleting } =
     useDeleteWorkspaceUser();
   const { mutateAsync: cancelInvitation, isPending: isCancelling } =
@@ -217,7 +235,7 @@ function MembersTable({ workspaceId, invitations, users }: Props) {
                         src={member.user.image ?? ""}
                         alt={member.user.name ?? ""}
                       />
-                      <AvatarFallback className="bg-transparent text-[11px] font-medium">
+                      <AvatarFallback className="bg-transparent text-label font-medium">
                         {getInitials(member.user.name)}
                       </AvatarFallback>
                     </Avatar>
@@ -231,9 +249,21 @@ function MembersTable({ workspaceId, invitations, users }: Props) {
                             ({t("team:members.you", { defaultValue: "You" })})
                           </span>
                         ) : null}
+                        {instanceUsers?.get(member.userId)?.banned ? (
+                          <span className="rounded border border-destructive/40 bg-destructive/10 px-1.5 py-0.5 text-label font-medium text-destructive">
+                            {t("team:members.blocked")}
+                          </span>
+                        ) : null}
+                        {isLocalAccount(member.user.email) ? (
+                          <span className="rounded border border-border/70 bg-muted/55 px-1.5 py-0.5 text-label font-medium text-muted-foreground">
+                            {t("team:members.localAccount")}
+                          </span>
+                        ) : null}
                       </div>
                       <div className="truncate text-xs text-muted-foreground">
-                        {member.user.email}
+                        {isLocalAccount(member.user.email)
+                          ? `@${member.user.email.split("@")[0]}`
+                          : member.user.email}
                       </div>
                     </div>
                   </div>
@@ -293,7 +323,7 @@ function MembersTable({ workspaceId, invitations, users }: Props) {
                   {member.createdAt ? formatDateMedium(member.createdAt) : "–"}
                 </TableCell>
                 <TableCell className="pe-6 py-3 text-right">
-                  {!isSelf && canRemove ? (
+                  {!isSelf && (canRemove || isInstanceAdmin) ? (
                     <Menu>
                       <MenuTrigger
                         render={
@@ -308,10 +338,32 @@ function MembersTable({ workspaceId, invitations, users }: Props) {
                         <EllipsisIcon className="size-4" />
                       </MenuTrigger>
                       <MenuPopup align="end">
-                        <MenuItem onClick={() => setMemberToDelete(member)}>
-                          <TrashIcon className="size-4" />
-                          {t("team:membersTable.removeMember")}
-                        </MenuItem>
+                        {isInstanceAdmin ? (
+                          <MenuItem
+                            onClick={() =>
+                              setAccountToManage({
+                                userId: member.userId,
+                                name: member.user.name ?? "",
+                                email: member.user.email,
+                                isLocalAccount: isLocalAccount(
+                                  member.user.email,
+                                ),
+                                banned: Boolean(
+                                  instanceUsers?.get(member.userId)?.banned,
+                                ),
+                              })
+                            }
+                          >
+                            <UserRoundCog className="size-4" />
+                            {t("team:membersTable.manageAccount")}
+                          </MenuItem>
+                        ) : null}
+                        {canRemove ? (
+                          <MenuItem onClick={() => setMemberToDelete(member)}>
+                            <TrashIcon className="size-4" />
+                            {t("team:membersTable.removeMember")}
+                          </MenuItem>
+                        ) : null}
                       </MenuPopup>
                     </Menu>
                   ) : null}
@@ -335,7 +387,7 @@ function MembersTable({ workspaceId, invitations, users }: Props) {
                       <Badge
                         variant="outline"
                         size="sm"
-                        className="font-mono text-[9px] uppercase tracking-wider"
+                        className="font-mono text-label uppercaser"
                       >
                         {t("team:invitations.pendingBadge", {
                           defaultValue: "pending",
@@ -497,6 +549,14 @@ function MembersTable({ workspaceId, invitations, users }: Props) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {accountToManage ? (
+        <ManageAccountModal
+          account={accountToManage}
+          workspaceId={workspaceId}
+          onClose={() => setAccountToManage(null)}
+        />
+      ) : null}
     </>
   );
 }

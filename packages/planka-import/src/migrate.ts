@@ -1,5 +1,4 @@
 import { labelColorToHex } from "./colors.js";
-import type { KaneoClient } from "./kaneo.js";
 import { toProjectKey, uniqueKey } from "./keys.js";
 import {
   boardProjectName,
@@ -18,6 +17,7 @@ import {
   type PlankaProject,
   type PlankaUser,
 } from "./planka.js";
+import type { RiunaClient } from "./riuna.js";
 
 export type BoardTarget = {
   project: PlankaProject;
@@ -30,7 +30,7 @@ export type BoardReport = {
   project: string;
   projectName: string;
   projectKey: string | null;
-  kaneoProjectId: string | null;
+  riunaProjectId: string | null;
   columns: number;
   tasks: number;
   labels: number;
@@ -47,7 +47,7 @@ export type BoardReport = {
 
 export type MigrateOptions = {
   planka: PlankaClient;
-  kaneo: KaneoClient;
+  riuna: RiunaClient;
   workspaceId: string;
   targets: BoardTarget[];
   dryRun: boolean;
@@ -59,7 +59,7 @@ export type MigrateOptions = {
 export async function migrate(options: MigrateOptions): Promise<BoardReport[]> {
   const {
     planka,
-    kaneo,
+    riuna,
     workspaceId,
     targets,
     dryRun,
@@ -72,10 +72,10 @@ export async function migrate(options: MigrateOptions): Promise<BoardReport[]> {
   const membersByEmail = new Map<string, string>();
 
   if (!dryRun) {
-    for (const project of await kaneo.listProjects(workspaceId)) {
+    for (const project of await riuna.listProjects(workspaceId)) {
       if (project.slug) takenKeys.add(project.slug);
     }
-    for (const member of await kaneo.listMembers(workspaceId)) {
+    for (const member of await riuna.listMembers(workspaceId)) {
       if (member.email)
         membersByEmail.set(member.email.toLowerCase(), member.id);
     }
@@ -95,7 +95,7 @@ export async function migrate(options: MigrateOptions): Promise<BoardReport[]> {
       project: target.project.name,
       projectName,
       projectKey: null,
-      kaneoProjectId: null,
+      riunaProjectId: null,
       columns: 0,
       tasks: 0,
       labels: 0,
@@ -112,7 +112,7 @@ export async function migrate(options: MigrateOptions): Promise<BoardReport[]> {
     try {
       await migrateBoard({
         planka,
-        kaneo,
+        riuna,
         workspaceId,
         target,
         projectName,
@@ -137,7 +137,7 @@ export async function migrate(options: MigrateOptions): Promise<BoardReport[]> {
 
 async function migrateBoard(context: {
   planka: PlankaClient;
-  kaneo: KaneoClient;
+  riuna: RiunaClient;
   workspaceId: string;
   target: BoardTarget;
   projectName: string;
@@ -151,7 +151,7 @@ async function migrateBoard(context: {
 }): Promise<void> {
   const {
     planka,
-    kaneo,
+    riuna,
     workspaceId,
     target,
     projectName,
@@ -180,7 +180,7 @@ async function migrateBoard(context: {
   for (const column of columns) {
     if (column.renamedFrom) {
       report.warnings.push(
-        `List "${column.renamedFrom}" was imported as column "${column.name}" to avoid a naming conflict in Kaneo.`,
+        `List "${column.renamedFrom}" was imported as column "${column.name}" to avoid a naming conflict in Riuna.`,
       );
     }
   }
@@ -229,21 +229,21 @@ async function migrateBoard(context: {
   report.projectKey = projectKey;
 
   onProgress(`Creating project "${projectName}" (${projectKey})`);
-  const project = await kaneo.createProject({
+  const project = await riuna.createProject({
     name: projectName,
     workspaceId,
     icon: projectIcon,
     slug: projectKey,
   });
-  report.kaneoProjectId = project.id;
+  report.riunaProjectId = project.id;
 
-  // Kaneo seeds four default columns on create; drop them while still empty.
-  for (const existing of await kaneo.listColumns(project.id)) {
-    await kaneo.deleteColumn(existing.id);
+  // Riuna seeds four default columns on create; drop them while still empty.
+  for (const existing of await riuna.listColumns(project.id)) {
+    await riuna.deleteColumn(existing.id);
   }
 
   for (const column of columns) {
-    await kaneo.createColumn(project.id, {
+    await riuna.createColumn(project.id, {
       name: column.name,
       isFinal: column.isFinal,
     });
@@ -255,7 +255,7 @@ async function migrateBoard(context: {
 
     const name = label.name?.trim() || label.color;
     const color = labelColorToHex(label.color);
-    await kaneo.createLabel({ name, color, workspaceId });
+    await riuna.createLabel({ name, color, workspaceId });
     labelIdByPlankaId.set(label.id, { name, color });
   }
 
@@ -292,7 +292,7 @@ async function migrateBoard(context: {
 
     const dueDate = toDueDate(card);
 
-    const task = await kaneo.createTask(project.id, {
+    const task = await riuna.createTask(project.id, {
       title: card.name,
       description,
       status,
@@ -308,7 +308,7 @@ async function migrateBoard(context: {
       const label = labelIdByPlankaId.get(link.labelId);
       if (!label) continue;
 
-      await kaneo.createLabel({
+      await riuna.createLabel({
         name: label.name,
         color: label.color,
         workspaceId,
@@ -323,7 +323,7 @@ async function migrateBoard(context: {
 
     for (const comment of comments) {
       const author = comment.userId ? usersById.get(comment.userId) : undefined;
-      await kaneo.createComment(
+      await riuna.createComment(
         task.id,
         formatComment(comment),
         displayName(author),
@@ -332,7 +332,7 @@ async function migrateBoard(context: {
     }
   }
 
-  // Relations need every task to exist first, so they run after the card loop.
+  // Hierarchy needs every task to exist first, so it runs after the card loop.
   for (const item of checklistItems) {
     if (!item.linkedCardId) continue;
 
@@ -341,22 +341,18 @@ async function migrateBoard(context: {
     )?.cardId;
     if (!parentCardId) continue;
 
-    const sourceTaskId = taskIdByCardId.get(parentCardId);
-    const targetTaskId = taskIdByCardId.get(item.linkedCardId);
-    if (!sourceTaskId || !targetTaskId || sourceTaskId === targetTaskId) {
+    const parentTaskId = taskIdByCardId.get(parentCardId);
+    const childTaskId = taskIdByCardId.get(item.linkedCardId);
+    if (!parentTaskId || !childTaskId || parentTaskId === childTaskId) {
       continue;
     }
 
     try {
-      await kaneo.createTaskRelation({
-        sourceTaskId,
-        targetTaskId,
-        relationType: "subtask",
-      });
+      await riuna.updateTaskParent(childTaskId, parentTaskId);
       report.relations++;
     } catch (error) {
       report.warnings.push(
-        `Could not link "${item.name}" as a subtask: ${
+        `Could not hang "${item.name}" under its parent card: ${
           error instanceof Error ? error.message : String(error)
         }`,
       );
@@ -370,7 +366,7 @@ async function migrateBoard(context: {
   }
   if (notAWorkspaceMember > 0) {
     report.warnings.push(
-      `${notAWorkspaceMember} card assignment(s) were skipped because no member of this Kaneo workspace has a matching email. Invite those people to the workspace first, then re-run.`,
+      `${notAWorkspaceMember} card assignment(s) were skipped because no member of this Riuna workspace has a matching email. Invite those people to the workspace first, then re-run.`,
     );
   }
 }
@@ -386,7 +382,7 @@ function resolveAssignee(
   usersById: Map<string, PlankaUser>,
   membersByEmail: Map<string, string>,
 ): AssigneeResolution {
-  // Kaneo has a single assignee; take the first member present in the workspace.
+  // Riuna has a single assignee; take the first member present in the workspace.
   let reason: AssigneeResolution["reason"];
 
   for (const membership of memberships) {
@@ -398,8 +394,8 @@ function resolveAssignee(
       continue;
     }
 
-    const kaneoUserId = membersByEmail.get(email);
-    if (kaneoUserId) return { userId: kaneoUserId };
+    const riunaUserId = membersByEmail.get(email);
+    if (riunaUserId) return { userId: riunaUserId };
     reason = "not_a_member";
   }
 

@@ -1,3 +1,8 @@
+# Todo el repositorio usa LF, tambien en checkouts de Windows. Biome formatea
+# con LF, y el hook de pre-commit (`biome ci .`) marca como mal formateado
+# cualquier fichero con CRLF: con core.autocrlf=true no habria commit posible.
+* text=auto eol=lf
+
 # Husky hooks must use LF, otherwise a CRLF checkout makes the shell pass a
 # trailing carriage return to commitlint and every commit fails on Unix.
 .husky/* text eol=lf

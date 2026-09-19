@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { eq } from "drizzle-orm";
 import type { WSContext } from "hono/ws";
+import db, { schema } from "../database";
 import { subscribeToEvent } from "../events";
+import { MY_WORK_EVENTS, recipientsForMyWork } from "../my-work/recipients";
 import { isRedisConfigured } from "../redis";
 import type {
   BroadcastAdapter,
@@ -262,16 +265,30 @@ type TaskEvent = {
   taskId: string;
   sourceTaskId: string | undefined;
   targetTaskId: string | undefined;
+  oldParentId?: string | null;
+  newParentId?: string | null;
 };
 
 const taskUpdateEvents = [
   "task.created",
   "task.updated",
+  "task.parent_changed",
+  "task.epics_changed",
+  "task.cycle_changed",
   "task.deleted",
   "task.status_changed",
   "task.priority_changed",
   "task.unassigned",
   "task.assignee_changed",
+  // Los tres que faltaban. `assignees_changed` es el que emite la via de
+  // asignacion multiple —la que usa la interfaz principal desde la Fase 1— y no
+  // lo escuchaba **nadie**: ni el WebSocket, ni la actividad, ni las
+  // notificaciones, ni las integraciones. Anadir a alguien a una tarea no le
+  // llegaba por ningun canal. Lo mismo con la asignacion a un equipo, que es
+  // justo el requisito que motivo esa fase.
+  "task.assignees_changed",
+  "task.team_changed",
+  "task.team_unassigned",
   "task.due_date_changed",
   "task.title_changed",
   "task.description_changed",
@@ -313,6 +330,89 @@ subscribeToEvent<{
   );
 });
 
+// El canal de proyecto si valida con un esquema estricto bajo Redis
+// (`broadcastMessageSchema`, un `v.object`), asi que este mensaje se queda en
+// los campos ya declarados: `type`, `projectId` y `taskId`. Un campo nuevo aqui
+// funcionaria en una sola instancia y desapareceria con Redis.
+subscribeToEvent<{
+  projectId: string;
+  cycleId: string;
+  userId: string;
+  initiatorId?: string;
+}>("cycle.changed", async (data) => {
+  const { projectId, initiatorId } = data;
+  if (!projectId) return;
+
+  broadcastToProject(
+    projectId,
+    { type: "CYCLE_UPDATED", projectId, taskId: "" },
+    initiatorId,
+  );
+});
+
+subscribeToEvent<{
+  projectId: string;
+  epicId: string;
+  userId: string;
+  initiatorId?: string;
+}>("epic.changed", async (data) => {
+  const { projectId, initiatorId } = data;
+  if (!projectId) return;
+
+  broadcastToProject(
+    projectId,
+    { type: "EPIC_UPDATED", projectId, taskId: "" },
+    initiatorId,
+  );
+});
+
+subscribeToEvent<{
+  projectId: string;
+  viewId: string;
+  userId: string;
+  initiatorId?: string;
+}>("view.changed", async (data) => {
+  const { projectId, initiatorId } = data;
+  if (!projectId) return;
+
+  broadcastToProject(
+    projectId,
+    { type: "VIEW_UPDATED", projectId, taskId: "" },
+    initiatorId,
+  );
+});
+
+subscribeToEvent<{
+  workspaceId: string;
+  projectId: string | null;
+  fieldDefinitionId: string;
+  userId: string;
+  initiatorId?: string;
+}>("field-definition.changed", async (data) => {
+  const { workspaceId, projectId, initiatorId } = data;
+
+  // Un campo de proyecto avisa a su proyecto. Uno de espacio afecta a todos a
+  // la vez y no hay un canal de espacio de trabajo, asi que se resuelven sus
+  // proyectos y se avisa a cada uno. Es una consulta de mas en un evento que
+  // ocurre cuando alguien edita los ajustes, no en la ruta caliente.
+  const projectIds = projectId
+    ? [projectId]
+    : (
+        await db
+          .select({ id: schema.projectTable.id })
+          .from(schema.projectTable)
+          .where(eq(schema.projectTable.workspaceId, workspaceId))
+      ).map((row) => row.id);
+
+  for (const id of projectIds) {
+    broadcastToProject(
+      id,
+      { type: "FIELD_DEFINITION_UPDATED", projectId: id, taskId: "" },
+      initiatorId,
+    );
+  }
+});
+
 subscribeToEvent<{
   projectId: string;
   userId: string;
@@ -342,6 +442,29 @@ subscribeToEvent<{ notificationId: string; userId: string }>(
     }
   },
 );
+
+// "Mi trabajo" cruza proyectos, asi que su invalidacion va por el canal de
+// usuario: la tarea puede cambiar en un proyecto que quien la tiene asignada no
+// esta mirando, y ahi no hay conexion de proyecto que reciba nada.
+//
+// El mensaje no lleva `workspaceId` a proposito: anadirlo obligaria a resolver
+// `project -> workspace` en cada evento, y la clave de consulta del cliente ya
+// lo lleva, asi que invalidar por el prefijo `["my-work"]` solo refresca la
+// consulta que este montada.
+//
+// **El canal de usuario de Redis no necesita ningun cambio.**
+// `userBroadcastSchema` valida el mensaje con `v.looseObject`, asi que conserva
+// las claves que no declara. El aviso escrito en `broadcast-adapter.ts` —el de
+// que un campo nuevo desaparece bajo Redis— es del canal de **proyecto**, cuyo
+// `broadcastMessageSchema` si es un `v.object` estricto. No hay que "arreglar"
+// esto anadiendo un esquema estricto aqui.
+for (const eventName of MY_WORK_EVENTS) {
+  subscribeToEvent<Record<string, unknown>>(eventName, async (data) => {
+    for (const userId of await recipientsForMyWork(eventName, data)) {
+      broadcastToUser(userId, { type: "MY_WORK_INVALIDATED" });
+    }
+  });
+}
 
 for (const eventName of taskUpdateEvents) {
   subscribeToEvent<TaskEvent>(eventName, async (data) => {
@@ -384,6 +507,9 @@ for (const eventName of taskUpdateEvents) {
         taskId: taskId,
         sourceTaskId: data.sourceTaskId,
         targetTaskId: data.targetTaskId,
+        // Solo los trae `task.parent_changed`; en los demas van indefinidos.
+        oldParentId: data.oldParentId,
+        newParentId: data.newParentId,
       },
       initiatorId,
     );

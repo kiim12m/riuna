@@ -22,6 +22,7 @@ import {
 import { formatTaskDescriptionFromIssue } from "../../plugins/github/utils/format";
 import { getInstallationOctokit } from "../../plugins/github/utils/github-app";
 import { claimTaskNumber } from "../../task/controllers/claim-task-numbers";
+import { rootTaskTreeFields } from "../../task/tree";
 
 type ImportResult = {
   imported: number;
@@ -239,6 +240,7 @@ async function importSingleIssue(
   const nextTaskNumber = await claimTaskNumber(projectId);
 
   const taskValues: typeof taskTable.$inferInsert = {
+    ...rootTaskTreeFields(),
     projectId,
     userId: null,
     title: issue.title,

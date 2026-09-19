@@ -18,7 +18,17 @@ type WorkspaceIdSource =
         | "activity"
         | "comment"
         | "column"
-        | "workflowRule";
+        | "workflowRule"
+        | "cycle"
+        | "recurrence"
+        | "template"
+        | "epic"
+        | "fieldDefinition"
+        | "view"
+        | "dashboard"
+        | "dashboardWidget"
+        | "goal"
+        | "goalTarget";
       idKey: string;
     }
   | {
@@ -137,7 +147,17 @@ async function lookupWorkspaceId(
     | "activity"
     | "comment"
     | "column"
-    | "workflowRule",
+    | "workflowRule"
+    | "cycle"
+    | "recurrence"
+    | "template"
+    | "epic"
+    | "fieldDefinition"
+    | "view"
+    | "dashboard"
+    | "dashboardWidget"
+    | "goal"
+    | "goalTarget",
   id: string,
 ): Promise<string | null> {
   try {
@@ -164,6 +184,119 @@ async function lookupWorkspaceId(
           .where(eq(schema.taskTable.id, id))
           .limit(1);
         return task?.workspaceId || null;
+      }
+
+      case "view": {
+        const [view] = await db
+          .select({ workspaceId: schema.viewTable.workspaceId })
+          .from(schema.viewTable)
+          .where(eq(schema.viewTable.id, id))
+          .limit(1);
+        return view?.workspaceId || null;
+      }
+      case "dashboard": {
+        const [dashboard] = await db
+          .select({ workspaceId: schema.dashboardTable.workspaceId })
+          .from(schema.dashboardTable)
+          .where(eq(schema.dashboardTable.id, id))
+          .limit(1);
+        return dashboard?.workspaceId || null;
+      }
+      // Un widget no lleva `workspace_id`: sube por su panel, que es quien lo
+      // tiene. Es la misma forma que `column` o `task`, que suben por proyecto.
+      case "dashboardWidget": {
+        const [widget] = await db
+          .select({ workspaceId: schema.dashboardTable.workspaceId })
+          .from(schema.dashboardWidgetTable)
+          .innerJoin(
+            schema.dashboardTable,
+            eq(
+              schema.dashboardWidgetTable.dashboardId,
+              schema.dashboardTable.id,
+            ),
+          )
+          .where(eq(schema.dashboardWidgetTable.id, id))
+          .limit(1);
+        return widget?.workspaceId || null;
+      }
+
+      case "goal": {
+        const [goal] = await db
+          .select({ workspaceId: schema.goalTable.workspaceId })
+          .from(schema.goalTable)
+          .where(eq(schema.goalTable.id, id))
+          .limit(1);
+        return goal?.workspaceId || null;
+      }
+      // Un resultado clave no lleva `workspace_id`: sube por su objetivo, que
+      // es quien lo tiene.
+      case "goalTarget": {
+        const [target] = await db
+          .select({ workspaceId: schema.goalTable.workspaceId })
+          .from(schema.goalTargetTable)
+          .innerJoin(
+            schema.goalTable,
+            eq(schema.goalTargetTable.goalId, schema.goalTable.id),
+          )
+          .where(eq(schema.goalTargetTable.id, id))
+          .limit(1);
+        return target?.workspaceId || null;
+      }
+      case "fieldDefinition": {
+        const [definition] = await db
+          .select({ workspaceId: schema.fieldDefinitionTable.workspaceId })
+          .from(schema.fieldDefinitionTable)
+          .where(eq(schema.fieldDefinitionTable.id, id))
+          .limit(1);
+        return definition?.workspaceId || null;
+      }
+
+      case "template": {
+        const [row] = await db
+          .select({ workspaceId: schema.templateTable.workspaceId })
+          .from(schema.templateTable)
+          .where(eq(schema.templateTable.id, id))
+          .limit(1);
+        return row?.workspaceId || null;
+      }
+
+      case "recurrence": {
+        const [row] = await db
+          .select({ workspaceId: schema.projectTable.workspaceId })
+          .from(schema.taskRecurrenceTable)
+          .innerJoin(
+            schema.projectTable,
+            eq(schema.taskRecurrenceTable.projectId, schema.projectTable.id),
+          )
+          .where(eq(schema.taskRecurrenceTable.id, id))
+          .limit(1);
+        return row?.workspaceId || null;
+      }
+
+      case "cycle": {
+        const [cycle] = await db
+          .select({ workspaceId: schema.projectTable.workspaceId })
+          .from(schema.cycleTable)
+          .innerJoin(
+            schema.projectTable,
+            eq(schema.cycleTable.projectId, schema.projectTable.id),
+          )
+          .where(eq(schema.cycleTable.id, id))
+          .limit(1);
+        return cycle?.workspaceId || null;
+      }
+
+      case "epic": {
+        const [epic] = await db
+          .select({ workspaceId: schema.projectTable.workspaceId })
+          .from(schema.epicTable)
+          .innerJoin(
+            schema.projectTable,
+            eq(schema.epicTable.projectId, schema.projectTable.id),
+          )
+          .where(eq(schema.epicTable.id, id))
+          .limit(1);
+        return epic?.workspaceId || null;
       }
 
       case "label": {
@@ -312,6 +445,42 @@ export const workspaceAccess = {
       sources: [{ type: "lookupMany", resource: "task", idKey }],
     }),
 
+  fromView: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [{ type: "lookup", resource: "view", idKey }],
+    }),
+
+  fromDashboard: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [
+        { type: "lookup", resource: "dashboard", idKey },
+        { type: "query", key: "workspaceId" },
+      ],
+    }),
+
+  fromDashboardWidget: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [{ type: "lookup", resource: "dashboardWidget", idKey }],
+    }),
+
+  fromGoal: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [
+        { type: "lookup", resource: "goal", idKey },
+        { type: "query", key: "workspaceId" },
+      ],
+    }),
+
+  fromGoalTarget: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [{ type: "lookup", resource: "goalTarget", idKey }],
+    }),
+
+  fromFieldDefinition: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [{ type: "lookup", resource: "fieldDefinition", idKey }],
+    }),
+
   fromLabel: (idKey = "id") =>
     workspaceAccessMiddleware({
       sources: [
@@ -356,6 +525,38 @@ export const workspaceAccess = {
     workspaceAccessMiddleware({
       sources: [
         { type: "lookup", resource: "workflowRule", idKey },
+        { type: "query", key: "workspaceId" },
+      ],
+    }),
+
+  fromTemplate: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [
+        { type: "lookup", resource: "template", idKey },
+        { type: "query", key: "workspaceId" },
+      ],
+    }),
+
+  fromRecurrence: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [
+        { type: "lookup", resource: "recurrence", idKey },
+        { type: "query", key: "workspaceId" },
+      ],
+    }),
+
+  fromCycle: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [
+        { type: "lookup", resource: "cycle", idKey },
+        { type: "query", key: "workspaceId" },
+      ],
+    }),
+
+  fromEpic: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [
+        { type: "lookup", resource: "epic", idKey },
         { type: "query", key: "workspaceId" },
       ],
     }),

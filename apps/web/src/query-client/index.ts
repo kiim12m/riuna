@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/react";
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
+import { isClientError } from "@/lib/http-error";
 
 // TanStack raises these before any fetcher-level message exists; CORS rejections
 // from the browser also surface here. Used both to skip auto-retry and to tag
@@ -63,8 +64,13 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       refetchOnMount: false,
+      // Un 4xx no se reintenta: el servidor ya ha dicho que la peticion esta
+      // mal y va a decir lo mismo las tres veces. Reintentarlo solo retrasa
+      // que el error llegue a quien lo esta mirando.
       retry: (failureCount, error) =>
-        isNetworkError(error) ? false : failureCount < 2,
+        isNetworkError(error) || isClientError(error)
+          ? false
+          : failureCount < 2,
     },
     mutations: {
       retry: false,

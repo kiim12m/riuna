@@ -21,20 +21,20 @@ function AttachmentCardView({ node }: NodeViewProps) {
   const size = Number(node.attrs.size || 0);
 
   return (
-    <NodeViewWrapper as="span" className="kaneo-attachment-node">
+    <NodeViewWrapper as="span" className="riuna-attachment-node">
       <a
         href={url || undefined}
         target="_blank"
         rel="noopener noreferrer"
-        className="kaneo-attachment-card"
+        className="riuna-attachment-card"
         title={filename}
       >
-        <span className="kaneo-attachment-card-icon">
+        <span className="riuna-attachment-card-icon">
           <FileText className="size-4" />
         </span>
-        <span className="kaneo-attachment-card-content">
-          <span className="kaneo-attachment-card-title">{filename}</span>
-          <span className="kaneo-attachment-card-meta">
+        <span className="riuna-attachment-card-content">
+          <span className="riuna-attachment-card-title">{filename}</span>
+          <span className="riuna-attachment-card-meta">
             {formatBytes(size)}
             {mimeType ? ` · ${mimeType}` : ""}
           </span>
@@ -62,14 +62,17 @@ export const AttachmentCard = Node.create({
 
   parseHTML() {
     return [
-      { tag: "kaneo-attachment[url]" },
+      { tag: "riuna-attachment[url]" },
       { tag: "span[data-type='attachment-card'][data-url]" },
+      // Descriptions/comments written before the Kaneo->Riuna rename still
+      // contain the old tag name; keep parsing it so old content renders.
+      { tag: "kaneo-attachment[url]" },
     ];
   },
 
   renderHTML({ HTMLAttributes }) {
     return [
-      "kaneo-attachment",
+      "riuna-attachment",
       mergeAttributes(HTMLAttributes, {
         "data-type": "attachment-card",
         "data-url": HTMLAttributes.url,
@@ -104,6 +107,6 @@ export const AttachmentCard = Node.create({
 
     if (!url) return "";
 
-    return `\n<kaneo-attachment url="${escapeHtml(url)}" filename="${escapeHtml(filename)}" mime-type="${escapeHtml(mimeType)}" size="${size}" />\n`;
+    return `\n<riuna-attachment url="${escapeHtml(url)}" filename="${escapeHtml(filename)}" mime-type="${escapeHtml(mimeType)}" size="${size}" />\n`;
   },
 });

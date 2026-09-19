@@ -13,6 +13,7 @@ import getProjectsCtrl from "./controllers/get-projects";
 import reorderProjectsCtrl from "./controllers/reorder-projects";
 import unarchiveProjectCtrl from "./controllers/unarchive-project";
 import updateProjectCtrl from "./controllers/update-project";
+import updateProjectTreeSettings from "./controllers/update-project-tree-settings";
 
 const project = new Hono<{
   Variables: {
@@ -194,6 +195,43 @@ const project = new Hono<{
         workspaceId,
       );
       return c.json(updatedProject);
+    },
+  )
+  .patch(
+    "/:id/tree-settings",
+    describeRoute({
+      operationId: "updateProjectTreeSettings",
+      tags: ["Projects"],
+      description:
+        "Update how the task tree behaves in this project: whether closing or archiving cascades down the branch, and how deep the tree may go.",
+      responses: {
+        200: {
+          description: "Project tree settings updated successfully",
+          content: {
+            "application/json": { schema: resolver(projectSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator(
+      "json",
+      v.object({
+        cascadeClose: v.optional(v.boolean()),
+        cascadeArchive: v.optional(v.boolean()),
+        maxTaskDepth: v.optional(
+          v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(10)),
+        ),
+      }),
+    ),
+    workspaceAccess.fromProject(),
+    requireWorkspacePermission({ project: ["update"] }),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const body = c.req.valid("json");
+      return c.json(
+        await updateProjectTreeSettings({ projectId: id, ...body }),
+      );
     },
   )
   .delete(

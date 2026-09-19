@@ -17,6 +17,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { produce } from "immer";
 import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useUpdateTask } from "@/hooks/mutations/task/use-update-task";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import useBulkSelectionStore from "@/store/bulk-selection";
@@ -192,23 +193,23 @@ function KanbanBoard({ project, disableDragDrop = false }: KanbanBoardProps) {
       <div className="flex h-full w-full flex-col bg-linear-to-b from-muted/25 to-background">
         <header className="mb-6 mt-6 space-y-6 shrink-0 px-6">
           <div className="flex items-center justify-between">
-            <div className="w-48 h-8 bg-muted/50 rounded-md animate-pulse" />
+            <Skeleton className="w-48 h-8 rounded-md" />
           </div>
         </header>
 
         <div className="relative min-h-0 flex-1">
-          <div className="flex h-full flex-1 gap-4 overflow-x-auto px-4 pb-4 md:px-5">
+          <div className="flex h-full flex-1 gap-3 overflow-x-auto px-2 pb-4 md:px-3">
             {[...Array(4)].map((_, i) => (
               <div
                 key={`kanban-column-skeleton-${
                   // biome-ignore lint/suspicious/noArrayIndexKey: It's a skeleton
                   i
                 }`}
-                className="h-full min-w-80 w-full flex-1 rounded-xl border border-border/70 bg-card"
+                className="h-full min-w-56 w-full flex-1 rounded-xl border border-border/70 bg-card"
               >
                 <div className="px-4 py-3 flex items-center justify-between">
-                  <div className="w-24 h-5 bg-muted/50 rounded animate-pulse" />
-                  <div className="w-8 h-5 bg-muted/50 rounded animate-pulse" />
+                  <Skeleton className="w-24 h-5" />
+                  <Skeleton className="w-8 h-5" />
                 </div>
 
                 <div className="px-2 pb-4 flex flex-col gap-3 flex-1">
@@ -218,11 +219,11 @@ function KanbanBoard({ project, disableDragDrop = false }: KanbanBoardProps) {
                         // biome-ignore lint/suspicious/noArrayIndexKey: It's a skeleton
                         j
                       }`}
-                      className="p-4 bg-card rounded-lg border border-border/50 animate-pulse"
+                      className="p-4 bg-card rounded-lg border border-border/50"
                     >
                       <div className="space-y-3">
-                        <div className="w-2/3 h-4 bg-muted/70 rounded" />
-                        <div className="w-1/2 h-3 bg-muted/70 rounded" />
+                        <Skeleton className="w-2/3 h-4" />
+                        <Skeleton className="w-1/2 h-3" />
                       </div>
                     </div>
                   ))}
@@ -250,12 +251,9 @@ function KanbanBoard({ project, disableDragDrop = false }: KanbanBoardProps) {
     >
       <div className="flex h-full w-full flex-col bg-linear-to-b from-muted/20 to-background">
         <div className="min-h-0 flex-1 overflow-x-auto [-webkit-overflow-scrolling:touch]">
-          <div className="flex h-full min-w-max gap-4 px-4 py-4 md:px-5">
+          <div className="flex h-full w-full gap-3 px-2 py-4 md:px-3">
             {project.columns?.map((column) => (
-              <div
-                key={column.id}
-                className="h-full max-w-96 min-w-80 shrink-0 flex-1"
-              >
+              <div key={column.id} className="h-full min-w-56 max-w-96 flex-1">
                 <Column column={column} disableDragDrop={disableDragDrop} />
               </div>
             ))}

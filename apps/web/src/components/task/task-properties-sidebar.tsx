@@ -6,6 +6,7 @@ import {
   Copy,
   GitBranch,
   Plus,
+  Users,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -40,12 +41,16 @@ import { getPriorityLabel, getStatusDisplayLabel } from "@/lib/i18n/domain";
 import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
 import TaskAssigneePopover from "./task-assignee-popover";
+import TaskCustomFields from "./task-custom-fields";
+import TaskCyclePopover, { TaskCycleTrigger } from "./task-cycle-popover";
 import TaskDueDatePopover from "./task-due-date-popover";
+import TaskEpicsPopover, { TaskEpicsTrigger } from "./task-epics-popover";
 import TaskLabelsPopover from "./task-labels-popover";
 import TaskMovePopover from "./task-move-popover";
 import TaskPriorityPopover from "./task-priority-popover";
 import TaskStartDatePopover from "./task-start-date-popover";
 import TaskStatusPopover from "./task-status-popover";
+import TaskTeamPopover from "./task-team-popover";
 
 function slugify(text: string | undefined): string {
   if (!text) return "";
@@ -116,6 +121,18 @@ export default function TaskPropertiesSidebar({
   const assignee = workspaceUsers?.members?.find(
     (member) => member.userId === task?.userId,
   );
+
+  // Con varios asignados el nombre del principal se queda corto, asi que la
+  // etiqueta pasa a contarlos. El avatar sigue siendo el del principal.
+  const assigneeCount = task?.assignees?.length ?? (task?.userId ? 1 : 0);
+  const assigneeLabel =
+    assigneeCount > 1
+      ? // `total` y no `count`: pasar `count` activaria la resolucion de
+        // plurales de i18next y buscaria claves que no existen.
+        t("tasks:popover.assignee.multiple", { total: assigneeCount })
+      : assignee?.user?.name ||
+        task?.assigneeName ||
+        t("tasks:popover.assignee.unassigned");
 
   const handleCopyTaskLink = () => {
     navigator.clipboard.writeText(
@@ -240,7 +257,7 @@ export default function TaskPropertiesSidebar({
                           src={assignee?.user?.image ?? ""}
                           alt={assignee?.user?.name || ""}
                         />
-                        <AvatarFallback className="text-[9px] font-medium border border-border/30 flex-shrink-0 h-[16px] w-[16px]">
+                        <AvatarFallback className="text-label font-medium border border-border/30 flex-shrink-0 h-[16px] w-[16px]">
                           {getInitials(
                             assignee?.user?.name || task.assigneeName,
                           )}
@@ -251,16 +268,45 @@ export default function TaskPropertiesSidebar({
                         className="w-[16px] h-[16px] rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0"
                         title={t("tasks:popover.assignee.unassigned")}
                       >
-                        <span className="text-[8px] font-medium">?</span>
+                        <span className="text-label font-medium">?</span>
                       </div>
                     )}
                     <span className="text-xs font-semibold truncate max-w-[100px]">
-                      {assignee?.user?.name ||
-                        task.assigneeName ||
-                        t("tasks:popover.assignee.unassigned")}
+                      {assigneeLabel}
                     </span>
                   </Button>
                 </TaskAssigneePopover>
+              )}
+              {task && (
+                <TaskTeamPopover task={task} workspaceId={workspaceId}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="justify-start h-7 px-1.5 gap-1.5"
+                  >
+                    <div className="w-[16px] h-[16px] rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0">
+                      <Users className="w-2.5 h-2.5 text-muted-foreground" />
+                    </div>
+                    <span className="text-xs font-semibold truncate max-w-[100px]">
+                      {task.teamName || t("tasks:popover.team.unassigned")}
+                    </span>
+                  </Button>
+                </TaskTeamPopover>
+              )}
+              {task && (
+                <>
+                  <TaskCyclePopover task={task} projectId={projectId}>
+                    <TaskCycleTrigger task={task} projectId={projectId} />
+                  </TaskCyclePopover>
+                  <TaskEpicsPopover task={task} projectId={projectId}>
+                    <TaskEpicsTrigger task={task} />
+                  </TaskEpicsPopover>
+                  <TaskCustomFields
+                    task={task}
+                    projectId={projectId}
+                    workspaceId={workspaceId}
+                  />
+                </>
               )}
               {task && (
                 <TaskStartDatePopover task={task}>
@@ -431,7 +477,7 @@ export default function TaskPropertiesSidebar({
                             src={assignee?.user?.image ?? ""}
                             alt={assignee?.user?.name || ""}
                           />
-                          <AvatarFallback className="text-[9px] font-medium border border-border/30 shrink-0 h-[16px] w-[16px]">
+                          <AvatarFallback className="text-label font-medium border border-border/30 shrink-0 h-[16px] w-[16px]">
                             {getInitials(
                               assignee?.user?.name || task.assigneeName,
                             )}
@@ -442,16 +488,45 @@ export default function TaskPropertiesSidebar({
                           className="w-[16px] h-[16px] rounded-full bg-muted border border-border flex items-center justify-center shrink-0"
                           title={t("tasks:popover.assignee.unassigned")}
                         >
-                          <span className="text-[8px] font-medium">?</span>
+                          <span className="text-label font-medium">?</span>
                         </div>
                       )}
                       <span className="text-xs font-semibold truncate max-w-[100px]">
-                        {assignee?.user?.name ||
-                          task.assigneeName ||
-                          t("tasks:popover.assignee.unassigned")}
+                        {assigneeLabel}
                       </span>
                     </Button>
                   </TaskAssigneePopover>
+                )}
+                {task && (
+                  <TaskTeamPopover task={task} workspaceId={workspaceId}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start h-7 px-1.5 gap-1.5"
+                    >
+                      <div className="w-[16px] h-[16px] rounded-full bg-muted border border-border flex items-center justify-center shrink-0">
+                        <Users className="w-2.5 h-2.5 text-muted-foreground" />
+                      </div>
+                      <span className="text-xs font-semibold truncate max-w-[100px]">
+                        {task.teamName || t("tasks:popover.team.unassigned")}
+                      </span>
+                    </Button>
+                  </TaskTeamPopover>
+                )}
+                {task && (
+                  <>
+                    <TaskCyclePopover task={task} projectId={projectId}>
+                      <TaskCycleTrigger task={task} projectId={projectId} />
+                    </TaskCyclePopover>
+                    <TaskEpicsPopover task={task} projectId={projectId}>
+                      <TaskEpicsTrigger task={task} />
+                    </TaskEpicsPopover>
+                    <TaskCustomFields
+                      task={task}
+                      projectId={projectId}
+                      workspaceId={workspaceId}
+                    />
+                  </>
                 )}
                 {task && (
                   <TaskStartDatePopover task={task}>
@@ -624,7 +699,7 @@ export default function TaskPropertiesSidebar({
                             src={assignee?.user?.image ?? ""}
                             alt={assignee?.user?.name || ""}
                           />
-                          <AvatarFallback className="text-[9px] font-medium border border-border/30 shrink-0 h-[16px] w-[16px]">
+                          <AvatarFallback className="text-label font-medium border border-border/30 shrink-0 h-[16px] w-[16px]">
                             {getInitials(
                               assignee?.user?.name || task.assigneeName,
                             )}
@@ -635,16 +710,45 @@ export default function TaskPropertiesSidebar({
                           className="w-[16px] h-[16px] rounded-full bg-muted border border-border flex items-center justify-center shrink-0"
                           title={t("tasks:popover.assignee.unassigned")}
                         >
-                          <span className="text-[8px] font-medium">?</span>
+                          <span className="text-label font-medium">?</span>
                         </div>
                       )}
                       <span className="text-xs font-semibold truncate max-w-[100px]">
-                        {assignee?.user?.name ||
-                          task.assigneeName ||
-                          t("tasks:popover.assignee.unassigned")}
+                        {assigneeLabel}
                       </span>
                     </Button>
                   </TaskAssigneePopover>
+                )}
+                {task && (
+                  <TaskTeamPopover task={task} workspaceId={workspaceId}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start h-7 px-1.5 gap-1.5"
+                    >
+                      <div className="w-[16px] h-[16px] rounded-full bg-muted border border-border flex items-center justify-center shrink-0">
+                        <Users className="w-2.5 h-2.5 text-muted-foreground" />
+                      </div>
+                      <span className="text-xs font-semibold truncate max-w-[100px]">
+                        {task.teamName || t("tasks:popover.team.unassigned")}
+                      </span>
+                    </Button>
+                  </TaskTeamPopover>
+                )}
+                {task && (
+                  <>
+                    <TaskCyclePopover task={task} projectId={projectId}>
+                      <TaskCycleTrigger task={task} projectId={projectId} />
+                    </TaskCyclePopover>
+                    <TaskEpicsPopover task={task} projectId={projectId}>
+                      <TaskEpicsTrigger task={task} />
+                    </TaskEpicsPopover>
+                    <TaskCustomFields
+                      task={task}
+                      projectId={projectId}
+                      workspaceId={workspaceId}
+                    />
+                  </>
                 )}
                 {task && (
                   <TaskStartDatePopover task={task}>
@@ -731,7 +835,7 @@ export default function TaskPropertiesSidebar({
                     >
                       <Badge
                         variant="outline"
-                        className="flex items-center gap-1 px-1.5 py-0.5 cursor-pointer hover:bg-accent/50 transition-colors text-[10px]"
+                        className="flex items-center gap-1 px-1.5 py-0.5 cursor-pointer hover:bg-accent/50 transition-colors text-label"
                       >
                         <span
                           className="w-1.5 h-1.5 rounded-full flex-shrink-0"

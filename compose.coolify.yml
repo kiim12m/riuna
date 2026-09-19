@@ -1,50 +1,49 @@
-# Kaneo on Coolify
+# Riuna on Coolify
 #
 # Deploy this stack from a Git source with Coolify's "Docker Compose" build pack:
-#   Public Repository -> https://github.com/usekaneo/kaneo
 #   Build Pack: Docker Compose | Base Directory: / | Compose Location: compose.coolify.yml
 #
-# Assign a domain to the "kaneo" service using its container port, e.g. https://kaneo.example.com:5173
+# Assign a domain to the "riuna" service using its container port, e.g. https://riuna.example.com:5173
 # (visitors use the normal HTTPS URL; the port only tells Coolify where to route traffic).
 #
-# The only required environment variable is KANEO_CLIENT_URL (your public URL, without :5173).
+# The only required environment variable is RIUNA_CLIENT_URL (your public URL, without :5173).
 # AUTH_SECRET and the PostgreSQL password are auto-generated via Coolify magic variables.
-# Do NOT set KANEO_API_URL — the entrypoint derives it from KANEO_CLIENT_URL (public URL + /api).
-# The Kaneo image tracks the latest release by default. Set KANEO_IMAGE_TAG to a
+# Do NOT set RIUNA_API_URL — the entrypoint derives it from RIUNA_CLIENT_URL (public URL + /api).
+# The Riuna image tracks the latest release by default. Set RIUNA_IMAGE_TAG to a
 # release tag to hold a deployment on a known version.
 
 services:
   postgres:
     image: postgres:16-alpine
     environment:
-      - POSTGRES_DB=kaneo
-      - POSTGRES_USER=kaneo
+      - POSTGRES_DB=riuna
+      - POSTGRES_USER=riuna
       - POSTGRES_PASSWORD=${SERVICE_PASSWORD_POSTGRES:?}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kaneo -d kaneo"]
+      test: ["CMD-SHELL", "pg_isready -U riuna -d riuna"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  kaneo:
+  riuna:
     # Tracks the latest release. The API runs database migrations on startup, so
-    # set KANEO_IMAGE_TAG to a release tag if a redeploy should stay on a known
+    # set RIUNA_IMAGE_TAG to a release tag if a redeploy should stay on a known
     # version rather than pick up whatever is newest.
-    image: ghcr.io/usekaneo/kaneo:${KANEO_IMAGE_TAG:-latest}
+    image: ghcr.io/kiim12m/riuna:${RIUNA_IMAGE_TAG:-latest}
     environment:
-      - KANEO_CLIENT_URL=${KANEO_CLIENT_URL:?}
-      - AUTH_SECRET=${SERVICE_HEX_64_KANEO:?}
+      - RIUNA_CLIENT_URL=${RIUNA_CLIENT_URL:?}
+      - AUTH_SECRET=${SERVICE_HEX_64_RIUNA:?}
       # The image derives DATABASE_URL from these POSTGRES_* variables at startup.
       # POSTGRES_PASSWORD is the same generated value shared with the postgres service.
       - POSTGRES_HOST=postgres
-      - POSTGRES_DB=kaneo
-      - POSTGRES_USER=kaneo
+      - POSTGRES_DB=riuna
+      - POSTGRES_USER=riuna
       - POSTGRES_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
       # Optional: SMTP_*, SSO providers, GitHub integration, Sentry, Redis...
-      # add them here or in the Coolify UI for the kaneo service.
+      # add them here or in the Coolify UI for the riuna service.
     depends_on:
       postgres:
         condition: service_healthy

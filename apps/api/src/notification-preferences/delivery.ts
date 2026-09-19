@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto";
-import { sendNotificationEmail } from "@kaneo/email";
+import { sendNotificationEmail } from "@riuna/email";
 import { and, eq } from "drizzle-orm";
 import db from "../database";
 import {
@@ -12,6 +12,7 @@ import {
   workspaceTable,
 } from "../database/schema";
 import { assertPublicWebhookDestination } from "../plugins/generic-webhook/config";
+import { isLocalAccountEmail } from "../utils/local-account";
 import { decryptSecret } from "./secrets";
 
 const DEFAULT_OUTBOUND_FETCH_TIMEOUT_MS = 15_000;
@@ -47,7 +48,7 @@ type DeliveryContent = {
 };
 
 function buildTaskUrl(workspaceId: string, projectId: string, taskId: string) {
-  const clientUrl = process.env.KANEO_CLIENT_URL || "http://localhost:5173";
+  const clientUrl = process.env.RIUNA_CLIENT_URL || "http://localhost:5173";
   return `${clientUrl}/dashboard/workspace/${workspaceId}/project/${projectId}/task/${taskId}`;
 }
 
@@ -100,7 +101,7 @@ function buildDeliveryContent(notification: {
         title: "New task created",
         body: taskTitle
           ? `A new task was created: ${taskTitle}`
-          : "A new task was created in Kaneo.",
+          : "A new task was created in Riuna.",
       };
     }
     case "workspace_created": {
@@ -112,7 +113,7 @@ function buildDeliveryContent(notification: {
         title: "Workspace created",
         body: workspaceName
           ? `Workspace created: ${workspaceName}`
-          : "A new workspace was created in Kaneo.",
+          : "A new workspace was created in Riuna.",
       };
     }
     case "task_status_changed": {
@@ -124,7 +125,7 @@ function buildDeliveryContent(notification: {
         body:
           taskTitle && oldStatus && newStatus
             ? `${taskTitle} moved from ${oldStatus} to ${newStatus}.`
-            : "A task status changed in Kaneo.",
+            : "A task status changed in Riuna.",
       };
     }
     case "task_assignee_changed": {
@@ -133,7 +134,7 @@ function buildDeliveryContent(notification: {
         title: "Task assigned to you",
         body: taskTitle
           ? `You were assigned to ${taskTitle}.`
-          : "A task was assigned to you in Kaneo.",
+          : "A task was assigned to you in Riuna.",
       };
     }
     case "time_entry_created": {
@@ -142,7 +143,7 @@ function buildDeliveryContent(notification: {
         title: "Time entry created",
         body: taskTitle
           ? `A time entry was created for ${taskTitle}.`
-          : "A time entry was created in Kaneo.",
+          : "A time entry was created in Riuna.",
       };
     }
     case "due_date_reminder": {
@@ -178,7 +179,7 @@ function buildDeliveryContent(notification: {
           : "You were mentioned",
         body: taskTitle
           ? `You were mentioned in ${taskTitle}.`
-          : "You were mentioned in a Kaneo task.",
+          : "You were mentioned in a Riuna task.",
       };
     }
     case "task_comment": {
@@ -193,13 +194,13 @@ function buildDeliveryContent(notification: {
           : "New task comment",
         body: taskTitle
           ? `A new comment was added to ${taskTitle}.`
-          : "A new comment was added to a Kaneo task.",
+          : "A new comment was added to a Riuna task.",
       };
     }
     default:
       return {
-        title: notification.title ?? "New Kaneo notification",
-        body: notification.content ?? "You have a new notification in Kaneo.",
+        title: notification.title ?? "New Riuna notification",
+        body: notification.content ?? "You have a new notification in Riuna.",
       };
   }
 }
@@ -363,7 +364,7 @@ async function sendWebhookNotification(input: {
   };
 
   if (input.secret) {
-    headers["X-Kaneo-Signature"] = createHmac("sha256", input.secret)
+    headers["X-Riuna-Signature"] = createHmac("sha256", input.secret)
       .update(body)
       .digest("hex");
   }
@@ -505,13 +506,20 @@ export async function deliverNotification(
 
   const deliveries: Array<Promise<void>> = [];
 
-  if (decryptedPreference.emailEnabled && rule.emailEnabled && user.email) {
+  // Una cuenta local no tiene correo real, solo el sintetico que exige la
+  // columna: intentar la entrega solo produciria rebotes.
+  if (
+    decryptedPreference.emailEnabled &&
+    rule.emailEnabled &&
+    user.email &&
+    !isLocalAccountEmail(user.email)
+  ) {
     deliveries.push(
       sendNotificationEmail(user.email, content.title, {
         title: content.title,
         message: content.body,
         actionUrl: context.taskUrl,
-        actionLabel: context.taskUrl ? "Open in Kaneo" : undefined,
+        actionLabel: context.taskUrl ? "Open in Riuna" : undefined,
         locale: user.locale ?? null,
       }).then(() => undefined),
     );

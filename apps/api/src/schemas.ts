@@ -20,6 +20,9 @@ export const projectSchema = v.object({
   isPublic: v.nullable(v.boolean()),
   archivedAt: v.nullable(v.date()),
   position: v.number(),
+  cascadeClose: v.boolean(),
+  cascadeArchive: v.boolean(),
+  maxTaskDepth: v.number(),
 });
 
 export const taskSchema = v.object({
@@ -40,6 +43,7 @@ export const taskSchema = v.object({
   ] as const),
   startDate: v.optional(v.date()),
   dueDate: v.optional(v.date()),
+  customFields: v.record(v.string(), v.unknown()),
   createdAt: v.date(),
 });
 
@@ -278,4 +282,5 @@ export const configSchema = v.object({
   customOAuthAutoLogin: v.nullable(v.boolean()),
   customOAuthLogoutUrl: v.nullable(v.string()),
   billingEnabled: v.boolean(),
+  localAccountDomain: v.string(),
 });

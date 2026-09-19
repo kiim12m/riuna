@@ -1,11 +1,17 @@
 # Sentry
 
-This directory holds Sentry configuration as code, so the alert rules and dashboards that Kaneo depends on are version-controlled and reproducible.
+> **Prepared but inactive.** The names already point at the `riuna`
+> organization and the `riuna-api` / `riuna-web` projects, but Riuna sends
+> nothing to Sentry: `SENTRY_DSN` is empty, and both the API and the web skip
+> initialization without a DSN. Turning it on means creating that
+> organization, importing these files, and filling in the DSN.
+
+This directory holds Sentry configuration as code, so the alert rules and dashboards that Riuna depends on are version-controlled and reproducible.
 
 ## Contents
 
-- `alerts.json` — alert rules. Six rules cover first-seen issues, error spikes, missed cron check-ins, slow p95 latency, and MCP error rate. Both `kaneo-api` and `kaneo-web` are covered.
-- `dashboards.json` — four Kaneo-specific dashboards (Backend, Frontend, MCP, Cron Monitors) with widgets for the metrics above. The prebuilt Sentry templates are left untouched.
+- `alerts.json` — alert rules. Six rules cover first-seen issues, error spikes, missed cron check-ins, slow p95 latency, and MCP error rate. Both `riuna-api` and `riuna-web` are covered.
+- `dashboards.json` — four Riuna-specific dashboards (Backend, Frontend, MCP, Cron Monitors) with widgets for the metrics above. The prebuilt Sentry templates are left untouched.
 
 ## What's NOT here yet
 
@@ -29,7 +35,7 @@ SENTRY_API_TOKEN=sntrys_... ./scripts/provision-sentry-alerts.sh
 SENTRY_API_TOKEN=sntrys_... ./scripts/provision-sentry-alerts.sh --dry-run
 ```
 
-The script targets the EU region (`https://de.sentry.io`). If Kaneo ever moves to the US region, change the `region` field in `alerts.json` (or override `SENTRY_API_BASE`).
+The script targets the EU region (`https://de.sentry.io`). If Riuna ever moves to the US region, change the `region` field in `alerts.json` (or override `SENTRY_API_BASE`).
 
 If you rename an alert in `alerts.json`, the old name stays in Sentry alongside the new one. Rename alerts only when you intend to delete the old one manually.
 
@@ -65,7 +71,7 @@ SENTRY_API_TOKEN=sntrys_... ./scripts/provision-sentry-dashboards.sh
 SENTRY_API_TOKEN=sntrys_... ./scripts/provision-sentry-dashboards.sh --dry-run
 ```
 
-The prebuilt Sentry dashboards (Backend Overview, Frontend Overview, etc.) are **not** touched. Kaneo-specific dashboards are created with the `Kaneo:` prefix.
+The prebuilt Sentry dashboards (Backend Overview, Frontend Overview, etc.) are **not** touched. Riuna-specific dashboards are created with the `Riuna:` prefix.
 
 ## Schema notes
 
@@ -87,7 +93,7 @@ Each dashboard entry has:
   - `fields` — columns to display
   - `aggregates` — aggregate functions to compute (e.g., `count()`, `p95(transaction.duration)`)
   - `columns` — group-by fields
-  - `query` — Sentry search filter (e.g., `event.type:error project:kaneo-api`)
+  - `query` — Sentry search filter (e.g., `event.type:error project:riuna-api`)
   - `orderby` — sort field (e.g., `-count()`)
   - `limit` — required on every query; max is 10. The script uses 10 for all queries.
 

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import getGitHubAppInfo from "@/fetchers/github-integration/get-app-info";
 import listRepositories, {
   type ListRepositoriesResponse,
@@ -151,13 +152,13 @@ export function RepositoryBrowserModal({
               {[0, 1, 2, 3, 4].map((slot) => (
                 <div
                   key={`loading-skeleton-repo-${slot}`}
-                  className="p-4 border border-border rounded-md bg-sidebar animate-pulse"
+                  className="p-4 border border-border rounded-md bg-sidebar"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-muted rounded-full" />
+                    <Skeleton className="w-8 h-8 rounded-full" />
                     <div className="flex-1">
-                      <div className="w-48 h-4 bg-muted rounded mb-2" />
-                      <div className="w-32 h-3 bg-muted rounded" />
+                      <Skeleton className="w-48 h-4 mb-2" />
+                      <Skeleton className="w-32 h-3" />
                     </div>
                   </div>
                 </div>
