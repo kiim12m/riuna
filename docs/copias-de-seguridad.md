@@ -22,14 +22,23 @@ ficheros van a `./backups` del host (ignorado por git) como
 |---|---|---|
 | `BACKUP_INTERVAL_HOURS` | 24 | Horas entre copias |
 | `BACKUP_RETENTION_DAYS` | 14 | Días que se conservan antes de purgar |
+| `BACKUP_KEEP_MIN` | 3 | Copias más recientes que no se purgan nunca, tengan la edad que tengan |
 
-Dos detalles que evitan los fallos clásicos:
+Los detalles que evitan los fallos clásicos:
 
-- El volcado se escribe como `.partial` y solo se renombra al terminar. Un
-  contenedor detenido a media copia deja basura evidente, no un fichero
-  truncado que aparenta estar bien.
-- La purga se ejecuta **después** de una copia correcta. Si el volcado falla,
-  el script corta antes y nunca borra la última copia buena.
+- **Espera a Postgres** con `pg_isready` antes de volcar. Al reiniciarse Docker,
+  el servicio `backup` y Postgres arrancan a la vez y `depends_on` no espera:
+  hasta septiembre de 2026 eso dejaba volcados vacíos.
+- **Un volcado fallido no deja fichero.** `pipefail` hace que el fallo de
+  `pg_dump` cuente aunque `gzip` termine bien, y antes de dar la copia por
+  buena se comprueba que descomprime y que acaba con la línea final de
+  `pg_dump` («PostgreSQL database dump complete»).
+- El volcado se escribe como `.partial` y solo se renombra cuando ha pasado esa
+  comprobación. Un contenedor detenido a media copia deja basura evidente, no
+  un fichero truncado que aparenta estar bien.
+- La purga se ejecuta **después** de una copia comprobada, y aun así conserva
+  siempre las `BACKUP_KEEP_MIN` más recientes: si las copias fallaran varios
+  días seguidos, purgar solo por edad acabaría dejando el directorio vacío.
 
 ## Probar una restauración (hazlo cada pocos meses)
 
@@ -67,6 +76,14 @@ docker compose -f compose.local.yml exec backup sh -c 'sh /scripts/restore.sh /b
 
 Para la API en marcha antes de hacerlo, o mantendrá conexiones abiertas contra
 una base que está siendo recreada.
+
+La restauración no toca la base de destino hasta el final:
+
+1. Comprueba el fichero (que descomprime y que el volcado está completo). Si no
+   pasa, sale sin haber borrado nada.
+2. Carga el volcado en una base aparte, `<destino>__restoring`. Si la carga
+   falla, la borra y la base de destino sigue como estaba.
+3. Solo entonces borra la base de destino y renombra la nueva en su lugar.
 
 ## Lo que esto no cubre
 
