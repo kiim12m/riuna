@@ -2,14 +2,16 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
+import { useReducedMotion } from "framer-motion";
 import {
   Calendar,
   CalendarClock,
   CalendarX,
+  ChevronRight,
   GitMerge,
   GitPullRequest,
 } from "lucide-react";
-import { type CSSProperties, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertDialog,
@@ -31,6 +33,7 @@ import { useDeleteTask } from "@/hooks/mutations/task/use-delete-task";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { cn } from "@/lib/cn";
+import { getColumnIcon } from "@/lib/column";
 import {
   dueDateStatusColors,
   getDueDateStatus,
@@ -42,18 +45,41 @@ import { toast } from "@/lib/toast";
 import queryClient from "@/query-client";
 import useBulkSelectionStore from "@/store/bulk-selection";
 import useProjectStore from "@/store/project";
+import useRealtimeHighlightStore from "@/store/realtime-highlight";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import type Task from "@/types/task";
 import TaskCardContextMenuContent from "../kanban-board/task-card-context-menu/task-card-context-menu-content";
 import { TaskLabels } from "../kanban-board/task-labels";
+import SubtaskBadge from "../task/subtask-badge";
 import { ContextMenu, ContextMenuTrigger } from "../ui/context-menu";
 
 type TaskRowProps = {
   task: Task;
   projectSlug: string;
+  // Solo llega cuando la lista no esta agrupada por estado: entonces la
+  // seccion ya no lo dice y la fila tiene que llevarlo.
+  statusColumn?: {
+    id: string;
+    name: string;
+    isFinal?: boolean | null;
+    icon?: string | null;
+  };
+  // Solo llega en el modo jerarquia: la sangria, el desplegable y si la fila
+  // es ahora mismo el destino de un arrastre.
+  tree?: {
+    depth: number;
+    hasChildren: boolean;
+    isCollapsed: boolean;
+    onToggle: () => void;
+    isNestTarget?: boolean;
+  };
 };
 
-function TaskRow({ task, projectSlug }: TaskRowProps) {
+// Cada nivel sangra lo justo para que la relacion se lea sin comerse el ancho
+// del titulo, que es lo que pasa cuando se sangra por tabulador entero.
+const TREE_INDENT_PX = 18;
+
+function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const {
@@ -80,6 +106,23 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
   const { toggleSelection, isSelected, isFocused } = useBulkSelectionStore();
   const isTaskSelected = isSelected(task.id);
   const isTaskFocused = isFocused(task.id);
+
+  // Resalte cuando otra persona cambia esta tarea (marca §06 principio 5).
+  const pulse = useRealtimeHighlightStore(
+    (state) => state.pulses[task.id] ?? 0,
+  );
+  const reduceMotion = useReducedMotion();
+  const [isFlashing, setIsFlashing] = useState(false);
+  useEffect(() => {
+    if (!pulse) return;
+    setIsFlashing(true);
+    const timeout = setTimeout(() => setIsFlashing(false), 900);
+    return () => clearTimeout(timeout);
+  }, [pulse]);
+  let flashClass = "";
+  if (isFlashing) {
+    flashClass = reduceMotion ? "riuna-flash-static" : "animate-flux";
+  }
 
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(
     workspace?.id ?? "",
@@ -187,6 +230,8 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
         isTaskSelected &&
           "bg-accent/60 shadow-sm ring-1 ring-inset ring-ring/30",
         isTaskFocused && "ring-2 ring-inset ring-ring/50",
+        tree?.isNestTarget && "bg-primary/10 ring-2 ring-inset ring-primary/40",
+        flashClass,
       )}
     >
       <ContextMenu>
@@ -199,9 +244,44 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
               "group relative flex items-center gap-3 px-4 py-1.5 transition-colors cursor-pointer",
               isTaskSelected ? "bg-accent/45" : "hover:bg-accent/60",
             )}
+            style={
+              tree
+                ? { paddingLeft: 16 + tree.depth * TREE_INDENT_PX }
+                : undefined
+            }
             {...attributes}
             {...listeners}
           >
+            {tree &&
+              (tree.hasChildren ? (
+                <button
+                  type="button"
+                  aria-label={
+                    tree.isCollapsed
+                      ? t("tasks:tree.expand")
+                      : t("tasks:tree.collapse")
+                  }
+                  aria-expanded={!tree.isCollapsed}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    tree.onToggle();
+                  }}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  className="flex-shrink-0 rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <ChevronRight
+                    className={cn(
+                      "h-3 w-3 transition-transform",
+                      !tree.isCollapsed && "rotate-90",
+                    )}
+                  />
+                </button>
+              ) : (
+                // Hueco del mismo ancho que el desplegable: sin el, las hojas
+                // y las ramas de un mismo nivel no quedarian alineadas.
+                <span className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+              ))}
+
             {showPriority && (
               <div className="flex-shrink-0 first:[&_svg]:h-4 first:[&_svg]:w-4">
                 {getPriorityIcon(task.priority ?? "")}
@@ -219,6 +299,7 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
                   {task.title}
                 </span>
                 <div className="flex items-center gap-1">
+                  <SubtaskBadge subtree={task.subtree} />
                   {showLabels && <TaskLabels labels={task.labels ?? []} />}
 
                   {pullRequests.length === 1 && (
@@ -230,7 +311,7 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
                             e.stopPropagation();
                             window.open(pullRequests[0].url, "_blank");
                           }}
-                          className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-[10px] font-medium text-muted-foreground"
+                          className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-label font-medium text-muted-foreground"
                         >
                           {getPRInfo(pullRequests[0]).icon}
                           <span>#{pullRequests[0].externalId}</span>
@@ -276,7 +357,7 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
                             <button
                               type="button"
                               onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-[10px] font-medium text-muted-foreground"
+                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-label font-medium text-muted-foreground"
                             >
                               <GitPullRequest
                                 className={`h-3 w-3 ${iconColor}`}
@@ -311,7 +392,7 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
                                     }
                                     className="w-full px-2 py-1.5 text-left hover:bg-muted/50 rounded transition-colors"
                                   >
-                                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                    <div className="flex items-center gap-1.5 text-label text-muted-foreground">
                                       {prInfo.icon}
                                       <span>
                                         {repoName}#{pr.externalId}
@@ -320,7 +401,7 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
                                     <p className="text-xs leading-tight line-clamp-2 mt-0.5">
                                       {pr.title || t("tasks:pr.label")}
                                     </p>
-                                    <span className="text-[10px] text-muted-foreground">
+                                    <span className="text-meta text-muted-foreground">
                                       {prInfo.status}
                                     </span>
                                   </button>
@@ -335,9 +416,20 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
               </div>
             </div>
 
+            {statusColumn && (
+              <div className="flex items-center gap-1 text-label text-muted-foreground flex-shrink-0 rounded border border-border/60 px-1.5 py-0.5 [&_svg]:h-3 [&_svg]:w-3">
+                {getColumnIcon(
+                  statusColumn.id,
+                  statusColumn.isFinal ?? undefined,
+                  statusColumn.icon,
+                )}
+                <span>{statusColumn.name}</span>
+              </div>
+            )}
+
             {showDueDates && task.dueDate && (
               <div
-                className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded flex-shrink-0 ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
+                className={`flex items-center gap-1 text-label px-2 py-1 rounded flex-shrink-0 ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
               >
                 {getDueDateStatus(task.dueDate, taskIsCompleted) ===
                   "overdue" && <CalendarX className="w-3 h-3" />}
@@ -368,7 +460,7 @@ function TaskRow({ task, projectSlug }: TaskRowProps) {
                     className="w-6 h-6 rounded-full bg-muted border border-border flex items-center justify-center"
                     title={t("tasks:assignee.unassigned")}
                   >
-                    <span className="text-[10px] font-medium text-muted-foreground">
+                    <span className="text-label font-medium text-muted-foreground">
                       ?
                     </span>
                   </div>

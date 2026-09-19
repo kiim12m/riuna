@@ -104,21 +104,17 @@ export default function TaskRelations({
     }
   }, [commandOpen]);
 
-  const nonSubtaskRelations = relations.filter(
-    (rel) => rel.relationType !== "subtask",
-  );
-
   const groupedRelations = useMemo(() => {
     const groups: Record<
       string,
       Array<{
         id: string;
         relationType: string;
-        task: NonNullable<(typeof nonSubtaskRelations)[number]["sourceTask"]>;
+        task: NonNullable<(typeof relations)[number]["sourceTask"]>;
       }>
     > = {};
 
-    for (const rel of nonSubtaskRelations) {
+    for (const rel of relations) {
       const isSource = rel.sourceTaskId === taskId;
       const linkedTask = isSource ? rel.targetTask : rel.sourceTask;
       if (!linkedTask) continue;
@@ -140,10 +136,10 @@ export default function TaskRelations({
     }
 
     return groups;
-  }, [nonSubtaskRelations, taskId]);
+  }, [relations, taskId]);
 
   const existingRelatedTaskIds = new Set(
-    nonSubtaskRelations.flatMap((rel) => [rel.sourceTaskId, rel.targetTaskId]),
+    relations.flatMap((rel) => [rel.sourceTaskId, rel.targetTaskId]),
   );
   existingRelatedTaskIds.add(taskId);
 
@@ -237,7 +233,7 @@ export default function TaskRelations({
   };
 
   const buildTaskObject = (item: {
-    task: NonNullable<(typeof nonSubtaskRelations)[number]["sourceTask"]>;
+    task: NonNullable<(typeof relations)[number]["sourceTask"]>;
   }): Task => ({
     id: item.task.id,
     title: item.task.title,
@@ -257,7 +253,7 @@ export default function TaskRelations({
     projectId: item.task.projectId,
   });
 
-  const totalCount = nonSubtaskRelations.length;
+  const totalCount = relations.length;
 
   return (
     <>
@@ -298,7 +294,7 @@ export default function TaskRelations({
         <CollapsibleContent>
           {Object.entries(groupedRelations).map(([type, items]) => (
             <div key={type} className="mt-1.5">
-              <span className="text-[11px] text-muted-foreground/70 px-2">
+              <span className="text-label text-muted-foreground/70 px-2">
                 {t(`tasks:relations.types.${type}`, {
                   defaultValue: type.replace(/_/g, " "),
                 })}
@@ -354,7 +350,7 @@ export default function TaskRelations({
                                     src={assignee?.user?.image ?? ""}
                                     alt={assignee?.user?.name || ""}
                                   />
-                                  <AvatarFallback className="text-[9px] font-medium border border-border/30">
+                                  <AvatarFallback className="text-label font-medium border border-border/30">
                                     {getInitials(assignee?.user?.name)}
                                   </AvatarFallback>
                                 </Avatar>
@@ -363,7 +359,7 @@ export default function TaskRelations({
                                   className="flex h-5 w-5 items-center justify-center rounded-full border border-dashed border-border/70"
                                   title={t("tasks:popover.assignee.unassigned")}
                                 >
-                                  <span className="text-[9px] font-medium text-muted-foreground">
+                                  <span className="text-label font-medium text-muted-foreground">
                                     ?
                                   </span>
                                 </div>

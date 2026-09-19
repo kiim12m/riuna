@@ -9,6 +9,8 @@ import {
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
 import { assertValidTaskStatus } from "../validate-task-fields";
+import { syncPrimaryAssignee } from "./assignees";
+import { cascadeStatusToSubtree } from "./cascade-status";
 
 async function updateTask(
   id: string,
@@ -29,6 +31,7 @@ async function updateTask(
       description: taskTable.description,
       status: taskTable.status,
       projectId: taskTable.projectId,
+      userId: taskTable.userId,
     })
     .from(taskTable)
     .where(eq(taskTable.id, id))
@@ -64,22 +67,33 @@ async function updateTask(
     ),
   });
 
-  const [updatedTask] = await db
-    .update(taskTable)
-    .set({
-      title,
-      status,
-      columnId: column?.id ?? null,
-      startDate: startDate || null,
-      dueDate: dueDate || null,
-      projectId,
-      description,
-      priority,
-      position,
-      userId: normalizedUserId ?? null,
-    })
-    .where(eq(taskTable.id, id))
-    .returning();
+  // El conjunto de asignados se sincroniza dentro de la misma transaccion que
+  // escribe `assignee_id`: si se hicieran por separado, un fallo entre las dos
+  // dejaria la divergencia que `assignees.ts` existe para impedir.
+  const [updatedTask] = await db.transaction(async (tx) => {
+    const rows = await tx
+      .update(taskTable)
+      .set({
+        title,
+        status,
+        columnId: column?.id ?? null,
+        startDate: startDate || null,
+        dueDate: dueDate || null,
+        projectId,
+        description,
+        priority,
+        position,
+        userId: normalizedUserId ?? null,
+      })
+      .where(eq(taskTable.id, id))
+      .returning();
+
+    if (rows[0]) {
+      await syncPrimaryAssignee(id, existingTask.userId, rows[0].userId, tx);
+    }
+
+    return rows;
+  });
 
   if (!updatedTask) {
     throw new HTTPException(500, {
@@ -88,6 +102,12 @@ async function updateTask(
   }
 
   if (existingTask.status !== status) {
+    await cascadeStatusToSubtree({
+      task: updatedTask,
+      status,
+      currentUserId,
+    });
+
     await publishEvent("task.status_changed", {
       taskId: updatedTask.id,
       projectId: updatedTask.projectId,
