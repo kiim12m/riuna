@@ -2,65 +2,27 @@ import { describe, expect, it } from "vitest";
 import { getInvitationEmailSubject } from "../../../apps/api/src/utils/get-invitation-email-subject";
 
 describe("getInvitationEmailSubject", () => {
-  it("uses French copy for regional French locales", () => {
-    const locale = "fr-FR";
-    const inviterName = "Alice";
-    const workspaceName = "Équipe produit";
+  it("uses English copy for regional English locales", () => {
+    const subject = getInvitationEmailSubject("en-GB", "Alice", "Producto");
 
-    const subject = getInvitationEmailSubject(
-      locale,
-      inviterName,
-      workspaceName,
-    );
-
-    expect(subject).toBe(
-      "Alice vous invite à rejoindre Équipe produit sur Kaneo",
-    );
+    expect(subject).toBe("Alice invited you to join Producto on Riuna");
   });
 
-  it("keeps the German translation unchanged", () => {
-    const locale = "de-DE";
-    const inviterName = "Alice";
-    const workspaceName = "Produkt";
+  it("uses Spanish copy for regional Spanish locales", () => {
+    const subject = getInvitationEmailSubject("es-MX", "Alice", "Producto");
 
-    const subject = getInvitationEmailSubject(
-      locale,
-      inviterName,
-      workspaceName,
-    );
-
-    expect(subject).toBe(
-      "Alice hat dich eingeladen, Produkt auf Kaneo beizutreten",
-    );
+    expect(subject).toBe("Alice te ha invitado a unirte a Producto en Riuna");
   });
 
-  it("uses Brazilian Portuguese copy for regional Portuguese locales", () => {
-    const locale = "pt-BR";
-    const inviterName = "Alice";
-    const workspaceName = "Equipe produto";
+  it("falls back to Spanish for unsupported locales", () => {
+    const subject = getInvitationEmailSubject("de-DE", "Alice", "Producto");
 
-    const subject = getInvitationEmailSubject(
-      locale,
-      inviterName,
-      workspaceName,
-    );
-
-    expect(subject).toBe(
-      "Alice convidou você para participar de Equipe produto no Kaneo",
-    );
+    expect(subject).toBe("Alice te ha invitado a unirte a Producto en Riuna");
   });
 
-  it("uses the English fallback for unsupported locales", () => {
-    const locale = "es-ES";
-    const inviterName = "Alice";
-    const workspaceName = "Producto";
+  it("falls back to Spanish when no locale is given", () => {
+    const subject = getInvitationEmailSubject(null, "Alice", "Producto");
 
-    const subject = getInvitationEmailSubject(
-      locale,
-      inviterName,
-      workspaceName,
-    );
-
-    expect(subject).toBe("Alice invited you to join Producto on Kaneo");
+    expect(subject).toBe("Alice te ha invitado a unirte a Producto en Riuna");
   });
 });

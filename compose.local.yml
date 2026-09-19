@@ -2,17 +2,45 @@ services:
   postgres:
     image: postgres:16-alpine
     env_file:
-      - .env.local
+      - .env
     ports:
-      - "5432:5432"
+      # 5433 en el host: el 5432 lo ocupa el Postgres de otro proyecto.
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kaneo -d kaneo"]
+      test: ["CMD-SHELL", "pg_isready -U riuna -d riuna"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # Copias de seguridad automaticas. Usa la misma imagen que el servidor para
+  # que pg_dump y Postgres nunca se desalineen de version, y escribe en
+  # ./backups del host. PGHOST se fija aqui: el .env compartido define
+  # POSTGRES_HOST=localhost para la API, que corre fuera de Docker.
+  backup:
+    image: postgres:16-alpine
+    env_file:
+      - .env
+    environment:
+      PGHOST: postgres
+      BACKUP_DIR: /backups
+    volumes:
+      - ./backups:/backups
+      - ./scripts/backup:/scripts:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        interval=$$(( ${BACKUP_INTERVAL_HOURS:-24} * 3600 ))
+        while true; do
+          sh /scripts/backup.sh || echo "[backup] la copia ha fallado"
+          sleep "$$interval"
+        done
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
   api:
     build:
@@ -21,7 +49,7 @@ services:
     ports:
       - "1337:1337"
     env_file:
-      - .env.local
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
@@ -40,19 +68,9 @@ services:
     ports:
       - "5173:5173"
     env_file:
-      - .env.local
+      - .env
     depends_on:
       - api
-    restart: unless-stopped
-
-  docs:
-    image: node:24.19.0-alpine
-    working_dir: /app/apps/docs
-    command: sh -c "npm install -g mintlify && mintlify dev --disable-openapi"
-    ports:
-      - "3421:3000"
-    volumes:
-      - ./apps/docs:/app/apps/docs
     restart: unless-stopped
 
 volumes:

@@ -1,0 +1,260 @@
+import { and, eq } from "drizzle-orm";
+import { HTTPException } from "hono/http-exception";
+import db from "../../database";
+import {
+  epicTable,
+  labelTable,
+  projectTable,
+  taskEpicTable,
+  taskTable,
+  templateTable,
+} from "../../database/schema";
+import { publishEvent } from "../../events";
+import createTask from "../../task/controllers/create-task";
+import { getMaxTaskDepth } from "../../task/controllers/update-task-parent";
+import {
+  countTemplateTasks,
+  parseTemplateContent,
+  type TemplateNode,
+  templateDepth,
+} from "../content";
+
+/**
+ * Despliega el arbol de la plantilla dentro de un proyecto.
+ *
+ * **Cada tarea se crea con `createTask`**, no con inserciones directas: es lo
+ * unico que toma el cerrojo del proyecto, resuelve `path`/`depth`, reclama el
+ * numero de tarea y sincroniza el responsable. Insertar a mano seria mas rapido
+ * y dejaria el arbol incoherente, que es lo que las dos CHECK de la Fase 2
+ * existen para impedir.
+ */
+async function createBranch({
+  nodes,
+  projectId,
+  parentId,
+  currentUserId,
+  workspaceId,
+  epicIdsByName,
+}: {
+  nodes: TemplateNode[];
+  projectId: string;
+  parentId: string | null;
+  currentUserId: string;
+  workspaceId: string;
+  epicIdsByName: Map<string, string>;
+}): Promise<number> {
+  let created = 0;
+
+  for (const node of nodes) {
+    const task = await createTask({
+      projectId,
+      currentUserId,
+      title: node.title,
+      status: node.status ?? "to-do",
+      description: node.description,
+      priority: node.priority,
+      estimate: node.estimate,
+      parentId,
+    });
+
+    created += 1;
+
+    if (node.customFields && Object.keys(node.customFields).length > 0) {
+      await db
+        .update(taskTable)
+        .set({ customFields: node.customFields })
+        .where(eq(taskTable.id, task.id));
+    }
+
+    if (node.labels?.length) {
+      await db.insert(labelTable).values(
+        node.labels.map((label) => ({
+          workspaceId,
+          taskId: task.id,
+          name: label.name,
+          color: label.color,
+        })),
+      );
+    }
+
+    if (node.epics?.length) {
+      const epicIds = node.epics
+        .map((name) => epicIdsByName.get(name))
+        .filter((id): id is string => Boolean(id));
+
+      if (epicIds.length > 0) {
+        await db
+          .insert(taskEpicTable)
+          .values(epicIds.map((epicId) => ({ taskId: task.id, epicId })))
+          .onConflictDoNothing();
+      }
+    }
+
+    if (node.children?.length) {
+      created += await createBranch({
+        nodes: node.children,
+        projectId,
+        parentId: task.id,
+        currentUserId,
+        workspaceId,
+        epicIdsByName,
+      });
+    }
+  }
+
+  return created;
+}
+
+/** Las epicas que la plantilla nombra, creando las que falten en el proyecto. */
+async function resolveEpics(
+  projectId: string,
+  names: string[],
+): Promise<Map<string, string>> {
+  const unique = [...new Set(names)].filter(Boolean);
+  const byName = new Map<string, string>();
+
+  if (unique.length === 0) return byName;
+
+  const existing = await db
+    .select({ id: epicTable.id, name: epicTable.name })
+    .from(epicTable)
+    .where(eq(epicTable.projectId, projectId));
+
+  for (const epic of existing) byName.set(epic.name, epic.id);
+
+  const missing = unique.filter((name) => !byName.has(name));
+
+  if (missing.length > 0) {
+    const inserted = await db
+      .insert(epicTable)
+      .values(
+        missing.map((name, index) => ({
+          projectId,
+          name,
+          position: existing.length + index + 1,
+        })),
+      )
+      .returning({ id: epicTable.id, name: epicTable.name });
+
+    for (const epic of inserted) byName.set(epic.name, epic.id);
+  }
+
+  return byName;
+}
+
+function collectEpicNames(nodes: TemplateNode[]): string[] {
+  return nodes.flatMap((node) => [
+    ...(node.epics ?? []),
+    ...collectEpicNames(node.children ?? []),
+  ]);
+}
+
+/**
+ * Aplica una plantilla de tarea dentro de un proyecto.
+ *
+ * La profundidad se comprueba **antes** de crear nada. Sin esta guarda, un arbol
+ * mas hondo que el limite del proyecto fallaria a mitad —`createTask` rechaza
+ * cada hija demasiado profunda— y dejaria medio desplegada una plantilla que
+ * nadie pidio a medias.
+ */
+export async function applyTaskTemplate({
+  templateId,
+  projectId,
+  parentId,
+  currentUserId,
+}: {
+  templateId: string;
+  projectId: string;
+  parentId?: string | null;
+  currentUserId: string;
+}) {
+  const template = await db.query.templateTable.findFirst({
+    where: eq(templateTable.id, templateId),
+  });
+
+  if (!template)
+    throw new HTTPException(404, { message: "Template not found" });
+
+  const project = await db.query.projectTable.findFirst({
+    where: eq(projectTable.id, projectId),
+  });
+
+  if (!project) throw new HTTPException(404, { message: "Project not found" });
+
+  if (project.workspaceId !== template.workspaceId) {
+    throw new HTTPException(400, {
+      message: "The template belongs to another workspace",
+    });
+  }
+
+  let content: ReturnType<typeof parseTemplateContent>;
+
+  try {
+    content = parseTemplateContent(template.content);
+  } catch (error) {
+    throw new HTTPException(400, {
+      message: error instanceof Error ? error.message : "Invalid template",
+    });
+  }
+
+  let parentDepth = -1;
+
+  if (parentId) {
+    const parent = await db.query.taskTable.findFirst({
+      where: and(
+        eq(taskTable.id, parentId),
+        eq(taskTable.projectId, projectId),
+      ),
+    });
+
+    if (!parent) {
+      throw new HTTPException(400, {
+        message: "The parent task must belong to the same project",
+      });
+    }
+
+    parentDepth = parent.depth;
+  }
+
+  const maxDepth = await getMaxTaskDepth(projectId);
+  const needed = parentDepth + 1 + templateDepth(content.tasks);
+
+  if (needed > maxDepth) {
+    throw new HTTPException(400, {
+      message: `The template does not fit: it needs ${needed} levels and this project allows ${maxDepth}`,
+    });
+  }
+
+  const epicIdsByName = await resolveEpics(
+    projectId,
+    collectEpicNames(content.tasks),
+  );
+
+  const created = await createBranch({
+    nodes: content.tasks,
+    projectId,
+    parentId: parentId ?? null,
+    currentUserId,
+    workspaceId: project.workspaceId,
+    epicIdsByName,
+  });
+
+  await publishEvent("task.created", {
+    projectId,
+    taskId: "",
+    userId: currentUserId,
+    type: "created",
+    content: null,
+  });
+
+  return { templateId, projectId, createdTaskCount: created };
+}
+
+/** Cuantas tareas trae una plantilla, para enseñarlo antes de aplicarla. */
+export function templateTaskCount(content: unknown): number {
+  try {
+    return countTemplateTasks(parseTemplateContent(content).tasks);
+  } catch {
+    return 0;
+  }
+}

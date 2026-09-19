@@ -18,9 +18,9 @@ import { useReorderColumns } from "@/hooks/mutations/column/use-reorder-columns"
 import { useUpdateColumn } from "@/hooks/mutations/column/use-update-column";
 import { useGetColumns } from "@/hooks/queries/column/use-get-columns";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { cn } from "@/lib/cn";
 import { getColumnIcon } from "@/lib/column";
 import { toast } from "@/lib/toast";
-import { cn } from "@/lib/utils";
 
 type ColumnEditorProps = {
   projectId: string;
@@ -322,7 +322,7 @@ export default function ColumnEditor({ projectId }: ColumnEditorProps) {
                   })}
                   className="scale-75"
                 />
-                <span className="text-[11px] text-muted-foreground w-8">
+                <span className="text-label text-muted-foreground w-8">
                   {col.isFinal
                     ? t("settings:columnEditor.on")
                     : t("settings:columnEditor.off")}

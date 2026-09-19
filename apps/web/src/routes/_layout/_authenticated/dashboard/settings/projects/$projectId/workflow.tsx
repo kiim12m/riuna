@@ -2,6 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import PageTitle from "@/components/page-title";
 import ColumnEditor from "@/components/project/column-editor";
+import EpicEditor from "@/components/project/epic-editor";
+import RecurrenceEditor from "@/components/project/recurrence-editor";
+import TemplatePanel from "@/components/project/template-panel";
+import TreeSettings from "@/components/project/tree-settings";
 import WorkflowEditor from "@/components/project/workflow-editor";
 
 export const Route = createFileRoute(
@@ -37,6 +41,54 @@ function RouteComponent() {
             </p>
           </div>
           <ColumnEditor projectId={projectId} />
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-md font-medium">
+              {t("settings:projectTree.title")}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {t("settings:projectTree.description")}
+            </p>
+          </div>
+          <TreeSettings projectId={projectId} />
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-md font-medium">
+              {t("settings:projectEpics.title")}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {t("settings:projectEpics.description")}
+            </p>
+          </div>
+          <EpicEditor projectId={projectId} />
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-md font-medium">
+              {t("settings:projectRecurrences.title")}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {t("settings:projectRecurrences.description")}
+            </p>
+          </div>
+          <RecurrenceEditor projectId={projectId} />
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-md font-medium">
+              {t("settings:projectTemplates.title")}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {t("settings:projectTemplates.description")}
+            </p>
+          </div>
+          <TemplatePanel projectId={projectId} />
         </div>
 
         <div className="space-y-6">

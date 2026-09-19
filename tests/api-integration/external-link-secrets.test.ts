@@ -6,6 +6,7 @@ import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 const GITEA_TOKEN = "gitea-pat-should-never-be-exposed";
@@ -25,6 +26,7 @@ describe("API integration: external link integration secrets", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Task with a linked Gitea issue",
         status: "to-do",

@@ -7,8 +7,12 @@ import {
   assertAssignableUser,
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
+import { childTaskTreeFields, rootTaskTreeFields } from "../tree";
 import { assertValidTaskStatus } from "../validate-task-fields";
+import { syncPrimaryAssignee } from "./assignees";
 import { claimTaskNumber } from "./claim-task-numbers";
+import { lockProjectTree } from "./lock-project-tree";
+import { resolveParentForNewTask } from "./update-task-parent";
 
 async function createTask({
   projectId,
@@ -20,6 +24,8 @@ async function createTask({
   dueDate,
   description,
   priority,
+  parentId,
+  estimate,
 }: {
   projectId: string;
   currentUserId: string;
@@ -30,6 +36,8 @@ async function createTask({
   dueDate?: Date;
   description?: string;
   priority?: string;
+  parentId?: string | null;
+  estimate?: number | null;
 }) {
   const resolvedStatus = status || "to-do";
   const resolvedPriority = priority || "no-priority";
@@ -74,11 +82,23 @@ async function createTask({
   const nextPosition = (maxPositionResult?.maxPosition ?? 0) + 1;
 
   const createdTask = await db.transaction(async (tx) => {
+    await lockProjectTree(tx, projectId);
+
+    // El padre se resuelve ya con el cerrojo tomado: resolverlo antes congelaba
+    // su `path`, y si el padre se reparentaba en ese hueco la hija nacia fuera
+    // del subarbol de su propio padre. Ver `lockProjectTree`.
+    const parent = await resolveParentForNewTask(projectId, parentId, tx);
+    const treeFields = parent
+      ? childTaskTreeFields(parent)
+      : rootTaskTreeFields();
+
     const taskNumber = await claimTaskNumber(projectId, tx);
 
     const [task] = await tx
       .insert(taskTable)
       .values({
+        ...treeFields,
+        estimate: estimate ?? null,
         projectId,
         userId: normalizedUserId ?? null,
         title: title || "",
@@ -92,6 +112,10 @@ async function createTask({
         position: nextPosition,
       })
       .returning();
+
+    if (task) {
+      await syncPrimaryAssignee(task.id, null, task.userId, tx);
+    }
 
     return task;
   });

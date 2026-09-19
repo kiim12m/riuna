@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
   useDeleteNotificationWorkspaceRule,
@@ -565,9 +566,9 @@ export function NotificationPreferencesSettings() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="h-24 animate-pulse rounded-md bg-muted" />
-        <div className="h-24 animate-pulse rounded-md bg-muted" />
-        <div className="h-48 animate-pulse rounded-md bg-muted" />
+        <Skeleton className="h-24 rounded-md" />
+        <Skeleton className="h-24 rounded-md" />
+        <Skeleton className="h-48 rounded-md" />
       </div>
     );
   }

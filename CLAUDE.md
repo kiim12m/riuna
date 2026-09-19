@@ -1,4 +1,4 @@
-# Kaneo project instructions
+# Riuna project instructions
 
 Canonical guidance: [AGENTS.md](./AGENTS.md)
 

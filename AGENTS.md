@@ -1,8 +1,10 @@
-# Kaneo agent guide
+# Riuna agent guide
 
-Kaneo is a fast, deliberately simple, self-hosted project-management platform. The Hono API owns domain behavior and authorization, the React app consumes its typed client, PostgreSQL stores durable state, and events plus WebSockets keep clients current. Redis is optional and coordinates realtime delivery across multiple API instances.
+Riuna is a self-hosted all-in-one productivity platform: project and task management first, CRM and light ERP later. It is a hard fork of [Kaneo](https://github.com/usekaneo/kaneo) v2.22.0 (MIT), maintained as an independent program — **there is no upstream sync**, so changing inherited code carries no future merge cost. Attribution lives in `NOTICE`.
 
-This is an operating guide, not a README. These rules are good defaults; explicit developer and user instructions take precedence.
+The Hono API owns domain behavior and authorization, the React app consumes its typed client, PostgreSQL stores durable state, and events plus WebSockets keep clients current. Redis is optional and coordinates realtime delivery across multiple API instances.
+
+This is an operating guide, not a README. These rules are good defaults; explicit developer and user instructions take precedence. Most of this document is inherited from Kaneo and is deliberately kept in English to match the codebase and keep the diff small; the product UI, however, defaults to Spanish.
 
 ## Principles
 
@@ -19,17 +21,32 @@ This is an operating guide, not a README. These rules are good defaults; explici
 
 - `apps/api` — Hono API, Better Auth, controllers, database access, events, integrations, MCP HTTP routes, and WebSockets.
 - `apps/web` — React/Vite UI, TanStack Router and Query, fetchers, hooks, and realtime cache updates.
-- `apps/docs` — product and API documentation content; `apps/site` — public Next.js site and documentation host.
 - `packages/libs` — shared typed Hono client and URL helpers.
 - `packages/permissions` — canonical permission vocabulary and built-in roles.
 - `packages/mcp` — published stdio MCP package.
-- `charts/kaneo` — Helm deployment surface.
+- `charts/riuna` — Helm deployment surface.
 - `tests/api` contains API unit tests; `tests/api-integration` contains PostgreSQL-backed integration tests.
+- `docs/` — Riuna's own working documents: [`plan.md`](docs/plan.md) (the phased roadmap and its live status — read it before starting anything substantial), the Phase 0 gap audit, the backup procedure, and the ADRs.
+
+Kaneo's public marketing site (`apps/site`) and Mintlify documentation (`apps/docs`) were removed in Phase 0: Riuna is internal and needs neither.
+
+## Riuna-specific rules
+
+These are additions on top of everything above, not replacements.
+
+- **Complexity budget.** Rule of three before abstracting. Controllers stay under ~150 lines. No new dependency without a one-line justification. A new column only if it is filtered, sorted, grouped, or a foreign key — everything else belongs in `custom_fields`.
+- **Follow Kaneo's conventions, do not introduce competing ones.** A fork with two coexisting styles ages worse than one with an imperfect but consistent style.
+- **Additive over invasive.** New capability arrives as new tables and new modules alongside the inherited ones (`task_assignee`, `epic`, `field_definition`, `view`, `external_ref`), not as rewrites of the existing schema — unless the roadmap explicitly calls for it, as the task tree does.
+- **Every import must be idempotent** through `external_ref`. Re-importing updates; it never duplicates. The table exists since Phase 4.5; the generic CSV/Excel importer that uses it is Phase 5, so `import-tasks` is *not* idempotent yet.
+- **Performance budget.** Any new view paginates and answers under 300 ms p95 with 50,000 tasks, including deep trees. Check with `EXPLAIN`. Seed the volume with `DATABASE_URL=…_bench pnpm --filter @riuna/api db:seed:volume`; the script refuses any database whose name does not end in `_bench` or `_test`. Reasoning about the expected plan is not measuring: Phase 4.5 confirmed two catastrophic queries this way *and refuted* a proposed index that the planner turned out not to use.
+- **Never join a tree by `path` prefix with a pattern that depends on the outer row** (`d.path LIKE a.path || '%'`). No index can serve it, and Postgres degenerates to a nested loop over every pair. The ancestors of a task are the segments of its own `path`, so join on id equality instead: `CROSS JOIN LATERAL unnest(string_to_array(trim(both '/' from d.path), '/'))`. Measured on 10,000 tasks: 6,769 ms → 36 ms.
+- **One ADR per structural decision** in `docs/adr/`, ten lines: context, decision, consequence.
+- **Product UI language is Spanish.** `i18n/en-US.json` remains the key source of truth; Spanish is the default locale.
 
 ## Boundaries that must hold
 
 - The API is the authority for authentication and authorization. Hiding an action in the UI is not an authorization check.
-- Workspace-scoped operations must use the existing `@kaneo/permissions` vocabulary and API middleware.
+- Workspace-scoped operations must use the existing `@riuna/permissions` vocabulary and API middleware.
 - Do not expose secrets, credentials, internal fields, or private workspace data through responses, logs, events, WebSockets, or MCP tools.
 - Public API behavior must retain accurate Valibot validation and OpenAPI metadata.
 - Mutations that affect realtime state must consider event publication, WebSocket delivery, and client cache invalidation.
@@ -58,9 +75,10 @@ Not every change touches every surface. Make the decision deliberately rather th
 - Use `requireWorkspacePermission` rather than duplicating role checks.
 - Use `publishEvent()` when a mutation drives activity, notifications, integrations, or realtime updates.
 - Keep web requests in `apps/web/src/fetchers/` and server state in TanStack Query hooks.
-- Use the client from `@kaneo/libs`; do not create a parallel untyped request layer.
+- Use the client from `@riuna/libs`; do not create a parallel untyped request layer.
 - Define database schema in `apps/api/src/database/schema.ts` and relations in `apps/api/src/database/relations.ts`.
-- Generate migrations with `pnpm --filter @kaneo/api db:generate`, inspect the SQL, and include it with the schema change.
+- Generate migrations with `pnpm --filter @riuna/api db:generate`, inspect the SQL, and include it with the schema change.
+- **Inside a `sql` template, wrap arrays in `sql.param()`.** Drizzle expands a bare array into `($1, $2, …)` — which is what you want for `IN`, and silently wrong everywhere else: `${keys}::text[]` compiles to `($1, $2)::text[]`, and an empty array to `()`, a syntax error. It bit this codebase twice in one afternoon.
 - Prefer inferred TypeScript types and `type` over `interface` unless extension or declaration merging is required.
 - Comments should explain constraints or surprising decisions, not narrate code.
 
@@ -89,33 +107,26 @@ Run repository-wide checks when a change crosses packages broadly, before a requ
 
 ## Releases
 
-Releasing is manual and deliberate: dispatch the **Release** workflow from `main`. Nothing releases on a push.
+**Riuna has no release pipeline.** Kaneo's semantic-release setup was removed in Phase 0: it cut GitHub Releases, published npm packages, notified a Discord server, and bumped `charts/kaneo/Chart.yaml` — all of it aimed at Kaneo as a public product, none of it useful for an internal instance deployed from source.
 
-The workflow resolves the next version from the Conventional Commits since the last tag, builds and pushes the three GHCR images under that version, validates the Helm chart, and only then cuts the release: `package.json`, `charts/kaneo/Chart.yaml`, `CHANGELOG.md`, the `vX.Y.Z` tag, a GitHub Release with grouped notes, and a "released in vX.Y.Z" comment on every PR and issue it closed. `:latest` and the chart publish come after that. A failed image build stops the release; it never leaves a tag pointing at an image that was never published.
+What survives in `.github/workflows/`:
 
-Dispatch inputs: `release_type` (`auto` by default; `patch`/`minor`/`major` force the bump) and `dry_run`, which prints the version and notes to the job summary and stops.
+- `ci.yml` — lint, typecheck and tests on push and pull request. The safety net; keep it green.
+- `nightly.yml` — scheduled verification with a real PostgreSQL service.
+- `docker.yml` → `build-images.yml` — manual dispatch that builds and pushes images to `ghcr.io/<owner>/…` under **your** namespace.
+- `helm-chart.yml` → `helm-validate.yml` — packages and validates the Helm chart.
 
-This is why the commit convention matters:
+Artifact names were renamed off `kaneo` in the internal-renaming pass: images publish as `riuna`, `web`, `api` and the chart as `charts/riuna`. Still confirm `ghcr.io/<owner>/…` resolves to a real registry namespace before running these workflows for the first time.
 
-- `feat:` → minor bump
-- `fix:` / `perf:` → patch bump
-- `feat!:` or a `BREAKING CHANGE:` footer → major bump
-- `refactor:` / `docs:` → shown in the changelog, no bump on their own
-- `test:` / `build:` / `ci:` / `chore:` / `style:` → no release, hidden from the notes
+Conventional Commits are still enforced by commitlint on `commit-msg`. Nothing bumps a version automatically any more, so the convention now buys readable history rather than a release.
 
-Notes are generated by `scripts/release/notes.mjs`, which maps every commit back to the pull request that landed it and collapses the range to one entry per pull request, so review churn like `fix: apply CodeRabbit auto-fixes` no longer reaches the notes. The entry text is the pull request title when its type matches the commit's, and the commit subject otherwise; both are public, so write them for the reader. Commits pushed straight to `main` have no pull request and fall back to a commit link. Pull request authors are credited by handle, bots excluded.
+`scripts/release/apply-version.mjs` is kept because `build-images.yml` stamps versions with it. Version-carrying files are listed inside it; add new ones there rather than in a workflow step.
 
-Preview any range before releasing:
-
-```bash
-node scripts/release/notes.mjs v2.21.0 HEAD
-```
-
-Version-carrying files are listed in `scripts/release/apply-version.mjs`. Add new ones there rather than in a workflow step, because the image build and the release commit both run that script.
+The root `package.json` and `charts/riuna/Chart.yaml` read `0.1.0`: Riuna resets versioning independently of the Kaneo lineage it forked from (`2.22.0`).
 
 ## Glossary
 
-- **instance**: one deployed Kaneo installation.
+- **instance**: one deployed Riuna installation.
 - **workspace**: the top-level collaboration and authorization boundary.
 - **project**: a task container inside a workspace.
 - **role**: a workspace-scoped set of permission statements.

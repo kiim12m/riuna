@@ -1,17 +1,6 @@
 import { Badge } from "@/components/ui/badge";
+import labelColors from "@/constants/label-colors";
 import type Task from "@/types/task";
-
-const labelColors = [
-  { value: "gray", label: "Stone", color: "var(--color-stone-500)" },
-  { value: "dark-gray", label: "Slate", color: "var(--color-slate-500)" },
-  { value: "purple", label: "Lavender", color: "var(--color-violet-500)" },
-  { value: "teal", label: "Sage", color: "var(--color-emerald-600)" },
-  { value: "green", label: "Forest", color: "var(--color-green-600)" },
-  { value: "yellow", label: "Amber", color: "var(--color-amber-600)" },
-  { value: "orange", label: "Terracotta", color: "var(--color-orange-600)" },
-  { value: "pink", label: "Rose", color: "var(--color-rose-600)" },
-  { value: "red", label: "Crimson", color: "var(--color-red-600)" },
-];
 
 function isValidHtmlColor(color: string): boolean {
   const s = new Option().style;
@@ -39,13 +28,16 @@ export function TaskLabels({
 }) {
   if (!labels.length) return null;
 
+  // `span` y no `div`: la fila de "Mi trabajo" es un `<button>`, cuyo modelo de
+  // contenido es contenido de frase. Con `display:flex` se pinta igual en las
+  // cuatro superficies que ya lo usaban.
   return (
-    <div className="flex flex-wrap gap-1">
+    <span className="flex flex-wrap gap-1">
       {labels.map((label: { id: string; name: string; color: string }) => (
         <Badge
           key={label.id}
           variant="outline"
-          className="px-2 py-0.5 text-[10px] flex items-center"
+          className="px-2 py-0.5 text-label flex items-center"
         >
           <span
             className="inline-block w-1.5 h-1.5 mr-1 rounded-full"
@@ -56,6 +48,6 @@ export function TaskLabels({
           <span className="max-w-20 truncate">{label.name}</span>
         </Badge>
       ))}
-    </div>
+    </span>
   );
 }

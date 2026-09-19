@@ -8,6 +8,7 @@ import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 describe("API integration: task creation", () => {
@@ -50,6 +51,7 @@ describe("API integration: task creation", () => {
     });
 
     await db.insert(schema.taskTable).values({
+      ...taskTreeValues(),
       projectId: project.id,
       userId: member.user.id,
       title: "Existing task",

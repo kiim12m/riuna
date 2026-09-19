@@ -10,9 +10,9 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
       value={content}
       readOnly
       showBubbleMenu={false}
-      proseClassName="kaneo-tiptap-prose"
-      contentClassName="kaneo-tiptap-content"
-      className="[&_.kaneo-tiptap-content_.ProseMirror]:max-h-none [&_.kaneo-tiptap-content_.ProseMirror]:overflow-visible [&_.kaneo-tiptap-content_.ProseMirror]:px-0 [&_.kaneo-tiptap-content_.ProseMirror]:py-0"
+      proseClassName="riuna-tiptap-prose"
+      contentClassName="riuna-tiptap-content"
+      className="[&_.riuna-tiptap-content_.ProseMirror]:max-h-none [&_.riuna-tiptap-content_.ProseMirror]:overflow-visible [&_.riuna-tiptap-content_.ProseMirror]:px-0 [&_.riuna-tiptap-content_.ProseMirror]:py-0"
     />
   );
 }

@@ -1,27 +1,31 @@
 ---
-description: Overview of the Kaneo project structure, architecture, and key technologies
-globs: 
+description: Overview of the Riuna project structure, architecture, and key technologies
+globs:
 alwaysApply: true
 ---
 # Project Overview
 
-Kaneo is a self-hosted project management platform built with a focus on simplicity and performance. This document provides an overview of the project structure and architecture.
+Riuna is a self-hosted project and task management platform built with a focus on simplicity and performance. This document provides an overview of the project structure and architecture.
 
 ## Project Structure
 
-Kaneo is organized as a **monorepo** using pnpm workspaces:
+Riuna is organized as a **monorepo** using pnpm workspaces:
 
 ```
-kaneo/
+riuna/
 ├── apps/
 │   ├── api/          # Backend API (Hono/Node.js)
-│   ├── docs/         # Documentation site (Next.js)
 │   └── web/          # Frontend app (React/Vite)
 ├── packages/         # Shared code and configs
 │   ├── email/        # Email utilities
-│   ├── libs/         # Shared libraries
+│   ├── libs/         # Typed API client and shared runtime helpers
+│   ├── mcp/          # Stdio MCP package
+│   ├── permissions/  # Shared permission vocabulary and built-in roles
+│   ├── planka-import/  # PLANKA migration CLI
 │   └── typescript-config/  # TypeScript configurations
 ├── charts/           # Kubernetes Helm charts
+├── docs/             # Riuna's own working documents (plan, ADRs, procedures)
+├── tests/            # API unit and integration tests
 ├── .cursor/          # Cursor IDE rules
 └── compose.yml       # Docker Compose configuration
 ```
@@ -63,7 +67,7 @@ kaneo/
 1. **Install dependencies**: `pnpm install`
 2. **Start development**: `pnpm dev` (starts both API and web)
 3. **Lint code**: `pnpm lint` (runs Biome)
-4. **Database migrations**: `pnpm --filter @kaneo/api db:generate` and `db:migrate`
+4. **Database migrations**: `pnpm --filter @riuna/api db:generate` and `db:migrate`
 
 ## Environment Setup
 
