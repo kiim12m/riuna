@@ -1,11 +1,6 @@
 import { and, eq, inArray, like } from "drizzle-orm";
 import db from "../database";
-import {
-  activityTable,
-  assetTable,
-  commentTable,
-  taskTable,
-} from "../database/schema";
+import { activityTable, assetTable, taskTable } from "../database/schema";
 import { deleteS3Object } from "./s3";
 
 const ASSET_URL_PATTERN = /\/api\/asset\/([a-z0-9]+)/gi;
@@ -41,9 +36,12 @@ export interface AssetCleanupScope {
 
 /**
  * Check whether an asset ID is still referenced in any content belonging to
- * the same task (description, comments, or activity comments).
+ * the same task: its description, or any activity content — comments included,
+ * since a comment is an `activity` row with `type = 'comment'` and its body in
+ * `content`. (The legacy `comment` table is never written, so there is nothing
+ * to check there.)
  */
-async function isAssetReferencedElsewhere(
+export async function isAssetReferencedElsewhere(
   assetId: string,
   taskId: string,
 ): Promise<boolean> {
@@ -56,17 +54,6 @@ async function isAssetReferencedElsewhere(
     .limit(1);
 
   if (contentReferencesAsset(taskRef?.description, assetId)) return true;
-
-  const commentRefs = await db
-    .select({ content: commentTable.content })
-    .from(commentTable)
-    .where(
-      and(eq(commentTable.taskId, taskId), like(commentTable.content, pattern)),
-    );
-
-  if (commentRefs.some((ref) => contentReferencesAsset(ref.content, assetId))) {
-    return true;
-  }
 
   const activityRefs = await db
     .select({ content: activityTable.content })

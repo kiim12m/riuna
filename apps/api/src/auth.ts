@@ -3,13 +3,13 @@ import {
   sendMagicLinkEmail,
   sendOtpEmail,
   sendWorkspaceInvitationEmail,
-} from "@kaneo/email";
+} from "@riuna/email";
 import {
   ac,
   DEFAULT_ROLE_NAMES,
   defaultRolePayloads,
   owner,
-} from "@kaneo/permissions";
+} from "@riuna/permissions";
 import bcrypt from "bcryptjs";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -29,6 +29,7 @@ import {
   magicLink,
   openAPI,
   organization,
+  username,
 } from "better-auth/plugins";
 import type { AccessControl } from "better-auth/plugins/access";
 import type { UserWithAnonymous } from "better-auth/plugins/anonymous";
@@ -53,6 +54,7 @@ import { getGithubSsoOAuthCredentials } from "./utils/github-sso-env";
 import { isCloud } from "./utils/is-cloud";
 import { isDisposableEmail } from "./utils/is-disposable-email";
 import { isLocalSignInPath } from "./utils/is-local-sign-in-path";
+import { isLocalAccountEmail } from "./utils/local-account";
 import { verifyTurnstile } from "./utils/verify-turnstile";
 
 config();
@@ -80,8 +82,8 @@ function isOAuthCallbackPath(path: unknown): boolean {
   return path.startsWith("/callback/") || path.startsWith("/oauth2/callback/");
 }
 
-const apiUrl = process.env.KANEO_API_URL || "http://localhost:1337";
-const clientUrl = process.env.KANEO_CLIENT_URL || "http://localhost:5173";
+const apiUrl = process.env.RIUNA_API_URL || "http://localhost:1337";
+const clientUrl = process.env.RIUNA_CLIENT_URL || "http://localhost:5173";
 
 const trustedOrigins = [clientUrl];
 try {
@@ -130,21 +132,21 @@ function getAuthEmailCopy(locale?: string | null) {
 
   if (localeKey === "de") {
     return {
-      magicLinkSubject: "Anmeldelink fuer Kaneo",
-      otpSubject: "Bestaetigungscode fuer Kaneo",
+      magicLinkSubject: "Anmeldelink fuer Riuna",
+      otpSubject: "Bestaetigungscode fuer Riuna",
     };
   }
 
   if (localeKey === "vi") {
     return {
-      magicLinkSubject: "Liên kết đăng nhập Kaneo",
-      otpSubject: "Mã xác minh Kaneo",
+      magicLinkSubject: "Liên kết đăng nhập Riuna",
+      otpSubject: "Mã xác minh Riuna",
     };
   }
 
   return {
-    magicLinkSubject: "Login for Kaneo",
-    otpSubject: "Authentication code for Kaneo",
+    magicLinkSubject: "Login for Riuna",
+    otpSubject: "Authentication code for Riuna",
   };
 }
 
@@ -158,7 +160,7 @@ function getDeviceAuthClientIds(): Set<string> {
         .filter(Boolean),
     );
   }
-  return new Set(["kaneo-cli", "kaneo-mcp"]);
+  return new Set(["riuna-cli", "riuna-mcp"]);
 }
 
 const DEFAULT_TRUSTED_PROXIES = [
@@ -215,6 +217,13 @@ export const auth = betterAuth({
         input: true,
         required: false,
       },
+      // Lo fija el endpoint de cuentas locales, nunca quien se registra.
+      isLocalAccount: {
+        type: "boolean",
+        input: false,
+        required: false,
+        defaultValue: false,
+      },
     },
     deleteUser: {
       enabled: true,
@@ -269,7 +278,7 @@ export const auth = betterAuth({
       ? [
           anonymous({
             generateName: async () => generateDemoName(),
-            emailDomainName: "kaneo.app",
+            emailDomainName: "riuna.app",
           }),
         ]
       : []),
@@ -391,7 +400,7 @@ export const auth = betterAuth({
           }
         : true,
       // Better Auth defaults this to `true`, which blocks any user whose email
-      // is not verified from accepting/rejecting an invitation. Kaneo does not
+      // is not verified from accepting/rejecting an invitation. Riuna does not
       // verify emails on signup (and guest/anonymous users are unverified by
       // design), so leaving the default on breaks invitation acceptance for
       // everyone. The invitation link id is the actual secret here, so gate on
@@ -407,7 +416,7 @@ export const auth = betterAuth({
         afterCreateOrganization: async ({ organization, user }) => {
           // Seed the editable default roles for this workspace. Each
           // role's permissions are derived from the compiled-in defaults
-          // in `@kaneo/permissions`; admins can later replace them in the
+          // in `@riuna/permissions`; admins can later replace them in the
           // Roles UI. We skip names that somehow already exist (this hook
           // is best-effort idempotent; the boot-time backfill is the
           // belt-and-braces path).
@@ -473,7 +482,7 @@ export const auth = betterAuth({
         },
       },
       async sendInvitationEmail(data) {
-        const inviteLink = `${process.env.KANEO_CLIENT_URL}/invitation/accept/${data.id}`;
+        const inviteLink = `${process.env.RIUNA_CLIENT_URL}/invitation/accept/${data.id}`;
         const locale = await getUserLocale(data.email);
         const copy = getWorkspaceInvitationEmailCopy(locale);
 
@@ -543,6 +552,12 @@ export const auth = betterAuth({
       defaultRole: "user",
       adminRoles: ["admin"],
     }),
+    // Permite entrar con nombre de usuario a las cuentas locales, que no
+    // tienen un correo real que escribir en el formulario de acceso.
+    username({
+      minUsernameLength: 3,
+      maxUsernameLength: 32,
+    }),
     openAPI(),
   ],
   session: {
@@ -552,7 +567,7 @@ export const auth = betterAuth({
     },
   },
   rateLimit: {
-    // Enable in cloud; self-hosted instances opt in by setting KANEO_CLOUD.
+    // Enable in cloud; self-hosted instances opt in by setting RIUNA_CLOUD.
     // Default better-auth rate-limit only kicks in for production; we keep the
     // global limits conservative and tighten signup/invite via customRules.
     enabled: isCloud(),
@@ -588,6 +603,31 @@ export const auth = betterAuth({
           const existingUserCount = userCountRow?.value ?? 0;
           if (existingUserCount === 0) {
             return;
+          }
+
+          // El dominio sintetico de las cuentas locales esta reservado.
+          //
+          // `set-user-email` ya lo rechazaba al asignar un correo a mano, pero
+          // el registro no lo miraba: cualquiera podia darse de alta como
+          // `mgarcia@local.riuna` y la tabla de miembros lo presentaba como una
+          // cuenta creada por el admin —clasifica por dominio—, ademas de
+          // dejarle sin correo de notificacion y de bloquear al admin para
+          // crear despues la cuenta local `mgarcia`.
+          //
+          // `isLocalAccount` es `input: false` en el esquema, asi que una
+          // peticion de registro normal no puede falsificarlo: solo lo trae la
+          // via de `createLocalUser`.
+          const userWithLocalAccount = user as Partial<{
+            isLocalAccount: boolean;
+          }>;
+
+          if (
+            !userWithLocalAccount.isLocalAccount &&
+            isLocalAccountEmail(user.email)
+          ) {
+            throw new APIError("FORBIDDEN", {
+              message: "That email domain is reserved for local accounts",
+            });
           }
 
           const invitationId = normalizeInvitationId(
@@ -718,7 +758,7 @@ export const auth = betterAuth({
         }
 
         // Cloud-only abuse gates on password signup. Self-hosted instances
-        // leave KANEO_CLOUD/TURNSTILE_SECRET_KEY unset and skip both.
+        // leave RIUNA_CLOUD/TURNSTILE_SECRET_KEY unset and skip both.
         if (isCloud() && !isInstanceAdminSetup) {
           const signupEmail = (ctx.body?.email as string | undefined) ?? "";
           if (signupEmail && isDisposableEmail(signupEmail)) {
