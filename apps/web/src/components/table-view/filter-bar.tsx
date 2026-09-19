@@ -1,4 +1,5 @@
 import { Plus, X } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { parseLocaleNumber } from "@/lib/parse-locale-number";
 import {
   type EditableCondition,
   type FilterableField,
@@ -171,6 +173,13 @@ function FilterBar({
                     ))}
                   </SelectContent>
                 </Select>
+              ) : field?.valueType === "number" ? (
+                <NumberValueInput
+                  key={`${condition.id}:${condition.field}`}
+                  value={condition.value}
+                  onValue={(value) => update(index, { value })}
+                  placeholder={t("tasks:table.filterValue")}
+                />
               ) : (
                 <Input
                   value={
@@ -179,20 +188,9 @@ function FilterBar({
                       : String(condition.value)
                   }
                   type={field?.valueType === "date" ? "date" : "text"}
-                  inputMode={
-                    field?.valueType === "number" ? "decimal" : undefined
+                  onChange={(event) =>
+                    update(index, { value: event.target.value })
                   }
-                  onChange={(event) => {
-                    const raw = event.target.value;
-                    // Los campos numericos mandan numero, no texto: el motor
-                    // rechaza la cadena con un 400 y hace bien.
-                    update(index, {
-                      value:
-                        field?.valueType === "number" && raw !== ""
-                          ? Number(raw.replace(",", "."))
-                          : raw,
-                    });
-                  }}
                   className="h-6 w-28 px-1 text-xs"
                   placeholder={t("tasks:table.filterValue")}
                 />
@@ -255,6 +253,50 @@ function FilterBar({
         </Select>
       )}
     </div>
+  );
+}
+
+/**
+ * El valor de una condicion numerica. Guarda el texto tal como se escribe y solo
+ * pasa un numero a la condicion cuando lo es: el motor rechaza la cadena con un
+ * 400, pero convertir en cada pulsacion devolvia "1" al teclear "1," y "NaN" al
+ * empezar un negativo, asi que no habia forma de escribir ni decimales ni
+ * numeros bajo cero.
+ */
+function NumberValueInput({
+  value,
+  onValue,
+  placeholder,
+}: {
+  value: unknown;
+  onValue: (value: number | "") => void;
+  placeholder: string;
+}) {
+  const { i18n } = useTranslation();
+  const [text, setText] = useState(
+    value === undefined || value === null ? "" : String(value),
+  );
+  const invalid =
+    text.trim() !== "" && parseLocaleNumber(text, i18n.language) === null;
+
+  return (
+    <Input
+      value={text}
+      inputMode="decimal"
+      aria-invalid={invalid}
+      onChange={(event) => {
+        const raw = event.target.value;
+        setText(raw);
+        if (raw.trim() === "") {
+          onValue("");
+          return;
+        }
+        const parsed = parseLocaleNumber(raw, i18n.language);
+        if (parsed !== null) onValue(parsed);
+      }}
+      className="h-6 w-28 px-1 text-xs"
+      placeholder={placeholder}
+    />
   );
 }
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,52 +66,53 @@ function AddFieldDialog({ open, pending, onClose, onCreate }: Props) {
     .map((line) => line.trim())
     .filter(Boolean);
 
+  // El valor guardado se deriva de la etiqueta y ya no cambia, igual que la
+  // `key` del campo: renombrar una opcion no puede huerfanar lo que las tareas
+  // tienen guardado. Una etiqueta sin letras ni cifras ("\u20ac") no deja nada que
+  // derivar y toma un valor por posicion: la API rechaza un valor vacio.
+  const optionEntries = parsedOptions.map((label, index) => ({
+    label,
+    value: optionValue(label) || `opcion_${index + 1}`,
+  }));
+  // "Alta" y "alta" dan el mismo valor, y la API rechaza valores repetidos: se
+  // dice aqui en vez de esperar al 400.
+  const hasDuplicates =
+    new Set(optionEntries.map((option) => option.value)).size !==
+    optionEntries.length;
+
   const canSubmit =
     name.trim().length > 0 &&
-    (!needsOptions || parsedOptions.length > 0) &&
+    (!needsOptions || (parsedOptions.length > 0 && !hasDuplicates)) &&
     (type !== "currency" || /^[A-Z]{3}$/.test(currency));
 
-  const reset = () => {
-    setName("");
-    setType("text");
-    setOptions("");
-    setCurrency("EUR");
-  };
+  // Se limpia al cerrarse, lo cierre quien lo cierre. El padre lo cierra cuando
+  // el servidor acepta; limpiar al enviar perdia lo escrito si fallaba.
+  useEffect(() => {
+    if (!open) {
+      setName("");
+      setType("text");
+      setOptions("");
+      setCurrency("EUR");
+    }
+  }, [open]);
 
   const submit = () => {
     if (!canSubmit) return;
 
     const config = needsOptions
-      ? {
-          options: parsedOptions.map((label) => ({
-            // El valor guardado se deriva de la etiqueta y ya no cambia,
-            // igual que la `key` del campo: renombrar una opcion no puede
-            // huerfanar lo que las tareas tienen guardado.
-            value: label
-              .normalize("NFD")
-              .replace(/[\u0300-\u036f]/g, "")
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, "_")
-              .replace(/^_+|_+$/g, ""),
-            label,
-          })),
-        }
+      ? { options: optionEntries }
       : type === "currency"
         ? { currency }
         : undefined;
 
     onCreate({ name: name.trim(), type, config });
-    reset();
   };
 
   return (
     <Dialog
       open={open}
       onOpenChange={(next) => {
-        if (!next) {
-          reset();
-          onClose();
-        }
+        if (!next) onClose();
       }}
     >
       <DialogContent className="sm:max-w-md">
@@ -166,7 +167,13 @@ function AddFieldDialog({ open, pending, onClose, onCreate }: Props) {
                 rows={4}
                 placeholder={t("tasks:table.fieldOptionsPlaceholder")}
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-invalid={hasDuplicates}
               />
+              {hasDuplicates && (
+                <p className="text-destructive text-xs">
+                  {t("tasks:table.fieldOptionsDuplicate")}
+                </p>
+              )}
             </div>
           )}
 
@@ -199,6 +206,15 @@ function AddFieldDialog({ open, pending, onClose, onCreate }: Props) {
       </DialogContent>
     </Dialog>
   );
+}
+
+function optionValue(label: string) {
+  return label
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
 export default AddFieldDialog;

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { parseLocaleNumber } from "@/lib/parse-locale-number";
 
 export type FieldDefinition = {
   id: string;
@@ -101,8 +103,10 @@ function CustomFieldCell({
   disabled,
   members = [],
 }: Props) {
+  const { i18n } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
+  const [invalid, setInvalid] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -252,24 +256,38 @@ function CustomFieldCell({
     );
   }
 
-  const commit = () => {
+  const stopEditing = () => {
     setEditing(false);
+    setInvalid(false);
+  };
 
+  const commit = ({ fromBlur }: { fromBlur: boolean }) => {
     const trimmed = draft.trim();
 
     if (trimmed === "") {
+      stopEditing();
       onCommit(null);
       return;
     }
 
     if (definition.type === "number" || definition.type === "currency") {
-      // Se admite la coma decimal, que es como se escribe en español, y se
-      // manda el numero: el validador de la API rechaza el texto.
-      const parsed = Number(trimmed.replace(",", "."));
-      onCommit(Number.isFinite(parsed) ? parsed : null);
+      // Se lee en la configuracion de quien escribe —en español, "1.500,50" es
+      // mil quinientos— y se manda el numero: el validador de la API rechaza el
+      // texto. Lo que no es un numero **no se manda**: enviar null borraba el
+      // valor que ya habia. Con Intro la celda sigue abierta y marcada; al
+      // salir de ella se descarta la edicion.
+      const parsed = parseLocaleNumber(trimmed, i18n.language);
+      if (parsed === null) {
+        if (fromBlur) stopEditing();
+        else setInvalid(true);
+        return;
+      }
+      stopEditing();
+      onCommit(parsed);
       return;
     }
 
+    stopEditing();
     onCommit(trimmed);
   };
 
@@ -303,16 +321,20 @@ function CustomFieldCell({
       }
       type={definition.type === "date" ? "date" : "text"}
       placeholder={definition.type === "url" ? "https://…" : undefined}
-      onChange={(event) => setDraft(event.target.value)}
-      onBlur={commit}
+      aria-invalid={invalid}
+      onChange={(event) => {
+        setDraft(event.target.value);
+        setInvalid(false);
+      }}
+      onBlur={() => commit({ fromBlur: true })}
       onKeyDown={(event) => {
         if (event.key === "Enter") {
           event.preventDefault();
-          commit();
+          commit({ fromBlur: false });
         }
         if (event.key === "Escape") {
           event.preventDefault();
-          setEditing(false);
+          stopEditing();
         }
       }}
       className="h-7 px-1 text-xs"

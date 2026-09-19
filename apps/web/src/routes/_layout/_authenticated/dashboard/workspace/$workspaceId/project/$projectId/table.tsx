@@ -176,7 +176,7 @@ function RouteComponent() {
   );
 
   const handleSaveView = useCallback(
-    (name: string, isShared: boolean) => {
+    (name: string, isShared: boolean, onSaved: () => void) => {
       saveView(
         {
           name,
@@ -189,7 +189,10 @@ function RouteComponent() {
           },
         },
         {
-          onSuccess: () => toast.success(t("tasks:table.views.saved")),
+          onSuccess: () => {
+            onSaved();
+            toast.success(t("tasks:table.views.saved"));
+          },
           onError: (error) =>
             toast.error(
               error instanceof Error

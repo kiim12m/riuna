@@ -2266,7 +2266,8 @@
 				"saved": "Vista guardada",
 				"saveFailed": "No se ha podido guardar la vista",
 				"delete": "Borrar esta vista"
-			}
+			},
+			"fieldOptionsDuplicate": "Hay dos opciones que son la misma si se ignoran acentos y mayúsculas"
 		},
 		"team": {
 			"label": "Equipo",

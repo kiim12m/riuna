@@ -2266,7 +2266,8 @@
 				"saved": "View saved",
 				"saveFailed": "The view could not be saved",
 				"delete": "Delete this view"
-			}
+			},
+			"fieldOptionsDuplicate": "Two options are the same once accents and capitals are ignored"
 		},
 		"team": {
 			"label": "Team",

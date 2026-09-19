@@ -275,6 +275,10 @@ function TableView({
     // todas las ramas cerradas aunque el valor diga lo contrario.
     initialState: { expanded: true },
     getSubRows: (row) => row.subRows,
+    // La fila se identifica por la tarea, no por su posicion. Con la posicion,
+    // si una actualizacion en vivo reordenaba las filas mientras se editaba una
+    // celda, el borrador se quedaba en ese hueco y se guardaba en otra tarea.
+    getRowId: (row) => row.id,
   });
 
   const showAddField = Boolean(onAddField) && canEdit;

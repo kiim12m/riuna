@@ -37,7 +37,8 @@ type Props = {
   canSave: boolean;
   saving: boolean;
   onApply: (view: SavedView) => void;
-  onSave: (name: string, isShared: boolean) => void;
+  /** `onSaved` se llama cuando el servidor acepta: es cuando se cierra. */
+  onSave: (name: string, isShared: boolean, onSaved: () => void) => void;
   onDelete: (viewId: string) => void;
 };
 
@@ -66,11 +67,18 @@ function ViewPicker({
 
   const active = views.find((view) => view.id === activeViewId);
 
-  const submit = () => {
-    if (!name.trim()) return;
-    onSave(name.trim(), isShared);
+  const close = () => {
+    setIsSaveOpen(false);
     setName("");
     setIsShared(false);
+  };
+
+  // El dialogo se cierra y se limpia cuando el servidor acepta, no al enviar:
+  // antes no se cerraba nunca, y limpiar antes de la respuesta perdia lo
+  // escrito si el guardado fallaba.
+  const submit = () => {
+    if (!name.trim()) return;
+    onSave(name.trim(), isShared, close);
   };
 
   return (
