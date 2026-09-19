@@ -1,5 +1,6 @@
 import { Readable } from "node:stream";
 import ExcelJS from "exceljs";
+import { restoreCsvFormula } from "./build-file";
 
 // Lector de los dos formatos que la fase acepta. Devuelve una tabla de celdas
 // sin interpretar: quien decide que significa cada columna es el mapeo, no
@@ -95,8 +96,9 @@ async function parseCsv(buffer: Buffer): Promise<ParsedSheet> {
   try {
     worksheet = await workbook.csv.read(Readable.from(buffer), {
       // Sin esto, ExcelJS convierte a numero y a fecha lo que le parece. La
-      // columna `Esquema` no sobrevive: `1.10` se volveria `1.1`.
-      map: (value: string) => value,
+      // columna `Esquema` no sobrevive: `1.10` se volveria `1.1`. De paso se
+      // quita el apostrofo con el que la exportacion desarma las formulas.
+      map: (value: string) => restoreCsvFormula(value),
     });
   } catch (error) {
     throw new FileParseError(

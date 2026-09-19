@@ -141,7 +141,11 @@ function addSheet(workbook: ExcelJS.Workbook, sheet: ExchangeSheet) {
  * emite BOM, sin el cual Excel abre un CSV UTF-8 con los acentos rotos.
  */
 export function buildExchangeCsv(sheet: ExchangeSheet): Buffer {
-  const lines = [sheet.columns.map((column) => column.header).map(escapeCsv)];
+  const lines = [
+    sheet.columns
+      .map((column) => neutralizeCsvFormula(column.header))
+      .map(escapeCsv),
+  ];
 
   for (const row of sheet.rows) {
     lines.push(
@@ -161,7 +165,29 @@ function csvValue(value: string | number | Date | null): string {
     const day = toSheetDate(value);
     return day ? day.toISOString().slice(0, 10) : "";
   }
-  return String(value);
+  // Solo el texto: un numero negativo es un numero para Excel, no una formula.
+  return typeof value === "string"
+    ? neutralizeCsvFormula(value)
+    : String(value);
+}
+
+// Excel y LibreOffice ejecutan como formula la celda de un CSV que empieza por
+// uno de estos caracteres, y cualquiera que pueda titular una tarea puede
+// escribir una. Un apostrofo delante la deja en texto (CWE-1236).
+const FORMULA_TRIGGER = /^[=+\-@\t\r]/;
+
+function neutralizeCsvFormula(text: string): string {
+  return FORMULA_TRIGGER.test(text) ? `'${text}` : text;
+}
+
+/**
+ * Deshace `neutralizeCsvFormula` al importar un CSV. Sin esto, exportar y
+ * reimportar anadiria un apostrofo a cada titulo que empieza por `-` o `+`.
+ */
+export function restoreCsvFormula(text: string): string {
+  return text.startsWith("'") && FORMULA_TRIGGER.test(text.slice(1))
+    ? text.slice(1)
+    : text;
 }
 
 function escapeCsv(value: string): string {

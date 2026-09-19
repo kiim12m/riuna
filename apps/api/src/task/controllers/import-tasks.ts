@@ -28,9 +28,11 @@ import type { CellValue } from "../exchange/parse-file";
 import {
   type LabelLink,
   type Link,
+  type PrimaryChange,
   reconcileAssignees,
   reconcileEpics,
   reconcileLabels,
+  reconcilePrimaryAssignees,
 } from "../exchange/reconcile-links";
 import {
   collectLinks,
@@ -253,6 +255,7 @@ async function run(
   const updatedRowIndexes: number[] = [];
 
   const assigneeLinks: Link[] = [];
+  const primaryChanges: PrimaryChange[] = [];
   const epicLinks: Link[] = [];
   const labelLinks: LabelLink[] = [];
   const assigneeTaskIds: string[] = [];
@@ -379,7 +382,9 @@ async function run(
         epicIdByName,
         workspaceId: project.workspaceId,
         assigneeId: effectiveAssignee,
+        previousAssigneeId: existing.userId,
         assigneeLinks,
+        primaryChanges,
         epicLinks,
         labelLinks,
         assigneeTaskIds,
@@ -474,7 +479,9 @@ async function run(
       epicIdByName,
       workspaceId: project.workspaceId,
       assigneeId,
+      previousAssigneeId: null,
       assigneeLinks,
+      primaryChanges,
       epicLinks,
       labelLinks,
       assigneeTaskIds,
@@ -551,10 +558,12 @@ async function run(
   // la lista y las otras dos reconciliaciones, con su lista de enlaces vacia,
   // les borraban todos los asignados y todas las epicas.
   //
-  // El responsable principal ya viene dentro de `assigneeLinks` (ver
-  // `collectLinks`), asi que no hace falta un `syncPrimaryAssignee` aparte: la
-  // ADR 010 se cumple igual.
+  // Si el fichero trae `Asignados`, el responsable principal ya viene dentro de
+  // `assigneeLinks` (ver `collectLinks`) y la ADR 010 se cumple al reconciliar.
+  // Si solo trae `Responsable`, el conjunto no se reconcilia: solo se cambia el
+  // responsable, con `primaryChanges`.
   await reconcileAssignees(tx, assigneeTaskIds, assigneeLinks);
+  await reconcilePrimaryAssignees(tx, primaryChanges);
   await reconcileEpics(tx, epicTaskIds, epicLinks);
   await reconcileLabels(tx, labelTaskIds, labelLinks);
 

@@ -50,6 +50,60 @@ export async function reconcileAssignees(
   }
 }
 
+export type PrimaryChange = {
+  taskId: string;
+  previousUserId: string | null;
+  nextUserId: string | null;
+};
+
+/**
+ * Para un fichero que trae el responsable y no la lista de asignados: el
+ * anterior sale del conjunto y el nuevo entra, sin tocar a nadie mas. Es lo que
+ * hace `syncPrimaryAssignee` en la via de un solo responsable (ADR 010), aqui en
+ * dos sentencias para todo el lote. Una columna que el fichero no trae no puede
+ * vaciar lo que ya hay escrito (regla 3 de la ADR 017).
+ */
+export async function reconcilePrimaryAssignees(
+  tx: DbOrTx,
+  changes: readonly PrimaryChange[],
+): Promise<void> {
+  const leaving = changes.filter(
+    (change): change is PrimaryChange & { previousUserId: string } =>
+      change.previousUserId !== null &&
+      change.previousUserId !== change.nextUserId,
+  );
+
+  if (leaving.length > 0) {
+    await tx.execute(sql`
+      DELETE FROM "task_assignee" AS "row"
+      USING unnest(
+        ${sql.param(leaving.map((change) => change.taskId))}::text[],
+        ${sql.param(leaving.map((change) => change.previousUserId))}::text[]
+      ) AS leaving(task_id, user_id)
+      WHERE "row"."task_id" = leaving.task_id
+        AND "row"."user_id" = leaving.user_id
+    `);
+  }
+
+  const arriving = changes.filter(
+    (change): change is PrimaryChange & { nextUserId: string } =>
+      change.nextUserId !== null && change.nextUserId !== change.previousUserId,
+  );
+
+  if (arriving.length > 0) {
+    await tx
+      .insert(taskAssigneeTable)
+      .values(
+        arriving.map((change) => ({
+          id: createId(),
+          taskId: change.taskId,
+          userId: change.nextUserId,
+        })),
+      )
+      .onConflictDoNothing();
+  }
+}
+
 export async function reconcileEpics(
   tx: DbOrTx,
   taskIds: readonly string[],

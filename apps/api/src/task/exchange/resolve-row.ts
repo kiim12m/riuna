@@ -2,7 +2,7 @@ import { coercePriority, coerceStatus } from "../validate-task-fields";
 import { matchPriority } from "./format";
 import { type ImportLookups, normalizeLookupKey, statusKeys } from "./lookups";
 import type { ColumnMapping, MappedRow } from "./map-rows";
-import type { LabelLink, Link } from "./reconcile-links";
+import type { LabelLink, Link, PrimaryChange } from "./reconcile-links";
 import type { UpdatableField } from "./write-tasks";
 
 // Resolucion de los valores de una fila contra lo que el proyecto conoce.
@@ -131,7 +131,14 @@ export function mappedFields(
 
 /** Que relaciones trae el fichero. Lo que no mapea no se reconcilia. */
 export type MappedLinks = {
+  /** Trae la lista entera de asignados: el conjunto se reconcilia con ella. */
   assignees: boolean;
+  /**
+   * Trae el responsable pero no la lista. Solo cambia el responsable: sale el
+   * anterior y entra el nuevo, como en la via de un solo responsable. Tratarlo
+   * como la lista entera borraba a todos los demas asignados.
+   */
+  primaryAssignee: boolean;
   epics: boolean;
   labels: boolean;
 };
@@ -145,8 +152,11 @@ export function mappedLinks(mapping: readonly ColumnMapping[]): MappedLinks {
       ),
   );
 
+  const assignees = fields.has("assignees");
+
   return {
-    assignees: fields.has("assignees") || fields.has("assignee"),
+    assignees,
+    primaryAssignee: !assignees && fields.has("assignee"),
     epics: fields.has("epics"),
     labels: fields.has("labels"),
   };
@@ -159,7 +169,10 @@ export type LinkCollector = {
   workspaceId: string;
   /** Responsable que quedara en `task.assignee_id` tras esta importacion. */
   assigneeId: string | null;
+  /** El que tenia antes; `null` para una tarea que se crea ahora. */
+  previousAssigneeId: string | null;
   assigneeLinks: Link[];
+  primaryChanges: PrimaryChange[];
   epicLinks: Link[];
   labelLinks: LabelLink[];
   assigneeTaskIds: string[];
@@ -197,6 +210,17 @@ export function collectLinks(
     for (const id of ids) {
       collector.assigneeLinks.push({ taskId, valueId: id });
     }
+  }
+
+  if (
+    collector.links.primaryAssignee &&
+    collector.previousAssigneeId !== collector.assigneeId
+  ) {
+    collector.primaryChanges.push({
+      taskId,
+      previousUserId: collector.previousAssigneeId,
+      nextUserId: collector.assigneeId,
+    });
   }
 
   if (collector.links.epics) {

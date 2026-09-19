@@ -516,6 +516,65 @@ describe("API integration: multiple task assignees", () => {
         member.user.id,
       ]);
     });
+
+    it("re-importing only the primary assignee keeps the co-assignees", async () => {
+      const member = await createWorkspaceMember({ role: "admin" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const second = await addWorkspaceMember(member.workspace.id, "Segunda");
+      const third = await addWorkspaceMember(member.workspace.id, "Tercera");
+
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const importRow = async (headers: string[], row: string[]) => {
+        const content = `﻿${[headers, row]
+          .map((cells) => cells.join(","))
+          .join("\r\n")}\r\n`;
+        const form = new FormData();
+        form.append(
+          "file",
+          new File([content], "import.csv", { type: "text/csv" }),
+        );
+        form.append("mapping", JSON.stringify(proposeMapping(headers)));
+
+        const response = await app.request(`/api/task/import/${project.id}`, {
+          method: "POST",
+          body: form,
+        });
+        expect(response.status).toBe(200);
+
+        return (await response.json()) as {
+          results: { rows: { taskId: string }[] };
+        };
+      };
+
+      const created = await importRow(
+        ["Referencia", "Título", "Responsable", "Asignados"],
+        [
+          "A-1",
+          "Varias manos",
+          member.user.email,
+          `${second.email}; ${third.email}`,
+        ],
+      );
+      const taskId = created.results.rows[0].taskId;
+      expect((await readAssignees(taskId)).sort()).toEqual(
+        [member.user.id, second.id, third.id].sort(),
+      );
+
+      // Una hoja que solo trae «Responsable» cambia el responsable: sale el
+      // anterior y entra el nuevo, y el resto no se toca (regla 3 de la ADR
+      // 017). Antes la importacion reconciliaba el conjunto entero y dejaba
+      // la tarea con el nuevo responsable como unico asignado.
+      await importRow(["Referencia", "Responsable"], ["A-1", second.email]);
+
+      await expect(readPrimaryAssignee(taskId)).resolves.toBe(second.id);
+      expect((await readAssignees(taskId)).sort()).toEqual(
+        [second.id, third.id].sort(),
+      );
+    });
   });
   // `task.assignees_changed` no lo escuchaba nadie: ni el WebSocket, ni la
   // actividad, ni las notificaciones. Anadir a alguien a una tarea no le
