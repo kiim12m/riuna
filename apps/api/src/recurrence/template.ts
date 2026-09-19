@@ -1,4 +1,12 @@
-import { VALID_PRIORITIES } from "../task/validate-task-fields";
+import {
+  assertValidTaskStatus,
+  VALID_PRIORITIES,
+} from "../task/validate-task-fields";
+import { assertAssignableTeam } from "../utils/assert-assignable-team";
+import {
+  assertAssignableUser,
+  getProjectWorkspaceId,
+} from "../utils/assert-assignable-user";
 
 export type RecurrenceTemplate = {
   title: string;
@@ -62,4 +70,31 @@ export function parseTemplate(value: unknown): RecurrenceTemplate {
     teamId: typeof raw.teamId === "string" ? raw.teamId : null,
     status: typeof raw.status === "string" ? raw.status : undefined,
   };
+}
+
+/**
+ * Lo que `parseTemplate` no puede comprobar sin la base: que el estado sea una
+ * columna del proyecto y que responsable y equipo sean de su espacio de
+ * trabajo. Lanza el mismo `HTTPException` que la creacion normal de tareas.
+ *
+ * Se llama al guardar la recurrencia y otra vez antes de cada ocurrencia,
+ * porque entre medias alguien puede borrar la columna o sacar a esa persona
+ * del espacio. Sin la segunda, una plantilla que dejo de valer fallaba en cada
+ * ocurrencia y las perdia todas en silencio.
+ */
+export async function assertTemplateUsable(
+  template: RecurrenceTemplate,
+  projectId: string,
+): Promise<void> {
+  await assertValidTaskStatus(template.status ?? "to-do", projectId);
+
+  if (!template.assigneeId && !template.teamId) return;
+
+  const workspaceId = await getProjectWorkspaceId(projectId);
+  if (template.assigneeId) {
+    await assertAssignableUser(template.assigneeId, workspaceId);
+  }
+  if (template.teamId) {
+    await assertAssignableTeam(template.teamId, workspaceId);
+  }
 }

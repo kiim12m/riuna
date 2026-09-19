@@ -1,3 +1,4 @@
+import { addDays, isSameDay, max, startOfDay } from "date-fns";
 import { asc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -8,9 +9,9 @@ import { taskRecurrenceTable } from "../database/schema";
 import { requireWorkspacePermission } from "../utils/require-workspace-permission";
 import { validateAndParseDate } from "../utils/validate-dates";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
-import { advancePast, parseCadence } from "./cadence";
+import { firstOnOrAfter, parseCadence } from "./cadence";
 import { countGeneratedTasks } from "./generate";
-import { parseTemplate } from "./template";
+import { assertTemplateUsable, parseTemplate } from "./template";
 
 /** Las excepciones de `parseCadence`/`parseTemplate` son errores de quien llama. */
 function asBadRequest<T>(parse: () => T): T {
@@ -98,18 +99,17 @@ const recurrence = new Hono<{
 
       const cadence = asBadRequest(() => parseCadence(body.cadence));
       const template = asBadRequest(() => parseTemplate(body.template));
+      await assertTemplateUsable(template, projectId);
       const startsAt = validateAndParseDate(body.startsAt, "startsAt");
       const endsAt = body.endsAt
         ? validateAndParseDate(body.endsAt, "endsAt")
         : null;
 
-      // Si la fecha de inicio ya pasó, la primera ocurrencia es la siguiente que
-      // toque, no un disparo inmediato por cada dia transcurrido.
-      const now = new Date();
-      const nextRunAt =
-        startsAt > now
-          ? startsAt
-          : advancePast(cadence, startsAt, now).nextRunAt;
+      // La primera ocurrencia es el primer dia de la cadencia desde el inicio, y
+      // nunca antes de hoy. Hoy cuenta ("toca hoy", ADR 026): una recurrencia
+      // que empieza hoy genera la tarea de hoy, y con un inicio pasado no se
+      // dispara una tarea por cada dia transcurrido.
+      const nextRunAt = firstOnOrAfter(cadence, startsAt, new Date());
 
       if (endsAt && endsAt < startsAt) {
         throw new HTTPException(400, {
@@ -172,19 +172,26 @@ const recurrence = new Hono<{
       const changes: Partial<typeof taskRecurrenceTable.$inferInsert> = {};
 
       if (body.template !== undefined) {
-        changes.template = asBadRequest(() => parseTemplate(body.template));
+        const template = asBadRequest(() => parseTemplate(body.template));
+        await assertTemplateUsable(template, existing.projectId);
+        changes.template = template;
       }
 
       if (body.cadence !== undefined) {
         const cadence = asBadRequest(() => parseCadence(body.cadence));
         changes.cadence = cadence;
-        // Cambiar la cadencia recoloca la proxima fecha: dejarla como estaba
-        // haria que la primera ocurrencia siguiera la regla vieja.
-        changes.nextRunAt = advancePast(
-          cadence,
-          existing.nextRunAt,
-          new Date(),
-        ).nextRunAt;
+        // Cambiar la cadencia recoloca la proxima fecha aunque la vieja siga en
+        // el futuro: si no, la primera ocurrencia seguiria la regla anterior.
+        // Cuenta desde hoy, o desde manana si la tarea de hoy ya se genero; y
+        // una recurrencia que aun no ha empezado no se adelanta a su inicio.
+        const today = startOfDay(new Date());
+        const floor =
+          existing.lastRunAt === null
+            ? max([today, existing.nextRunAt])
+            : isSameDay(existing.lastRunAt, today)
+              ? addDays(today, 1)
+              : today;
+        changes.nextRunAt = firstOnOrAfter(cadence, floor);
       }
 
       if (body.endsAt !== undefined) {

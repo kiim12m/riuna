@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   advancePast,
   type Cadence,
+  firstOnOrAfter,
   nextOccurrence,
   parseCadence,
 } from "../../../apps/api/src/recurrence/cadence";
@@ -103,6 +104,30 @@ describe("nextOccurrence", () => {
     expect(iso(first)).toBe("2026-01-19"); // dos semanas despues, no el 12
   });
 
+  // Las semanas que tocan traen **todos** sus dias marcados. Contar semanas por
+  // dias transcurridos (offset / 7) se saltaba el miercoles de la semana del
+  // lunes y dejaba la recurrencia en solo lunes.
+  it("keeps every marked weekday of the weeks it lands on", () => {
+    const cadence: Cadence = {
+      frequency: "weekly",
+      interval: 2,
+      byWeekday: [1, 3],
+    };
+
+    const dates = [day("2026-01-05")]; // lunes
+    for (let i = 0; i < 4; i += 1) {
+      dates.push(nextOccurrence(cadence, dates[dates.length - 1] as Date));
+    }
+
+    expect(dates.map(iso)).toEqual([
+      "2026-01-05",
+      "2026-01-07",
+      "2026-01-19",
+      "2026-01-21",
+      "2026-02-02",
+    ]);
+  });
+
   // La trampa clasica: `setDate(31)` sobre febrero se desborda a marzo en vez
   // de fallar, y la tarea del dia 31 aparece el 3 de marzo.
   it("clamps the day of the month instead of overflowing", () => {
@@ -143,6 +168,58 @@ describe("nextOccurrence", () => {
       byMonthDay: 10,
     };
     expect(iso(nextOccurrence(cadence, day("2026-01-10")))).toBe("2026-04-10");
+  });
+});
+
+describe("firstOnOrAfter", () => {
+  // Una recurrencia que empieza hoy genera la tarea de hoy: la cadencia es
+  // "toca hoy" (ADR 026), y el inicio es un dia que cuenta.
+  it("returns the start day itself when it falls on the cadence", () => {
+    const daily: Cadence = { frequency: "daily", interval: 1 };
+    expect(iso(firstOnOrAfter(daily, day("2026-01-05")))).toBe("2026-01-05");
+
+    const mondays: Cadence = {
+      frequency: "weekly",
+      interval: 1,
+      byWeekday: [1],
+    };
+    expect(iso(firstOnOrAfter(mondays, day("2026-01-05")))).toBe("2026-01-05");
+
+    const fifteenth: Cadence = {
+      frequency: "monthly",
+      interval: 1,
+      byMonthDay: 15,
+    };
+    expect(iso(firstOnOrAfter(fifteenth, day("2026-01-15")))).toBe(
+      "2026-01-15",
+    );
+  });
+
+  it("snaps a start that does not fall on the cadence to the next day that does", () => {
+    const cadence: Cadence = {
+      frequency: "weekly",
+      interval: 2,
+      byWeekday: [1, 3],
+    };
+    // Martes: el miercoles de esa misma semana es la primera ocurrencia.
+    expect(iso(firstOnOrAfter(cadence, day("2026-01-06")))).toBe("2026-01-07");
+  });
+
+  it("never goes before the floor, keeping the phase of a past start", () => {
+    const cadence: Cadence = {
+      frequency: "weekly",
+      interval: 2,
+      byWeekday: [1],
+    };
+    // Empezo el lunes 5; hoy es el jueves 15. El lunes 12 no toca (semana de
+    // descanso), asi que la siguiente es el 19, no el 12 ni el 26.
+    expect(
+      iso(firstOnOrAfter(cadence, day("2026-01-05"), day("2026-01-15"))),
+    ).toBe("2026-01-19");
+    // Y si "hoy" cae en una ocurrencia, es hoy.
+    expect(
+      iso(firstOnOrAfter(cadence, day("2026-01-05"), day("2026-01-19"))),
+    ).toBe("2026-01-19");
   });
 });
 

@@ -1,6 +1,7 @@
 import {
   addDays,
   addMonths,
+  differenceInCalendarWeeks,
   getDate,
   getDay,
   getDaysInMonth,
@@ -111,13 +112,14 @@ export function nextOccurrence(cadence: Cadence, after: Date): Date {
 
       if (!cadence.byWeekday.includes(getDay(candidate))) continue;
 
-      // Con intervalo 1 vale cualquier dia marcado. Con intervalo > 1 solo
-      // valen las semanas que tocan, contadas desde la semana de `from`.
-      if (cadence.interval === 1) return candidate;
-
-      const weeksApart = Math.floor(offset / 7);
-      if (weeksApart % cadence.interval === 0 && offset >= 7) return candidate;
-      if (weeksApart === 0) continue;
+      // Solo valen las semanas que tocan, contadas **de calendario** (de lunes
+      // a domingo) desde la de `from`, que siempre es una semana que toca: sus
+      // demas dias marcados tambien valen. Contarlas por dias transcurridos
+      // (`offset / 7`) se saltaba el miercoles de la semana del lunes.
+      const weeksApart = differenceInCalendarWeeks(candidate, from, {
+        weekStartsOn: 1,
+      });
+      if (weeksApart % cadence.interval === 0) return candidate;
     }
 
     // Inalcanzable con una cadencia valida, pero mejor una fecha que un bucle
@@ -158,6 +160,40 @@ export function advancePast(
   }
 
   return { nextRunAt: cursor, skipped };
+}
+
+function occursOn(cadence: Cadence, day: Date): boolean {
+  if (cadence.frequency === "daily") return true;
+  if (cadence.frequency === "weekly") {
+    return cadence.byWeekday.includes(getDay(day));
+  }
+  return day.getTime() === clampToMonth(day, cadence.byMonthDay).getTime();
+}
+
+/**
+ * La primera ocurrencia **en o despues de** `start`, y nunca antes de
+ * `notBefore`.
+ *
+ * Es la que toca al crear una recurrencia o cambiar su cadencia, y a diferencia
+ * de `nextOccurrence` el propio dia vale: una recurrencia que empieza hoy genera
+ * la tarea de hoy. Con un inicio pasado se avanza desde el inicio y no desde
+ * hoy, para no perder la fase de una cadencia de cada dos semanas.
+ */
+export function firstOnOrAfter(
+  cadence: Cadence,
+  start: Date,
+  notBefore: Date = start,
+): Date {
+  let cursor = startOfDay(start);
+  if (!occursOn(cadence, cursor)) cursor = nextOccurrence(cadence, cursor);
+
+  const floor = startOfDay(notBefore);
+  // El mismo tope que `advancePast`, por lo mismo.
+  for (let steps = 0; cursor < floor && steps < 1000; steps += 1) {
+    cursor = nextOccurrence(cadence, cursor);
+  }
+
+  return cursor;
 }
 
 /** Un dia legible para el titulo de la tarea generada. */

@@ -3,7 +3,7 @@ import db from "../database";
 import { taskRecurrenceTable, taskTable } from "../database/schema";
 import createTask from "../task/controllers/create-task";
 import { advancePast, parseCadence } from "./cadence";
-import { parseTemplate } from "./template";
+import { assertTemplateUsable, parseTemplate } from "./template";
 
 type DueRecurrence = typeof taskRecurrenceTable.$inferSelect;
 
@@ -18,6 +18,14 @@ async function getDueRecurrences(now: Date): Promise<DueRecurrence[]> {
         lte(taskRecurrenceTable.nextRunAt, now),
       ),
     );
+}
+
+async function disable(recurrenceId: string, reason: string, error: unknown) {
+  console.error(reason, { recurrenceId, error });
+  await db
+    .update(taskRecurrenceTable)
+    .set({ active: false })
+    .where(eq(taskRecurrenceTable.id, recurrenceId));
 }
 
 /**
@@ -46,14 +54,21 @@ async function runOne(
   } catch (error) {
     // Una fila invalida se apaga en vez de reintentarse cada cinco minutos
     // para siempre.
-    console.error("Disabling an invalid recurrence", {
-      recurrenceId: recurrence.id,
+    await disable(recurrence.id, "Disabling an invalid recurrence", error);
+    return "failed";
+  }
+
+  try {
+    await assertTemplateUsable(template, recurrence.projectId);
+  } catch (error) {
+    // Un estado, responsable o equipo que el proyecto ya no admite haria
+    // fallar cada ocurrencia despues de reclamarla, y se perderian todas sin
+    // ruido. Se apaga **antes** de reclamar, igual que una fila ilegible.
+    await disable(
+      recurrence.id,
+      "Disabling a recurrence the project no longer accepts",
       error,
-    });
-    await db
-      .update(taskRecurrenceTable)
-      .set({ active: false })
-      .where(eq(taskRecurrenceTable.id, recurrence.id));
+    );
     return "failed";
   }
 

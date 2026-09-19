@@ -26,6 +26,7 @@ async function seedRecurrence({
   cadence = { frequency: "daily", interval: 1 },
   template = { title: "Parte semanal", priority: "medium" },
   endsAt,
+  lastRunAt,
   active = true,
 }: {
   projectId: string;
@@ -34,6 +35,7 @@ async function seedRecurrence({
   cadence?: Record<string, unknown>;
   template?: Record<string, unknown>;
   endsAt?: Date;
+  lastRunAt?: Date;
   active?: boolean;
 }) {
   const [row] = await db
@@ -45,11 +47,30 @@ async function seedRecurrence({
       cadence,
       nextRunAt,
       endsAt: endsAt ?? null,
+      lastRunAt: lastRunAt ?? null,
       active,
     })
     .returning();
 
   return row;
+}
+
+async function readRecurrence(id: string) {
+  const [row] = await db
+    .select({
+      active: schema.taskRecurrenceTable.active,
+      nextRunAt: schema.taskRecurrenceTable.nextRunAt,
+    })
+    .from(schema.taskRecurrenceTable)
+    .where(eq(schema.taskRecurrenceTable.id, id));
+
+  return row;
+}
+
+function startOfToday() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
 }
 
 async function tasksOf(projectId: string) {
@@ -316,6 +337,127 @@ describe("API integration: recurring tasks", () => {
       },
     );
     expect(badTemplate.status).toBe(400);
+  });
+
+  // "Toca hoy" (ADR 026): una recurrencia que empieza hoy no puede estrenarse
+  // manana. El inicio a medianoche ya habia pasado y se empujaba un dia.
+  it("creates today's task when the recurrence starts today", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const created = await app.request(`/api/recurrence/project/${project.id}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        template: { title: "Parte diario" },
+        cadence: { frequency: "daily", interval: 1 },
+        startsAt: new Date().toISOString(),
+      }),
+    });
+    expect(created.status).toBe(200);
+    const recurrence = (await created.json()) as { id: string };
+
+    expect((await readRecurrence(recurrence.id)).nextRunAt).toEqual(
+      startOfToday(),
+    );
+
+    await generateRecurringTasks();
+    expect(await tasksOf(project.id)).toHaveLength(1);
+  });
+
+  // Cambiar la cadencia recoloca la proxima fecha aunque la vieja siguiera en
+  // el futuro: si no, la primera ocurrencia seguia la regla anterior.
+  it("moves a future next run when the cadence changes", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const recurrence = await seedRecurrence({
+      projectId: project.id,
+      createdBy: member.user.id,
+      cadence: { frequency: "weekly", interval: 1, byWeekday: [1] },
+      nextRunAt: new Date(Date.now() + 5 * DAY),
+      lastRunAt: new Date(Date.now() - 2 * DAY),
+    });
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const response = await app.request(`/api/recurrence/${recurrence.id}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ cadence: { frequency: "daily", interval: 1 } }),
+    });
+    expect(response.status).toBe(200);
+
+    expect((await readRecurrence(recurrence.id)).nextRunAt).toEqual(
+      startOfToday(),
+    );
+  });
+
+  it("refuses a template whose status, assignee or team the project cannot take", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const stranger = await createWorkspaceMember({ role: "admin" });
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const [foreignTeam] = await db
+      .insert(schema.teamTable)
+      .values({
+        id: `team-${Date.now()}`,
+        name: "Equipo ajeno",
+        workspaceId: stranger.workspace.id,
+        createdAt: new Date(),
+      })
+      .returning();
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const create = (template: Record<string, unknown>) =>
+      app.request(`/api/recurrence/project/${project.id}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          template: { title: "X", ...template },
+          cadence: { frequency: "daily", interval: 1 },
+          startsAt: new Date().toISOString(),
+        }),
+      });
+
+    expect((await create({ status: "no-existe" })).status).toBe(400);
+    expect((await create({ assigneeId: stranger.user.id })).status).toBe(403);
+    expect((await create({ teamId: foreignTeam.id })).status).toBe(403);
+  });
+
+  // Una plantilla que el proyecto ya no admite fallaria en cada ocurrencia y se
+  // perderian todas en silencio. Se apaga antes de reclamar la fecha, igual que
+  // una plantilla ilegible.
+  it("switches off a recurrence the project no longer accepts, without claiming the date", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const nextRunAt = new Date(Date.now() - DAY);
+    const recurrence = await seedRecurrence({
+      projectId: project.id,
+      createdBy: member.user.id,
+      nextRunAt,
+      template: { title: "Revision", status: "columna-borrada" },
+    });
+
+    const outcome = await generateRecurringTasks();
+    expect(outcome.degraded).toBe(true);
+
+    const after = await readRecurrence(recurrence.id);
+    expect(after.active).toBe(false);
+    expect(after.nextRunAt).toEqual(nextRunAt);
+    expect(await tasksOf(project.id)).toHaveLength(0);
   });
 
   it("refuses a plain member and anyone outside the workspace", async () => {
