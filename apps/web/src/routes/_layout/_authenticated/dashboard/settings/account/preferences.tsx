@@ -66,6 +66,8 @@ function RouteComponent() {
     resetDisplayPreferences,
     sidebarDefaultOpen,
     setSidebarDefaultOpen,
+    compactMode,
+    setCompactMode,
   } = useUserPreferencesStore();
 
   const themeLabels: Record<string, string> = {
@@ -270,6 +272,20 @@ function RouteComponent() {
               checked={sidebarDefaultOpen}
               onCheckedChange={setSidebarDefaultOpen}
             />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-medium">
+                {t("settings:preferencesPage.density")}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {t("settings:preferencesPage.densityDescription")}
+              </p>
+            </div>
+            <Switch checked={compactMode} onCheckedChange={setCompactMode} />
           </div>
         </div>
       </div>

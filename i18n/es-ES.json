@@ -1,8 +1,9 @@
 {
 	"common": {
-		"appName": "Kaneo",
+		"appName": "Riuna",
 		"actions": {
 			"cancel": "Cancelar",
+			"save": "Guardar",
 			"close": "Cerrar",
 			"clearAll": "Limpiar todo",
 			"delete": "Borrar",
@@ -11,7 +12,14 @@
 			"remove": "Borrar",
 			"reset": "Restablecer",
 			"filter": "Filtrar",
-			"clearAllFilters": "Eliminar todos los filtros"
+			"clearAllFilters": "Eliminar todos los filtros",
+			"next": "Siguiente",
+			"previous": "Anterior",
+			"edit": "Editar"
+		},
+		"boolean": {
+			"yes": "Sí",
+			"no": "No"
 		},
 		"a11y": {
 			"toggleSidebar": "Mostrar barra lateral"
@@ -56,7 +64,30 @@
 			"troubleshooting": "Pasos para solucionar problemas:",
 			"tryAgain": "Intentar de nuevo",
 			"viewDeploymentGuide": "Ver el manual del despliegue",
-			"refreshPage": "Actualizar página"
+			"refreshPage": "Actualizar página",
+			"description": "La página ha fallado inesperadamente. Normalmente se soluciona actualizando.",
+			"messages": {
+				"cors": "No se ha podido conectar con el servidor. Puede deberse a la configuración de CORS.",
+				"network": "Error de red. Comprueba tu conexión a internet e inténtalo de nuevo.",
+				"auth": "Ha fallado la autenticación. Vuelve a iniciar sesión.",
+				"server": "Error del servidor. Inténtalo de nuevo más tarde.",
+				"unknown": "Se ha producido un error inesperado."
+			},
+			"troubleshootingSteps": {
+				"cors": {
+					"checkApiRunning": "Asegúrate de que el servidor de la API está en marcha",
+					"checkApiUrl": "Comprueba que VITE_API_URL en el .env del frontend coincide con la URL del servidor de la API",
+					"verifyCorsOrigins": "Verifica que CORS_ORIGINS en el .env de la API incluye la URL del frontend",
+					"checkProtocol": "Asegúrate de que el frontend y la API usan el mismo protocolo (http/https)",
+					"checkAccessibility": "Comprueba que el servidor de la API es accesible desde tu navegador"
+				},
+				"network": {
+					"checkConnection": "Comprueba tu conexión a internet",
+					"verifyApiRunning": "Verifica que el servidor de la API está en marcha y es accesible",
+					"tryRefresh": "Prueba a actualizar la página",
+					"checkFirewall": "Comprueba si hay problemas de cortafuegos o proxy"
+				}
+			}
 		},
 		"formats": {
 			"never": "Nunca"
@@ -77,7 +108,7 @@
 				"errorToast": "Hubo un error al crear el proyecto"
 			},
 			"createWorkspace": {
-				"breadcrumbKaneo": "KANEO",
+				"breadcrumbAppName": "RIUNA",
 				"title": "Crear un nuevo espacio de trabajo",
 				"description": "Crea un nuevo espacio de trabajo eligiendo un nombre.",
 				"namePlaceholder": "Nombre del espacio de trabajo",
@@ -172,7 +203,9 @@
 			"emailPlaceholder": "yo@ejemplo.com",
 			"passwordPlaceholder": "••••••••",
 			"showPassword": "Mostrar contraseña",
-			"hidePassword": "Ocultar contraseña"
+			"hidePassword": "Ocultar contraseña",
+			"identifier": "Correo o usuario",
+			"identifierPlaceholder": "yo@ejemplo.com o miusuario"
 		},
 		"checkEmail": {
 			"pageTitle": "Verifica tu email",
@@ -196,7 +229,7 @@
 			"toggleMessage": "¿Ya tienes cuenta?",
 			"toggleLink": "Iniciar sesión",
 			"instanceStatusError": "No se ha podido contactar con el servidor. Vuelve a intentarlo en un momento.",
-			"instanceAdminTitle": "Configura tu instancia de Kaneo",
+			"instanceAdminTitle": "Configura tu instancia de Riuna",
 			"instanceAdminSubtitle": "Esta cuenta se convierte en la administradora de la instancia con acceso completo."
 		},
 		"verifyOtp": {
@@ -254,7 +287,7 @@
 			"workspaceLabel": "Espacio de trabajo: {{workspaceName}}",
 			"joinWorkspace": "Unirse a {{workspaceName}}",
 			"inviteBodySignedIn": "<inviter>{{inviterName}}</inviter> te ha invitado a unirse a su espacio de trabajo.",
-			"inviteBodySignedOut": "<inviter>{{inviterName}}</inviter> te ha invitado a unirse a su espacio de trabajo en Kaneo.",
+			"inviteBodySignedOut": "<inviter>{{inviterName}}</inviter> te ha invitado a unirse a su espacio de trabajo en Riuna.",
 			"createAccountOrSignIn": "Crea una cuenta para aceptar esta invitación o inicia sesión si ya tienes una.",
 			"createAccount": "Crear cuenta",
 			"accepting": "Aceptando...",
@@ -270,7 +303,7 @@
 			}
 		},
 		"onboarding": {
-			"pageTitle": "Bienvenido a Kaneo",
+			"pageTitle": "Bienvenido a Riuna",
 			"workspacePageTitle": "Crear espacio de trabajo",
 			"createWorkspaceTitle": "Crear espacio de trabajo",
 			"createWorkspaceSubtitle": "Configura tu espacio de trabajo para empezar a gestionar proyectos",
@@ -337,30 +370,30 @@
 			"avatar": {
 				"hint": "PNG, JPEG, or WebP. Cropped to a square and resized to 256x256.",
 				"remove": "Remove",
-				"removeError": "Failed to remove profile picture",
-				"removeSuccess": "Profile picture removed",
-				"updateError": "Failed to update profile picture",
-				"updateSuccess": "Profile picture updated",
-				"change": "Change avatar",
-				"edit": "Change your profile picture"
+				"removeError": "No se ha podido quitar la foto de perfil",
+				"removeSuccess": "Foto de perfil quitada",
+				"updateError": "No se ha podido actualizar la foto de perfil",
+				"updateSuccess": "Foto de perfil actualizada",
+				"change": "Cambiar foto",
+				"edit": "Cambia tu foto de perfil"
 			},
 			"deleteAccount": {
-				"confirm": "Delete account",
+				"confirm": "Eliminar la cuenta",
 				"confirmLabel": "Confirm your email address",
-				"description": "Workspaces only you belong to are deleted with your account. Elsewhere, your tasks stay and become unassigned, and your comments are removed.",
-				"error": "Failed to delete account",
+				"description": "Los espacios de trabajo en los que estés solo se eliminan con tu cuenta. En el resto, tus tareas se quedan y pasan a estar sin asignar, y tus comentarios se borran.",
+				"error": "No se ha podido eliminar la cuenta",
 				"modalDescription": "This cannot be undone. Type {{email}} to confirm.",
-				"modalTitle": "Delete your account?",
-				"sectionSubtitle": "Permanent actions that affect your whole account.",
-				"sectionTitle": "Danger zone",
-				"success": "Your account has been deleted",
-				"title": "Delete account",
-				"sessionTooOld": "For security, sign out and sign back in before deleting your account."
+				"modalTitle": "¿Eliminar tu cuenta?",
+				"sectionSubtitle": "Acciones permanentes que afectan a toda tu cuenta.",
+				"sectionTitle": "Zona peligrosa",
+				"success": "Tu cuenta se ha eliminado",
+				"title": "Eliminar la cuenta",
+				"sessionTooOld": "Por seguridad, cierra la sesión y vuelve a entrar antes de eliminar tu cuenta."
 			}
 		},
 		"preferencesPage": {
 			"title": "Preferencias",
-			"subtitle": "Personaliza tu experiencia Kaneo.",
+			"subtitle": "Personaliza tu experiencia Riuna.",
 			"appearanceTitle": "Apariencia",
 			"appearanceSubtitle": "Ajustes visuales y de diseño.",
 			"theme": "Tema",
@@ -386,7 +419,9 @@
 			"gantt": "Gantt",
 			"sidebarDefault": "Barra lateral por defecto",
 			"sidebarDefaultDescription": "Mantener la barra lateral al iniciar",
-			"displayOptions": "Ver opciones",
+			"density": "Densidad compacta",
+			"densityDescription": "Aprieta el espaciado en las vistas con muchas tareas",
+			"displayOptions": "Opciones de vista",
 			"displayOptionsDescription": "Elige qué información ver en las tareas",
 			"taskNumbers": "Número de tarea",
 			"taskNumbersDescription": "Mostrar el ID y el número de las tareas",
@@ -404,7 +439,7 @@
 			"title": "Ajustes de Desarrollador",
 			"subtitle": "Gestiona tus claves de API y recursos de desarrollo.",
 			"apiKeysCardTitle": "Claves de API",
-			"apiKeysCardDescription": "Crea y gestiona las claves de API para acceder a Kaneo.",
+			"apiKeysCardDescription": "Crea y gestiona las claves de API para acceder a Riuna.",
 			"createApiKey": "Crear clave de API",
 			"unnamedKey": "Clave sin nombre"
 		},
@@ -443,7 +478,7 @@
 			},
 			"createDialog": {
 				"title": "Crear clave de API",
-				"description": "Create una nueva clave de API para acceder a la API de Kaneo.",
+				"description": "Create una nueva clave de API para acceder a la API de Riuna.",
 				"nameLabel": "Nombre",
 				"namePlaceholder": "Mi API Key",
 				"nameDescription": "Un nombre descriptivo para esta clave de API",
@@ -507,6 +542,16 @@
 				"transferring": "Transfiriendo…",
 				"confirm": "Transferir propiedad"
 			}
+		},
+		"workspaceTasksExport": {
+			"title": "Exportar tareas a Excel",
+			"subtitle": "Descarga todas las tareas del espacio de trabajo en el formato del cuadro de SERVITEC.",
+			"spreadsheet": "Cuadro de tareas (.xlsx)",
+			"spreadsheetDescription": "Una hoja con todas las tareas de todos los proyectos, con su estado, sus fechas y sus comentarios.",
+			"exportButton": "Exportar",
+			"exporting": "Exportando tareas...",
+			"exportSuccess": "Tareas exportadas correctamente",
+			"exportError": "Error al exportar tareas"
 		},
 		"projectGeneral": {
 			"pageTitle": "Ajustes del Proyecto",
@@ -635,7 +680,7 @@
 				"removeError": "Error al eliminar la integración con GitHub",
 				"issuesImported": "Issues importados correctamente",
 				"importError": "Error al importar issues",
-				"commentOnEnabled": "Kaneo añadirá un comentario con un enlace a la tarea en los nuevos issues",
+				"commentOnEnabled": "Riuna añadirá un comentario con un enlace a la tarea en los nuevos issues",
 				"commentOnDisabled": "Los comentarios con enlaces a tareas en nuevos issues están desactivados",
 				"settingsUpdateError": "Error al actualizar la integración de GitHub"
 			},
@@ -646,8 +691,8 @@
 			"badgeNotConnected": "No connectado",
 			"repository": "Repositorio",
 			"repositoryHint": "Repositorio de GitHub conectado",
-			"commentTaskLinkTitle": "Comenta Kaneo link en issues nuevos",
-			"commentTaskLinkHint": "Si está activado, Kaneo añade un comentario en cada nuevo issue de GitHub vinculado con la tarea.",
+			"commentTaskLinkTitle": "Comenta Riuna link en issues nuevos",
+			"commentTaskLinkHint": "Si está activado, Riuna añade un comentario en cada nuevo issue de GitHub vinculado con la tarea.",
 			"appStatusTitle": "Estado de la App de GitHub",
 			"appStatusHint": "Estado de instalación y permisos",
 			"statusProperlyConfigured": "Correctamente configurado",
@@ -765,15 +810,15 @@
 				"removeError": "Error al eliminar la integración con webhook"
 			},
 			"connectionTitle": "Conexión de sálida a un webhook",
-			"connectionHint": "Envía eventos de las tareas a tu propio webhook como JSON. Una cabecera X-Kaneo-Signature se incluye si el secreto está configurado.",
+			"connectionHint": "Envía eventos de las tareas a tu propio webhook como JSON. Una cabecera X-Riuna-Signature se incluye si el secreto está configurado.",
 			"connected": "Conectado",
 			"paused": "Pausado",
 			"webhookLabel": "URL del webhook",
-			"webhookPlaceholder": "https://ejemplo.com/webhooks/kaneo",
-			"webhookHint": "Kaneo envía requests POST como JSON para cada evento activo.",
+			"webhookPlaceholder": "https://ejemplo.com/webhooks/riuna",
+			"webhookHint": "Riuna envía requests POST como JSON para cada evento activo.",
 			"secretLabel": "Secreto para la firma",
 			"secretPlaceholder": "Secreto opcional",
-			"secretHint": "Opcional. Si está configurado, Kaneo envía el cuerpo de la petición y añade la cabecera X-Kaneo-Signature.",
+			"secretHint": "Opcional. Si está configurado, Riuna envía el cuerpo de la petición y añade la cabecera X-Riuna-Signature.",
 			"secretHintConfigured": "Ya hay un secreto configurado ({{secret}}). Introduce uno nuevo para reemplazarlo.",
 			"eventsTitle": "Notificaciones de eventos",
 			"eventsHint": "Elige qué cambios en el proyecto deben ser notificados a través de webhooks.",
@@ -816,23 +861,63 @@
 			"relativeDaysAgo": "hace {{count}}d"
 		},
 		"tasksImportExport": {
-			"exportTasks": "Exportar tareas",
-			"importTasks": "Importar tareas",
+			"analyzeError": "No se ha podido leer el fichero",
+			"check": "Comprobar",
+			"checkResult": "Se crearán {{created}}, se actualizarán {{updated}} y {{failed}} tienen errores.",
+			"dialogDescription": "Sube un fichero CSV o Excel. La primera fila tiene que nombrar las columnas.",
 			"dialogTitle": "Importar tareas",
-			"dialogDescription": "Sube un fichero JSON con las tareas para importar en este proyecto.",
-			"expectedFormat": "Formato esperado:",
-			"dropHint": "Arrastra tu fichero JSON aquí",
-			"selectFile": "Seleccionar fichero",
-			"exporting": "Exportando tareas...",
-			"exportSuccess": "Tareas exportadas correctamente",
+			"dropHint": "Arrastra aquí tu fichero CSV o Excel",
+			"existingField": "Campo existente",
+			"exportCsv": "Exportar a CSV",
 			"exportError": "Error al exportar tareas",
-			"importing": "Importando tareas...",
-			"importSuccess": "{{count}} tareas importadas correctamente",
-			"importPartialError": "Error al importar {{count}} tareas",
-			"importError": "Error al importar tareas",
-			"invalidFormat": "Formato de fichero inválido",
-			"noFileDropped": "No se ha añadido ningún fichero",
-			"notJsonFile": "Por favor, sube un fichero JSON"
+			"exportJson": "Exportar copia JSON",
+			"exportSuccess": "Tareas exportadas correctamente",
+			"exportXlsx": "Exportar a Excel",
+			"exporting": "Exportando tareas...",
+			"field": {
+				"assignee": "Responsable",
+				"assignees": "Asignados",
+				"description": "Descripción",
+				"descriptionHtml": "Descripción (HTML)",
+				"dueDate": "Fecha límite",
+				"epics": "Épicas",
+				"estimateHours": "Estimación (h)",
+				"id": "ID",
+				"labels": "Etiquetas",
+				"outline": "Esquema",
+				"priority": "Prioridad",
+				"reference": "Referencia",
+				"startDate": "Fecha inicio",
+				"status": "Estado",
+				"team": "Equipo",
+				"title": "Título"
+			},
+			"importError": "No se han podido importar las tareas",
+			"importPartialError": "No se han podido importar {{count}} filas",
+			"importSuccess": "{{created}} tareas creadas y {{updated}} actualizadas",
+			"importTasks": "Importar tareas",
+			"noFileDropped": "No se ha soltado ningún fichero",
+			"noOutline": "El fichero no trae columna de esquema, así que la jerarquía no se toca.",
+			"outlineIssues": "{{count}} filas tienen un problema de esquema y no cambiarán de madre.",
+			"outlineSummary": "{{roots}} tareas raíz y {{depth}} niveles de profundidad.",
+			"selectFile": "Seleccionar fichero",
+			"sourceHint": "Reimportar con el mismo nombre de origen actualiza las filas que creó en vez de duplicarlas.",
+			"sourceLabel": "Nombre de origen",
+			"summary": "{{rows}} filas: {{matched}} ya existen y {{fresh}} son nuevas.",
+			"targetCustom": "Campo personalizado",
+			"targetIgnore": "No importar",
+			"type": {
+				"checkbox": "Casilla",
+				"currency": "Moneda",
+				"date": "Fecha",
+				"multi_select": "Selección múltiple",
+				"number": "Número",
+				"select": "Selección",
+				"text": "Texto",
+				"url": "URL",
+				"user": "Usuario"
+			},
+			"unnamedColumn": "(columna sin título)"
 		},
 		"workflowEditor": {
 			"loading": "Cargando...",
@@ -864,7 +949,7 @@
 		"notificationsPage": {
 			"pageTitle": "Notificaciones",
 			"title": "Notificaciones",
-			"subtitle": "Elige cómo Kaneo entrega las notificaciones de tu cuenta y qué canales usar.",
+			"subtitle": "Elige cómo Riuna entrega las notificaciones de tu cuenta y qué canales usar.",
 			"statusConnected": "Conectado",
 			"statusPaused": "Pausado",
 			"emailTitle": "Correo electrónico",
@@ -897,10 +982,10 @@
 			"webhookDescription": "Envía las notificaciones de tu cuenta a tu propio endpoint como JSON.",
 			"endpointUrl": "URL del endpoint",
 			"signingSecret": "Secreto de firma",
-			"webhookUrlPlaceholder": "https://example.com/webhooks/kaneo",
+			"webhookUrlPlaceholder": "https://example.com/webhooks/riuna",
 			"webhookSecretPlaceholder": "Secreto compartido opcional",
 			"webhookSecretHintConfigured": "Ya hay un secreto de firma configurado ({{masked}}). Introduce uno nuevo para reemplazarlo.",
-			"webhookSecretHintOptional": "Opcional. Kaneo firma el cuerpo de la petición cuando hay un secreto configurado.",
+			"webhookSecretHintOptional": "Opcional. Riuna firma el cuerpo de la petición cuando hay un secreto configurado.",
 			"connectWebhook": "Conectar webhook",
 			"workspaceRulesTitle": "Reglas de entrega por espacio de trabajo",
 			"workspaceRulesDescription": "Reutiliza tus canales globales y decide qué espacios de trabajo y proyectos pueden enviar notificaciones a tu cuenta.",
@@ -1100,6 +1185,34 @@
 				"description": "Esto eliminará permanentemente el rol \"{{role}}\". Los miembros con este rol asignado perderán sus permisos."
 			}
 		},
+		"workspaceTeams": {
+			"title": "Equipos",
+			"subtitle": "Agrupa a las personas en departamentos y asigna tareas a un equipo entero.",
+			"cardDescription": "Una tarea puede asignarse a un equipo además de a una persona.",
+			"empty": "Todavía no hay equipos. Crea uno para poder asignar trabajo a un departamento entero.",
+			"createTeam": "Crear equipo",
+			"createDescription": "Ponle nombre al departamento o grupo.",
+			"createSuccess": "Equipo creado",
+			"createError": "No se ha podido crear el equipo",
+			"name": "Nombre",
+			"namePlaceholder": "Diseño",
+			"rename": "Renombrar equipo",
+			"save": "Guardar",
+			"updateSuccess": "Equipo actualizado",
+			"updateError": "No se ha podido actualizar el equipo",
+			"delete": "Eliminar equipo",
+			"deleteTitle": "¿Eliminar el equipo?",
+			"deleteDescription": "Las tareas asignadas a este equipo conservan su responsable individual, pero pierden el equipo.",
+			"deleteSuccess": "Equipo eliminado",
+			"deleteError": "No se ha podido eliminar el equipo",
+			"manageMembers": "Miembros",
+			"membersTitle": "Miembros del equipo",
+			"noMembers": "Este equipo todavía no tiene miembros.",
+			"addMember": "Añadir un miembro",
+			"addMemberError": "No se ha podido añadir el miembro",
+			"removeMember": "Quitar del equipo",
+			"removeMemberError": "No se ha podido quitar el miembro"
+		},
 		"workspaceLabels": {
 			"pageTitle": "Ajustes de etiquetas",
 			"title": "Etiquetas",
@@ -1148,7 +1261,7 @@
 				"removeError": "Error al eliminar la integración con Gitea",
 				"issuesImported": "Issues importadas correctamente",
 				"importError": "Error al importar issues",
-				"commentOnEnabled": "Kaneo comentará con un enlace a la tarea en las nuevas issues",
+				"commentOnEnabled": "Riuna comentará con un enlace a la tarea en las nuevas issues",
 				"commentOnDisabled": "Los comentarios con enlace a la tarea en nuevas issues están desactivados",
 				"settingsUpdateError": "Error al actualizar la integración con Gitea",
 				"secretCopied": "Copiado",
@@ -1166,8 +1279,8 @@
 			"badgeNotConnected": "No conectado",
 			"repository": "Repositorio",
 			"repositoryHint": "Repositorio de Gitea vinculado",
-			"commentTaskLinkTitle": "Comentar el enlace de Kaneo en nuevas issues",
-			"commentTaskLinkHint": "Si está activado, Kaneo publica un comentario en cada nueva issue con un enlace a la tarea.",
+			"commentTaskLinkTitle": "Comentar el enlace de Riuna en nuevas issues",
+			"commentTaskLinkHint": "Si está activado, Riuna publica un comentario en cada nueva issue con un enlace a la tarea.",
 			"webhookTitle": "Webhook",
 			"webhookHint": "En tu repositorio de Gitea, añade un webhook con esta URL y secreto. Activa push, pull request, issues, comentarios de issues y create (para etiquetas).",
 			"webhookSecretLabel": "Secreto (debe coincidir con el secreto del webhook en Gitea)",
@@ -1232,7 +1345,7 @@
 			"threadIdHint": "Opcional. Úsalo para temas de foro dentro de grupos de Telegram.",
 			"chatLabelLabel": "Etiqueta del chat",
 			"chatLabelPlaceholder": "Actualizaciones de ingeniería",
-			"chatLabelHint": "Etiqueta opcional para tu referencia dentro de Kaneo.",
+			"chatLabelHint": "Etiqueta opcional para tu referencia dentro de Riuna.",
 			"eventsTitle": "Notificaciones de eventos",
 			"eventsHint": "Elige qué cambios del proyecto deben publicarse en Telegram.",
 			"events": {
@@ -1246,6 +1359,83 @@
 			"connect": "Conectar Telegram",
 			"saveChanges": "Guardar cambios",
 			"disconnect": "Desconectar"
+		},
+		"projectTree": {
+			"title": "Jerarquía",
+			"description": "Cómo se comporta el árbol de tareas en este proyecto: hasta dónde puede bajar, y si cerrar o archivar una tarea se lleva su rama por delante.",
+			"cascadeCloseLabel": "Cerrar baja en cascada",
+			"cascadeCloseHint": "Mover una tarea a una columna final mueve también todo lo que cuelga de ella.",
+			"cascadeArchiveLabel": "Archivar baja en cascada",
+			"cascadeArchiveHint": "Archivar una tarea archiva también todo lo que cuelga de ella.",
+			"depthLabel": "Profundidad máxima",
+			"depthHint": "Cuántos niveles puede tener una rama. Más allá de cinco, la sangría se come la lista.",
+			"updateError": "No se han podido guardar los ajustes de jerarquía"
+		},
+		"projectEpics": {
+			"title": "Épicas",
+			"description": "Las épicas cortan el proyecto en vertical: agrupan tareas de cualquier rama y de cualquier columna.",
+			"namePlaceholder": "Nombre de la épica",
+			"addAction": "Añadir",
+			"empty": "Todavía no hay épicas",
+			"archiveAction": "Archivar la épica",
+			"unarchiveAction": "Restaurar la épica",
+			"deleteAction": "Borrar la épica",
+			"createError": "No se ha podido crear la épica",
+			"updateError": "No se ha podido cambiar la épica",
+			"deleteError": "No se ha podido borrar la épica"
+		},
+		"projectRecurrences": {
+			"add": "Añadir tarea recurrente",
+			"dayOfMonth": "Día",
+			"description": "Tareas que Riuna crea sola cada cierto tiempo. Para el parte semanal, la revisión mensual y todo lo que vuelve.",
+			"everyDays_one": "Cada día",
+			"everyDays_other": "Cada {{count}} días",
+			"everyMonths_one": "Cada mes el día {{day}}",
+			"everyMonths_other": "Cada {{count}} meses el día {{day}}",
+			"everyWeeks_one": "Cada semana",
+			"everyWeeks_other": "Cada {{count}} semanas",
+			"frequencies": {
+				"daily": "A diario",
+				"monthly": "Cada mes",
+				"weekly": "Cada semana"
+			},
+			"frequency": "Se repite",
+			"generated_one": "{{count}} tarea creada",
+			"generated_other": "{{count}} tareas creadas",
+			"interval": "Cada",
+			"pause": "Pausar",
+			"resume": "Reanudar",
+			"taskTitle": "Título de la tarea",
+			"taskTitlePlaceholder": "Parte semanal",
+			"title": "Tareas recurrentes",
+			"weekdays": "Días de la semana",
+			"weekdayShort": {
+				"0": "Dom",
+				"1": "Lun",
+				"2": "Mar",
+				"3": "Mié",
+				"4": "Jue",
+				"5": "Vie",
+				"6": "Sáb"
+			}
+		},
+		"projectTemplates": {
+			"applied_one": "{{count}} tarea creada",
+			"applied_other": "{{count}} tareas creadas",
+			"apply": "Usar",
+			"applyError": "No se ha podido aplicar la plantilla",
+			"description": "Guarda un proyecto o una tarea con todo lo que cuelga de ella, y vuelve a desplegarlo donde haga falta. Las plantillas son del espacio de trabajo, así que sirven en cualquier proyecto.",
+			"kind": {
+				"project": "Proyecto",
+				"task": "Árbol"
+			},
+			"name": "Nombre de la plantilla",
+			"namePlaceholder": "Nombre de la nueva plantilla",
+			"saveProject": "Guardar este proyecto como plantilla",
+			"saveTask": "Guardar como plantilla",
+			"taskCount_one": "{{count}} tarea",
+			"taskCount_other": "{{count}} tareas",
+			"title": "Plantillas"
 		}
 	},
 	"navigation": {
@@ -1277,7 +1467,9 @@
 			"members": "Miembros",
 			"invitations": "Invitaciones",
 			"more": "Más",
-			"backToBoard": "Volver al tablero"
+			"backToBoard": "Volver al tablero",
+			"home": "Panel",
+			"goals": "Objetivos"
 		},
 		"projectList": {
 			"viewProject": "Ver Proyecto",
@@ -1357,7 +1549,7 @@
 				"prevTask": "Tarea anterior",
 				"openTask": "Abrir tarea seleccionada",
 				"quickSelectNumber": "Seleccionar opción por número",
-				"calendarView": "Switch to calendar view"
+				"calendarView": "Cambiar a vista de calendario"
 			}
 		}
 	},
@@ -1423,6 +1615,12 @@
 	},
 	"activity": {
 		"assignedToSelf": "se ha asignado la tarea a sí mismo",
+		"assignedToTeam": "asignada la tarea al equipo {{name}}",
+		"nestedUnderTask": "colgó la tarea de otra",
+		"promotedToRoot": "sacó la tarea al primer nivel",
+		"epicsUpdated": "cambió las épicas de la tarea",
+		"epicsCleared": "sacó la tarea de sus épicas",
+		"teamUnassigned": "quitada la tarea de su equipo",
 		"unassigned": "desasignado la tarea",
 		"assignedTo": "asignada la tarea a {{name}}",
 		"changedStatus": "cambio en el estado de {{from}} a {{to}}",
@@ -1535,33 +1733,133 @@
 		}
 	},
 	"tasks": {
-		"status": {
-			"label": "Estado",
-			"to-do": "To Do",
-			"in-progress": "En progreso",
-			"in-review": "En revisión",
-			"done": "Hecho",
-			"archived": "Archivado",
-			"planned": "Planeado"
+		"actions": {
+			"archive": "Archivar",
+			"markAsPlanned": "Marcar como planeada",
+			"delete": "Eliminar..."
 		},
-		"priority": {
-			"label": "Prioridad",
-			"no-priority": "Sin prioridad",
-			"low": "Baja",
-			"medium": "Media",
-			"high": "Alta",
-			"urgent": "Urgente"
+		"archive": {
+			"success": "Se han archivado {{count}} tareas"
+		},
+		"assignee": {
+			"label": "Asignado",
+			"unassigned": "Sin asignar"
+		},
+		"backlog": {
+			"addFilter": "Añadir filtro...",
+			"addTask": "Añadir tarea",
+			"filter": "Filtrar",
+			"filters": {
+				"priority": "Prioridad: {{name}}",
+				"assignee": "Asignado: {{name}}",
+				"due": "Vencimiento: {{date}}",
+				"label": "Etiqueta: {{name}}",
+				"dueThisWeek": "Para esta semana",
+				"dueNextWeek": "Para la semana que viene",
+				"noDueDate": "Sin fecha de vencimiento",
+				"team": "Equipo: {{name}}"
+			},
+			"moveAll": "Mover todas",
+			"moveAllConfirm": "¿Mover las {{count}} tareas planeadas a la primera columna?",
+			"moveAllSuccess": "{{count}} tareas movidas a la primera columna",
+			"moveAllTooltip": "Mover todas las planeadas a la primera columna",
+			"noTasksInSection": "No hay tareas en {{section}}",
+			"noTasksToMove": "No hay tareas planeadas para mover",
+			"pageTitle": "Backlog de {{name}}",
+			"plan": "Planear",
+			"sections": {
+				"planned": "Planeadas",
+				"archived": "Archivadas"
+			},
+			"title": "Backlog"
+		},
+		"board": {
+			"title": "Tareas"
+		},
+		"boardFilters": {
+			"filterBy": "Filtrar por",
+			"allStatuses": "Todos los estados",
+			"allPriorities": "Todas las prioridades",
+			"allAssignees": "Todos los asignados",
+			"allDueDates": "Todas las fechas de vencimiento",
+			"allLabels": "Todas las etiquetas",
+			"selectedCount": "{{count}} selecionadas",
+			"subjects": {
+				"status": "Estado",
+				"priority": "Prioridad",
+				"assignee": "Asignado",
+				"dueDate": "Fecha de vencimiento",
+				"labels": "Etiquetas",
+				"team": "Equipo"
+			},
+			"operators": {
+				"isAnyOf": "es alguno de",
+				"includeAnyOf": "incluye alguno de"
+			},
+			"allTeams": "Todos los equipos"
 		},
 		"boardSearchPlaceholder": "Buscar tickets...",
-		"view": {
-			"board": "Tablero",
-			"list": "Lista"
+		"bulk": {
+			"selectedCount": "{{count}} seleccionadas",
+			"moveToBacklog": "Mover al backlog",
+			"moveToBacklogSuccess": "Se han movido {{count}} tareas al backlog",
+			"moveToBacklogError": "Error al mover tareas al backlog",
+			"moveToBoard": "Mover al tablero",
+			"moveToBoardSuccess": "Se han movido {{count}} tareas al tablero",
+			"moveToBoardError": "Error al mover tareas al tablero",
+			"delete": "Eliminar tareas",
+			"deleteConfirm": "¿Eliminar {{count}} tareas? Esta acción no puede deshacerse.",
+			"deleteSuccess": "{{count}} tareas eliminadas",
+			"deleteError": "Error al eliminar tareas",
+			"archive": "Archivar tareas",
+			"archiveSuccess": "{{count}} tareas archivadas",
+			"archiveError": "Error al archivar tareas",
+			"updateSuccess": "{{count}} tareas actualizadas",
+			"updateError": "Error al actualizar tareas",
+			"assignTo": "Asignar a",
+			"assignSuccess": "{{count}} tareas asignadas",
+			"assignError": "Error al asignar tareas",
+			"setPriority": "Modificar prioridad",
+			"updatePriorityError": "Error al actualizar la prioridad",
+			"addLabel": "Añadir etiqueta",
+			"addLabelSuccess": "Etiqueta añadida a {{count}} tareas",
+			"addLabelError": "Error al añadir etiqueta",
+			"setDueDate": "Modificar fecha de vencimiento",
+			"updateDueDateError": "Error al actualizar fecha de vencimiento",
+			"actions": "Actiones",
+			"searchActions": "Buscar acciones...",
+			"noActionsFound": "No se han encontrado acciones.",
+			"changeStatus": "Cambiar estado"
+		},
+		"calendar": {
+			"dayTasksAriaLabel": "Ver todas las tareas del {{date}}",
+			"moreTasks": "+{{count}} más",
+			"nextMonth": "Mes siguiente",
+			"noTasks": "No hay tareas planificadas",
+			"noTasksSubtitle": "Ponles fecha de inicio, de vencimiento o ambas para que aparezcan en el calendario.",
+			"pageTitle": "{{name}} – Calendario",
+			"previousMonth": "Mes anterior",
+			"taskAriaLabel": "{{title}}, {{range}}: abrir tarea",
+			"title": "Calendario",
+			"today": "Hoy",
+			"loadError": "No se han podido cargar las tareas."
 		},
 		"common": {
 			"selectTask": "Seleccionar tarea",
 			"loadingTask": "Cargando tarea...",
 			"taskNotFound": "Tarea no encontrada",
 			"taskNotFoundDescription": "La tarea que buscas no existe o ha sido eliminada."
+		},
+		"contextMenu": {
+			"copyLink": "Copiar enlace",
+			"copyLinkSuccess": "¡Enlace a la tarea copiado!"
+		},
+		"delete": {
+			"title": "¿Eliminar tarea?",
+			"description": "Esto eliminará permanentemente la tarea y sus datos. Esta acción no puede deshacerse.",
+			"action": "Eliminar tarea",
+			"success": "Tarea eliminada correctamente",
+			"error": "Error al eliminar la tarea"
 		},
 		"detail": {
 			"subtaskOf": "Subtarea de",
@@ -1669,53 +1967,106 @@
 				}
 			}
 		},
+		"dueDate": {
+			"label": "Fecha de vencimiento",
+			"clear": "Eliminar fecha",
+			"updateSuccess": "Fecha de vencimiento actualizada correctamente",
+			"updateError": "Error al actualizar fecha de vencimiento",
+			"clearSuccess": "Fecha de vencimiento eliminada correctamente",
+			"clearError": "Error al eliminar fecha de vencimiento"
+		},
+		"editor": {
+			"table": {
+				"addColumnBefore": "Insertar columna a la izquierda",
+				"addColumnAfter": "Insertar columna a la derecha",
+				"deleteColumn": "Eliminar columna",
+				"addRowBefore": "Insertar fila encima",
+				"addRowAfter": "Insertar fila debajo",
+				"deleteRow": "Eliminar fila",
+				"deleteTable": "Eliminar tabla"
+			}
+		},
 		"entity": {
 			"task": "Tarea"
 		},
-		"relations": {
-			"title": "Relaciones",
-			"tasksInProject": "Tareas en el proyecto",
-			"linkError": "Error al vincular tarea",
-			"empty": "No hay tareas relacionadas",
-			"searchPlaceholder": "Buscar tareas para vincular...",
+		"epics": {
+			"title": "Épicas",
+			"none": "Sin épica",
+			"count": "{{count}} épicas",
+			"allEpics": "Todas las épicas",
+			"emptyProject": "Este proyecto todavía no tiene épicas",
+			"updateError": "No se han podido cambiar las épicas de la tarea"
+		},
+		"gantt": {
+			"pageTitle": "{{name}} – Gantt",
+			"title": "Diagrama de Gantt",
+			"searchPlaceholder": "Buscar tareas planificadas…",
+			"hideTasks": "Esconder tareas",
+			"showTasks": "Mostrar tareas",
+			"noTasks": "No hay tareas planificadas",
+			"noTasksSubtitle": "Añade una fecha de comienzo, fecha de vencimiento o ambas para a las tareas para mostrarlas en la línea temporal del proyecto.",
 			"noTasksFound": "No se han encontrado tareas",
-			"openTask": "Abrir tarea",
-			"removeRelation": "Eliminar relación",
-			"related": "Relacionadas",
-			"blocks": "Bloquea",
-			"selectTask": "Selecciona una tarea para vincular",
-			"types": {
-				"blocks": "bloquea",
-				"related": "relacionada con",
-				"blocked_by": "bloqueada por"
+			"noTasksMatch": "Ninguna tarea encaja con \"{{query}}\"",
+			"taskHeader": "Tarea",
+			"updateDatesError": "Error al actualizar las fechas de la tarea",
+			"resizeStart": "Cambiar la fecha de comienzo",
+			"resizeDue": "Cambiar la fecha de vencimiento",
+			"taskAriaLabel": "{{title}}: abrir o arrastrar para mover",
+			"branchSpan": "Tramo de toda la rama",
+			"zoomLabel": "Escala temporal",
+			"zoomDay": "Día",
+			"zoomWeek": "Semana",
+			"zoomMonth": "Mes",
+			"zoomQuarter": "Trimestre",
+			"jumpToday": "Hoy",
+			"previousRange": "Retroceder",
+			"nextRange": "Avanzar",
+			"quarterShort": "T{{n}}",
+			"dependencyBlocks": "{{source}} bloquea a {{target}}"
+		},
+		"group": {
+			"label": "Agrupar",
+			"by": "Agrupar por",
+			"noTeam": "Sin equipo",
+			"boardHint": "El tablero ya agrupa por estado, en columnas",
+			"fields": {
+				"status": "Estado",
+				"team": "Equipo",
+				"tree": "Jerarquía"
 			}
 		},
-		"subtasks": {
-			"title": "Sub-tareas",
-			"inputPlaceholder": "Título de la subtarea...",
-			"addAction": "Añadir",
-			"empty": "No hay subtareas aún",
-			"createError": "Error al crear subtarea",
-			"deleteSuccess": "Tarea eliminada correctamente",
-			"deleteError": "Error al eliminar tarea",
-			"deleteDialogTitle": "¿Eliminar tarea?",
-			"deleteDialogDescription": "Esto eliminará permanentemente la tarea y sus datos. Esta acción no puede deshacerse.",
-			"deleteAction": "Eliminar tarea",
-			"completeAria": "Marcar subtarea como completada"
+		"kanban": {
+			"addTask": "Añadir tarea"
 		},
-		"properties": {
-			"title": "Propiedades",
-			"labels": "Etiquetas",
-			"copyTaskLink": "Copiar enlace a tarea",
-			"copyTaskBranch": "Copiar la rama de la tarea",
-			"start": "Comenzar",
-			"startDate": "Fecha de inicio",
-			"noDate": "Sin fecha"
+		"labels": {
+			"label": "Etiquetas",
+			"empty": "No hay etiquetas disponibles"
+		},
+		"listView": {
+			"addTask": "Añadir tarea",
+			"archiveAllTooltip": "Archivar todas las tareas completadas",
+			"noTasks": "No hay tareas"
+		},
+		"move": {
+			"title": "Mover tarea",
+			"projectLabel": "Proyecto de destino",
+			"projectPlaceholder": "Selecciona un proyecto",
+			"statusLabel": "Estado de destino",
+			"statusHintKeep": "El flujo de trabajo de este proyecto ya admite el estado actual.",
+			"statusHintAdjust": "Elige el estado que se usará en el proyecto de destino.",
+			"action": "Mover tarea",
+			"success": "Tarea movida correctamente",
+			"error": "Error al mover la tarea"
 		},
 		"popover": {
 			"assignee": {
 				"unassigned": "No asignada",
-				"updateError": "Error al actualizar el asignado a esta tarea"
+				"updateError": "Error al actualizar el asignado a esta tarea",
+				"multiple": "{{total}} asignados"
+			},
+			"team": {
+				"unassigned": "Sin equipo",
+				"updateError": "No se ha podido cambiar el equipo"
 			},
 			"status": {
 				"updateError": "Error al actualizar el estado de esta tarea"
@@ -1756,30 +2107,51 @@
 				}
 			}
 		},
-		"backlog": {
-			"pageTitle": "Backlog de {{name}}",
-			"noTasksToMove": "No hay tareas planeadas para mover",
-			"moveAllConfirm": "Mover las {{count}} tareas planeadas a To Do?",
-			"moveAllSuccess": "{{count}} tareas movidas correctamente a To Do",
-			"plan": "Planear",
-			"moveAllTooltip": "Mover todas las planeadas a To Do",
-			"moveAll": "Mover todas",
-			"addTask": "Añadir tarea",
-			"filter": "Filtrar",
-			"addFilter": "Añadir filtro...",
-			"sections": {
-				"planned": "Planeadas",
-				"archived": "Archivadas"
-			},
-			"noTasksInSection": "No hay tareas en {{section}}",
-			"filters": {
-				"priority": "Prioridad: {{name}}",
-				"assignee": "Asignado: {{name}}",
-				"due": "Vencimiento: {{date}}",
-				"label": "Etiqueta: {{name}}",
-				"dueThisWeek": "Para esta semana",
-				"dueNextWeek": "Para la semana que viene",
-				"noDueDate": "Sin fecha de vencimiento"
+		"pr": {
+			"merged": "Mergeada",
+			"draft": "Borrador",
+			"open": "Abierta",
+			"label": "Pull Request",
+			"count_one": "{{count}} PR",
+			"count_other": "{{count}} PRs"
+		},
+		"priority": {
+			"label": "Prioridad",
+			"no-priority": "Sin prioridad",
+			"low": "Baja",
+			"medium": "Media",
+			"high": "Alta",
+			"urgent": "Urgente"
+		},
+		"projectSize": {
+			"warning": "Este proyecto tiene {{count}} tareas. Las vistas las cargan todas, así que irán lentas. Filtra para acotar la lista."
+		},
+		"properties": {
+			"title": "Propiedades",
+			"labels": "Etiquetas",
+			"copyTaskLink": "Copiar enlace a tarea",
+			"copyTaskBranch": "Copiar la rama de la tarea",
+			"start": "Comenzar",
+			"startDate": "Fecha de inicio",
+			"noDate": "Sin fecha",
+			"customFields": "Campos personalizados"
+		},
+		"relations": {
+			"title": "Relaciones",
+			"tasksInProject": "Tareas en el proyecto",
+			"linkError": "Error al vincular tarea",
+			"empty": "No hay tareas relacionadas",
+			"searchPlaceholder": "Buscar tareas para vincular...",
+			"noTasksFound": "No se han encontrado tareas",
+			"openTask": "Abrir tarea",
+			"removeRelation": "Eliminar relación",
+			"related": "Relacionadas",
+			"blocks": "Bloquea",
+			"selectTask": "Selecciona una tarea para vincular",
+			"types": {
+				"blocks": "bloquea",
+				"related": "relacionada con",
+				"blocked_by": "bloqueada por"
 			}
 		},
 		"sort": {
@@ -1797,175 +2169,143 @@
 				"number": "Número de tarea"
 			}
 		},
-		"boardFilters": {
-			"filterBy": "Filtrar por",
-			"allStatuses": "Todos los estados",
-			"allPriorities": "Todas las prioridades",
-			"allAssignees": "Todos los asignados",
-			"allDueDates": "Todas las fechas de vencimiento",
-			"allLabels": "Todas las etiquetas",
-			"selectedCount": "{{count}} selecionadas",
-			"subjects": {
+		"status": {
+			"label": "Estado",
+			"to-do": "To Do",
+			"in-progress": "En progreso",
+			"in-review": "En revisión",
+			"done": "Hecho",
+			"archived": "Archivado",
+			"planned": "Planeado"
+		},
+		"subtasks": {
+			"title": "Sub-tareas",
+			"inputPlaceholder": "Título de la subtarea...",
+			"addAction": "Añadir",
+			"empty": "No hay subtareas aún",
+			"createError": "Error al crear subtarea",
+			"deleteSuccess": "Tarea eliminada correctamente",
+			"deleteError": "Error al eliminar tarea",
+			"deleteDialogTitle": "¿Eliminar tarea?",
+			"deleteDialogDescription": "Esto eliminará permanentemente la tarea y sus datos. Esta acción no puede deshacerse.",
+			"deleteAction": "Eliminar tarea",
+			"completeAria": "Marcar subtarea como completada"
+		},
+		"table": {
+			"title": "Tabla",
+			"pageTitle": "{{name}} · Tabla",
+			"empty": "No hay tareas que mostrar",
+			"expand": "Desplegar",
+			"collapse": "Plegar",
+			"saveFailed": "No se ha podido guardar el valor",
+			"columns": {
+				"title": "Título",
 				"status": "Estado",
 				"priority": "Prioridad",
-				"assignee": "Asignado",
-				"dueDate": "Fecha de vencimiento",
-				"labels": "Etiquetas"
+				"assignee": "Responsable",
+				"dueDate": "Fecha límite",
+				"done": "Hecha",
+				"completedAt": "Fecha de cierre"
 			},
+			"addField": "Añadir un campo",
+			"addFieldTitle": "Campo personalizado nuevo",
+			"addFieldDescription": "Se convierte en una columna aquí y en un campo de todas las tareas del proyecto.",
+			"fieldName": "Nombre",
+			"fieldNamePlaceholder": "Presupuesto",
+			"fieldType": "Tipo",
+			"fieldOptions": "Opciones",
+			"fieldOptionsPlaceholder": "Una por línea",
+			"fieldCurrency": "Moneda",
+			"createField": "Crear campo",
+			"fieldCreated": "Campo creado",
+			"fieldCreateFailed": "No se ha podido crear el campo",
+			"fieldTypes": {
+				"text": "Texto",
+				"number": "Número",
+				"currency": "Moneda",
+				"select": "Selección",
+				"multi_select": "Selección múltiple",
+				"date": "Fecha",
+				"checkbox": "Casilla",
+				"user": "Persona",
+				"url": "URL"
+			},
+			"addFilter": "Añadir un filtro",
+			"removeFilter": "Quitar este filtro",
+			"filterValue": "Valor",
+			"filterFailed": "No se ha podido aplicar el filtro",
 			"operators": {
-				"isAnyOf": "es alguno de",
-				"includeAnyOf": "incluye alguno de"
+				"eq": "es",
+				"neq": "no es",
+				"gt": "mayor que",
+				"gte": "al menos",
+				"lt": "menor que",
+				"lte": "como mucho",
+				"contains": "contiene",
+				"startsWith": "empieza por",
+				"in": "es alguno de",
+				"notIn": "no es ninguno de",
+				"isEmpty": "está vacío",
+				"isNotEmpty": "no está vacío"
+			},
+			"treeModes": {
+				"tree": "Jerarquía",
+				"flat": "Lista plana",
+				"roots": "Solo raíces",
+				"withDescendants": "Con subtareas"
+			},
+			"views": {
+				"label": "Vistas",
+				"empty": "No hay vistas guardadas",
+				"save": "Guardar esta vista",
+				"saveTitle": "Guardar vista",
+				"saveDescription": "Guarda el filtro y el modo de jerarquía que estás mirando.",
+				"name": "Nombre",
+				"namePlaceholder": "Obras caras",
+				"share": "Compartir con el espacio de trabajo",
+				"saved": "Vista guardada",
+				"saveFailed": "No se ha podido guardar la vista",
+				"delete": "Borrar esta vista"
 			}
 		},
-		"gantt": {
-			"pageTitle": "{{name}} – Gantt",
-			"title": "Diagrama de Gantt",
-			"searchPlaceholder": "Buscar tickets planificados...",
-			"hideTasks": "Esconder tareas",
-			"showTasks": "Mostrar tareas",
-			"noTasks": "No hay tareas planificadas",
-			"noTasksSubtitle": "Añade una fecha de comienzo, fecha de vencimiento o ambas para a las tareas para mostrarlas en la línea temporal del proyecto.",
-			"noTasksFound": "No se han encontrado tareas",
-			"noTasksMatch": "Ninguna tarea encaja con \"{{query}}\"",
-			"taskHeader": "Tarea",
-			"updateDatesError": "Error al actualizar las fechas de la tarea",
-			"resizeStart": "Cambiar la fecha de comienzo",
-			"resizeDue": "Cambiar la fecha de vencimiento",
-			"taskAriaLabel": "{{title}}: abrir o arrastrar para mover"
+		"team": {
+			"label": "Equipo",
+			"unknown": "Equipo desconocido"
 		},
-		"delete": {
-			"title": "¿Eliminar tarea?",
-			"description": "Esto eliminará permanentemente la tarea y sus datos. Esta acción no puede deshacerse.",
-			"action": "Eliminar tarea",
-			"success": "Tarea eliminada correctamente",
-			"error": "Error al eliminar la tarea"
-		},
-		"archive": {
-			"success": "Se han archivado {{count}} tareas"
-		},
-		"listView": {
-			"addTask": "Añadir tarea",
-			"archiveAllTooltip": "Archivar todas las tareas completadas",
-			"noTasks": "No hay tareas"
-		},
-		"kanban": {
-			"addTask": "Añadir tarea"
-		},
-		"pr": {
-			"merged": "Mergeada",
-			"draft": "Borrador",
-			"open": "Abierta",
-			"label": "Pull Request",
-			"count_one": "{{count}} PR",
-			"count_other": "{{count}} PRs"
-		},
-		"assignee": {
-			"label": "Asignado",
-			"unassigned": "Sin asignar"
-		},
-		"dueDate": {
-			"label": "Fecha de vencimiento",
-			"clear": "Eliminar fecha",
-			"updateSuccess": "Fecha de vencimiento actualizada correctamente",
-			"updateError": "Error al actualizar fecha de vencimiento",
-			"clearSuccess": "Fecha de vencimiento eliminada correctamente",
-			"clearError": "Error al eliminar fecha de vencimiento"
-		},
-		"labels": {
-			"label": "Etiquetas",
-			"empty": "No hay etiquetas disponibles"
+		"tree": {
+			"title": "Rama",
+			"expand": "Desplegar la rama",
+			"collapse": "Plegar la rama",
+			"detach": "Descolgar",
+			"branchProgress": "Cerradas en esta rama",
+			"branchDates": "Fechas de la rama",
+			"branchTime": "Registrado / estimado",
+			"estimateLabel": "Estimación",
+			"hoursShort": "h",
+			"estimateError": "No se ha podido guardar la estimación",
+			"reparentError": "No se ha podido mover la tarea",
+			"cycleError": "Una tarea no puede colgar de su propia rama",
+			"progressTooltip": "{{done}} de {{total}} subtareas cerradas"
 		},
 		"update": {
 			"success": "Tarea actualizada correctamente",
 			"error": "Error al actualizar tarea"
 		},
-		"contextMenu": {
-			"copyLink": "Copiar enlace",
-			"copyLinkSuccess": "¡Enlace a la tarea copiado!"
-		},
-		"actions": {
-			"archive": "Archivar",
-			"markAsPlanned": "Marcar como planeada",
-			"delete": "Eliminar..."
-		},
-		"bulk": {
-			"selectedCount": "{{count}} seleccionadas",
-			"moveToBacklog": "Mover al backlog",
-			"moveToBacklogSuccess": "Se han movido {{count}} tareas al backlog",
-			"moveToBacklogError": "Error al mover tareas al backlog",
-			"moveToBoard": "Mover al tablero",
-			"moveToBoardSuccess": "Se han movido {{count}} tareas al tablero",
-			"moveToBoardError": "Error al mover tareas al tablero",
-			"delete": "Eliminar tareas",
-			"deleteConfirm": "¿Eliminar {{count}} tareas? Esta acción no puede deshacerse.",
-			"deleteSuccess": "{{count}} tareas eliminadas",
-			"deleteError": "Error al eliminar tareas",
-			"archive": "Archivar tareas",
-			"archiveSuccess": "{{count}} tareas archivadas",
-			"archiveError": "Error al archivar tareas",
-			"updateSuccess": "{{count}} tareas actualizadas",
-			"updateError": "Error al actualizar tareas",
-			"assignTo": "Asignar a",
-			"assignSuccess": "{{count}} tareas asignadas",
-			"assignError": "Error al asignar tareas",
-			"setPriority": "Modificar prioridad",
-			"updatePriorityError": "Error al actualizar la prioridad",
-			"addLabel": "Añadir etiqueta",
-			"addLabelSuccess": "Etiqueta añadida a {{count}} tareas",
-			"addLabelError": "Error al añadir etiqueta",
-			"setDueDate": "Modificar fecha de vencimiento",
-			"updateDueDateError": "Error al actualizar fecha de vencimiento",
-			"actions": "Actiones",
-			"searchActions": "Buscar acciones...",
-			"noActionsFound": "No se han encontrado acciones.",
-			"changeStatus": "Cambiar estado"
-		},
-		"move": {
-			"title": "Mover tarea",
-			"projectLabel": "Proyecto de destino",
-			"projectPlaceholder": "Selecciona un proyecto",
-			"statusLabel": "Estado de destino",
-			"statusHintKeep": "El flujo de trabajo de este proyecto ya admite el estado actual.",
-			"statusHintAdjust": "Elige el estado que se usará en el proyecto de destino.",
-			"action": "Mover tarea",
-			"success": "Tarea movida correctamente",
-			"error": "Error al mover la tarea"
-		},
-		"editor": {
-			"table": {
-				"addColumnBefore": "Insertar columna a la izquierda",
-				"addColumnAfter": "Insertar columna a la derecha",
-				"deleteColumn": "Eliminar columna",
-				"addRowBefore": "Insertar fila encima",
-				"addRowAfter": "Insertar fila debajo",
-				"deleteRow": "Eliminar fila",
-				"deleteTable": "Eliminar tabla"
-			}
-		},
-		"calendar": {
-			"dayTasksAriaLabel": "Show all tasks for {{date}}",
-			"moreTasks": "+{{count}} more",
-			"nextMonth": "Next month",
-			"noTasks": "No scheduled tasks",
-			"noTasksSubtitle": "Add a start date, due date, or both to tasks to place them on the calendar.",
-			"pageTitle": "{{name}} – Calendar",
-			"previousMonth": "Previous month",
-			"taskAriaLabel": "{{title}}, {{range}}: open task",
-			"title": "Calendar",
-			"today": "Today",
-			"loadError": "Failed to load tasks."
+		"view": {
+			"board": "Tablero",
+			"list": "Lista"
 		}
 	},
 	"invitations": {
 		"email": {
-			"subject": "{{inviterName}} te ha invitado a unirte a {{workspaceName}} en Kaneo",
-			"preview": "Te han invitado a {{workspaceName}} en Kaneo",
+			"subject": "{{inviterName}} te ha invitado a unirte a {{workspaceName}} en Riuna",
+			"preview": "Te han invitado a {{workspaceName}} en Riuna",
 			"title": "Únete a {{workspaceName}}",
-			"subtitle": "{{inviterName}} ({{inviterEmail}}) te ha invitado a colaborar en Kaneo.",
+			"subtitle": "{{inviterName}} ({{inviterEmail}}) te ha invitado a colaborar en Riuna.",
 			"cta": "Aceptar invitación",
 			"sameEmail": "Puedes aceptarla con el mismo correo que recibió este mensaje.",
 			"ignore": "Si no esperabas este correo, puedes ignorarlo sin problema.",
-			"footer": "Invitación a un espacio de trabajo de Kaneo"
+			"footer": "Invitación a un espacio de trabajo de Riuna"
 		},
 		"pageTitle": "Invitaciones",
 		"pendingInvitations": "Invitaciones pendientes",
@@ -2021,8 +2361,8 @@
 			"startDescription": "Escribe algún término para encontrar tareas entre todos los proyectos",
 			"quickSearchesLabel": "Búsqueda rápida:",
 			"suggestionHighPriority": "Alta prioridad",
-			"suggestionBug": "Bugs",
-			"suggestionFeature": "Features",
+			"suggestionBug": "Errores",
+			"suggestionFeature": "Mejoras",
 			"suggestionInProgress": "En progreso",
 			"suggestionCompleted": "Completadas"
 		},
@@ -2051,7 +2391,10 @@
 		"members": {
 			"pageTitle": "Miembros",
 			"inviteMember": "Invitar miembro",
-			"you": "Tú"
+			"you": "Tú",
+			"createLocalUser": "Crear cuenta local",
+			"localAccount": "Local",
+			"blocked": "Bloqueada"
 		},
 		"invitations": {
 			"linkLabel": "Enlace de invitación",
@@ -2096,7 +2439,35 @@
 			"cancelInviteSuccess": "Invitación cancelada correctamente",
 			"cancelInviteError": "Error al cancelar invitación",
 			"roleUpdateSuccess": "Rol actualizado",
-			"roleUpdateError": "Error al actualizar el rol"
+			"roleUpdateError": "Error al actualizar el rol",
+			"manageAccount": "Administrar cuenta"
+		},
+		"localUserModal": {
+			"title": "Crear cuenta local",
+			"description": "Una cuenta con usuario y contraseña, sin correo. No recibe notificaciones por correo ni puede restablecer la contraseña por su cuenta: la cambia el administrador.",
+			"usernameLabel": "Usuario",
+			"usernamePlaceholder": "ana.torres",
+			"displayNameLabel": "Nombre visible",
+			"displayNamePlaceholder": "Ana Torres",
+			"passwordLabel": "Contraseña",
+			"roleLabel": "Rol",
+			"submit": "Crear cuenta",
+			"created": "Cuenta local {{username}} creada",
+			"error": "No se ha podido crear la cuenta local"
+		},
+		"manageAccount": {
+			"title": "Administrar cuenta",
+			"nameLabel": "Nombre visible",
+			"emailLabel": "Correo",
+			"emailPlaceholder": "ana@ejemplo.com",
+			"emailHelp": "Al asignar un correo la cuenta deja de ser local: recupera las notificaciones y podrá entrar con el correo o con su usuario.",
+			"passwordLabel": "Contraseña nueva",
+			"passwordPlaceholder": "Dejar vacío para no cambiarla",
+			"shortPassword": "Mínimo 8 caracteres",
+			"blockLabel": "Bloquear el acceso",
+			"blockHelp": "Cierra sus sesiones abiertas y le impide entrar, sin borrar nada.",
+			"saved": "Cuenta actualizada",
+			"error": "No se ha podido actualizar la cuenta"
 		}
 	},
 	"publicProject": {
@@ -2135,5 +2506,205 @@
 		"branding": {
 			"poweredBy": "Powered by"
 		}
+	},
+	"cycles": {
+		"actions": {
+			"close": "Cerrar ciclo",
+			"start": "Empezar ciclo"
+		},
+		"assignError": "No se ha podido mover la tarea a ese ciclo",
+		"burndown": {
+			"actual": "Pendiente",
+			"ideal": "Ideal",
+			"title": "Burndown"
+		},
+		"close": {
+			"backlog": "De vuelta al backlog",
+			"confirm": "Cerrar ciclo",
+			"description_one": "Queda {{count}} tarea sin terminar. ¿Dónde va?",
+			"description_other": "Quedan {{count}} tareas sin terminar. ¿Dónde van?",
+			"descriptionEmpty": "Todo lo de este ciclo está hecho. Al cerrarlo se congela su velocidad.",
+			"moveTo": "Mover las tareas sin terminar a",
+			"title": "Cerrar {{name}}"
+		},
+		"create": {
+			"confirm": "Crear ciclo",
+			"datesInvalid": "La fecha de fin no puede ser anterior a la de inicio.",
+			"description": "Ponle nombre y elige las fechas. Dos semanas es lo habitual.",
+			"endDate": "Termina",
+			"goal": "Objetivo",
+			"goalPlaceholder": "Para qué es este ciclo",
+			"name": "Nombre",
+			"namePlaceholder": "Sprint 1",
+			"startDate": "Empieza",
+			"title": "Nuevo ciclo"
+		},
+		"empty": {
+			"description": "Un ciclo es una caja de tiempo que se llena de tareas antes de empezar. Al cerrarlo sabes cuánto completó el equipo de verdad.",
+			"title": "Todavía no hay ciclos"
+		},
+		"hours": {
+			"empty": "Todavía no hay tiempo registrado en este ciclo.",
+			"title": "Horas por persona",
+			"unknownPerson": "Desconocido"
+		},
+		"none": "Sin ciclo",
+		"noneAvailable": "Este proyecto todavía no tiene ciclos",
+		"pageTitle": "Ciclos",
+		"stats": {
+			"completed": "Completadas",
+			"estimated": "Estimado",
+			"logged": "Registrado",
+			"velocity": "Velocidad"
+		},
+		"status": {
+			"active": "Activo",
+			"closed": "Cerrado",
+			"planned": "Planificado"
+		},
+		"title": "Ciclos",
+		"unit": {
+			"hours": "Horas",
+			"tasks": "Tareas",
+			"label": "Unidad del burndown"
+		},
+		"velocity": {
+			"completed": "Completado",
+			"empty": "La velocidad aparece cuando cierras tu primer ciclo.",
+			"title": "Velocidad"
+		}
+	},
+	"panels": {
+		"pageTitle": "Panel",
+		"defaultName": "Mi panel",
+		"empty": {
+			"title": "Tu panel está vacío",
+			"description": "Añade un widget para ver cómo va el trabajo sin entrar proyecto por proyecto."
+		},
+		"widget": {
+			"add": "Añadir widget",
+			"edit": "Editar widget",
+			"actions": "Acciones del widget",
+			"type": "Tipo",
+			"title": "Título",
+			"scope": "Ámbito",
+			"wholeWorkspace": "Todo el espacio",
+			"groupBy": "Agrupar por",
+			"pickGroupBy": "Elige una agrupación",
+			"filter": "Filtro",
+			"noData": "Todavía no hay nada que enseñar",
+			"ofTotal": "{{value}} de {{total}}",
+			"goal": "Objetivo",
+			"pickGoal": "Elige un objetivo"
+		},
+		"type": {
+			"count": "Recuento",
+			"breakdown": "Reparto",
+			"trend": "Tendencia",
+			"time": "Tiempo registrado",
+			"epic_progress": "Avance por épica",
+			"table": "Lista de tareas",
+			"inbox": "Bandeja",
+			"goal": "Objetivo"
+		},
+		"metric": {
+			"count": "Tareas",
+			"doneCount": "Completadas",
+			"doneRatio": "Completadas",
+			"sumEstimate": "Estimado",
+			"sumLogged": "Registrado"
+		},
+		"groupBy": {
+			"project": "Proyecto",
+			"assignee": "Responsable",
+			"priority": "Prioridad",
+			"team": "Equipo",
+			"status": "Estado",
+			"done": "Hecha",
+			"dueWindow": "Vencimiento",
+			"epic": "Épica",
+			"time": "En el tiempo"
+		},
+		"buckets": {
+			"none": "Sin asignar",
+			"unknown": "Desconocido",
+			"done": "Hechas",
+			"notDone": "Sin hacer",
+			"due": {
+				"none": "Sin fecha",
+				"overdue": "Vencidas",
+				"today": "Hoy",
+				"week": "Esta semana",
+				"later": "Más adelante"
+			},
+			"other": "Otros"
+		},
+		"greeting": {
+			"morning": "Buenos días, {{name}}.",
+			"afternoon": "Buenas tardes, {{name}}.",
+			"evening": "Buenas noches, {{name}}.",
+			"night": "¿Todavía en pie, {{name}}?",
+			"morningNoName": "Buenos días.",
+			"afternoonNoName": "Buenas tardes.",
+			"eveningNoName": "Buenas noches.",
+			"nightNoName": "¿Todavía en pie?",
+			"subtitle": "Todo lo que tienes entre manos, en un sitio."
+		},
+		"inbox": {
+			"error": "No se ha podido cargar tu bandeja",
+			"empty": "Tu bandeja está vacía"
+		},
+		"actions": {
+			"share": "Compartir con el espacio",
+			"unshare": "Dejar de compartir",
+			"export": "Exportar",
+			"exportError": "No se ha podido exportar el panel"
+		},
+		"shared": "Compartido"
+	},
+	"goals": {
+		"pageTitle": "Objetivos",
+		"actions": {
+			"create": "Nuevo objetivo",
+			"addTarget": "Añadir resultado clave",
+			"menu": "Acciones del objetivo",
+			"targetMenu": "Acciones del resultado",
+			"share": "Compartir con el espacio",
+			"unshare": "Dejar de compartir"
+		},
+		"empty": {
+			"title": "Todavía no hay objetivos",
+			"description": "Un objetivo es un periodo más los resultados clave que lo miden. El progreso sale de las tareas que cierras, así que avanza solo.",
+			"noTargets": "Sin resultados clave todavía. Un objetivo sin ellos no se puede medir."
+		},
+		"form": {
+			"createTitle": "Nuevo objetivo",
+			"editTitle": "Editar objetivo",
+			"description": "El periodo es lo que acota la medida.",
+			"name": "Nombre",
+			"namePlaceholder": "Cerrar el nuevo flujo de facturación",
+			"detail": "Detalle",
+			"startsAt": "Empieza",
+			"endsAt": "Acaba",
+			"datesInvalid": "El final no puede ir antes del principio."
+		},
+		"target": {
+			"createTitle": "Nuevo resultado clave",
+			"editTitle": "Editar resultado clave",
+			"description": "Un número al que llegar, medido contra el periodo del objetivo.",
+			"name": "Nombre",
+			"namePlaceholder": "Cerrar 40 tareas",
+			"metric": "Medida",
+			"value": "Diana",
+			"scope": "Ámbito",
+			"progress": "{{current}} de {{target}}",
+			"unmeasurable": "No se puede medir"
+		},
+		"scope": {
+			"all": "Todo el espacio",
+			"assigned": "Asignadas a mí",
+			"team": "De mis equipos"
+		},
+		"shared": "Compartido"
 	}
 }

@@ -7,6 +7,7 @@ import {
   assertAssignableUser,
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
+import { syncPrimaryAssignee } from "./assignees";
 
 async function updateTaskAssignee({
   id,
@@ -51,6 +52,10 @@ async function updateTaskAssignee({
     });
   }
 
+  // Cambiar el responsable principal por esta via tambien mueve el conjunto de
+  // asignados, o las dos fuentes acabarian contradiciendose.
+  await syncPrimaryAssignee(id, existingTask.userId, nextAssigneeId);
+
   const newAssigneeName = nextAssigneeId
     ? (
         await db
@@ -66,6 +71,10 @@ async function updateTaskAssignee({
       taskId: updatedTask.id,
       projectId: updatedTask.projectId,
       userId: currentUserId,
+      // Quien deja de tenerla. Sin este id, "Mi trabajo" no sabe a quien
+      // avisar de que la fila ya no es suya y la tarea se le queda en la
+      // pagina hasta el siguiente sondeo.
+      previousAssigneeId: existingTask.userId,
       title: updatedTask.title,
       type: "unassigned",
     });

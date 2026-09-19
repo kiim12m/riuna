@@ -9,6 +9,7 @@ import {
   lastLoginMethodClient,
   magicLinkClient,
   organizationClient,
+  usernameClient,
 } from "better-auth/client/plugins";
 import type { AccessControl } from "better-auth/plugins/access";
 import { createAuthClient } from "better-auth/react";
@@ -46,17 +47,31 @@ export const authClient = createAuthClient({
       dynamicAccessControl: {
         enabled: true,
       },
+      // Debe reflejar `teams` del plugin de organizacion del servidor
+      // (apps/api/src/auth.ts): sin esto el cliente no expone listTeams ni
+      // el resto de metodos de equipo, aunque el servidor si los sirva.
+      teams: {
+        enabled: true,
+      },
     }),
     genericOAuthClient(),
     deviceAuthorizationClient(),
     apiKeyClient(),
     adminClient(),
+    // Refleja el plugin `username` del servidor: sin esto no existe
+    // signIn.username y las cuentas locales no podrian entrar.
+    usernameClient(),
     inferAdditionalFields({
       user: {
         locale: {
           type: "string",
           required: false,
           input: true,
+        },
+        isLocalAccount: {
+          type: "boolean",
+          required: false,
+          input: false,
         },
       },
     }),

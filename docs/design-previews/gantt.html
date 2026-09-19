@@ -1,0 +1,945 @@
+<title>El Gantt de Riuna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+
+<style>
+  /* ================= TOKENS =================
+     Semánticos copiados de apps/web/src/index.css + escala, densidad,
+     elevación y movimiento del rediseño previo a la Fase 6 (ADR 018–022).
+     El Gantt es la única vista que aún no los consume; esta maqueta
+     enseña cómo se vería si lo hiciera. */
+  :root {
+    --color-white: #fff; --color-black: #000;
+    --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --radius: 0.625rem; --radius-sm: 0.375rem; --radius-md: 0.5rem; --radius-lg: 0.625rem;
+
+    --riuna-navy: #1b3a5c; --riuna-ink: #141d2b; --riuna-mid: #4a6380;
+    --riuna-surface: #f6f7f9; --riuna-teal: #0e8a7a; --riuna-teal-strong: #0b7466;
+    --riuna-teal-light: #2ab39f; --riuna-teal-lighter: #5fd3c0;
+    --riuna-ground: #0b141f; --riuna-raised: #101c2a; --riuna-sunken: #0e1825;
+    --riuna-text-night: #e6edf4; --riuna-mid-night: #8fa7c0;
+
+    --accent: color-mix(in srgb, var(--riuna-teal) 10%, transparent);
+    --accent-foreground: var(--riuna-ink);
+    --background: var(--color-white);
+    --border: color-mix(in srgb, var(--riuna-navy) 17%, transparent);
+    --brand: var(--riuna-teal); --brand-strong: var(--riuna-teal-strong);
+    --brand-foreground: var(--color-white);
+    --card: var(--color-white); --card-foreground: var(--riuna-ink);
+    --destructive: #dc2626; --destructive-foreground: #b91c1c;
+    --foreground: var(--riuna-ink);
+    --info: #2563eb; --info-foreground: #1d4ed8;
+    --input: color-mix(in srgb, var(--riuna-navy) 22%, transparent);
+    --muted: color-mix(in srgb, var(--riuna-navy) 5%, transparent);
+    --muted-foreground: var(--riuna-mid);
+    --popover: var(--color-white); --popover-foreground: var(--riuna-ink);
+    --primary: var(--riuna-navy); --primary-foreground: var(--color-white);
+    --ring: var(--riuna-teal);
+    --secondary: color-mix(in srgb, var(--riuna-navy) 6%, transparent);
+    --secondary-foreground: var(--riuna-navy);
+    --success: #16a34a; --success-foreground: #15803d;
+    --warning: #d97706; --warning-foreground: #b45309;
+    --sidebar: var(--riuna-surface); --sidebar-foreground: var(--riuna-mid);
+    --sidebar-accent: color-mix(in srgb, var(--riuna-teal) 12%, transparent);
+    --sidebar-accent-foreground: var(--riuna-teal-strong);
+    --sidebar-border: color-mix(in srgb, var(--riuna-navy) 12%, transparent);
+
+    --elevation-1: 0 1px 2px -1px color-mix(in srgb, var(--riuna-navy) 24%, transparent), 0 1px 1px -1px color-mix(in srgb, var(--riuna-navy) 16%, transparent);
+    --elevation-2: 0 2px 6px -2px color-mix(in srgb, var(--riuna-navy) 22%, transparent), 0 4px 12px -4px color-mix(in srgb, var(--riuna-navy) 16%, transparent);
+    --elevation-3: 0 8px 24px -6px color-mix(in srgb, var(--riuna-navy) 26%, transparent), 0 2px 6px -2px color-mix(in srgb, var(--riuna-navy) 18%, transparent);
+    --elevation-4: 0 24px 60px -12px color-mix(in srgb, var(--riuna-navy) 38%, transparent), 0 8px 20px -8px color-mix(in srgb, var(--riuna-navy) 24%, transparent);
+    --elevation-hairline: inset 0 1px 0 color-mix(in srgb, var(--color-white) 55%, transparent);
+
+    --motion-instant: 90ms; --motion-fast: 140ms; --motion-base: 220ms;
+    --motion-slow: 360ms; --motion-settle: 760ms;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+    --stagger-step: 38ms;
+
+    --text-page: 1.25rem; --text-section: 1rem; --text-body: 0.875rem;
+    --text-secondary: 0.75rem; --text-label: 0.6875rem; --text-mono: 0.8125rem;
+    --tr-label: 0.06em;
+
+    --density-card-pad: 0.75rem; --density-gap: 0.5rem; --density-stack: 0.5rem;
+    --density-col-gap: 0.6rem; --density-control: 2rem; --density-row: 2.25rem;
+
+    --sidebar-w: 15rem; --rail-w: 3.25rem; --chrome-h: 2.5rem;
+    --rail-w2: 14rem;                       /* riel de tareas del Gantt */
+    --gantt-total: 1200px;                  /* ancho de la pista, lo fija el JS */
+    --gbar-h: 0.625rem;                     /* barra de tarea de primer nivel; cualquier subtarea usa el mismo grosor fino */
+    --grow-h: calc(var(--density-row) - 0.3rem);  /* filas más bajas; la barra fina no las necesita altas */
+  }
+
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --accent: color-mix(in srgb, var(--riuna-teal-light) 14%, transparent);
+    --accent-foreground: var(--riuna-text-night);
+    --background: var(--riuna-ground);
+    --border: color-mix(in srgb, var(--color-white) 10%, transparent);
+    --brand: var(--riuna-teal-light); --brand-strong: var(--riuna-teal-light);
+    --brand-foreground: #062a25;
+    --card: var(--riuna-raised); --card-foreground: var(--riuna-text-night);
+    --destructive-foreground: #f26d6d;
+    --foreground: var(--riuna-text-night);
+    --info-foreground: #7ca9f5;
+    --input: color-mix(in srgb, var(--color-white) 12%, transparent);
+    --muted: color-mix(in srgb, var(--color-white) 5%, transparent);
+    --muted-foreground: var(--riuna-mid-night);
+    --popover: var(--riuna-raised); --popover-foreground: var(--riuna-text-night);
+    --primary: var(--riuna-text-night); --primary-foreground: #14293f;
+    --ring: var(--riuna-teal-light);
+    --secondary: color-mix(in srgb, var(--color-white) 6%, transparent);
+    --secondary-foreground: var(--riuna-text-night);
+    --success-foreground: #55d486; --warning-foreground: #f0a83c;
+    --sidebar: var(--riuna-sunken); --sidebar-foreground: var(--riuna-mid-night);
+    --sidebar-accent: color-mix(in srgb, var(--riuna-teal-light) 16%, transparent);
+    --sidebar-accent-foreground: var(--riuna-teal-lighter);
+    --sidebar-border: color-mix(in srgb, var(--color-white) 8%, transparent);
+    --elevation-1: 0 1px 2px -1px color-mix(in srgb, #000 55%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent);
+    --elevation-2: 0 3px 10px -3px color-mix(in srgb, #000 55%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+    --elevation-3: 0 10px 28px -8px color-mix(in srgb, #000 60%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+    --elevation-4: 0 28px 64px -14px color-mix(in srgb, #000 66%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent);
+    --elevation-hairline: inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+  }}
+
+  :root[data-theme="dark"] {
+    --accent: color-mix(in srgb, var(--riuna-teal-light) 14%, transparent);
+    --accent-foreground: var(--riuna-text-night);
+    --background: var(--riuna-ground);
+    --border: color-mix(in srgb, var(--color-white) 10%, transparent);
+    --brand: var(--riuna-teal-light); --brand-strong: var(--riuna-teal-light);
+    --brand-foreground: #062a25;
+    --card: var(--riuna-raised); --card-foreground: var(--riuna-text-night);
+    --destructive-foreground: #f26d6d;
+    --foreground: var(--riuna-text-night);
+    --info-foreground: #7ca9f5;
+    --input: color-mix(in srgb, var(--color-white) 12%, transparent);
+    --muted: color-mix(in srgb, var(--color-white) 5%, transparent);
+    --muted-foreground: var(--riuna-mid-night);
+    --popover: var(--riuna-raised); --popover-foreground: var(--riuna-text-night);
+    --primary: var(--riuna-text-night); --primary-foreground: #14293f;
+    --ring: var(--riuna-teal-light);
+    --secondary: color-mix(in srgb, var(--color-white) 6%, transparent);
+    --secondary-foreground: var(--riuna-text-night);
+    --success-foreground: #55d486; --warning-foreground: #f0a83c;
+    --sidebar: var(--riuna-sunken); --sidebar-foreground: var(--riuna-mid-night);
+    --sidebar-accent: color-mix(in srgb, var(--riuna-teal-light) 16%, transparent);
+    --sidebar-accent-foreground: var(--riuna-teal-lighter);
+    --sidebar-border: color-mix(in srgb, var(--color-white) 8%, transparent);
+    --elevation-1: 0 1px 2px -1px color-mix(in srgb, #000 55%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent);
+    --elevation-2: 0 3px 10px -3px color-mix(in srgb, #000 55%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+    --elevation-3: 0 10px 28px -8px color-mix(in srgb, #000 60%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+    --elevation-4: 0 28px 64px -14px color-mix(in srgb, #000 66%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 7%, transparent);
+    --elevation-hairline: inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+  }
+
+  :root[data-theme="light"] {
+    --background: var(--color-white); --foreground: var(--riuna-ink);
+    --card: var(--color-white); --card-foreground: var(--riuna-ink);
+    --popover: var(--color-white);
+    --border: color-mix(in srgb, var(--riuna-navy) 17%, transparent);
+    --brand: var(--riuna-teal); --brand-strong: var(--riuna-teal-strong);
+    --primary: var(--riuna-navy); --primary-foreground: var(--color-white);
+    --accent: color-mix(in srgb, var(--riuna-teal) 10%, transparent);
+    --accent-foreground: var(--riuna-ink);
+    --muted-foreground: var(--riuna-mid); --ring: var(--riuna-teal);
+  }
+
+  :root[data-density="compact"] {
+    --density-card-pad: 0.5rem; --density-gap: 0.375rem; --density-stack: 0.35rem;
+    --density-col-gap: 0.4rem; --density-control: 1.75rem; --density-row: 1.75rem;
+    --text-body: 0.8125rem; --rail-w2: 12rem; --gbar-h: 0.625rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+  }
+  :root[data-motion="reduced"] *, :root[data-motion="reduced"] *::before, :root[data-motion="reduced"] *::after {
+    animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important;
+  }
+
+  /* ================= BASE ================= */
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-sans); font-size: var(--text-body); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; }
+  h1 { margin: 0; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+  @keyframes riuna-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes riuna-flux {
+    0% { background: color-mix(in srgb, var(--brand) 46%, transparent); }
+    60% { background: color-mix(in srgb, var(--brand) 30%, transparent); }
+    100% { background: color-mix(in srgb, var(--brand) 20%, transparent); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ================= PREVIEW CHROME ================= */
+  .page { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
+  .pchrome {
+    min-height: var(--chrome-h); flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1rem; padding: 0.35rem 0.85rem;
+    background: var(--riuna-ink); color: #cdd7e2; font-size: var(--text-label);
+    text-transform: uppercase; letter-spacing: var(--tr-label); font-weight: 600; z-index: 80;
+  }
+  .pchrome .pc-group { display: flex; align-items: center; gap: 0.4rem; }
+  .pchrome .spacer { flex: 1; }
+  .pseg { display: inline-flex; padding: 2px; gap: 2px; border: 1px solid #ffffff26; border-radius: 7px; }
+  .pseg button { border: 0; cursor: pointer; background: transparent; color: #9fb0c2; font-size: var(--text-label); font-weight: 600; text-transform: uppercase; letter-spacing: var(--tr-label); padding: 3px 8px; border-radius: 5px; }
+  .pseg button[aria-pressed="true"] { background: var(--riuna-teal-strong); color: #fff; }
+  .pchrome .simbtn { border: 1px solid #ffffff26; background: #ffffff12; color: #e6edf4; cursor: pointer; padding: 4px 10px; border-radius: 6px; font-size: var(--text-label); font-weight: 600; text-transform: uppercase; letter-spacing: var(--tr-label); }
+  .pchrome .simbtn:hover { background: #ffffff1f; }
+
+  /* ================= APP SHELL ================= */
+  .app { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--sidebar-w) 1fr; overflow: hidden; }
+  .sidebar { background: var(--sidebar); color: var(--sidebar-foreground); display: flex; flex-direction: column; min-width: 0; padding: 0.5rem; gap: 0.15rem; overflow: hidden; }
+  .sb-head { display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.35rem 0.5rem; }
+  .ws { flex: 1; min-width: 0; display: flex; align-items: center; gap: 0.5rem; border: 0; background: transparent; cursor: pointer; padding: 0.35rem; border-radius: 8px; color: inherit; }
+  .ws:hover { background: var(--sidebar-accent); }
+  .ws-badge { width: 1.4rem; height: 1.4rem; border-radius: 6px; background: var(--primary); color: var(--primary-foreground); display: grid; place-items: center; font-weight: 600; font-size: var(--text-label); flex: none; }
+  .ws-name { font-weight: 600; font-size: var(--text-body); color: var(--foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sb-search { display: flex; align-items: center; gap: 0.5rem; width: 100%; border: 1px solid var(--sidebar-border); background: color-mix(in srgb, var(--card) 40%, transparent); color: var(--muted-foreground); border-radius: 8px; padding: 0.4rem 0.55rem; cursor: pointer; font-size: var(--text-secondary); margin-bottom: 0.35rem; }
+  .sb-search kbd { margin-left: auto; font-family: var(--font-mono); font-size: 0.625rem; border: 1px solid var(--sidebar-border); border-radius: 4px; padding: 0 4px; }
+  .sb-group-label { font-size: var(--text-label); text-transform: uppercase; letter-spacing: var(--tr-label); font-weight: 600; color: var(--sidebar-foreground); padding: 0.6rem 0.5rem 0.3rem; opacity: 0.8; }
+  .sb-item { display: flex; align-items: center; gap: 0.6rem; border: 0; background: transparent; color: var(--sidebar-foreground); width: 100%; text-align: left; padding: 0.42rem 0.5rem; border-radius: 8px; cursor: pointer; font-size: var(--text-body); position: relative; }
+  .sb-item:hover { background: var(--sidebar-accent); color: var(--sidebar-accent-foreground); }
+  .sb-item[aria-current="page"] { background: var(--sidebar-accent); color: var(--sidebar-accent-foreground); font-weight: 500; }
+  .sb-item .pj { width: 1.15rem; height: 1.15rem; border-radius: 5px; display: grid; place-items: center; font-size: 0.6rem; font-weight: 700; flex: none; color: #fff; }
+  .sb-item .count { margin-left: auto; font-size: var(--text-label); opacity: 0.7; font-variant-numeric: tabular-nums; }
+  .sb-foot { margin-top: auto; padding: 0.5rem 0.4rem 0.2rem; font-size: var(--text-label); color: var(--sidebar-foreground); }
+
+  .inset { position: relative; margin: 0.5rem; border: 1px solid color-mix(in srgb, var(--border) 80%, transparent); border-radius: 14px; background: var(--background); box-shadow: var(--elevation-1); display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+  .topbar { height: 2.75rem; flex: none; display: flex; align-items: center; gap: 0.5rem; padding: 0 0.5rem; border-bottom: 1px solid var(--border); background: var(--card); }
+  .crumb { display: flex; align-items: center; gap: 0.35rem; min-width: 0; }
+  .crumb button { border: 0; background: transparent; color: var(--muted-foreground); cursor: pointer; padding: 0.25rem 0.4rem; border-radius: 6px; font-size: var(--text-secondary); white-space: nowrap; }
+  .crumb button:hover { background: var(--accent); color: var(--foreground); }
+  .crumb .sep { color: var(--muted-foreground); opacity: 0.5; }
+  .divider { width: 1px; height: 1rem; background: var(--border); flex: none; }
+  .viewtabs { display: inline-flex; gap: 1px; border: 1px solid var(--border); border-radius: 9px; padding: 2px; background: var(--background); }
+  .viewtabs button { border: 0; background: transparent; color: var(--muted-foreground); cursor: pointer; font-size: var(--text-secondary); padding: 0.3rem 0.6rem; border-radius: 7px; display: flex; align-items: center; gap: 0.35rem; position: relative; transition: color var(--motion-fast) var(--ease-out); }
+  .viewtabs button:hover { color: var(--foreground); }
+  .viewtabs button[aria-selected="true"] { background: var(--accent); color: var(--foreground); box-shadow: inset 0 -2px 0 var(--brand); }
+  .tb-right { margin-left: auto; display: flex; align-items: center; gap: 0.4rem; }
+
+  .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; height: var(--density-control); padding: 0 0.6rem; border-radius: 8px; border: 1px solid var(--primary); background: var(--primary); color: var(--primary-foreground); font-size: var(--text-secondary); font-weight: 500; cursor: pointer; box-shadow: var(--elevation-1); transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out), background-color var(--motion-fast) var(--ease-out); }
+  .btn:hover { background: color-mix(in srgb, var(--primary) 90%, transparent); }
+  .btn:active { transform: scale(0.97); }
+  .btn.ghost { background: transparent; border-color: transparent; color: var(--foreground); box-shadow: none; }
+  .btn.ghost:hover { background: var(--accent); }
+  .btn.outline { background: var(--card); border-color: var(--input); color: var(--foreground); box-shadow: none; }
+  .btn.outline:hover { background: var(--accent); }
+  .btn.sm { height: 1.6rem; padding: 0 0.5rem; font-size: var(--text-label); }
+  .btn.icon { width: var(--density-control); padding: 0; }
+  .btn.icon.sm { width: 1.6rem; }
+
+  .icn { width: 1rem; height: 1rem; display: inline-block; vertical-align: -0.18em; }
+  .icn-s { width: 0.85rem; height: 0.85rem; }
+  .avatar { width: 1.3rem; height: 1.3rem; border-radius: 999px; flex: none; display: grid; place-items: center; font-size: 0.6rem; font-weight: 600; background: var(--accent); color: var(--brand-strong); border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent); }
+
+  /* ================= GANTT ================= */
+  .gwrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+  .gfilter { flex: none; display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.6rem; border-bottom: 1px solid var(--border); color: var(--muted-foreground); font-size: var(--text-secondary); }
+  .gfilter .fstub { display: inline-flex; align-items: center; gap: 0.35rem; border: 1px solid var(--border); border-radius: 7px; padding: 0.2rem 0.5rem; }
+
+  .gtoolbar { flex: none; display: flex; align-items: center; gap: 0.45rem 0.6rem; padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--card) 78%, transparent); backdrop-filter: blur(8px); flex-wrap: wrap; }
+  .gtoolbar h1 { font-size: var(--text-body); font-weight: 600; letter-spacing: -0.01em; }
+  .gtoolbar .grow { flex: 1; }
+
+  .zoomseg { display: inline-flex; gap: 1px; border: 1px solid var(--border); border-radius: 9px; padding: 2px; background: var(--background); }
+  .zoomseg button { border: 0; background: transparent; color: var(--muted-foreground); cursor: pointer; font-size: var(--text-secondary); padding: 0.28rem 0.6rem; border-radius: 7px; transition: color var(--motion-fast) var(--ease-out); }
+  .zoomseg button:hover { color: var(--foreground); }
+  .zoomseg button[aria-pressed="true"] { background: var(--accent); color: var(--foreground); box-shadow: inset 0 -2px 0 var(--brand); }
+
+  .rangenav { display: inline-flex; align-items: center; gap: 0.25rem; }
+
+  .gsearch { position: relative; display: flex; align-items: center; }
+  .gsearch svg { position: absolute; left: 0.55rem; width: 0.85rem; height: 0.85rem; color: var(--muted-foreground); pointer-events: none; }
+  .gsearch input { height: 1.7rem; width: 13rem; max-width: 40vw; border: 1px solid var(--input); background: var(--background); color: var(--foreground); border-radius: 8px; padding: 0 0.5rem 0 1.7rem; font-size: var(--text-secondary); }
+  .gsearch input::placeholder { color: var(--muted-foreground); }
+  .gsearch input:focus-visible { outline: none; border-color: color-mix(in srgb, var(--brand) 60%, var(--input)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 22%, transparent); }
+
+  .gscroll { flex: 1; min-height: 0; overflow: auto; overscroll-behavior-x: contain; }
+  .gcanvas { position: relative; width: calc(var(--rail-w2) + var(--gantt-total)); min-width: 100%; }
+
+  /* --- cabecera de dos bandas --- */
+  .ghead { position: sticky; top: 0; z-index: 5; display: flex; width: 100%; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--background) 92%, transparent); backdrop-filter: blur(8px); }
+  .ghead-rail { position: sticky; left: 0; z-index: 6; flex: 0 0 var(--rail-w2); border-right: 1px solid var(--border); background: var(--background); display: flex; align-items: flex-end; padding: 0 0.75rem 0.4rem; }
+  .ghead-rail span { font-size: var(--text-label); text-transform: uppercase; letter-spacing: var(--tr-label); font-weight: 500; color: var(--muted-foreground); }
+  .gbands { flex: 0 0 var(--gantt-total); position: relative; }
+  .gband-top { position: relative; height: 1.1rem; border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+  .gband-bot { position: relative; height: 1.45rem; }
+  .gseg { position: absolute; top: 0; bottom: 0; display: flex; align-items: center; padding-left: 0.4rem; font-size: var(--text-label); color: var(--muted-foreground); white-space: nowrap; overflow: hidden; }
+  .gband-top .gseg { text-transform: uppercase; letter-spacing: var(--tr-label); font-weight: 500; }
+  .gband-bot .gseg { justify-content: center; padding-left: 0; border-left: 1px solid color-mix(in srgb, var(--border) 55%, transparent); }
+  /* HOY se marca sombreando su columna, no con una etiqueta encima del numero. */
+  .gband-bot .gseg.is-today { color: var(--brand-strong); font-weight: 600; background: color-mix(in srgb, var(--brand) 10%, transparent); }
+  .gband-bot .gseg .wd { margin-left: 0.25rem; opacity: 0.6; }
+
+  /* --- cuerpo --- */
+  .gbody { position: relative; width: 100%; }
+  .glines { position: absolute; top: 0; bottom: 0; left: var(--rail-w2); width: var(--gantt-total); z-index: 0; pointer-events: none; }
+  .gline { position: absolute; top: 0; bottom: 0; width: 1px; background: color-mix(in srgb, var(--border) 70%, transparent); }
+  .gline.week0 { background: color-mix(in srgb, var(--border) 45%, transparent); }
+  .gtoday { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--brand) 8%, transparent); z-index: 0; pointer-events: none; }
+
+  /* líneas de dependencia (fin → inicio): estructura, callada; no es acción, no va en teal */
+  .gdeps { position: absolute; top: 0; bottom: 0; left: var(--rail-w2); width: var(--gantt-total); z-index: 3; pointer-events: none; }
+  .gdeps svg { width: 100%; height: 100%; overflow: visible; }
+  .gdeps path { fill: none; stroke: color-mix(in srgb, var(--muted-foreground) 58%, transparent); stroke-width: 1.5; }
+  .gdeps polygon { fill: color-mix(in srgb, var(--muted-foreground) 58%, transparent); }
+
+  .grows { position: relative; z-index: 1; }
+  .grow { display: flex; width: 100%; height: var(--grow-h); border-bottom: 1px solid color-mix(in srgb, var(--border) 42%, transparent); transition: background-color var(--motion-fast) var(--ease-out); }
+  .grow:hover { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+
+  .gcell-rail { position: sticky; left: 0; z-index: 4; flex: 0 0 var(--rail-w2); display: flex; align-items: center; gap: 0.4rem; padding: 0 0.5rem 0 0; border-right: 1px solid var(--border); background: var(--background); cursor: pointer; overflow: hidden; }
+  /* El tinte va como capa de imagen sobre el color de fondo opaco. Sustituir
+     `background` por un color con alfa —`--accent` ya la tiene— dejaria ver las
+     barras y la rejilla que pasan por debajo de la celda pegajosa. */
+  .grow:hover .gcell-rail { background-image: linear-gradient(var(--accent), var(--accent)); }
+  .gcell-rail .stripe { flex: none; width: 3px; align-self: stretch; margin-right: 0.5rem; background: var(--muted-foreground); }
+  /* sangría de subtarea: el codo de árbol; la franja de prioridad se queda a ras del borde */
+  .gcell-rail .rtree { flex: none; align-self: stretch; position: relative; }
+  .gcell-rail .rtree::before { content: ""; position: absolute; right: 0.4rem; top: 0; height: 50%; border-left: 1px solid color-mix(in srgb, var(--border) 95%, transparent); }
+  .gcell-rail .rtree::after { content: ""; position: absolute; right: 0; width: 0.4rem; top: 50%; border-top: 1px solid color-mix(in srgb, var(--border) 95%, transparent); }
+  .gcell-rail .sdot { flex: none; width: 6px; height: 6px; border-radius: 999px; background: var(--muted-foreground); }
+  .gcell-rail .rid { flex: none; font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: var(--text-label); color: var(--muted-foreground); }
+  .gcell-rail .rtitle { min-width: 0; flex: 1; font-size: var(--text-secondary); font-weight: 500; color: var(--foreground); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gcell-rail .rmeta { flex: none; font-size: var(--text-label); color: var(--muted-foreground); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity var(--motion-fast) var(--ease-out); }
+  .grow:hover .gcell-rail .rmeta, .gcell-rail:focus-visible .rmeta { opacity: 1; }
+  :root[data-railcolor="neutral"] .gcell-rail .stripe { display: none; }
+  :root:not([data-railcolor="neutral"]) .gcell-rail .sdot { display: none; }
+
+  .gcell-track { flex: 0 0 var(--gantt-total); position: relative; }
+
+  /* Dos grosores y no más: la tarea de primer nivel manda y cualquier subtarea
+     —del nivel que sea— adelgaza igual. Se fija en la fila para que la barra y
+     el corchete de rama lo compartan. */
+  .grow:not([data-depth="0"]) { --bar-h: calc(var(--gbar-h) * 0.6); }
+  .gbar { position: absolute; top: 50%; transform: translateY(-50%); height: var(--bar-h, var(--gbar-h)); min-width: 8px; border-radius: 999px; background: color-mix(in srgb, var(--brand) 22%, transparent); cursor: grab; z-index: 2; transition: background-color var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) var(--ease-out); }
+  /* La barra es fina a propósito; el objetivo de puntero se amplía con este pseudo (sin overflow que lo recorte). */
+  .gbar::before { content: ""; position: absolute; inset: -0.5rem 0; z-index: 1; }
+  .gbar:hover { background: color-mix(in srgb, var(--brand) 32%, transparent); box-shadow: var(--elevation-2); }
+  .gbar:active { cursor: grabbing; }
+  .gbar[data-status="done"] { opacity: 0.5; }
+  .gbar.flux { animation: riuna-flux var(--motion-settle) var(--ease-out); }
+  .gbar .fill { position: absolute; inset: 0 auto 0 0; z-index: 0; background: color-mix(in srgb, var(--brand) 46%, transparent); border-radius: 999px 0 0 999px; }
+  .gbar .handle { position: absolute; top: 0; bottom: 0; width: 8px; z-index: 3; cursor: ew-resize; opacity: 0; transition: opacity var(--motion-fast) var(--ease-out); background: color-mix(in srgb, var(--brand) 52%, transparent); }
+  .gbar .handle.l { left: 0; border-radius: 999px 0 0 999px; } .gbar .handle.r { right: 0; border-radius: 0 999px 999px 0; }
+  .gbar:hover .handle, .gbar:focus-within .handle { opacity: 1; }
+  .gbar:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--ring); }
+
+  .gbranch { position: absolute; height: 4px; border: 1.5px solid color-mix(in srgb, var(--brand) 44%, transparent); border-bottom: 0; border-radius: 3px 3px 0 0; z-index: 2; pointer-events: none; }
+
+  .gdragtip { position: fixed; z-index: 95; background: var(--popover); color: var(--popover-foreground); border: 1px solid var(--border); border-radius: 7px; box-shadow: var(--elevation-3); padding: 0.28rem 0.5rem; font-family: var(--font-mono); font-size: var(--text-label); pointer-events: none; white-space: nowrap; }
+
+  /* --- estado vacío: primitivo Empty --- */
+  .gempty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; text-align: center; padding: 3rem 1rem; color: var(--muted-foreground); }
+  .gempty .em-ic { position: relative; width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 9px; background: var(--card); box-shadow: var(--elevation-1); margin-bottom: 0.3rem; }
+  .gempty .em-ic::before, .gempty .em-ic::after { content: ""; position: absolute; inset: 0; border: 1px solid var(--border); border-radius: 9px; background: var(--card); z-index: -1; }
+  .gempty .em-ic::before { transform: rotate(-8deg) translateX(-4px); opacity: 0.55; }
+  .gempty .em-ic::after { transform: rotate(7deg) translateX(4px); opacity: 0.35; }
+  .gempty b { color: var(--foreground); font-size: var(--text-section); font-weight: 600; }
+  .gempty span { max-width: 22rem; font-size: var(--text-secondary); }
+
+  /* --- toast --- */
+  .toasts { position: fixed; right: 0.9rem; bottom: 0.9rem; display: grid; gap: 0.5rem; z-index: 96; }
+  .toast { display: flex; align-items: flex-start; gap: 0.55rem; background: var(--popover); color: var(--popover-foreground); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--elevation-3), var(--elevation-hairline); padding: 0.55rem 0.7rem; font-size: var(--text-secondary); max-width: 22rem; animation: riuna-enter var(--motion-base) var(--ease-out-quart); }
+  .toast .tw { width: 1.2rem; height: 1.2rem; flex: none; }
+  .toast b { display: block; font-size: var(--text-body); margin-bottom: 0.05rem; }
+
+  .stagger > * { animation: riuna-enter var(--motion-base) var(--ease-out-quart) both; animation-delay: calc(var(--i,0) * var(--stagger-step)); }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .viewtabs .vlabel { display: none; }
+  }
+</style>
+
+<div class="page">
+<div class="pchrome">
+  <span>Preview · el Gantt de Riuna</span>
+  <span class="spacer"></span>
+  <div class="pc-group"><span>Zoom</span>
+    <div class="pseg" id="pseg-zoom" role="group" aria-label="Nivel de zoom">
+      <button type="button" data-v="day" aria-pressed="true">Día</button>
+      <button type="button" data-v="week" aria-pressed="false">Semana</button>
+      <button type="button" data-v="month" aria-pressed="false">Mes</button>
+      <button type="button" data-v="quarter" aria-pressed="false">Trimestre</button>
+    </div>
+  </div>
+  <div class="pc-group"><span>Riel</span>
+    <div class="pseg" id="pseg-rail" role="group" aria-label="Color del riel">
+      <button type="button" data-v="priority" aria-pressed="true">Prioridad</button>
+      <button type="button" data-v="status" aria-pressed="false">Estado</button>
+      <button type="button" data-v="neutral" aria-pressed="false">Neutro</button>
+    </div>
+  </div>
+  <div class="pc-group"><span>Relaciones</span>
+    <div class="pseg" id="pseg-deps" role="group" aria-label="Líneas de dependencia">
+      <button type="button" data-v="on" aria-pressed="true">Ver</button>
+      <button type="button" data-v="off" aria-pressed="false">Ocultar</button>
+    </div>
+  </div>
+  <div class="pc-group"><span>Contenido</span>
+    <div class="pseg" id="pseg-content" role="group" aria-label="Contenido">
+      <button type="button" data-v="full" aria-pressed="true">Con tareas</button>
+      <button type="button" data-v="empty" aria-pressed="false">Vacío</button>
+    </div>
+  </div>
+  <div class="pc-group"><span>Tema</span>
+    <div class="pseg" id="pseg-theme" role="group" aria-label="Tema">
+      <button type="button" data-v="system" aria-pressed="true">Sistema</button>
+      <button type="button" data-v="light" aria-pressed="false">Claro</button>
+      <button type="button" data-v="dark" aria-pressed="false">Oscuro</button>
+    </div>
+  </div>
+  <div class="pc-group"><span>Densidad</span>
+    <div class="pseg" id="pseg-density" role="group" aria-label="Densidad">
+      <button type="button" data-v="comfortable" aria-pressed="true">Cómoda</button>
+      <button type="button" data-v="compact" aria-pressed="false">Compacta</button>
+    </div>
+  </div>
+  <div class="pc-group"><span>Movimiento</span>
+    <div class="pseg" id="pseg-motion" role="group" aria-label="Movimiento">
+      <button type="button" data-v="full" aria-pressed="true">Normal</button>
+      <button type="button" data-v="reduced" aria-pressed="false">Reducido</button>
+    </div>
+  </div>
+  <button class="simbtn" id="sim-reprog" type="button">Simular: Ana reprograma RIU-142</button>
+</div>
+
+<div class="app">
+  <aside class="sidebar" aria-label="Navegación">
+    <div class="sb-head">
+      <button class="ws" type="button">
+        <span class="ws-badge">R</span><span class="ws-name">Riuna</span>
+        <svg class="icn-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+    </div>
+    <button class="sb-search" type="button">
+      <svg class="icn-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <span>Buscar</span><kbd>⌘K</kbd>
+    </button>
+    <div class="sb-group-label"><span>Proyectos</span></div>
+    <button class="sb-item" type="button" aria-current="page">
+      <span class="pj" style="background:#2a5c8a">PL</span><span>Plataforma</span><span class="count">42</span>
+    </button>
+    <button class="sb-item" type="button">
+      <span class="pj" style="background:#7c3aed">DS</span><span>Diseño</span><span class="count">11</span>
+    </button>
+    <button class="sb-item" type="button">
+      <span class="pj" style="background:#0b7466">OP</span><span>Operación</span><span class="count">7</span>
+    </button>
+    <div class="sb-foot"><span class="mono">0.1.0</span></div>
+  </aside>
+
+  <div class="inset">
+    <header class="topbar">
+      <nav class="crumb" aria-label="Ruta">
+        <button type="button">Riuna</button><span class="sep">/</span><button type="button">Plataforma</button>
+      </nav>
+      <span class="divider"></span>
+      <div class="viewtabs" role="tablist" aria-label="Vista">
+        <button type="button" role="tab" aria-selected="false">Backlog</button>
+        <button type="button" role="tab" aria-selected="false"><span class="vlabel">Tareas</span></button>
+        <button type="button" role="tab" aria-selected="false"><span class="vlabel">Calendario</span></button>
+        <button type="button" role="tab" aria-selected="true">
+          <svg class="icn-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M7 15h5"/></svg>
+          <span class="vlabel">Gantt</span>
+        </button>
+        <button type="button" role="tab" aria-selected="false"><span class="vlabel">Tabla</span></button>
+      </div>
+      <div class="tb-right">
+        <button class="btn sm" type="button">
+          <svg class="icn-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Nueva tarea
+        </button>
+      </div>
+    </header>
+
+    <div class="gwrap" id="gwrap">
+      <div class="gfilter">
+        <span class="fstub">
+          <svg class="icn-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18l-7 8v6l-4-2v-4z"/></svg>
+          Filtrar
+        </span>
+        <span class="fstub" style="border-style:dashed">+ Añadir filtro</span>
+      </div>
+
+      <div class="gtoolbar">
+        <h1>Gantt</h1>
+        <div class="zoomseg" id="zoomseg" role="group" aria-label="Escala temporal">
+          <button type="button" data-z="day" aria-pressed="true">Día</button>
+          <button type="button" data-z="week" aria-pressed="false">Semana</button>
+          <button type="button" data-z="month" aria-pressed="false">Mes</button>
+          <button type="button" data-z="quarter" aria-pressed="false">Trimestre</button>
+        </div>
+        <div class="rangenav">
+          <button class="btn outline icon sm" id="nav-prev" type="button" aria-label="Rango anterior">
+            <svg class="icn-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="btn outline sm" id="nav-today" type="button">Hoy</button>
+          <button class="btn outline icon sm" id="nav-next" type="button" aria-label="Rango siguiente">
+            <svg class="icn-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+        </div>
+        <span class="grow"></span>
+        <div class="gsearch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="gsearch" type="text" placeholder="Buscar tickets programados…" aria-label="Buscar">
+        </div>
+      </div>
+
+      <div class="gscroll" id="gscroll"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  document.querySelectorAll("svg").forEach(function (s) {
+    if (!s.hasAttribute("role") && !s.hasAttribute("aria-label")) { s.setAttribute("aria-hidden", "true"); s.setAttribute("focusable", "false"); }
+  });
+  function reduced() { return window.matchMedia("(prefers-reduced-motion: reduce)").matches || root.getAttribute("data-motion") === "reduced"; }
+
+  /* ---------- estado ---------- */
+  var state = { zoom: "day", rail: "priority", deps: true, content: "full", query: "" };
+
+  /* ---------- datos de ejemplo (anclados a septiembre de 2026) ---------- */
+  var TODAY = new Date(2026, 8, 18);
+  var STATUS = {
+    backlog:     { label: "Backlog",      color: "var(--muted-foreground)" },
+    planned:     { label: "Planificada",  color: "var(--info-foreground)" },
+    in_progress: { label: "En curso",     color: "var(--brand-strong)" },
+    in_review:   { label: "En revisión",  color: "var(--warning-foreground)" },
+    done:        { label: "Hecha",        color: "var(--success-foreground)" }
+  };
+  var PRIORITY = {
+    low:    "var(--muted-foreground)", medium: "var(--info-foreground)",
+    high:   "var(--warning-foreground)", urgent: "var(--destructive-foreground)"
+  };
+  function d(y, m, day) { return new Date(y, m - 1, day); }
+  var TASKS = [
+    { id: "RIU-131", title: "Importación y exportación en CSV y Excel", status: "done", priority: "medium", assignee: "MQ", start: d(2026,8,26), end: d(2026,9,5), progress: 100 },
+    { id: "RIU-205", title: "Cierre de la fase 5", status: "done", priority: "low", assignee: "MQ", start: d(2026,9,5), end: d(2026,9,5) },
+    { id: "RIU-142", title: "Traductor de filtros a SQL con árboles de 5 niveles", status: "in_progress", priority: "high", assignee: "MQ", start: d(2026,9,8), end: d(2026,9,24), progress: 45, desc: 3, subStart: d(2026,9,8), subEnd: d(2026,9,30), deps: ["RIU-131"] },
+    { id: "RIU-127", title: "Filtrar por selección múltiple no devolvía nada", status: "in_review", priority: "high", assignee: "AR", start: d(2026,9,12), end: d(2026,9,17), parent: "RIU-142", desc: 1, subStart: d(2026,9,12), subEnd: d(2026,9,19) },
+    { id: "RIU-149", title: "Normalizar operadores IN / NOT IN", status: "in_progress", priority: "medium", assignee: "MQ", start: d(2026,9,13), end: d(2026,9,19), parent: "RIU-127" },
+    { id: "RIU-118", title: "Agregados del subárbol sobre el prefijo materializado", status: "in_progress", priority: "urgent", assignee: "MQ", start: d(2026,9,15), end: d(2026,9,30), parent: "RIU-142" },
+    { id: "RIU-160", title: "Bandeja unificada de «Mi trabajo»", status: "backlog", priority: "medium", assignee: null, start: d(2026,9,25), end: d(2026,10,10), deps: ["RIU-142"] },
+    { id: "RIU-181", title: "Motor disparador → condición → acción", status: "planned", priority: "medium", assignee: null, start: d(2026,10,6), end: d(2026,11,4), desc: 1, subStart: d(2026,9,30), subEnd: d(2026,11,4), deps: ["RIU-142"] },
+    { id: "RIU-190", title: "Vista de carga por persona", status: "planned", priority: "low", assignee: null, start: d(2026,9,30), end: d(2026,10,3), parent: "RIU-181", deps: ["RIU-118"] },
+    { id: "RIU-163", title: "Plantillas de árbol que despliegan su jerarquía", status: "backlog", priority: "low", assignee: "JB", start: d(2026,10,14), end: d(2026,10,28), deps: ["RIU-160"] }
+  ];
+
+  /* ---------- utilidades de fecha ---------- */
+  var DAY = 86400000;
+  var MES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+  var WD = ["L","M","X","J","V","S","D"]; // lunes primero
+  function midnight(x) { return new Date(x.getFullYear(), x.getMonth(), x.getDate()); }
+  function addDays(x, n) { return new Date(x.getFullYear(), x.getMonth(), x.getDate() + n); }
+  function diffDays(a, b) { return Math.round((midnight(b) - midnight(a)) / DAY); }
+  function startOfWeekMon(x) { var w = (x.getDay() + 6) % 7; return addDays(x, -w); }
+  function isoWeek(x) {
+    var t = midnight(x); t.setDate(t.getDate() + 3 - ((t.getDay() + 6) % 7));
+    var w1 = new Date(t.getFullYear(), 0, 4);
+    return 1 + Math.round(((t - w1) / DAY - 3 + ((w1.getDay() + 6) % 7)) / 7);
+  }
+  function fmtShort(x) { return x.getDate() + " " + MES[x.getMonth()]; }
+
+  /* ---------- configuración de zoom ---------- */
+  var ZOOM = {
+    day:     { pxPerDay: 40,        unit: "1 columna = 1 día" },
+    week:    { pxPerDay: 132 / 7,   unit: "1 columna = 1 semana" },
+    month:   { pxPerDay: 150 / 30.4368, unit: "1 columna = 1 mes" },
+    quarter: { pxPerDay: 62 / 30.4368,  unit: "1 columna = 1 mes · banda de trimestre" }
+  };
+
+  var scroll = document.getElementById("gscroll");
+  var lastZoom = null;
+
+  function rangeBounds() {
+    var minS = TASKS[0].start, maxE = TASKS[0].end;
+    TASKS.forEach(function (t) { if (t.start < minS) minS = t.start; if (t.end > maxE) maxE = t.end; });
+    return { start: addDays(startOfWeekMon(minS), -7), end: addDays(startOfWeekMon(maxE), 7 + 28) };
+  }
+
+  // Orden de árbol: cada raíz por fecha de inicio, y bajo ella sus hijas por fecha.
+  // Devuelve [{ t, depth }]. Si el padre queda fuera del filtro, la hija sube a raíz.
+  function orderedRows(list) {
+    var vis = {};
+    list.forEach(function (t) { vis[t.id] = true; });
+    var kids = {};
+    list.forEach(function (t) {
+      var p = t.parent && vis[t.parent] ? t.parent : "__root";
+      (kids[p] = kids[p] || []).push(t);
+    });
+    Object.keys(kids).forEach(function (k) {
+      kids[k].sort(function (a, b) { return a.start - b.start; });
+    });
+    var out = [];
+    (function walk(pid, depth) {
+      (kids[pid] || []).forEach(function (t) {
+        out.push({ t: t, depth: depth });
+        walk(t.id, depth + 1);
+      });
+    })("__root", 0);
+    return out;
+  }
+
+  /* ---------- render ---------- */
+  function render() {
+    var prevScrollLeft = scroll.scrollLeft;
+    var q = state.query.trim().toLowerCase();
+    var filtered = TASKS.filter(function (t) {
+      return !q || t.title.toLowerCase().indexOf(q) !== -1 || t.id.toLowerCase().indexOf(q) !== -1 || STATUS[t.status].label.toLowerCase().indexOf(q) !== -1;
+    });
+    var rows = orderedRows(filtered);
+
+    if (state.content === "empty" || rows.length === 0) {
+      var vac = state.content === "empty";
+      scroll.innerHTML =
+        '<div class="gempty">' +
+        '<div class="em-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>' +
+        '<b>' + (vac ? "Sin tareas programadas" : "No hay resultados") + '</b>' +
+        '<span>' + (vac
+          ? "Añade una fecha de inicio, de vencimiento o ambas para colocar la tarea en la línea de tiempo del proyecto."
+          : 'Ninguna tarea programada coincide con «' + state.query + '».') + '</span>' +
+        '</div>';
+      return;
+    }
+
+    var cfg = ZOOM[state.zoom];
+    var b = rangeBounds();
+    var totalDays = diffDays(b.start, b.end);
+    var pxPerDay = cfg.pxPerDay;
+    var totalPx = Math.round(totalDays * pxPerDay);
+    var x = function (date) { return diffDays(b.start, date) * pxPerDay; };
+
+    root.style.setProperty("--gantt-total", totalPx + "px");
+
+    /* -- banda superior + inferior -- */
+    var topHtml = "", botHtml = "", lineHtml = "";
+    var todayBand = null;   // {left, width} del tramo de cabecera marcado como actual
+    var cursor;
+
+    if (state.zoom === "day" || state.zoom === "week") {
+      // banda superior = meses
+      cursor = new Date(b.start.getFullYear(), b.start.getMonth(), 1);
+      while (cursor < b.end) {
+        var mEnd = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+        var s = Math.max(0, x(cursor)), e = Math.min(totalPx, x(mEnd));
+        topHtml += '<div class="gseg" style="left:' + s + 'px;width:' + (e - s) + 'px">' +
+          MES[cursor.getMonth()] + " " + cursor.getFullYear() + '</div>';
+        cursor = mEnd;
+      }
+    } else {
+      // banda superior = años
+      cursor = new Date(b.start.getFullYear(), 0, 1);
+      while (cursor < b.end) {
+        var yEnd = new Date(cursor.getFullYear() + 1, 0, 1);
+        var sy = Math.max(0, x(cursor)), ey = Math.min(totalPx, x(yEnd));
+        topHtml += '<div class="gseg" style="left:' + sy + 'px;width:' + (ey - sy) + 'px">' + cursor.getFullYear() + '</div>';
+        cursor = yEnd;
+      }
+    }
+
+    if (state.zoom === "day") {
+      for (var i = 0; i < totalDays; i++) {
+        var day = addDays(b.start, i);
+        var isTd = diffDays(day, TODAY) === 0;
+        if (isTd) todayBand = { left: i * pxPerDay, width: pxPerDay };
+        botHtml += '<div class="gseg' + (isTd ? " is-today" : "") + '" style="left:' + (i * pxPerDay) + 'px;width:' + pxPerDay + 'px">' +
+          day.getDate() + '<span class="wd">' + WD[(day.getDay() + 6) % 7] + '</span></div>';
+        if (day.getDay() === 1) lineHtml += '<div class="gline week0" style="left:' + (i * pxPerDay) + 'px"></div>';
+      }
+    } else if (state.zoom === "week") {
+      cursor = startOfWeekMon(b.start);
+      while (cursor < b.end) {
+        var wS = x(cursor), wW = 7 * pxPerDay;
+        var inWk = diffDays(cursor, TODAY) >= 0 && diffDays(cursor, TODAY) < 7;
+        if (inWk) todayBand = { left: wS, width: wW };
+        botHtml += '<div class="gseg' + (inWk ? " is-today" : "") + '" style="left:' + wS + 'px;width:' + wW + 'px">sem ' + isoWeek(cursor) + '</div>';
+        if (cursor.getDate() <= 7) lineHtml += '<div class="gline" style="left:' + wS + 'px"></div>';
+        cursor = addDays(cursor, 7);
+      }
+    } else if (state.zoom === "month") {
+      cursor = new Date(b.start.getFullYear(), b.start.getMonth(), 1);
+      while (cursor < b.end) {
+        var mE = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+        var mS = Math.max(0, x(cursor)), mW = Math.min(totalPx, x(mE)) - mS;
+        var inM = cursor.getMonth() === TODAY.getMonth() && cursor.getFullYear() === TODAY.getFullYear();
+        if (inM) todayBand = { left: mS, width: mW };
+        botHtml += '<div class="gseg' + (inM ? " is-today" : "") + '" style="left:' + mS + 'px;width:' + mW + 'px">' + MES[cursor.getMonth()] + '</div>';
+        if (cursor.getMonth() % 3 === 0) lineHtml += '<div class="gline" style="left:' + x(cursor) + 'px"></div>';
+        cursor = mE;
+      }
+    } else {
+      cursor = new Date(b.start.getFullYear(), Math.floor(b.start.getMonth() / 3) * 3, 1);
+      while (cursor < b.end) {
+        var qE = new Date(cursor.getFullYear(), cursor.getMonth() + 3, 1);
+        var qS = Math.max(0, x(cursor)), qW = Math.min(totalPx, x(qE)) - qS;
+        var qn = Math.floor(cursor.getMonth() / 3) + 1;
+        var inQ = cursor.getFullYear() === TODAY.getFullYear() && Math.floor(TODAY.getMonth() / 3) + 1 === qn;
+        if (inQ) todayBand = { left: qS, width: qW };
+        botHtml += '<div class="gseg' + (inQ ? " is-today" : "") + '" style="left:' + qS + 'px;width:' + qW + 'px">T' + qn + '</div>';
+        if (cursor.getMonth() === 0) lineHtml += '<div class="gline" style="left:' + x(cursor) + 'px"></div>';
+        cursor = qE;
+      }
+    }
+
+    /* -- columna sombreada de HOY (sin etiqueta ni punto: se solapaban con el
+          número del día). Se toma del propio tramo de cabecera marcado actual,
+          así cabecera y cuerpo no se pueden desalinear. -- */
+    var todayLine = todayBand
+      ? '<div class="gtoday" style="left:calc(var(--rail-w2) + ' + todayBand.left + 'px);width:' + todayBand.width + 'px"></div>'
+      : "";
+
+    /* -- filas -- */
+    var rowsHtml = "";
+    rows.forEach(function (node, idx) {
+      var t = node.t, depth = node.depth;
+      var st = STATUS[t.status];
+      var stripeColor = state.rail === "priority" ? PRIORITY[t.priority] : st.color;
+      // Ancla en el centro del dia de inicio y de fin, no en los bordes.
+      var half = pxPerDay / 2;
+      var bx = x(t.start) + half;
+      var bw = x(t.end) + half - bx;
+      if (bw < 8) { bx -= (8 - bw) / 2; bw = 8; }
+      var fill = (t.progress != null && t.progress > 0)
+        ? '<div class="fill" style="width:' + t.progress + '%"></div>' : "";
+      var branch = "";
+      if (t.subStart && t.subEnd) {
+        var brx = x(t.subStart) + half, brw = x(t.subEnd) + half - brx;
+        if (brw < 8) { brx -= (8 - brw) / 2; brw = 8; }
+        branch = '<div class="gbranch" style="left:' + brx + 'px;width:' + brw + 'px;top:calc(50% - var(--bar-h, var(--gbar-h))/2 - 5px)"></div>';
+      }
+      var meta = t.progress != null && t.desc ? (t.progress + "%") : "";
+      var kind = depth === 0 ? "Tarea" : "Subtarea";
+      var tip = t.id + " · " + kind + " · " + st.label + " · " + fmtShort(t.start) + "–" + fmtShort(t.end) +
+        (t.assignee ? " · " + t.assignee : "") + (t.desc ? " · " + t.desc + (t.desc === 1 ? " subtarea" : " subtareas") : "");
+      var indent = depth > 0 ? '<span class="rtree" style="width:' + (depth * 0.85) + 'rem"></span>' : "";
+
+      rowsHtml +=
+        '<div class="grow" data-id="' + t.id + '" data-depth="' + depth + '" style="--i:' + Math.min(idx, 8) + '">' +
+          '<div class="gcell-rail" data-depth="' + depth + '" tabindex="0" role="button" title="' + tip.replace(/"/g, "&quot;") + '">' +
+            '<span class="stripe" style="background:' + stripeColor + '"></span>' +
+            indent +
+            '<span class="sdot" style="background:' + st.color + '"></span>' +
+            '<span class="rid">' + t.id + '</span>' +
+            '<span class="rtitle">' + t.title + '</span>' +
+            (meta ? '<span class="rmeta">' + meta + '</span>' : '') +
+          '</div>' +
+          '<div class="gcell-track">' +
+            branch +
+            '<div class="gbar" data-id="' + t.id + '" data-status="' + t.status + '" data-depth="' + depth + '" tabindex="0" style="left:' + bx + 'px;width:' + bw + 'px" aria-label="' + tip.replace(/"/g, "&quot;") + '" title="' + tip.replace(/"/g, "&quot;") + '">' +
+              fill +
+              '<span class="handle l" data-edge="l" aria-hidden="true"></span>' +
+              '<span class="handle r" data-edge="r" aria-hidden="true"></span>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    });
+
+    scroll.innerHTML =
+      '<div class="gcanvas">' +
+        '<div class="ghead">' +
+          '<div class="ghead-rail"><span>Tarea</span></div>' +
+          '<div class="gbands">' +
+            '<div class="gband-top">' + topHtml + '</div>' +
+            '<div class="gband-bot">' + botHtml + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="gbody">' +
+          '<div class="glines">' + lineHtml + '</div>' +
+          todayLine +
+          '<div class="grows' + (reduced() ? "" : " stagger") + '">' + rowsHtml + '</div>' +
+          '<div class="gdeps"></div>' +
+        '</div>' +
+      '</div>';
+
+    if (!reduced()) {
+      var g = scroll.querySelector(".grows");
+      setTimeout(function () { if (g) g.classList.remove("stagger"); }, 700);
+    }
+    if (state.deps) drawDeps();
+    // Recentrar en HOY solo al cambiar de zoom; en el resto (buscar, arrastrar,
+    // toggles) se conserva la posición de scroll.
+    if (lastZoom !== state.zoom) { lastZoom = state.zoom; centerToday(false); }
+    else { scroll.scrollLeft = prevScrollLeft; }
+  }
+
+  /* ---------- líneas de dependencia (fin → inicio) ----------
+     Se dibujan sobre la geometría real del DOM: sirve en cualquier zoom y no
+     duplica la matemática de posicionado. En la implementación real esto es
+     Fase 6 (con edición); aquí es solo la propuesta visual. */
+  function drawDeps() {
+    var host = scroll.querySelector(".gdeps"); if (!host) return;
+    var pos = {};
+    scroll.querySelectorAll(".gbar").forEach(function (bar) {
+      var row = bar.closest(".grow");
+      pos[bar.dataset.id] = {
+        x1: bar.offsetLeft,
+        x2: bar.offsetLeft + bar.offsetWidth,
+        cy: row.offsetTop + row.offsetHeight / 2
+      };
+    });
+    var segs = "";
+    TASKS.forEach(function (t) {
+      if (!t.deps) return;
+      var s = pos[t.id]; if (!s) return;
+      t.deps.forEach(function (pid) {
+        var p = pos[pid]; if (!p) return;
+        var x1 = p.x2, y1 = p.cy, x2 = s.x1, y2 = s.cy, g = 9, ah = 5;
+        var dd = (x2 >= x1 + g * 2)
+          ? "M" + x1 + " " + y1 + " H" + (x1 + g) + " V" + y2 + " H" + (x2 - ah)
+          : "M" + x1 + " " + y1 + " h" + g + " V" + (y1 + (y2 - y1) / 2) + " H" + (x2 - g) + " V" + y2 + " H" + (x2 - ah);
+        segs += '<path d="' + dd + '"/>' +
+          '<polygon points="' + x2 + " " + y2 + " " + (x2 - ah) + " " + (y2 - 3) + " " + (x2 - ah) + " " + (y2 + 3) + '"/>';
+      });
+    });
+    host.innerHTML = segs ? '<svg xmlns="http://www.w3.org/2000/svg">' + segs + "</svg>" : "";
+  }
+
+  function centerToday(smooth) {
+    var band = scroll.querySelector(".gtoday");
+    if (!band) return;
+    var left = parseFloat(getComputedStyle(band).left) || band.offsetLeft;
+    var centre = left + band.offsetWidth / 2;
+    scroll.scrollTo({ left: Math.max(0, centre - scroll.clientWidth / 2), behavior: smooth && !reduced() ? "smooth" : "auto" });
+  }
+
+  /* ---------- toasts ---------- */
+  function toast(title, body, kind) {
+    var t = document.createElement("div");
+    t.className = "toast";
+    var col = kind === "ok" ? "var(--success-foreground)" : kind === "err" ? "var(--destructive-foreground)" : "var(--info-foreground)";
+    var path = kind === "ok" ? '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>'
+      : kind === "err" ? '<circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/>'
+      : '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.01"/>';
+    t.innerHTML = '<span class="tw" style="color:' + col + '"><svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" stroke="currentColor" stroke-width="2">' + path + '</svg></span><span><b>' + title + '</b>' + (body || "") + '</span>';
+    document.getElementById("toasts").appendChild(t);
+    setTimeout(function () { t.style.transition = "opacity .3s, transform .3s"; t.style.opacity = "0"; t.style.transform = "translateY(6px)"; setTimeout(function () { t.remove(); }, 320); }, 3000);
+  }
+
+  /* ---------- toggles del chrome ---------- */
+  function wire(id, on) {
+    var g = document.getElementById(id);
+    g.addEventListener("click", function (e) {
+      var btn = e.target.closest("button[data-v]"); if (!btn) return;
+      g.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === btn)); });
+      on(btn.dataset.v);
+    });
+  }
+  wire("pseg-theme", function (v) { v === "system" ? root.removeAttribute("data-theme") : root.setAttribute("data-theme", v); });
+  wire("pseg-density", function (v) { v === "compact" ? root.setAttribute("data-density", "compact") : root.removeAttribute("data-density"); render(); });
+  wire("pseg-motion", function (v) { v === "reduced" ? root.setAttribute("data-motion", "reduced") : root.removeAttribute("data-motion"); });
+  wire("pseg-rail", function (v) { state.rail = v; root.setAttribute("data-railcolor", v); render(); });
+  wire("pseg-deps", function (v) { state.deps = v === "on"; render(); });
+  wire("pseg-content", function (v) { state.content = v; render(); });
+  wire("pseg-zoom", function (v) { setZoom(v); });
+  root.setAttribute("data-railcolor", state.rail);
+
+  /* ---------- zoom (toolbar + chrome sincronizados) ---------- */
+  var zoomseg = document.getElementById("zoomseg");
+  function setZoom(z) {
+    state.zoom = z;
+    zoomseg.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.z === z)); });
+    document.getElementById("pseg-zoom").querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", String(x.dataset.v === z)); });
+    render();
+  }
+  zoomseg.addEventListener("click", function (e) { var b = e.target.closest("button[data-z]"); if (b) setZoom(b.dataset.z); });
+
+  /* ---------- navegación de rango ---------- */
+  document.getElementById("nav-prev").addEventListener("click", function () { scroll.scrollBy({ left: -scroll.clientWidth * 0.7, behavior: reduced() ? "auto" : "smooth" }); });
+  document.getElementById("nav-next").addEventListener("click", function () { scroll.scrollBy({ left: scroll.clientWidth * 0.7, behavior: reduced() ? "auto" : "smooth" }); });
+  document.getElementById("nav-today").addEventListener("click", function () { centerToday(true); });
+
+  /* ---------- búsqueda ---------- */
+  document.getElementById("gsearch").addEventListener("input", function (e) { state.query = e.target.value; render(); });
+
+  /* ---------- arrastrar y redimensionar barras (delegado, snap a día) ---------- */
+  var drag = null;
+  scroll.addEventListener("pointerdown", function (e) {
+    var bar = e.target.closest(".gbar"); if (!bar) return;
+    var task = TASKS.find(function (t) { return t.id === bar.dataset.id; }); if (!task) return;
+    var edge = e.target.closest(".handle");
+    e.preventDefault();
+    var pxPerDay = ZOOM[state.zoom].pxPerDay;
+    drag = {
+      bar: bar, task: task, edge: edge ? edge.dataset.edge : null, moved: false,
+      originX: e.clientX, pxPerDay: pxPerDay, start0: task.start, end0: task.end
+    };
+    bar.setPointerCapture && bar.setPointerCapture(e.pointerId);
+  });
+  scroll.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    var deltaDays = Math.round((e.clientX - drag.originX) / drag.pxPerDay);
+    if (!drag.moved && Math.abs(e.clientX - drag.originX) < 4) return;
+    drag.moved = true;
+    var ns = drag.start0, ne = drag.end0;
+    if (drag.edge === "l") { ns = addDays(drag.start0, Math.min(deltaDays, diffDays(drag.start0, drag.end0))); }
+    else if (drag.edge === "r") { ne = addDays(drag.end0, Math.max(deltaDays, -diffDays(drag.start0, drag.end0))); }
+    else { ns = addDays(drag.start0, deltaDays); ne = addDays(drag.end0, deltaDays); }
+    drag.next = { start: ns, end: ne };
+    var dHalf = drag.pxPerDay / 2;
+    var bx = diffDays(rangeBounds().start, ns) * drag.pxPerDay + dHalf;
+    var bw = diffDays(rangeBounds().start, ne) * drag.pxPerDay + dHalf - bx;
+    if (bw < 8) { bx -= (8 - bw) / 2; bw = 8; }
+    drag.bar.style.left = bx + "px"; drag.bar.style.width = bw + "px";
+    var tip = document.getElementById("gdragtip") || (function () {
+      var el = document.createElement("div"); el.id = "gdragtip"; el.className = "gdragtip"; document.body.appendChild(el); return el;
+    })();
+    tip.textContent = fmtShort(ns) + "  →  " + fmtShort(ne);
+    tip.style.left = (e.clientX + 14) + "px"; tip.style.top = (e.clientY + 14) + "px";
+  });
+  scroll.addEventListener("pointerup", function () {
+    if (!drag) return;
+    var tip = document.getElementById("gdragtip"); if (tip) tip.remove();
+    if (drag.moved && drag.next) {
+      drag.task.start = drag.next.start; drag.task.end = drag.next.end;
+      render();
+      toast("Fechas actualizadas", drag.task.id + " · " + fmtShort(drag.task.start) + "–" + fmtShort(drag.task.end), "ok");
+    } else if (!drag.moved) {
+      toast("Abriría " + drag.task.id, "El panel de detalle de la tarea llega con la implementación.", "info");
+    }
+    drag = null;
+  });
+  scroll.addEventListener("pointercancel", function () {
+    var tip = document.getElementById("gdragtip"); if (tip) tip.remove();
+    if (drag) { render(); drag = null; }
+  });
+
+  /* riel: abrir con teclado o clic */
+  scroll.addEventListener("click", function (e) {
+    var rail = e.target.closest(".gcell-rail"); if (!rail) return;
+    var row = rail.closest(".grow");
+    toast("Abriría " + row.dataset.id, "El panel de detalle de la tarea llega con la implementación.", "info");
+  });
+  scroll.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var rail = e.target.closest(".gcell-rail"); var bar = e.target.closest(".gbar");
+    if (rail || bar) { e.preventDefault(); var row = (rail || bar).closest(".grow"); toast("Abriría " + row.dataset.id, "", "info"); }
+  });
+
+  /* ---------- simulación: Ana reprograma RIU-142 ---------- */
+  document.getElementById("sim-reprog").addEventListener("click", function () {
+    var t = TASKS.find(function (x) { return x.id === "RIU-142"; });
+    t.start = addDays(t.start, 5); t.end = addDays(t.end, 5);
+    if (t.subEnd) t.subEnd = addDays(t.subEnd, 5);
+    render();
+    var bar = scroll.querySelector('.gbar[data-id="RIU-142"]');
+    if (bar && !reduced()) { bar.classList.remove("flux"); void bar.offsetWidth; bar.classList.add("flux"); }
+    toast("Ana reprogramó una tarea", "RIU-142 se desplazó a " + fmtShort(t.start) + "–" + fmtShort(t.end) + ".", "info");
+  });
+
+  render();
+})();
+</script>

@@ -28,11 +28,11 @@ import {
 } from "./schemas";
 import { registerMcpTools, toMcpToolRegistrar } from "./tools";
 
-const publicApiUrl = (process.env.KANEO_API_URL || "http://localhost:1337")
+const publicApiUrl = (process.env.RIUNA_API_URL || "http://localhost:1337")
   .replace(/\/api\/?$/, "")
   .replace(/\/+$/, "");
 const internalApiUrl = (
-  process.env.KANEO_INTERNAL_API_URL || "http://127.0.0.1:1337"
+  process.env.RIUNA_INTERNAL_API_URL || "http://127.0.0.1:1337"
 )
   .replace(/\/api\/?$/, "")
   .replace(/\/+$/, "");
@@ -46,7 +46,7 @@ const sessions = new Map<string, McpSession>();
 
 function createMcpServerForUser(token: string): LegacyMcpServer {
   const server = new LegacyMcpServer({
-    name: "kaneo-mcp",
+    name: "riuna-mcp",
     version: "1.0.0",
   });
   registerMcpTools(toMcpToolRegistrar(server), internalApiUrl, token);
@@ -108,7 +108,7 @@ mcp.get(
     description: "Start an explicit MCP OAuth consent request",
     security: [],
     responses: {
-      302: { description: "Redirect to the Kaneo consent page" },
+      302: { description: "Redirect to the Riuna consent page" },
       400: {
         description: "Invalid authorization request",
         content: {

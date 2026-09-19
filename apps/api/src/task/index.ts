@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
@@ -11,6 +12,7 @@ import {
   taskTable,
   workspaceTable,
 } from "../database/schema";
+import { buildImportSource } from "../external-ref";
 import { taskSchema } from "../schemas";
 import {
   assertTaskImageKeyMatchesContext,
@@ -18,17 +20,26 @@ import {
   isImageContentType,
   validateTaskAssetUploadInput,
 } from "../storage/s3";
+import { buildContentDisposition } from "../utils/content-disposition";
 import { normalizeApiServerUrl } from "../utils/openapi-spec";
-import { requireWorkspacePermission } from "../utils/require-workspace-permission";
+import {
+  hasWorkspacePermission,
+  requireWorkspacePermission,
+} from "../utils/require-workspace-permission";
 import {
   validateAndParseDate,
   validateDateRange,
 } from "../utils/validate-dates";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
+import { parseFilterParam } from "../view/filter-schema";
+import { FilterError, type FilterNode } from "../view/filter-to-sql";
+import analyzeImport from "./controllers/analyze-import";
 import bulkUpdateTasks from "./controllers/bulk-update-tasks";
 import createTask from "./controllers/create-task";
 import deleteTask from "./controllers/delete-task";
+import exportTaskSheet from "./controllers/export-task-sheet";
 import exportTasks from "./controllers/export-tasks";
+import exportWorkspaceTasks from "./controllers/export-workspace-tasks";
 import getTask from "./controllers/get-task";
 import getTasks from "./controllers/get-tasks";
 import importTasks from "./controllers/import-tasks";
@@ -40,11 +51,23 @@ import {
 } from "./controllers/require-task-permission";
 import updateTask from "./controllers/update-task";
 import updateTaskAssignee from "./controllers/update-task-assignee";
+import updateTaskAssignees from "./controllers/update-task-assignees";
+import updateTaskCustomFields from "./controllers/update-task-custom-fields";
 import updateTaskDescription from "./controllers/update-task-description";
 import updateTaskDueDate from "./controllers/update-task-due-date";
+import updateTaskEstimate from "./controllers/update-task-estimate";
+import updateTaskParent from "./controllers/update-task-parent";
 import updateTaskPriority from "./controllers/update-task-priority";
 import updateTaskStatus from "./controllers/update-task-status";
+import updateTaskTeam from "./controllers/update-task-team";
 import updateTaskTitle from "./controllers/update-task-title";
+import { parseUploadedFile } from "./exchange/parse-file";
+import {
+  MAX_IMPORT_UPLOAD_BYTES,
+  parseMapping,
+  readUpload,
+  rejectOversized,
+} from "./exchange/upload";
 import { VALID_PRIORITIES } from "./validate-task-fields";
 
 const task = new Hono<{
@@ -75,6 +98,8 @@ const task = new Hono<{
           status: v.optional(v.string()),
           priority: v.optional(v.string()),
           assigneeId: v.optional(v.string()),
+          epicId: v.optional(v.string()),
+          rootsOnly: v.optional(v.string()),
           page: v.optional(v.pipe(v.string(), v.transform(Number))),
           limit: v.optional(v.pipe(v.string(), v.transform(Number))),
           sortBy: v.optional(
@@ -90,6 +115,13 @@ const task = new Hono<{
           sortOrder: v.optional(v.picklist(["asc", "desc"])),
           dueBefore: v.optional(v.string()),
           dueAfter: v.optional(v.string()),
+          // El arbol de filtros del motor de vistas, como JSON. Va en la URL
+          // para que una vista guardada siga siendo un enlace.
+          filter: v.optional(v.string()),
+          // Que hace el filtro con la jerarquia. Ver `GetTasksOptions`.
+          treeScope: v.optional(
+            v.picklist(["matching", "roots", "withDescendants"]),
+          ),
         }),
       ),
     ),
@@ -98,9 +130,32 @@ const task = new Hono<{
       const { projectId } = c.req.valid("param");
       const filters = c.req.valid("query") || {};
 
-      const tasks = await getTasks(projectId, filters);
+      // Un filtro mal formado o que nombre un campo inexistente es culpa de
+      // quien lo manda, no del servidor: 400 y no 500.
+      let filter: FilterNode | null = null;
+      try {
+        filter = parseFilterParam(filters.filter);
+      } catch (error) {
+        throw new HTTPException(400, {
+          message: error instanceof Error ? error.message : "Invalid filter",
+        });
+      }
 
-      return c.json(tasks);
+      try {
+        const tasks = await getTasks(projectId, {
+          ...filters,
+          rootsOnly: filters.rootsOnly === "true",
+          treeScope: filters.treeScope,
+          filter,
+        });
+
+        return c.json(tasks);
+      } catch (error) {
+        if (error instanceof FilterError) {
+          throw new HTTPException(400, { message: error.message });
+        }
+        throw error;
+      }
     },
   )
   .patch(
@@ -197,6 +252,8 @@ const task = new Hono<{
         priority: v.picklist(VALID_PRIORITIES),
         status: v.string(),
         userId: v.optional(v.string()),
+        parentId: v.optional(v.nullable(v.string())),
+        estimate: v.optional(v.nullable(v.pipe(v.number(), v.minValue(0)))),
       }),
     ),
     workspaceAccess.fromProject("projectId"),
@@ -212,6 +269,8 @@ const task = new Hono<{
         priority,
         status,
         userId,
+        parentId,
+        estimate,
       } = c.req.valid("json");
 
       const parsedStartDate =
@@ -235,6 +294,8 @@ const task = new Hono<{
         dueDate: parsedDueDate,
         priority,
         status,
+        parentId,
+        estimate,
       });
 
       return c.json(task);
@@ -408,13 +469,135 @@ const task = new Hono<{
       },
     }),
     validator("param", v.object({ projectId: v.string() })),
+    validator(
+      "query",
+      v.object({
+        format: v.optional(v.picklist(["json", "csv", "xlsx"])),
+        filter: v.optional(v.string()),
+        treeScope: v.optional(
+          v.picklist(["matching", "roots", "withDescendants"]),
+        ),
+      }),
+    ),
     workspaceAccess.fromProject("projectId"),
     async (c) => {
       const { projectId } = c.req.valid("param");
+      const query = c.req.valid("query");
 
-      const exportData = await exportTasks(projectId);
+      // `json` sigue siendo el valor por defecto: es lo que devuelve hoy y hay
+      // una interfaz colgando de ello.
+      if (!query.format || query.format === "json") {
+        return c.json(await exportTasks(projectId));
+      }
 
-      return c.json(exportData);
+      // Exportar "la vista que estoy mirando" es pasar la misma busqueda que ya
+      // vive en la URL. Punto 3 de la ADR 015.
+      let filter: FilterNode | null = null;
+      try {
+        filter = parseFilterParam(query.filter);
+      } catch (error) {
+        throw new HTTPException(400, {
+          message: error instanceof Error ? error.message : "Invalid filter",
+        });
+      }
+
+      let sheet: Awaited<ReturnType<typeof exportTaskSheet>>;
+      try {
+        sheet = await exportTaskSheet(projectId, {
+          format: query.format,
+          filter,
+          treeScope: query.treeScope,
+        });
+      } catch (error) {
+        if (error instanceof FilterError) {
+          throw new HTTPException(400, { message: error.message });
+        }
+        throw error;
+      }
+
+      // Sin Content-Length: el `compress()` global puede recodificar el cuerpo,
+      // y un largo obsoleto es peor que ninguno.
+      return c.body(new Uint8Array(sheet.buffer), 200, {
+        "Content-Disposition": buildContentDisposition(sheet.filename, false),
+        "Content-Type": sheet.contentType,
+        "X-Content-Type-Options": "nosniff",
+      });
+    },
+  )
+  .get(
+    "/export/servitec/:workspaceId",
+    describeRoute({
+      operationId: "exportWorkspaceTasksXlsx",
+      tags: ["Tasks"],
+      description:
+        "Export every task in a workspace as the SERVITEC spreadsheet board",
+      responses: {
+        200: {
+          description: "Spreadsheet file",
+          content: {
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+              { schema: { type: "string", format: "binary" } },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ workspaceId: v.string() })),
+    workspaceAccess.fromParam("workspaceId"),
+    requireWorkspacePermission({ task: ["read"] }),
+    async (c) => {
+      const { workspaceId } = c.req.valid("param");
+
+      const { buffer, filename } = await exportWorkspaceTasks(workspaceId);
+
+      // No Content-Length: the global compress() middleware may re-encode the
+      // body, and a stale length is worse than none.
+      return c.body(new Uint8Array(buffer), 200, {
+        "Content-Disposition": buildContentDisposition(filename, false),
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "X-Content-Type-Options": "nosniff",
+      });
+    },
+  )
+  .post(
+    "/import/:projectId/analyze",
+    describeRoute({
+      operationId: "analyzeTaskImport",
+      tags: ["Tasks"],
+      description:
+        "Read a CSV or spreadsheet and report the columns, the hierarchy and how many rows already exist, without writing anything",
+      responses: {
+        200: {
+          description: "What the importer understood from the file",
+          content: { "application/json": { schema: resolver(v.any()) } },
+        },
+      },
+    }),
+    // `bodyLimit` va el primero: detras del validador no protege de nada,
+    // porque el cuerpo ya se ha leido entero en memoria.
+    bodyLimit({ maxSize: MAX_IMPORT_UPLOAD_BYTES, onError: rejectOversized }),
+    validator("param", v.object({ projectId: v.string() })),
+    validator(
+      "form",
+      v.object({
+        file: v.instance(File),
+        source: v.optional(v.string()),
+      }),
+    ),
+    workspaceAccess.fromProject("projectId"),
+    requireWorkspacePermission({ task: ["create"] }),
+    async (c) => {
+      const { projectId } = c.req.valid("param");
+      const upload = await readUpload(c);
+
+      const analysis = await analyzeImport({
+        projectId,
+        buffer: upload.buffer,
+        filename: upload.filename,
+        source: upload.source,
+      });
+
+      return c.json(analysis);
     },
   )
   .post(
@@ -422,31 +605,24 @@ const task = new Hono<{
     describeRoute({
       operationId: "importTasks",
       tags: ["Tasks"],
-      description: "Import multiple tasks into a project",
+      description:
+        "Import a CSV or spreadsheet into a project, preserving hierarchy and updating rows it has seen before",
       responses: {
         200: {
-          description: "Tasks imported successfully",
-          content: {
-            "application/json": { schema: resolver(v.any()) },
-          },
+          description: "What the import did",
+          content: { "application/json": { schema: resolver(v.any()) } },
         },
       },
     }),
+    bodyLimit({ maxSize: MAX_IMPORT_UPLOAD_BYTES, onError: rejectOversized }),
     validator("param", v.object({ projectId: v.string() })),
     validator(
-      "json",
+      "form",
       v.object({
-        tasks: v.array(
-          v.object({
-            title: v.string(),
-            description: v.optional(v.string()),
-            status: v.string(),
-            priority: v.optional(v.string()),
-            startDate: v.optional(v.nullable(v.string())),
-            dueDate: v.optional(v.nullable(v.string())),
-            userId: v.optional(v.nullable(v.string())),
-          }),
-        ),
+        file: v.instance(File),
+        mapping: v.string(),
+        source: v.optional(v.string()),
+        dryRun: v.optional(v.string()),
       }),
     ),
     workspaceAccess.fromProject("projectId"),
@@ -454,12 +630,39 @@ const task = new Hono<{
     requireEntitlement,
     async (c) => {
       const { projectId } = c.req.valid("param");
-      const { tasks } = c.req.valid("json");
       const currentUserId = c.get("userId");
+      const upload = await readUpload(c);
+      const mapping = parseMapping(upload.mapping);
 
-      const result = await importTasks(projectId, tasks, currentUserId);
+      // Crear definiciones de campo es cambiar la forma de las tareas de todo
+      // el proyecto, y eso lo gobierna `project:update` (ADR 013). Se comprueba
+      // aqui y no en el middleware porque depende del cuerpo: importar sin
+      // crear campos sigue al alcance de un `member`.
+      if (
+        mapping.some(
+          (column) => column.target.kind === "custom" && column.target.create,
+        )
+      ) {
+        if (!(await hasWorkspacePermission(c, { project: ["update"] }))) {
+          throw new HTTPException(403, {
+            message:
+              "Creating custom fields while importing requires permission to update the project",
+          });
+        }
+      }
 
-      return c.json(result);
+      const sheet = await parseUploadedFile(upload.buffer, upload.filename);
+
+      const report = await importTasks({
+        projectId,
+        currentUserId,
+        source: upload.source || buildImportSource(upload.filename),
+        rows: sheet.rows,
+        mapping,
+        dryRun: upload.dryRun,
+      });
+
+      return c.json(report);
     },
   )
   .delete(
@@ -575,6 +778,171 @@ const task = new Hono<{
       const currentUserId = c.get("userId");
 
       const task = await updateTaskAssignee({ id, userId, currentUserId });
+
+      return c.json(task);
+    },
+  )
+  .put(
+    "/assignees/:id",
+    describeRoute({
+      operationId: "updateTaskAssignees",
+      tags: ["Tasks"],
+      description:
+        "Replace the full set of assignees. The first one becomes the primary assignee.",
+      responses: {
+        200: {
+          description: "Task assignees updated successfully",
+          content: {
+            "application/json": { schema: resolver(v.any()) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ userIds: v.array(v.string()) })),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["assign"] }),
+    requireEntitlement,
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { userIds } = c.req.valid("json");
+      const currentUserId = c.get("userId");
+
+      const task = await updateTaskAssignees({ id, userIds, currentUserId });
+
+      return c.json(task);
+    },
+  )
+  .put(
+    "/parent/:id",
+    describeRoute({
+      operationId: "updateTaskParent",
+      tags: ["Tasks"],
+      description:
+        "Hang a task under another one, or promote it to a root task with a null parent. Moves the whole subtree; rejects cycles, cross-project parents and anything past the project's depth limit.",
+      responses: {
+        200: {
+          description: "Task reparented successfully",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+        400: {
+          description:
+            "The parent is the task itself, inside its own subtree, in another project, or too deep",
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ parentId: v.nullable(v.string()) })),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    requireEntitlement,
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { parentId } = c.req.valid("json");
+      const currentUserId = c.get("userId");
+
+      const task = await updateTaskParent({
+        taskId: id,
+        parentId,
+        currentUserId,
+      });
+
+      return c.json(task);
+    },
+  )
+  .put(
+    "/estimate/:id",
+    describeRoute({
+      operationId: "updateTaskEstimate",
+      tags: ["Tasks"],
+      description:
+        "Update the task estimate, in seconds - the same unit time entries use.",
+      responses: {
+        200: {
+          description: "Task estimate updated successfully",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator(
+      "json",
+      v.object({ estimate: v.nullable(v.pipe(v.number(), v.minValue(0))) }),
+    ),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    requireEntitlement,
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { estimate } = c.req.valid("json");
+      const currentUserId = c.get("userId");
+
+      const task = await updateTaskEstimate({ id, estimate, currentUserId });
+
+      return c.json(task);
+    },
+  )
+  .put(
+    "/custom-fields/:id",
+    describeRoute({
+      operationId: "updateTaskCustomFields",
+      tags: ["Tasks"],
+      description:
+        "Set custom field values on a task. Only the keys sent are touched; an empty value clears one.",
+      responses: {
+        200: {
+          description: "Task custom fields updated successfully",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ values: v.record(v.string(), v.unknown()) })),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    requireEntitlement,
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { values } = c.req.valid("json");
+      const currentUserId = c.get("userId");
+
+      const task = await updateTaskCustomFields({ id, values, currentUserId });
+
+      return c.json(task);
+    },
+  )
+  .put(
+    "/team/:id",
+    describeRoute({
+      operationId: "updateTaskTeam",
+      tags: ["Tasks"],
+      description: "Assign or unassign a task to a team",
+      responses: {
+        200: {
+          description: "Task team updated successfully",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ teamId: v.nullable(v.string()) })),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["assign"] }),
+    requireEntitlement,
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { teamId } = c.req.valid("json");
+      const currentUserId = c.get("userId");
+
+      const task = await updateTaskTeam({ id, teamId, currentUserId });
 
       return c.json(task);
     },
@@ -857,7 +1225,7 @@ const task = new Hono<{
       }
 
       const apiBaseUrl = normalizeApiServerUrl(
-        process.env.KANEO_API_URL || new URL(c.req.url).origin,
+        process.env.RIUNA_API_URL || new URL(c.req.url).origin,
       );
       return c.json({
         id: asset.id,

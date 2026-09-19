@@ -316,6 +316,104 @@
 			"when": 1787492852776,
 			"tag": "0044_needy_triathlon",
 			"breakpoints": true
+		},
+		{
+			"idx": 45,
+			"version": "7",
+			"when": 1787518895990,
+			"tag": "0045_furry_talos",
+			"breakpoints": true
+		},
+		{
+			"idx": 46,
+			"version": "7",
+			"when": 1787521984863,
+			"tag": "0046_giant_pixie",
+			"breakpoints": true
+		},
+		{
+			"idx": 47,
+			"version": "7",
+			"when": 1787697268969,
+			"tag": "0047_cold_sharon_carter",
+			"breakpoints": true
+		},
+		{
+			"idx": 48,
+			"version": "7",
+			"when": 1787816677661,
+			"tag": "0048_serious_loa",
+			"breakpoints": true
+		},
+		{
+			"idx": 49,
+			"version": "7",
+			"when": 1787866769537,
+			"tag": "0049_slippery_mentallo",
+			"breakpoints": true
+		},
+		{
+			"idx": 50,
+			"version": "7",
+			"when": 1787951555662,
+			"tag": "0050_third_black_cat",
+			"breakpoints": true
+		},
+		{
+			"idx": 51,
+			"version": "7",
+			"when": 1788055790360,
+			"tag": "0051_nebulous_sasquatch",
+			"breakpoints": true
+		},
+		{
+			"idx": 52,
+			"version": "7",
+			"when": 1788509668368,
+			"tag": "0052_plain_jazinda",
+			"breakpoints": true
+		},
+		{
+			"idx": 53,
+			"version": "7",
+			"when": 1788524737050,
+			"tag": "0053_secret_lockjaw",
+			"breakpoints": true
+		},
+		{
+			"idx": 54,
+			"version": "7",
+			"when": 1788526602836,
+			"tag": "0054_flaky_santa_claus",
+			"breakpoints": true
+		},
+		{
+			"idx": 55,
+			"version": "7",
+			"when": 1788877545484,
+			"tag": "0055_white_flatman",
+			"breakpoints": true
+		},
+		{
+			"idx": 56,
+			"version": "7",
+			"when": 1788877545485,
+			"tag": "0056_final_status_rule",
+			"breakpoints": true
+		},
+		{
+			"idx": 57,
+			"version": "7",
+			"when": 1788898677301,
+			"tag": "0057_colorful_miss_america",
+			"breakpoints": true
+		},
+		{
+			"idx": 58,
+			"version": "7",
+			"when": 1788899799388,
+			"tag": "0058_amused_jack_flag",
+			"breakpoints": true
 		}
 	]
 }

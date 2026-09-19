@@ -8,6 +8,7 @@ import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 type RecordedEvent = {
@@ -33,6 +34,7 @@ async function seedTask(userId: string, projectId: string) {
   return db
     .insert(schema.taskTable)
     .values({
+      ...taskTreeValues(),
       projectId,
       userId,
       title: "Seed",
@@ -415,6 +417,7 @@ describe("API integration: label detach/attach", () => {
     const [taskA] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Task A",
@@ -429,6 +432,7 @@ describe("API integration: label detach/attach", () => {
     const [taskB] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Task B",

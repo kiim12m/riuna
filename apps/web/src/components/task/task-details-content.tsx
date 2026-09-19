@@ -11,12 +11,12 @@ import useGetActivitiesByTaskId from "@/hooks/queries/activity/use-get-activitie
 import useExternalLinks from "@/hooks/queries/external-link/use-external-links";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTask from "@/hooks/queries/task/use-get-task";
-import useGetTaskRelations from "@/hooks/queries/task-relation/use-get-task-relations";
 import type { ExternalLink } from "@/types/external-link";
 import TaskDescription from "./task-description";
 import TaskRelations from "./task-relations";
 import TaskSubtasks from "./task-subtasks";
 import TaskTitle from "./task-title";
+import TaskTree from "./task-tree";
 
 type TaskDetailsContentProps = {
   taskId: string | undefined;
@@ -38,13 +38,11 @@ export default function TaskDetailsContent({
   const { data: activities = [] } = useGetActivitiesByTaskId(taskId ?? "");
   const { data: externalLinks = [], isLoading: isLoadingExternalLinks } =
     useExternalLinks(taskId ?? "");
-  const { data: relations = [] } = useGetTaskRelations(taskId ?? "");
   const { user } = useAuth();
 
-  const parentRelation = relations.find(
-    (rel) => rel.relationType === "subtask" && rel.targetTaskId === taskId,
-  );
-  const parentTask = parentRelation?.sourceTask;
+  // El padre llega con el detalle: la jerarquia ya no se deduce cruzando
+  // relaciones.
+  const parentTask = task?.parent ?? null;
 
   if (!taskId) return null;
 
@@ -87,6 +85,11 @@ export default function TaskDetailsContent({
           />
         </div>
       )}
+      {task && (
+        <div className="mt-4">
+          <TaskTree taskId={taskId} projectId={projectId} />
+        </div>
+      )}
       <div className="mt-4">
         {task && (
           <TaskSubtasks
@@ -106,7 +109,9 @@ export default function TaskDetailsContent({
       </div>
       <span className="text-sm font-medium text-muted-foreground h-[1px] bg-border w-full block shrink-0" />
       <div className="flex flex-col gap-4">
-        <h1 className="text-md font-semibold">{t("tasks:detail.activity")}</h1>
+        {/* `h2`: es una seccion de la tarea, no el titulo de la pagina. Y
+            `text-md` no existe en Tailwind, asi que esa clase no pintaba nada. */}
+        <h2 className="text-section">{t("tasks:detail.activity")}</h2>
         {user?.id && taskId && <CommentInput taskId={taskId} />}
         {activities.length > 0 ? (
           <Timeline>

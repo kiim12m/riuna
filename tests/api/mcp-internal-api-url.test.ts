@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 const authMocks = vi.hoisted(() => ({
   getSession: vi.fn(async () => ({ user: { id: "test-user" } })),
@@ -31,7 +31,7 @@ function toolRequest() {
         _meta: {
           "io.modelcontextprotocol/protocolVersion": protocolVersion,
           "io.modelcontextprotocol/clientInfo": {
-            name: "kaneo-internal-url-test",
+            name: "riuna-internal-url-test",
             version: "1.0.0",
           },
           "io.modelcontextprotocol/clientCapabilities": {},
@@ -42,11 +42,22 @@ function toolRequest() {
 }
 
 async function loadMcpRoutes(internalApiUrl?: string) {
-  vi.stubEnv("KANEO_API_URL", "http://public.test:5273/api");
-  vi.stubEnv("KANEO_INTERNAL_API_URL", internalApiUrl);
+  vi.stubEnv("RIUNA_API_URL", "http://public.test:5273/api");
+  vi.stubEnv("RIUNA_INTERNAL_API_URL", internalApiUrl);
   vi.resetModules();
   return (await import("../../apps/api/src/mcp")).default;
 }
+
+// El primer import de la ruta MCP arrastra el SDK, Hono, la autenticacion y el
+// resto del grafo: ~1,5 s en reposo, y bastante mas con turbo corriendo todos
+// los paquetes a la vez. Se paga aqui y no dentro del primer caso, porque un
+// caso que agota su plazo en vitest no se cancela: sigue corriendo, y su fetch
+// tardio aterriza en el doble del caso siguiente, que entonces falla por una
+// llamada de mas que no es suya. Con el grafo ya cargado, cada caso vuelve a
+// importarlo en ~15 ms y ninguno se acerca al plazo.
+beforeAll(async () => {
+  await import("../../apps/api/src/mcp");
+}, 60_000);
 
 afterEach(() => {
   vi.unstubAllGlobals();

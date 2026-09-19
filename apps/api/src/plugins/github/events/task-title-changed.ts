@@ -82,7 +82,7 @@ export async function handleTaskTitleChanged(
           ...metadata.lastSync,
           title: {
             timestamp: new Date().toISOString(),
-            source: "kaneo",
+            source: "riuna",
             value: event.newTitle,
           },
         },

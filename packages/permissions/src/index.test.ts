@@ -11,7 +11,7 @@ import {
   viewer,
 } from "./index";
 
-describe("@kaneo/permissions statement surface", () => {
+describe("@riuna/permissions statement surface", () => {
   it("exposes Kaneo's resource statements alongside better-auth defaults", () => {
     expect(statement.project).toEqual([
       "create",

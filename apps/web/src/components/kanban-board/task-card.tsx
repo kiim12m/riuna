@@ -2,6 +2,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useNavigate } from "@tanstack/react-router";
 import { format } from "date-fns";
+import { useReducedMotion } from "framer-motion";
 import {
   Calendar,
   CalendarClock,
@@ -9,7 +10,7 @@ import {
   GitMerge,
   GitPullRequest,
 } from "lucide-react";
-import { type CSSProperties, useMemo, useState } from "react";
+import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertDialog,
@@ -40,8 +41,10 @@ import { toast } from "@/lib/toast";
 import queryClient from "@/query-client";
 import useBulkSelectionStore from "@/store/bulk-selection";
 import useProjectStore from "@/store/project";
+import useRealtimeHighlightStore from "@/store/realtime-highlight";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import type Task from "@/types/task";
+import SubtaskBadge from "../task/subtask-badge";
 import { Button } from "../ui/button";
 import { ContextMenu, ContextMenuTrigger } from "../ui/context-menu";
 import TaskCardContextMenuContent from "./task-card-context-menu/task-card-context-menu-content";
@@ -78,6 +81,23 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
   const { toggleSelection, isSelected, isFocused } = useBulkSelectionStore();
   const isTaskSelected = isSelected(task.id);
   const isTaskFocused = isFocused(task.id);
+
+  // Resalte cuando otra persona cambia esta tarea (marca §06 principio 5).
+  const pulse = useRealtimeHighlightStore(
+    (state) => state.pulses[task.id] ?? 0,
+  );
+  const reduceMotion = useReducedMotion();
+  const [isFlashing, setIsFlashing] = useState(false);
+  useEffect(() => {
+    if (!pulse) return;
+    setIsFlashing(true);
+    const timeout = setTimeout(() => setIsFlashing(false), 900);
+    return () => clearTimeout(timeout);
+  }, [pulse]);
+  let flashClass = "";
+  if (isFlashing) {
+    flashClass = reduceMotion ? "riuna-flash-static" : "animate-flux";
+  }
 
   const pullRequests = useMemo(() => {
     return (task.externalLinks ?? []).filter(
@@ -179,25 +199,35 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      tabIndex={-1}
+    >
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          {/** biome-ignore lint/a11y/noStaticElementInteractions: false positive for onClick and onKeyDown */}
+          {/** biome-ignore lint/a11y/useSemanticElements: the card holds block-level content and cannot be a native <button> */}
           <div
+            role="button"
+            tabIndex={0}
+            aria-label={task.title}
             onClick={handleTaskCardClick}
-            className={`group relative rounded-lg border bg-background p-3 shadow-xs/5 transition-[background-color,border-color,box-shadow,scale] duration-150 ease-out active:scale-[0.98] ${
+            className={`group relative rounded-lg border bg-background p-(--density-card-pad) shadow-xs/5 outline-none transition-[background-color,border-color,box-shadow,scale] duration-150 ease-out active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring ${
               disableDragDrop ? "cursor-default" : "cursor-move"
             } ${
               isDragging
                 ? "border-ring/40 bg-card shadow-lg"
-                : "hover:border-border/90 hover:bg-background hover:shadow-sm"
+                : "hover:border-brand/45 hover:shadow-sm"
             } ${
               isTaskSelected
                 ? "border-ring/40 bg-accent/50 shadow-sm ring-1 ring-inset ring-ring/30"
                 : "border-border"
-            } ${isTaskFocused ? "ring-2 ring-inset ring-ring/50" : ""}`}
+            } ${isTaskFocused ? "ring-2 ring-inset ring-ring/50" : ""} ${flashClass}`}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
                 handleTaskCardClick(e);
               } else if (e.key === "Escape") {
                 handleKeyDown(e);
@@ -205,13 +235,13 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
             }}
           >
             {showTaskNumbers && (
-              <div className="mb-2 text-[10px] font-mono text-muted-foreground/90">
+              <div className="mb-2 text-label font-mono text-muted-foreground/90">
                 {project?.slug}-{task.number}
               </div>
             )}
 
             {showAssignees && (
-              <div className="absolute top-3 right-3">
+              <div className="absolute top-(--density-card-pad) right-(--density-card-pad)">
                 {task.userId ? (
                   <Avatar className="h-5 w-5">
                     <AvatarImage
@@ -227,7 +257,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
                     className="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-muted"
                     title={t("tasks:assignee.unassigned")}
                   >
-                    <span className="text-[10px] font-medium text-muted-foreground">
+                    <span className="text-label font-medium text-muted-foreground">
                       ?
                     </span>
                   </div>
@@ -235,9 +265,9 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
               </div>
             )}
 
-            <div className="mb-2.5 pr-6">
+            <div className="mb-(--density-stack) pr-6">
               <div
-                className="overflow-hidden break-words leading-5 font-medium text-foreground/95 text-[15px]"
+                className="overflow-hidden break-words leading-5 font-medium text-foreground/95 text-body"
                 style={{
                   display: "-webkit-box",
                   WebkitLineClamp: 3,
@@ -251,21 +281,22 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
             </div>
 
             {showLabels && (
-              <div className="mb-2.5">
+              <div className="mb-(--density-stack)">
                 <TaskLabels labels={task.labels ?? []} />
               </div>
             )}
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-(--density-gap)">
+              <SubtaskBadge subtree={task.subtree} />
               {showPriority && (
-                <span className="inline-flex items-center gap-1 rounded border border-border/70 bg-muted/55 px-2 py-1 text-[10px] font-medium text-muted-foreground">
+                <span className="inline-flex items-center gap-1 rounded border border-border/70 bg-muted/55 px-2 py-1 text-label font-medium text-muted-foreground">
                   {getPriorityIcon(task.priority ?? "")}
                 </span>
               )}
 
               {showDueDates && task.dueDate && (
                 <div
-                  className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
+                  className={`flex items-center gap-1 text-label px-2 py-1 rounded ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
                 >
                   {getDueDateStatus(task.dueDate, taskIsCompleted) ===
                     "overdue" && <CalendarX className="w-3 h-3" />}
@@ -288,7 +319,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
                         e.stopPropagation();
                         window.open(pullRequests[0].url, "_blank");
                       }}
-                      className="inline-flex items-center gap-1.5 rounded border border-border/70 bg-muted/55 px-2 py-1 text-[10px] font-medium text-muted-foreground"
+                      className="inline-flex items-center gap-1.5 rounded border border-border/70 bg-muted/55 px-2 py-1 text-label font-medium text-muted-foreground"
                     >
                       {getPRInfo(pullRequests[0]).icon}
                       <span>#{pullRequests[0].externalId}</span>
@@ -335,7 +366,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
                         <button
                           type="button"
                           onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1.5 rounded border border-border/70 bg-muted/55 px-2 py-1 text-[10px] font-medium text-muted-foreground"
+                          className="inline-flex items-center gap-1.5 rounded border border-border/70 bg-muted/55 px-2 py-1 text-label font-medium text-muted-foreground"
                         >
                           <GitPullRequest className={`h-3 w-3 ${iconColor}`} />
                           <span>
@@ -367,7 +398,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
                                 onClick={() => window.open(pr.url, "_blank")}
                                 className="w-full px-2 py-1.5 text-left hover:bg-muted/50 rounded transition-colors"
                               >
-                                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                <div className="flex items-center gap-1.5 text-label text-muted-foreground">
                                   {prInfo.icon}
                                   <span>
                                     {repoName}#{pr.externalId}
@@ -376,7 +407,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
                                 <p className="text-xs leading-tight line-clamp-2 mt-0.5">
                                   {pr.title || t("tasks:pr.label")}
                                 </p>
-                                <span className="text-[10px] text-muted-foreground">
+                                <span className="text-meta text-muted-foreground">
                                   {prInfo.status}
                                 </span>
                               </button>

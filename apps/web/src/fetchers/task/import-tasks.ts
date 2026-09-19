@@ -1,28 +1,45 @@
-import { client } from "@kaneo/libs";
+import { client } from "@riuna/libs";
 
-export type TaskToImport = {
-  title: string;
-  description?: string;
-  status: string;
-  priority?: string;
-  startDate?: string;
-  dueDate?: string;
-  userId?: string | null;
+export type ImportColumnMapping = {
+  index: number;
+  target:
+    | { kind: "field"; field: string }
+    | {
+        kind: "custom";
+        key: string;
+        create?: { name: string; type: string; options?: string[] };
+      }
+    | { kind: "ignore" };
 };
 
-async function importTasks(projectId: string, tasks: TaskToImport[]) {
+async function importTasks({
+  projectId,
+  file,
+  mapping,
+  source,
+  dryRun,
+}: {
+  projectId: string;
+  file: File;
+  mapping: ImportColumnMapping[];
+  source?: string;
+  dryRun?: boolean;
+}) {
   const response = await client.task.import[":projectId"].$post({
     param: { projectId },
-    json: { tasks },
+    form: {
+      file,
+      mapping: JSON.stringify(mapping),
+      ...(source ? { source } : {}),
+      ...(dryRun ? { dryRun: "true" } : {}),
+    },
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error);
+    throw new Error(await response.text());
   }
 
-  const data = await response.json();
-  return data;
+  return response.json();
 }
 
 export default importTasks;

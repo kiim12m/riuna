@@ -1,15 +1,14 @@
 import { useMutation } from "@tanstack/react-query";
-import importTasks, { type TaskToImport } from "@/fetchers/task/import-tasks";
+import importTasks, {
+  type ImportColumnMapping,
+} from "@/fetchers/task/import-tasks";
+
+export type { ImportColumnMapping };
 
 const useImportTasks = () => {
   return useMutation({
-    mutationFn: ({
-      projectId,
-      tasks,
-    }: {
-      projectId: string;
-      tasks: TaskToImport[];
-    }) => importTasks(projectId, tasks),
+    mutationFn: (input: Parameters<typeof importTasks>[0]) =>
+      importTasks(input),
   });
 };
 
