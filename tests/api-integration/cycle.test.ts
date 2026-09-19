@@ -339,6 +339,48 @@ describe("API integration: cycles", () => {
     expect(response.status).toBe(400);
   });
 
+  // La velocidad de un ciclo cerrado se da por congelada (ADR 025) y se mide
+  // al leer, contando las tareas que apuntan a el: sacar una se la cambiaba.
+  it("refuses taking a task out of a closed cycle", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const closed = await createCycleRow({
+      projectId: project.id,
+      status: "closed",
+    });
+    const open = await createCycleRow({
+      projectId: project.id,
+      name: "Siguiente",
+    });
+    const task = await createTask({
+      projectId: project.id,
+      title: "Hecha en el ciclo cerrado",
+      status: "done",
+      cycleId: closed.id,
+    });
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const move = (cycleId: string | null) =>
+      app.request(`/api/cycle/task/${task.id}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ cycleId }),
+      });
+
+    expect((await move(null)).status).toBe(400);
+    expect((await move(open.id)).status).toBe(400);
+
+    const [after] = await db
+      .select({ cycleId: schema.taskTable.cycleId })
+      .from(schema.taskTable)
+      .where(eq(schema.taskTable.id, task.id));
+    expect(after.cycleId).toBe(closed.id);
+  });
+
   // El criterio de aceptacion de la fase, entero.
   it("reports velocity, a burndown and hours per person", async () => {
     const member = await createWorkspaceMember({ role: "admin" });

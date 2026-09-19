@@ -53,6 +53,24 @@ async function updateTaskCycle({
     return task;
   }
 
+  // Un ciclo cerrado no suelta lo que tiene: su velocidad se dio por congelada
+  // (ADR 025) y se mide al leer, contando las tareas que apuntan a el, asi que
+  // sacar una le cambiaria la historia. Es la misma razon por la que no se
+  // puede reabrir.
+  if (task.cycleId) {
+    const [current] = await db
+      .select({ status: cycleTable.status })
+      .from(cycleTable)
+      .where(eq(cycleTable.id, task.cycleId))
+      .limit(1);
+
+    if (current?.status === "closed") {
+      throw new HTTPException(400, {
+        message: "Tasks cannot leave a closed cycle",
+      });
+    }
+  }
+
   const [updated] = await db
     .update(taskTable)
     .set({ cycleId: nextCycleId })
