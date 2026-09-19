@@ -316,6 +316,40 @@ describe("field definition routes", () => {
       expect(stored?.customFields).toEqual({});
     }
   });
+
+  // En un proyecto que declara la misma clave gana su campo (ADR 013), asi que
+  // el valor de sus tareas es de ese campo y no del de espacio que se borra.
+  it("keeps the values of a project field that shadows the deleted workspace one", async () => {
+    const { app, workspaceId, projectId, columnId } = await setup();
+    const other = await createProjectFixture({ workspaceId });
+
+    const workspaceField = await (
+      await createWorkspaceField(app, workspaceId, {
+        name: "Cliente",
+        type: "text",
+      })
+    ).json();
+    await createProjectField(app, projectId, { name: "Cliente", type: "url" });
+
+    const shadowed = await insertTask(projectId, columnId, {
+      cliente: "https://bauhaus.es",
+    });
+    const plain = await insertTask(other.project.id, other.columns.todo.id, {
+      cliente: "LEROY",
+    });
+
+    await app.request(`/api/field/${workspaceField.id}`, { method: "DELETE" });
+
+    const read = async (id: string) =>
+      (
+        await db.query.taskTable.findFirst({
+          where: eq(schema.taskTable.id, id),
+        })
+      )?.customFields;
+
+    expect(await read(shadowed.id)).toEqual({ cliente: "https://bauhaus.es" });
+    expect(await read(plain.id)).toEqual({});
+  });
 });
 
 // El reparto que se decidio para esta fase: definir un campo de proyecto es

@@ -33,16 +33,24 @@ async function deleteFieldDefinition(id: string, currentUserId: string) {
 
   const deleted = await db.transaction(async (tx) => {
     if (storesValueInJson(existing.type as FieldType)) {
-      // El `-` de jsonb quita la clave. El `::text` es explicito porque sin el
-      // Postgres no puede elegir entre las variantes del operador, que es el
-      // mismo tropiezo que dio `substring(... from $n)` en la Fase 2.
+      // Cuando un proyecto declara la misma clave que un campo de espacio, en
+      // ese proyecto gana el suyo (ADR 013, regla 4): el valor que guardan sus
+      // tareas es de **su** campo, y borrar el de espacio no puede llevarselo.
       const scope = existing.projectId
         ? sql`${taskTable.projectId} = ${existing.projectId}`
         : sql`${taskTable.projectId} IN (
             SELECT ${projectTable.id} FROM ${projectTable}
             WHERE ${projectTable.workspaceId} = ${existing.workspaceId}
+          ) AND ${taskTable.projectId} NOT IN (
+            SELECT ${fieldDefinitionTable.projectId} FROM ${fieldDefinitionTable}
+            WHERE ${fieldDefinitionTable.workspaceId} = ${existing.workspaceId}
+              AND ${fieldDefinitionTable.projectId} IS NOT NULL
+              AND ${fieldDefinitionTable.key} = ${existing.key}
           )`;
 
+      // El `-` de jsonb quita la clave. El `::text` es explicito porque sin el
+      // Postgres no puede elegir entre las variantes del operador, que es el
+      // mismo tropiezo que dio `substring(... from $n)` en la Fase 2.
       await tx
         .update(taskTable)
         .set({
