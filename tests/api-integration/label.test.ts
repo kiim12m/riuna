@@ -7,6 +7,7 @@ import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 describe("API integration: labels", () => {
@@ -125,6 +126,7 @@ describe("API integration: labels", () => {
       const [taskA] = await db
         .insert(schema.taskTable)
         .values({
+          ...taskTreeValues(),
           projectId: project.id,
           userId: member.user.id,
           title: "Task A",
@@ -139,6 +141,7 @@ describe("API integration: labels", () => {
       const [taskB] = await db
         .insert(schema.taskTable)
         .values({
+          ...taskTreeValues(),
           projectId: project.id,
           userId: member.user.id,
           title: "Task B",
@@ -214,6 +217,7 @@ describe("API integration: labels", () => {
       const [task] = await db
         .insert(schema.taskTable)
         .values({
+          ...taskTreeValues(),
           projectId: project.id,
           userId: member.user.id,
           title: "Task",

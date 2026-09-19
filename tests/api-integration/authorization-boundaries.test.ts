@@ -3,11 +3,13 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
+import { proposeMapping } from "../../apps/api/src/task/exchange/map-rows";
 import { mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 beforeEach(async () => {
@@ -45,8 +47,8 @@ describe("github integration routes are workspace scoped", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         projectId: project.id,
-        repositoryOwner: "usekaneo",
-        repositoryName: "kaneo",
+        repositoryOwner: "riuna",
+        repositoryName: "riuna",
       }),
     });
 
@@ -83,6 +85,98 @@ describe("public project route", () => {
 
     expect(response.status).toBe(403);
     expect(await response.text()).not.toContain(project.name);
+  });
+
+  // Esta ruta se sirve sin sesion, asi que hereda todo lo que se anada al
+  // listado interno. Las Fases 2 y 3 le colaron los campos personalizados, las
+  // epicas, el equipo, la estimacion y la forma del arbol sin que nadie
+  // revisara quien mas llamaba a `getTasks`.
+  it("does not leak internal fields that the task list happens to carry", async () => {
+    const { workspace } = await createWorkspaceMember();
+    const { project, columns } = await createProjectFixture({
+      workspaceId: workspace.id,
+    });
+
+    await db
+      .update(schema.projectTable)
+      .set({ isPublic: true })
+      .where(eq(schema.projectTable.id, project.id));
+
+    await db.insert(schema.fieldDefinitionTable).values({
+      workspaceId: workspace.id,
+      projectId: project.id,
+      key: "presupuesto",
+      name: "Presupuesto",
+      type: "number",
+      config: {},
+    });
+
+    const [team] = await db
+      .insert(schema.teamTable)
+      .values({
+        id: `team-${randomUUID()}`,
+        workspaceId: workspace.id,
+        name: "Legal",
+        createdAt: new Date(),
+      })
+      .returning();
+
+    const tree = taskTreeValues();
+    const [task] = await db
+      .insert(schema.taskTable)
+      .values({
+        ...tree,
+        projectId: project.id,
+        columnId: columns.todo.id,
+        title: "Obra publica",
+        status: "to-do",
+        priority: "medium",
+        number: 1,
+        position: 0,
+        teamId: team.id,
+        estimate: 7200,
+        customFields: { presupuesto: 50000 },
+      })
+      .returning();
+
+    const [epic] = await db
+      .insert(schema.epicTable)
+      .values({
+        projectId: project.id,
+        name: "Secreta",
+        color: "#123456",
+        position: 0,
+      })
+      .returning();
+
+    await db
+      .insert(schema.taskEpicTable)
+      .values({ taskId: task.id, epicId: epic.id });
+
+    const { app } = createApp();
+    const response = await app.request(`/api/public-project/${project.id}`);
+
+    expect(response.status).toBe(200);
+    const body = await response.text();
+
+    // Lo que si se ensena: es un tablero publico.
+    expect(body).toContain("Obra publica");
+
+    // Y lo que no.
+    for (const leaked of [
+      "presupuesto",
+      "customFields",
+      "Secreta",
+      "epics",
+      "Legal",
+      "teamId",
+      "estimate",
+      "workspaceId",
+      "maxTaskDepth",
+      tree.path,
+    ]) {
+      expect(body).not.toContain(leaked);
+    }
   });
 });
 
@@ -122,6 +216,7 @@ describe("task assignees stay inside the workspace", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Seeded",
         description: "",
@@ -157,6 +252,7 @@ describe("activity attribution", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Seeded",
         description: "",
@@ -190,6 +286,22 @@ describe("activity attribution", () => {
 });
 
 describe("every assignee write path is workspace scoped", () => {
+  // El importador dejo de aceptar JSON `{ tasks: [...] }` en la Fase 5 (ADR 017):
+  // ahora es multipart con un CSV y su mapeo de columnas.
+  function importForm(rows: string[][]) {
+    const headers = ["Título", "Estado", "Responsable"];
+    const content = `﻿${[headers, ...rows]
+      .map((cells) => cells.join(","))
+      .join("\r\n")}\r\n`;
+    const form = new FormData();
+    form.append(
+      "file",
+      new File([content], "import.csv", { type: "text/csv" }),
+    );
+    form.append("mapping", JSON.stringify(proposeMapping(headers)));
+    return form;
+  }
+
   it("refuses a non-member through the task update endpoint", async () => {
     const { user, workspace } = await createWorkspaceMember({ role: "owner" });
     const outsider = await createWorkspaceMember({ role: "owner" });
@@ -200,6 +312,7 @@ describe("every assignee write path is workspace scoped", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Seeded",
         description: "",
@@ -231,7 +344,7 @@ describe("every assignee write path is workspace scoped", () => {
     expect(response.status).toBe(403);
   });
 
-  it("imports the valid tasks and fails only the one with a bad assignee", async () => {
+  it("imports every row but drops an assignee who is not a member", async () => {
     const { user, workspace } = await createWorkspaceMember({ role: "owner" });
     const outsider = await createWorkspaceMember({ role: "owner" });
     const { project } = await createProjectFixture({
@@ -243,31 +356,49 @@ describe("every assignee write path is workspace scoped", () => {
 
     const response = await app.request(`/api/task/import/${project.id}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tasks: [
-          { title: "Good", status: "to-do", priority: "low" },
-          {
-            title: "Bad",
-            status: "to-do",
-            priority: "low",
-            userId: outsider.user.id,
-          },
-        ],
-      }),
+      body: importForm([
+        ["Good", "To Do", ""],
+        ["Bad", "To Do", outsider.user.email],
+      ]),
     });
 
     expect(response.status).toBe(200);
 
-    const stored = await db
-      .select({ title: schema.taskTable.title })
-      .from(schema.taskTable)
-      .where(eq(schema.taskTable.projectId, project.id));
+    const body = (await response.json()) as {
+      results: {
+        created: number;
+        rows: { outcome: string; taskId: string; warnings?: string[] }[];
+      };
+    };
 
-    expect(stored.map((t) => t.title)).toEqual(["Good"]);
+    expect(body.results.created).toBe(2);
+
+    const stored = await db
+      .select({
+        title: schema.taskTable.title,
+        userId: schema.taskTable.userId,
+      })
+      .from(schema.taskTable)
+      .where(eq(schema.taskTable.projectId, project.id))
+      .orderBy(schema.taskTable.number);
+
+    expect(stored.map((t) => t.title)).toEqual(["Good", "Bad"]);
+    expect(stored.find((t) => t.title === "Bad")?.userId).toBeNull();
+
+    const warned = body.results.rows.filter((row) =>
+      row.warnings?.some((warning) => warning.includes("not a member")),
+    );
+    expect(warned).toHaveLength(1);
+
+    const outsiderLinks = await db
+      .select({ taskId: schema.taskAssigneeTable.taskId })
+      .from(schema.taskAssigneeTable)
+      .where(eq(schema.taskAssigneeTable.userId, outsider.user.id));
+
+    expect(outsiderLinks).toHaveLength(0);
   });
 
-  it("refuses a non-member through task import", async () => {
+  it("does not assign a non-member through task import", async () => {
     const { user, workspace } = await createWorkspaceMember({ role: "owner" });
     const outsider = await createWorkspaceMember({ role: "owner" });
     const { project } = await createProjectFixture({
@@ -279,30 +410,30 @@ describe("every assignee write path is workspace scoped", () => {
 
     const response = await app.request(`/api/task/import/${project.id}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tasks: [
-          {
-            title: "Imported",
-            status: "to-do",
-            priority: "low",
-            userId: outsider.user.id,
-          },
-        ],
-      }),
+      body: importForm([["Imported", "To Do", outsider.user.email]]),
     });
 
     expect(response.status).toBe(200);
 
-    const stored = await db
-      .select({ id: schema.taskTable.id })
+    const body = (await response.json()) as { results: { created: number } };
+    expect(body.results.created).toBe(1);
+
+    const [stored] = await db
+      .select({ userId: schema.taskTable.userId })
       .from(schema.taskTable)
       .where(eq(schema.taskTable.projectId, project.id));
 
-    expect(stored).toHaveLength(0);
+    expect(stored.userId).toBeNull();
+
+    const outsiderLinks = await db
+      .select({ taskId: schema.taskAssigneeTable.taskId })
+      .from(schema.taskAssigneeTable)
+      .where(eq(schema.taskAssigneeTable.userId, outsider.user.id));
+
+    expect(outsiderLinks).toHaveLength(0);
   });
 
-  it("stores a padded assignee id in its normalised form", async () => {
+  it("resolves a padded assignee handle to the member", async () => {
     const { user, workspace } = await createWorkspaceMember({ role: "owner" });
     const { project } = await createProjectFixture({
       workspaceId: workspace.id,
@@ -313,17 +444,7 @@ describe("every assignee write path is workspace scoped", () => {
 
     const response = await app.request(`/api/task/import/${project.id}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        tasks: [
-          {
-            title: "Imported",
-            status: "to-do",
-            priority: "low",
-            userId: `  ${user.id}  `,
-          },
-        ],
-      }),
+      body: importForm([["Imported", "To Do", `  ${user.email}  `]]),
     });
 
     expect(response.status).toBe(200);
@@ -345,6 +466,7 @@ describe("every assignee write path is workspace scoped", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Seeded",
         description: "",
@@ -385,6 +507,7 @@ describe("every assignee write path is workspace scoped", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Seeded",
         description: "",
@@ -425,6 +548,7 @@ describe("every assignee write path is workspace scoped", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Seeded",
         description: "",

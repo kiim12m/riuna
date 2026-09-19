@@ -7,6 +7,7 @@ import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 describe("API integration: task image upload finalize", () => {
@@ -24,8 +25,8 @@ describe("API integration: task image upload finalize", () => {
     vi.restoreAllMocks();
   });
 
-  it("returns a URL using KANEO_API_URL", async () => {
-    process.env.KANEO_API_URL = "http://kaneo.test:1337";
+  it("returns a URL using RIUNA_API_URL", async () => {
+    process.env.RIUNA_API_URL = "http://riuna.test:1337";
 
     const member = await createWorkspaceMember();
     const { project, columns } = await createProjectFixture({
@@ -35,6 +36,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "URL test task",
@@ -70,12 +72,12 @@ describe("API integration: task image upload finalize", () => {
     const payload = (await response.json()) as { id: string; url: string };
     expect(payload).toHaveProperty("id");
     expect(payload).toHaveProperty("url");
-    expect(payload.url).toBe(`http://kaneo.test:1337/api/asset/${payload.id}`);
+    expect(payload.url).toBe(`http://riuna.test:1337/api/asset/${payload.id}`);
     expect(payload.url).not.toContain("localhost");
   });
 
-  it("updates the URL when KANEO_API_URL changes", async () => {
-    process.env.KANEO_API_URL = "https://proxy.kaneo.internal";
+  it("updates the URL when RIUNA_API_URL changes", async () => {
+    process.env.RIUNA_API_URL = "https://proxy.riuna.internal";
 
     const member = await createWorkspaceMember();
     const { project, columns } = await createProjectFixture({
@@ -85,6 +87,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Proxy test",
@@ -119,13 +122,13 @@ describe("API integration: task image upload finalize", () => {
     expect(response.status).toBe(200);
     const payload = (await response.json()) as { id: string; url: string };
     expect(payload.url).toBe(
-      `https://proxy.kaneo.internal/api/asset/${payload.id}`,
+      `https://proxy.riuna.internal/api/asset/${payload.id}`,
     );
     expect(payload.url).not.toContain("localhost");
   });
 
-  it("falls back to deriving URL from the request when KANEO_API_URL is not set", async () => {
-    delete process.env.KANEO_API_URL;
+  it("falls back to deriving URL from the request when RIUNA_API_URL is not set", async () => {
+    delete process.env.RIUNA_API_URL;
 
     const member = await createWorkspaceMember();
     const { project, columns } = await createProjectFixture({
@@ -135,6 +138,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Fallback test",
@@ -152,7 +156,7 @@ describe("API integration: task image upload finalize", () => {
     const key = `workspace/${member.workspace.id}/project/${project.id}/task/${task.id}/descriptions/fallback-image.png`;
 
     const response = await app.request(
-      `https://app.kaneo.test/api/task/image-upload/${task.id}/finalize`,
+      `https://app.riuna.test/api/task/image-upload/${task.id}/finalize`,
       {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -168,12 +172,12 @@ describe("API integration: task image upload finalize", () => {
 
     expect(response.status).toBe(200);
     const payload = (await response.json()) as { id: string; url: string };
-    expect(payload.url).toBe(`https://app.kaneo.test/api/asset/${payload.id}`);
+    expect(payload.url).toBe(`https://app.riuna.test/api/asset/${payload.id}`);
     expect(payload.url).not.toContain("localhost");
   });
 
   it("persists a new asset record with correct metadata", async () => {
-    process.env.KANEO_API_URL = "http://localhost:1337";
+    process.env.RIUNA_API_URL = "http://localhost:1337";
 
     const member = await createWorkspaceMember();
     const { project, columns } = await createProjectFixture({
@@ -183,6 +187,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Persist test",
@@ -236,7 +241,7 @@ describe("API integration: task image upload finalize", () => {
   });
 
   it("creates attachment records for non-image content types", async () => {
-    process.env.KANEO_API_URL = "http://localhost:1337";
+    process.env.RIUNA_API_URL = "http://localhost:1337";
 
     const member = await createWorkspaceMember();
     const { project, columns } = await createProjectFixture({
@@ -246,6 +251,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Attachment test",
@@ -287,7 +293,7 @@ describe("API integration: task image upload finalize", () => {
   });
 
   it("rejects key that does not match the task context", async () => {
-    process.env.KANEO_API_URL = "http://localhost:1337";
+    process.env.RIUNA_API_URL = "http://localhost:1337";
 
     const member = await createWorkspaceMember();
     const { project, columns } = await createProjectFixture({
@@ -297,6 +303,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Bad key test",
@@ -332,7 +339,7 @@ describe("API integration: task image upload finalize", () => {
   });
 
   it("rejects unauthenticated requests", async () => {
-    process.env.KANEO_API_URL = "http://localhost:1337";
+    process.env.RIUNA_API_URL = "http://localhost:1337";
 
     const member = await createWorkspaceMember();
     const { project, columns } = await createProjectFixture({
@@ -342,6 +349,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "Auth test",
@@ -375,7 +383,7 @@ describe("API integration: task image upload finalize", () => {
   });
 
   it("rejects requests from users outside the workspace", async () => {
-    process.env.KANEO_API_URL = "http://localhost:1337";
+    process.env.RIUNA_API_URL = "http://localhost:1337";
 
     const member = await createWorkspaceMember();
     const outsiderId = `user-${randomUUID()}`;
@@ -397,6 +405,7 @@ describe("API integration: task image upload finalize", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         userId: member.user.id,
         title: "RBAC test",

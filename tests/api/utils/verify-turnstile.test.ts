@@ -3,7 +3,6 @@ import { verifyTurnstile } from "../../../apps/api/src/utils/verify-turnstile";
 
 describe("verifyTurnstile", () => {
   const originalSecret = process.env.TURNSTILE_SECRET_KEY;
-  const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
     process.env.TURNSTILE_SECRET_KEY = "test-secret";
@@ -15,7 +14,7 @@ describe("verifyTurnstile", () => {
     } else {
       process.env.TURNSTILE_SECRET_KEY = originalSecret;
     }
-    globalThis.fetch = originalFetch;
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
@@ -34,7 +33,7 @@ describe("verifyTurnstile", () => {
     const fetchMock = vi.fn().mockResolvedValue({
       json: async () => ({ success: true }),
     });
-    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    vi.stubGlobal("fetch", fetchMock);
 
     const result = await verifyTurnstile("good-token", "203.0.113.7");
 
@@ -51,12 +50,15 @@ describe("verifyTurnstile", () => {
   });
 
   it("returns the cloudflare error codes on failure", async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({
-      json: async () => ({
-        success: false,
-        "error-codes": ["invalid-input-response"],
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        json: async () => ({
+          success: false,
+          "error-codes": ["invalid-input-response"],
+        }),
       }),
-    }) as unknown as typeof fetch;
+    );
 
     const result = await verifyTurnstile("bad-token");
     expect(result.ok).toBe(false);
@@ -66,9 +68,10 @@ describe("verifyTurnstile", () => {
   });
 
   it("fails gracefully when the fetch throws", async () => {
-    globalThis.fetch = vi
-      .fn()
-      .mockRejectedValue(new Error("network down")) as unknown as typeof fetch;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValue(new Error("network down")),
+    );
 
     const result = await verifyTurnstile("token");
     expect(result.ok).toBe(false);
@@ -81,7 +84,7 @@ describe("verifyTurnstile", () => {
       const fetchMock = vi.fn().mockResolvedValue({
         json: async () => ({ success: true }),
       });
-      globalThis.fetch = fetchMock as unknown as typeof fetch;
+      vi.stubGlobal("fetch", fetchMock);
 
       const result = await verifyTurnstile("token");
 

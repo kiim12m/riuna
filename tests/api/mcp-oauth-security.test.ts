@@ -75,7 +75,7 @@ import {
   getAuthorizationRequest,
 } from "../../apps/api/src/mcp/oauth";
 
-const clientUrl = process.env.KANEO_CLIENT_URL || "http://localhost:5173";
+const clientUrl = process.env.RIUNA_CLIENT_URL || "http://localhost:5173";
 const clientOrigin = new URL(clientUrl).origin;
 
 function challengeFor(verifier: string): string {

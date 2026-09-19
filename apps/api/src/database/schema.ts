@@ -1,7 +1,9 @@
 import { createId } from "@paralleldrive/cuid2";
 import { relations, sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
+  check,
   customType,
   foreignKey,
   index,
@@ -37,6 +39,12 @@ export const userTable = pgTable("user", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
   isAnonymous: boolean("is_anonymous").default(false),
+  // Cuentas locales: usuario y contrasena sin correo real. `username` y
+  // `displayUsername` los exige el plugin homonimo de Better Auth;
+  // `isLocalAccount` es propio y marca a quien no tiene correo al que escribir.
+  username: text("username").unique(),
+  displayUsername: text("display_username"),
+  isLocalAccount: boolean("is_local_account").default(false),
   role: text("role"),
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
@@ -329,6 +337,12 @@ export const projectTable = pgTable(
     archivedAt: timestamp("archived_at", { mode: "date" }),
     lastTaskNumber: integer("last_task_number").notNull().default(0),
     position: integer("position").notNull().default(0),
+    // La cascada del arbol es por proyecto y viene apagada: cerrar una tarea
+    // y arrastrar con ella veinte descendientes es una accion que nadie ha
+    // pedido si no la ha encendido antes.
+    cascadeClose: boolean("cascade_close").notNull().default(false),
+    cascadeArchive: boolean("cascade_archive").notNull().default(false),
+    maxTaskDepth: integer("max_task_depth").notNull().default(5),
   },
   (table) => [
     unique("project_workspace_id_id_unique").on(table.workspaceId, table.id),
@@ -416,6 +430,14 @@ export const taskTable = pgTable(
       onDelete: "set null",
       onUpdate: "cascade",
     }),
+    // Asignacion a un departamento entero, independiente del asignado
+    // individual: una tarea puede pertenecer a un equipo sin tener todavia
+    // una persona concreta detras, y el equipo sobrevive a los cambios de
+    // pertenencia que una lista de asignados no reflejaria.
+    teamId: text("team_id").references(() => teamTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
     title: text("title").notNull(),
     description: text("description"),
     status: text("status").notNull().default("to-do"),
@@ -426,6 +448,55 @@ export const taskTable = pgTable(
     priority: text("priority").default("low").notNull(),
     startDate: timestamp("start_date", { mode: "date" }),
     dueDate: timestamp("due_date", { mode: "date" }),
+    // El arbol. `parent_id` es la verdad; `path` y `depth` son su forma
+    // materializada, que es lo que permite contestar "todo el subarbol" con un
+    // prefijo en vez de una recursiva por consulta. `path` incluye la propia
+    // tarea y va entre barras —`/raiz/hija/nieta/`—, de modo que los
+    // descendientes estrictos de X son `path LIKE X.path || '_%'`. Padre e
+    // hija comparten siempre proyecto: ver ADR 011.
+    parentId: text("parent_id").references((): AnyPgColumn => taskTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    path: text("path").notNull(),
+    depth: integer("depth").notNull().default(0),
+    // Estimacion en segundos, la misma unidad que `time_entry.duration`, para
+    // que el agregado del subarbol compare estimado y registrado sin convertir
+    // nada por el camino.
+    estimate: integer("estimate"),
+    // Los valores de los campos personalizados, indexados por la `key` de su
+    // definicion. Van en la propia fila y no en una tabla de valores porque
+    // el tablero ya esta leyendo esta fila: asi pintar una tarjeta con ocho
+    // campos sigue siendo una consulta y no ocho filas que pivotar. Los
+    // campos de tipo relacion no guardan nada aqui —viven en `task_relation`,
+    // que si tiene integridad referencial—. Ver ADR 013.
+    customFields: jsonb("custom_fields")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    // El ciclo al que pertenece, o ninguno. Se borra a `null` con el ciclo: la
+    // tarea sobrevive a su sprint.
+    cycleId: text("cycle_id").references(() => cycleTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    // De que recurrencia salio, si salio de alguna. Borrar la recurrencia no
+    // borra lo que ya genero.
+    recurrenceId: text("recurrence_id").references(
+      () => taskRecurrenceTable.id,
+      { onDelete: "set null", onUpdate: "cascade" },
+    ),
+    /**
+     * Cuando la tarea entro en una columna final. **Lo mantiene un disparador**
+     * (`task_completed_at`), no la aplicacion: hay cinco escritores de `status`
+     * en el dominio de tareas y otros tantos entre importacion, webhooks y MCP,
+     * y la Fase 4.5 ya demostro que cuatro caminos que escriben lo mismo a mano
+     * acaban divergiendo.
+     *
+     * **No es la fuente de verdad de "esta hecha"** —eso lo dice la columna—,
+     * solo responde *cuando*. Ver ADR 025.
+     */
+    completedAt: timestamp("completed_at", { mode: "date" }),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()
@@ -434,10 +505,723 @@ export const taskTable = pgTable(
   },
   (table) => [
     index("task_projectId_idx").on(table.projectId),
+    index("task_cycleId_idx").on(table.cycleId),
     index("task_dueDate_idx").on(table.dueDate),
     index("task_assigneeId_idx").on(table.userId),
+    index("task_teamId_idx").on(table.teamId),
     index("task_columnId_idx").on(table.columnId),
+    index("task_parentId_idx").on(table.parentId),
+    // `text_pattern_ops` es lo que hace que el `LIKE 'prefijo%'` del subarbol
+    // use el indice: el operador por defecto depende de la intercalacion de la
+    // base de datos y con una que no sea C no sirve para prefijos.
+    index("task_path_idx").using("btree", sql`${table.path} text_pattern_ops`),
+    // GIN con la clase por defecto (`jsonb_ops`), no `jsonb_path_ops`: la
+    // primera indexa claves ademas de valores y responde tambien a "esta
+    // tarea tiene el campo X", que es lo que necesita el editor para saber
+    // que hay que rellenar. Ojo: GIN acelera contencion y existencia, no
+    // comparaciones por rango —`presupuesto > 1000` pide un indice de
+    // expresion por campo, y eso se decide en la Fase 4 cuando se sepa que
+    // campos se filtran de verdad. Ver ADR 013.
+    index("task_custom_fields_idx").using("gin", table.customFields),
     unique("task_project_number_unique").on(table.projectId, table.number),
+    // Las dos invariantes del arbol, vigiladas por la base de datos y no por
+    // la buena memoria de quien anada el proximo `insert(taskTable)`: el
+    // camino termina en la propia tarea, y la profundidad es el numero de
+    // saltos que ese camino describe.
+    check(
+      "task_path_ends_with_id",
+      sql`${table.path} LIKE '%/' || ${table.id} || '/'`,
+    ),
+    check(
+      "task_depth_matches_path",
+      sql`${table.depth} = length(${table.path}) - length(replace(${table.path}, '/', '')) - 2`,
+    ),
+  ],
+);
+
+// Asignados adicionales. `task.assignee_id` sigue siendo el responsable
+// principal y no se toca: todo lo heredado (notificaciones, filtros, tarjetas,
+// integraciones) sigue leyendolo. Esta tabla anade el resto, y el principal
+// tambien esta aqui, de modo que consultar "quien tiene esta tarea" es una
+// sola consulta y no una union con la columna.
+export const taskAssigneeTable = pgTable(
+  "task_assignee",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => taskTable.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("taskAssignee_taskId_idx").on(table.taskId),
+    index("taskAssignee_userId_idx").on(table.userId),
+    unique("task_assignee_unique").on(table.taskId, table.userId),
+  ],
+);
+
+// Las epicas cortan el proyecto en vertical: agrupan tareas de cualquier rama
+// del arbol y de cualquier columna. Son entidad propia y no una etiqueta
+// porque tienen fechas, orden y un ciclo de vida —se archivan— que una
+// etiqueta no sabria llevar.
+export const epicTable = pgTable(
+  "epic",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projectTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    description: text("description"),
+    color: text("color"),
+    position: integer("position").notNull().default(0),
+    startDate: timestamp("start_date", { mode: "date" }),
+    dueDate: timestamp("due_date", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    // Borrado suave, alineado con el `archived_at` que ya usa `project`.
+    archivedAt: timestamp("archived_at", { mode: "date" }),
+  },
+  (table) => [
+    index("epic_projectId_idx").on(table.projectId),
+    index("epic_projectId_position_idx").on(table.projectId, table.position),
+  ],
+);
+
+// Muchos a muchos a proposito: una tarea puede servir a mas de una epica, y
+// obligar a elegir una sola convertiria la epica en un segundo estado.
+export const taskEpicTable = pgTable(
+  "task_epic",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => taskTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    epicId: text("epic_id")
+      .notNull()
+      .references(() => epicTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("task_epic_taskId_idx").on(table.taskId),
+    index("task_epic_epicId_idx").on(table.epicId),
+    unique("task_epic_unique").on(table.taskId, table.epicId),
+  ],
+);
+
+/**
+ * Ciclos (sprints): una caja de tiempo con nombre y fechas a la que se le meten
+ * tareas antes de empezar.
+ *
+ * Cuelga del **proyecto**, como la epica, y por el mismo motivo: hereda el
+ * control de acceso, el permiso `project:update`, el canal de tiempo real y la
+ * barra de filtros sin inventar nada. La diferencia con la epica es que la
+ * epica agrupa por *tema* y no caduca, y el ciclo dice *cuando*: una tarea
+ * tiene las dos a la vez.
+ *
+ * A diferencia de `epic` **no lleva `archived_at`**. `closed` ya es el estado
+ * terminal, y un ciclo cerrado tiene que quedarse: es lo que sostiene la
+ * velocidad historica. Tampoco lleva `position`, porque las fechas ya lo
+ * ordenan.
+ */
+export const cycleTable = pgTable(
+  "cycle",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projectTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    /** El objetivo del sprint, en una linea. */
+    goal: text("goal"),
+    status: text("status").notNull().default("planned"),
+    startDate: timestamp("start_date", { mode: "date" }).notNull(),
+    endDate: timestamp("end_date", { mode: "date" }).notNull(),
+    /**
+     * Cuando se cerro. Es lo que congela la velocidad: a partir de aqui el
+     * ciclo no cambia aunque alguien termine una tarea tarde.
+     */
+    closedAt: timestamp("closed_at", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("cycle_projectId_idx").on(table.projectId),
+    index("cycle_projectId_startDate_idx").on(table.projectId, table.startDate),
+    // **Un solo ciclo activo por proyecto**, vigilado por la base de datos y no
+    // por la buena voluntad del controlador: es la misma decision que las dos
+    // CHECK del arbol de la Fase 2. Dos peticiones simultaneas de "activar"
+    // podrian pasar las dos la comprobacion previa y dejar el proyecto con dos
+    // sprints en marcha; el indice parcial las corta en el commit.
+    uniqueIndex("cycle_one_active_per_project")
+      .on(table.projectId)
+      .where(sql`status = 'active'`),
+    check(
+      "cycle_status_valid",
+      sql`${table.status} IN ('planned', 'active', 'closed')`,
+    ),
+    check("cycle_dates_ordered", sql`${table.endDate} >= ${table.startDate}`),
+  ],
+);
+
+/**
+ * Plantillas de proyecto y de arbol.
+ *
+ * Cuelgan del **espacio de trabajo** y no del proyecto, al reves que las epicas
+ * y los ciclos: una plantilla que solo sirviera en el proyecto donde se creo no
+ * seria una plantilla. Es la misma decision que `field_definition` toma con su
+ * `project_id` nulo.
+ *
+ * `content` guarda el arbol entero en `jsonb`. La alternativa —tablas de tareas
+ * plantilla con su propia jerarquia— duplicaria `task`, sus dos CHECK y su
+ * `path`, para datos que no se consultan ni se filtran: se leen enteros al
+ * aplicar la plantilla y nunca por partes. Ver ADR 027.
+ */
+export const templateTable = pgTable(
+  "template",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    description: text("description"),
+    /** `project` trae columnas y epicas ademas del arbol; `task` solo el arbol. */
+    kind: text("kind").notNull(),
+    content: jsonb("content").$type<Record<string, unknown>>().notNull(),
+    createdBy: text("created_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("template_workspaceId_idx").on(table.workspaceId),
+    check("template_kind_valid", sql`${table.kind} IN ('project', 'task')`),
+  ],
+);
+
+/**
+ * Tareas recurrentes: la plantilla de lo que hay que crear y cada cuanto.
+ *
+ * La cadencia se guarda como un **modelo explicito** y no como una cadena
+ * RRULE. RRULE es el estandar y lo cubre todo, pero exige una dependencia nueva
+ * para interpretar casos que aqui no pide nadie ("el ultimo jueves laborable de
+ * cada trimestre"); el modelo explicito —frecuencia, intervalo, dias— cubre lo
+ * que la gente configura de verdad y se lee sin libreria. Ver ADR 026.
+ *
+ * `template` guarda los campos de la tarea a crear, con la misma convencion de
+ * `jsonb` que `field_definition.config` y `view.config`: la alternativa era una
+ * tabla ancha que duplicaria la forma de `task` y envejeceria peor.
+ */
+export const taskRecurrenceTable = pgTable(
+  "task_recurrence",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projectTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    createdBy: text("created_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    // Sin valor por defecto a proposito: una plantilla sin titulo o una
+    // cadencia sin frecuencia no son un estado inicial valido, son una fila
+    // rota. Y con `default '{}'` la CHECK de abajo no comprobaria nada, porque
+    // `'{}'->>'frequency'` es NULL y una CHECK pasa con NULL.
+    template: jsonb("template").$type<Record<string, unknown>>().notNull(),
+    cadence: jsonb("cadence").$type<Record<string, unknown>>().notNull(),
+    /** Cuando toca la proxima. Es la columna que el planificador consulta. */
+    nextRunAt: timestamp("next_run_at", { mode: "date" }).notNull(),
+    lastRunAt: timestamp("last_run_at", { mode: "date" }),
+    /** Opcional: a partir de aqui deja de generar. */
+    endsAt: timestamp("ends_at", { mode: "date" }),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("task_recurrence_projectId_idx").on(table.projectId),
+    // El indice que sirve al planificador: "que toca ya". Parcial, porque una
+    // recurrencia apagada no se mira nunca y no tiene por que ocupar el indice.
+    index("task_recurrence_due_idx").on(table.nextRunAt).where(sql`active`),
+    check(
+      "task_recurrence_frequency_valid",
+      sql`${table.cadence}->>'frequency' IS NOT NULL AND ${table.cadence}->>'frequency' IN ('daily', 'weekly', 'monthly')`,
+    ),
+  ],
+);
+
+// El catalogo de campos personalizados. Esta tabla dice que campos existen y
+// de que tipo; los valores viven en `task.custom_fields`.
+//
+// El alcance es una de dos: con `project_id` puesto el campo solo existe en
+// ese proyecto, y con `project_id` nulo existe en todo el espacio. El
+// `workspace_id` esta siempre —regla de Riuna para las tablas nuevas— y
+// ademas es lo que permite listar los campos de un espacio sin recorrer sus
+// proyectos.
+export const fieldDefinitionTable = pgTable(
+  "field_definition",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    projectId: text("project_id").references(() => projectTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+    // `key` es la clave dentro del JSONB y no cambia nunca; `name` es la
+    // etiqueta visible. Separarlas es lo que permite renombrar "Presupuesto"
+    // a "Presupuesto 2026" sin huerfanar el valor guardado en cada tarea.
+    key: text("key").notNull(),
+    name: text("name").notNull(),
+    type: text("type").notNull(),
+    description: text("description"),
+    // Lo que depende del tipo: las opciones de un select, el codigo de moneda,
+    // el minimo y el maximo de un numero. Va en JSONB porque su forma la
+    // decide `type`, y una columna por variante seria una tabla ancha de
+    // nulos.
+    config: jsonb("config")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    required: boolean("required").notNull().default(false),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    // Borrado suave, como en `epic`: archivar una definicion la retira de los
+    // formularios sin borrar el valor que miles de tareas ya tienen guardado.
+    archivedAt: timestamp("archived_at", { mode: "date" }),
+  },
+  (table) => [
+    index("field_definition_workspaceId_idx").on(table.workspaceId),
+    index("field_definition_projectId_idx").on(table.projectId),
+    // Dos indices parciales en vez de un UNIQUE de tres columnas: en SQL
+    // estandar dos filas con `project_id` nulo no colisionan nunca —NULL no
+    // es igual a NULL—, asi que un `unique(workspace_id, project_id, key)`
+    // dejaria repetir la clave de todos los campos de espacio. `NULLS NOT
+    // DISTINCT` lo arreglaria pero solo existe desde Postgres 15.
+    uniqueIndex("field_definition_workspace_key_unique")
+      .on(table.workspaceId, table.key)
+      .where(sql`project_id IS NULL`),
+    uniqueIndex("field_definition_project_key_unique")
+      .on(table.projectId, table.key)
+      .where(sql`project_id IS NOT NULL`),
+    // El vocabulario de tipos, vigilado por la base de datos y no por la
+    // buena memoria de quien anada el proximo `insert`, que es el criterio
+    // que dejo establecido el arbol de la Fase 2.
+    check(
+      "field_definition_type_valid",
+      sql`${table.type} IN ('text', 'number', 'currency', 'select', 'multi_select', 'date', 'checkbox', 'user', 'url', 'relation')`,
+    ),
+  ],
+);
+
+// Una vista guardada: el filtro, el orden, la agrupacion y las columnas con
+// que alguien quiere mirar un proyecto.
+//
+// La propiedad es de quien la crea, no del rol. Cualquiera del espacio puede
+// guardarse una vista y compartirla; solo su dueno —o un administrador— la
+// edita o la borra. Es lo contrario que `field_definition`, y a proposito: un
+// campo cambia la forma de las tareas de todo el mundo, y una vista solo dice
+// como mirarlas. Atar esto a `project:update` repetiria el problema de la
+// Fase 3, donde definir un campo quedo fuera del alcance de un `member`.
+/**
+ * Un panel personal. Fase 7, rebanada 1.
+ *
+ * Cuelga del espacio de trabajo y pertenece a quien lo crea, como las vistas
+ * (ADR 015): un panel dice como mirar, no cambia la forma de nada, asi que se
+ * gobierna por propiedad y no por el vocabulario de permisos. De momento **solo
+ * hay paneles personales**; compartir con el equipo llega despues y sera una
+ * columna mas, no otra tabla.
+ */
+export const dashboardTable = pgTable(
+  "dashboard",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    /**
+     * El panel que se crea solo la primera vez, con una distribucion de
+     * partida. Uno por persona y espacio.
+     */
+    isDefault: boolean("is_default").notNull().default(false),
+    /**
+     * Compartido con todo el espacio. Calcado de `view.is_shared` (ADR 015):
+     * lo comparte quien lo crea, lo ve todo el mundo, y solo su dueño —o un
+     * administrador del espacio— lo edita o lo retira.
+     */
+    isShared: boolean("is_shared").notNull().default(false),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    // "Mis paneles en este espacio" es la unica consulta que hace la pantalla.
+    index("dashboard_workspace_creator_idx").on(
+      table.workspaceId,
+      table.createdBy,
+    ),
+    // El panel de partida se crea al leer, asi que dos cargas simultaneas la
+    // primera vez crearian dos. Lo vigila la base y no el controlador, que es
+    // lo que dos peticiones a la vez se saltan. Mismo patron que
+    // `cycle_one_active_per_project`.
+    uniqueIndex("dashboard_one_default_per_person")
+      .on(table.workspaceId, table.createdBy)
+      .where(sql`is_default`),
+    index("dashboard_workspace_shared_idx").on(
+      table.workspaceId,
+      table.isShared,
+    ),
+  ],
+);
+
+/**
+ * Un widget dentro de un panel.
+ *
+ * **`project_id` nulo es lo que decide el registro de campos**, igual que en
+ * `view` y en `field_definition`: con proyecto se compila contra el registro
+ * completo de ese proyecto —`status`, epicas y sus campos personalizados—, y
+ * sin el contra el registro del espacio, que retira los nombres cuyo
+ * significado cambia de proyecto en proyecto. Es la respuesta a lo que la
+ * ADR 024 dejo aplazado.
+ *
+ * `config` guarda el filtro **en forma editable**, la misma que `view.config`,
+ * mas la agrupacion y la metrica. Se valida al escribir con el mismo esquema
+ * que las vistas, para que una vista guardada pueda alimentar un widget sin
+ * conversion.
+ */
+/**
+ * Un objetivo con periodo: el OKR trimestral de la Fase 7.
+ *
+ * Cuelga del espacio de trabajo y se gobierna por **propiedad**, igual que
+ * `view` y que `dashboard`: compartirlo con el equipo llega con el `is_shared`
+ * de la rebanada 2, que es una columna, no un modelo distinto.
+ *
+ * El periodo no es decoracion: acota la medida. "Cerrar 40 tareas este
+ * trimestre" solo significa algo contra unas fechas, y son estas las que se le
+ * pasan al agregado como ventana de cierre.
+ */
+export const goalTable = pgTable(
+  "goal",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    description: text("description"),
+    /** Mismo criterio que un panel y que una vista. */
+    isShared: boolean("is_shared").notNull().default(false),
+    startsAt: timestamp("starts_at", { mode: "date" }).notNull(),
+    endsAt: timestamp("ends_at", { mode: "date" }).notNull(),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("goal_workspace_creator_idx").on(table.workspaceId, table.createdBy),
+    index("goal_workspace_shared_idx").on(table.workspaceId, table.isShared),
+    check("goal_dates_ordered", sql`${table.endsAt} >= ${table.startsAt}`),
+  ],
+);
+
+/**
+ * Un resultado clave: la consulta de un widget mas un valor diana.
+ *
+ * `config` tiene **la misma forma** que el de un widget —filtro editable,
+ * ambito personal, metrica—, asi que el progreso lo calcula `aggregate()` tal
+ * cual, sin una segunda capa de agregacion que mantener en paralelo. Lo unico
+ * que no lleva es agrupacion: un resultado clave es un numero, no un reparto.
+ */
+export const goalTargetTable = pgTable(
+  "goal_target",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    goalId: text("goal_id")
+      .notNull()
+      .references(() => goalTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    // Nulo = todo el espacio de trabajo, igual que en un widget.
+    projectId: text("project_id").references(() => projectTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+    name: text("name").notNull(),
+    config: jsonb("config")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    /** La diana. Entera: son tareas, horas o puntos, nunca fracciones. */
+    targetValue: integer("target_value").notNull(),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("goal_target_goalId_idx").on(table.goalId),
+    check("goal_target_value_positive", sql`${table.targetValue} > 0`),
+  ],
+);
+
+export const dashboardWidgetTable = pgTable(
+  "dashboard_widget",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    dashboardId: text("dashboard_id")
+      .notNull()
+      .references(() => dashboardTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    // Nulo para un widget que mira todo el espacio de trabajo.
+    projectId: text("project_id").references(() => projectTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+    /**
+     * A que objetivo mira un widget de tipo `goal`.
+     *
+     * Columna y no una clave dentro de `config` porque es una **clave ajena**:
+     * borrar el objetivo tiene que llevarse el widget por delante, y un id
+     * suelto en un JSONB dejaria un widget apuntando a un fantasma.
+     */
+    goalId: text("goal_id").references(() => goalTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+    type: text("type").notNull(),
+    title: text("title").notNull(),
+    config: jsonb("config")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    position: integer("position").notNull().default(0),
+    /** Cuantas de las tres columnas de la rejilla ocupa. */
+    span: integer("span").notNull().default(1),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("dashboard_widget_dashboardId_idx").on(table.dashboardId),
+    check(
+      "dashboard_widget_type_valid",
+      sql`${table.type} IN ('count', 'breakdown', 'trend', 'time', 'epic_progress', 'table', 'inbox', 'goal')`,
+    ),
+    check("dashboard_widget_span_valid", sql`${table.span} BETWEEN 1 AND 3`),
+  ],
+);
+
+export const viewTable = pgTable(
+  "view",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    // Nula para una vista que vale en todo el espacio de trabajo.
+    projectId: text("project_id").references(() => projectTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    // Que vista la usa: `table`, `board`, `list`, `calendar` o `gantt`. Se
+    // guarda para no ofrecer una vista de tabla como si fuera un calendario.
+    type: text("type").notNull().default("table"),
+    // El arbol de filtros, el modo de jerarquia, el orden, la agrupacion y las
+    // columnas. Va en JSONB porque su forma la decide el motor de vistas y
+    // cambiara con el; una columna por ajuste seria una tabla ancha de nulos.
+    config: jsonb("config")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    // Compartida con el espacio, o solo de quien la creo.
+    isShared: boolean("is_shared").notNull().default(false),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    archivedAt: timestamp("archived_at", { mode: "date" }),
+  },
+  (table) => [
+    index("view_workspaceId_idx").on(table.workspaceId),
+    index("view_projectId_idx").on(table.projectId),
+    index("view_createdBy_idx").on(table.createdBy),
+    // Listar "las mias y las compartidas" de un proyecto es la consulta de
+    // todas las pantallas que usan esto.
+    index("view_workspace_shared_idx").on(table.workspaceId, table.isShared),
+    check(
+      "view_type_valid",
+      sql`${table.type} IN ('table', 'board', 'list', 'calendar', 'gantt')`,
+    ),
+  ],
+);
+
+/**
+ * De donde vino una fila que entro de fuera, para que reimportar actualice en
+ * vez de duplicar.
+ *
+ * `AGENTS.md` da la idempotencia por hecha «a traves de `external_ref`» y la
+ * tabla no existia: `import-tasks` no tenia idempotencia de ninguna clase —dos
+ * importaciones del mismo fichero creaban 2N tareas— y los importadores de
+ * GitHub y Gitea la conseguian con un `findFirst` sin bloqueo ni restriccion
+ * unica, que funciona en secuencia y duplica en concurrencia.
+ *
+ * No sirve `external_link` para esto, por tres motivos: exige `integration_id`
+ * con clave foranea (habria que fabricar una integracion falsa por proyecto,
+ * visible en los ajustes), exige `task_id` (y la Fase 5 promete preservar
+ * tambien epicas y crear definiciones de campo), y no tiene unicidad.
+ *
+ * `source` es texto libre —`csv:<hash>`, `xlsx:<nombre>`, `trello`, `jira`—
+ * para que los importadores externos de la Fase 8 la reutilicen sin migrar.
+ */
+export const externalRefTable = pgTable(
+  "external_ref",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    source: text("source").notNull(),
+    entityType: text("entity_type").notNull(),
+    entityId: text("entity_id").notNull(),
+    externalId: text("external_id").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    // La unicidad **es** la idempotencia: sin ella la tabla solo documenta la
+    // procedencia, y una reimportacion concurrente vuelve a duplicar.
+    uniqueIndex("external_ref_source_entity_external_unique").on(
+      table.workspaceId,
+      table.source,
+      table.entityType,
+      table.externalId,
+    ),
+    index("external_ref_entity_idx").on(table.entityType, table.entityId),
+    index("external_ref_workspaceId_idx").on(table.workspaceId),
+    check(
+      "external_ref_entity_type_valid",
+      sql`${table.entityType} IN ('task', 'epic', 'field_definition')`,
+    ),
   ],
 );
 
@@ -926,6 +1710,18 @@ export const externalLinkTable = pgTable(
     index("external_link_integrationId_idx").on(table.integrationId),
     index("external_link_externalId_idx").on(table.externalId),
     index("external_link_resourceType_idx").on(table.resourceType),
+    // Sus once puntos de escritura hacen leer-y-luego-escribir sin bloqueo, asi
+    // que un webhook concurrente con una importacion creaba dos tareas para la
+    // misma incidencia, de forma permanente: las importaciones posteriores
+    // actualizan una de las dos y la otra queda huerfana para siempre.
+    //
+    // `0020_gitea_dedup_guards.sql` blindo asi `activity` y `label` y se dejo
+    // esta.
+    uniqueIndex("external_link_integration_resource_external_unique").on(
+      table.integrationId,
+      table.resourceType,
+      table.externalId,
+    ),
   ],
 );
 

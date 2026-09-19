@@ -9,7 +9,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ShortcutNumber } from "@/components/ui/shortcut-number";
-import { useUpdateTaskAssignee } from "@/hooks/mutations/task/use-update-task-assignee";
+import { useUpdateTaskAssignees } from "@/hooks/mutations/task/use-update-task-assignees";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { useNumberedShortcuts } from "@/hooks/use-numbered-shortcuts";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
@@ -36,7 +36,7 @@ export default function TaskAssigneePopover({
   const [visibleUsersCount, setVisibleUsersCount] = useState(
     INITIAL_VISIBLE_USERS,
   );
-  const { mutateAsync: updateTaskAssignee } = useUpdateTaskAssignee();
+  const { mutateAsync: updateTaskAssignees } = useUpdateTaskAssignees();
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
   const { canAssignTasks } = useWorkspacePermission();
   const canAssign = canAssignTasks();
@@ -50,14 +50,17 @@ export default function TaskAssigneePopover({
     }));
   }, [workspaceUsers]);
 
-  const handleAssigneeChange = useCallback(
-    async (newUserId: string) => {
+  // El conjunto de asignados manda; `userId` es solo el principal y se usa
+  // como respaldo en las vistas que todavia no piden la lista completa.
+  const selectedIds = useMemo(() => {
+    if (task.assignees?.length) return task.assignees.map((user) => user.id);
+    return task.userId ? [task.userId] : [];
+  }, [task.assignees, task.userId]);
+
+  const applyAssignees = useCallback(
+    async (userIds: string[]) => {
       try {
-        await updateTaskAssignee({
-          ...task,
-          userId: newUserId,
-        });
-        setOpen(false);
+        await updateTaskAssignees({ taskId: task.id, userIds });
       } catch (error) {
         toast.error(
           error instanceof Error
@@ -66,16 +69,34 @@ export default function TaskAssigneePopover({
         );
       }
     },
-    [t, task, updateTaskAssignee],
+    [t, task.id, updateTaskAssignees],
   );
 
+  // Alternar no cierra el desplegable: asignar a varias personas de una vez es
+  // el caso normal, y cerrarlo en cada clic obligaria a reabrirlo.
+  const handleToggle = useCallback(
+    (userId: string) => {
+      void applyAssignees(
+        selectedIds.includes(userId)
+          ? selectedIds.filter((id) => id !== userId)
+          : [...selectedIds, userId],
+      );
+    },
+    [applyAssignees, selectedIds],
+  );
+
+  const handleClear = useCallback(() => {
+    void applyAssignees([]);
+    setOpen(false);
+  }, [applyAssignees]);
+
   const shortcutOptions = useMemo(() => {
-    const unassignedOption = { onSelect: () => handleAssigneeChange("") };
+    const unassignedOption = { onSelect: handleClear };
     const userOptions = (usersOptions || []).slice(0, 8).map((user) => ({
-      onSelect: () => handleAssigneeChange(user.value),
+      onSelect: () => handleToggle(user.value),
     }));
     return [unassignedOption, ...userOptions];
-  }, [usersOptions, handleAssigneeChange]);
+  }, [usersOptions, handleClear, handleToggle]);
 
   const visibleUsersOptions = useMemo(() => {
     return usersOptions?.slice(0, visibleUsersCount) ?? [];
@@ -120,20 +141,20 @@ export default function TaskAssigneePopover({
             variant="ghost"
             size="sm"
             className="w-full justify-start gap-2 h-8 px-2"
-            onClick={() => handleAssigneeChange("")}
+            onClick={handleClear}
           >
             <div
               className="w-6 h-6 rounded-full bg-muted border border-border flex items-center justify-center"
               title={t("tasks:popover.assignee.unassigned")}
             >
-              <span className="text-[10px] font-medium text-muted-foreground">
+              <span className="text-label font-medium text-muted-foreground">
                 ?
               </span>
             </div>
             <span className="text-sm">
               {t("tasks:popover.assignee.unassigned")}
             </span>
-            {!task.userId ? (
+            {selectedIds.length === 0 ? (
               <Check className="ml-auto h-4 w-4" />
             ) : (
               <ShortcutNumber number={1} />
@@ -145,7 +166,7 @@ export default function TaskAssigneePopover({
               variant="ghost"
               size="sm"
               className="w-full justify-start gap-2 h-8 px-2"
-              onClick={() => handleAssigneeChange(user.value)}
+              onClick={() => handleToggle(user.value)}
             >
               <Avatar className="h-6 w-6">
                 <AvatarImage src={user.image ?? ""} alt={user.name || ""} />
@@ -154,7 +175,7 @@ export default function TaskAssigneePopover({
                 </AvatarFallback>
               </Avatar>
               <span className="text-sm truncate">{user.label}</span>
-              {task.userId === user.value ? (
+              {selectedIds.includes(user.value) ? (
                 <Check className="ml-auto h-4 w-4 shrink-0" />
               ) : index < 8 ? (
                 <ShortcutNumber number={index + 2} />

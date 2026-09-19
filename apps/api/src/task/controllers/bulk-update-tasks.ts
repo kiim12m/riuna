@@ -17,6 +17,7 @@ import {
   assertValidPriority,
   assertValidTaskStatus,
 } from "../validate-task-fields";
+import { syncPrimaryAssigneeBulk } from "./assignees";
 
 type BulkOperation =
   | "updateStatus"
@@ -181,10 +182,16 @@ async function bulkUpdateTasks({
           )[0]?.name
         : undefined;
 
-      const result = await db
-        .update(taskTable)
-        .set({ userId: assigneeId })
-        .where(inArray(taskTable.id, foundIds));
+      const result = await db.transaction(async (tx) => {
+        const updated = await tx
+          .update(taskTable)
+          .set({ userId: assigneeId })
+          .where(inArray(taskTable.id, foundIds));
+
+        await syncPrimaryAssigneeBulk(tasks, assigneeId, tx);
+
+        return updated;
+      });
 
       updatedCount = result.rowCount ?? foundIds.length;
 

@@ -7,6 +7,7 @@ import {
   taskReminderSentTable,
 } from "../../../apps/api/src/database/schema";
 import { resetTestDatabase } from "./database";
+import { taskTreeValues } from "./fixtures";
 
 async function seedMcpOauthStateRow(): Promise<string> {
   const id = `mcp-oauth-${randomUUID()}`;
@@ -62,7 +63,7 @@ async function seedTaskReminderSentRow(): Promise<string> {
     isFinal: false,
   });
   await db.insert(schema.taskTable).values({
-    id: taskId,
+    ...taskTreeValues(taskId),
     projectId,
     title: "Reminder task",
     description: "",

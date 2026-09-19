@@ -5,55 +5,38 @@ import { useUpdateTask } from "@/hooks/mutations/task/use-update-task";
 import { cn } from "@/lib/cn";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
+import { barHeightRem, barMetrics, type GanttTimeline } from "./gantt-timeline";
 
 const CLICK_MOVE_THRESHOLD_PX = 4;
 const MOBILE_MOVE_THRESHOLD_PX = 14;
 
-type ScheduledTask = Task & {
+export type ScheduledTask = Task & {
   scheduleStart: Date;
   scheduleEnd: Date;
 };
 
 type GanttTaskBarProps = {
   task: ScheduledTask;
-  timeline: {
-    days: Date[];
-    rangeStart: Date;
-    gridTemplateColumns: string;
-  };
-  pixelsPerDay: number;
+  depth: number;
+  isDone: boolean;
+  timeline: GanttTimeline;
   isMobile?: boolean;
   onOpenTask: () => void;
 };
 
-function getBarGridColumns(
-  scheduleStart: Date,
-  scheduleEnd: Date,
-  rangeStart: Date,
-  trackCount: number,
-): { barInView: boolean; lineStart: number; lineEnd: number } {
-  const startIndex = differenceInCalendarDays(scheduleStart, rangeStart);
-  const endIndex = differenceInCalendarDays(scheduleEnd, rangeStart);
-  const barInView = endIndex >= 0 && startIndex < trackCount && trackCount > 0;
-  if (!barInView) {
-    return { barInView: false, lineStart: 1, lineEnd: 1 };
-  }
-  const lineStart = Math.max(1, Math.min(startIndex + 1, trackCount));
-  const lineEnd = Math.max(
-    lineStart + 1,
-    Math.min(endIndex + 2, trackCount + 1),
-  );
-  return { barInView: true, lineStart, lineEnd };
+function toIsoDay(date: Date) {
+  return startOfDay(date).toISOString();
 }
 
-function toIsoDay(d: Date) {
-  return startOfDay(d).toISOString();
+function clampIndex(index: number, min: number, max: number) {
+  return Math.max(min, Math.min(index, max));
 }
 
 export function GanttTaskBar({
   task,
+  depth,
+  isDone,
   timeline,
-  pixelsPerDay,
   isMobile = false,
   onOpenTask,
 }: GanttTaskBarProps) {
@@ -64,28 +47,27 @@ export function GanttTaskBar({
     end: Date;
   } | null>(null);
 
-  // Drop the drag overlay once server data matches
+  // Soltar el overlay optimista cuando el servidor confirma las mismas fechas.
   useEffect(() => {
     if (!dragDisplay) return;
     const startMatches =
       differenceInCalendarDays(task.scheduleStart, dragDisplay.start) === 0;
     const endMatches =
       differenceInCalendarDays(task.scheduleEnd, dragDisplay.end) === 0;
-    if (startMatches && endMatches) {
-      setDragDisplay(null);
-    }
+    if (startMatches && endMatches) setDragDisplay(null);
   }, [dragDisplay, task.scheduleEnd, task.scheduleStart]);
 
   const displayStart = dragDisplay?.start ?? task.scheduleStart;
   const displayEnd = dragDisplay?.end ?? task.scheduleEnd;
 
-  const trackCount = timeline.days.length;
-  const { barInView, lineStart, lineEnd } = getBarGridColumns(
-    displayStart,
-    displayEnd,
-    timeline.rangeStart,
-    trackCount,
-  );
+  const { rangeStart, totalDays, pixelsPerDay } = timeline;
+  const pxPerDay = Math.max(pixelsPerDay, 1e-6);
+  const moveThresholdPx = isMobile
+    ? MOBILE_MOVE_THRESHOLD_PX
+    : CLICK_MOVE_THRESHOLD_PX;
+
+  const { left, width } = barMetrics(displayStart, displayEnd, timeline);
+  const barHeight = barHeightRem(depth);
 
   const persistDates = useCallback(
     async (nextStart: Date, nextEnd: Date): Promise<boolean> => {
@@ -108,225 +90,198 @@ export function GanttTaskBar({
     [task, updateTask, t],
   );
 
-  const pxPerDay = Math.max(pixelsPerDay, 1e-6);
-  const moveThresholdPx = isMobile
-    ? MOBILE_MOVE_THRESHOLD_PX
-    : CLICK_MOVE_THRESHOLD_PX;
+  const startIdx = differenceInCalendarDays(task.scheduleStart, rangeStart);
+  const endIdx = differenceInCalendarDays(task.scheduleEnd, rangeStart);
+  const durationDays = endIdx - startIdx;
 
-  const handleResizeLeftPointerDown = (event: React.PointerEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const originX = event.clientX;
-    const initialStart = task.scheduleStart;
-    const initialEnd = task.scheduleEnd;
-    const startIdx = differenceInCalendarDays(
-      initialStart,
-      timeline.rangeStart,
-    );
-    const endIdx = differenceInCalendarDays(initialEnd, timeline.rangeStart);
-
-    const onMove = (ev: PointerEvent) => {
-      const deltaDays = Math.round((ev.clientX - originX) / pxPerDay);
-      let nextStartIdx = startIdx + deltaDays;
-      nextStartIdx = Math.max(0, Math.min(nextStartIdx, endIdx));
-      const nextStart = timeline.days[nextStartIdx] ?? initialStart;
-      const nextEnd = initialEnd;
-      setDragDisplay({ start: nextStart, end: nextEnd });
+  const bindWindowDrag = (
+    onMove: (deltaDays: number) => void,
+    onEnd: (deltaDays: number, cancelled: boolean) => void,
+    originX: number,
+  ) => {
+    const toDelta = (clientX: number) =>
+      Math.round((clientX - originX) / pxPerDay);
+    const move = (ev: PointerEvent) => onMove(toDelta(ev.clientX));
+    const up = (ev: PointerEvent) => {
+      detach();
+      onEnd(toDelta(ev.clientX), ev.type === "pointercancel");
     };
-
-    const onUp = async (ev: PointerEvent) => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onCancel);
-      if (ev.type === "pointercancel") {
-        setDragDisplay(null);
-        return;
-      }
-      const deltaDays = Math.round((ev.clientX - originX) / pxPerDay);
-      let nextStartIdx = startIdx + deltaDays;
-      nextStartIdx = Math.max(0, Math.min(nextStartIdx, endIdx));
-      const nextStart = timeline.days[nextStartIdx] ?? initialStart;
-      if (nextStart.getTime() === initialStart.getTime()) {
-        setDragDisplay(null);
-        return;
-      }
-      const ok = await persistDates(nextStart, initialEnd);
-      if (!ok) {
-        setDragDisplay(null);
-      }
+    const detach = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
     };
-
-    const onCancel = onUp;
-
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onCancel);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
   };
 
-  const handleResizeRightPointerDown = (event: React.PointerEvent) => {
+  const handleResizeStart = (event: React.PointerEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    const originX = event.clientX;
-    const initialStart = task.scheduleStart;
-    const initialEnd = task.scheduleEnd;
-    const startIdx = differenceInCalendarDays(
-      initialStart,
-      timeline.rangeStart,
+    bindWindowDrag(
+      (delta) => {
+        const idx = clampIndex(startIdx + delta, 0, endIdx);
+        setDragDisplay({
+          start: addDays(rangeStart, idx),
+          end: task.scheduleEnd,
+        });
+      },
+      async (delta, cancelled) => {
+        if (cancelled) return setDragDisplay(null);
+        const idx = clampIndex(startIdx + delta, 0, endIdx);
+        const nextStart = addDays(rangeStart, idx);
+        if (nextStart.getTime() === task.scheduleStart.getTime()) {
+          return setDragDisplay(null);
+        }
+        if (!(await persistDates(nextStart, task.scheduleEnd)))
+          setDragDisplay(null);
+      },
+      event.clientX,
     );
-    const endIdx = differenceInCalendarDays(initialEnd, timeline.rangeStart);
-
-    const onMove = (ev: PointerEvent) => {
-      const deltaDays = Math.round((ev.clientX - originX) / pxPerDay);
-      let nextEndIdx = endIdx + deltaDays;
-      nextEndIdx = Math.max(startIdx, Math.min(nextEndIdx, trackCount - 1));
-      const nextEnd = timeline.days[nextEndIdx] ?? initialEnd;
-      const nextStart = initialStart;
-      setDragDisplay({ start: nextStart, end: nextEnd });
-    };
-
-    const onUp = async (ev: PointerEvent) => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onCancel);
-      if (ev.type === "pointercancel") {
-        setDragDisplay(null);
-        return;
-      }
-      const deltaDays = Math.round((ev.clientX - originX) / pxPerDay);
-      let nextEndIdx = endIdx + deltaDays;
-      nextEndIdx = Math.max(startIdx, Math.min(nextEndIdx, trackCount - 1));
-      const nextEnd = timeline.days[nextEndIdx] ?? initialEnd;
-      if (nextEnd.getTime() === initialEnd.getTime()) {
-        setDragDisplay(null);
-        return;
-      }
-      const ok = await persistDates(initialStart, nextEnd);
-      if (!ok) {
-        setDragDisplay(null);
-      }
-    };
-
-    const onCancel = onUp;
-
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onCancel);
   };
 
-  const handleMovePointerDown = (event: React.PointerEvent) => {
+  const handleResizeEnd = (event: React.PointerEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    bindWindowDrag(
+      (delta) => {
+        const idx = clampIndex(endIdx + delta, startIdx, totalDays - 1);
+        setDragDisplay({
+          start: task.scheduleStart,
+          end: addDays(rangeStart, idx),
+        });
+      },
+      async (delta, cancelled) => {
+        if (cancelled) return setDragDisplay(null);
+        const idx = clampIndex(endIdx + delta, startIdx, totalDays - 1);
+        const nextEnd = addDays(rangeStart, idx);
+        if (nextEnd.getTime() === task.scheduleEnd.getTime()) {
+          return setDragDisplay(null);
+        }
+        if (!(await persistDates(task.scheduleStart, nextEnd)))
+          setDragDisplay(null);
+      },
+      event.clientX,
+    );
+  };
+
+  const handleMove = (event: React.PointerEvent) => {
     if (event.button !== 0) return;
     event.preventDefault();
     const originX = event.clientX;
-    const initialStart = task.scheduleStart;
-    const initialEnd = task.scheduleEnd;
-    const durationDays = differenceInCalendarDays(initialEnd, initialStart);
-    const startIdx = differenceInCalendarDays(
-      initialStart,
-      timeline.rangeStart,
+    bindWindowDrag(
+      (delta) => {
+        const idx = clampIndex(
+          startIdx + delta,
+          0,
+          totalDays - 1 - durationDays,
+        );
+        const nextStart = addDays(rangeStart, idx);
+        setDragDisplay({
+          start: nextStart,
+          end: addDays(nextStart, durationDays),
+        });
+      },
+      async (delta, cancelled) => {
+        if (cancelled) return setDragDisplay(null);
+        const movedPx = Math.abs(delta * pxPerDay);
+        if (movedPx < moveThresholdPx) {
+          setDragDisplay(null);
+          onOpenTask();
+          return;
+        }
+        const idx = clampIndex(
+          startIdx + delta,
+          0,
+          totalDays - 1 - durationDays,
+        );
+        const nextStart = addDays(rangeStart, idx);
+        const nextEnd = addDays(nextStart, durationDays);
+        if (
+          nextStart.getTime() === task.scheduleStart.getTime() &&
+          nextEnd.getTime() === task.scheduleEnd.getTime()
+        ) {
+          return setDragDisplay(null);
+        }
+        if (!(await persistDates(nextStart, nextEnd))) setDragDisplay(null);
+      },
+      originX,
     );
-
-    const onMove = (ev: PointerEvent) => {
-      const deltaDays = Math.round((ev.clientX - originX) / pxPerDay);
-      let nextStartIdx = startIdx + deltaDays;
-      const maxStart = trackCount - 1 - durationDays;
-      nextStartIdx = Math.max(0, Math.min(nextStartIdx, maxStart));
-      const nextStart = timeline.days[nextStartIdx] ?? initialStart;
-      const nextEnd = addDays(nextStart, durationDays);
-      setDragDisplay({ start: nextStart, end: nextEnd });
-    };
-
-    const onUp = async (ev: PointerEvent) => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onCancel);
-      if (ev.type === "pointercancel") {
-        setDragDisplay(null);
-        return;
-      }
-      const moved = Math.abs(ev.clientX - originX);
-      const deltaDays = Math.round((ev.clientX - originX) / pxPerDay);
-      let nextStartIdx = startIdx + deltaDays;
-      const maxStart = trackCount - 1 - durationDays;
-      nextStartIdx = Math.max(0, Math.min(nextStartIdx, maxStart));
-      const nextStart = timeline.days[nextStartIdx] ?? initialStart;
-      const nextEnd = addDays(nextStart, durationDays);
-
-      if (moved < moveThresholdPx) {
-        setDragDisplay(null);
-        onOpenTask();
-        return;
-      }
-      if (
-        nextStart.getTime() === initialStart.getTime() &&
-        nextEnd.getTime() === initialEnd.getTime()
-      ) {
-        setDragDisplay(null);
-        return;
-      }
-      const ok = await persistDates(nextStart, nextEnd);
-      if (!ok) {
-        setDragDisplay(null);
-      }
-    };
-
-    const onCancel = onUp;
-
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onCancel);
   };
 
-  if (!barInView || lineEnd <= lineStart) {
-    return null;
-  }
+  // Corchete de la rama: solo cuando el subarbol se sale del tramo propio del
+  // padre. Si el padre ya abarca a sus hijas, repetir la franja seria ruido.
+  const subtree = task.subtree ?? null;
+  const summaryStart = subtree?.startDate ? new Date(subtree.startDate) : null;
+  const summaryEnd = subtree?.dueDate ? new Date(subtree.dueDate) : null;
+  const branch =
+    subtree &&
+    subtree.descendantCount > 0 &&
+    summaryStart &&
+    summaryEnd &&
+    (subtree.inheritsStartDate || subtree.inheritsDueDate)
+      ? barMetrics(summaryStart, summaryEnd, timeline)
+      : null;
+
+  const showProgress = subtree != null && subtree.descendantCount > 0;
+  const handleClasses =
+    "relative z-10 w-2 shrink-0 cursor-ew-resize touch-none bg-brand/55 opacity-0 transition-opacity duration-150 before:absolute before:-inset-y-2 before:inset-x-0 before:content-[''] group-hover/bar:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
   return (
-    <div
-      className="pointer-events-none absolute inset-0 z-[1] grid items-center"
-      style={{
-        gridTemplateColumns: timeline.gridTemplateColumns,
-      }}
-    >
+    <>
+      {branch && (
+        <div
+          aria-hidden="true"
+          title={t("tasks:gantt.branchSpan")}
+          className="pointer-events-none absolute z-[1] h-1 rounded-t-[3px] border-x-[1.5px] border-t-[1.5px] border-brand/45"
+          style={{
+            left: branch.left,
+            width: branch.width,
+            top: `calc(50% - ${barHeight} / 2 - 5px)`,
+          }}
+        />
+      )}
       <div
-        style={{ gridColumn: `${lineStart} / ${lineEnd}` }}
-        className="group pointer-events-auto relative mx-1 flex min-h-[44px] min-w-0 items-stretch overflow-hidden rounded-md border border-primary/25 bg-background text-left text-sm font-medium leading-none text-foreground shadow-sm transition-colors hover:border-primary/40 sm:h-11 sm:min-h-0"
+        className={cn(
+          "group/bar pointer-events-auto absolute top-1/2 z-[2] flex -translate-y-1/2 items-stretch rounded-full bg-brand/22 transition-[background-color,box-shadow] duration-150 ease-out",
+          "hover:bg-brand/32 hover:shadow-e2",
+          isDone && "opacity-50",
+        )}
+        style={{ left, width, height: barHeight }}
       >
+        {showProgress && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 left-0 rounded-l-full bg-brand/45"
+            style={{ width: `${subtree?.progress ?? 0}%` }}
+          />
+        )}
         <button
           type="button"
           aria-label={t("tasks:gantt.resizeStart")}
-          onPointerDown={handleResizeLeftPointerDown}
-          className={cn(
-            "relative z-20 shrink-0 cursor-ew-resize touch-none border-r border-primary/15 bg-primary/8 hover:bg-primary/18",
-            "min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:w-2",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-          )}
+          onPointerDown={handleResizeStart}
+          className={cn(handleClasses, "rounded-l-full")}
         />
         <button
           type="button"
           aria-label={t("tasks:gantt.taskAriaLabel", { title: task.title })}
-          className="relative z-10 min-h-[44px] min-w-0 flex-1 cursor-grab touch-manipulation overflow-hidden px-2 text-left active:cursor-grabbing sm:min-h-0 sm:px-2.5"
-          onPointerDown={handleMovePointerDown}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
+          onPointerDown={handleMove}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
               onOpenTask();
             }
           }}
-        >
-          <div className="absolute inset-0 z-0 bg-primary/12 transition-colors group-hover:bg-primary/18" />
-          <span className="relative z-10 block truncate">{task.title}</span>
-        </button>
+          className="relative z-[1] min-w-0 flex-1 cursor-grab touch-manipulation rounded-full outline-none before:absolute before:inset-x-0 before:-inset-y-2 before:content-[''] active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
+        />
         <button
           type="button"
           aria-label={t("tasks:gantt.resizeDue")}
-          onPointerDown={handleResizeRightPointerDown}
-          className={cn(
-            "relative z-20 shrink-0 cursor-ew-resize touch-none border-l border-primary/15 bg-primary/8 hover:bg-primary/18",
-            "min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 sm:w-2",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
-          )}
+          onPointerDown={handleResizeEnd}
+          className={cn(handleClasses, "rounded-r-full")}
         />
       </div>
-    </div>
+    </>
   );
 }

@@ -2,11 +2,19 @@ import { eq, max, sql } from "drizzle-orm";
 import db from "../../database";
 import { columnTable, projectTable } from "../../database/schema";
 
+/**
+ * Las cuatro columnas de `docs/marca.md` §06, con sus nombres.
+ *
+ * **El slug no se traduce.** Es lo que compara `is_final`, el filtro de estado
+ * y la definicion de «hecha» de la ADR 025, asi que sigue en ingles y estable;
+ * lo unico que ve quien usa Riuna es el nombre. Una hoja que diga «To Do»
+ * tambien entra: `statusKeys` casa el slug colapsando separadores.
+ */
 export const DEFAULT_PROJECT_COLUMNS = [
-  { name: "To Do", slug: "to-do", position: 0, isFinal: false },
-  { name: "In Progress", slug: "in-progress", position: 1, isFinal: false },
-  { name: "In Review", slug: "in-review", position: 2, isFinal: false },
-  { name: "Done", slug: "done", position: 3, isFinal: true },
+  { name: "Por hacer", slug: "to-do", position: 0, isFinal: false },
+  { name: "En curso", slug: "in-progress", position: 1, isFinal: false },
+  { name: "En revisión", slug: "in-review", position: 2, isFinal: false },
+  { name: "Hecha", slug: "done", position: 3, isFinal: true },
 ] as const;
 
 async function createProject(

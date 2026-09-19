@@ -7,6 +7,7 @@ import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
   createWorkspaceMember,
+  taskTreeValues,
 } from "./helpers/fixtures";
 
 describe("API integration: task comments", () => {
@@ -22,6 +23,7 @@ describe("API integration: task comments", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Shared comments",
         status: "to-do",
@@ -103,6 +105,7 @@ describe("API integration: task comments", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Imported",
         status: "to-do",
@@ -143,6 +146,7 @@ describe("API integration: task comments", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Unattributed",
         status: "to-do",
@@ -177,6 +181,7 @@ describe("API integration: task comments", () => {
     const [task] = await db
       .insert(schema.taskTable)
       .values({
+        ...taskTreeValues(),
         projectId: project.id,
         title: "Bad source",
         status: "to-do",
