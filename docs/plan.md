@@ -4,7 +4,8 @@
 > abajo manda sobre cualquier otra cosa escrita aquí.
 >
 > Complementarios: [auditoría de partida](auditoria-fase-0.md) ·
-> [decisiones (ADR)](adr/) · [copias de seguridad](copias-de-seguridad.md)
+> [decisiones (ADR)](adr/) · [copias de seguridad](copias-de-seguridad.md) ·
+> [plan de despliegue](plan-despliegue.md)
 
 ## Estado
 
@@ -1239,6 +1240,10 @@ reales, responsive de las pantallas de consulta móvil, Playwright de humo,
 **copias fuera de la máquina** y guía de actualización propia de Riuna.
 **Hecho cuando:** restauras un backup en limpio y la suite de humo pasa contra
 esa instancia.
+
+La guía de actualización y las copias externas tienen ya un plan concreto,
+pendiente de aplicar: [plan de despliegue](plan-despliegue.md) (Oracle Always
+Free + Tailscale).
 
 ---
 
