@@ -9,9 +9,9 @@ import {
   taskTable,
   templateTable,
 } from "../../database/schema";
-import { publishEvent } from "../../events";
 import createTask from "../../task/controllers/create-task";
 import { getMaxTaskDepth } from "../../task/controllers/update-task-parent";
+import { checkTemplateFits } from "../check-template";
 import {
   countTemplateTasks,
   parseTemplateContent,
@@ -35,6 +35,7 @@ async function createBranch({
   currentUserId,
   workspaceId,
   epicIdsByName,
+  fieldsByNode,
 }: {
   nodes: TemplateNode[];
   projectId: string;
@@ -42,6 +43,7 @@ async function createBranch({
   currentUserId: string;
   workspaceId: string;
   epicIdsByName: Map<string, string>;
+  fieldsByNode: Map<TemplateNode, Record<string, unknown>>;
 }): Promise<number> {
   let created = 0;
 
@@ -59,10 +61,11 @@ async function createBranch({
 
     created += 1;
 
-    if (node.customFields && Object.keys(node.customFields).length > 0) {
+    const customFields = fieldsByNode.get(node);
+    if (customFields) {
       await db
         .update(taskTable)
-        .set({ customFields: node.customFields })
+        .set({ customFields })
         .where(eq(taskTable.id, task.id));
     }
 
@@ -98,6 +101,7 @@ async function createBranch({
         currentUserId,
         workspaceId,
         epicIdsByName,
+        fieldsByNode,
       });
     }
   }
@@ -225,6 +229,14 @@ export async function applyTaskTemplate({
     });
   }
 
+  // Estados y campos, como la profundidad, antes de la primera escritura:
+  // `resolveEpics` ya crea epicas.
+  const fieldsByNode = await checkTemplateFits(
+    content.tasks,
+    projectId,
+    project.workspaceId,
+  );
+
   const epicIdsByName = await resolveEpics(
     projectId,
     collectEpicNames(content.tasks),
@@ -237,14 +249,7 @@ export async function applyTaskTemplate({
     currentUserId,
     workspaceId: project.workspaceId,
     epicIdsByName,
-  });
-
-  await publishEvent("task.created", {
-    projectId,
-    taskId: "",
-    userId: currentUserId,
-    type: "created",
-    content: null,
+    fieldsByNode,
   });
 
   return { templateId, projectId, createdTaskCount: created };

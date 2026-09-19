@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
+import { subscribeToEvent } from "../../apps/api/src/events";
 import { createApp } from "../../apps/api/src/index";
 import { mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
@@ -19,6 +20,36 @@ type Template = {
 };
 
 let counter = 0;
+
+const createdEvents: Array<{ taskId?: string }> = [];
+let subscribed = false;
+
+function recordCreatedEvents() {
+  if (subscribed) return;
+  subscribed = true;
+  subscribeToEvent<{ taskId?: string }>("task.created", async (data) => {
+    createdEvents.push(data);
+  });
+}
+
+async function insertTemplate(
+  workspaceId: string,
+  createdBy: string,
+  tasks: unknown[],
+) {
+  const [row] = await db
+    .insert(schema.templateTable)
+    .values({
+      workspaceId,
+      createdBy,
+      name: "Escrita a mano",
+      kind: "task",
+      content: { tasks },
+    })
+    .returning();
+
+  return row;
+}
 
 async function createTask({
   projectId,
@@ -245,6 +276,129 @@ describe("API integration: templates", () => {
 
     // Nada a medias.
     expect(after).toHaveLength(before.length);
+  });
+
+  // Igual que la profundidad: un estado que el proyecto no tiene hacia fallar
+  // `createTask` a mitad del arbol, con la raiz y las epicas ya creadas.
+  it("refuses a status the target project lacks and creates nothing, not even epics", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const template = await insertTemplate(member.workspace.id, member.user.id, [
+      {
+        title: "Raiz",
+        epics: ["Nueva"],
+        children: [{ title: "Hija", status: "qa" }],
+      },
+    ]);
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const applied = await app.request(`/api/template/${template.id}/apply`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ projectId: project.id }),
+    });
+
+    expect(applied.status).toBe(400);
+    expect(await applied.text()).toContain("qa");
+    expect(
+      await db
+        .select({ id: schema.taskTable.id })
+        .from(schema.taskTable)
+        .where(eq(schema.taskTable.projectId, project.id)),
+    ).toHaveLength(0);
+    expect(
+      await db
+        .select({ id: schema.epicTable.id })
+        .from(schema.epicTable)
+        .where(eq(schema.epicTable.projectId, project.id)),
+    ).toHaveLength(0);
+  });
+
+  // Una plantilla viaja entre proyectos: una clave que el destino no define se
+  // descarta, y un valor que no casa con su tipo se rechaza antes de crear.
+  it("checks custom field values against the target project", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    await app.request(`/api/field/project/${project.id}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ name: "Presupuesto", type: "number" }),
+    });
+
+    const apply = (templateId: string) =>
+      app.request(`/api/template/${templateId}/apply`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ projectId: project.id }),
+      });
+
+    const wrongType = await insertTemplate(
+      member.workspace.id,
+      member.user.id,
+      [{ title: "Mal", customFields: { presupuesto: "mucho" } }],
+    );
+    expect((await apply(wrongType.id)).status).toBe(400);
+    expect(
+      await db
+        .select({ id: schema.taskTable.id })
+        .from(schema.taskTable)
+        .where(eq(schema.taskTable.projectId, project.id)),
+    ).toHaveLength(0);
+
+    const foreignKey = await insertTemplate(
+      member.workspace.id,
+      member.user.id,
+      [
+        {
+          title: "Bien",
+          customFields: { presupuesto: 1200, de_otro_proyecto: "x" },
+        },
+      ],
+    );
+    expect((await apply(foreignKey.id)).status).toBe(200);
+
+    const [created] = await db
+      .select({ customFields: schema.taskTable.customFields })
+      .from(schema.taskTable)
+      .where(eq(schema.taskTable.projectId, project.id));
+    expect(created.customFields).toEqual({ presupuesto: 1200 });
+  });
+
+  // Sobraba un `task.created` con el id vacio al final: una notificacion basura
+  // para quien aplicaba la plantilla y un aviso vacio a cada integracion.
+  it("publishes one task.created per task and none without an id", async () => {
+    recordCreatedEvents();
+    const member = await createWorkspaceMember({ role: "admin" });
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const template = await insertTemplate(member.workspace.id, member.user.id, [
+      { title: "Raiz", children: [{ title: "Hija" }] },
+    ]);
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    createdEvents.length = 0;
+    const applied = await app.request(`/api/template/${template.id}/apply`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ projectId: project.id }),
+    });
+    expect(applied.status).toBe(200);
+
+    expect(createdEvents).toHaveLength(2);
+    expect(createdEvents.every((event) => Boolean(event.taskId))).toBe(true);
   });
 
   it("carries labels and creates the epics the template names", async () => {
