@@ -43,10 +43,10 @@ export default function WorkspaceLayout({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <SidebarTrigger className="-ml-1 h-6 w-6" />
+                  <SidebarTrigger className="-ml-1 h-6 w-6 md:hidden" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="flex items-center gap-2 text-[10px]">
+                  <p className="flex items-center gap-2 text-meta">
                     Toggle sidebar
                     <KbdSequence
                       keys={[
@@ -58,7 +58,7 @@ export default function WorkspaceLayout({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <div className="mx-1.5 h-4 w-px shrink-0 bg-border/80" />
+            <div className="mx-1.5 h-4 w-px shrink-0 bg-border/80 md:hidden" />
             <Breadcrumb className="flex items-center gap-1 text-xs w-full">
               <BreadcrumbList>
                 <BreadcrumbItem>

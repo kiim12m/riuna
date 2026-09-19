@@ -64,7 +64,7 @@ export function SettingsLayout({
                   <SidebarTrigger className="-ml-1 h-6 w-6" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="flex items-center gap-2 text-[10px]">
+                  <p className="flex items-center gap-2 text-meta">
                     {t("navigation:settingsLayout.toggleSidebar")}
                     <KbdSequence
                       keys={[
@@ -115,7 +115,12 @@ export function SettingsLayout({
         <div className={cn("max-w-4xl mx-auto space-y-8 py-6", className)}>
           {description && (
             <div className="space-y-1">
-              <p className="text-sm text-muted-foreground">{description}</p>
+              {/* La medida se acota en el parrafo y no en el contenedor: los
+                  formularios y las tablas necesitan los 896 px, la prosa no.
+                  `max-w-prose` son 65ch, justo lo que fija marca.md §05. */}
+              <p className="max-w-prose text-muted-foreground text-sm">
+                {description}
+              </p>
             </div>
           )}
           {children}
@@ -149,9 +154,12 @@ export function SettingsSection({
           </div>
         )}
         <div className="space-y-1">
-          <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+          {/* 18 px no es ninguno de los siete papeles de marca.md §05. */}
+          <h2 className="text-section">{title}</h2>
           {description && (
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <p className="max-w-prose text-muted-foreground text-sm">
+              {description}
+            </p>
           )}
         </div>
       </div>
@@ -178,10 +186,10 @@ export function DangerZoneSection({
           <AlertTriangle className="h-4 w-4 text-destructive" />
         </div>
         <div className="space-y-1">
-          <h2 className="text-lg font-semibold tracking-tight text-destructive">
-            {title}
-          </h2>
-          <p className="text-sm text-muted-foreground">{description}</p>
+          <h2 className="text-destructive text-section">{title}</h2>
+          <p className="max-w-prose text-muted-foreground text-sm">
+            {description}
+          </p>
         </div>
       </div>
       <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-6">

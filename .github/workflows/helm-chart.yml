@@ -3,7 +3,7 @@ name: Build & publish Helm chart to GHCR
 on:
   pull_request:
     paths:
-      - "charts/kaneo/**"
+      - "charts/riuna/**"
       - ".github/workflows/helm-chart.yml"
       - ".github/workflows/helm-validate.yml"
   workflow_call:
@@ -21,7 +21,7 @@ on:
         type: string
 
 env:
-  CHART_PATH: charts/kaneo
+  CHART_PATH: charts/riuna
   REGISTRY: ghcr.io
 
 jobs:
@@ -66,11 +66,11 @@ jobs:
       - name: Publish chart
         run: |
           OWNER="${GITHUB_REPOSITORY_OWNER,,}"
-          CHART_REF="oci://$REGISTRY/$OWNER/charts/kaneo"
+          CHART_REF="oci://$REGISTRY/$OWNER/charts/riuna"
 
           if helm show chart "$CHART_REF" --version "$CHART_VERSION" >/dev/null 2>&1; then
             echo "Chart $CHART_REF:$CHART_VERSION already exists; skipping publish."
             exit 0
           fi
 
-          helm push dist/kaneo-"$CHART_VERSION".tgz "oci://$REGISTRY/$OWNER/charts"
+          helm push dist/riuna-"$CHART_VERSION".tgz "oci://$REGISTRY/$OWNER/charts"

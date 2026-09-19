@@ -14,6 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
   useCreateGenericWebhookIntegration,
@@ -297,9 +298,9 @@ export function GenericWebhookIntegrationSettings({
     return (
       <div className="space-y-4">
         <div className="space-y-4 rounded-md border border-border bg-sidebar p-4">
-          <div className="h-4 w-40 animate-pulse rounded bg-muted" />
-          <div className="h-10 w-full animate-pulse rounded bg-muted" />
-          <div className="h-10 w-full animate-pulse rounded bg-muted" />
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
         </div>
       </div>
     );

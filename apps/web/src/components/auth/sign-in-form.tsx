@@ -18,7 +18,8 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "@/lib/toast";
 
 export type SignInFormValues = {
-  email: string;
+  // Correo o nombre de usuario: las cuentas locales no tienen correo real.
+  identifier: string;
   password: string;
 };
 
@@ -28,7 +29,12 @@ type SignInFormProps = {
 };
 
 const signInSchema = z.object({
-  email: z.email(),
+  identifier: z
+    .string()
+    .min(1)
+    .refine(
+      (value) => !value.includes("@") || z.email().safeParse(value).success,
+    ),
   password: z.string(),
 });
 
@@ -39,7 +45,7 @@ export function SignInForm({ onSuccess, defaultEmail }: SignInFormProps) {
   const form = useForm<SignInFormValues>({
     resolver: standardSchemaResolver(signInSchema),
     defaultValues: {
-      email: defaultEmail || "",
+      identifier: defaultEmail || "",
       password: "",
     },
   });
@@ -47,10 +53,18 @@ export function SignInForm({ onSuccess, defaultEmail }: SignInFormProps) {
   const onSubmit = async (data: SignInFormValues) => {
     setIsPending(true);
     try {
-      const result = await authClient.signIn.email({
-        email: data.email,
-        password: data.password,
-      });
+      // La arroba es lo unico que separa un correo de un nombre de usuario,
+      // y por eso el patron de usuario del servidor la prohibe.
+      const identifier = data.identifier.trim();
+      const result = identifier.includes("@")
+        ? await authClient.signIn.email({
+            email: identifier,
+            password: data.password,
+          })
+        : await authClient.signIn.username({
+            username: identifier,
+            password: data.password,
+          });
 
       if (result.error) {
         toast.error(result.error.message || t("auth:signInForm.failedSignIn"));
@@ -78,17 +92,17 @@ export function SignInForm({ onSuccess, defaultEmail }: SignInFormProps) {
         <div className="space-y-3">
           <FormField
             control={form.control}
-            name="email"
+            name="identifier"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-sm font-medium">
-                  {t("auth:forms.email")}
+                  {t("auth:forms.identifier")}
                 </FormLabel>
                 <FormControl>
                   <Input
-                    placeholder={t("auth:forms.emailPlaceholder")}
-                    type="email"
-                    autoComplete="email"
+                    placeholder={t("auth:forms.identifierPlaceholder")}
+                    type="text"
+                    autoComplete="username"
                     {...field}
                   />
                 </FormControl>

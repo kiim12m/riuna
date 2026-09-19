@@ -1,6 +1,6 @@
 {
 	"version": 2,
-	"organization": "kaneo",
+	"organization": "riuna",
 	"region": "de",
 	"api_base": "https://de.sentry.io/api/0",
 	"_comment_actions": "Actions are intentionally minimal. After the script applies this config, configure per-alert notifications in the Sentry UI (Settings > Alerts). Recommended: Slack #engineering or email on-call.",
@@ -10,12 +10,12 @@
 	"_comment_dataset": "Sentry is migrating transaction-based alerts away from `dataset: transactions`. Use `dataset: events_analytics_platform` (with `is_transaction:true` in the query) for transaction-based metrics.",
 	"alerts": [
 		{
-			"name": "Kaneo API: New issue",
-			"description": "First time a new issue is seen in kaneo-api. Triages everything that isn't yet bucketed.",
+			"name": "Riuna API: New issue",
+			"description": "First time a new issue is seen in riuna-api. Triages everything that isn't yet bucketed.",
 			"kind": "issue",
-			"projects": ["kaneo-api"],
+			"projects": ["riuna-api"],
 			"workflow": {
-				"name": "Kaneo API: New issue",
+				"name": "Riuna API: New issue",
 				"enabled": true,
 				"triggers": {
 					"logicType": "any-short",
@@ -30,12 +30,12 @@
 			}
 		},
 		{
-			"name": "Kaneo API: New error spike",
+			"name": "Riuna API: New error spike",
 			"description": "More than 50 error events in 5 minutes. Detector is created alongside this workflow.",
 			"kind": "metric",
-			"project": "kaneo-api",
+			"project": "riuna-api",
 			"detector": {
-				"name": "Kaneo API: Error spike detector",
+				"name": "Riuna API: Error spike detector",
 				"description": "count(error events) > 50 in a 5-minute window",
 				"type": "metric_issue",
 				"config": {
@@ -70,7 +70,7 @@
 				}
 			},
 			"workflow": {
-				"name": "Kaneo API: New error spike",
+				"name": "Riuna API: New error spike",
 				"enabled": true
 			}
 		},
@@ -91,12 +91,12 @@
 			}
 		},
 		{
-			"name": "Kaneo API: Slow p95 latency",
+			"name": "Riuna API: Slow p95 latency",
 			"description": "p95 of transaction.duration > 1500ms in any 10-minute window on /api/* routes.",
 			"kind": "metric",
-			"project": "kaneo-api",
+			"project": "riuna-api",
 			"detector": {
-				"name": "Kaneo API: Slow p95 latency detector",
+				"name": "Riuna API: Slow p95 latency detector",
 				"description": "p95(transaction.duration) > 1500ms over 10 minutes",
 				"type": "metric_issue",
 				"config": {
@@ -131,17 +131,17 @@
 				}
 			},
 			"workflow": {
-				"name": "Kaneo API: Slow p95 latency",
+				"name": "Riuna API: Slow p95 latency",
 				"enabled": true
 			}
 		},
 		{
-			"name": "Kaneo API: MCP error rate",
+			"name": "Riuna API: MCP error rate",
 			"description": "MCP tool errors exceed 5% over a 1h window. Helps catch regressions before users do.",
 			"kind": "metric",
-			"project": "kaneo-api",
+			"project": "riuna-api",
 			"detector": {
-				"name": "Kaneo API: MCP error rate detector",
+				"name": "Riuna API: MCP error rate detector",
 				"description": "MCP error rate > 5% over 1 hour",
 				"type": "metric_issue",
 				"config": {
@@ -176,17 +176,17 @@
 				}
 			},
 			"workflow": {
-				"name": "Kaneo API: MCP error rate",
+				"name": "Riuna API: MCP error rate",
 				"enabled": true
 			}
 		},
 		{
-			"name": "Kaneo Web: New issue",
-			"description": "New React ErrorBoundary or unhandled exception in kaneo-web.",
+			"name": "Riuna Web: New issue",
+			"description": "New React ErrorBoundary or unhandled exception in riuna-web.",
 			"kind": "issue",
-			"projects": ["kaneo-web"],
+			"projects": ["riuna-web"],
 			"workflow": {
-				"name": "Kaneo Web: New issue",
+				"name": "Riuna Web: New issue",
 				"enabled": true,
 				"triggers": {
 					"logicType": "any-short",
