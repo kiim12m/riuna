@@ -9,18 +9,6 @@ import getTasks from "../../task/controllers/get-tasks";
  *
  * Es una lista blanca a proposito, y no la proyeccion de `getTasks`. Esta ruta
  * se sirve **sin sesion** (se registra antes del middleware de autenticacion),
- * asi que hereda todo lo que se anada al listado interno: la Fase 3 le metio
- * `custom_fields` —donde la ADR 013 pone «Presupuesto» y «Cliente»— y la Fase 2
- * las epicas, el equipo, la estimacion y la forma del arbol, sin que nadie
- * revisara quien mas llamaba a `getTasks`.
- *
- * Anadir un campo aqui es una decision; heredarlo no debe serlo.
- */
-/**
- * Lo que un tablero publico ensena de cada tarea.
- *
- * Es una lista blanca a proposito, y no la proyeccion de `getTasks`. Esta ruta
- * se sirve **sin sesion** (se registra antes del middleware de autenticacion),
  * asi que heredaba todo lo que se anadiera al listado interno: la Fase 3 le
  * metio `custom_fields` —donde la ADR 013 pone «Presupuesto» y «Cliente»— y la
  * Fase 2 las epicas, el equipo, la estimacion y la forma del arbol (`path`,

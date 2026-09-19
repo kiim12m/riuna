@@ -44,31 +44,42 @@ async function updateTaskAssignees({
     }
   }
 
-  // Quien ya estaba, para poder avisar solo a los que entran. Sin esto habria
-  // que notificar al conjunto entero en cada cambio, y quitar a una persona
-  // pingaria a las otras cuatro.
-  const previous = new Set(await getAssigneeIds(id));
-
-  await replaceAssignees(id, requested);
-
   // El primero de la lista queda como responsable principal en
   // `task.assignee_id`, que es lo que siguen leyendo las notificaciones, los
   // filtros heredados y las integraciones.
   const nextPrimary = requested[0] ?? null;
 
-  const [updatedTask] = await db
-    .update(taskTable)
-    .set({ userId: nextPrimary })
-    .where(eq(taskTable.id, id))
-    .returning();
+  // El conjunto y `task.assignee_id` se escriben en la misma transaccion, como
+  // pide `assignees.ts`: un fallo entre las dos sentencias dejaria la
+  // divergencia que ese modulo existe para impedir.
+  const { previous, updatedTask, assigneeIds } = await db.transaction(
+    async (tx) => {
+      // Quien ya estaba, para poder avisar solo a los que entran. Sin esto
+      // habria que notificar al conjunto entero en cada cambio, y quitar a una
+      // persona pingaria a las otras cuatro.
+      const previous = new Set(await getAssigneeIds(id, tx));
 
-  if (!updatedTask) {
-    throw new HTTPException(500, {
-      message: "Failed to update task assignees",
-    });
-  }
+      await replaceAssignees(id, requested, tx);
 
-  const assigneeIds = await getAssigneeIds(id);
+      const [updatedTask] = await tx
+        .update(taskTable)
+        .set({ userId: nextPrimary })
+        .where(eq(taskTable.id, id))
+        .returning();
+
+      if (!updatedTask) {
+        throw new HTTPException(500, {
+          message: "Failed to update task assignees",
+        });
+      }
+
+      return {
+        previous,
+        updatedTask,
+        assigneeIds: await getAssigneeIds(id, tx),
+      };
+    },
+  );
   const names =
     assigneeIds.length > 0
       ? await db

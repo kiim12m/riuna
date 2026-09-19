@@ -40,21 +40,26 @@ async function updateTaskAssignee({
     );
   }
 
-  const [updatedTask] = await db
-    .update(taskTable)
-    .set({ userId: nextAssigneeId })
-    .where(eq(taskTable.id, id))
-    .returning();
-
-  if (!updatedTask) {
-    throw new HTTPException(500, {
-      message: "Failed to update task assignee",
-    });
-  }
-
   // Cambiar el responsable principal por esta via tambien mueve el conjunto de
-  // asignados, o las dos fuentes acabarian contradiciendose.
-  await syncPrimaryAssignee(id, existingTask.userId, nextAssigneeId);
+  // asignados, o las dos fuentes acabarian contradiciendose. Las dos
+  // escrituras van en la misma transaccion, como pide `assignees.ts`.
+  const updatedTask = await db.transaction(async (tx) => {
+    const [updated] = await tx
+      .update(taskTable)
+      .set({ userId: nextAssigneeId })
+      .where(eq(taskTable.id, id))
+      .returning();
+
+    if (!updated) {
+      throw new HTTPException(500, {
+        message: "Failed to update task assignee",
+      });
+    }
+
+    await syncPrimaryAssignee(id, existingTask.userId, nextAssigneeId, tx);
+
+    return updated;
+  });
 
   const newAssigneeName = nextAssigneeId
     ? (

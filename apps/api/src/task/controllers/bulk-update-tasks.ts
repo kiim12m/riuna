@@ -18,6 +18,7 @@ import {
   assertValidTaskStatus,
 } from "../validate-task-fields";
 import { syncPrimaryAssigneeBulk } from "./assignees";
+import { cascadeStatusToSubtree } from "./cascade-status";
 
 type BulkOperation =
   | "updateStatus"
@@ -44,6 +45,7 @@ async function bulkUpdateTasks({
       id: taskTable.id,
       title: taskTable.title,
       projectId: taskTable.projectId,
+      path: taskTable.path,
       userId: taskTable.userId,
       dueDate: taskTable.dueDate,
       workspaceId: projectTable.workspaceId,
@@ -129,6 +131,17 @@ async function bulkUpdateTasks({
             userId,
             newStatus: value,
             type: "status_changed",
+          });
+        }
+
+        // Cerrar o archivar en lote baja por la rama igual que tarea a tarea,
+        // si el proyecto tiene la cascada encendida (ADR 011). Las que ya
+        // movio la cascada de una madre seleccionada no vuelven a moverse.
+        for (const task of tasks.filter((t) => t.projectId === projectId)) {
+          await cascadeStatusToSubtree({
+            task,
+            status: value,
+            currentUserId: userId,
           });
         }
 

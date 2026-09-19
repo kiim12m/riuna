@@ -350,6 +350,46 @@ describe("API integration: task tree", () => {
       expect(movedChild.columnId).toBe(columns.done.id);
     });
 
+    // La barra de seleccion multiple archiva y cierra por `PATCH /task/bulk`,
+    // que se saltaba la cascada que la via de una sola tarea si aplica.
+    it("archives the whole branch when the parent is archived in bulk", async () => {
+      const { project, columns, app } = await setup();
+
+      await db
+        .update(schema.projectTable)
+        .set({ cascadeArchive: true })
+        .where(eq(schema.projectTable.id, project.id));
+
+      const parent = await insertTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+      });
+      const child = await insertTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+        parent,
+      });
+      const grandchild = await insertTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+        parent: child,
+      });
+
+      const response = await app.request("/api/task/bulk", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          taskIds: [parent.id],
+          operation: "updateStatus",
+          value: "archived",
+        }),
+      });
+      expect(response.status).toBe(200);
+
+      expect((await readTask(child.id)).status).toBe("archived");
+      expect((await readTask(grandchild.id)).status).toBe("archived");
+    });
+
     it("does not cascade a move to a column that is not final", async () => {
       const { project, columns, app } = await setup();
 

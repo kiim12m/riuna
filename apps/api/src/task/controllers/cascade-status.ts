@@ -1,8 +1,9 @@
-import { and, eq, like, ne } from "drizzle-orm";
+import { and, eq, inArray, like, ne } from "drizzle-orm";
 import db from "../../database";
 import { columnTable, projectTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { descendantsPattern } from "../tree";
+import { lockProjectTree } from "./lock-project-tree";
 
 // La cascada baja por la rama, nunca sube. Cerrar un padre puede cerrar lo que
 // cuelga de el; cerrar una hija no toca al padre, que es lo que el agregado de
@@ -95,19 +96,37 @@ export async function cascadeStatusToSubtree({
     ...(reason === "close" ? [ne(taskTable.status, "archived")] : []),
   );
 
-  // Se leen antes de escribir porque `RETURNING` devolveria ya el estado
-  // nuevo, y la actividad necesita decir de donde venia cada tarea.
-  const moved = await db
-    .select({ id: taskTable.id, oldStatus: taskTable.status })
-    .from(taskTable)
-    .where(scope);
+  // Lectura y escritura en la misma transaccion, con el cerrojo del arbol que
+  // toman mover y reparentar, y las filas bloqueadas: si otra peticion cambiaba
+  // una descendiente entre las dos, la escritura se la saltaba pero la
+  // actividad seguia contando un cambio que no habia hecho.
+  const moved = await db.transaction(async (tx) => {
+    await lockProjectTree(tx, task.projectId);
+
+    // Se leen antes de escribir porque `RETURNING` devolveria ya el estado
+    // nuevo, y la actividad necesita decir de donde venia cada tarea.
+    const rows = await tx
+      .select({ id: taskTable.id, oldStatus: taskTable.status })
+      .from(taskTable)
+      .where(scope)
+      .for("update");
+
+    if (rows.length > 0) {
+      await tx
+        .update(taskTable)
+        .set({ status, columnId: column?.id ?? null })
+        .where(
+          inArray(
+            taskTable.id,
+            rows.map((row) => row.id),
+          ),
+        );
+    }
+
+    return rows;
+  });
 
   if (moved.length === 0) return 0;
-
-  await db
-    .update(taskTable)
-    .set({ status, columnId: column?.id ?? null })
-    .where(scope);
 
   for (const descendant of moved) {
     await publishEvent("task.status_changed", {
