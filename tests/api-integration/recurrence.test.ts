@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
 import { generateRecurringTasks } from "../../apps/api/src/recurrence/generate";
@@ -9,6 +9,28 @@ import {
   createProjectFixture,
   createWorkspaceMember,
 } from "./helpers/fixtures";
+
+// `assertTemplateUsable` consulta la base, asi que puede fallar por algo que no
+// es la plantilla. Se deja pinchar para simular ese corte; mientras nadie lo
+// use, delega en la funcion real y el resto de pruebas no se entera.
+const templateCheck = vi.hoisted(() => ({ failWith: null as Error | null }));
+
+vi.mock("../../apps/api/src/recurrence/template", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("../../apps/api/src/recurrence/template")
+    >();
+
+  return {
+    ...actual,
+    assertTemplateUsable: async (
+      ...args: Parameters<typeof actual.assertTemplateUsable>
+    ) => {
+      if (templateCheck.failWith) throw templateCheck.failWith;
+      return actual.assertTemplateUsable(...args);
+    },
+  };
+});
 
 const DAY = 86_400_000;
 
@@ -87,6 +109,7 @@ async function tasksOf(projectId: string) {
 
 describe("API integration: recurring tasks", () => {
   beforeEach(async () => {
+    templateCheck.failWith = null;
     await resetTestDatabase();
   });
 
@@ -458,6 +481,36 @@ describe("API integration: recurring tasks", () => {
     expect(after.active).toBe(false);
     expect(after.nextRunAt).toEqual(nextRunAt);
     expect(await tasksOf(project.id)).toHaveLength(0);
+  });
+
+  // La otra mitad del par: la comprobacion tambien puede fallar por algo que no
+  // es la plantilla, y apagar por un corte de conexion dejaria apagadas para
+  // siempre todas las recurrencias de esa vuelta.
+  it("leaves a recurrence untouched when the check fails for a passing reason", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const nextRunAt = new Date(Date.now() - DAY);
+    const recurrence = await seedRecurrence({
+      projectId: project.id,
+      createdBy: member.user.id,
+      nextRunAt,
+    });
+
+    templateCheck.failWith = new Error("connection terminated unexpectedly");
+    const outcome = await generateRecurringTasks();
+    expect(outcome.degraded).toBe(true);
+
+    const after = await readRecurrence(recurrence.id);
+    expect(after.active).toBe(true);
+    expect(after.nextRunAt).toEqual(nextRunAt);
+    expect(await tasksOf(project.id)).toHaveLength(0);
+
+    // Y la vuelta siguiente, ya sin el corte, la genera.
+    templateCheck.failWith = null;
+    expect((await generateRecurringTasks()).degraded).toBe(false);
+    expect(await tasksOf(project.id)).toHaveLength(1);
   });
 
   it("refuses a plain member and anyone outside the workspace", async () => {

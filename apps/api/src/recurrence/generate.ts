@@ -1,4 +1,5 @@
 import { and, eq, lte, sql } from "drizzle-orm";
+import { HTTPException } from "hono/http-exception";
 import db from "../database";
 import { taskRecurrenceTable, taskTable } from "../database/schema";
 import createTask from "../task/controllers/create-task";
@@ -18,6 +19,15 @@ async function getDueRecurrences(now: Date): Promise<DueRecurrence[]> {
         lte(taskRecurrenceTable.nextRunAt, now),
       ),
     );
+}
+
+/**
+ * Que el error venga de una comprobacion y no de la infraestructura: los
+ * `assert*` de la plantilla lanzan 400, 403 o 404. Un 5xx, o cualquier otra
+ * excepcion, es un fallo pasajero.
+ */
+function isRejection(error: unknown): boolean {
+  return error instanceof HTTPException && error.status < 500;
 }
 
 async function disable(recurrenceId: string, reason: string, error: unknown) {
@@ -64,6 +74,20 @@ async function runOne(
     // Un estado, responsable o equipo que el proyecto ya no admite haria
     // fallar cada ocurrencia despues de reclamarla, y se perderian todas sin
     // ruido. Se apaga **antes** de reclamar, igual que una fila ilegible.
+    //
+    // Pero solo si la plantilla es el problema: a diferencia de leerla, esta
+    // comprobacion consulta la base, y apagar por un corte de conexion o un
+    // pool agotado dejaria apagadas para siempre todas las recurrencias de esa
+    // vuelta. Lo demas se reporta como degradado y se reintenta en la
+    // siguiente, dentro de cinco minutos.
+    if (!isRejection(error)) {
+      console.error("Could not check a recurrence template", {
+        recurrenceId: recurrence.id,
+        error,
+      });
+      return "failed";
+    }
+
     await disable(
       recurrence.id,
       "Disabling a recurrence the project no longer accepts",
