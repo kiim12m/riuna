@@ -18,7 +18,7 @@ import {
   assertValidTaskStatus,
 } from "../validate-task-fields";
 import { syncPrimaryAssigneeBulk } from "./assignees";
-import { cascadeStatusToSubtree } from "./cascade-status";
+import { cascadeStatusToSubtrees } from "./cascade-status";
 
 type BulkOperation =
   | "updateStatus"
@@ -137,13 +137,12 @@ async function bulkUpdateTasks({
         // Cerrar o archivar en lote baja por la rama igual que tarea a tarea,
         // si el proyecto tiene la cascada encendida (ADR 011). Las que ya
         // movio la cascada de una madre seleccionada no vuelven a moverse.
-        for (const task of tasks.filter((t) => t.projectId === projectId)) {
-          await cascadeStatusToSubtree({
-            task,
-            status: value,
-            currentUserId: userId,
-          });
-        }
+        await cascadeStatusToSubtrees({
+          tasks: tasks.filter((t) => t.projectId === projectId),
+          projectId,
+          status: value,
+          currentUserId: userId,
+        });
 
         await publishEvent("task-relation.refresh", {
           projectId,

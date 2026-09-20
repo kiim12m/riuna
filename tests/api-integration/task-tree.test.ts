@@ -1,6 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
+import { subscribeToEvent } from "../../apps/api/src/events";
 import { createApp } from "../../apps/api/src/index";
 import { mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
@@ -388,6 +389,75 @@ describe("API integration: task tree", () => {
 
       expect((await readTask(child.id)).status).toBe("archived");
       expect((await readTask(grandchild.id)).status).toBe("archived");
+    });
+
+    // Un lote con varias ramas comparte cerrojo y transaccion, asi que se
+    // comprueba lo que eso puede romper: que todas las ramas bajen y que una
+    // descendiente alcanzable desde dos seleccionadas se mueva y se anote una
+    // sola vez.
+    it("cascades every selected branch once in a single bulk request", async () => {
+      const { project, columns, app } = await setup();
+
+      await db
+        .update(schema.projectTable)
+        .set({ cascadeArchive: true })
+        .where(eq(schema.projectTable.id, project.id));
+
+      const branch = async () => {
+        const parent = await insertTask({
+          projectId: project.id,
+          columnId: columns.todo.id,
+        });
+        const child = await insertTask({
+          projectId: project.id,
+          columnId: columns.todo.id,
+          parent,
+        });
+        const grandchild = await insertTask({
+          projectId: project.id,
+          columnId: columns.todo.id,
+          parent: child,
+        });
+        return { parent, child, grandchild };
+      };
+
+      const first = await branch();
+      const second = await branch();
+
+      const cascaded: { taskId: string; cascadedFrom?: string }[] = [];
+      await subscribeToEvent<{ taskId: string; cascadedFrom?: string }>(
+        "task.status_changed",
+        async (data) => {
+          if (data.cascadedFrom) cascaded.push(data);
+        },
+      );
+
+      const response = await app.request("/api/task/bulk", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          // La hija de la primera rama va tambien en la seleccion: su subarbol
+          // se solapa con el de su madre.
+          taskIds: [first.parent.id, first.child.id, second.parent.id],
+          operation: "updateStatus",
+          value: "archived",
+        }),
+      });
+      expect(response.status).toBe(200);
+
+      for (const task of [first.grandchild, second.child, second.grandchild]) {
+        expect((await readTask(task.id)).status).toBe("archived");
+      }
+
+      // Una sola anotacion por descendiente, y la nieta solapada atribuida a
+      // la mas alta de las dos seleccionadas que la alcanzan.
+      expect(cascaded.map((event) => event.taskId).sort()).toEqual(
+        [first.grandchild.id, second.child.id, second.grandchild.id].sort(),
+      );
+      expect(
+        cascaded.find((event) => event.taskId === first.grandchild.id)
+          ?.cascadedFrom,
+      ).toBe(first.parent.id);
     });
 
     it("does not cascade a move to a column that is not final", async () => {
