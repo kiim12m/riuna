@@ -41,6 +41,14 @@ de una cadena RRULE.
 - **Una fila que no se puede interpretar se apaga.** Reintentar cada cinco
   minutos para siempre una plantilla sin título llenaría el registro sin arreglar
   nada. Se marca `active = false` y el trabajo se reporta como degradado.
+- **También se apaga la plantilla que el proyecto ya no admite**, y antes de
+  reclamar la fecha. Entre una ocurrencia y la siguiente alguien puede borrar la
+  columna o sacar del espacio a la persona asignada; sin comprobarlo, cada
+  ocurrencia fallaba después de reclamar y se perdían todas en silencio.
+- **Un fallo de infraestructura no apaga nada.** Esa comprobación consulta la
+  base, así que distingue el rechazo de la validación (4xx) de una conexión caída
+  o un pool agotado. Apagar por lo segundo dejaría apagadas **para siempre**
+  todas las recurrencias de esa vuelta: se reporta degradado y se reintenta.
 - **`template` y `cadence` van sin valor por defecto.** Con `DEFAULT '{}'` la
   `CHECK` de la frecuencia **no comprobaría nada**: `'{}'::jsonb->>'frequency'` es
   NULL y una `CHECK` pasa con NULL. De ahí el `IS NOT NULL` explícito y la
