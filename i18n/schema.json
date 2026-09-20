@@ -1124,7 +1124,7 @@
 						"joinWorkspace": {
 							"type": "string"
 						},
-						"inviteBodySignedIn": {
+						"grantingAccess": {
 							"type": "string"
 						},
 						"inviteBodySignedOut": {
@@ -1134,12 +1134,6 @@
 							"type": "string"
 						},
 						"createAccount": {
-							"type": "string"
-						},
-						"accepting": {
-							"type": "string"
-						},
-						"acceptInvitation": {
 							"type": "string"
 						},
 						"goToDashboard": {
@@ -1183,12 +1177,10 @@
 						"goToSignIn",
 						"workspaceLabel",
 						"joinWorkspace",
-						"inviteBodySignedIn",
+						"grantingAccess",
 						"inviteBodySignedOut",
 						"createAccountOrSignIn",
 						"createAccount",
-						"accepting",
-						"acceptInvitation",
 						"goToDashboard",
 						"signedInAs",
 						"youveBeenInvited",
@@ -5805,9 +5797,6 @@
 						"members": {
 							"type": "string"
 						},
-						"invitations": {
-							"type": "string"
-						},
 						"more": {
 							"type": "string"
 						},
@@ -5825,7 +5814,6 @@
 						"overview",
 						"projects",
 						"members",
-						"invitations",
 						"more",
 						"backToBoard",
 						"home",
@@ -6265,6 +6253,19 @@
 							},
 							"required": ["title", "content"]
 						},
+						"workspace_member_added": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"content": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "content"]
+						},
 						"task_status_changed": {
 							"type": "object",
 							"additionalProperties": false,
@@ -6363,6 +6364,7 @@
 					"required": [
 						"task_created",
 						"workspace_created",
+						"workspace_member_added",
 						"task_status_changed",
 						"task_assignee_changed",
 						"task_mention",
@@ -8911,6 +8913,9 @@
 								"saveFailed",
 								"delete"
 							]
+						},
+						"fieldOptionsDuplicate": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -8940,7 +8945,8 @@
 						"filterFailed",
 						"operators",
 						"treeModes",
-						"views"
+						"views",
+						"fieldOptionsDuplicate"
 					]
 				},
 				"team": {
@@ -9126,81 +9132,9 @@
 						"ignore",
 						"footer"
 					]
-				},
-				"pageTitle": {
-					"type": "string"
-				},
-				"pendingInvitations": {
-					"type": "string"
-				},
-				"acceptSubtitle": {
-					"type": "string"
-				},
-				"noPendingTitle": {
-					"type": "string"
-				},
-				"noPendingDescription": {
-					"type": "string"
-				},
-				"continueToSetup": {
-					"type": "string"
-				},
-				"skipForNow": {
-					"type": "string"
-				},
-				"table": {
-					"type": "object",
-					"additionalProperties": false,
-					"properties": {
-						"workspace": {
-							"type": "string"
-						},
-						"invitedBy": {
-							"type": "string"
-						},
-						"expires": {
-							"type": "string"
-						}
-					},
-					"required": ["workspace", "invitedBy", "expires"]
-				},
-				"toast": {
-					"type": "object",
-					"additionalProperties": false,
-					"properties": {
-						"acceptError": {
-							"type": "string"
-						},
-						"acceptSuccess": {
-							"type": "string"
-						},
-						"rejectError": {
-							"type": "string"
-						},
-						"rejectSuccess": {
-							"type": "string"
-						}
-					},
-					"required": [
-						"acceptError",
-						"acceptSuccess",
-						"rejectError",
-						"rejectSuccess"
-					]
 				}
 			},
-			"required": [
-				"email",
-				"pageTitle",
-				"pendingInvitations",
-				"acceptSubtitle",
-				"noPendingTitle",
-				"noPendingDescription",
-				"continueToSetup",
-				"skipForNow",
-				"table",
-				"toast"
-			]
+			"required": ["email"]
 		},
 		"workspace": {
 			"type": "object",
@@ -9518,10 +9452,13 @@
 						"emailPlaceholder": {
 							"type": "string"
 						},
-						"sendInvitation": {
+						"addMember": {
 							"type": "string"
 						},
-						"success": {
+						"addedSuccess": {
+							"type": "string"
+						},
+						"invitedSuccess": {
 							"type": "string"
 						},
 						"error": {
@@ -9541,8 +9478,9 @@
 						"title",
 						"emailLabel",
 						"emailPlaceholder",
-						"sendInvitation",
-						"success",
+						"addMember",
+						"addedSuccess",
+						"invitedSuccess",
 						"error",
 						"createdTitle",
 						"shareLinkDescription",
@@ -10479,6 +10417,16 @@
 				},
 				"shared": {
 					"type": "string"
+				},
+				"errors": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"saveFailed": {
+							"type": "string"
+						}
+					},
+					"required": ["saveFailed"]
 				}
 			},
 			"required": [
@@ -10493,7 +10441,8 @@
 				"greeting",
 				"inbox",
 				"actions",
-				"shared"
+				"shared",
+				"errors"
 			]
 		},
 		"goals": {
@@ -10661,6 +10610,16 @@
 				},
 				"shared": {
 					"type": "string"
+				},
+				"errors": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"saveFailed": {
+							"type": "string"
+						}
+					},
+					"required": ["saveFailed"]
 				}
 			},
 			"required": [
@@ -10670,7 +10629,8 @@
 				"form",
 				"target",
 				"scope",
-				"shared"
+				"shared",
+				"errors"
 			]
 		}
 	},

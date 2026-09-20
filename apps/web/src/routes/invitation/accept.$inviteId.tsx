@@ -6,7 +6,6 @@ import {
 } from "@tanstack/react-router";
 import {
   AlertCircle,
-  CheckCircle,
   Clock,
   Loader2,
   LogIn,
@@ -14,7 +13,7 @@ import {
   Users,
   XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import PageTitle from "@/components/page-title";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -34,7 +33,8 @@ function AcceptInvitation() {
     from: "/invitation/accept/$inviteId",
   });
   const navigate = useNavigate();
-  const [isAccepting, setIsAccepting] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
+  const hasClaimed = useRef(false);
 
   const { data: session, isPending: isSessionLoading } =
     authClient.useSession();
@@ -47,43 +47,63 @@ function AcceptInvitation() {
   const isLoading = isSessionLoading || isInvitationLoading;
   const isSignedIn = !!session?.user;
 
-  const handleAcceptInvitation = async () => {
-    setIsAccepting(true);
-    try {
-      const { data, error } = await authClient.organization.acceptInvitation({
-        invitationId: inviteId,
-      });
+  // El acceso ya lo concedio quien invito, asi que aqui no se pregunta nada:
+  // en cuanto hay sesion, la pertenencia se materializa y se entra. Se sigue
+  // usando `acceptInvitation` de better-auth porque es quien comprueba que el
+  // correo de la sesion coincide con el de la invitacion.
+  useEffect(() => {
+    if (isLoading || !isSignedIn) return;
+    if (!invitationData?.valid || !invitationData.invitation) return;
+    if (hasClaimed.current) return;
+    hasClaimed.current = true;
 
-      if (error) {
-        toast.error(error.message || t("auth:invitation.toast.acceptFailed"));
-        return;
+    const claim = async () => {
+      try {
+        const { data, error } = await authClient.organization.acceptInvitation({
+          invitationId: inviteId,
+        });
+
+        if (error) {
+          setClaimError(
+            error.message || t("auth:invitation.toast.acceptFailed"),
+          );
+          return;
+        }
+
+        await authClient.organization.setActive({
+          organizationId: data?.invitation.organizationId,
+        });
+
+        toast.success(t("auth:invitation.toast.acceptSuccess"));
+
+        if (!session?.user?.name) {
+          navigate({ to: "/profile-setup" });
+          return;
+        }
+
+        navigate({
+          to: "/dashboard/workspace/$workspaceId",
+          params: { workspaceId: data?.invitation.organizationId || "" },
+        });
+      } catch (error) {
+        setClaimError(
+          error instanceof Error
+            ? error.message
+            : t("auth:invitation.toast.acceptFailed"),
+        );
       }
+    };
 
-      await authClient.organization.setActive({
-        organizationId: data?.invitation.organizationId,
-      });
-
-      toast.success(t("auth:invitation.toast.acceptSuccess"));
-
-      if (!session?.user?.name) {
-        navigate({ to: "/profile-setup" });
-        return;
-      }
-
-      navigate({
-        to: "/dashboard/workspace/$workspaceId",
-        params: { workspaceId: data?.invitation.organizationId || "" },
-      });
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : t("auth:invitation.toast.acceptFailed"),
-      );
-    } finally {
-      setIsAccepting(false);
-    }
-  };
+    void claim();
+  }, [
+    isLoading,
+    isSignedIn,
+    invitationData,
+    inviteId,
+    navigate,
+    session?.user?.name,
+    t,
+  ]);
 
   const handleSignIn = () => {
     const email = invitationData?.invitation?.email;
@@ -217,48 +237,33 @@ function AcceptInvitation() {
               <Users className="w-6 h-6 text-primary" />
             </div>
 
-            <div className="space-y-3 text-center">
-              <h2 className="text-lg font-semibold text-foreground">
-                {t("auth:invitation.joinWorkspace", {
-                  workspaceName: invitation.workspaceName,
-                })}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                <Trans
-                  i18nKey="auth:invitation.inviteBodySignedIn"
-                  values={{ inviterName: invitation.inviterName }}
-                  components={{ inviter: <strong /> }}
-                />
-              </p>
-            </div>
-
-            <div className="space-y-3 pt-2">
-              <Button
-                onClick={handleAcceptInvitation}
-                disabled={isAccepting}
-                className="w-full"
-              >
-                {isAccepting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {t("auth:invitation.accepting")}
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    {t("auth:invitation.acceptInvitation")}
-                  </>
-                )}
-              </Button>
-
-              <Button
-                render={<Link to="/dashboard" />}
-                variant="outline"
-                className="w-full"
-              >
-                {t("auth:invitation.goToDashboard")}
-              </Button>
-            </div>
+            {claimError ? (
+              <>
+                <Alert variant="error">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{claimError}</AlertDescription>
+                </Alert>
+                <Button
+                  render={<Link to="/dashboard" />}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {t("auth:invitation.goToDashboard")}
+                </Button>
+              </>
+            ) : (
+              <div className="space-y-3 text-center">
+                <h2 className="text-lg font-semibold text-foreground">
+                  {t("auth:invitation.joinWorkspace", {
+                    workspaceName: invitation.workspaceName,
+                  })}
+                </h2>
+                <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t("auth:invitation.grantingAccess")}
+                </p>
+              </div>
+            )}
 
             <div className="pt-4 border-t border-border">
               <p className="text-xs text-center text-muted-foreground">

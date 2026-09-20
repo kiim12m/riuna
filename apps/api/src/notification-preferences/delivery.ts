@@ -116,6 +116,18 @@ function buildDeliveryContent(notification: {
           : "A new workspace was created in Riuna.",
       };
     }
+    case "workspace_member_added": {
+      const workspaceName = getStringValue(
+        notification.eventData,
+        "workspaceName",
+      );
+      return {
+        title: "Added to a workspace",
+        body: workspaceName
+          ? `You were added to the workspace: ${workspaceName}`
+          : "You were added to a workspace in Riuna.",
+      };
+    }
     case "task_status_changed": {
       const taskTitle = getStringValue(notification.eventData, "taskTitle");
       const oldStatus = getStringValue(notification.eventData, "oldStatus");

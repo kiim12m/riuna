@@ -19,7 +19,7 @@ describe("WorkspaceInvitationEmail", () => {
     );
 
     expect(html).toContain("Únete a Equipo Producto");
-    expect(html).toContain("Aceptar invitación");
+    expect(html).toContain("Crear tu cuenta");
     expect(html).toContain("Camille (camille@example.com)");
   });
 });
@@ -37,7 +37,7 @@ describe("WorkspaceInvitationEmail default copy", () => {
     );
 
     expect(html).toContain("Join Acme Inc");
-    expect(html).toContain("Accept invitation");
+    expect(html).toContain("Create your account");
   });
 
   it("keeps the fallback in sync with the en-US bundle", async () => {

@@ -206,6 +206,24 @@ subscribeToEvent<{
   }
 });
 
+// Avisar es parte del trato: al miembro se le anade sin pedirle permiso, asi
+// que al menos se entera de que ahora pertenece a un espacio.
+subscribeToEvent<{
+  workspaceId: string;
+  workspaceName: string;
+  userId: string;
+}>("workspace.member.added", async (data) => {
+  await createNotification({
+    userId: data.userId,
+    type: "workspace_member_added",
+    eventData: {
+      workspaceName: data.workspaceName,
+    },
+    resourceId: data.workspaceId,
+    resourceType: "workspace",
+  });
+});
+
 subscribeToEvent<{
   taskId: string;
   userId: string;

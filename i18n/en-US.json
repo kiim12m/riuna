@@ -286,12 +286,10 @@
 			"goToSignIn": "Go to Sign In",
 			"workspaceLabel": "Workspace: {{workspaceName}}",
 			"joinWorkspace": "Join {{workspaceName}}",
-			"inviteBodySignedIn": "<inviter>{{inviterName}}</inviter> has invited you to join their workspace.",
+			"grantingAccess": "Giving you access…",
 			"inviteBodySignedOut": "<inviter>{{inviterName}}</inviter> has invited you to join their workspace on Riuna.",
 			"createAccountOrSignIn": "Create an account to accept this invitation, or sign in if you already have one.",
 			"createAccount": "Create Account",
-			"accepting": "Accepting...",
-			"acceptInvitation": "Accept Invitation",
 			"goToDashboard": "Go to Dashboard",
 			"signedInAs": "Signed in as <email>{{email}}</email>",
 			"youveBeenInvited": "You've been invited!",
@@ -1465,7 +1463,6 @@
 			"overview": "Overview",
 			"projects": "Projects",
 			"members": "Members",
-			"invitations": "Invitations",
 			"more": "More",
 			"backToBoard": "Back to board",
 			"home": "Home",
@@ -1581,6 +1578,10 @@
 			"workspace_created": {
 				"title": "Workspace created",
 				"content": "Your workspace \"{{workspaceName}}\" has been created successfully"
+			},
+			"workspace_member_added": {
+				"title": "Added to a workspace",
+				"content": "You now have access to the workspace \"{{workspaceName}}\""
 			},
 			"task_status_changed": {
 				"title": "Task status changed",
@@ -2302,29 +2303,11 @@
 			"subject": "{{inviterName}} invited you to join {{workspaceName}} on Riuna",
 			"preview": "You're invited to {{workspaceName}} on Riuna",
 			"title": "Join {{workspaceName}}",
-			"subtitle": "{{inviterName}} ({{inviterEmail}}) invited you to collaborate in Riuna.",
-			"cta": "Accept invitation",
-			"sameEmail": "You can accept with the same email that received this message.",
+			"subtitle": "{{inviterName}} ({{inviterEmail}}) gave you access to this workspace in Riuna.",
+			"cta": "Create your account",
+			"sameEmail": "Sign up with the same email address that received this message.",
 			"ignore": "If this wasn't expected, you can safely ignore this email.",
 			"footer": "Riuna workspace invitation"
-		},
-		"pageTitle": "Invitations",
-		"pendingInvitations": "Pending Invitations",
-		"acceptSubtitle": "Accept invitations to join workspaces",
-		"noPendingTitle": "No pending invitations",
-		"noPendingDescription": "You don't have any pending workspace invitations at the moment.",
-		"continueToSetup": "Continue to Setup",
-		"skipForNow": "Skip for now",
-		"table": {
-			"workspace": "Workspace",
-			"invitedBy": "Invited By",
-			"expires": "Expires"
-		},
-		"toast": {
-			"acceptError": "Failed to accept invitation",
-			"acceptSuccess": "Invitation accepted! Welcome to the team.",
-			"rejectError": "Failed to reject invitation",
-			"rejectSuccess": "Invitation rejected"
 		}
 	},
 	"workspace": {
@@ -2398,7 +2381,7 @@
 			"blocked": "Blocked"
 		},
 		"invitations": {
-			"pendingBadge": "pending",
+			"pendingBadge": "pending sign-up",
 			"expires": "Expires {{date}}",
 			"linkLabel": "Invitation link",
 			"copyLink": "Copy link",
@@ -2406,14 +2389,15 @@
 			"copyFailed": "Couldn't copy automatically. Select the link and press Ctrl+C."
 		},
 		"inviteModal": {
-			"title": "Invite Team Member",
+			"title": "Add member",
 			"emailLabel": "Email",
 			"emailPlaceholder": "colleague@company.com",
-			"sendInvitation": "Send Invitation",
-			"success": "Invitation sent successfully",
-			"error": "Failed to invite team member",
-			"createdTitle": "Invitation created",
-			"shareLinkDescription": "Share this link with {{email}} so they can join the workspace.",
+			"addMember": "Add member",
+			"addedSuccess": "They are now a member of the workspace",
+			"invitedSuccess": "Access granted. They still need to create their account",
+			"error": "Failed to add the member",
+			"createdTitle": "They need an account first",
+			"shareLinkDescription": "{{email}} has no account yet. Share this link so they can sign up and set a password; their access is already granted.",
 			"done": "Done"
 		},
 		"membersTable": {
@@ -2426,19 +2410,19 @@
 				"actions": "Actions"
 			},
 			"memberRolePending": "{{role}} (Pending)",
-			"ariaCancelInvitation": "Cancel invitation",
+			"ariaCancelInvitation": "Revoke access",
 			"ariaInvitationActions": "Invitation actions",
 			"ariaRemoveMember": "Remove member",
 			"removeDialogTitle": "Remove Team Member?",
 			"removeDialogDescription": "Are you sure you want to remove {{name}} from the workspace? This action cannot be undone.",
-			"cancelDialogTitle": "Cancel Invitation?",
-			"cancelDialogDescription": "Are you sure you want to cancel the invitation for {{email}}? This action cannot be undone.",
+			"cancelDialogTitle": "Revoke access?",
+			"cancelDialogDescription": "{{email}} will no longer be able to use their sign-up link, and will not become a member. You can add them again later.",
 			"removeMember": "Remove Member",
-			"cancelInvitation": "Cancel Invitation",
+			"cancelInvitation": "Revoke access",
 			"removeSuccess": "Team member removed successfully",
 			"removeError": "Failed to remove team member",
-			"cancelInviteSuccess": "Invitation cancelled successfully",
-			"cancelInviteError": "Failed to cancel invitation",
+			"cancelInviteSuccess": "Access revoked",
+			"cancelInviteError": "Failed to revoke access",
 			"roleUpdateSuccess": "Role updated",
 			"roleUpdateError": "Failed to update role",
 			"manageAccount": "Manage account"

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
-import useInviteWorkspaceUser from "@/hooks/mutations/workspace-user/use-invite-workspace-user";
+import useAddWorkspaceMember from "@/hooks/mutations/workspace-user/use-add-workspace-member";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { toast } from "@/lib/toast";
@@ -42,13 +42,16 @@ type TeamMemberFormValues = z.infer<typeof teamMemberSchema>;
 
 function InviteTeamMemberModal({ open, onClose }: Props) {
   const { t } = useTranslation();
-  const { mutateAsync } = useInviteWorkspaceUser();
+  const { mutateAsync } = useAddWorkspaceMember();
   const queryClient = useQueryClient();
   const { data: workspace } = useActiveWorkspace();
   const workspaceId = workspace?.id;
   const { canInviteUsers } = useWorkspacePermission();
   const canInvite = canInviteUsers();
-  const [createdInvitation, setCreatedInvitation] = useState<{
+  // Solo se llena cuando la persona aun no tenia cuenta: entonces hay un
+  // enlace que pasarle. Si ya la tenia, ya es miembro y no hay nada que
+  // compartir.
+  const [pendingSignUp, setPendingSignUp] = useState<{
     id: string;
     email: string;
   } | null>(null);
@@ -73,26 +76,26 @@ function InviteTeamMemberModal({ open, onClose }: Props) {
       return;
     }
     try {
-      const invitation = await mutateAsync({
+      const result = await mutateAsync({
         email,
         workspaceId,
         role: "member",
-      }); // TODO: role and email
+      });
       await queryClient.refetchQueries({
         queryKey: ["workspace-users", workspaceId],
       });
 
-      toast.success(t("team:inviteModal.success"));
-
-      // The link is the only delivery channel when SMTP is unconfigured, so the
-      // modal stays open on it instead of closing. If the API ever stops
-      // returning an id, fall back to the previous close-on-success behaviour.
-      if (invitation?.id) {
-        setCreatedInvitation({ id: invitation.id, email });
+      // Quien no tenia cuenta necesita darse de alta primero, y sin SMTP el
+      // enlace es el unico canal, asi que el modal se queda en el en vez de
+      // cerrarse. Quien ya la tenia es miembro desde este momento.
+      if (result.status === "invited") {
+        toast.success(t("team:inviteModal.invitedSuccess"));
+        setPendingSignUp({ id: result.invitationId, email });
         form.reset();
         return;
       }
 
+      toast.success(t("team:inviteModal.addedSuccess"));
       resetInviteTeamMember();
       onClose();
     } catch (error) {
@@ -112,7 +115,7 @@ function InviteTeamMemberModal({ open, onClose }: Props) {
   };
 
   const resetAndCloseModal = () => {
-    setCreatedInvitation(null);
+    setPendingSignUp(null);
     resetInviteTeamMember();
     onClose();
   };
@@ -122,21 +125,21 @@ function InviteTeamMemberModal({ open, onClose }: Props) {
       <DialogPopup className="w-full max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {createdInvitation
+            {pendingSignUp
               ? t("team:inviteModal.createdTitle")
               : t("team:inviteModal.title")}
           </DialogTitle>
         </DialogHeader>
 
-        {createdInvitation ? (
+        {pendingSignUp ? (
           <>
             <DialogPanel className="space-y-3">
               <p className="text-sm text-muted-foreground">
                 {t("team:inviteModal.shareLinkDescription", {
-                  email: createdInvitation.email,
+                  email: pendingSignUp.email,
                 })}
               </p>
-              <InvitationLinkField invitationId={createdInvitation.id} />
+              <InvitationLinkField invitationId={pendingSignUp.id} />
             </DialogPanel>
             <DialogFooter>
               <Button size="sm" onClick={resetAndCloseModal}>
@@ -178,7 +181,7 @@ function InviteTeamMemberModal({ open, onClose }: Props) {
                   size="sm"
                   disabled={!workspaceId || !canInvite}
                 >
-                  {t("team:inviteModal.sendInvitation")}
+                  {t("team:inviteModal.addMember")}
                 </Button>
               </DialogFooter>
             </form>

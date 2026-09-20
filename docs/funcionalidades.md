@@ -46,11 +46,14 @@ siguen pendientes.
 
 - **Espacios de trabajo** con nombre, descripción, logo y slug; transferencia
   de propiedad y borrado.
-- **Miembros**: invitar por correo, copiar el enlace de invitación, cambiar
-  rol, expulsar, cancelar una invitación, y gestionar cuentas locales
-  (renombrar, asignar correo, cambiar contraseña, bloquear acceso).
-- **Invitaciones** con página pública de aceptación —con o sin sesión— y
-  bandeja de invitaciones pendientes.
+- **Miembros**: añadir por correo, cambiar rol, expulsar, revocar un alta
+  pendiente, y gestionar cuentas locales (renombrar, asignar correo, cambiar
+  contraseña, bloquear acceso).
+- **El acceso lo concede el admin del espacio y es efectivo sin que la persona
+  lo apruebe** ([ADR 035](adr/035-acceso-concedido-sin-aprobacion.md)). Quien ya
+  tiene cuenta entra en el acto y recibe un aviso; quien no la tiene recibe un
+  enlace para darse de alta —el que abre el registro aunque esté cerrado— y la
+  pertenencia se materializa sola al crear la cuenta.
 - **Equipos / departamentos** (máximo 10 por espacio): crear, renombrar,
   eliminar y gestionar miembros. Una tarea se puede asignar a un equipo entero
   ([ADR 010](adr/010-asignacion-a-equipos-y-multiples-asignados.md)).
@@ -208,8 +211,8 @@ la tarea y en la propia tabla.
   actividad, más búsqueda por ID corto de tarea (`DEP-23`).
 - **Notificaciones in-app** con campana, contador de no leídas, marcar todas
   como leídas y borrar todas. Eventos: tarea creada, asignación, mención,
-  comentario, cambio de estado, recordatorio de vencimiento, tarea vencida y
-  espacio creado.
+  comentario, cambio de estado, recordatorio de vencimiento, tarea vencida,
+  espacio creado y alta en un espacio de trabajo.
 - **Canales de entrega externos** por usuario: **email (SMTP)**, **ntfy**,
   **Gotify** y **webhook propio firmado**, con reglas por espacio de trabajo
   —qué canales y qué proyectos, todos o una selección— y **antelación

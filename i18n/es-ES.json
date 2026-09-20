@@ -286,12 +286,10 @@
 			"goToSignIn": "Ir a Iniciar Sesión",
 			"workspaceLabel": "Espacio de trabajo: {{workspaceName}}",
 			"joinWorkspace": "Unirse a {{workspaceName}}",
-			"inviteBodySignedIn": "<inviter>{{inviterName}}</inviter> te ha invitado a unirse a su espacio de trabajo.",
+			"grantingAccess": "Dándote acceso…",
 			"inviteBodySignedOut": "<inviter>{{inviterName}}</inviter> te ha invitado a unirse a su espacio de trabajo en Riuna.",
 			"createAccountOrSignIn": "Crea una cuenta para aceptar esta invitación o inicia sesión si ya tienes una.",
 			"createAccount": "Crear cuenta",
-			"accepting": "Aceptando...",
-			"acceptInvitation": "Aceptar invitación",
 			"goToDashboard": "Ir al Panel de Control",
 			"signedInAs": "Sesión iniciada como <email>{{email}}</email>",
 			"youveBeenInvited": "¡Has sido invitado!",
@@ -1465,7 +1463,6 @@
 			"overview": "Vista general",
 			"projects": "Proyectos",
 			"members": "Miembros",
-			"invitations": "Invitaciones",
 			"more": "Más",
 			"backToBoard": "Volver al tablero",
 			"home": "Panel",
@@ -1573,6 +1570,10 @@
 			"workspace_created": {
 				"title": "Se ha creado un espacio de trabajo",
 				"content": "Tu espacio de trabajo \"{{workspaceName}}\" ha sido creado correctamente"
+			},
+			"workspace_member_added": {
+				"title": "Te han añadido a un espacio de trabajo",
+				"content": "Ya tienes acceso al espacio de trabajo \"{{workspaceName}}\""
 			},
 			"task_status_changed": {
 				"title": "El estado de una tarea ha cambiado",
@@ -2302,29 +2303,11 @@
 			"subject": "{{inviterName}} te ha invitado a unirte a {{workspaceName}} en Riuna",
 			"preview": "Te han invitado a {{workspaceName}} en Riuna",
 			"title": "Únete a {{workspaceName}}",
-			"subtitle": "{{inviterName}} ({{inviterEmail}}) te ha invitado a colaborar en Riuna.",
-			"cta": "Aceptar invitación",
-			"sameEmail": "Puedes aceptarla con el mismo correo que recibió este mensaje.",
+			"subtitle": "{{inviterName}} ({{inviterEmail}}) te ha dado acceso a este espacio de trabajo en Riuna.",
+			"cta": "Crear tu cuenta",
+			"sameEmail": "Date de alta con el mismo correo que recibió este mensaje.",
 			"ignore": "Si no esperabas este correo, puedes ignorarlo sin problema.",
 			"footer": "Invitación a un espacio de trabajo de Riuna"
-		},
-		"pageTitle": "Invitaciones",
-		"pendingInvitations": "Invitaciones pendientes",
-		"acceptSubtitle": "Aceptar invitaciones para unirse a espacios de trabajo",
-		"noPendingTitle": "No hay invitaciones pendientes",
-		"noPendingDescription": "No tienes ninguna invitación pendiente a espacios de trabajo en este momento.",
-		"continueToSetup": "Continuar a la configuración",
-		"skipForNow": "Saltar por ahora",
-		"table": {
-			"workspace": "Espacio de trabajo",
-			"invitedBy": "Invitado Por",
-			"expires": "Expira"
-		},
-		"toast": {
-			"acceptError": "Error al aceptar invitación",
-			"acceptSuccess": "¡Invitación aceptada! Bienvenido al equipo.",
-			"rejectError": "Error al rechazar invitación",
-			"rejectSuccess": "Invitación rechazada"
 		}
 	},
 	"workspace": {
@@ -2402,18 +2385,19 @@
 			"copyLink": "Copiar enlace",
 			"linkCopied": "Enlace de invitación copiado",
 			"copyFailed": "No se pudo copiar automáticamente. Selecciona el enlace y presiona Ctrl+C.",
-			"pendingBadge": "pendiente",
+			"pendingBadge": "pendiente de alta",
 			"expires": "Expira {{date}}"
 		},
 		"inviteModal": {
-			"title": "Invitar miembro al equipo",
+			"title": "Añadir miembro",
 			"emailLabel": "Email",
 			"emailPlaceholder": "compi@company.com",
-			"sendInvitation": "Enviar invitación",
-			"success": "Invitación enviada correctamente",
-			"error": "Error al invitar miembro al equipo",
-			"createdTitle": "Invitación creada",
-			"shareLinkDescription": "Comparte este enlace con {{email}} para que se una al espacio de trabajo.",
+			"addMember": "Añadir miembro",
+			"addedSuccess": "Ya es miembro del espacio de trabajo",
+			"invitedSuccess": "Acceso concedido. Todavía le falta crear su cuenta",
+			"error": "No se ha podido añadir al miembro",
+			"createdTitle": "Primero necesita una cuenta",
+			"shareLinkDescription": "{{email}} todavía no tiene cuenta. Pásale este enlace para que se dé de alta y ponga su contraseña; el acceso ya está concedido.",
 			"done": "Listo"
 		},
 		"membersTable": {
@@ -2426,19 +2410,19 @@
 				"actions": "Acciones"
 			},
 			"memberRolePending": "{{role}} (Pendiente)",
-			"ariaCancelInvitation": "Cancelar invitacion",
+			"ariaCancelInvitation": "Revocar el acceso",
 			"ariaInvitationActions": "Acciones de invitación",
 			"ariaRemoveMember": "Eliminar miembro",
 			"removeDialogTitle": "¿Eliminar miembro del equipo?",
 			"removeDialogDescription": "¿Estás seguro de que quieres eliminar a {{name}} del espacio de trabajo? Esta acción no puede deshacerse.",
-			"cancelDialogTitle": "¿Cancelar invitación?",
-			"cancelDialogDescription": "¿Estás seguro de que quieres cancelar la invitación para {{email}}? Esta acción no puede deshacerse.",
+			"cancelDialogTitle": "¿Revocar el acceso?",
+			"cancelDialogDescription": "{{email}} dejará de poder usar su enlace de alta y no llegará a ser miembro. Puedes volver a añadirle más adelante.",
 			"removeMember": "Eliminar miembro",
-			"cancelInvitation": "Cancelar invitación",
+			"cancelInvitation": "Revocar el acceso",
 			"removeSuccess": "Miembro eliminado del equipo correctamente",
 			"removeError": "Error al eliminar miembro del equipo",
-			"cancelInviteSuccess": "Invitación cancelada correctamente",
-			"cancelInviteError": "Error al cancelar invitación",
+			"cancelInviteSuccess": "Acceso revocado",
+			"cancelInviteError": "No se ha podido revocar el acceso",
 			"roleUpdateSuccess": "Rol actualizado",
 			"roleUpdateError": "Error al actualizar el rol",
 			"manageAccount": "Administrar cuenta"

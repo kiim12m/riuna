@@ -26,3 +26,5 @@
 - **El bloqueo es un interruptor**, sin motivo ni caducidad, aunque las columnas existan: cierra las sesiones abiertas e impide entrar, sin borrar nada. Si algún día hace falta dejar escrito el porqué, los campos están.
 - **Todo en un solo formulario**: nombre, correo, contraseña nueva y bloqueo. La contraseña y el correo vacíos significan «no tocar», que evita cambiarlos sin querer al editar el nombre.
 - **La tabla de miembros necesita datos que el plugin de organización no da** —quién está bloqueado—, así que el admin de instancia carga además la lista de usuarios del plugin de administración. Esa consulta está apagada para todos los demás, porque solo a él le responde.
+
+**Nota (20-09-2026).** El [ADR 035](035-acceso-concedido-sin-aprobacion.md) cambió cómo se da acceso a un espacio, pero no movió esta frontera: quien administra un espacio concede acceso y, como mucho, permiso para registrarse; acuñar credenciales para otra persona sigue siendo cosa del admin de instancia.

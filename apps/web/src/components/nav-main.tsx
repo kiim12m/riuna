@@ -3,7 +3,6 @@ import {
   ChevronRight,
   LayoutDashboard,
   LayoutGrid,
-  Mail,
   Target,
   Users,
 } from "lucide-react";
@@ -21,18 +20,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { usePendingInvitations } from "@/hooks/queries/invitation/use-pending-invitations";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 
 export function NavMain() {
   const { t } = useTranslation();
   const { data: workspace } = useActiveWorkspace();
   const navigate = useNavigate();
-  const { data: invitations = [] } = usePendingInvitations();
 
   if (!workspace) return null;
-
-  const pendingCount = invitations.length;
 
   const navItems = [
     {
@@ -76,13 +71,6 @@ export function NavMain() {
         window.location.pathname ===
         `/dashboard/workspace/${workspace.id}/members`,
       badge: null,
-    },
-    {
-      title: t("navigation:sidebar.invitations"),
-      url: "/dashboard/invitations",
-      icon: Mail,
-      isActive: window.location.pathname === "/dashboard/invitations",
-      badge: pendingCount > 0 ? pendingCount : null,
     },
   ];
 

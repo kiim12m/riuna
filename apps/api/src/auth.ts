@@ -51,6 +51,7 @@ import { getDefaultCookieAttributes } from "./utils/get-default-cookie-attribute
 import { getInvitationEmailSubject } from "./utils/get-invitation-email-subject";
 import { getWorkspaceInvitationEmailCopy } from "./utils/get-workspace-invitation-email-copy";
 import { getGithubSsoOAuthCredentials } from "./utils/github-sso-env";
+import { grantPendingInvitations } from "./utils/grant-pending-invitations";
 import { isCloud } from "./utils/is-cloud";
 import { isDisposableEmail } from "./utils/is-disposable-email";
 import { isLocalSignInPath } from "./utils/is-local-sign-in-path";
@@ -693,6 +694,24 @@ export const auth = betterAuth({
                 .where(eq(schema.userTable.id, user.id));
             }
           });
+
+          // El acceso al espacio ya lo concedio quien invito: la invitacion es
+          // un testigo de registro, no algo que haya que aceptar. En cuanto la
+          // cuenta existe, la pertenencia se materializa sola.
+          //
+          // Va en try/catch a proposito: una excepcion aqui dejaria huerfano a
+          // un usuario ya insertado. Si falla, la pagina de la invitacion
+          // sigue siendo la via de recuperacion.
+          try {
+            await grantPendingInvitations(user, (body) =>
+              auth.api.addMember({ body }),
+            );
+          } catch (error) {
+            console.error("Failed to grant pending invitations", {
+              userId: user.id,
+              error,
+            });
+          }
         },
       },
     },

@@ -93,6 +93,7 @@ export const notificationSchema = v.object({
     "info",
     "task_created",
     "workspace_created",
+    "workspace_member_added",
     "task_status_changed",
     "task_assignee_changed",
     "time_entry_created",

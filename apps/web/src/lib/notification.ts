@@ -50,6 +50,11 @@ export function getNotificationTitle(notification: Notification, t: Translate) {
           ...eventData,
           defaultValue: notification.title ?? notification.type,
         });
+      case "workspace_member_added":
+        return t("notifications:events.workspace_member_added.title", {
+          ...eventData,
+          defaultValue: notification.title ?? notification.type,
+        });
       case "task_status_changed":
         return t("notifications:events.task_status_changed.title", {
           ...eventData,
@@ -107,6 +112,11 @@ export function getNotificationContent(
         });
       case "workspace_created":
         return t("notifications:events.workspace_created.content", {
+          ...eventData,
+          defaultValue: notification.content ?? "",
+        });
+      case "workspace_member_added":
+        return t("notifications:events.workspace_member_added.content", {
           ...eventData,
           defaultValue: notification.content ?? "",
         });

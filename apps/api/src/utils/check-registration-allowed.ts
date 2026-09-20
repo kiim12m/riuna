@@ -204,6 +204,7 @@ export async function getUserPendingInvitations(userEmail: string) {
       id: invitationTable.id,
       email: invitationTable.email,
       workspaceId: invitationTable.workspaceId,
+      role: invitationTable.role,
       workspaceName: workspaceTable.name,
       inviterName: userTable.name,
       expiresAt: invitationTable.expiresAt,
