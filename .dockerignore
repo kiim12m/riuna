@@ -1,6 +1,11 @@
 .git
 .github
 .turbo
+# Va con `**/dist`, y no separado de el: packages/email compila con
+# `incremental: true`, asi que un tsbuildinfo que entre en el contexto sin su
+# `dist` deja a tsc convencido de que no hay nada que emitir. Sale con 0, no
+# genera nada, y la API muere al arrancar sin @riuna/email/dist/index.js.
+**/.cache
 **/.next
 **/.turbo
 **/coverage
