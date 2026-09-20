@@ -173,21 +173,17 @@ function csvValue(value: string | number | Date | null): string {
 
 // Excel y LibreOffice ejecutan como formula la celda de un CSV que empieza por
 // uno de estos caracteres, y cualquiera que pueda titular una tarea puede
-// escribir una. Un apostrofo delante la deja en texto (CWE-1236).
+// escribir una. Solo miran el primer caracter, asi que un espacio delante
+// basta para dejarla en texto (CWE-1236).
+//
+// Un espacio y no un apostrofo: el importador ya recorta cada celda, asi que
+// el texto vuelve intacto sin deshacer nada al leer. Quitar el apostrofo
+// habria que hacerlo en todos los CSV, tambien en los que no salieron de
+// aqui, y se comeria el que hubiera escrito una persona.
 const FORMULA_TRIGGER = /^[=+\-@\t\r]/;
 
 function neutralizeCsvFormula(text: string): string {
-  return FORMULA_TRIGGER.test(text) ? `'${text}` : text;
-}
-
-/**
- * Deshace `neutralizeCsvFormula` al importar un CSV. Sin esto, exportar y
- * reimportar anadiria un apostrofo a cada titulo que empieza por `-` o `+`.
- */
-export function restoreCsvFormula(text: string): string {
-  return text.startsWith("'") && FORMULA_TRIGGER.test(text.slice(1))
-    ? text.slice(1)
-    : text;
+  return FORMULA_TRIGGER.test(text) ? ` ${text}` : text;
 }
 
 function escapeCsv(value: string): string {

