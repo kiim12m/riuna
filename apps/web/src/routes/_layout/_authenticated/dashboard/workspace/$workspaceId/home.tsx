@@ -225,7 +225,10 @@ function HomeComponent() {
                 {t("panels:actions.export")}
               </Button>
             )}
-            {isMine && (
+            {/* Quien puede editar el panel puede anadirle paneles, igual que
+                en el estado vacio: compartir es lo unico que sigue siendo del
+                dueno. */}
+            {(canEdit || !dashboard) && (
               <Button
                 variant="outline"
                 size="xs"

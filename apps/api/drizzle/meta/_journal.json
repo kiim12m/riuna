@@ -421,6 +421,13 @@
 			"when": 1789844975280,
 			"tag": "0059_goal_target_done_metric",
 			"breakpoints": true
+		},
+		{
+			"idx": 60,
+			"version": "7",
+			"when": 1789844976280,
+			"tag": "0060_widget_drop_stale_metric",
+			"breakpoints": true
 		}
 	]
 }
