@@ -6,6 +6,7 @@
 > Complementarios: [qué hace Riuna hoy](funcionalidades.md) ·
 > [auditoría de partida](auditoria-fase-0.md) ·
 > [decisiones (ADR)](adr/) · [copias de seguridad](copias-de-seguridad.md) ·
+> [actualizar la instancia](actualizar.md) ·
 > [plan de despliegue](plan-despliegue.md)
 
 ## Estado
