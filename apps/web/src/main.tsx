@@ -52,6 +52,15 @@ const router = createRouter({
   },
 });
 
+// Sin este registro, TanStack Router tipa `to` como `string` y ningún destino
+// de navegación de la aplicación se comprueba: una ruta inexistente pasa
+// typecheck y solo se descubre al pulsarla.
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
+
 function App() {
   const { user } = useAuth();
 

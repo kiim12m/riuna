@@ -14,9 +14,10 @@ export default function WorkspaceCrumbSelect() {
       size="xs"
       className="h-7 justify-between px-2 text-xs text-foreground"
       onClick={() => {
+        if (!workspace?.id) return;
         navigate({
           to: "/dashboard/workspace/$workspaceId",
-          params: { workspaceId: workspace?.id },
+          params: { workspaceId: workspace.id },
         });
       }}
     >
