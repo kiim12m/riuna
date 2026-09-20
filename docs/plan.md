@@ -3,7 +3,8 @@
 > Documento vivo. Se actualiza al cerrar cada fase; el estado de la tabla de
 > abajo manda sobre cualquier otra cosa escrita aquí.
 >
-> Complementarios: [auditoría de partida](auditoria-fase-0.md) ·
+> Complementarios: [qué hace Riuna hoy](funcionalidades.md) ·
+> [auditoría de partida](auditoria-fase-0.md) ·
 > [decisiones (ADR)](adr/) · [copias de seguridad](copias-de-seguridad.md) ·
 > [plan de despliegue](plan-despliegue.md)
 
