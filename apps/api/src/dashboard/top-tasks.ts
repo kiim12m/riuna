@@ -1,12 +1,13 @@
-import { and, asc, desc, eq, isNull, ne, type SQL, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import db from "../database";
 import { projectTable, taskTable } from "../database/schema";
-import { type PersonalScope, personalScopeCondition } from "../my-work/scope";
+import type { PersonalScope } from "../my-work/scope";
 import {
   type FieldRegistry,
   priorityRankExpression,
 } from "../view/field-registry";
-import { type FilterNode, filterToSql } from "../view/filter-to-sql";
+import type { FilterNode } from "../view/filter-to-sql";
+import { workspaceTaskConditions } from "../view/workspace-task-query";
 import { TABLE_WIDGET_ROWS } from "./widget-config";
 
 /**
@@ -33,26 +34,18 @@ export default async function topTasks({
   filter: FilterNode | null;
   registry: FieldRegistry;
 }) {
-  const conditions: SQL[] = [
-    eq(projectTable.workspaceId, workspaceId),
-    isNull(projectTable.archivedAt),
-    ne(taskTable.status, "archived"),
-  ];
+  const conditions = await workspaceTaskConditions({
+    workspaceId,
+    userId,
+    projectId,
+    scope,
+    filter,
+    registry,
+  });
 
-  if (projectId) {
-    conditions.push(eq(taskTable.projectId, projectId));
-  }
-
-  if (scope) {
-    const personal = await personalScopeCondition(scope, workspaceId, userId);
-    // Sin equipos no hay nada que listar. Devolver la lista entera seria peor
-    // que devolver ninguna.
-    if (!personal) return [];
-    conditions.push(personal);
-  }
-
-  const compiled = filterToSql(filter, registry);
-  if (compiled) conditions.push(compiled);
+  // Sin equipos no hay nada que listar. Devolver la lista entera seria peor que
+  // devolver ninguna.
+  if (!conditions) return [];
 
   return db
     .select({

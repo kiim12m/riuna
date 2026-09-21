@@ -5,9 +5,7 @@ import {
   eq,
   gte,
   isNotNull,
-  isNull,
   lt,
-  ne,
   type SQL,
   sql,
 } from "drizzle-orm";
@@ -18,13 +16,14 @@ import {
   taskTable,
   timeEntryTable,
 } from "../database/schema";
-import { type PersonalScope, personalScopeCondition } from "../my-work/scope";
+import type { PersonalScope } from "../my-work/scope";
 import { addDays, startOfServerDay } from "../utils/day-boundaries";
 import {
   type FieldRegistry,
   priorityRankExpression,
 } from "../view/field-registry";
-import { type FilterNode, filterToSql } from "../view/filter-to-sql";
+import type { FilterNode } from "../view/filter-to-sql";
+import { workspaceTaskConditions } from "../view/workspace-task-query";
 
 export const CATEGORICAL_GROUP_BY = [
   "project",
@@ -98,53 +97,6 @@ export type AggregateRequest = {
   now?: Date;
 };
 
-/**
- * El ambito, que es lo mismo para los seis tipos de widget.
- *
- * **`project.workspace_id` va siempre, incluso con `projectId` puesto.** Es lo
- * que impide que un widget que apunte a un proyecto de otro espacio se lleve
- * datos ajenos: con la pertenencia comprobada aqui, un id equivocado devuelve
- * cero filas en vez de contenido de otro sitio.
- */
-async function scopeConditions({
-  workspaceId,
-  userId,
-  projectId,
-  scope,
-  filter,
-  registry,
-}: Pick<
-  AggregateRequest,
-  "workspaceId" | "userId" | "projectId" | "scope" | "filter" | "registry"
->): Promise<SQL[] | null> {
-  const conditions: SQL[] = [
-    eq(projectTable.workspaceId, workspaceId),
-    isNull(projectTable.archivedAt),
-    // Una tarea archivada no entra en ningun agregado: es la regla que ya
-    // aplican los agregados del arbol.
-    ne(taskTable.status, "archived"),
-  ];
-
-  if (projectId) {
-    conditions.push(eq(taskTable.projectId, projectId));
-  }
-
-  if (scope) {
-    const personal = await personalScopeCondition(scope, workspaceId, userId);
-    // `null` es "no puede casar nada" —quien no esta en ningun equipo—, no
-    // "sin filtro": devolverlo como ausencia contaria el espacio entero.
-    if (!personal) return null;
-    conditions.push(personal);
-  }
-
-  const compiled = filterToSql(filter, registry);
-  if (compiled) {
-    conditions.push(compiled);
-  }
-
-  return conditions;
-}
-
 const doneExpression = sql`(${taskTable.completedAt} IS NOT NULL)`;
 
 /** El `CASE` de las ventanas de vencimiento, con las fronteras del servidor. */
@@ -202,7 +154,7 @@ export default async function aggregate(
   request: AggregateRequest,
 ): Promise<AggregateResult> {
   const now = request.now ?? new Date();
-  const conditions = await scopeConditions(request);
+  const conditions = await workspaceTaskConditions(request);
 
   if (!conditions) return { buckets: [], truncated: false };
   const { metric, groupBy, granularity = "week" } = request;
