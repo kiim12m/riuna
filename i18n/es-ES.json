@@ -1460,13 +1460,17 @@
 		},
 		"notifications": "Notificaciones",
 		"sidebar": {
-			"overview": "Vista general",
+			"personal": "Espacio personal",
+			"admin": "Administración",
 			"projects": "Proyectos",
+			"home": "Mi panel",
+			"goals": "Objetivos",
 			"members": "Miembros",
+			"membersAndTeams": "Miembros y equipos",
+			"workspaceAdmin": "Espacio",
+			"projectSettings": "Ajustes de proyecto",
 			"more": "Más",
-			"backToBoard": "Volver al tablero",
-			"home": "Panel",
-			"goals": "Objetivos"
+			"backToBoard": "Volver al tablero"
 		},
 		"projectList": {
 			"viewProject": "Ver Proyecto",

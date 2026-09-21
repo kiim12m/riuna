@@ -9,7 +9,7 @@ import TreeSettings from "@/components/project/tree-settings";
 import WorkflowEditor from "@/components/project/workflow-editor";
 
 export const Route = createFileRoute(
-  "/_layout/_authenticated/dashboard/settings/projects/$projectId/workflow",
+  "/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/workflow",
 )({
   component: RouteComponent,
 });

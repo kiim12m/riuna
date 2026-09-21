@@ -47,7 +47,7 @@ import { toast } from "@/lib/toast";
 import useProjectStore from "@/store/project.ts";
 
 export const Route = createFileRoute(
-  "/_layout/_authenticated/dashboard/settings/projects/$projectId/general",
+  "/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/general",
 )({
   component: RouteComponent,
 });

@@ -217,7 +217,7 @@ export function NavProjects() {
   return (
     <>
       <Collapsible defaultOpen className="group/collapsible">
-        <SidebarGroup className="gap-1 p-2 pt-1">
+        <SidebarGroup className="gap-1 p-2 pt-1 group-data-[collapsible=icon]:mt-1 group-data-[collapsible=icon]:border-sidebar-border group-data-[collapsible=icon]:border-t group-data-[collapsible=icon]:pt-2">
           <CollapsibleTrigger
             className="data-panel-open:[&_svg]:rotate-90"
             render={
@@ -328,8 +328,11 @@ export function NavProjects() {
                                 className="h-7 items-start cursor-pointer text-sm"
                                 onClick={() => {
                                   navigate({
-                                    to: "/dashboard/settings/projects/$projectId/general",
-                                    params: { projectId: project.id },
+                                    to: "/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/general",
+                                    params: {
+                                      workspaceId: workspace?.id || "",
+                                      projectId: project.id,
+                                    },
                                   });
                                 }}
                               >

@@ -1460,13 +1460,17 @@
 		},
 		"notifications": "Notificacions",
 		"sidebar": {
-			"overview": "Visió general",
+			"personal": "Espai personal",
+			"admin": "Administració",
 			"projects": "Projectes",
+			"home": "El meu panell",
+			"goals": "Objectius",
 			"members": "Membres",
+			"membersAndTeams": "Membres i equips",
+			"workspaceAdmin": "Espai",
+			"projectSettings": "Configuració del projecte",
 			"more": "Més",
-			"backToBoard": "Torna al tauler",
-			"home": "Panel",
-			"goals": "Objectius"
+			"backToBoard": "Torna al tauler"
 		},
 		"projectList": {
 			"viewProject": "Mostra el projecte",

@@ -1460,13 +1460,17 @@
 		},
 		"notifications": "Notifications",
 		"sidebar": {
-			"overview": "Overview",
+			"personal": "Personal space",
+			"admin": "Administration",
 			"projects": "Projects",
+			"home": "My panel",
+			"goals": "Goals",
 			"members": "Members",
+			"membersAndTeams": "Members and teams",
+			"workspaceAdmin": "Workspace",
+			"projectSettings": "Project settings",
 			"more": "More",
-			"backToBoard": "Back to board",
-			"home": "Home",
-			"goals": "Goals"
+			"backToBoard": "Back to board"
 		},
 		"projectList": {
 			"viewProject": "View Project",

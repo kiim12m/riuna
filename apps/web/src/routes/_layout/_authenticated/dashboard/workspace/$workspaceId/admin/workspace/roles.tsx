@@ -41,7 +41,7 @@ import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { toast } from "@/lib/toast";
 
 export const Route = createFileRoute(
-  "/_layout/_authenticated/dashboard/settings/workspace/roles",
+  "/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/roles",
 )({
   component: RouteComponent,
 });

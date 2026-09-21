@@ -88,7 +88,8 @@ export function TrialCard() {
           : "Upgrade anytime to keep your workspace after the trial."}
       </p>
       <Link
-        to="/dashboard/settings/workspace/billing"
+        to="/dashboard/workspace/$workspaceId/admin/workspace/billing"
+        params={{ workspaceId: workspace.id }}
         className="mt-2 inline-flex font-medium underline underline-offset-2 hover:no-underline"
       >
         {expired ? "Choose a plan" : "View plans"}

@@ -3,7 +3,9 @@ import { createTask, expect, test } from "./fixtures";
 /** Rebanadas 3 y 4: las dos viven en los ajustes de flujo del proyecto. */
 test.describe("Recurrentes y plantillas", () => {
   test("creates a weekly recurrence and pauses it", async ({ page, riuna }) => {
-    await page.goto(`/dashboard/settings/projects/${riuna.projectId}/workflow`);
+    await page.goto(
+      `/dashboard/workspace/${riuna.workspaceId}/admin/project-settings/${riuna.projectId}/workflow`,
+    );
 
     await expect(
       page.getByRole("heading", { name: "Tareas recurrentes" }),
@@ -33,7 +35,9 @@ test.describe("Recurrentes y plantillas", () => {
     const root = await createTask(riuna, "Lanzamiento");
     await createTask(riuna, "Preparar copia", { parentId: root });
 
-    await page.goto(`/dashboard/settings/projects/${riuna.projectId}/workflow`);
+    await page.goto(
+      `/dashboard/workspace/${riuna.workspaceId}/admin/project-settings/${riuna.projectId}/workflow`,
+    );
 
     await expect(
       page.getByRole("heading", { name: "Plantillas" }),

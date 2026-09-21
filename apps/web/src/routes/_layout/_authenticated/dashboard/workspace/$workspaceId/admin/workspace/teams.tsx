@@ -52,7 +52,7 @@ import { getInitials } from "@/lib/get-initials";
 import { toast } from "@/lib/toast";
 
 export const Route = createFileRoute(
-  "/_layout/_authenticated/dashboard/settings/workspace/teams",
+  "/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/teams",
 )({
   component: RouteComponent,
 });

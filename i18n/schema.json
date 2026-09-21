@@ -5788,19 +5788,13 @@
 					"type": "object",
 					"additionalProperties": false,
 					"properties": {
-						"overview": {
+						"personal": {
+							"type": "string"
+						},
+						"admin": {
 							"type": "string"
 						},
 						"projects": {
-							"type": "string"
-						},
-						"members": {
-							"type": "string"
-						},
-						"more": {
-							"type": "string"
-						},
-						"backToBoard": {
 							"type": "string"
 						},
 						"home": {
@@ -5808,16 +5802,38 @@
 						},
 						"goals": {
 							"type": "string"
+						},
+						"members": {
+							"type": "string"
+						},
+						"membersAndTeams": {
+							"type": "string"
+						},
+						"workspaceAdmin": {
+							"type": "string"
+						},
+						"projectSettings": {
+							"type": "string"
+						},
+						"more": {
+							"type": "string"
+						},
+						"backToBoard": {
+							"type": "string"
 						}
 					},
 					"required": [
-						"overview",
+						"personal",
+						"admin",
 						"projects",
-						"members",
-						"more",
-						"backToBoard",
 						"home",
-						"goals"
+						"goals",
+						"members",
+						"membersAndTeams",
+						"workspaceAdmin",
+						"projectSettings",
+						"more",
+						"backToBoard"
 					]
 				},
 				"projectList": {

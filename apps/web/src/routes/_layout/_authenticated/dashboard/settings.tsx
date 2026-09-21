@@ -10,11 +10,18 @@ import { useTranslation } from "react-i18next";
 import PageTitle from "@/components/page-title";
 import { SettingsSidebarProvider } from "@/components/SettingsSidebar";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+/**
+ * Ajustes, que ahora son solo **los de la cuenta**.
+ *
+ * Las pestanas de espacio y de proyecto se fueron al grupo de administracion,
+ * dentro del layout con barra lateral: son de administrar el espacio, no de la
+ * persona. Lo que queda aqui —perfil, avisos, preferencias y claves de API— es
+ * lo unico que de verdad pertenece a quien ha iniciado sesion, y por eso sigue
+ * abriendose desde el menu de usuario y no desde la barra.
+ */
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/settings",
 )({
@@ -28,25 +35,6 @@ function SettingsLayout() {
   const isMobile = useIsMobile();
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const { data: workspace } = useActiveWorkspace();
-  const { data: projects } = useGetProjects({
-    workspaceId: workspace?.id ?? "",
-  });
-
-  const getActiveTab = () => {
-    const pathname = location.pathname;
-    if (pathname.includes("/dashboard/settings/account")) {
-      return "account";
-    }
-    if (pathname.includes("/dashboard/settings/workspace")) {
-      return "workspace";
-    }
-    if (pathname.includes("/dashboard/settings/projects")) {
-      return "project";
-    }
-    return "account";
-  };
-
-  const activeTab = getActiveTab();
 
   useEffect(() => {
     if (location.pathname) {
@@ -96,7 +84,7 @@ function SettingsLayout() {
                   if (!workspace?.id) return;
 
                   navigate({
-                    to: "/dashboard/workspace/$workspaceId",
+                    to: "/dashboard/workspace/$workspaceId/home",
                     params: { workspaceId: workspace.id },
                   });
                 }}
@@ -110,48 +98,6 @@ function SettingsLayout() {
             <h1 className="mt-4 hidden pl-1 text-2xl font-semibold md:block">
               {t("navigation:page.settingsTitle")}
             </h1>
-
-            <Tabs
-              value={activeTab}
-              className="w-full pt-4 md:w-[400px] md:pt-2"
-            >
-              <TabsList className="bg-sidebar gap-2">
-                <TabsTrigger
-                  value="account"
-                  className="[&[data-state=active]]:rounded-md [&[data-state=active]]:border [&[data-state=active]]:border-border [&[data-state=active]]:bg-card"
-                  onClick={() =>
-                    navigate({
-                      to: "/dashboard/settings/account/information",
-                    })
-                  }
-                >
-                  {t("settings:account")}
-                </TabsTrigger>
-                <TabsTrigger
-                  value="workspace"
-                  className="[&[data-state=active]]:rounded-md [&[data-state=active]]:border [&[data-state=active]]:border-border [&[data-state=active]]:bg-card"
-                  onClick={() =>
-                    navigate({
-                      to: "/dashboard/settings/workspace/general",
-                    })
-                  }
-                >
-                  {t("navigation:page.settingsWorkspaceTab")}
-                </TabsTrigger>
-                <TabsTrigger
-                  disabled={projects?.length === 0}
-                  value="project"
-                  className="[&[data-state=active]]:rounded-md [&[data-state=active]]:border [&[data-state=active]]:border-border [&[data-state=active]]:bg-card"
-                  onClick={() =>
-                    navigate({
-                      to: "/dashboard/settings/projects",
-                    })
-                  }
-                >
-                  {t("navigation:sidebar.projects")}
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto">

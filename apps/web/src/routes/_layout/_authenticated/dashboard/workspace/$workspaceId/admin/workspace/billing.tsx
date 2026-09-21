@@ -15,7 +15,7 @@ import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
 
 export const Route = createFileRoute(
-  "/_layout/_authenticated/dashboard/settings/workspace/billing",
+  "/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/billing",
 )({
   component: RouteComponent,
 });

@@ -1,0 +1,1304 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Barra lateral de Riuna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+  /* ---------------------------------------------------------------
+     Tokens de la PÁGINA (el chrome de esta maqueta).
+     Siguen el tema del visor. Los de la APLICACIÓN van más abajo,
+     bajo .frame, y se conmutan aparte porque son lo que se revisa.
+     Valores tomados de apps/web/DESIGN.md y src/index.css.
+  ----------------------------------------------------------------*/
+  :root {
+    --navy: #1B3A5C;
+    --navy-900: #142B44;
+    --teal: #0E8A7A;
+    --teal-strong: #0B7466;
+    --teal-lighter: #5FD3C0;
+
+    --page-bg: #EEF1F5;
+    --page-panel: #FFFFFF;
+    --page-ink: #141D2B;
+    --page-mid: #4A6380;
+    --page-border: #D8DDE5;
+    --page-accent: var(--teal-strong);
+
+    --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page-bg: #0B141F;
+      --page-panel: #101C2A;
+      --page-ink: #E6EDF4;
+      --page-mid: #8FA7C0;
+      --page-border: rgba(255, 255, 255, 0.10);
+      --page-accent: var(--teal-lighter);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --page-bg: #0B141F;
+    --page-panel: #101C2A;
+    --page-ink: #E6EDF4;
+    --page-mid: #8FA7C0;
+    --page-border: rgba(255, 255, 255, 0.10);
+    --page-accent: var(--teal-lighter);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--page-bg);
+    color: var(--page-ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding-inline: 16px;
+    padding-block: 28px 44px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* --- cabecera de la maqueta --- */
+  .masthead { display: flex; flex-direction: column; gap: 6px; }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--page-accent);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .lede {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--page-mid);
+  }
+
+  /* --- controles --- */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 24px;
+    align-items: flex-end;
+    padding: 14px 16px;
+    background: var(--page-panel);
+    border: 1px solid var(--page-border);
+    border-radius: 10px;
+  }
+
+  .control { display: flex; flex-direction: column; gap: 6px; }
+
+  .control > span {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--page-mid);
+  }
+
+  /* Control segmentado: el primitivo único de la ADR 028. */
+  .seg {
+    display: inline-flex;
+    padding: 2px;
+    gap: 2px;
+    background: color-mix(in srgb, var(--page-mid) 12%, transparent);
+    border-radius: 8px;
+  }
+
+  .seg button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: var(--page-mid);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 140ms ease, color 140ms ease;
+  }
+
+  .seg button:hover { color: var(--page-ink); }
+
+  .seg button[aria-pressed="true"] {
+    background: var(--page-panel);
+    color: var(--page-ink);
+    box-shadow: 0 1px 2px rgba(20, 29, 43, 0.12);
+  }
+
+  .seg button:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 1px;
+  }
+
+  /* ---------------------------------------------------------------
+     Tokens de la APLICACIÓN. Claro por defecto; [data-app="dark"]
+     redefine solo los tokens, nunca los componentes.
+  ----------------------------------------------------------------*/
+  .frame {
+    --sidebar: #F6F7F9;                 /* --riuna-surface */
+    --sidebar-fg: #4A6380;              /* --riuna-mid */
+    --sidebar-ink: #141D2B;             /* --riuna-ink */
+    --sidebar-accent: rgba(14, 138, 122, 0.12);
+    --sidebar-accent-fg: #0B7466;       /* teal-strong */
+    --sidebar-border: rgba(27, 58, 92, 0.12);
+    --sidebar-hover: rgba(27, 58, 92, 0.06);
+    --canvas: #FFFFFF;
+    --canvas-border: #D8DDE5;
+    --canvas-ink: #141D2B;
+    --canvas-mid: #4A6380;
+    --ring: #0E8A7A;
+    --avatar: #1B3A5C;
+    --avatar-fg: #FFFFFF;
+  }
+
+  .frame[data-app="dark"] {
+    --sidebar: #0E1825;                 /* --riuna-sunken */
+    --sidebar-fg: #8FA7C0;              /* --riuna-mid-night */
+    --sidebar-ink: #E6EDF4;
+    --sidebar-accent: rgba(42, 179, 159, 0.16);
+    --sidebar-accent-fg: #5FD3C0;       /* teal-lighter */
+    --sidebar-border: rgba(255, 255, 255, 0.08);
+    --sidebar-hover: rgba(255, 255, 255, 0.05);
+    --canvas: #101C2A;                  /* --riuna-raised */
+    --canvas-border: rgba(255, 255, 255, 0.08);
+    --canvas-ink: #E6EDF4;
+    --canvas-mid: #8FA7C0;
+    --ring: #2AB39F;
+    --avatar: #2AB39F;
+    --avatar-fg: #0B141F;
+  }
+
+  .frame {
+    display: flex;
+    height: 620px;
+    border: 1px solid var(--canvas-border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--canvas);
+    box-shadow: 0 1px 2px rgba(20, 29, 43, 0.06), 0 8px 24px rgba(20, 29, 43, 0.08);
+  }
+
+  /* --- barra lateral --- */
+  .sidebar {
+    width: 268px;
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    background: var(--sidebar);
+    border-right: 1px solid var(--sidebar-border);
+    transition: width 180ms ease;
+    overflow: hidden;
+  }
+
+  .frame[data-rail="true"] .sidebar { width: 52px; }
+
+  .sb-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--sidebar-border);
+    min-height: 52px;
+  }
+
+  .ws-badge {
+    width: 26px;
+    height: 26px;
+    flex: none;
+    border-radius: 7px;
+    background: var(--avatar);
+    color: var(--avatar-fg);
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .ws-name { display: flex; flex-direction: column; min-width: 0; }
+  .ws-name b { font-size: 13px; font-weight: 600; color: var(--sidebar-ink); }
+  .ws-name span { font-size: 11px; color: var(--sidebar-fg); }
+
+  .sb-search {
+    margin: 8px 8px 2px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 30px;
+    padding: 0 8px;
+    border: 1px solid var(--sidebar-border);
+    border-radius: 6px;
+    color: var(--sidebar-fg);
+    font-size: 13px;
+  }
+
+  .sb-search kbd {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 1px 4px;
+    border: 1px solid var(--sidebar-border);
+    border-radius: 3px;
+  }
+
+  .sb-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 6px 0 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .group { padding: 4px 8px; }
+
+  /* En raíl los grupos se separan con un filete, ya que pierden su rótulo. */
+  .frame[data-rail="true"] .group + .group {
+    border-top: 1px solid var(--sidebar-border);
+    margin-top: 4px;
+    padding-top: 8px;
+  }
+
+  .group-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 28px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--sidebar-accent-fg);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .group-label svg { width: 13px; height: 13px; opacity: 0.6; transition: transform 160ms ease; }
+  .group[data-open="true"] .group-label svg { transform: rotate(90deg); }
+  .group[data-open="false"] .items { display: none; }
+  .frame[data-rail="true"] .group-label { display: none; }
+  .frame[data-rail="true"] .group[data-open="false"] .items { display: flex; }
+
+  .items { display: flex; flex-direction: column; gap: 2px; }
+
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: 6px;
+    color: var(--sidebar-fg);
+    font-size: 14px;
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+    font-family: inherit;
+    width: 100%;
+    text-align: left;
+    transition: background 120ms ease, color 120ms ease;
+  }
+
+  .item:hover { background: var(--sidebar-hover); color: var(--sidebar-ink); }
+
+  .item[aria-current="true"] {
+    background: var(--sidebar-accent);
+    color: var(--sidebar-accent-fg);
+    font-weight: 500;
+  }
+
+  .item:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+
+  .item svg { width: 16px; height: 16px; flex: none; opacity: 0.85; }
+  .item span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .frame[data-rail="true"] .item { justify-content: center; padding: 0; }
+  .frame[data-rail="true"] .item span,
+  .frame[data-rail="true"] .item .count,
+  .frame[data-rail="true"] .sub,
+  .frame[data-rail="true"] .ws-name,
+  .frame[data-rail="true"] .sb-search span,
+  .frame[data-rail="true"] .sb-search kbd,
+  .frame[data-rail="true"] .foot-text { display: none; }
+
+  .frame[data-rail="true"] .sb-search { justify-content: center; padding: 0; }
+
+  .count {
+    margin-left: auto;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--sidebar-fg);
+    opacity: 0.75;
+  }
+
+  /* Sub-vistas de "Mis tareas": el mismo conmutador que ya tiene un proyecto. */
+  .sub {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin: 1px 0 3px 15px;
+    padding-left: 9px;
+    border-left: 1px solid var(--sidebar-border);
+  }
+
+  .sub .item { height: 28px; font-size: 13px; }
+  .sub .item svg { width: 13px; height: 13px; }
+
+  .dot { width: 8px; height: 8px; border-radius: 3px; flex: none; }
+
+  /* --- pie: el indicador de cronómetro --- */
+  .sb-foot {
+    border-top: 1px solid var(--sidebar-border);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .timer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    border-radius: 7px;
+    background: var(--sidebar-accent);
+    color: var(--sidebar-accent-fg);
+    cursor: pointer;
+  }
+
+  .pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    flex: none;
+    animation: beat 2s ease-in-out infinite;
+  }
+
+  @keyframes beat { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pulse { animation: none; }
+    .sidebar { transition: none; }
+  }
+
+  .timer .foot-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+  .timer .foot-text b { font-size: 12px; font-weight: 500; }
+  .timer .foot-text time {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  .timer .stop { margin-left: auto; }
+  .frame[data-rail="true"] .timer { justify-content: center; padding: 7px 0; }
+  .frame[data-rail="true"] .timer .stop { display: none; }
+
+  /* --- lienzo de la derecha --- */
+  .canvas {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--canvas);
+  }
+
+  .canvas-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    height: 52px;
+    border-bottom: 1px solid var(--canvas-border);
+    font-size: 13px;
+    color: var(--canvas-mid);
+  }
+
+  .canvas-head b { color: var(--canvas-ink); font-weight: 600; }
+
+  .canvas-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .stub-title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--canvas-ink);
+  }
+
+  .stub-note {
+    margin: 0;
+    font-size: 13px;
+    color: var(--canvas-mid);
+    max-width: 58ch;
+  }
+
+  .rows { display: flex; flex-direction: column; gap: 1px; }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    color: var(--canvas-ink);
+    font-size: 13px;
+  }
+
+  .row:nth-child(odd) { background: color-mix(in srgb, var(--canvas-mid) 5%, transparent); }
+  .row .tag {
+    margin-left: auto;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--canvas-mid);
+    white-space: nowrap;
+  }
+  .row .proj {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--canvas-border);
+    color: var(--canvas-mid);
+    white-space: nowrap;
+  }
+
+  .ghost {
+    display: block;
+    height: 9px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--canvas-mid) 16%, transparent);
+  }
+
+  .stub-note code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ring);
+  }
+
+  /* --- relleno del planificador: columnas de día con capacidad --- */
+  .days { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+
+  .day {
+    flex: 1 0 150px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 9px;
+    border: 1px solid var(--canvas-border);
+    border-radius: 8px;
+  }
+
+  .day header { display: flex; flex-direction: column; gap: 4px; }
+  .day b { font-size: 12px; font-weight: 600; color: var(--canvas-ink); }
+  .day .cap {
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: var(--canvas-mid);
+  }
+
+  .bar {
+    height: 4px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--canvas-mid) 18%, transparent);
+    overflow: hidden;
+  }
+  .bar i { display: block; height: 100%; background: var(--ring); border-radius: 2px; }
+  .bar[data-over="true"] i { background: #D97706; }
+
+  .chip {
+    font-size: 11px;
+    padding: 5px 7px;
+    border-radius: 5px;
+    background: color-mix(in srgb, var(--canvas-mid) 8%, transparent);
+    border: 1px solid var(--canvas-border);
+    color: var(--canvas-ink);
+  }
+  .chip[data-ghost="true"] {
+    border-style: dashed;
+    background: transparent;
+    color: var(--canvas-mid);
+  }
+
+  /* --- relleno del cronograma: rejilla de semana con eje de horas --- */
+  .sched-wrap { overflow-x: auto; }
+
+  .sched {
+    display: grid;
+    grid-template-columns: 46px repeat(4, minmax(120px, 1fr));
+    grid-auto-rows: 26px;
+    column-gap: 4px;
+    min-width: 520px;
+    position: relative;
+  }
+
+  .sched .dayhead {
+    grid-row: 1;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--canvas-ink);
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--canvas-border);
+    align-self: end;
+  }
+
+  .sched .hour {
+    grid-column: 1;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+    color: var(--canvas-mid);
+    text-align: right;
+    padding-right: 4px;
+    transform: translateY(-6px);
+  }
+
+  /* El filete de cada hora, que da la rejilla sin dibujar una tabla. */
+  .sched .rule {
+    border-top: 1px dashed color-mix(in srgb, var(--canvas-mid) 20%, transparent);
+    grid-column: 2 / -1;
+  }
+
+  .block {
+    font-size: 11px;
+    line-height: 1.25;
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--ring) 16%, transparent);
+    border-left: 3px solid var(--ring);
+    color: var(--canvas-ink);
+    overflow: hidden;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .block .len {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--canvas-mid);
+  }
+
+  /* Hora fija: no se mueve, y por eso lleva el navy que sostiene. */
+  .block[data-fixed="true"] {
+    background: color-mix(in srgb, var(--avatar) 16%, transparent);
+    border-left-color: var(--avatar);
+  }
+  /* Continuación de algo partido por un bloque cerrado. */
+  .block[data-split="true"] { border-left-style: dashed; }
+  .block[data-repeat="true"] {
+    background: transparent;
+    border: 1px dashed color-mix(in srgb, var(--canvas-mid) 40%, transparent);
+    border-left-width: 3px;
+    color: var(--canvas-mid);
+  }
+  .block[data-blocked="true"] {
+    background: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--canvas-mid) 12%, transparent) 0 5px,
+      transparent 5px 10px
+    );
+    border-left-color: color-mix(in srgb, var(--canvas-mid) 40%, transparent);
+    color: var(--canvas-mid);
+  }
+  .block[data-running="true"] {
+    border-left-color: #D97706;
+    background: color-mix(in srgb, #D97706 16%, transparent);
+  }
+
+  /* La marca del ahora, que cruza solo el día en curso. */
+  .nowline {
+    grid-column: 2;
+    height: 0;
+    border-top: 2px solid #DC2626;
+    align-self: start;
+    z-index: 2;
+    position: relative;
+  }
+  .nowline::before {
+    content: "";
+    position: absolute;
+    left: -3px;
+    top: -4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #DC2626;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 11px;
+    color: var(--canvas-mid);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    border-left: 3px solid var(--ring);
+    background: color-mix(in srgb, var(--ring) 16%, transparent);
+  }
+  .legend i[data-fixed] {
+    border-left-color: var(--avatar);
+    background: color-mix(in srgb, var(--avatar) 16%, transparent);
+  }
+  .legend i[data-repeat] {
+    border: 1px dashed color-mix(in srgb, var(--canvas-mid) 40%, transparent);
+    border-left-width: 3px;
+    background: transparent;
+  }
+  .legend i[data-blocked] {
+    border-left-color: color-mix(in srgb, var(--canvas-mid) 40%, transparent);
+    background: color-mix(in srgb, var(--canvas-mid) 18%, transparent);
+  }
+
+  /* --- Hoy: lista + panel derecho --- */
+  .today-split { display: flex; gap: 12px; align-items: flex-start; }
+  .today-split > .rows { flex: 1; min-width: 0; }
+
+  .peek {
+    width: 236px;
+    flex: none;
+    border: 1px solid var(--canvas-border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .peek header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 9px;
+    border-bottom: 1px solid var(--canvas-border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--canvas-mid);
+  }
+
+  .peek .peek-body { padding: 9px; display: flex; flex-direction: column; gap: 7px; }
+  .peek h4 { margin: 0; font-size: 13px; font-weight: 600; color: var(--canvas-ink); }
+  .peek dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 11px; }
+  .peek dt { color: var(--canvas-mid); }
+  .peek dd { margin: 0; color: var(--canvas-ink); }
+
+  /* --- botón de cronómetro en la fila --- */
+  .play {
+    width: 22px;
+    height: 22px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 5px;
+    border: 1px solid var(--canvas-border);
+    color: var(--canvas-mid);
+    background: transparent;
+  }
+  .play[data-on="true"] {
+    border-color: transparent;
+    background: color-mix(in srgb, #D97706 18%, transparent);
+    color: #D97706;
+  }
+  .row[data-running="true"] { background: color-mix(in srgb, #D97706 9%, transparent); }
+
+  @media (max-width: 900px) {
+    .today-split { flex-direction: column; }
+    .peek { width: 100%; }
+  }
+
+  /* --- notas de revisión --- */
+  .notes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+  }
+
+  .note {
+    padding: 14px 16px;
+    background: var(--page-panel);
+    border: 1px solid var(--page-border);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .note h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .note p { margin: 0; font-size: 13px; color: var(--page-mid); }
+  .note code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--page-accent);
+  }
+
+  .hint {
+    margin: 0;
+    font-size: 12px;
+    color: var(--page-mid);
+    font-style: italic;
+  }
+
+  @media (max-width: 760px) {
+    .frame { height: 560px; }
+    .canvas { display: none; }
+    .sidebar { width: 100%; border-right: 0; }
+    .frame[data-rail="true"] .sidebar { width: 52px; }
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">Maqueta de revisión · antes de tocar código</p>
+    <h1>Barra lateral en tres espacios</h1>
+    <p class="lede">
+      Lo personal, lo que administra el espacio y los proyectos dejan de compartir
+      un solo grupo. Cambia el rol para ver qué desaparece cuando quien mira no
+      administra, y el estado de la barra para comprobar el raíl de 52&nbsp;px de la ADR 022.
+      Entra en <b>Planificador</b> y <b>Cronograma</b>: son las dos piezas nuevas, y las dos
+      salen del mismo dato.
+    </p>
+  </header>
+
+  <div class="controls">
+    <label class="control">
+      <span>Quién mira</span>
+      <span class="seg" id="seg-role">
+        <button type="button" data-value="admin" aria-pressed="true">Administra</button>
+        <button type="button" data-value="member" aria-pressed="false">Miembro raso</button>
+      </span>
+    </label>
+
+    <label class="control">
+      <span>Barra lateral</span>
+      <span class="seg" id="seg-rail">
+        <button type="button" data-value="false" aria-pressed="true">Abierta</button>
+        <button type="button" data-value="true" aria-pressed="false">Raíl</button>
+      </span>
+    </label>
+
+    <label class="control">
+      <span>Tema de la aplicación</span>
+      <span class="seg" id="seg-app-theme">
+        <button type="button" data-value="light" aria-pressed="true">Claro</button>
+        <button type="button" data-value="dark" aria-pressed="false">Oscuro</button>
+      </span>
+    </label>
+  </div>
+
+  <div class="frame" id="frame" data-rail="false" data-app="light" data-role="admin">
+    <nav class="sidebar" aria-label="Navegación principal">
+      <div class="sb-head">
+        <div class="ws-badge">SV</div>
+        <div class="ws-name">
+          <b>Servitec</b>
+          <span>Espacio de trabajo</span>
+        </div>
+      </div>
+
+      <div class="sb-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <span>Buscar</span>
+        <kbd>⌘K</kbd>
+      </div>
+
+      <div class="sb-scroll" id="nav"></div>
+
+      <div class="sb-foot">
+        <div class="timer" title="Cronómetro en marcha">
+          <span class="pulse"></span>
+          <span class="foot-text">
+            <b>Revisar cuadro eléctrico</b>
+            <time id="clock">00:42:17</time>
+          </span>
+          <svg class="stop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+        </div>
+      </div>
+    </nav>
+
+    <section class="canvas">
+      <div class="canvas-head">
+        <b>Servitec</b>
+        <span>/</span>
+        <span id="crumb">Hoy</span>
+      </div>
+      <div class="canvas-body" id="stub"></div>
+    </section>
+  </div>
+
+  <p class="hint">
+    El panel de la derecha es relleno: esta maqueta revisa la barra lateral, no las pantallas.
+  </p>
+
+  <div class="notes">
+    <div class="note">
+      <h3>La puerta es una capacidad, no el rol</h3>
+      <p>
+        El grupo se enseña si hay alguna de <code>canManageWorkspace</code>,
+        <code>canManageProjects</code>, <code>canManageTeam</code> o
+        <code>canInviteUsers</code>. Comparar con las cadenas <code>owner</code>
+        y <code>admin</code> dejaría fuera a un rol a medida que sí tiene el permiso.
+      </p>
+    </div>
+    <div class="note">
+      <h3>Ajustes se queda con la cuenta</h3>
+      <p>
+        Los ajustes de espacio y de proyecto vuelven al layout con barra lateral.
+        <code>/dashboard/settings</code> conserva solo perfil, avisos, preferencias
+        y claves de API, y se sigue abriendo desde el menú de usuario.
+      </p>
+    </div>
+    <div class="note">
+      <h3>Se entra por Hoy</h3>
+      <p>
+        La tabla de proyectos pasa a Administración, así que deja de valer como
+        pantalla de entrada. <code>/dashboard</code> lleva a <code>/today</code>,
+        y las URL viejas redirigen como ya se hizo con <code>/my-work</code>.
+      </p>
+    </div>
+    <div class="note">
+      <h3>El calendario sale de Mis tareas</h3>
+      <p>
+        Su sitio lo ocupa el Cronograma, que es una línea de tiempo por horas y no
+        una rejilla de mes. La vista Calendario <b>de proyecto</b> no se toca.
+      </p>
+    </div>
+    <div class="note">
+      <h3>Planificar no mueve el vencimiento</h3>
+      <p>
+        Super-productivity planifica escribiendo la fecha de vencimiento de la tarea.
+        Aquí no: <code>due_date</code> es un compromiso con el equipo, y que yo decida
+        trabajar el lunes en algo no puede cambiar lo que el equipo ve. El plan
+        personal vive en su propia tabla.
+      </p>
+    </div>
+    <div class="note">
+      <h3>El cronograma se porta, no se reescribe</h3>
+      <p>
+        <code>map-schedule-data/</code> de super-productivity son ~60 KB de
+        TypeScript puro con ~190 KB de tests, sin una sola importación de Angular.
+        Es MIT: entra con su copyright en <code>NOTICE</code>. Sus componentes
+        Angular no; esos se rehacen con las primitivas de Riuna.
+      </p>
+    </div>
+    <div class="note">
+      <h3>El cronómetro va al pie</h3>
+      <p>
+        No a una barra superior: la ADR 022 dice que esa variante se maquetó y se
+        descartó. En raíl queda el icono con el pulso, sin el botón de parar.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const svg = (d, w) =>
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${w || 2}" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+
+  const I = {
+    today: svg('<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/><path d="m9 16 2 2 4-4"/>'),
+    planner: svg('<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>'),
+    schedule: svg('<path d="M4 3v18"/><rect x="8" y="5" width="12" height="4" rx="1"/><rect x="8" y="12" width="7" height="4" rx="1"/><path d="M4 7h1M4 14h1M4 19h1"/>'),
+    panel: svg('<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>'),
+    tasks: svg('<rect x="3" y="5" width="6" height="6" rx="1"/><path d="m3 17 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/>'),
+    clock: svg('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'),
+    target: svg('<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>'),
+    grid: svg('<rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/>'),
+    users: svg('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+    building: svg('<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4"/>'),
+    sliders: svg('<path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3"/><path d="M14 2v4M8 10v4M16 18v4"/>'),
+    list: svg('<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'),
+    board: svg('<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18M15 3v18"/>'),
+    calendar: svg('<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/>'),
+    gantt: svg('<path d="M4 5h9M4 12h6M4 19h13"/><path d="M13 5v0M10 12v0"/>'),
+    table: svg('<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>'),
+    chevron: svg('<path d="m9 18 6-6-6-6"/>'),
+  };
+
+  // El modelo de la barra. `gate` marca lo que solo ve quien administra.
+  const GROUPS = [
+    {
+      label: 'Espacio personal',
+      items: [
+        { id: 'today', icon: I.today, label: 'Hoy', count: '7' },
+        { id: 'planner', icon: I.planner, label: 'Planificador' },
+        { id: 'schedule', icon: I.schedule, label: 'Cronograma' },
+        {
+          id: 'me', icon: I.tasks, label: 'Mis tareas', count: '34',
+          sub: [
+            { id: 'me-list', icon: I.list, label: 'Lista' },
+            { id: 'me-board', icon: I.board, label: 'Tablero' },
+            { id: 'me-gantt', icon: I.gantt, label: 'Gantt' },
+            { id: 'me-table', icon: I.table, label: 'Tabla' },
+          ],
+        },
+        { id: 'home', icon: I.panel, label: 'Mi panel' },
+        { id: 'worklog', icon: I.clock, label: 'Parte de horas' },
+        { id: 'goals', icon: I.target, label: 'Objetivos' },
+      ],
+    },
+    {
+      label: 'Administración',
+      gate: true,
+      items: [
+        { id: 'adm-projects', icon: I.grid, label: 'Proyectos', count: '6' },
+        { id: 'adm-members', icon: I.users, label: 'Miembros y equipos', count: '14' },
+        { id: 'adm-workspace', icon: I.building, label: 'Espacio' },
+        { id: 'adm-project-settings', icon: I.sliders, label: 'Ajustes de proyecto' },
+      ],
+    },
+    {
+      label: 'Proyectos',
+      items: [
+        { id: 'p1', dot: '#0E8A7A', label: 'Obra Norte' },
+        { id: 'p2', dot: '#1B3A5C', label: 'SAT' },
+        { id: 'p3', dot: '#D97706', label: 'Reforma Estación' },
+        { id: 'p4', dot: '#2563EB', label: 'Mantenimiento' },
+      ],
+    },
+  ];
+
+  // Lo que enseña el panel de relleno para cada entrada.
+  const STUBS = {
+    today: {
+      title: 'Hoy',
+      note: 'El plan del día, arrastrable. Cada fila arranca su propio cronómetro, y al pulsar la fila se abre el panel derecho de la tarea — el mismo que ya usan las cinco vistas de proyecto.',
+      kind: 'today',
+      rows: [
+        ['Revisar cuadro eléctrico', 'Obra Norte', '00:42 / 2 h', true],
+        ['Llamar al proveedor de áridos', 'SAT', 'arrastrada de ayer'],
+        ['Acta de replanteo', 'Obra Norte', '45 min'],
+        ['Cerrar parte de la semana', 'Mantenimiento', 'vence hoy'],
+        ['Presupuesto planta baja', 'Reforma Estación', 'vencida'],
+      ],
+    },
+    planner: {
+      title: 'Planificador',
+      note: 'Ventana rodante de 15 días. Se arrastran tareas de un día a otro y desde "sin planificar". Cada columna dice cuánto has metido frente a las horas que tienes: es lo que evita planificar doce horas en un día de ocho.',
+      kind: 'planner',
+      days: [
+        { name: 'Hoy · jue 18', load: 78, items: [['Revisar cuadro eléctrico'], ['Acta de replanteo'], ['Parte semanal', true]] },
+        { name: 'Vie 19', load: 54, items: [['Sustituir bomba'], ['Inventario de repuestos']] },
+        { name: 'Lun 22', load: 116, items: [['Presupuesto planta baja'], ['Visita a obra'], ['Revisión mensual', true]] },
+        { name: 'Mar 23', load: 25, items: [['Cerrar albaranes']] },
+      ],
+    },
+    schedule: {
+      title: 'Cronograma',
+      note: 'No es una rejilla de mes: es cuándo va a pasar cada cosa. Lo de hora fija se queda clavado, el resto fluye rellenando huecos según su estimación sin salir del horario laboral, se parte cuando topa con un bloque cerrado y desborda al día siguiente cuando no cabe.',
+      kind: 'schedule',
+      // hora de inicio (fila), duración en medias horas, columna de día
+      days: ['Hoy · jue 18', 'Vie 19', 'Lun 22', 'Mar 23'],
+      hours: ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'],
+      blocks: [
+        { day: 0, from: '08:00', spans: 3, text: 'Revisar cuadro eléctrico', len: '1 h 30 · en marcha', running: true },
+        { day: 0, from: '09:30', spans: 1, text: 'Acta de replanteo', len: '30 min' },
+        { day: 0, from: '10:00', spans: 2, text: 'Visita de obra', len: 'hora fija', fixed: true },
+        { day: 0, from: '11:00', spans: 1, text: 'Acta (continúa)', len: '15 min', split: true },
+        { day: 0, from: '13:00', spans: 2, text: 'Comida', blocked: true },
+        { day: 0, from: '14:00', spans: 2, text: 'Parte semanal', len: '1 h' },
+        { day: 0, from: '15:00', spans: 4, text: 'Inventario de repuestos', len: 'sin estimar' },
+        { day: 1, from: '08:00', spans: 2, text: 'Sustituir bomba', len: '1 h' },
+        { day: 1, from: '09:00', spans: 2, text: 'Revisión mensual', len: 'recurrente', repeat: true },
+        { day: 1, from: '13:00', spans: 2, text: 'Comida', blocked: true },
+        { day: 2, from: '08:00', spans: 6, text: 'Presupuesto planta baja', len: '3 h' },
+        { day: 2, from: '13:00', spans: 2, text: 'Comida', blocked: true },
+        { day: 2, from: '14:00', spans: 3, text: 'Inventario (desborda de hoy)', len: '1 h 30', split: true },
+        { day: 3, from: '09:00', spans: 2, text: 'Cerrar albaranes', len: '1 h' },
+        { day: 3, from: '13:00', spans: 2, text: 'Comida', blocked: true },
+      ],
+      now: { day: 0, at: '08:30' },
+    },
+    home: { title: 'Mi panel', note: 'La rejilla de widgets de la ADR 031, intacta.', ghosts: 6 },
+    me: {
+      title: 'Mis tareas',
+      note: 'Las mismas vistas que un proyecto, sobre tus tareas de todos los proyectos. Sin columnas de proyecto ni modo jerarquía: el árbol vive dentro de un proyecto.',
+      rows: [
+        ['Revisar cuadro eléctrico', 'Obra Norte', 'Alta'],
+        ['Acta de replanteo', 'Obra Norte', 'Media'],
+        ['Sustituir bomba', 'SAT', 'Urgente'],
+        ['Presupuesto planta baja', 'Reforma Estación', 'Media'],
+        ['Inventario de repuestos', 'Mantenimiento', 'Baja'],
+      ],
+    },
+    worklog: {
+      title: 'Parte de horas',
+      note: 'Tus entradas por rango, agrupadas por día, tarea o proyecto. Exportable.',
+      rows: [
+        ['Lunes 15', '', '6 h 20 min'],
+        ['Martes 16', '', '7 h 05 min'],
+        ['Miércoles 17', '', '5 h 40 min'],
+        ['Jueves 18', '', '7 h 30 min'],
+      ],
+    },
+    goals: { title: 'Objetivos', note: 'Sin cambios: solo se muda de grupo, porque un objetivo nace de una persona y se comparte si quiere.', ghosts: 4 },
+    'adm-projects': {
+      title: 'Proyectos',
+      note: 'La tabla de gestión que hoy es la pantalla de entrada. Crear, reordenar, archivar y borrar.',
+      rows: [
+        ['Obra Norte', '', '128 tareas'],
+        ['SAT', '', '64 tareas'],
+        ['Reforma Estación', '', '41 tareas'],
+        ['Mantenimiento', '', '97 tareas'],
+      ],
+    },
+    'adm-members': { title: 'Miembros y equipos', note: 'Miembros, invitaciones y equipos en una sola pantalla.', ghosts: 5 },
+    'adm-workspace': { title: 'Espacio', note: 'General, roles, etiquetas y plan. Venían de la pestaña "Espacio" de Ajustes.', ghosts: 5 },
+    'adm-project-settings': { title: 'Ajustes de proyecto', note: 'Columnas, épicas, flujo, integraciones, recurrencias y plantillas.', ghosts: 5 },
+  };
+
+  const frame = document.getElementById('frame');
+  const nav = document.getElementById('nav');
+  const stub = document.getElementById('stub');
+  const crumb = document.getElementById('crumb');
+  let active = 'today';
+
+  function itemHtml(item, isSub) {
+    const glyph = item.dot
+      ? `<span class="dot" style="background:${item.dot}"></span>`
+      : item.icon;
+    const count = item.count ? `<span class="count">${item.count}</span>` : '';
+    return `<button type="button" class="item" data-id="${item.id}"
+      aria-current="${active === item.id}">${glyph}<span>${item.label}</span>${count}</button>`;
+  }
+
+  function render() {
+    const isAdmin = frame.dataset.role === 'admin';
+
+    nav.innerHTML = GROUPS
+      .filter((group) => !group.gate || isAdmin)
+      .map((group) => {
+        const body = group.items.map((item) => {
+          let html = itemHtml(item);
+          if (item.sub) {
+            const open = active === item.id || item.sub.some((s) => s.id === active);
+            if (open) {
+              html += `<div class="sub">${item.sub.map((s) => itemHtml(s, true)).join('')}</div>`;
+            }
+          }
+          return html;
+        }).join('');
+
+        return `<div class="group" data-open="true">
+          <div class="group-label" role="button" tabindex="0">
+            <span>${group.label}</span>${I.chevron}
+          </div>
+          <div class="items">${body}</div>
+        </div>`;
+      })
+      .join('');
+
+    renderStub();
+  }
+
+  function renderStub() {
+    const key = active.startsWith('me-') ? 'me' : active;
+    const data = STUBS[key] || { title: 'Proyecto', note: 'Las vistas de proyecto no cambian en este interludio.', ghosts: 5 };
+    crumb.textContent = data.title;
+
+    let body = `<h2 class="stub-title">${data.title}</h2><p class="stub-note">${data.note}</p>`;
+
+    if (data.kind === 'planner') {
+      body += '<div class="days">' + data.days.map((day) => {
+        const chips = day.items.map(([text, isGhost]) =>
+          `<span class="chip" data-ghost="${Boolean(isGhost)}">${text}</span>`
+        ).join('');
+        return `<div class="day">
+          <header>
+            <b>${day.name}</b>
+            <span class="cap">${day.load}% de tu jornada</span>
+            <span class="bar" data-over="${day.load > 100}"><i style="width:${Math.min(day.load, 100)}%"></i></span>
+          </header>
+          ${chips}
+        </div>`;
+      }).join('') + '</div>';
+      body += '<p class="stub-note">Las recurrentes salen en gris: se proyectan, no se crean hasta que toca.</p>';
+    } else if (data.kind === 'schedule') {
+      // Cada hora ocupa dos filas de rejilla, para poder colocar medias horas.
+      const base = Number(data.hours[0].slice(0, 2));
+      const rowOf = (time) => {
+        const [h, m] = time.split(':').map(Number);
+        return 2 + (h - base) * 2 + (m === 30 ? 1 : 0);
+      };
+
+      const heads = data.days.map((name, i) =>
+        `<div class="dayhead" style="grid-column:${2 + i}">${name}</div>`
+      ).join('');
+
+      const axis = data.hours.map((hour) =>
+        `<div class="hour" style="grid-row:${rowOf(hour)}">${hour}</div>` +
+        `<div class="rule" style="grid-row:${rowOf(hour)}"></div>`
+      ).join('');
+
+      const blocks = data.blocks.map((block) => {
+        const flags = `data-fixed="${Boolean(block.fixed)}" data-split="${Boolean(block.split)}"` +
+          ` data-blocked="${Boolean(block.blocked)}" data-repeat="${Boolean(block.repeat)}"` +
+          ` data-running="${Boolean(block.running)}"`;
+        const len = block.len ? `<span class="len">${block.len}</span>` : '';
+        return `<div class="block" ${flags}
+          style="grid-column:${2 + block.day};grid-row:${rowOf(block.from)} / span ${block.spans}">
+          <span>${block.text}</span>${len}</div>`;
+      }).join('');
+
+      const now = `<div class="nowline" style="grid-column:${2 + data.now.day};grid-row:${rowOf(data.now.at)}"></div>`;
+
+      body += `<div class="sched-wrap"><div class="sched">${heads}${axis}${blocks}${now}</div></div>`;
+      body += `<div class="legend">
+        <span><i></i>Del plan</span>
+        <span><i data-fixed></i>Hora fija</span>
+        <span><i data-repeat></i>Recurrente proyectada</span>
+        <span><i data-blocked></i>Bloque cerrado</span>
+      </div>`;
+      body += '<p class="stub-note">La visita de obra tiene hora fija, así que parte el acta de replanteo en dos. El inventario no cabe en la jornada y desborda al lunes. La línea roja es el ahora.</p>';
+    } else if (data.kind === 'today') {
+      const list = data.rows.map(([title, proj, tag, running]) =>
+        `<div class="row" data-running="${Boolean(running)}">
+          <span class="play" data-on="${Boolean(running)}">
+            ${running
+              ? '<svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>'
+              : '<svg viewBox="0 0 24 24" fill="currentColor" width="10" height="10"><path d="M8 5v14l11-7z"/></svg>'}
+          </span>
+          <span>${title}</span>
+          <span class="proj">${proj}</span>
+          <span class="tag">${tag}</span>
+        </div>`
+      ).join('');
+
+      body += `<div class="today-split">
+        <div class="rows">${list}</div>
+        <aside class="peek">
+          <header><span>OBR-142</span><span>✕</span></header>
+          <div class="peek-body">
+            <h4>Revisar cuadro eléctrico</h4>
+            <dl>
+              <dt>Proyecto</dt><dd>Obra Norte</dd>
+              <dt>Estado</dt><dd>En curso</dd>
+              <dt>Prioridad</dt><dd>Alta</dd>
+              <dt>Estimado</dt><dd>2 h</dd>
+              <dt>Registrado</dt><dd>00:42</dd>
+              <dt>Vence</dt><dd>hoy</dd>
+            </dl>
+            <span class="ghost" style="width:90%"></span>
+            <span class="ghost" style="width:70%"></span>
+          </div>
+        </aside>
+      </div>`;
+      body += '<p class="stub-note">El panel de la derecha no es nuevo: es <b>TaskDetailsSheet</b>, que ya abren las cinco vistas de proyecto con <code>?taskId=</code>. Basta con que tome el proyecto de la tarea en vez de la ruta.</p>';
+    } else if (data.rows) {
+      body += '<div class="rows">' + data.rows.map(([title, proj, tag]) =>
+        `<div class="row"><span>${title}</span>${proj ? `<span class="proj">${proj}</span>` : ''}<span class="tag">${tag}</span></div>`
+      ).join('') + '</div>';
+    } else {
+      body += '<div class="rows">' + Array.from({ length: data.ghosts }, (_, i) =>
+        `<div class="row"><span class="ghost" style="width:${[70, 45, 60, 38, 55, 48][i % 6]}%"></span></div>`
+      ).join('') + '</div>';
+    }
+
+    stub.innerHTML = body;
+  }
+
+  nav.addEventListener('click', (event) => {
+    const button = event.target.closest('.item');
+    if (button) {
+      active = button.dataset.id;
+      render();
+      return;
+    }
+    const label = event.target.closest('.group-label');
+    if (label) {
+      const group = label.parentElement;
+      group.dataset.open = group.dataset.open === 'true' ? 'false' : 'true';
+    }
+  });
+
+  nav.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const label = event.target.closest('.group-label');
+    if (!label) return;
+    event.preventDefault();
+    const group = label.parentElement;
+    group.dataset.open = group.dataset.open === 'true' ? 'false' : 'true';
+  });
+
+  function wireSegment(id, apply) {
+    const root = document.getElementById(id);
+    root.addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      if (!button) return;
+      for (const sibling of root.querySelectorAll('button')) {
+        sibling.setAttribute('aria-pressed', String(sibling === button));
+      }
+      apply(button.dataset.value);
+    });
+  }
+
+  wireSegment('seg-role', (value) => {
+    frame.dataset.role = value;
+    // Si quien mira deja de administrar, la entrada activa puede haberse ido.
+    if (value === 'member' && active.startsWith('adm-')) active = 'today';
+    render();
+  });
+
+  wireSegment('seg-rail', (value) => { frame.dataset.rail = value; });
+  wireSegment('seg-app-theme', (value) => { frame.dataset.app = value; });
+
+  // El cronómetro corre: es el detalle que hace creíble el indicador del pie.
+  const clock = document.getElementById('clock');
+  let seconds = 42 * 60 + 17;
+  setInterval(() => {
+    seconds += 1;
+    const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+    const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+    const s = String(seconds % 60).padStart(2, '0');
+    clock.textContent = `${h}:${m}:${s}`;
+  }, 1000);
+
+  render();
+</script>
+</body>
+</html>
