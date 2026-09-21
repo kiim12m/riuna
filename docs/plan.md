@@ -1227,6 +1227,69 @@ tarea, que no tenía tope alguno y crecía con la ventana.
   que el calendario empiece en domingo. Es una decisión de producto con el rótulo
   desalineado, no un fallo.
 
+### Interludio — Espacio personal y administración (antes de la Fase 8) · **en curso**
+
+*Mismo patrón que el interludio de UX antes de la Fase 6: se decide sobre una
+maqueta ([`barra-lateral.html`](design-previews/barra-lateral.html)) antes de
+tocar `apps/web`, y la decisión queda en ADR antes que el código.*
+
+La barra lateral tenía un solo grupo mezclando «qué me toca a mí» con «cómo
+está montado este espacio», y administrar significaba salir a una pantalla a
+página completa sin barra lateral
+([ADR 036](adr/036-barra-lateral-en-tres-espacios.md)). Se separa en tres
+grupos —espacio personal, administración (por capacidades, no por rol) y
+proyectos— y el grupo personal, que nace corto, se llena en bloques:
+
+1. **Acceso concedido por el admin, sin aprobación de quien entra** ✔
+   ([ADR 035](adr/035-acceso-concedido-sin-aprobacion.md)). Desaparece el
+   buzón de invitaciones pendientes; la invitación pasa de máquina de estados
+   a testigo de registro.
+2. **Barra lateral en tres espacios y administración de vuelta al layout
+   principal** ✔ ([ADR 036](adr/036-barra-lateral-en-tres-espacios.md)).
+   `/dashboard/settings` se queda solo con «Mi cuenta»; los ajustes de espacio
+   y de proyecto se mudan a `.../admin/workspace/…` y
+   `.../admin/project-settings/…`, con redirecciones desde las URL viejas. El
+   grupo personal arranca con lo que ya existía —«Mi panel» y «Objetivos»— y
+   nada más.
+3. **Lectura de tareas del espacio generalizada, paginada y compartida** ✔
+   ([ADR 037](adr/037-la-lectura-de-tareas-del-espacio.md)):
+   `my-work/decorate.ts`, `my-work/pagination.ts`,
+   `view/workspace-task-query.ts`, endpoint nuevo
+   `GET /api/my-work/tasks/search`. Extrae a un solo sitio lo que estaba
+   duplicado a medias entre `top-tasks.ts`, `aggregate.ts` y
+   `get-my-work.ts`. El endpoint **todavía no tiene consumidor web** — llega
+   con los bloques 5 y 8.
+4. **Qué no puede ofrecer una vista transversal** ✔ decidido
+   ([ADR 038](adr/038-lo-que-una-vista-transversal-no-ofrece.md)): `status`,
+   `column`, `number`, `position`, `parent` y `depth` quedan fuera del
+   registro de campos del espacio, porque comparan contra un proyecto y
+   mentirían entre proyectos. Pedirlos es un 400 con el nombre del campo, no
+   una lista vacía.
+5. **Hoy** — pantalla de entrada, sustituye a la tabla de proyectos como raíz
+   del espacio (`/dashboard` pasa a llevar a `/today`). Pendiente: solo
+   maqueta.
+6. **Planificador** — ventana rodante de 15 días; arrastrar una tarea de un
+   día a otro, o desde «sin planificar», **no** toca `due_date` — el plan
+   personal vive en su propia tabla, porque el vencimiento es un compromiso
+   con el equipo. Pendiente: solo maqueta.
+7. **Cronograma** — línea de tiempo por horas; sustituye al calendario dentro
+   de «Mis tareas» (el Calendario **de proyecto** no se toca). Portea
+   `map-schedule-data` de
+   [super-productivity](https://github.com/johannesjo/super-productivity)
+   (MIT, ~60 KB de TypeScript puro sin una sola importación de Angular, con
+   su copyright entrando en `NOTICE`); sus componentes Angular se rehacen con
+   las primitivas de Riuna. Pendiente: solo maqueta.
+8. **Mis tareas** — Lista, Tablero, Gantt y Tabla personales sobre el motor
+   de los bloques 3 y 4. Pendiente, depende del bloque 3.
+9. **Parte de horas**. Pendiente: solo maqueta.
+
+El cronómetro de tarea se mueve al pie de la barra lateral en vez de una
+cabecera —la ADR 022 ya maquetó y descartó esa variante—.
+
+**Hecho cuando:** entras por «Hoy», planificas tu semana arrastrando entre
+días sin cambiar el vencimiento que ve el equipo, y administrar el espacio ya
+no te saca de la barra lateral.
+
 ### Fase 8 — Automatizaciones e importadores externos (≈3 semanas)
 Motor disparador → condición → acción (`automation`, `automation_run`) sobre
 los eventos que Kaneo ya emite, ampliando su `workflowRule` en lugar de
@@ -1361,7 +1424,12 @@ destructiva.
 
 ## Siguiente paso
 
-La **Fase 8**: automatizaciones e importadores externos. Motor disparador →
+El **interludio de espacio personal y administración**, en curso: los bloques
+2 y 3 están cerrados (barra lateral en tres espacios y lectura de tareas del
+espacio). Sigue **Hoy**, la pantalla de entrada — composición pura sobre el
+motor del bloque 3, sin ADR propia —, y después Mis tareas, Planificador,
+Cronograma y Parte de horas, en ese orden. Después la **Fase 8**:
+automatizaciones e importadores externos. Motor disparador →
 condición → acción sobre los eventos que Kaneo ya emite, e importadores de
 Trello, Jira, Asana y Notion.
 
