@@ -443,6 +443,14 @@ subscribeToEvent<{ notificationId: string; userId: string }>(
   },
 );
 
+// El plan personal es de una sola persona: el evento ya trae su `userId`, sin
+// resolucion de destinatarios de por medio (ADR 040).
+subscribeToEvent<{ userId: string }>("personal-plan.changed", async (data) => {
+  if (data.userId) {
+    broadcastToUser(data.userId, { type: "PLAN_INVALIDATED" });
+  }
+});
+
 // "Mi trabajo" cruza proyectos, asi que su invalidacion va por el canal de
 // usuario: la tarea puede cambiar en un proyecto que quien la tiene asignada no
 // esta mirando, y ahi no hay conexion de proyecto que reciba nada.

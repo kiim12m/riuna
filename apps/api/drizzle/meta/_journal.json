@@ -428,6 +428,13 @@
 			"when": 1789844976280,
 			"tag": "0060_widget_drop_stale_metric",
 			"breakpoints": true
+		},
+		{
+			"idx": 61,
+			"version": "7",
+			"when": 1790077609087,
+			"tag": "0061_boring_freak",
+			"breakpoints": true
 		}
 	]
 }

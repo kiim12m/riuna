@@ -1464,6 +1464,7 @@
 			"admin": "Administration",
 			"projects": "Projects",
 			"today": "Today",
+			"planner": "Planner",
 			"myTasks": "My tasks",
 			"home": "My panel",
 			"goals": "Goals",
@@ -2726,6 +2727,15 @@
 		"empty": {
 			"title": "Nothing here",
 			"description": "There are no tasks in this scope."
+		}
+	},
+	"planner": {
+		"pageTitle": "Planner",
+		"unplanned": "Unplanned",
+		"today": "Today",
+		"empty": {
+			"title": "Nothing assigned",
+			"description": "You have no assigned tasks to plan."
 		}
 	}
 }

@@ -5800,6 +5800,9 @@
 						"today": {
 							"type": "string"
 						},
+						"planner": {
+							"type": "string"
+						},
 						"myTasks": {
 							"type": "string"
 						},
@@ -5833,6 +5836,7 @@
 						"admin",
 						"projects",
 						"today",
+						"planner",
 						"myTasks",
 						"home",
 						"goals",
@@ -10735,6 +10739,35 @@
 				}
 			},
 			"required": ["pageTitle", "tabs", "table", "empty"]
+		},
+		"planner": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"pageTitle": {
+					"type": "string"
+				},
+				"unplanned": {
+					"type": "string"
+				},
+				"today": {
+					"type": "string"
+				},
+				"empty": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "description"]
+				}
+			},
+			"required": ["pageTitle", "unplanned", "today", "empty"]
 		}
 	},
 	"required": [
@@ -10753,6 +10786,7 @@
 		"panels",
 		"goals",
 		"today",
-		"myTasks"
+		"myTasks",
+		"planner"
 	]
 }

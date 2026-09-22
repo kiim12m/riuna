@@ -1275,10 +1275,20 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
    —el antiguo «Mi trabajo» fundido con Panel, ADR 031— no se toca: sigue
    siendo la pantalla de widgets configurables, entrada propia en el grupo
    personal.
-6. **Planificador** — ventana rodante de 15 días; arrastrar una tarea de un
-   día a otro, o desde «sin planificar», **no** toca `due_date` — el plan
-   personal vive en su propia tabla, porque el vencimiento es un compromiso
-   con el equipo. Pendiente: solo maqueta.
+6. **Planificador** ✔ ([ADR 040](adr/040-planificador.md)) — ventana rodante
+   de 15 días. Tabla nueva `personal_plan_entry` (única por usuario y tarea);
+   arrastrar una tarea de un día a otro, o desde «sin planificar» —lo
+   asignado y sin terminar que no tiene fila en la tabla, calculado y no
+   guardado—, escribe ahí y **nunca** `task.due_date`. Los fantasmas de
+   recurrentes se proyectan encadenando `firstOnOrAfter`/`nextOccurrence`
+   (`recurrence/cadence.ts`, sin tocar el módulo), filtrados por
+   `template.assigneeId`; no se guardan, no se arrastran y no cuentan en la
+   carga del día. La carga es `SUM(estimate) / 8 h` fija por persona —sin
+   ajuste todavía, declarado—. Arrastre con `dnd-kit` (columnas discretas),
+   no la matemática de puntero del Gantt; tarjeta propia, no la de
+   `kanban-board`, que lee el proyecto activo de una tienda global.
+   Verificado en navegador real: arrastrar una tarjeta y comprobar contra la
+   API que el vencimiento no se movió.
 7. **Cronograma** — línea de tiempo por horas; sustituye al calendario dentro
    de «Mis tareas» (el Calendario **de proyecto** no se toca). Portea
    `map-schedule-data` de
@@ -1449,15 +1459,14 @@ destructiva.
 ## Siguiente paso
 
 El **interludio de espacio personal y administración**, en curso: los bloques
-2, 3, 5 y 8 están cerrados (barra lateral en tres espacios, lectura de tareas
-del espacio, «Hoy» y «Mis tareas»). Sigue el **Planificador** — necesita tabla
-nueva y ADR propia antes de escribir código: forma recomendada ya investigada
-(`personal_plan_entry`, carga desde `task.estimate`, fantasmas de recurrentes
-vía `apps/api/src/recurrence/cadence.ts`, que ya expone lo necesario sin
-investigación adicional) —, y después Cronograma y Parte de horas, en ese
-orden. Después la **Fase 8**: automatizaciones e importadores externos. Motor
-disparador → condición → acción sobre los eventos que Kaneo ya emite, e
-importadores de Trello, Jira, Asana y Notion.
+2, 3, 5, 6 y 8 están cerrados (barra lateral en tres espacios, lectura de
+tareas del espacio, «Hoy», el Planificador y «Mis tareas»). Sigue el
+**Cronograma** — el bloque más pesado y el único sin diseño empezado: primer
+paso, leer el código de `map-schedule-data` de super-productivity antes de
+comprometer nada, porque nada de eso está vendorizado todavía. Después
+**Parte de horas**. Después la **Fase 8**: automatizaciones e importadores
+externos. Motor disparador → condición → acción sobre los eventos que Kaneo
+ya emite, e importadores de Trello, Jira, Asana y Notion.
 
 **Las dos cosas que la Fase 7 dejaba abiertas están cerradas**, y las cerró la
 Fase 7.5:

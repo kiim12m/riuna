@@ -1464,6 +1464,7 @@
 			"admin": "Administración",
 			"projects": "Proyectos",
 			"today": "Hoy",
+			"planner": "Planificador",
 			"myTasks": "Mis tareas",
 			"home": "Mi panel",
 			"goals": "Objetivos",
@@ -2726,6 +2727,15 @@
 		"empty": {
 			"title": "Nada por aquí",
 			"description": "No hay tareas en este ámbito."
+		}
+	},
+	"planner": {
+		"pageTitle": "Planificador",
+		"unplanned": "Sin planificar",
+		"today": "Hoy",
+		"empty": {
+			"title": "Nada asignado",
+			"description": "No tienes tareas asignadas que planificar."
 		}
 	}
 }

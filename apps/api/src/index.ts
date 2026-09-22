@@ -50,6 +50,7 @@ import myWork from "./my-work";
 import notification from "./notification";
 import notificationPreferences from "./notification-preferences";
 import oauth from "./oauth";
+import planner from "./planner";
 import { initializePlugins } from "./plugins";
 import { migrateGitHubIntegration } from "./plugins/github/migration";
 import project from "./project";
@@ -620,6 +621,7 @@ export function createApp() {
   const recurrenceApi = api.route("/recurrence", recurrence);
   const templateApi = api.route("/template", template);
   const myWorkApi = api.route("/my-work", myWork);
+  const plannerApi = api.route("/planner", planner);
   const searchApi = api.route("/search", search);
   const githubIntegrationApi = api.route(
     "/github-integration",
@@ -806,6 +808,7 @@ export function createApp() {
     templateApi,
     labelApi,
     myWorkApi,
+    plannerApi,
     notificationApi,
     notificationPreferencesApi,
     projectApi,
@@ -958,6 +961,7 @@ const {
   templateApi,
   labelApi,
   myWorkApi,
+  plannerApi,
   notificationApi,
   notificationPreferencesApi,
   projectApi,
@@ -1010,6 +1014,7 @@ export type AppType =
   | typeof recurrenceApi
   | typeof templateApi
   | typeof myWorkApi
+  | typeof plannerApi
   | typeof searchApi
   | typeof githubIntegrationApi
   | typeof giteaIntegrationApi

@@ -2,6 +2,7 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Building2,
   CalendarCheck,
+  CalendarClock,
   ChevronRight,
   LayoutDashboard,
   LayoutGrid,
@@ -144,6 +145,11 @@ export function NavMain() {
       title: t("navigation:sidebar.today"),
       url: `${base}/today`,
       icon: CalendarCheck,
+    },
+    {
+      title: t("navigation:sidebar.planner"),
+      url: `${base}/planner`,
+      icon: CalendarClock,
     },
     {
       title: t("navigation:sidebar.myTasks"),

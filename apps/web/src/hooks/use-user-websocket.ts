@@ -100,6 +100,12 @@ export function useUserWebSocket() {
           if (message.type === "MY_WORK_INVALIDATED") {
             scheduleMyWorkInvalidate();
           }
+          // El plan personal es de una sola persona y no comparte nada con
+          // "my-work": otra sesion propia -otra pestana, el movil- movio una
+          // tarjeta, y esta hay que refrescarla tambien.
+          if (message.type === "PLAN_INVALIDATED") {
+            queryClient.invalidateQueries({ queryKey: ["planner"] });
+          }
         } catch {
           // Ignore malformed messages
         }

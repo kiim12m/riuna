@@ -798,6 +798,55 @@ export const taskRecurrenceTable = pgTable(
   ],
 );
 
+/**
+ * El plan personal: que dia piensa alguien hacer una tarea.
+ *
+ * Aparte de `task.due_date` a proposito (ADR 040): el vencimiento es un
+ * compromiso con el equipo y el plan es de quien lo hace. Una tarea tiene una
+ * sola fila por persona -unica por `(user_id, task_id)`-, y cae en cascada con
+ * el usuario o la tarea: un plan no sobrevive a lo que planifica.
+ */
+export const personalPlanEntryTable = pgTable(
+  "personal_plan_entry",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => taskTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    plannedDate: timestamp("planned_date", { mode: "date" }).notNull(),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("personal_plan_entry_user_task").on(table.userId, table.taskId),
+    index("personal_plan_entry_user_date_idx").on(
+      table.userId,
+      table.plannedDate,
+    ),
+  ],
+);
+
 // El catalogo de campos personalizados. Esta tabla dice que campos existen y
 // de que tipo; los valores viven en `task.custom_fields`.
 //

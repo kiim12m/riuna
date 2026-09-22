@@ -19,6 +19,7 @@ import {
   invitationTable,
   labelTable,
   notificationTable,
+  personalPlanEntryTable,
   projectTable,
   sessionTable,
   taskAssigneeTable,
@@ -221,6 +222,24 @@ export const taskRecurrenceTableRelations = relations(
       references: [projectTable.id],
     }),
     tasks: many(taskTable),
+  }),
+);
+
+export const personalPlanEntryTableRelations = relations(
+  personalPlanEntryTable,
+  ({ one }) => ({
+    workspace: one(workspaceTable, {
+      fields: [personalPlanEntryTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    user: one(userTable, {
+      fields: [personalPlanEntryTable.userId],
+      references: [userTable.id],
+    }),
+    task: one(taskTable, {
+      fields: [personalPlanEntryTable.taskId],
+      references: [taskTable.id],
+    }),
   }),
 );
 

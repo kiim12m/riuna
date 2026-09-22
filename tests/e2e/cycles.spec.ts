@@ -26,7 +26,9 @@ test.describe("Ciclos", () => {
     await page.getByRole("button", { name: "Crear ciclo" }).click();
 
     await expect(page.getByText("Sprint 1")).toBeVisible();
-    await expect(page.getByText("Planificado")).toBeVisible();
+    // Coincidencia exacta: sin ella tambien casa con la entrada de barra
+    // lateral "Planificador" del interludio (empieza igual, "Planifica...").
+    await expect(page.getByText("Planificado", { exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "Empezar ciclo" }).click();
     await expect(page.getByText("Activo")).toBeVisible();
