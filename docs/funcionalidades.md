@@ -184,6 +184,22 @@ la tarea y en la propia tabla.
   proyecto.
 - **Mi trabajo**: las tareas propias o de mi equipo de todos los proyectos, con
   filtros de vencimiento (todas, vencidas, hoy, esta semana).
+- **Hoy**: pantalla de entrada del espacio. Lo asignado en todos los
+  proyectos, agrupado por ventana de vencimiento (vencidas, hoy, esta
+  semana), con el detalle abriéndose en un panel lateral.
+- **Mis tareas**: Lista, Tablero, Gantt y Tabla personales sobre todos los
+  proyectos del espacio ([ADR 039](adr/039-mis-tareas-vistas-personales.md)).
+  El Tablero agrupa por ventana de vencimiento, no por estado; sin arrastre.
+- **Planificador** ([ADR 040](adr/040-planificador.md)): ventana rodante de 15
+  días para decidir qué día se piensa hacer cada tarea, sin tocar su fecha de
+  vencimiento. Incluye una proyección de las próximas ocurrencias de tareas
+  recurrentes todavía no creadas.
+- **Cronograma** ([ADR 041](adr/041-cronograma.md)): línea de tiempo por
+  horas sobre lo ya decidido en el Planificador, dentro de una jornada fija.
+  Arrastrar un tramo lo ancla a una hora concreta; lo que no cabe en el día
+  se lista aparte, sin pasar solo al día siguiente. Admite citas fijas y
+  bloqueos que no son tareas (sueltos o repetidos cada semana en días
+  concretos), y muestra el cronómetro en marcha.
 
 ## 8. Paneles y objetivos
 

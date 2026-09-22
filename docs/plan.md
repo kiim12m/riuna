@@ -1289,13 +1289,36 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
    `kanban-board`, que lee el proyecto activo de una tienda global.
    Verificado en navegador real: arrastrar una tarjeta y comprobar contra la
    API que el vencimiento no se movió.
-7. **Cronograma** — línea de tiempo por horas; sustituye al calendario dentro
-   de «Mis tareas» (el Calendario **de proyecto** no se toca). Portea
-   `map-schedule-data` de
-   [super-productivity](https://github.com/johannesjo/super-productivity)
-   (MIT, ~60 KB de TypeScript puro sin una sola importación de Angular, con
-   su copyright entrando en `NOTICE`); sus componentes Angular se rehacen con
-   las primitivas de Riuna. Pendiente: solo maqueta.
+7. **Cronograma** ✔ ([ADR 041](adr/041-cronograma.md)) — línea de tiempo por
+   horas sobre lo que ya decidió el Planificador. Diseño cerrado tras leer el
+   motor real de esto, `map-schedule-data` de
+   [super-productivity](https://github.com/super-productivity/super-productivity)
+   (MIT, ~1.900 líneas de TypeScript puro sin una sola importación de
+   Angular; `NOTICE` lleva su entrada). No se portó entero: Riuna ya tiene
+   `personal_plan_entry` (ADR 040) haciendo el trabajo de su
+   `plannerDayMap`, así que solo se portó, reducido, el álgebra de solapes y
+   partición (`mergeBlocksRecursively` + el barrido de
+   `insert-blocked-blocks-view-entries-for-schedule.ts`, con dos variantes
+   en vez de doce, sin acarreo entre días ni bandas a N solapes — la razón
+   de cada corte está en la ADR). Columna nueva `start_minute` (nullable) en
+   `personal_plan_entry` para anclar una entrada a una hora fija; tabla
+   nueva `schedule_block` para lo que no es tarea (fijo/bloqueo), con
+   `cadence` opcional reutilizando `recurrence/cadence.ts` tal cual; el
+   cronómetro en marcha se lee de `time_entry` en vivo, sin guardar nada.
+   Arrastre con matemática de puntero continua (`gantt-task-bar.tsx`), no
+   `dnd-kit` — aquí sí encaja, a diferencia del Planificador, porque el eje
+   es continuo. Motor puro con 6 pruebas unitarias
+   (`apps/api/src/schedule/layout.ts`); 9 pruebas de integración cubriendo
+   el reparto, el anclaje, los bloques repetidos y el aislamiento entre
+   espacios. Verificado en navegador real contra la instancia de
+   `dev:parallel`: crear, partir alrededor de un bloque fijo, fusionar dos
+   bloques que se solapan, arrastrar para anclar una hora, y crear un bloque
+   nuevo con el diálogo — de paso salió una etiqueta de `Select` sin resolver
+   (el mismo patrón de `close-cycle-dialog.tsx`, ahora aplicado aquí). La
+   prueba de extremo a extremo (`tests/e2e/schedule.spec.ts`) está escrita
+   pero **no se ha podido ejecutar en este entorno**: la configuración de
+   Playwright espera la PostgreSQL de `compose.local.yml` en el puerto 5433,
+   y este devcontainer no tiene Docker.
 8. **Mis tareas** ✔ ([ADR 039](adr/039-mis-tareas-vistas-personales.md)) —
    Lista, Tablero, Gantt y Tabla personales sobre el motor de los bloques 3 y
    4, con ADR propia porque cambia la semántica del tablero. Carriles por
@@ -1459,14 +1482,21 @@ destructiva.
 ## Siguiente paso
 
 El **interludio de espacio personal y administración**, en curso: los bloques
-2, 3, 5, 6 y 8 están cerrados (barra lateral en tres espacios, lectura de
-tareas del espacio, «Hoy», el Planificador y «Mis tareas»). Sigue el
-**Cronograma** — el bloque más pesado y el único sin diseño empezado: primer
-paso, leer el código de `map-schedule-data` de super-productivity antes de
-comprometer nada, porque nada de eso está vendorizado todavía. Después
-**Parte de horas**. Después la **Fase 8**: automatizaciones e importadores
-externos. Motor disparador → condición → acción sobre los eventos que Kaneo
-ya emite, e importadores de Trello, Jira, Asana y Notion.
+2, 3, 5, 6, 7 y 8 están cerrados (barra lateral en tres espacios, lectura de
+tareas del espacio, «Hoy», el Planificador, el Cronograma y «Mis tareas»).
+Sigue **Parte de horas** — sin dependencia de ningún otro bloque: módulo
+nuevo `apps/api/src/time-sheet/` (lectura de `time_entry` por persona y
+rango, hoy solo por tarea), agrupación por día/tarea/proyecto, exportación
+reutilizando `buildExchangeWorkbookOf`. Después la **Fase 8**:
+automatizaciones e importadores externos. Motor disparador → condición →
+acción sobre los eventos que Kaneo ya emite, e importadores de Trello, Jira,
+Asana y Notion.
+
+Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
+está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la
+prueba de extremo a extremo necesita la PostgreSQL de `compose.local.yml`.
+Correrla es el primer paso si se retoma trabajo en un entorno que sí tenga
+Docker, antes de dar el bloque por verificado del todo.
 
 **Las dos cosas que la Fase 7 dejaba abiertas están cerradas**, y las cerró la
 Fase 7.5:

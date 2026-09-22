@@ -451,6 +451,15 @@ subscribeToEvent<{ userId: string }>("personal-plan.changed", async (data) => {
   }
 });
 
+// El Cronograma lee `personal_plan_entry` ademas de `schedule_block`, asi que
+// tambien escucha PLAN_INVALIDATED en el cliente (ADR 041); este es solo el
+// que le falta para sus propios cambios (anclar hora, bloques fijos).
+subscribeToEvent<{ userId: string }>("schedule.changed", async (data) => {
+  if (data.userId) {
+    broadcastToUser(data.userId, { type: "SCHEDULE_INVALIDATED" });
+  }
+});
+
 // "Mi trabajo" cruza proyectos, asi que su invalidacion va por el canal de
 // usuario: la tarea puede cambiar en un proyecto que quien la tiene asignada no
 // esta mirando, y ahi no hay conexion de proyecto que reciba nada.

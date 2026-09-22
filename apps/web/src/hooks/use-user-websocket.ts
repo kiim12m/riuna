@@ -102,9 +102,15 @@ export function useUserWebSocket() {
           }
           // El plan personal es de una sola persona y no comparte nada con
           // "my-work": otra sesion propia -otra pestana, el movil- movio una
-          // tarjeta, y esta hay que refrescarla tambien.
+          // tarjeta, y esta hay que refrescarla tambien. El Cronograma lee
+          // `personal_plan_entry` ademas de lo suyo (ADR 041), asi que un
+          // cambio de plan tambien lo invalida.
           if (message.type === "PLAN_INVALIDATED") {
             queryClient.invalidateQueries({ queryKey: ["planner"] });
+            queryClient.invalidateQueries({ queryKey: ["schedule"] });
+          }
+          if (message.type === "SCHEDULE_INVALIDATED") {
+            queryClient.invalidateQueries({ queryKey: ["schedule"] });
           }
         } catch {
           // Ignore malformed messages

@@ -1465,6 +1465,7 @@
 			"projects": "Projectes",
 			"today": "Avui",
 			"planner": "Planificador",
+			"schedule": "Cronograma",
 			"myTasks": "Les meves tasques",
 			"home": "El meu panell",
 			"goals": "Objectius",
@@ -2736,6 +2737,32 @@
 		"empty": {
 			"title": "Nada asignado",
 			"description": "No tienes tareas asignadas que planificar."
+		}
+	},
+	"schedule": {
+		"pageTitle": "Cronograma",
+		"today": "Avui",
+		"overflow": "Sense forat avui",
+		"running": "En marxa",
+		"empty": {
+			"title": "Res a mostrar",
+			"description": "Planifica una tasca per avui o aquesta setmana per veure-la aquí per hores."
+		},
+		"createBlock": {
+			"title": "Bloc nou",
+			"description": "Una cita fixa o un bloqueig que no és una tasca.",
+			"name": "Títol",
+			"namePlaceholder": "Visita d'obra, dinar…",
+			"kind": "Tipus",
+			"kindFixed": "Cita fixa",
+			"kindBreak": "Bloqueig",
+			"startTime": "Comença",
+			"endTime": "Acaba",
+			"timesInvalid": "L'hora de fi ha de ser posterior a la d'inici.",
+			"repeat": "Repetir",
+			"repeatNone": "No es repeteix",
+			"repeatSome": "Es repeteix cada setmana els dies marcats.",
+			"confirm": "Crear bloc"
 		}
 	}
 }

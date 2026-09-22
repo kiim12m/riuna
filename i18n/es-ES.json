@@ -1465,6 +1465,7 @@
 			"projects": "Proyectos",
 			"today": "Hoy",
 			"planner": "Planificador",
+			"schedule": "Cronograma",
 			"myTasks": "Mis tareas",
 			"home": "Mi panel",
 			"goals": "Objetivos",
@@ -2736,6 +2737,32 @@
 		"empty": {
 			"title": "Nada asignado",
 			"description": "No tienes tareas asignadas que planificar."
+		}
+	},
+	"schedule": {
+		"pageTitle": "Cronograma",
+		"today": "Hoy",
+		"overflow": "Sin hueco hoy",
+		"running": "En marcha",
+		"empty": {
+			"title": "Nada que mostrar",
+			"description": "Planifica una tarea para hoy o esta semana para verla aquí por horas."
+		},
+		"createBlock": {
+			"title": "Nuevo bloque",
+			"description": "Una cita fija o un bloqueo que no es una tarea.",
+			"name": "Título",
+			"namePlaceholder": "Visita de obra, comida…",
+			"kind": "Tipo",
+			"kindFixed": "Cita fija",
+			"kindBreak": "Bloqueo",
+			"startTime": "Empieza",
+			"endTime": "Termina",
+			"timesInvalid": "La hora de fin tiene que ser posterior a la de inicio.",
+			"repeat": "Repetir",
+			"repeatNone": "No se repite",
+			"repeatSome": "Se repite cada semana en los días marcados.",
+			"confirm": "Crear bloque"
 		}
 	}
 }

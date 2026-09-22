@@ -4,6 +4,7 @@ import {
   CalendarCheck,
   CalendarClock,
   ChevronRight,
+  Clock,
   LayoutDashboard,
   LayoutGrid,
   ListTodo,
@@ -150,6 +151,11 @@ export function NavMain() {
       title: t("navigation:sidebar.planner"),
       url: `${base}/planner`,
       icon: CalendarClock,
+    },
+    {
+      title: t("navigation:sidebar.schedule"),
+      url: `${base}/schedule`,
+      icon: Clock,
     },
     {
       title: t("navigation:sidebar.myTasks"),

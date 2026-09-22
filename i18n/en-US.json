@@ -1465,6 +1465,7 @@
 			"projects": "Projects",
 			"today": "Today",
 			"planner": "Planner",
+			"schedule": "Schedule",
 			"myTasks": "My tasks",
 			"home": "My panel",
 			"goals": "Goals",
@@ -2736,6 +2737,32 @@
 		"empty": {
 			"title": "Nothing assigned",
 			"description": "You have no assigned tasks to plan."
+		}
+	},
+	"schedule": {
+		"pageTitle": "Schedule",
+		"today": "Today",
+		"overflow": "No room left today",
+		"running": "Running",
+		"empty": {
+			"title": "Nothing to show",
+			"description": "Plan a task for today or this week to see it here by the hour."
+		},
+		"createBlock": {
+			"title": "New block",
+			"description": "A fixed appointment or a block of time that isn't a task.",
+			"name": "Title",
+			"namePlaceholder": "Site visit, lunch…",
+			"kind": "Kind",
+			"kindFixed": "Fixed appointment",
+			"kindBreak": "Break",
+			"startTime": "Starts",
+			"endTime": "Ends",
+			"timesInvalid": "The end time must be after the start time.",
+			"repeat": "Repeat",
+			"repeatNone": "Doesn't repeat",
+			"repeatSome": "Repeats weekly on the marked days.",
+			"confirm": "Create block"
 		}
 	}
 }

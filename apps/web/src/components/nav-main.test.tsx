@@ -90,6 +90,7 @@ describe("NavMain", () => {
     expect(screen.getByText("navigation:sidebar.personal")).toBeInTheDocument();
     expect(screen.getByText("navigation:sidebar.today")).toBeInTheDocument();
     expect(screen.getByText("navigation:sidebar.planner")).toBeInTheDocument();
+    expect(screen.getByText("navigation:sidebar.schedule")).toBeInTheDocument();
     expect(screen.getByText("navigation:sidebar.myTasks")).toBeInTheDocument();
     expect(screen.getByText("navigation:sidebar.home")).toBeInTheDocument();
     expect(screen.getByText("navigation:sidebar.goals")).toBeInTheDocument();

@@ -21,6 +21,7 @@ import {
   notificationTable,
   personalPlanEntryTable,
   projectTable,
+  scheduleBlockTable,
   sessionTable,
   taskAssigneeTable,
   taskEpicTable,
@@ -239,6 +240,20 @@ export const personalPlanEntryTableRelations = relations(
     task: one(taskTable, {
       fields: [personalPlanEntryTable.taskId],
       references: [taskTable.id],
+    }),
+  }),
+);
+
+export const scheduleBlockTableRelations = relations(
+  scheduleBlockTable,
+  ({ one }) => ({
+    workspace: one(workspaceTable, {
+      fields: [scheduleBlockTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    user: one(userTable, {
+      fields: [scheduleBlockTable.userId],
+      references: [userTable.id],
     }),
   }),
 );

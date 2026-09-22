@@ -5803,6 +5803,9 @@
 						"planner": {
 							"type": "string"
 						},
+						"schedule": {
+							"type": "string"
+						},
 						"myTasks": {
 							"type": "string"
 						},
@@ -5837,6 +5840,7 @@
 						"projects",
 						"today",
 						"planner",
+						"schedule",
 						"myTasks",
 						"home",
 						"goals",
@@ -10768,6 +10772,109 @@
 				}
 			},
 			"required": ["pageTitle", "unplanned", "today", "empty"]
+		},
+		"schedule": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"pageTitle": {
+					"type": "string"
+				},
+				"today": {
+					"type": "string"
+				},
+				"overflow": {
+					"type": "string"
+				},
+				"running": {
+					"type": "string"
+				},
+				"empty": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "description"]
+				},
+				"createBlock": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"name": {
+							"type": "string"
+						},
+						"namePlaceholder": {
+							"type": "string"
+						},
+						"kind": {
+							"type": "string"
+						},
+						"kindFixed": {
+							"type": "string"
+						},
+						"kindBreak": {
+							"type": "string"
+						},
+						"startTime": {
+							"type": "string"
+						},
+						"endTime": {
+							"type": "string"
+						},
+						"timesInvalid": {
+							"type": "string"
+						},
+						"repeat": {
+							"type": "string"
+						},
+						"repeatNone": {
+							"type": "string"
+						},
+						"repeatSome": {
+							"type": "string"
+						},
+						"confirm": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"name",
+						"namePlaceholder",
+						"kind",
+						"kindFixed",
+						"kindBreak",
+						"startTime",
+						"endTime",
+						"timesInvalid",
+						"repeat",
+						"repeatNone",
+						"repeatSome",
+						"confirm"
+					]
+				}
+			},
+			"required": [
+				"pageTitle",
+				"today",
+				"overflow",
+				"running",
+				"empty",
+				"createBlock"
+			]
 		}
 	},
 	"required": [
@@ -10787,6 +10894,7 @@
 		"goals",
 		"today",
 		"myTasks",
-		"planner"
+		"planner",
+		"schedule"
 	]
 }

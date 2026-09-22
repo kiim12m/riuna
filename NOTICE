@@ -9,6 +9,15 @@ Código original de Kaneo
   Copyright (c) 2024 Andrej Acevski
   Licencia MIT — texto completo en el fichero LICENSE
 
+Algoritmo de solapes del Cronograma, adaptado de super-productivity
+---------------------------------------------------------------------
+El módulo de reparto de bloques del Cronograma (ADR 041) porta, reducido y
+adaptado a la forma de datos de Riuna, el álgebra de fusión y partición de
+`src/app/features/schedule/map-schedule-data/` de super-productivity
+(https://github.com/super-productivity/super-productivity).
+  Copyright (c) 2018 Johannes Millan
+  Licencia MIT — texto completo en el fichero LICENSE
+
 Modificaciones y código nuevo de Riuna
 --------------------------------------
   Copyright (c) 2026 [TITULAR — sustituir por tu nombre o razón social]

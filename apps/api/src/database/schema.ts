@@ -10,6 +10,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  smallint,
   text,
   timestamp,
   unique,
@@ -832,6 +833,12 @@ export const personalPlanEntryTable = pgTable(
       }),
     plannedDate: timestamp("planned_date", { mode: "date" }).notNull(),
     position: integer("position").notNull().default(0),
+    /**
+     * Minuto del dia (0-1439) al que el Cronograma ancla la entrada (ADR 041).
+     * Nulo: fluye en orden de `position`, como hasta ahora. Con valor: hora
+     * fija, actua de bloqueador frente a las demas entradas de ese dia.
+     */
+    startMinute: smallint("start_minute"),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()
@@ -843,6 +850,63 @@ export const personalPlanEntryTable = pgTable(
     index("personal_plan_entry_user_date_idx").on(
       table.userId,
       table.plannedDate,
+    ),
+    check(
+      "personal_plan_entry_start_minute_valid",
+      sql`${table.startMinute} IS NULL OR ${table.startMinute} BETWEEN 0 AND 1439`,
+    ),
+  ],
+);
+
+/**
+ * Citas fijas o bloqueos del Cronograma que no son tareas (visita de obra,
+ * comida) — ADR 041. Un bloque suelto lleva `planned_date`; uno repetido
+ * lleva `cadence` (misma forma que `task_recurrence.cadence`,
+ * `recurrence/cadence.ts`) y `planned_date` nula. Nunca las dos a la vez.
+ */
+export const scheduleBlockTable = pgTable(
+  "schedule_block",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    title: text("title").notNull(),
+    kind: text("kind").notNull(),
+    plannedDate: timestamp("planned_date", { mode: "date" }),
+    cadence: jsonb("cadence").$type<Record<string, unknown>>(),
+    startMinute: smallint("start_minute").notNull(),
+    endMinute: smallint("end_minute").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("schedule_block_user_date_idx").on(table.userId, table.plannedDate),
+    check(
+      "schedule_block_kind_valid",
+      sql`${table.kind} IN ('fixed', 'break')`,
+    ),
+    check(
+      "schedule_block_minutes_valid",
+      sql`${table.startMinute} BETWEEN 0 AND 1439 AND ${table.endMinute} BETWEEN 1 AND 1440 AND ${table.endMinute} > ${table.startMinute}`,
+    ),
+    check(
+      "schedule_block_date_xor_cadence",
+      sql`(${table.plannedDate} IS NOT NULL) != (${table.cadence} IS NOT NULL)`,
     ),
   ],
 );

@@ -56,6 +56,7 @@ import { migrateGitHubIntegration } from "./plugins/github/migration";
 import project from "./project";
 import { getPublicProject } from "./project/controllers/get-public-project";
 import recurrence from "./recurrence";
+import schedule from "./schedule";
 import { initializeScheduler, shutdownScheduler } from "./scheduler";
 import search from "./search";
 import slackIntegration from "./slack-integration";
@@ -622,6 +623,7 @@ export function createApp() {
   const templateApi = api.route("/template", template);
   const myWorkApi = api.route("/my-work", myWork);
   const plannerApi = api.route("/planner", planner);
+  const scheduleApi = api.route("/schedule", schedule);
   const searchApi = api.route("/search", search);
   const githubIntegrationApi = api.route(
     "/github-integration",
@@ -809,6 +811,7 @@ export function createApp() {
     labelApi,
     myWorkApi,
     plannerApi,
+    scheduleApi,
     notificationApi,
     notificationPreferencesApi,
     projectApi,
@@ -962,6 +965,7 @@ const {
   labelApi,
   myWorkApi,
   plannerApi,
+  scheduleApi,
   notificationApi,
   notificationPreferencesApi,
   projectApi,
@@ -1015,6 +1019,7 @@ export type AppType =
   | typeof templateApi
   | typeof myWorkApi
   | typeof plannerApi
+  | typeof scheduleApi
   | typeof searchApi
   | typeof githubIntegrationApi
   | typeof giteaIntegrationApi
