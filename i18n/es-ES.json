@@ -1468,6 +1468,7 @@
 			"schedule": "Cronograma",
 			"myTasks": "Mis tareas",
 			"home": "Mi panel",
+			"timeSheet": "Parte de horas",
 			"goals": "Objetivos",
 			"members": "Miembros",
 			"membersAndTeams": "Miembros y equipos",
@@ -2763,6 +2764,27 @@
 			"repeatNone": "No se repite",
 			"repeatSome": "Se repite cada semana en los días marcados.",
 			"confirm": "Crear bloque"
+		}
+	},
+	"timeSheet": {
+		"pageTitle": "Parte de horas",
+		"from": "Desde",
+		"to": "Hasta",
+		"groupBy": "Agrupar por",
+		"groupByOption": {
+			"day": "Día",
+			"task": "Tarea",
+			"project": "Proyecto"
+		},
+		"export": "Exportar",
+		"exportError": "No se pudo exportar el parte.",
+		"rangeInvalid": "La fecha de fin tiene que ser posterior a la de inicio.",
+		"entries": "Entradas",
+		"hours": "Horas",
+		"total": "Total",
+		"empty": {
+			"title": "Nada en este rango",
+			"description": "No hay tiempo registrado entre estas fechas."
 		}
 	}
 }

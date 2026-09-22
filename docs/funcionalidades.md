@@ -200,6 +200,10 @@ la tarea y en la propia tabla.
   se lista aparte, sin pasar solo al día siguiente. Admite citas fijas y
   bloqueos que no son tareas (sueltos o repetidos cada semana en días
   concretos), y muestra el cronómetro en marcha.
+- **Parte de horas** ([ADR 042](adr/042-parte-de-horas.md)): lo registrado
+  por quien mira, cruzando proyectos, en un rango de fechas. Agrupable por
+  día, tarea o proyecto; una entrada en marcha cuenta lo transcurrido hasta
+  ahora. Exportable a Excel.
 
 ## 8. Paneles y objetivos
 

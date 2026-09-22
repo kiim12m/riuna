@@ -53,6 +53,7 @@ import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPanelRouteImpo
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPlannerRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/planner'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdScheduleRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/schedule'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/search'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTimeSheetRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/time-sheet'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTodayRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/today'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminMembersRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/members'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings'
@@ -328,6 +329,12 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRouteImport.update({
     id: '/search',
     path: '/search',
+    getParentRoute: () => LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+  } as any)
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTimeSheetRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTimeSheetRouteImport.update({
+    id: '/time-sheet',
+    path: '/time-sheet',
     getParentRoute: () => LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
   } as any)
 const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTodayRoute =
@@ -620,6 +627,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/workspace/$workspaceId/planner': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPlannerRoute
   '/dashboard/workspace/$workspaceId/schedule': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdScheduleRoute
   '/dashboard/workspace/$workspaceId/search': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
+  '/dashboard/workspace/$workspaceId/time-sheet': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTimeSheetRoute
   '/dashboard/workspace/$workspaceId/today': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTodayRoute
   '/dashboard/settings/projects/': typeof LayoutAuthenticatedDashboardSettingsProjectsIndexRoute
   '/dashboard/settings/workspace/': typeof LayoutAuthenticatedDashboardSettingsWorkspaceIndexRoute
@@ -686,6 +694,7 @@ export interface FileRoutesByTo {
   '/dashboard/workspace/$workspaceId/planner': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPlannerRoute
   '/dashboard/workspace/$workspaceId/schedule': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdScheduleRoute
   '/dashboard/workspace/$workspaceId/search': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
+  '/dashboard/workspace/$workspaceId/time-sheet': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTimeSheetRoute
   '/dashboard/workspace/$workspaceId/today': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTodayRoute
   '/dashboard/settings/projects': typeof LayoutAuthenticatedDashboardSettingsProjectsIndexRoute
   '/dashboard/settings/workspace': typeof LayoutAuthenticatedDashboardSettingsWorkspaceIndexRoute
@@ -760,6 +769,7 @@ export interface FileRoutesById {
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/planner': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPlannerRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/schedule': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdScheduleRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/search': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/time-sheet': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTimeSheetRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/today': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTodayRoute
   '/_layout/_authenticated/dashboard/settings/projects/': typeof LayoutAuthenticatedDashboardSettingsProjectsIndexRoute
   '/_layout/_authenticated/dashboard/settings/workspace/': typeof LayoutAuthenticatedDashboardSettingsWorkspaceIndexRoute
@@ -834,6 +844,7 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/planner'
     | '/dashboard/workspace/$workspaceId/schedule'
     | '/dashboard/workspace/$workspaceId/search'
+    | '/dashboard/workspace/$workspaceId/time-sheet'
     | '/dashboard/workspace/$workspaceId/today'
     | '/dashboard/settings/projects/'
     | '/dashboard/settings/workspace/'
@@ -900,6 +911,7 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/planner'
     | '/dashboard/workspace/$workspaceId/schedule'
     | '/dashboard/workspace/$workspaceId/search'
+    | '/dashboard/workspace/$workspaceId/time-sheet'
     | '/dashboard/workspace/$workspaceId/today'
     | '/dashboard/settings/projects'
     | '/dashboard/settings/workspace'
@@ -973,6 +985,7 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/planner'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/schedule'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/search'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/time-sheet'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/today'
     | '/_layout/_authenticated/dashboard/settings/projects/'
     | '/_layout/_authenticated/dashboard/settings/workspace/'
@@ -1325,6 +1338,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/dashboard/workspace/$workspaceId/search'
       preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/time-sheet': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/time-sheet'
+      path: '/time-sheet'
+      fullPath: '/dashboard/workspace/$workspaceId/time-sheet'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTimeSheetRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
     }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/today': {
@@ -1698,6 +1718,7 @@ interface LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren {
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPlannerRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPlannerRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdScheduleRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdScheduleRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTimeSheetRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTimeSheetRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTodayRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTodayRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksBoardRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksBoardRoute
@@ -1735,6 +1756,8 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren: LayoutAuthe
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdScheduleRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTimeSheetRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTimeSheetRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTodayRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTodayRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute:

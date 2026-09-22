@@ -1338,7 +1338,20 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
    (asignadas a mí / de mis equipos) hasta que alguien pida más. Sin campos
    personalizados todavía: no hay endpoint que liste los de espacio fuera del
    motor de filtros.
-9. **Parte de horas**. Pendiente: solo maqueta.
+9. **Parte de horas** ✔ ([ADR 042](adr/042-parte-de-horas.md)) — lo
+   registrado por quien mira, cruzando proyectos, agrupado por día, tarea o
+   proyecto sobre un rango de fechas (7 días por defecto). Módulo plano
+   `apps/api/src/time-sheet/`, fuera de `time-entry/` por el mismo motivo
+   que `my-work/` frente a `task/`: una lectura transversal no es un método
+   más del recurso. Sin tabla nueva — solo un índice compuesto
+   `(user_id, start_time)` que sustituye al de `user_id` solo. Una entrada
+   en marcha cuenta lo transcurrido hasta ahora en vez de omitirse del
+   total. La exportación reutiliza `buildExchangeWorkbookOf`
+   (tercer consumidor fuera de `task/`, tras el panel), exportando
+   exactamente los grupos que pinta la pantalla. 10 pruebas de integración;
+   verificado en navegador real contra `dev:parallel` (agrupar por día y por
+   tarea, entrada en marcha contando en vivo, exportar y descargar el
+   `.xlsx`).
 
 El cronómetro de tarea se mueve al pie de la barra lateral en vez de una
 cabecera —la ADR 022 ya maquetó y descartó esa variante—.
@@ -1481,13 +1494,10 @@ destructiva.
 
 ## Siguiente paso
 
-El **interludio de espacio personal y administración**, en curso: los bloques
-2, 3, 5, 6, 7 y 8 están cerrados (barra lateral en tres espacios, lectura de
-tareas del espacio, «Hoy», el Planificador, el Cronograma y «Mis tareas»).
-Sigue **Parte de horas** — sin dependencia de ningún otro bloque: módulo
-nuevo `apps/api/src/time-sheet/` (lectura de `time_entry` por persona y
-rango, hoy solo por tarea), agrupación por día/tarea/proyecto, exportación
-reutilizando `buildExchangeWorkbookOf`. Después la **Fase 8**:
+El **interludio de espacio personal y administración** está **cerrado**: los
+nueve bloques (barra lateral en tres espacios, lectura de tareas del
+espacio, «Hoy», el Planificador, el Cronograma, «Mis tareas» y el Parte de
+horas) están hechos, commiteados y verificados. Sigue la **Fase 8**:
 automatizaciones e importadores externos. Motor disparador → condición →
 acción sobre los eventos que Kaneo ya emite, e importadores de Trello, Jira,
 Asana y Notion.
@@ -1496,7 +1506,7 @@ Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la
 prueba de extremo a extremo necesita la PostgreSQL de `compose.local.yml`.
 Correrla es el primer paso si se retoma trabajo en un entorno que sí tenga
-Docker, antes de dar el bloque por verificado del todo.
+Docker, antes de dar ese bloque por verificado del todo.
 
 **Las dos cosas que la Fase 7 dejaba abiertas están cerradas**, y las cerró la
 Fase 7.5:

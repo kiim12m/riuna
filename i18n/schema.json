@@ -5812,6 +5812,9 @@
 						"home": {
 							"type": "string"
 						},
+						"timeSheet": {
+							"type": "string"
+						},
 						"goals": {
 							"type": "string"
 						},
@@ -5843,6 +5846,7 @@
 						"schedule",
 						"myTasks",
 						"home",
+						"timeSheet",
 						"goals",
 						"members",
 						"membersAndTeams",
@@ -10875,6 +10879,85 @@
 				"empty",
 				"createBlock"
 			]
+		},
+		"timeSheet": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"pageTitle": {
+					"type": "string"
+				},
+				"from": {
+					"type": "string"
+				},
+				"to": {
+					"type": "string"
+				},
+				"groupBy": {
+					"type": "string"
+				},
+				"groupByOption": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"day": {
+							"type": "string"
+						},
+						"task": {
+							"type": "string"
+						},
+						"project": {
+							"type": "string"
+						}
+					},
+					"required": ["day", "task", "project"]
+				},
+				"export": {
+					"type": "string"
+				},
+				"exportError": {
+					"type": "string"
+				},
+				"rangeInvalid": {
+					"type": "string"
+				},
+				"entries": {
+					"type": "string"
+				},
+				"hours": {
+					"type": "string"
+				},
+				"total": {
+					"type": "string"
+				},
+				"empty": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "description"]
+				}
+			},
+			"required": [
+				"pageTitle",
+				"from",
+				"to",
+				"groupBy",
+				"groupByOption",
+				"export",
+				"exportError",
+				"rangeInvalid",
+				"entries",
+				"hours",
+				"total",
+				"empty"
+			]
 		}
 	},
 	"required": [
@@ -10895,6 +10978,7 @@
 		"today",
 		"myTasks",
 		"planner",
-		"schedule"
+		"schedule",
+		"timeSheet"
 	]
 }

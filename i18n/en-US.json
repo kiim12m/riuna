@@ -1468,6 +1468,7 @@
 			"schedule": "Schedule",
 			"myTasks": "My tasks",
 			"home": "My panel",
+			"timeSheet": "Time sheet",
 			"goals": "Goals",
 			"members": "Members",
 			"membersAndTeams": "Members and teams",
@@ -2763,6 +2764,27 @@
 			"repeatNone": "Doesn't repeat",
 			"repeatSome": "Repeats weekly on the marked days.",
 			"confirm": "Create block"
+		}
+	},
+	"timeSheet": {
+		"pageTitle": "Time sheet",
+		"from": "From",
+		"to": "To",
+		"groupBy": "Group by",
+		"groupByOption": {
+			"day": "Day",
+			"task": "Task",
+			"project": "Project"
+		},
+		"export": "Export",
+		"exportError": "Couldn't export the time sheet.",
+		"rangeInvalid": "The end date must be after the start date.",
+		"entries": "Entries",
+		"hours": "Hours",
+		"total": "Total",
+		"empty": {
+			"title": "Nothing in this range",
+			"description": "No time logged between these dates."
 		}
 	}
 }

@@ -1468,6 +1468,7 @@
 			"schedule": "Cronograma",
 			"myTasks": "Les meves tasques",
 			"home": "El meu panell",
+			"timeSheet": "Part d'hores",
 			"goals": "Objectius",
 			"members": "Membres",
 			"membersAndTeams": "Membres i equips",
@@ -2763,6 +2764,27 @@
 			"repeatNone": "No es repeteix",
 			"repeatSome": "Es repeteix cada setmana els dies marcats.",
 			"confirm": "Crear bloc"
+		}
+	},
+	"timeSheet": {
+		"pageTitle": "Part d'hores",
+		"from": "Des de",
+		"to": "Fins a",
+		"groupBy": "Agrupar per",
+		"groupByOption": {
+			"day": "Dia",
+			"task": "Tasca",
+			"project": "Projecte"
+		},
+		"export": "Exportar",
+		"exportError": "No s'ha pogut exportar el part.",
+		"rangeInvalid": "La data de fi ha de ser posterior a la d'inici.",
+		"entries": "Entrades",
+		"hours": "Hores",
+		"total": "Total",
+		"empty": {
+			"title": "Res en aquest rang",
+			"description": "No hi ha temps registrat entre aquestes dates."
 		}
 	}
 }

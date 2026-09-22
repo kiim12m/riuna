@@ -5,6 +5,7 @@ import {
   CalendarClock,
   ChevronRight,
   Clock,
+  FileClock,
   LayoutDashboard,
   LayoutGrid,
   ListTodo,
@@ -167,6 +168,11 @@ export function NavMain() {
       title: t("navigation:sidebar.home"),
       url: `${base}/home`,
       icon: LayoutDashboard,
+    },
+    {
+      title: t("navigation:sidebar.timeSheet"),
+      url: `${base}/time-sheet`,
+      icon: FileClock,
     },
     {
       title: t("navigation:sidebar.goals"),

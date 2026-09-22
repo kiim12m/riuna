@@ -1436,7 +1436,9 @@ export const timeEntryTable = pgTable(
   },
   (table) => [
     index("time_entry_taskId_idx").on(table.taskId),
-    index("time_entry_userId_idx").on(table.userId),
+    // Sirve el filtro por usuario solo y el rango de fechas del parte de
+    // horas (ADR 042); sustituye al indice de userId solo, que este cubre.
+    index("time_entry_userId_startTime_idx").on(table.userId, table.startTime),
   ],
 );
 
