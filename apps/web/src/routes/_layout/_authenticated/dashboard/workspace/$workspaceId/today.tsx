@@ -14,35 +14,14 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { MyWorkTask } from "@/fetchers/my-work";
 import { useSearchMyWork } from "@/hooks/queries/my-work/use-search-my-work";
-import {
-  DUE_WINDOW_ORDER,
-  type DueWindow,
-  getDueWindow,
-} from "@/lib/due-window";
+import { DUE_WINDOW_ORDER, groupByDueWindow } from "@/lib/due-window";
 
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/workspace/$workspaceId/today",
 )({
   component: TodayComponent,
 });
-
-function groupByDueWindow(
-  tasks: MyWorkTask[],
-): Record<DueWindow, MyWorkTask[]> {
-  const groups: Record<DueWindow, MyWorkTask[]> = {
-    overdue: [],
-    today: [],
-    week: [],
-    later: [],
-    none: [],
-  };
-  for (const task of tasks) {
-    groups[getDueWindow(task.dueDate)].push(task);
-  }
-  return groups;
-}
 
 /**
  * La pantalla de entrada: lo asignado a mi, en todos los proyectos, repartido
@@ -64,7 +43,7 @@ function TodayComponent() {
   } | null>(null);
 
   const tasks = data?.tasks ?? [];
-  const groups = groupByDueWindow(tasks);
+  const groups = groupByDueWindow(tasks, (task) => task.dueDate);
   const windowsWithTasks = DUE_WINDOW_ORDER.filter(
     (window) => groups[window].length > 0,
   );

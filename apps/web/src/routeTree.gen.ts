@@ -56,6 +56,11 @@ import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminMembersRo
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectsRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/projects'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/index'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksBoardRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/board'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksGanttRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/gantt'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksListRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/list'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/table'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/billing'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/general'
@@ -353,6 +358,51 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRoute =
         LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminRoute,
     } as any,
   )
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRouteImport.update(
+    {
+      id: '/my-tasks/',
+      path: '/my-tasks/',
+      getParentRoute: () =>
+        LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+    } as any,
+  )
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksBoardRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksBoardRouteImport.update(
+    {
+      id: '/my-tasks/board',
+      path: '/my-tasks/board',
+      getParentRoute: () =>
+        LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+    } as any,
+  )
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksGanttRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksGanttRouteImport.update(
+    {
+      id: '/my-tasks/gantt',
+      path: '/my-tasks/gantt',
+      getParentRoute: () =>
+        LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+    } as any,
+  )
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksListRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksListRouteImport.update(
+    {
+      id: '/my-tasks/list',
+      path: '/my-tasks/list',
+      getParentRoute: () =>
+        LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+    } as any,
+  )
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRouteImport.update(
+    {
+      id: '/my-tasks/table',
+      path: '/my-tasks/table',
+      getParentRoute: () =>
+        LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+    } as any,
+  )
 const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceIndexRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceIndexRouteImport.update(
     {
@@ -562,6 +612,11 @@ export interface FileRoutesByFullPath {
   '/dashboard/workspace/$workspaceId/admin/project-settings': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsRouteWithChildren
   '/dashboard/workspace/$workspaceId/admin/projects': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectsRoute
   '/dashboard/workspace/$workspaceId/admin/workspace': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRouteWithChildren
+  '/dashboard/workspace/$workspaceId/my-tasks/board': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksBoardRoute
+  '/dashboard/workspace/$workspaceId/my-tasks/gantt': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksGanttRoute
+  '/dashboard/workspace/$workspaceId/my-tasks/list': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksListRoute
+  '/dashboard/workspace/$workspaceId/my-tasks/table': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRoute
+  '/dashboard/workspace/$workspaceId/my-tasks/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/billing': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/general': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/labels': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceLabelsRoute
@@ -620,6 +675,11 @@ export interface FileRoutesByTo {
   '/dashboard/workspace/$workspaceId/admin/members': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminMembersRoute
   '/dashboard/workspace/$workspaceId/admin/project-settings': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsRouteWithChildren
   '/dashboard/workspace/$workspaceId/admin/projects': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectsRoute
+  '/dashboard/workspace/$workspaceId/my-tasks/board': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksBoardRoute
+  '/dashboard/workspace/$workspaceId/my-tasks/gantt': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksGanttRoute
+  '/dashboard/workspace/$workspaceId/my-tasks/list': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksListRoute
+  '/dashboard/workspace/$workspaceId/my-tasks/table': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRoute
+  '/dashboard/workspace/$workspaceId/my-tasks': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/billing': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/general': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/labels': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceLabelsRoute
@@ -688,6 +748,11 @@ export interface FileRoutesById {
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsRouteWithChildren
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/projects': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectsRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRouteWithChildren
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/board': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksBoardRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/gantt': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksGanttRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/list': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksListRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/table': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/billing': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/general': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/labels': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceLabelsRoute
@@ -755,6 +820,11 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/admin/project-settings'
     | '/dashboard/workspace/$workspaceId/admin/projects'
     | '/dashboard/workspace/$workspaceId/admin/workspace'
+    | '/dashboard/workspace/$workspaceId/my-tasks/board'
+    | '/dashboard/workspace/$workspaceId/my-tasks/gantt'
+    | '/dashboard/workspace/$workspaceId/my-tasks/list'
+    | '/dashboard/workspace/$workspaceId/my-tasks/table'
+    | '/dashboard/workspace/$workspaceId/my-tasks/'
     | '/dashboard/workspace/$workspaceId/admin/workspace/billing'
     | '/dashboard/workspace/$workspaceId/admin/workspace/general'
     | '/dashboard/workspace/$workspaceId/admin/workspace/labels'
@@ -813,6 +883,11 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/admin/members'
     | '/dashboard/workspace/$workspaceId/admin/project-settings'
     | '/dashboard/workspace/$workspaceId/admin/projects'
+    | '/dashboard/workspace/$workspaceId/my-tasks/board'
+    | '/dashboard/workspace/$workspaceId/my-tasks/gantt'
+    | '/dashboard/workspace/$workspaceId/my-tasks/list'
+    | '/dashboard/workspace/$workspaceId/my-tasks/table'
+    | '/dashboard/workspace/$workspaceId/my-tasks'
     | '/dashboard/workspace/$workspaceId/admin/workspace/billing'
     | '/dashboard/workspace/$workspaceId/admin/workspace/general'
     | '/dashboard/workspace/$workspaceId/admin/workspace/labels'
@@ -880,6 +955,11 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/projects'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/board'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/gantt'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/list'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/table'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/billing'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/general'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/labels'
@@ -1242,6 +1322,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminRoute
     }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/'
+      path: '/my-tasks'
+      fullPath: '/dashboard/workspace/$workspaceId/my-tasks/'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/board': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/board'
+      path: '/my-tasks/board'
+      fullPath: '/dashboard/workspace/$workspaceId/my-tasks/board'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksBoardRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/gantt': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/gantt'
+      path: '/my-tasks/gantt'
+      fullPath: '/dashboard/workspace/$workspaceId/my-tasks/gantt'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksGanttRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/list': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/list'
+      path: '/my-tasks/list'
+      fullPath: '/dashboard/workspace/$workspaceId/my-tasks/list'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksListRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/table': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/table'
+      path: '/my-tasks/table'
+      fullPath: '/dashboard/workspace/$workspaceId/my-tasks/table'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/': {
       id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/'
       path: '/'
@@ -1543,6 +1658,11 @@ interface LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren {
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTodayRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTodayRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksBoardRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksBoardRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksGanttRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksGanttRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksListRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksListRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdCalendarRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdCalendarRoute
@@ -1573,6 +1693,16 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren: LayoutAuthe
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTodayRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksBoardRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksBoardRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksGanttRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksGanttRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksListRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksListRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute:

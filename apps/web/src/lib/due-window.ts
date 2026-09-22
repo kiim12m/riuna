@@ -41,3 +41,22 @@ export function getDueWindow(
   if (due < nextWeek) return "week";
   return "later";
 }
+
+/** Reparte una lista de tareas en sus cinco cubos, en el orden de siempre. */
+export function groupByDueWindow<T>(
+  items: T[],
+  getDueDate: (item: T) => string | Date | null,
+  now: Date = new Date(),
+): Record<DueWindow, T[]> {
+  const groups: Record<DueWindow, T[]> = {
+    overdue: [],
+    today: [],
+    week: [],
+    later: [],
+    none: [],
+  };
+  for (const item of items) {
+    groups[getDueWindow(getDueDate(item), now)].push(item);
+  }
+  return groups;
+}

@@ -5,6 +5,7 @@ import {
   ChevronRight,
   LayoutDashboard,
   LayoutGrid,
+  ListTodo,
   type LucideIcon,
   SlidersHorizontal,
   Target,
@@ -143,6 +144,12 @@ export function NavMain() {
       title: t("navigation:sidebar.today"),
       url: `${base}/today`,
       icon: CalendarCheck,
+    },
+    {
+      title: t("navigation:sidebar.myTasks"),
+      url: `${base}/my-tasks`,
+      icon: ListTodo,
+      activePrefix: `${base}/my-tasks`,
     },
     {
       title: t("navigation:sidebar.home"),

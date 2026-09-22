@@ -1464,6 +1464,7 @@
 			"admin": "Administración",
 			"projects": "Proyectos",
 			"today": "Hoy",
+			"myTasks": "Mis tareas",
 			"home": "Mi panel",
 			"goals": "Objetivos",
 			"members": "Miembros",
@@ -2018,6 +2019,7 @@
 			"resizeStart": "Cambiar la fecha de comienzo",
 			"resizeDue": "Cambiar la fecha de vencimiento",
 			"taskAriaLabel": "{{title}}: abrir o arrastrar para mover",
+			"taskAriaLabelReadOnly": "{{title}}: abrir tarea",
 			"branchSpan": "Tramo de toda la rama",
 			"zoomLabel": "Escala temporal",
 			"zoomDay": "Día",
@@ -2708,6 +2710,22 @@
 		"empty": {
 			"title": "Nada pendiente",
 			"description": "No tienes tareas asignadas en ningún proyecto."
+		}
+	},
+	"myTasks": {
+		"pageTitle": "Mis tareas",
+		"tabs": {
+			"list": "Lista",
+			"board": "Tablero",
+			"gantt": "Gantt",
+			"table": "Tabla"
+		},
+		"table": {
+			"moreResults": "Mostrando {{shown}} de {{total}}. Acota con un filtro para ver el resto."
+		},
+		"empty": {
+			"title": "Nada por aquí",
+			"description": "No hay tareas en este ámbito."
 		}
 	}
 }

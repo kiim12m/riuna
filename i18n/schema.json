@@ -5800,6 +5800,9 @@
 						"today": {
 							"type": "string"
 						},
+						"myTasks": {
+							"type": "string"
+						},
 						"home": {
 							"type": "string"
 						},
@@ -5830,6 +5833,7 @@
 						"admin",
 						"projects",
 						"today",
+						"myTasks",
 						"home",
 						"goals",
 						"members",
@@ -7960,6 +7964,9 @@
 						"taskAriaLabel": {
 							"type": "string"
 						},
+						"taskAriaLabelReadOnly": {
+							"type": "string"
+						},
 						"branchSpan": {
 							"type": "string"
 						},
@@ -8009,6 +8016,7 @@
 						"resizeStart",
 						"resizeDue",
 						"taskAriaLabel",
+						"taskAriaLabelReadOnly",
 						"branchSpan",
 						"zoomLabel",
 						"zoomDay",
@@ -10675,6 +10683,58 @@
 				}
 			},
 			"required": ["pageTitle", "empty"]
+		},
+		"myTasks": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"pageTitle": {
+					"type": "string"
+				},
+				"tabs": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"list": {
+							"type": "string"
+						},
+						"board": {
+							"type": "string"
+						},
+						"gantt": {
+							"type": "string"
+						},
+						"table": {
+							"type": "string"
+						}
+					},
+					"required": ["list", "board", "gantt", "table"]
+				},
+				"table": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"moreResults": {
+							"type": "string"
+						}
+					},
+					"required": ["moreResults"]
+				},
+				"empty": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "description"]
+				}
+			},
+			"required": ["pageTitle", "tabs", "table", "empty"]
 		}
 	},
 	"required": [
@@ -10692,6 +10752,7 @@
 		"cycles",
 		"panels",
 		"goals",
-		"today"
+		"today",
+		"myTasks"
 	]
 }

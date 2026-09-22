@@ -1286,8 +1286,25 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
    (MIT, ~60 KB de TypeScript puro sin una sola importación de Angular, con
    su copyright entrando en `NOTICE`); sus componentes Angular se rehacen con
    las primitivas de Riuna. Pendiente: solo maqueta.
-8. **Mis tareas** — Lista, Tablero, Gantt y Tabla personales sobre el motor
-   de los bloques 3 y 4. Pendiente, depende del bloque 3.
+8. **Mis tareas** ✔ ([ADR 039](adr/039-mis-tareas-vistas-personales.md)) —
+   Lista, Tablero, Gantt y Tabla personales sobre el motor de los bloques 3 y
+   4, con ADR propia porque cambia la semántica del tablero. Carriles por
+   ventana de vencimiento y no por estado (`status`/`column` no existen en el
+   registro del espacio, ADR 038); sin arrastre en ninguna de las dos —el
+   destino con sentido es el plan personal del Planificador, que no existe
+   aún—; Lista plana, sin árbol; Gantt de solo lectura, sin capa de
+   dependencias, «hecha» resuelta por `isDone`. `table-view` se reutiliza tal
+   cual —la única de las cuatro que no hacía falta tocar por dentro—; Lista y
+   Tablero se construyen ligeros sobre `WidgetTaskRow`, el mismo componente sin
+   estado que ya estrenó «Hoy», en vez de forzar `list-view`/`kanban-board` a
+   un modo multi-proyecto que no tenían. Vistas guardadas de espacio nuevas
+   (`GET/POST /view/workspace`), sobre controladores que ya sabían de
+   `projectId` nulo desde la ADR 015 y no tenían ruta que los llamara así.
+   Filtro y vista guardada llegan primero a la Tabla —la única que ya traía
+   barra de filtros—; Lista y Tablero se quedan con un selector de ámbito
+   (asignadas a mí / de mis equipos) hasta que alguien pida más. Sin campos
+   personalizados todavía: no hay endpoint que liste los de espacio fuera del
+   motor de filtros.
 9. **Parte de horas**. Pendiente: solo maqueta.
 
 El cronómetro de tarea se mueve al pie de la barra lateral en vez de una
@@ -1432,14 +1449,15 @@ destructiva.
 ## Siguiente paso
 
 El **interludio de espacio personal y administración**, en curso: los bloques
-2, 3 y 5 están cerrados (barra lateral en tres espacios, lectura de tareas del
-espacio y «Hoy»). Sigue **Mis tareas** — Lista, Tablero, Gantt y Tabla
-personales sobre el mismo motor, con ADR propia porque cambia la semántica del
-tablero (carriles por ventana de vencimiento, no por estado) —, y después
-Planificador, Cronograma y Parte de horas, en ese orden. Después la
-**Fase 8**: automatizaciones e importadores externos. Motor disparador →
-condición → acción sobre los eventos que Kaneo ya emite, e importadores de
-Trello, Jira, Asana y Notion.
+2, 3, 5 y 8 están cerrados (barra lateral en tres espacios, lectura de tareas
+del espacio, «Hoy» y «Mis tareas»). Sigue el **Planificador** — necesita tabla
+nueva y ADR propia antes de escribir código: forma recomendada ya investigada
+(`personal_plan_entry`, carga desde `task.estimate`, fantasmas de recurrentes
+vía `apps/api/src/recurrence/cadence.ts`, que ya expone lo necesario sin
+investigación adicional) —, y después Cronograma y Parte de horas, en ese
+orden. Después la **Fase 8**: automatizaciones e importadores externos. Motor
+disparador → condición → acción sobre los eventos que Kaneo ya emite, e
+importadores de Trello, Jira, Asana y Notion.
 
 **Las dos cosas que la Fase 7 dejaba abiertas están cerradas**, y las cerró la
 Fase 7.5:

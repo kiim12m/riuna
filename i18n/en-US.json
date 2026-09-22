@@ -1464,6 +1464,7 @@
 			"admin": "Administration",
 			"projects": "Projects",
 			"today": "Today",
+			"myTasks": "My tasks",
 			"home": "My panel",
 			"goals": "Goals",
 			"members": "Members",
@@ -2018,6 +2019,7 @@
 			"resizeStart": "Resize start date",
 			"resizeDue": "Resize due date",
 			"taskAriaLabel": "{{title}}: open or drag to move",
+			"taskAriaLabelReadOnly": "{{title}}: open task",
 			"branchSpan": "Span of the whole branch",
 			"zoomLabel": "Timeline scale",
 			"zoomDay": "Day",
@@ -2708,6 +2710,22 @@
 		"empty": {
 			"title": "Nothing pending",
 			"description": "You have no tasks assigned in any project."
+		}
+	},
+	"myTasks": {
+		"pageTitle": "My tasks",
+		"tabs": {
+			"list": "List",
+			"board": "Board",
+			"gantt": "Gantt",
+			"table": "Table"
+		},
+		"table": {
+			"moreResults": "Showing {{shown}} of {{total}}. Narrow it down with a filter to see the rest."
+		},
+		"empty": {
+			"title": "Nothing here",
+			"description": "There are no tasks in this scope."
 		}
 	}
 }

@@ -123,6 +123,88 @@ const view = new Hono<{
       );
     },
   )
+  .get(
+    "/workspace",
+    describeRoute({
+      operationId: "listWorkspaceViews",
+      tags: ["Views"],
+      description:
+        "List the saved views scoped to the whole workspace (not to one project): the caller's own plus the shared ones",
+      responses: {
+        200: {
+          description: "Views ordered by position",
+          content: { "application/json": { schema: resolver(v.any()) } },
+        },
+      },
+    }),
+    validator(
+      "query",
+      v.object({
+        workspaceId: v.pipe(v.string(), v.minLength(1)),
+        type: v.optional(viewTypeSchema),
+      }),
+    ),
+    workspaceAccess.fromQuery(),
+    async (c) => {
+      const { workspaceId, type } = c.req.valid("query");
+
+      return c.json(
+        await getViews({
+          workspaceId,
+          userId: c.get("userId"),
+          type,
+        }),
+      );
+    },
+  )
+  .post(
+    "/workspace",
+    describeRoute({
+      operationId: "createWorkspaceView",
+      tags: ["Views"],
+      description: "Save a view scoped to the whole workspace",
+      responses: {
+        200: {
+          description: "View created successfully",
+          content: { "application/json": { schema: resolver(v.any()) } },
+        },
+      },
+    }),
+    validator(
+      "query",
+      v.object({ workspaceId: v.pipe(v.string(), v.minLength(1)) }),
+    ),
+    validator(
+      "json",
+      v.object({
+        name: v.pipe(v.string(), v.minLength(1), v.maxLength(120)),
+        type: viewTypeSchema,
+        config: v.optional(configSchema),
+        isShared: v.optional(v.boolean()),
+      }),
+    ),
+    workspaceAccess.fromQuery(),
+    // Sin proyecto al que anclar el alcance: `task:update` es lo mas cercano
+    // en el vocabulario, y compartir con el espacio entero sigue siendo una
+    // escritura, no una simple lectura, igual que en la vista de proyecto.
+    requireApiKeyScope({ task: ["update"] }),
+    async (c) => {
+      const { workspaceId } = c.req.valid("query");
+      const body = c.req.valid("json");
+
+      return c.json(
+        await createView({
+          workspaceId,
+          projectId: null,
+          name: body.name,
+          type: body.type,
+          config: body.config,
+          isShared: body.isShared,
+          currentUserId: c.get("userId"),
+        }),
+      );
+    },
+  )
   .patch(
     "/:id",
     describeRoute({

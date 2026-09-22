@@ -22,6 +22,12 @@ type GanttTaskBarProps = {
   timeline: GanttTimeline;
   isMobile?: boolean;
   onOpenTask: () => void;
+  /**
+   * Sin arrastre ni redimensionado: solo abre la tarea al pulsar. Lo usa el
+   * Gantt personal de "Mis tareas" (ADR 039), que todavia no tiene un destino
+   * con sentido para un arrastre entre proyectos.
+   */
+  readOnly?: boolean;
 };
 
 function toIsoDay(date: Date) {
@@ -39,6 +45,7 @@ export function GanttTaskBar({
   timeline,
   isMobile = false,
   onOpenTask,
+  readOnly = false,
 }: GanttTaskBarProps) {
   const { t } = useTranslation();
   const { mutateAsync: updateTask } = useUpdateTask();
@@ -263,30 +270,43 @@ export function GanttTaskBar({
             style={{ width: `${subtree?.progress ?? 0}%` }}
           />
         )}
+        {!readOnly && (
+          <button
+            type="button"
+            aria-label={t("tasks:gantt.resizeStart")}
+            onPointerDown={handleResizeStart}
+            className={cn(handleClasses, "rounded-l-full")}
+          />
+        )}
         <button
           type="button"
-          aria-label={t("tasks:gantt.resizeStart")}
-          onPointerDown={handleResizeStart}
-          className={cn(handleClasses, "rounded-l-full")}
-        />
-        <button
-          type="button"
-          aria-label={t("tasks:gantt.taskAriaLabel", { title: task.title })}
-          onPointerDown={handleMove}
+          aria-label={t(
+            readOnly
+              ? "tasks:gantt.taskAriaLabelReadOnly"
+              : "tasks:gantt.taskAriaLabel",
+            { title: task.title },
+          )}
+          onPointerDown={readOnly ? undefined : handleMove}
+          onClick={readOnly ? onOpenTask : undefined}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();
               onOpenTask();
             }
           }}
-          className="relative z-[1] min-w-0 flex-1 cursor-grab touch-manipulation rounded-full outline-none before:absolute before:inset-x-0 before:-inset-y-2 before:content-[''] active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background"
+          className={cn(
+            "relative z-[1] min-w-0 flex-1 touch-manipulation rounded-full outline-none before:absolute before:inset-x-0 before:-inset-y-2 before:content-[''] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
+            readOnly ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
+          )}
         />
-        <button
-          type="button"
-          aria-label={t("tasks:gantt.resizeDue")}
-          onPointerDown={handleResizeEnd}
-          className={cn(handleClasses, "rounded-r-full")}
-        />
+        {!readOnly && (
+          <button
+            type="button"
+            aria-label={t("tasks:gantt.resizeDue")}
+            onPointerDown={handleResizeEnd}
+            className={cn(handleClasses, "rounded-r-full")}
+          />
+        )}
       </div>
     </>
   );
