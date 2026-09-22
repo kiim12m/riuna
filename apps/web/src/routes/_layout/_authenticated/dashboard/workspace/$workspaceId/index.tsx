@@ -5,14 +5,15 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
  *
  * Esa tabla es una pantalla de gestion —crear, reordenar, archivar, borrar— y
  * se ha ido al grupo de administracion, que no todo el mundo ve. Como pantalla
- * de entrada ahora manda el espacio personal.
+ * de entrada ahora manda "Hoy": lo asignado a mi ahora mismo, no un panel que
+ * hay que montar primero.
  */
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/workspace/$workspaceId/",
 )({
   beforeLoad: ({ params }) => {
     throw redirect({
-      to: "/dashboard/workspace/$workspaceId/home",
+      to: "/dashboard/workspace/$workspaceId/today",
       params,
       replace: true,
     });

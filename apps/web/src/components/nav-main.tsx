@@ -1,6 +1,7 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Building2,
+  CalendarCheck,
   ChevronRight,
   LayoutDashboard,
   LayoutGrid,
@@ -138,6 +139,11 @@ export function NavMain() {
 
   // Lo que responde "que me toca a mi". Lo ve todo el mundo.
   const personal: NavItem[] = [
+    {
+      title: t("navigation:sidebar.today"),
+      url: `${base}/today`,
+      icon: CalendarCheck,
+    },
     {
       title: t("navigation:sidebar.home"),
       url: `${base}/home`,

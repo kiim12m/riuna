@@ -88,6 +88,7 @@ describe("NavMain", () => {
     renderNav();
 
     expect(screen.getByText("navigation:sidebar.personal")).toBeInTheDocument();
+    expect(screen.getByText("navigation:sidebar.today")).toBeInTheDocument();
     expect(screen.getByText("navigation:sidebar.home")).toBeInTheDocument();
     expect(screen.getByText("navigation:sidebar.goals")).toBeInTheDocument();
   });

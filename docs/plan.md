@@ -1265,9 +1265,16 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
    registro de campos del espacio, porque comparan contra un proyecto y
    mentirían entre proyectos. Pedirlos es un 400 con el nombre del campo, no
    una lista vacía.
-5. **Hoy** — pantalla de entrada, sustituye a la tabla de proyectos como raíz
-   del espacio (`/dashboard` pasa a llevar a `/today`). Pendiente: solo
-   maqueta.
+5. **Hoy** ✔ — pantalla de entrada, sustituye a la tabla de proyectos como
+   raíz del espacio (`/dashboard` pasa a llevar a `/today`). Composición pura
+   sobre `GET /my-work/tasks/search` (bloque 3): sin endpoint ni ADR propios.
+   Lista lo asignado en todos los proyectos, agrupado por ventana de
+   vencimiento (Vencidas/Hoy/Esta semana/Más adelante/Sin fecha, las mismas
+   que ya usa el panel), con el detalle abriéndose en el mismo panel lateral
+   que tablero y calendario en vez de navegar a otra página. «Mi panel»
+   —el antiguo «Mi trabajo» fundido con Panel, ADR 031— no se toca: sigue
+   siendo la pantalla de widgets configurables, entrada propia en el grupo
+   personal.
 6. **Planificador** — ventana rodante de 15 días; arrastrar una tarea de un
    día a otro, o desde «sin planificar», **no** toca `due_date` — el plan
    personal vive en su propia tabla, porque el vencimiento es un compromiso
@@ -1425,11 +1432,12 @@ destructiva.
 ## Siguiente paso
 
 El **interludio de espacio personal y administración**, en curso: los bloques
-2 y 3 están cerrados (barra lateral en tres espacios y lectura de tareas del
-espacio). Sigue **Hoy**, la pantalla de entrada — composición pura sobre el
-motor del bloque 3, sin ADR propia —, y después Mis tareas, Planificador,
-Cronograma y Parte de horas, en ese orden. Después la **Fase 8**:
-automatizaciones e importadores externos. Motor disparador →
+2, 3 y 5 están cerrados (barra lateral en tres espacios, lectura de tareas del
+espacio y «Hoy»). Sigue **Mis tareas** — Lista, Tablero, Gantt y Tabla
+personales sobre el mismo motor, con ADR propia porque cambia la semántica del
+tablero (carriles por ventana de vencimiento, no por estado) —, y después
+Planificador, Cronograma y Parte de horas, en ese orden. Después la
+**Fase 8**: automatizaciones e importadores externos. Motor disparador →
 condición → acción sobre los eventos que Kaneo ya emite, e importadores de
 Trello, Jira, Asana y Notion.
 

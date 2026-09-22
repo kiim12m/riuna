@@ -5797,6 +5797,9 @@
 						"projects": {
 							"type": "string"
 						},
+						"today": {
+							"type": "string"
+						},
 						"home": {
 							"type": "string"
 						},
@@ -5826,6 +5829,7 @@
 						"personal",
 						"admin",
 						"projects",
+						"today",
 						"home",
 						"goals",
 						"members",
@@ -10648,6 +10652,29 @@
 				"shared",
 				"errors"
 			]
+		},
+		"today": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"pageTitle": {
+					"type": "string"
+				},
+				"empty": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "description"]
+				}
+			},
+			"required": ["pageTitle", "empty"]
 		}
 	},
 	"required": [
@@ -10664,6 +10691,7 @@
 		"publicProject",
 		"cycles",
 		"panels",
-		"goals"
+		"goals",
+		"today"
 	]
 }

@@ -1463,6 +1463,7 @@
 			"personal": "Espai personal",
 			"admin": "Administració",
 			"projects": "Projectes",
+			"today": "Avui",
 			"home": "El meu panell",
 			"goals": "Objectius",
 			"members": "Membres",
@@ -2700,6 +2701,13 @@
 		"shared": "Compartido",
 		"errors": {
 			"saveFailed": "No se ha podido guardar el cambio"
+		}
+	},
+	"today": {
+		"pageTitle": "Hoy",
+		"empty": {
+			"title": "Nada pendiente",
+			"description": "No tienes tareas asignadas en ningún proyecto."
 		}
 	}
 }

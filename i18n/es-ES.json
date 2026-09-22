@@ -1463,6 +1463,7 @@
 			"personal": "Espacio personal",
 			"admin": "Administración",
 			"projects": "Proyectos",
+			"today": "Hoy",
 			"home": "Mi panel",
 			"goals": "Objetivos",
 			"members": "Miembros",
@@ -2700,6 +2701,13 @@
 		"shared": "Compartido",
 		"errors": {
 			"saveFailed": "No se ha podido guardar el cambio"
+		}
+	},
+	"today": {
+		"pageTitle": "Hoy",
+		"empty": {
+			"title": "Nada pendiente",
+			"description": "No tienes tareas asignadas en ningún proyecto."
 		}
 	}
 }

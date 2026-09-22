@@ -1463,6 +1463,7 @@
 			"personal": "Personal space",
 			"admin": "Administration",
 			"projects": "Projects",
+			"today": "Today",
 			"home": "My panel",
 			"goals": "Goals",
 			"members": "Members",
@@ -2700,6 +2701,13 @@
 		"shared": "Shared",
 		"errors": {
 			"saveFailed": "The change could not be saved"
+		}
+	},
+	"today": {
+		"pageTitle": "Today",
+		"empty": {
+			"title": "Nothing pending",
+			"description": "You have no tasks assigned in any project."
 		}
 	}
 }

@@ -19,7 +19,12 @@ test.describe("Recurrentes y plantillas", () => {
     await page.getByRole("button", { name: "Añadir tarea recurrente" }).click();
 
     // El resumen legible de la cadencia es lo que la lista tiene que enseñar.
-    await expect(page.getByText("Parte semanal")).toBeVisible();
+    // Coincidencia exacta: sin ella, "Parte semanal" tambien casa con el texto
+    // de ayuda de la pantalla ("Para el parte semanal, la revision..."), que
+    // esta ruta no habia llegado a exponer hasta ahora.
+    await expect(
+      page.getByText("Parte semanal", { exact: true }),
+    ).toBeVisible();
     await expect(page.getByText(/Cada semana · Lun, Mié/)).toBeVisible();
     await expect(page.getByText(/0 tareas creadas/)).toBeVisible();
 
