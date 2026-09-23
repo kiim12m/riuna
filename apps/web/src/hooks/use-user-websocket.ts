@@ -93,6 +93,7 @@ export function useUserWebSocket() {
         try {
           const message = JSON.parse(event.data as string) as {
             type?: string;
+            workspaceId?: string;
           };
           if (message.type === "NOTIFICATION_CREATED") {
             queryClient.invalidateQueries({ queryKey: ["notifications"] });
@@ -111,6 +112,14 @@ export function useUserWebSocket() {
           }
           if (message.type === "SCHEDULE_INVALIDATED") {
             queryClient.invalidateQueries({ queryKey: ["schedule"] });
+          }
+          // Una vista de espacio sin proyecto no tiene socket de proyecto que la
+          // escuche: llega por aqui. El prefijo cubre las tres claves de
+          // `["workspace-views", workspaceId, type ?? "all"]`.
+          if (message.type === "VIEW_UPDATED" && message.workspaceId) {
+            queryClient.invalidateQueries({
+              queryKey: ["workspace-views", message.workspaceId],
+            });
           }
         } catch {
           // Ignore malformed messages

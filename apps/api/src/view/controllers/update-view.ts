@@ -59,9 +59,11 @@ async function updateView({
   // `["views", projectId]` no tiene refresco automatico y el cliente global
   // lleva `refetchOnMount:false`.
   await publishEvent("view.changed", {
+    workspaceId: updated.workspaceId,
     projectId: updated.projectId,
     viewId: updated.id,
     userId: updated.createdBy,
+    isShared: updated.isShared,
   });
 
   return updated;

@@ -62,9 +62,11 @@ async function createView({
   // `["views", projectId]` no tiene refresco automatico y el cliente global
   // lleva `refetchOnMount:false`.
   await publishEvent("view.changed", {
+    workspaceId: view.workspaceId,
     projectId: view.projectId,
     viewId: view.id,
     userId: view.createdBy,
+    isShared: view.isShared,
   });
 
   return view;

@@ -19,9 +19,11 @@ async function deleteView(id: string) {
   // `["views", projectId]` no tiene refresco automatico y el cliente global
   // lleva `refetchOnMount:false`.
   await publishEvent("view.changed", {
+    workspaceId: deleted.workspaceId,
     projectId: deleted.projectId,
     viewId: deleted.id,
     userId: deleted.createdBy,
+    isShared: deleted.isShared,
   });
 
   return deleted;

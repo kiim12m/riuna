@@ -366,20 +366,46 @@ subscribeToEvent<{
   );
 });
 
+/** Los miembros de un espacio, para difundir una vista compartida sin proyecto. */
+async function membersOfWorkspace(workspaceId: string): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ userId: schema.workspaceUserTable.userId })
+    .from(schema.workspaceUserTable)
+    .where(eq(schema.workspaceUserTable.workspaceId, workspaceId));
+
+  return rows.map((row) => row.userId);
+}
+
 subscribeToEvent<{
-  projectId: string;
+  workspaceId: string;
+  projectId: string | null;
   viewId: string;
   userId: string;
+  isShared: boolean;
   initiatorId?: string;
 }>("view.changed", async (data) => {
-  const { projectId, initiatorId } = data;
-  if (!projectId) return;
+  const { workspaceId, projectId, initiatorId } = data;
 
-  broadcastToProject(
-    projectId,
-    { type: "VIEW_UPDATED", projectId, taskId: "" },
-    initiatorId,
-  );
+  if (projectId) {
+    broadcastToProject(
+      projectId,
+      { type: "VIEW_UPDATED", projectId, taskId: "" },
+      initiatorId,
+    );
+    return;
+  }
+
+  // Una vista de espacio no tiene canal de proyecto que la escuche —"Mis
+  // tareas" no abre ninguno—, asi que va por el canal de usuario. Compartida,
+  // a todo el espacio; privada, solo a quien la creo, que es quien puede
+  // verla.
+  const recipients = data.isShared
+    ? await membersOfWorkspace(workspaceId)
+    : [data.userId];
+
+  for (const userId of recipients) {
+    broadcastToUser(userId, { type: "VIEW_UPDATED", workspaceId });
+  }
 });
 
 subscribeToEvent<{
