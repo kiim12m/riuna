@@ -15,6 +15,7 @@ import {
   nextOccurrence,
   parseCadence,
 } from "../../recurrence/cadence";
+import { serverDayKey } from "../../utils/day-boundaries";
 import {
   MIN_ENTRY_DURATION_SECONDS,
   WORK_END_MINUTE,
@@ -37,8 +38,6 @@ const taskColumns = {
   teamName: teamTable.name,
 };
 
-const dateKey = (date: Date): string => date.toISOString().slice(0, 10);
-
 const secondsSinceMidnight = (date: Date): number =>
   date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
 
@@ -46,7 +45,7 @@ function buildDayKeys(windowStart: Date, windowEnd: Date): string[] {
   const keys: string[] = [];
   const cursor = new Date(windowStart);
   while (cursor <= windowEnd) {
-    keys.push(dateKey(cursor));
+    keys.push(serverDayKey(cursor));
     cursor.setDate(cursor.getDate() + 1);
   }
   return keys;
@@ -66,7 +65,7 @@ export default async function getSchedule({
   now?: Date;
 }) {
   const projectColumns = await getWorkspaceColumns(workspaceId);
-  const todayKey = dateKey(now);
+  const todayKey = serverDayKey(now);
 
   const [entryRows, singleBlocks, repeatingBlocks, runningEntry, ghosts] =
     await Promise.all([
@@ -128,7 +127,7 @@ export default async function getSchedule({
 
   const entriesByDay = new Map<string, typeof decoratedEntries>();
   for (const entry of decoratedEntries) {
-    const key = dateKey(entry.plannedDate);
+    const key = serverDayKey(entry.plannedDate);
     const list = entriesByDay.get(key) ?? [];
     list.push(entry);
     entriesByDay.set(key, list);
@@ -137,7 +136,7 @@ export default async function getSchedule({
   const blocksByDay = new Map<string, (typeof singleBlocks)[number][]>();
   for (const block of singleBlocks) {
     if (!block.plannedDate) continue;
-    const key = dateKey(block.plannedDate);
+    const key = serverDayKey(block.plannedDate);
     const list = blocksByDay.get(key) ?? [];
     list.push(block);
     blocksByDay.set(key, list);
@@ -151,7 +150,7 @@ export default async function getSchedule({
       const cadence = parseCadence(block.cadence);
       let cursor = firstOnOrAfter(cadence, windowStart);
       while (cursor <= windowEnd) {
-        const key = dateKey(cursor);
+        const key = serverDayKey(cursor);
         const list = blocksByDay.get(key) ?? [];
         list.push(block);
         blocksByDay.set(key, list);
@@ -164,7 +163,7 @@ export default async function getSchedule({
 
   const ghostsByDay = new Map<string, typeof ghosts>();
   for (const ghost of ghosts) {
-    const key = dateKey(ghost.plannedDate);
+    const key = serverDayKey(ghost.plannedDate);
     const list = ghostsByDay.get(key) ?? [];
     list.push(ghost);
     ghostsByDay.set(key, list);

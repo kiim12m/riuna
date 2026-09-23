@@ -25,6 +25,14 @@ export type PlanGhost = {
  * haria la tarea, no de quien creo la recurrencia. Una recurrencia sin
  * responsable asignado no genera ningun fantasma: nadie la veria en su
  * Planificador y tampoco aparece en el de nadie por descarte.
+ *
+ * Proyecta desde `max(windowStart, nextRunAt)` y corta en `endsAt`.
+ * `nextRunAt` es el contrato del generador (`generate.ts`): la proxima
+ * ocurrencia que todavia no existe. Todo lo anterior o ya se creo, o el
+ * generador lo salto con `advancePast` y no lo va a crear nunca — proyectarlo
+ * de todos modos duplicaria una tarea ya generada. Una recurrencia cuyo
+ * `endsAt` ya paso no debe seguir proyectando fantasmas hasta que el
+ * generador corra y la desactive.
  */
 export async function computeGhosts(
   workspaceId: string,
@@ -37,6 +45,8 @@ export async function computeGhosts(
       id: taskRecurrenceTable.id,
       template: taskRecurrenceTable.template,
       cadence: taskRecurrenceTable.cadence,
+      nextRunAt: taskRecurrenceTable.nextRunAt,
+      endsAt: taskRecurrenceTable.endsAt,
     })
     .from(taskRecurrenceTable)
     .innerJoin(projectTable, eq(taskRecurrenceTable.projectId, projectTable.id))
@@ -56,8 +66,13 @@ export async function computeGhosts(
       const template = parseTemplate(row.template);
       const cadence = parseCadence(row.cadence);
 
-      let cursor = firstOnOrAfter(cadence, windowStart);
-      while (cursor <= windowEnd) {
+      const projectionStart =
+        row.nextRunAt > windowStart ? row.nextRunAt : windowStart;
+      const projectionEnd =
+        row.endsAt && row.endsAt < windowEnd ? row.endsAt : windowEnd;
+
+      let cursor = firstOnOrAfter(cadence, projectionStart);
+      while (cursor <= projectionEnd) {
         ghosts.push({
           recurrenceId: row.id,
           title: template.title,

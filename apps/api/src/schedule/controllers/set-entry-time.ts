@@ -11,10 +11,12 @@ import { publishEvent } from "../../events";
  */
 export default async function setEntryTime({
   userId,
+  workspaceId,
   taskId,
   startMinute,
 }: {
   userId: string;
+  workspaceId: string;
   taskId: string;
   startMinute: number | null;
 }) {
@@ -25,6 +27,7 @@ export default async function setEntryTime({
       and(
         eq(personalPlanEntryTable.userId, userId),
         eq(personalPlanEntryTable.taskId, taskId),
+        eq(personalPlanEntryTable.workspaceId, workspaceId),
       ),
     )
     .returning();

@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
+import { parseServerDay } from "../utils/day-boundaries";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
-import { validateAndParseDate } from "../utils/validate-dates";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import getPlan from "./controllers/get-plan";
 import removePlanEntry from "./controllers/remove-plan-entry";
@@ -64,6 +64,8 @@ const planResponseSchema = v.object({
   unplanned: v.array(planTaskSchema),
   ghosts: v.array(planGhostSchema),
   capacitySeconds: v.number(),
+  /** El dia del servidor, `yyyy-mm-dd`: de ahi arranca la rejilla de 15 dias. */
+  serverToday: v.string(),
 });
 
 /**
@@ -172,7 +174,7 @@ const planner = new Hono<{
         workspaceId,
         userId: c.get("userId"),
         taskId,
-        plannedDate: validateAndParseDate(body.plannedDate, "plannedDate"),
+        plannedDate: parseServerDay(body.plannedDate, "plannedDate"),
         position: body.position,
       });
 
@@ -202,8 +204,10 @@ const planner = new Hono<{
     requireApiKeyScope({ task: ["update"] }),
     async (c) => {
       const { taskId } = c.req.valid("param");
+      const { workspaceId } = c.req.valid("query");
       const deleted = await removePlanEntry({
         userId: c.get("userId"),
+        workspaceId,
         taskId,
       });
 

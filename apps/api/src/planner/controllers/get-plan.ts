@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, asc, eq, gte, lte, type SQL, sql } from "drizzle-orm";
 import db from "../../database";
 import {
   personalPlanEntryTable,
@@ -11,7 +11,8 @@ import {
   getWorkspaceColumns,
   notDoneCondition,
 } from "../../my-work/decorate";
-import { assignedCondition } from "../../my-work/scope";
+import { serverDayKey } from "../../utils/day-boundaries";
+import { workspaceTaskConditions } from "../../view/workspace-task-query";
 import { computeGhosts } from "../ghosts";
 
 /** Jornada fija de 8 h por persona (ADR 040). No hay ajuste todavia. */
@@ -47,14 +48,45 @@ export default async function getPlan({
   userId,
   windowStart,
   windowEnd,
+  now = new Date(),
 }: {
   workspaceId: string;
   userId: string;
   windowStart: Date;
   windowEnd: Date;
+  now?: Date;
 }) {
-  const projectColumns = await getWorkspaceColumns(workspaceId);
+  const serverToday = serverDayKey(now);
+  const [projectColumns, scopeConditions] = await Promise.all([
+    getWorkspaceColumns(workspaceId),
+    workspaceTaskConditions({
+      workspaceId,
+      userId,
+      scope: "assigned",
+      filter: null,
+      registry: {},
+    }),
+  ]);
+
+  // El ambito "assigned" siempre resuelve a un predicado -nunca depende de
+  // equipos-, pero el tipo lo comparte con "team" y hay que descartar el
+  // `null` para TypeScript.
+  if (!scopeConditions) {
+    return {
+      entries: [],
+      unplanned: [],
+      ghosts: [],
+      capacitySeconds: DAY_CAPACITY_SECONDS,
+      serverToday,
+    };
+  }
+
   const notDone = notDoneCondition(projectColumns);
+  const unplannedConditions: SQL[] = [
+    ...scopeConditions,
+    notPlannedCondition(userId),
+  ];
+  if (notDone) unplannedConditions.push(notDone);
 
   const [entryRows, unplannedRows, ghosts] = await Promise.all([
     db
@@ -83,14 +115,7 @@ export default async function getPlan({
       .from(taskTable)
       .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
       .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))
-      .where(
-        and(
-          eq(projectTable.workspaceId, workspaceId),
-          assignedCondition(userId),
-          notDone ?? undefined,
-          notPlannedCondition(userId),
-        ),
-      ),
+      .where(and(...unplannedConditions)),
     computeGhosts(workspaceId, userId, windowStart, windowEnd),
   ]);
 
@@ -104,5 +129,6 @@ export default async function getPlan({
     unplanned,
     ghosts,
     capacitySeconds: DAY_CAPACITY_SECONDS,
+    serverToday,
   };
 }

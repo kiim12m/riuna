@@ -1,6 +1,8 @@
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
+import { serverDayKey } from "../../apps/api/src/utils/day-boundaries";
 import { mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
 import {
@@ -68,9 +70,10 @@ function tomorrow(): Date {
   return date;
 }
 
-function dateKey(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
+// `serverDayKey` y no `toISOString().slice(0, 10)`: la API ya usa el dia del
+// servidor (hallazgo 3 de la revision), y comparar contra una clave UTC
+// divergiria en cuanto la suite corriera con otra zona horaria.
+const dateKey = serverDayKey;
 
 function getSchedule(app: App, workspaceId: string, days?: number) {
   const query = days ? `&days=${days}` : "";
@@ -109,6 +112,31 @@ function deleteBlock(app: App, workspaceId: string, id: string) {
   return app.request(`/api/schedule/blocks/${id}?workspaceId=${workspaceId}`, {
     method: "DELETE",
   });
+}
+
+function patchBlock(
+  app: App,
+  workspaceId: string,
+  id: string,
+  body: Record<string, unknown>,
+) {
+  return app.request(`/api/schedule/blocks/${id}?workspaceId=${workspaceId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+/** Anade a quien ya es miembro de un espacio a un segundo, distinto. */
+async function addToAnotherWorkspace(userId: string) {
+  const other = await createWorkspaceMember({ role: "member" });
+  await db.insert(schema.workspaceUserTable).values({
+    workspaceId: other.workspace.id,
+    userId,
+    role: "member",
+    joinedAt: new Date(),
+  });
+  return other.workspace;
 }
 
 async function setup(role = "member") {
@@ -327,5 +355,92 @@ describe("cronograma", () => {
 
     const response = await getSchedule(outsiderApp, workspaceId);
     expect(response.status).toBe(403);
+  });
+
+  it("cannot update a block through another workspace of the same person", async () => {
+    const { app, workspaceId, userId } = await setup();
+    const created = await (
+      await postBlock(app, workspaceId, {
+        title: "Cita",
+        kind: "fixed",
+        startMinute: 60,
+        endMinute: 120,
+        plannedDate: tomorrow().toISOString(),
+      })
+    ).json();
+
+    const otherWorkspace = await addToAnotherWorkspace(userId);
+    const response = await patchBlock(app, otherWorkspace.id, created.id, {
+      title: "Cita movida",
+      kind: "fixed",
+      startMinute: 60,
+      endMinute: 150,
+    });
+    expect(response.status).toBe(404);
+
+    const [unchanged] = await db
+      .select()
+      .from(schema.scheduleBlockTable)
+      .where(eq(schema.scheduleBlockTable.id, created.id));
+    expect(unchanged?.title).toBe("Cita");
+  });
+
+  it("cannot delete a block through another workspace of the same person", async () => {
+    const { app, workspaceId, userId } = await setup();
+    const created = await (
+      await postBlock(app, workspaceId, {
+        title: "Cita",
+        kind: "fixed",
+        startMinute: 60,
+        endMinute: 120,
+        plannedDate: tomorrow().toISOString(),
+      })
+    ).json();
+
+    const otherWorkspace = await addToAnotherWorkspace(userId);
+    const response = await deleteBlock(app, otherWorkspace.id, created.id);
+    expect(response.status).toBe(404);
+
+    const rows = await db.select().from(schema.scheduleBlockTable);
+    expect(rows).toHaveLength(1);
+  });
+
+  it("cannot anchor a plan entry through another workspace of the same person", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+    await planTask(task.id, workspaceId, userId, tomorrow(), { position: 0 });
+
+    const otherWorkspace = await addToAnotherWorkspace(userId);
+    const response = await putEntryTime(
+      app,
+      otherWorkspace.id,
+      task.id,
+      9 * 60,
+    );
+    expect(response.status).toBe(404);
+  });
+
+  it("rejects a block startMinute of 1440 with 400, not 500", async () => {
+    const { app, workspaceId } = await setup();
+
+    const response = await postBlock(app, workspaceId, {
+      title: "Roto",
+      kind: "fixed",
+      startMinute: 1440,
+      endMinute: 1440,
+      plannedDate: tomorrow().toISOString(),
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it("rejects a plan entry startMinute of 1440 with 400, not 500", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+    await planTask(task.id, workspaceId, userId, tomorrow(), { position: 0 });
+
+    const response = await putEntryTime(app, workspaceId, task.id, 1440);
+    expect(response.status).toBe(400);
   });
 });

@@ -50,11 +50,15 @@ async function seedRecurrence({
   createdBy,
   assigneeId,
   cadence = { frequency: "daily", interval: 1 },
+  nextRunAt = new Date(),
+  endsAt = null,
 }: {
   projectId: string;
   createdBy: string;
   assigneeId: string;
   cadence?: Record<string, unknown>;
+  nextRunAt?: Date;
+  endsAt?: Date | null;
 }) {
   const [row] = await db
     .insert(schema.taskRecurrenceTable)
@@ -63,12 +67,25 @@ async function seedRecurrence({
       createdBy,
       template: { title: "Parte semanal", priority: "medium", assigneeId },
       cadence,
-      nextRunAt: new Date(),
+      nextRunAt,
+      endsAt,
       active: true,
     })
     .returning();
 
   return row;
+}
+
+/** Anade a quien ya es miembro de un espacio a un segundo, distinto. */
+async function addToAnotherWorkspace(userId: string) {
+  const other = await createWorkspaceMember({ role: "member" });
+  await db.insert(schema.workspaceUserTable).values({
+    workspaceId: other.workspace.id,
+    userId,
+    role: "member",
+    joinedAt: new Date(),
+  });
+  return other.workspace;
 }
 
 function getPlan(app: App, workspaceId: string, days?: number) {
@@ -296,5 +313,87 @@ describe("personal planner", () => {
 
     const response = await getPlan(outsiderApp, workspaceId);
     expect(response.status).toBe(403);
+  });
+
+  it("cannot remove a plan entry through another workspace of the same person", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+
+    const plannedDate = new Date();
+    plannedDate.setHours(0, 0, 0, 0);
+    await putEntry(app, workspaceId, task.id, {
+      plannedDate: plannedDate.toISOString(),
+    });
+
+    const otherWorkspace = await addToAnotherWorkspace(userId);
+    const response = await deleteEntry(app, otherWorkspace.id, task.id);
+    expect(response.status).toBe(404);
+
+    const rows = await db
+      .select()
+      .from(schema.personalPlanEntryTable)
+      .where(eq(schema.personalPlanEntryTable.taskId, task.id));
+    expect(rows).toHaveLength(1);
+  });
+
+  it("excludes a task in an archived project from unplanned", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+
+    await db
+      .update(schema.projectTable)
+      .set({ archivedAt: new Date() })
+      .where(eq(schema.projectTable.id, projectId));
+
+    const plan = await (await getPlan(app, workspaceId)).json();
+    expect(plan.unplanned.map((t: { id: string }) => t.id)).not.toContain(
+      task.id,
+    );
+  });
+
+  it("does not project a ghost for an occurrence the generator already created", async () => {
+    const { app, workspaceId, projectId, userId } = await setup();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const nextRunAt = new Date(today);
+    nextRunAt.setDate(nextRunAt.getDate() + 2);
+
+    await seedRecurrence({
+      projectId,
+      createdBy: userId,
+      assigneeId: userId,
+      nextRunAt,
+    });
+
+    const plan = await (await getPlan(app, workspaceId)).json();
+    const ghostTimes = plan.ghosts.map((g: { plannedDate: string }) =>
+      new Date(g.plannedDate).getTime(),
+    );
+
+    expect(ghostTimes.length).toBeGreaterThan(0);
+    expect(Math.min(...ghostTimes)).toBe(nextRunAt.getTime());
+  });
+
+  it("does not project a ghost past an ended recurrence", async () => {
+    const { app, workspaceId, projectId, userId } = await setup();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endsAt = new Date(today);
+    endsAt.setDate(endsAt.getDate() - 1);
+    const nextRunAt = new Date(today);
+    nextRunAt.setDate(nextRunAt.getDate() - 5);
+
+    await seedRecurrence({
+      projectId,
+      createdBy: userId,
+      assigneeId: userId,
+      nextRunAt,
+      endsAt,
+    });
+
+    const plan = await (await getPlan(app, workspaceId)).json();
+    expect(plan.ghosts).toHaveLength(0);
   });
 });

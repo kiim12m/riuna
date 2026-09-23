@@ -5,15 +5,19 @@ import { personalPlanEntryTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 
 /**
- * Vuelve a "sin planificar". Acotado por `userId` de la sesion: no hace falta
- * verificar el espacio, porque nadie puede tocar la fila de otra persona con
- * solo saber el id de una tarea.
+ * Vuelve a "sin planificar". Acotado por `userId` de la sesion: eso basta
+ * frente a otra persona, que no puede tocar esta fila con solo saber el id de
+ * la tarea. No basta frente a otro espacio de la misma persona, porque una
+ * entrada de plan es unica por `(userId, taskId)` sin importar en que espacio
+ * se creo — hay que filtrar tambien por `workspaceId`.
  */
 export default async function removePlanEntry({
   userId,
+  workspaceId,
   taskId,
 }: {
   userId: string;
+  workspaceId: string;
   taskId: string;
 }) {
   const [deleted] = await db
@@ -22,6 +26,7 @@ export default async function removePlanEntry({
       and(
         eq(personalPlanEntryTable.userId, userId),
         eq(personalPlanEntryTable.taskId, taskId),
+        eq(personalPlanEntryTable.workspaceId, workspaceId),
       ),
     )
     .returning();

@@ -11,6 +11,7 @@ import { publishEvent } from "../../events";
  */
 export default async function updateBlock({
   userId,
+  workspaceId,
   id,
   title,
   kind,
@@ -18,6 +19,7 @@ export default async function updateBlock({
   endMinute,
 }: {
   userId: string;
+  workspaceId: string;
   id: string;
   title: string;
   kind: "fixed" | "break";
@@ -28,7 +30,11 @@ export default async function updateBlock({
     .update(scheduleBlockTable)
     .set({ title, kind, startMinute, endMinute, updatedAt: new Date() })
     .where(
-      and(eq(scheduleBlockTable.id, id), eq(scheduleBlockTable.userId, userId)),
+      and(
+        eq(scheduleBlockTable.id, id),
+        eq(scheduleBlockTable.userId, userId),
+        eq(scheduleBlockTable.workspaceId, workspaceId),
+      ),
     )
     .returning();
 

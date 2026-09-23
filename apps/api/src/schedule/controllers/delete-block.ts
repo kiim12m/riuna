@@ -6,15 +6,21 @@ import { publishEvent } from "../../events";
 
 export default async function deleteBlock({
   userId,
+  workspaceId,
   id,
 }: {
   userId: string;
+  workspaceId: string;
   id: string;
 }) {
   const [block] = await db
     .delete(scheduleBlockTable)
     .where(
-      and(eq(scheduleBlockTable.id, id), eq(scheduleBlockTable.userId, userId)),
+      and(
+        eq(scheduleBlockTable.id, id),
+        eq(scheduleBlockTable.userId, userId),
+        eq(scheduleBlockTable.workspaceId, workspaceId),
+      ),
     )
     .returning();
 

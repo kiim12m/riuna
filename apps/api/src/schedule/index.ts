@@ -3,8 +3,8 @@ import { HTTPException } from "hono/http-exception";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import { parseCadence } from "../recurrence/cadence";
+import { parseServerDay } from "../utils/day-boundaries";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
-import { validateAndParseDate } from "../utils/validate-dates";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import createBlock from "./controllers/create-block";
 import deleteBlock from "./controllers/delete-block";
@@ -26,18 +26,26 @@ function asBadRequest<T>(parse: () => T): T {
   }
 }
 
-const minuteSchema = v.pipe(
+/** CHECK `schedule_block_minutes_valid` (`schema.ts`): 0-1439, no 0-1440. */
+const startMinuteSchema = v.pipe(
   v.number(),
   v.integer(),
   v.minValue(0),
+  v.maxValue(1439),
+);
+/** Misma CHECK: `endMinute` llega hasta 1440 (medianoche exclusiva). */
+const endMinuteSchema = v.pipe(
+  v.number(),
+  v.integer(),
+  v.minValue(1),
   v.maxValue(1440),
 );
 
 const blockBodySchema = v.object({
   title: v.pipe(v.string(), v.minLength(1)),
   kind: v.picklist(["fixed", "break"]),
-  startMinute: minuteSchema,
-  endMinute: minuteSchema,
+  startMinute: startMinuteSchema,
+  endMinute: endMinuteSchema,
   plannedDate: v.optional(v.string()),
   cadence: v.optional(v.record(v.string(), v.unknown())),
 });
@@ -129,15 +137,17 @@ const schedule = new Hono<{
       "query",
       v.object({ workspaceId: v.pipe(v.string(), v.minLength(1)) }),
     ),
-    validator("json", v.object({ startMinute: v.nullable(minuteSchema) })),
+    validator("json", v.object({ startMinute: v.nullable(startMinuteSchema) })),
     workspaceAccess.fromQuery(),
     requireApiKeyScope({ task: ["update"] }),
     async (c) => {
       const { taskId } = c.req.valid("param");
+      const { workspaceId } = c.req.valid("query");
       const { startMinute } = c.req.valid("json");
 
       const entry = await setEntryTime({
         userId: c.get("userId"),
+        workspaceId,
         taskId,
         startMinute,
       });
@@ -185,7 +195,7 @@ const schedule = new Hono<{
         ? asBadRequest(() => parseCadence(body.cadence))
         : null;
       const plannedDate = body.plannedDate
-        ? validateAndParseDate(body.plannedDate, "plannedDate")
+        ? parseServerDay(body.plannedDate, "plannedDate")
         : null;
 
       const block = await createBlock({
@@ -226,14 +236,15 @@ const schedule = new Hono<{
       v.object({
         title: v.pipe(v.string(), v.minLength(1)),
         kind: v.picklist(["fixed", "break"]),
-        startMinute: minuteSchema,
-        endMinute: minuteSchema,
+        startMinute: startMinuteSchema,
+        endMinute: endMinuteSchema,
       }),
     ),
     workspaceAccess.fromQuery(),
     requireApiKeyScope({ task: ["update"] }),
     async (c) => {
       const { id } = c.req.valid("param");
+      const { workspaceId } = c.req.valid("query");
       const body = c.req.valid("json");
 
       if (body.endMinute <= body.startMinute) {
@@ -244,6 +255,7 @@ const schedule = new Hono<{
 
       const block = await updateBlock({
         userId: c.get("userId"),
+        workspaceId,
         id,
         title: body.title,
         kind: body.kind,
@@ -277,7 +289,12 @@ const schedule = new Hono<{
     requireApiKeyScope({ task: ["update"] }),
     async (c) => {
       const { id } = c.req.valid("param");
-      const block = await deleteBlock({ userId: c.get("userId"), id });
+      const { workspaceId } = c.req.valid("query");
+      const block = await deleteBlock({
+        userId: c.get("userId"),
+        workspaceId,
+        id,
+      });
 
       return c.json(block);
     },
