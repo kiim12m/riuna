@@ -43,7 +43,7 @@ function TodayComponent() {
   } | null>(null);
 
   const tasks = data?.tasks ?? [];
-  const groups = groupByDueWindow(tasks, (task) => task.dueDate);
+  const groups = groupByDueWindow(tasks, (task) => task.dueWindow);
   const windowsWithTasks = DUE_WINDOW_ORDER.filter(
     (window) => groups[window].length > 0,
   );

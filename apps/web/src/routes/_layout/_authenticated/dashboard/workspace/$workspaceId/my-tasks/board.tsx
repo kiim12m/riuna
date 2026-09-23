@@ -57,7 +57,7 @@ function RouteComponent() {
   } | null>(null);
 
   const tasks = data?.tasks ?? [];
-  const groups = groupByDueWindow(tasks, (task) => task.dueDate);
+  const groups = groupByDueWindow(tasks, (task) => task.dueWindow);
 
   return (
     <>

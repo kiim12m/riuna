@@ -206,7 +206,7 @@ export function CreateBlockDialog({
                         byWeekday: weekdays,
                       },
                     }
-                  : { plannedDate: new Date(`${day}T00:00:00`).toISOString() }),
+                  : { plannedDate: day }),
               });
             }}
           >

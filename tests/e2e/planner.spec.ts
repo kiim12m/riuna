@@ -1,10 +1,16 @@
 import { createTask, expect, test } from "./fixtures";
 
-/** El mismo calculo de "hoy" que usa la ruta, para dar con su `data-testid`. */
+/**
+ * El mismo calculo de "hoy" que usa la ruta, para dar con su `data-testid`.
+ * `yyyy-mm-dd`, no un instante: es el mismo `serverDayKey` que manda la API
+ * en `serverToday` y que `planner.tsx` usa como id de columna.
+ */
 function todayColumnId() {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  return start.toISOString();
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 /**

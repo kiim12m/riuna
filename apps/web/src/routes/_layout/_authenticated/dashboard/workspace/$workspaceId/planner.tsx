@@ -41,10 +41,21 @@ import { formatDate } from "@/lib/format";
 const WINDOW_DAYS = 15;
 const UNPLANNED_ID = "unplanned";
 
+/**
+ * `yyyy-mm-dd`, no un instante: sirve igual como id de columna que como carga
+ * util de la mutacion (`PUT /planner/:taskId`), que es justo lo que pide un
+ * dia sin zona.
+ */
 function isoDay(date: Date) {
-  const start = new Date(date);
-  start.setHours(0, 0, 0, 0);
-  return start.toISOString();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseIsoDay(key: string): Date {
+  const [year, month, day] = key.split("-").map(Number);
+  return new Date(year, month - 1, day);
 }
 
 function addDays(date: Date, days: number) {
@@ -77,11 +88,19 @@ function RouteComponent() {
     projectId: string;
   } | null>(null);
 
+  // El dia del servidor y no `new Date()`: es la unica via que le quedaba a
+  // la columna "Hoy" para apuntar a un dia distinto del que usa la API para
+  // decidir que fantasmas y ventanas de vencimiento tocan hoy.
   const days = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = data?.serverToday
+      ? parseIsoDay(data.serverToday)
+      : (() => {
+          const now = new Date();
+          now.setHours(0, 0, 0, 0);
+          return now;
+        })();
     return Array.from({ length: WINDOW_DAYS }, (_, i) => addDays(today, i));
-  }, []);
+  }, [data?.serverToday]);
 
   const entriesByDay = useMemo(() => {
     const map = new Map<string, PlanEntry[]>();
