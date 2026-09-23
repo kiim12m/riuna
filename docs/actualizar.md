@@ -19,6 +19,11 @@ servicios bajo el proyecto `riuna`:
 Las imágenes `riuna-api` y `riuna-web` **se construyen en la máquina**; no salen
 de ningún registro.
 
+Al lado de todo esto puede correr un **entorno de desarrollo en paralelo**, con
+`pnpm dev:parallel`: otros puertos (5273 y 1437) y la base local, para ver un
+cambio antes de reconstruir las imágenes. No toca nada de lo de arriba; está en
+[entorno-desarrollo.md](entorno-desarrollo.md).
+
 > **`compose.yml` no sirve para esto.** Es la variante genérica heredada y apunta
 > a `ghcr.io/kiim12m/riuna:latest`, una imagen que nunca se ha publicado. Como es
 > el fichero que Docker coge por defecto, olvidar el `-f compose.local.yml` da un

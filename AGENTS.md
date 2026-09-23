@@ -26,7 +26,7 @@ This is an operating guide, not a README. These rules are good defaults; explici
 - `packages/mcp` — published stdio MCP package.
 - `charts/riuna` — Helm deployment surface.
 - `tests/api` contains API unit tests; `tests/api-integration` contains PostgreSQL-backed integration tests.
-- `docs/` — Riuna's own working documents: [`plan.md`](docs/plan.md) (the phased roadmap and its live status — read it before starting anything substantial), [`funcionalidades.md`](docs/funcionalidades.md) (the inventory of what the application can do today), the Phase 0 gap audit, the backup procedure, [`actualizar.md`](docs/actualizar.md) (how the running instance is rebuilt and updated), and the ADRs.
+- `docs/` — Riuna's own working documents: [`plan.md`](docs/plan.md) (the phased roadmap and its live status — read it before starting anything substantial), [`funcionalidades.md`](docs/funcionalidades.md) (the inventory of what the application can do today), the Phase 0 gap audit, the backup procedure, [`actualizar.md`](docs/actualizar.md) (how the running instance is rebuilt and updated), [`entorno-desarrollo.md`](docs/entorno-desarrollo.md) (the dev environment that runs alongside it), and the ADRs.
 
 Kaneo's public marketing site (`apps/site`) and Mintlify documentation (`apps/docs`) were removed in Phase 0: Riuna is internal and needs neither.
 

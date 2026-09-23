@@ -214,6 +214,82 @@ For a complete list of all environment variables, their descriptions, and config
 - Use simple secrets for `AUTH_SECRET` (not for production)
 - The web app will use `VITE_API_URL` if set, otherwise defaults to `http://localhost:1337`
 
+#### Serving the API through the dev server (one port instead of two)
+
+The default, `VITE_API_URL=http://localhost:1337`, is baked into the bundle, so
+the browser has to reach **two** ports: 5173 for the web and 1337 for the API.
+That only holds when the browser runs on the same host as the dev server. Inside
+a devcontainer, behind a tunnel, or from another machine on the network it breaks
+as soon as one of the two ports is not forwarded, and the symptom is an opaque
+`NetworkError` on `getSession` with a blank screen.
+
+Set `VITE_API_URL` to `/` and the browser only needs port 5173: the Vite dev
+server proxies `/api` (WebSockets included) to the API, and rewrites the `Origin`
+header to the trusted client URL, so Better Auth keeps validating it without
+having to enumerate every way of reaching a dev environment.
+
+```bash
+# apps/web/.env.development.local   (git-ignored)
+VITE_API_URL=/
+```
+
+It has to be `.env.development.local` and **not** `.env.local`: in Vite,
+`.env.[mode]` takes priority over `.env.local`, and `apps/web/.env.development`
+already sets this key. A `VITE_*` variable **in the environment** outranks every
+one of those files, which is how `pnpm dev:parallel` below sets it without
+writing anything to disk.
+
+Three optional overrides for the proxy, all read from the environment of the dev
+server:
+
+- `DEV_WEB_PORT` — the port Vite listens on (default `5173`). Setting it also
+  turns on `strictPort`, so a busy port fails loudly instead of silently moving
+  to the next one.
+- `DEV_PROXY_API_TARGET` — where the API listens (default `http://localhost:1337`).
+- `DEV_PROXY_ORIGIN` — the origin sent upstream, which must match the API's
+  `RIUNA_CLIENT_URL` (default `http://localhost:5173`).
+
+A relative `VITE_API_URL` means "same origin as the page" everywhere: the typed
+Hono client, the REST fetchers and the realtime WebSockets. Absolute values keep
+behaving exactly as before.
+
+#### Running alongside the Docker instance (`pnpm dev:parallel`)
+
+The deployed instance from `compose.local.yml` already holds 5173, 1337 and its
+own database, so a plain `pnpm dev` collides with it on every one of the three.
+`pnpm dev:parallel` starts the same two dev servers somewhere else entirely:
+
+| | Docker instance | `pnpm dev:parallel` |
+|---|---|---|
+| Web | 5173 | **5273** |
+| API | 1337 | **1437**, reached only through the proxy |
+| Database | its own container | the local PostgreSQL |
+
+Only the web port has to be reachable — the API rides under `/api` — so the
+devcontainer forwards 5273 and nothing else. Open `http://localhost:5273`, or
+any address that reaches the machine: the proxy rewrites `Origin`, so Better
+Auth accepts it without listing it anywhere.
+
+The script overrides `RIUNA_CLIENT_URL`, `RIUNA_API_URL` and the database host
+in its own environment rather than editing the root `.env`, which keeps pointing
+at the deployed instance. `dotenv-mono` does not overwrite variables that are
+already set, so the process environment wins.
+
+Everything is overridable: `DEV_WEB_PORT`, `DEV_API_PORT`, `DEV_DATABASE_URL`,
+`DEV_POSTGRES_HOST`, `DEV_POSTGRES_PORT`.
+
+Two companion scripts: `pnpm dev:db` prepares the local PostgreSQL (install,
+start, role and databases — idempotent, and the devcontainer runs it on every
+start), and `pnpm dev:seed` creates the sample users and data through the API.
+`docs/entorno-desarrollo.md` is the practical guide.
+
+**The database is the one thing it refuses to guess.** A dev environment
+migrating over real data is a silent disaster rather than an error, so the script
+only starts against a database on the same machine, and it stops with an
+explanation if the root `.env` defines a `DATABASE_URL` of its own — that value
+would outrank the host override, and there is no way to tell where it points
+without interpreting it.
+
 ### Production
 - Use HTTPS for both frontend and API
 - Set specific `CORS_ORIGINS` for security (should match `RIUNA_CLIENT_URL`)

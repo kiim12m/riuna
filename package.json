@@ -5,6 +5,9 @@
 	"scripts": {
 		"build": "turbo build",
 		"dev": "turbo dev",
+		"dev:parallel": "bash scripts/dev-parallel.sh",
+		"dev:db": "bash scripts/dev-db.sh",
+		"dev:seed": "node scripts/dev-seed.mjs",
 		"i18n:check": "node ./scripts/i18n/check.mjs",
 		"check:env": "node ./scripts/check-env-documented.mjs",
 		"i18n:check:fix": "node ./scripts/i18n/check.mjs --fix",

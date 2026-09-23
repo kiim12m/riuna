@@ -40,10 +40,25 @@
 	// Docker creates empty named volumes owned by root; pnpm runs as `node`.
 	"onCreateCommand": "sudo chown node:node /home/node/.pnpm-store ${containerWorkspaceFolder}/node_modules ${containerWorkspaceFolder}/apps/*/node_modules ${containerWorkspaceFolder}/packages/*/node_modules",
 
-	"postCreateCommand": "corepack enable pnpm && pnpm install"
+	"postCreateCommand": "corepack enable pnpm && pnpm install",
 
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
+	// PostgreSQL, en cada arranque del contenedor. Aqui no hay systemd —el PID 1
+	// es un `sleep` en bucle—, asi que el `postgresql.service` que la imagen
+	// declara no lo levanta nadie, y sin esto hay que acordarse del
+	// `pg_ctlcluster` a mano cada vez que se reabre. El script es idempotente:
+	// instala solo si falta y no tarda nada cuando ya esta todo.
+	"postStartCommand": "bash scripts/dev-db.sh",
+
+	// Solo el puerto de la web. La API se sirve por debajo de el (el proxy de
+	// `apps/web/vite.config.ts`), asi que no hace falta reenviarla, y no es el
+	// 5173 a proposito: ese lo ocupa la instancia de Docker, y con el reenvio
+	// automatico el que arranca segundo acaba en un puerto distinto cada vez.
+	// Ver `pnpm dev:parallel`.
+	"forwardPorts": [5273],
+
+	"portsAttributes": {
+		"5273": { "label": "Riuna (desarrollo en paralelo)" }
+	}
 
 	// Configure tool-specific properties.
 	// "customizations": {},
