@@ -37,3 +37,10 @@ de una tarea concreta.
 
 **Consecuencias.** Los proyectos archivados no se excluyen: es un informe
 histórico, y archivar un proyecto no borra las horas que se le dedicaron.
+
+**Actualización 2026-09-23.** El agrupado por día formateaba la clave con
+`toISOString().slice(0, 10)` —UTC—, discrepando con el resto de superficies
+que ya usan el día del servidor. Corregido con `serverDayKey`
+(`utils/day-boundaries.ts`); `resolveWindow` también pasa a interpretar
+`start`/`end` con `parseServerDay`, que cierra un desfase de un día latente
+en servidores con offset negativo.

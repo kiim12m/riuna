@@ -1,3 +1,5 @@
+import { HTTPException } from "hono/http-exception";
+
 /**
  * El dia del servidor, que es el criterio que Riuna usa hoy para "vence hoy".
  *
@@ -22,4 +24,54 @@ export function addDays(date: Date, days: number): Date {
   const shifted = new Date(date);
   shifted.setDate(shifted.getDate() + days);
   return shifted;
+}
+
+/**
+ * La clave `yyyy-mm-dd` del dia del servidor para una fecha.
+ *
+ * **Nunca `toISOString().slice(0, 10)`**: eso da el dia en UTC, no en la zona
+ * del servidor, y discrepa de `startOfServerDay` (local) durante casi toda la
+ * jornada en cualquier servidor con offset distinto de cero. Es el mismo
+ * calculo que `startOfServerDay`, expresado como texto.
+ */
+export function serverDayKey(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+const DAY_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * Punto de entrada unico para un dia que llega de un cliente.
+ *
+ * Un `yyyy-mm-dd` pelado es medianoche **local del servidor** para ese dia,
+ * nunca UTC: `new Date("2026-09-16")` lo interpretaria como medianoche UTC, y
+ * en un servidor con offset negativo eso cae en el dia anterior en hora local.
+ * Un ISO completo se parsea como siempre y se normaliza con
+ * `startOfServerDay`, para no romper llamadas que ya mandan un instante
+ * completo con su propio reloj (por ejemplo, una integracion por clave de
+ * API).
+ */
+export function parseServerDay(value: string, fieldName: string): Date {
+  if (value.trim() === "") {
+    throw new HTTPException(400, {
+      message: `${fieldName} cannot be an empty string. Please provide a valid date or omit the field.`,
+    });
+  }
+
+  const dayOnly = DAY_ONLY_PATTERN.exec(value);
+  if (dayOnly) {
+    const [, year, month, day] = dayOnly;
+    return new Date(Number(year), Number(month) - 1, Number(day), 0, 0, 0, 0);
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new HTTPException(400, {
+      message: `Invalid ${fieldName} "${value}". Please provide a valid date string (e.g. "2025-01-15" or "2025-01-15T10:30:00Z").`,
+    });
+  }
+  return startOfServerDay(parsed);
 }

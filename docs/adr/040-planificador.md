@@ -113,3 +113,12 @@ todavía.
 - **La carga por defecto (8 h) puede estar mal** para quien no trabaja jornada
   completa o reparte su tiempo entre proyectos fuera de Riuna. Declarado, no
   resuelto: la pantalla de ajustes que lo cambiaría no existe todavía.
+- **Actualización 2026-09-23.** La revisión de código de este bloque encontró
+  que la frontera de "hoy" no se aplicaba de forma consistente: la rejilla de
+  15 días del Planificador se construía con el reloj del navegador y
+  `PUT /planner/:taskId` interpretaba un `yyyy-mm-dd` en UTC en vez de en la
+  zona del servidor. `serverDayKey`/`parseServerDay`
+  (`utils/day-boundaries.ts`) son ahora el único punto de entrada y salida
+  para un día, y la API publica su propio `serverToday` para que el cliente
+  deje de calcularlo. La decisión de fondo —qué zona horaria define un día—
+  sigue sin resolverse.

@@ -135,3 +135,10 @@ atajo que la ADR 026 ya rechazó para las tareas.
   `cadence` opcional** (junto a `task_recurrence` y, ahora, los bloques
   fijos repetidos): reutiliza el mismo tipo en vez de inventar una cuarta
   forma de decir «cada lunes».
+- **Actualización 2026-09-23.** `get-schedule.ts` calculaba `todayKey` y la
+  clave de cada día con `toISOString().slice(0, 10)` —UTC— mientras
+  `windowStart` salía de `setHours(0,0,0,0)` —hora local—; en un servidor con
+  offset positivo, `isToday` señalaba el día equivocado casi toda la jornada,
+  y con él el recorte «empieza en ahora» y el bloque del cronómetro en
+  marcha. Corregido con `serverDayKey` (`utils/day-boundaries.ts`), la misma
+  puerta que usa el Planificador (ADR 040).
