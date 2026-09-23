@@ -7,10 +7,10 @@ import { getSchedule } from "@/fetchers/schedule";
  * invalida (ver `use-user-websocket.ts`) porque el Cronograma lee
  * `personal_plan_entry`, no solo lo suyo.
  */
-export function useSchedule(workspaceId: string, days = 7) {
+export function useSchedule(workspaceId: string, days = 7, from?: string) {
   return useQuery({
-    queryKey: ["schedule", workspaceId, days],
-    queryFn: () => getSchedule(workspaceId, days),
+    queryKey: ["schedule", workspaceId, from, days],
+    queryFn: () => getSchedule(workspaceId, days, from),
     enabled: Boolean(workspaceId),
   });
 }

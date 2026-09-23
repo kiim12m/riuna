@@ -227,6 +227,67 @@ describe("personal planner", () => {
     expect(rows[0]?.plannedDate.toISOString()).toBe(day2.toISOString());
   });
 
+  it("plans and anchors a task to a clock time in a single call", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+
+    const day = new Date();
+    day.setHours(0, 0, 0, 0);
+
+    const response = await putEntry(app, workspaceId, task.id, {
+      plannedDate: day.toISOString(),
+      startMinute: 9 * 60,
+    });
+    expect(response.status).toBe(200);
+
+    const [row] = await db
+      .select()
+      .from(schema.personalPlanEntryTable)
+      .where(eq(schema.personalPlanEntryTable.taskId, task.id));
+    expect(row?.startMinute).toBe(9 * 60);
+  });
+
+  it("moving a task without startMinute leaves an existing anchor untouched", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+
+    const day1 = new Date();
+    day1.setHours(0, 0, 0, 0);
+    const day2 = new Date(day1);
+    day2.setDate(day2.getDate() + 1);
+
+    await putEntry(app, workspaceId, task.id, {
+      plannedDate: day1.toISOString(),
+      startMinute: 10 * 60,
+    });
+    // Sin `startMinute`: mover de dia en el Planificador no debe desanclar
+    // una hora puesta desde el Cronograma.
+    await putEntry(app, workspaceId, task.id, {
+      plannedDate: day2.toISOString(),
+    });
+
+    const [row] = await db
+      .select()
+      .from(schema.personalPlanEntryTable)
+      .where(eq(schema.personalPlanEntryTable.taskId, task.id));
+    expect(row?.startMinute).toBe(10 * 60);
+    expect(row?.plannedDate.toISOString()).toBe(day2.toISOString());
+  });
+
+  it("rejects a plan entry startMinute of 1440 with 400, not 500", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+
+    const response = await putEntry(app, workspaceId, task.id, {
+      plannedDate: new Date().toISOString(),
+      startMinute: 1440,
+    });
+    expect(response.status).toBe(400);
+  });
+
   it("refuses to plan a task from another workspace", async () => {
     const { app, workspaceId } = await setup();
     const other = await createWorkspaceMember({ role: "member" });

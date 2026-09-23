@@ -16,7 +16,12 @@ export async function getPlan(workspaceId: string, days = 15) {
 export async function setPlanEntry(
   workspaceId: string,
   taskId: string,
-  input: { plannedDate: string; position?: number },
+  input: {
+    plannedDate: string;
+    position?: number;
+    /** Ausente: no se toca. Presente: ancla o libera (ADR 041). */
+    startMinute?: number | null;
+  },
 ) {
   const response = await client.planner[":taskId"].$put({
     param: { taskId },

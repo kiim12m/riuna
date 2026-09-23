@@ -194,12 +194,23 @@ la tarea y en la propia tabla.
   días para decidir qué día se piensa hacer cada tarea, sin tocar su fecha de
   vencimiento. Incluye una proyección de las próximas ocurrencias de tareas
   recurrentes todavía no creadas.
-- **Cronograma** ([ADR 041](adr/041-cronograma.md)): línea de tiempo por
-  horas sobre lo ya decidido en el Planificador, dentro de una jornada fija.
-  Arrastrar un tramo lo ancla a una hora concreta; lo que no cabe en el día
-  se lista aparte, sin pasar solo al día siguiente. Admite citas fijas y
-  bloqueos que no son tareas (sueltos o repetidos cada semana en días
-  concretos), y muestra el cronómetro en marcha.
+- **Cronograma** ([ADR 041](adr/041-cronograma.md)): calendario por horas,
+  con vistas Día, Semana y Mes navegables, sobre lo ya decidido en el
+  Planificador. La rejilla (24 h) se ve siempre, aunque el día esté vacío;
+  al pasar el ratón por un hueco aparece una casilla discontinua con la hora
+  y un «pulsa aquí para crear una tarea» — un clic crea una tarea nueva o
+  planifica una ya existente sin planificar, anclada a esa hora o «para el
+  día». Arrastrar un tramo lo ancla a una hora concreta, y en la vista Semana
+  arrastrarlo a otra columna lo mueve también de día — con una sombra en la
+  columna de destino mientras se arrastra y sin salto al soltar; arrastrar
+  uno de sus bordes cambia la duración (borde inferior) o adelanta el inicio
+  (borde superior), escribiendo la estimación de la tarea. Una tarea sin estimar
+  ocupa media hora, con borde punteado y color apagado para distinguirla; lo
+  que no cabe en el día se lista aparte, sin pasar solo al día siguiente.
+  Admite citas fijas y bloqueos que no son tareas (sueltos o repetidos cada
+  semana en días concretos, con fecha límite opcional); un clic sobre uno
+  abre su edición (mover de día si es suelto, poner o quitar la fecha límite
+  si repite) o borrarlo. Muestra el cronómetro en marcha.
 - **Parte de horas** ([ADR 042](adr/042-parte-de-horas.md)): lo registrado
   por quien mira, cruzando proyectos, en un rango de fechas. Agrupable por
   día, tarea o proyecto; una entrada en marcha cuenta lo transcurrido hasta

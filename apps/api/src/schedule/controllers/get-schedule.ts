@@ -18,6 +18,7 @@ import {
 import { serverDayKey } from "../../utils/day-boundaries";
 import {
   MIN_ENTRY_DURATION_SECONDS,
+  UNESTIMATED_ENTRY_SECONDS,
   WORK_END_MINUTE,
   WORK_START_MINUTE,
 } from "../constants";
@@ -83,6 +84,10 @@ export default async function getSchedule({
         .where(
           and(
             eq(personalPlanEntryTable.userId, userId),
+            // Sin esto, una entrada planeada desde otro espacio del mismo
+            // usuario se colaba aqui: los bloques ya filtraban por
+            // workspaceId, esta consulta no.
+            eq(personalPlanEntryTable.workspaceId, workspaceId),
             between(personalPlanEntryTable.plannedDate, windowStart, windowEnd),
           ),
         )
@@ -143,13 +148,16 @@ export default async function getSchedule({
   }
 
   // Los bloques repetidos se proyectan igual que los fantasmas del
-  // Planificador: nunca se guarda una fila por ocurrencia.
+  // Planificador: nunca se guarda una fila por ocurrencia, y `endsAt` -si lo
+  // hay- recorta la ventana igual que `endsAt` en `computeGhosts`.
   for (const block of repeatingBlocks) {
     if (!block.cadence) continue;
     try {
       const cadence = parseCadence(block.cadence);
+      const projectionEnd =
+        block.endsAt && block.endsAt < windowEnd ? block.endsAt : windowEnd;
       let cursor = firstOnOrAfter(cadence, windowStart);
-      while (cursor <= windowEnd) {
+      while (cursor <= projectionEnd) {
         const key = serverDayKey(cursor);
         const list = blocksByDay.get(key) ?? [];
         list.push(block);
@@ -170,6 +178,13 @@ export default async function getSchedule({
   }
 
   const taskById = new Map(decoratedEntries.map((entry) => [entry.id, entry]));
+  // Lo que hace falta para prellenar el dialogo de editar un bloque
+  // (`create-block-dialog.tsx`): la fila real, no el tramo fusionado y
+  // recortado a la ventana que arma `layoutDay` -ese no sabe si es suelto o
+  // repetido, ni su horario propio si se fusiono con otro que se solapaba.
+  const blockById = new Map(
+    [...singleBlocks, ...repeatingBlocks].map((block) => [block.id, block]),
+  );
 
   const days = buildDayKeys(windowStart, windowEnd).map((dayKey) => {
     const dayEntries = entriesByDay.get(dayKey) ?? [];
@@ -178,10 +193,9 @@ export default async function getSchedule({
 
     const flowEntries: FlowEntry[] = dayEntries.map((entry) => ({
       taskId: entry.id,
-      estimateSeconds: Math.max(
-        entry.estimate ?? 0,
-        MIN_ENTRY_DURATION_SECONDS,
-      ),
+      estimateSeconds: entry.estimate
+        ? Math.max(entry.estimate, MIN_ENTRY_DURATION_SECONDS)
+        : UNESTIMATED_ENTRY_SECONDS,
       position: entry.position,
       pinnedStartSecond:
         entry.startMinute === null ? null : entry.startMinute * 60,
@@ -222,7 +236,19 @@ export default async function getSchedule({
       isToday,
       segments: layout.segments.map((segment) =>
         segment.type === "block"
-          ? segment
+          ? {
+              ...segment,
+              entries: segment.entries.map((entry) => ({
+                ...entry,
+                // El cronometro en marcha no es una fila de verdad -se
+                // proyecta desde `time_entry`-, asi que no hay nada que
+                // editar en el.
+                block:
+                  entry.kind === "running"
+                    ? null
+                    : (blockById.get(entry.id) ?? null),
+              })),
+            }
           : { ...segment, task: taskById.get(segment.taskId) ?? null },
       ),
       overflow: layout.overflow.map((entry) => ({
@@ -237,5 +263,8 @@ export default async function getSchedule({
     days,
     workStartMinute: WORK_START_MINUTE,
     workEndMinute: WORK_END_MINUTE,
+    // Mismo patron que `get-plan.ts`: el cliente deja de calcular "hoy" con
+    // el reloj del navegador para resaltar la columna/celda correcta.
+    serverToday: todayKey,
   };
 }

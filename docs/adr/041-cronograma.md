@@ -142,3 +142,187 @@ atajo que la ADR 026 ya rechazó para las tareas.
   y con él el recorte «empieza en ahora» y el bloque del cronómetro en
   marcha. Corregido con `serverDayKey` (`utils/day-boundaries.ts`), la misma
   puerta que usa el Planificador (ADR 040).
+- **Actualización 2026-09-23 (segunda).** La ventana fija de 7 días desde
+  hoy, sin navegación ni vista de mes, no dejaba planificar *desde* el
+  Cronograma — pedido explícito de acercarlo a Schedule de super-productivity
+  (`schedule.component.html`, `schedule-month.component.html`,
+  `create-task-placeholder.component.ts`, mismo MIT ya en `NOTICE`). Cambios:
+  - `GET /schedule` gana `from` (opcional, `yyyy-mm-dd` por `parseServerDay`;
+    por defecto el día del servidor) y devuelve `serverToday`; la ventana
+    máxima sube de 30 a **42 días** (seis semanas, una rejilla de mes
+    completa). La consulta de `personal_plan_entry` ganó el filtro por
+    `workspaceId` que ya tenían los bloques — sin él, una entrada planeada
+    desde otro espacio de la misma persona se colaba.
+  - `PUT /planner/:taskId` acepta `startMinute` opcional: crear una tarea
+    desde una celda de la rejilla planea el día **y** ancla la hora en una
+    sola llamada, en vez de encadenar `PUT /planner` + `PUT
+    /schedule/entries`. Ausente, no se toca — mover una tarea de día en el
+    Planificador ya no desancla una hora puesta desde el Cronograma.
+  - La web gana tres vistas (Día/Semana/Mes, `schedule-range.ts`, rango en la
+    URL) sobre una rejilla de **24 h fijas**, siempre visible aunque el día
+    esté vacío — se retira el estado vacío «Nada que mostrar». La rejilla se
+    desplaza a la jornada laboral (u «ahora» en hoy) al entrar, no empieza
+    siempre a medianoche.
+  - `CreateTaskPlaceholder` porta la caja discontinua de
+    `create-task-placeholder.component.ts`: en reposo, un mensaje de "pulsa
+    aquí para crear una tarea" con la hora encima; en edición, un campo que
+    crea una tarea nueva (30 min, como `timeEstimate` allí) o planifica una
+    ya existente sin planificar, con el mismo alternador Ctrl+1 entre "a esta
+    hora" y "para el día" (`isForDayMode` allí). Es puntero-only, como el
+    original — el fondo de cada columna expone además `role="button"` con
+    Enter/Espacio para quien navega por teclado, algo que el original no
+    ofrece.
+- **Actualización 2026-09-23 (tercera).** Tres ajustes tras una pasada visual
+  sobre lo anterior:
+  - **Bug de posición en la pestaña de hora**: `bottom-full` ya deja su borde
+    inferior en el borde superior del quadre; sumarle `-translate-y-full`
+    desplazaba dos veces y la separaba, flotante, del resto. Corregido a un
+    solo desplazamiento (`translate-y-px`, para solapar los dos bordes
+    discontinuos de 2 px en vez de dejar una línea doble).
+  - **Una tarea sin estimar ocupa media hora, no el mínimo de diez.**
+    `UNESTIMATED_ENTRY_SECONDS` (`apps/api/src/schedule/constants.ts`) sustituye
+    a `MIN_ENTRY_DURATION_SECONDS` como base del tramo cuando `estimate` es
+    `null` o 0 — a 10 min el tramo mide 14 px y no se lee, y el hueco de 30 min
+    ya se reserva en el reparto (`layoutDay`), no solo se pinta más grande. La
+    web distingue estos tramos con borde punteado y color apagado
+    (`segment-card.tsx`); las tareas con estimación se ven igual que antes.
+  - **Redimensionar arrastrando un borde.** Dos asas de 6 px, puntero-only
+    como el resto del arrastre del Cronograma (sin equivalente de teclado,
+    igual que mover el tramo). Matemática pura nueva,
+    `resizeSegment` (`schedule-timeline.ts`): el borde inferior solo cambia la
+    duración; la superior mueve el inicio y mantiene fijo el final. El delta
+    arrastrado se suma **a la estimación de la tarea**
+    (`PUT /task/estimate/:id`, ya existía), nunca a la duración del tramo
+    mostrado — un tramo partido alrededor de un bloque fijo no es la tarea
+    entera, y sustituir por la duración visible la habría recortado sin
+    querer. Arrastrar el borde superior también ancla la tarea a la nueva hora
+    (`PUT /planner/:taskId`, `startMinute`), como ya hacía arrastrar el
+    cuerpo del tramo.
+  - **Consecuencia declarada:** la estimación es un campo de la tarea,
+    compartido con el equipo — el mismo que se ve en el detalle y que suma en
+    Objetivos y Paneles. Redimensionar en el Cronograma la cambia para todos,
+    igual que en super-productivity, donde `timeEstimate` tampoco es privado
+    de la vista Schedule.
+- **Actualización 2026-09-23 (cuarta).** Tres correcciones de una pasada real
+  en navegador, mas una funcionalidad nueva:
+  - **La vista saltaba a "ahora" al mutar, no solo al navegar.** El
+    reencuadre inicial (`TimeGrid`) dependía de `days`, y `days` cambia de
+    identidad en cada refresco de la consulta — mover, redimensionar o
+    anclar una tarea disparaba el mismo salto que entrar por primera vez.
+    Corregido con `rangeKey` (los `dayDate` visibles, unidos), que solo
+    cambia al navegar de dia/semana/mes.
+  - **La casilla de crear tarea aparecia encima del tramo que se estaba
+    arrastrando o redimensionando.** El fondo de la columna (que escucha el
+    puntero para el hueco de crear) no sabia que un tramo estaba en pleno
+    gesto; el puntero pasaba por encima suyo en cuanto el arrastre salia del
+    area del propio tramo. `ScheduleSegmentCard` avisa ahora a la columna con
+    `onInteractionChange` al empezar y al soltar, y la columna calla el hueco
+    (y lo borra si ya estaba mostrado) mientras dure.
+  - **El punteado de una tarea sin estimar no se distinguia de un borde
+    continuo.** A 1 px, un borde punteado y uno solido se ven casi iguales.
+    Subido a `border-2` solo para el caso sin estimar.
+  - **Mover una tarea a otro dia arrastrandola a otra columna** (vista
+    Semana): `dayKeyAtPoint` (`segment-card.tsx`) lee el `data-day-key` que
+    `time-grid.tsx` pone en el contenedor de cada rejilla via
+    `document.elementFromPoint` en el punto donde se suelta -la coordenada
+    vertical se calcula igual sea cual sea la columna, asi que solo hace
+    falta averiguar de quien es el punto de soltar-. Pasa por
+    `PUT /planner/:taskId` (cambia `plannedDate` **y** `startMinute` en una
+    sola llamada), no por `setEntryTime`, que no toca el dia. Nueva mutacion
+    `moveEntryDay`; insignia flotante con el dia y la hora de destino
+    mientras se arrastra, y el tramo se atenua para señalar que se va de la
+    columna. Verificado con un test e2e que arrastra entre columnas y
+    comprueba que la tarea desaparece del dia de origen y aparece en el de
+    destino a la hora esperada.
+- **Actualización 2026-09-23 (quinta).** El movimiento entre dias de la
+  actualización anterior funcionaba pero confundía: no se veía que el tramo
+  quedaba "agarrado", el destino seguía ofreciendo crear una tarea encima del
+  hueco al que se apuntaba, y al soltar la tarea desaparecía hasta que
+  llegaba el refetch. Tres cambios, sin tocar la API:
+  - **Sombra en la columna de destino** (`drag-ghost.tsx`, nuevo): mientras
+    se arrastra sobre otra columna, esa columna dibuja un recuadro punteado
+    con el título y la franja horaria donde caería la tarea — como el
+    "fantasma" de Google Calendar o super-productivity. Sustituye a la
+    insignia flotante que llevaba el tramo (`crossDayKey`, en
+    `segment-card.tsx`): ahora la marca vive en la columna correcta, no
+    pegada al origen.
+  - **El estado de "se está arrastrando" y de "estoy silenciando el hueco de
+    crear" suben de `TimeGridColumn` a `TimeGrid`.** Antes cada columna sólo
+    sabía de sus propios gestos: la columna de origen callaba su hueco de
+    crear mientras el tramo se movía, pero la de destino — la que de verdad
+    importa, porque es donde el puntero está — seguía ofreciéndolo encima.
+    `ScheduleSegmentCard` gana `onCrossDayDrag(target | null)`, que informa a
+    la rejilla de a qué día y minuto caería el tramo en cada `pointermove`;
+    de ahí sale tanto la sombra como el `isSegmentInteracting` compartido.
+  - **Sin salto al soltar.** `moveEntryDay` (`use-schedule-mutations.ts`)
+    pasa a escribir la cache de **todas** las consultas `["schedule",
+    workspaceId, …]` en `onMutate`, antes de que la petición salga — retira
+    el tramo de su día de origen y lo inserta, ya anclado, en el destino, en
+    todas las vistas de Cronograma que haya en cache (Día/Semana/Mes pueden
+    convivir). Mismo patrón que `usePlannerMutations.moveTask`, y por el
+    mismo motivo: el tramo deja de dibujarse en cuanto se suelta el puntero
+    (ya no queda estado de arrastre local que lo sostenga), así que sin
+    escribir la cache antes se vería un frame con la tarea "desaparecida".
+    `onError` restaura la instantánea previa de cada consulta tocada;
+    `onSettled` invalida como ya hacía, para traer el reparto real (posición
+    entre las que fluyen, `conflict`, etc.).
+  - Verificado ampliando el mismo test e2e: con el puntero aún sobre la
+    columna de destino, comprueba que la sombra es visible y que no hay
+    ninguna casilla de crear tarea en pantalla; tras soltar, que el tramo ya
+    está en la columna de destino sin esperar a la llamada a la API.
+  - **El propio tramo de origen ya no sigue verticalmente al puntero
+    mientras se va a otro día** -solo la sombra de destino se mueve-: seguir
+    con `dragMinute` también aquí lo hacía subir y bajar en su columna, que
+    es justo lo contrario de "se queda quieto, se va la sombra".
+- **Actualización 2026-09-23 (sexta).** Los bloques (`schedule_block`) se
+  podían crear pero no editar ni borrar desde el Cronograma — la API y las
+  mutaciones ya existían (`updateBlock`/`deleteBlock`), sin conectar a
+  ningún sitio. Ahora un clic sobre un bloque de verdad (no el cronómetro en
+  marcha, que no tiene fila; no uno fusionado con otro que se solapaba, caso
+  raro sin un único `id` al que abrir el diálogo) abre `CreateBlockDialog`
+  ya relleno, con un botón de eliminar (confirmación con `AlertDialog`,
+  mismo patrón que borrar una tarea). Nunca cambia si es suelto o repetido
+  -eso sigue siendo borrar y crear de nuevo, `update-block.ts` ya lo decía-,
+  pero dentro de cada forma ahora sí se puede mover:
+  - **Un bloque suelto puede cambiar de día** (`plannedDate` en el PATCH).
+  - **Uno repetido puede ponerse o quitarse una fecha límite** (`endsAt`,
+    nueva columna nullable, mismo nombre y patrón que
+    `task_recurrence.ends_at`: `get-schedule.ts` recorta la proyección igual
+    que `computeGhosts` recorta los fantasmas). Los días de la semana que
+    repite no se pueden tocar desde el diálogo de edición -se ven de fondo,
+    sin poder pulsarlos-, solo desde crear uno nuevo.
+  - `update-block.ts` valida contra la fila real antes de escribir -no
+    contra lo que mande quien llama-: mover el día de uno repetido, o poner
+    `endsAt` a uno suelto, es 400, no la CHECK `schedule_block_date_xor_cadence`/
+    `schedule_block_ends_at_only_repeating` reventando en un 500 crudo.
+  - `get-schedule.ts` decora cada `entry` de un tramo `block` con la fila
+    completa (`entries[].block`), no solo `{id, title, kind}`: el diálogo de
+    edición necesita el horario y la forma (suelto/repetido) propios del
+    bloque, que el tramo fusionado y recortado a la ventana no lleva.
+  - Verificado con pruebas de integración nuevas (proyección cortada por
+    `endsAt`, mover un bloque suelto de día, rechazo cruzado de `plannedDate`
+    en uno repetido y `endsAt` en uno suelto, poner y quitar el límite,
+    forma decorada de `entries[].block`) y typecheck/Biome en los archivos
+    tocados.
+- **Actualización 2026-09-23 (séptima).** Dos fallos de la anterior, ambos
+  en `time-grid.tsx`/`create-block-dialog.tsx`, sin tocar la API:
+  - **Dos bloques solapados quedaban sin poder tocarlos.** `mergeBlockers`
+    (`layout.ts`) funde en un mismo tramo visual los bloques que coinciden en
+    hora, y el clic para editar solo estaba cableado cuando `entries.length
+    === 1` -a propósito, para no complicar el diseño con un caso que se
+    creía raro-. En la práctica, poner un bloque encima de otro es fácil de
+    hacer sin querer, y el resultado era un recuadro fusionado, atascado, sin
+    ninguna manera de editar ninguno de los dos. Corregido: cada `entry` es
+    ahora su propio `<button>` dentro del recuadro -ya no un único
+    `<span>` con `.join(" / ")`-, así que cada bloque solapado se edita por
+    su cuenta, sea cual sea el número de bloques fundidos.
+  - **El día no se podía tocar al crear un bloque.** El campo "Día" del
+    diálogo llevaba `disabled={!editingBlock}` a propósito -mantenía el
+    comportamiento anterior a poder editar nada, donde el día era implícito
+    y era el que se había pulsado con "+"-, pero volverlo visible-pero-fijo
+    fue peor que dejarlo invisible: parece un campo roto. Ahora es editable
+    también al crear, con el día pulsado como valor por defecto.
+  - Verificado en navegador real: dos bloques que se solapan se editan y
+    borran cada uno por separado sin afectar al otro; crear un bloque con un
+    día distinto al que se pulsó "+" lo deja en el día elegido, no en el
+    original.
