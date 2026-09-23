@@ -40,7 +40,45 @@ export default defineConfig({
   server: {
     host: true,
     hmr: true,
-    port: 5173,
+    // El 5173 de siempre, salvo que se pida otro. `pnpm dev:parallel` lo mueve
+    // para poder convivir con la instancia de Docker, que ya ocupa ese puerto.
+    port: Number(process.env.DEV_WEB_PORT) || 5173,
+    // Solo cuando se ha pedido un puerto concreto: ahi, caerse es mejor que
+    // saltar al siguiente libre, porque el numero esta en el reenvio del
+    // devcontainer y en el origen de confianza de la API.
+    strictPort: Boolean(process.env.DEV_WEB_PORT),
+    // La API, servida por debajo del propio servidor de desarrollo.
+    //
+    // Sin esto el navegador tiene que alcanzar **dos** puertos: el 5173 de la
+    // web y el 1337 de la API, que va grabada en el bundle como URL absoluta.
+    // En un devcontainer o un tunel eso falla en cuanto solo se reenvia uno de
+    // los dos, y el sintoma es un `NetworkError` en `getSession` que no dice
+    // de donde viene. Con el proxy basta con llegar al 5173.
+    //
+    // Solo se usa si `VITE_API_URL` vale `/`; con la URL absoluta de siempre,
+    // el cliente ni pasa por aqui. Es configuracion del servidor de
+    // desarrollo: no entra en la compilacion.
+    proxy: {
+      "/api": {
+        target: process.env.DEV_PROXY_API_TARGET || "http://localhost:1337",
+        changeOrigin: false,
+        // Los WebSockets de tiempo real cuelgan de `/api`, asi que suben por
+        // el mismo proxy.
+        ws: true,
+        configure: (proxy) => {
+          // Better Auth valida el `Origin` contra `RIUNA_CLIENT_URL`, y aqui
+          // el origen real es el que use cada quien —localhost, una IP de la
+          // red, un tunel—. Reescribirlo a la URL de confianza deja que el
+          // servidor siga siendo estricto sin tener que enumerar de antemano
+          // todas las formas de llegar a un entorno de desarrollo.
+          const trusted =
+            process.env.DEV_PROXY_ORIGIN || "http://localhost:5173";
+          proxy.on("proxyReq", (proxyReq) => {
+            proxyReq.setHeader("origin", trusted);
+          });
+        },
+      },
+    },
   },
   optimizeDeps: {
     exclude: ["better-auth"],
