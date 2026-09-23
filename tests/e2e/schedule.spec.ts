@@ -26,10 +26,14 @@ test.describe("Cronograma", () => {
     await riuna.api("put", `/api/task/assignee/${taskId}`, {
       userId: riuna.userId,
     });
-    await riuna.api("put", `/api/planner/${taskId}`, {
-      plannedDate: tomorrowIso(),
-      position: 0,
-    });
+    await riuna.api(
+      "put",
+      `/api/planner/${taskId}?workspaceId=${riuna.workspaceId}`,
+      {
+        plannedDate: tomorrowIso(),
+        position: 0,
+      },
+    );
 
     await page.goto(`/dashboard/workspace/${riuna.workspaceId}/schedule`);
 
