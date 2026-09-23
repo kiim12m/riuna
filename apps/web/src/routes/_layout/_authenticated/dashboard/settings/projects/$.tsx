@@ -5,5 +5,9 @@ import { redirectToAdmin } from "@/lib/legacy-settings-redirect";
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/settings/projects/$",
 )({
-  beforeLoad: () => redirectToAdmin("project-settings"),
+  // El destino tiene la misma forma que la ruta vieja
+  // (`admin/project-settings/$projectId/{general,integrations,visibility,workflow}`),
+  // asi que reenviar el resto tal cual funciona -igual que el hermano de espacio.
+  beforeLoad: ({ params }) =>
+    redirectToAdmin("project-settings", params._splat),
 });
