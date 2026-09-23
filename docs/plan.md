@@ -1508,6 +1508,26 @@ prueba de extremo a extremo necesita la PostgreSQL de `compose.local.yml`.
 Correrla es el primer paso si se retoma trabajo en un entorno que sí tenga
 Docker, antes de dar ese bloque por verificado del todo.
 
+**Revisión de código del interludio (2026-09-23):** `/code-review high` sobre
+los nueve bloques devolvió 10 hallazgos confirmados, ya corregidos. Cuatro con
+riesgo real de perder o falsear datos: `workspaceId` sin comprobar en cuatro
+mutaciones del Cronograma/Planificador (`update-block`, `delete-block`,
+`set-entry-time`, `remove-plan-entry`), un fantasma de recurrencia que podía
+duplicar una tarea ya generada por el planificador real, «sin planificar» sin
+excluir lo archivado, y un `minuteSchema` que dejaba pasar `1440` donde la
+CHECK de Postgres exige `0–1439` (salía 500 en vez de 400). El resto son
+inconsistencias del "día del servidor": una clave de día en UTC
+(`toISOString().slice(0,10)`) frente al resto de la superficie en hora local,
+`validateAndParseDate` interpretando mal un `yyyy-mm-dd` pelado, y el
+`due-window` del cliente recalculando la ventana con su propio reloj en vez de
+leer la que ya resuelve la API (`dueWindowExpression`, extraída a
+`utils/due-window.ts` y proyectada como columna en la búsqueda de "Mis
+tareas"; la API también publica su `serverToday`). Más tres del lado web: una
+vista de espacio sin proyecto que no se invalidaba por WebSocket, un redirect
+legado de ajustes de proyecto que perdía el `_splat`, y una `queryKey` de
+"Mis tareas" que no cubría `sortOrder`/`page`/`limit`. ADR 040/041/042 llevan
+la actualización correspondiente.
+
 **Las dos cosas que la Fase 7 dejaba abiertas están cerradas**, y las cerró la
 Fase 7.5:
 
