@@ -1,6 +1,8 @@
 import { and, asc, desc, eq, type SQL, sql } from "drizzle-orm";
 import db from "../../database";
 import { projectTable, taskTable, teamTable } from "../../database/schema";
+import { serverDayKey } from "../../utils/day-boundaries";
+import { dueWindowExpression } from "../../utils/due-window";
 import {
   type FieldRegistry,
   priorityRankExpression,
@@ -45,6 +47,7 @@ export type SearchTasksOptions = {
   sortOrder?: "asc" | "desc";
   page?: number;
   limit?: number;
+  now?: Date;
 };
 
 /**
@@ -127,8 +130,10 @@ export default async function searchTasks({
   sortOrder = "asc",
   page: requestedPage,
   limit,
+  now = new Date(),
 }: SearchTasksOptions) {
   const { page, pageSize, offset } = resolvePaging(requestedPage, limit);
+  const serverToday = serverDayKey(now);
 
   const [projectColumns, scopeConditions] = await Promise.all([
     getWorkspaceColumns(workspaceId),
@@ -144,7 +149,7 @@ export default async function searchTasks({
 
   // `null` es "el ambito no puede casar nada" —quien no pertenece a ningun
   // equipo—, no "sin filtro". Devolver la pagina vacia y no el espacio entero.
-  if (!scopeConditions) return emptyPage(page, pageSize);
+  if (!scopeConditions) return { ...emptyPage(page, pageSize), serverToday };
 
   const conditions: SQL[] = [...scopeConditions];
 
@@ -183,6 +188,7 @@ export default async function searchTasks({
         projectIcon: projectTable.icon,
         teamId: taskTable.teamId,
         teamName: teamTable.name,
+        dueWindow: dueWindowExpression(now),
       })
       .from(taskTable)
       .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
@@ -206,5 +212,6 @@ export default async function searchTasks({
   return {
     tasks,
     pagination: { page, pageSize, hasMore, total, totalIsCapped },
+    serverToday,
   };
 }

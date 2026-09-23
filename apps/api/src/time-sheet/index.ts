@@ -3,8 +3,8 @@ import { HTTPException } from "hono/http-exception";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import { buildContentDisposition } from "../utils/content-disposition";
+import { parseServerDay } from "../utils/day-boundaries";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
-import { validateAndParseDate } from "../utils/validate-dates";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import { DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS } from "./constants";
 import exportTimeSheet from "./controllers/export-time-sheet";
@@ -37,8 +37,8 @@ function resolveWindow(start?: string, end?: string) {
     });
   }
 
-  const windowStart = validateAndParseDate(start, "start");
-  const windowEnd = validateAndParseDate(end, "end");
+  const windowStart = parseServerDay(start, "start");
+  const windowEnd = parseServerDay(end, "end");
   windowEnd.setHours(23, 59, 59, 999);
 
   if (windowEnd < windowStart) {

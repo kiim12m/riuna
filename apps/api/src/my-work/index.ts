@@ -102,11 +102,15 @@ const searchTaskSchema = v.object({
       image: v.nullable(v.string()),
     }),
   ),
+  /** Resuelta por la API con el mismo `CASE` que los paneles (`dueWindowExpression`). */
+  dueWindow: v.picklist(["overdue", "today", "week", "later", "none"]),
 });
 
 const searchResponseSchema = v.object({
   tasks: v.array(searchTaskSchema),
   pagination: myWorkResponseSchema.entries.pagination,
+  /** El dia del servidor, `yyyy-mm-dd`: la referencia para agrupar `dueWindow`. */
+  serverToday: v.string(),
 });
 
 /**

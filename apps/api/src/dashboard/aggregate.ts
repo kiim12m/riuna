@@ -17,7 +17,7 @@ import {
   timeEntryTable,
 } from "../database/schema";
 import type { PersonalScope } from "../my-work/scope";
-import { addDays, startOfServerDay } from "../utils/day-boundaries";
+import { dueWindowExpression } from "../utils/due-window";
 import {
   type FieldRegistry,
   priorityRankExpression,
@@ -98,21 +98,6 @@ export type AggregateRequest = {
 };
 
 const doneExpression = sql`(${taskTable.completedAt} IS NOT NULL)`;
-
-/** El `CASE` de las ventanas de vencimiento, con las fronteras del servidor. */
-function dueWindowExpression(now: Date): SQL {
-  const today = startOfServerDay(now);
-  const tomorrow = addDays(today, 1);
-  const nextWeek = addDays(today, 7);
-
-  return sql`CASE
-    WHEN ${taskTable.dueDate} IS NULL THEN 'none'
-    WHEN ${taskTable.dueDate} < ${today} THEN 'overdue'
-    WHEN ${taskTable.dueDate} < ${tomorrow} THEN 'today'
-    WHEN ${taskTable.dueDate} < ${nextWeek} THEN 'week'
-    ELSE 'later'
-  END`;
-}
 
 function categoricalKey(groupBy: CategoricalGroupBy, now: Date): SQL {
   switch (groupBy) {

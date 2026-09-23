@@ -1,6 +1,7 @@
 import { and, between, eq } from "drizzle-orm";
 import db from "../../database";
 import { projectTable, taskTable, timeEntryTable } from "../../database/schema";
+import { serverDayKey } from "../../utils/day-boundaries";
 import type { TimeSheetGroupBy } from "../constants";
 
 export type TimeSheetGroup = {
@@ -18,8 +19,6 @@ export type TimeSheetResult = {
   groups: TimeSheetGroup[];
 };
 
-const dateKey = (date: Date): string => date.toISOString().slice(0, 10);
-
 type Row = {
   taskId: string;
   taskTitle: string;
@@ -31,7 +30,7 @@ type Row = {
 function groupKey(groupBy: TimeSheetGroupBy, row: Row): [string, string] {
   if (groupBy === "task") return [row.taskId, row.taskTitle];
   if (groupBy === "project") return [row.projectId, row.projectName];
-  const key = dateKey(row.startTime);
+  const key = serverDayKey(row.startTime);
   return [key, key];
 }
 
