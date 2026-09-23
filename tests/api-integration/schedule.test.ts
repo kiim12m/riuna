@@ -70,13 +70,28 @@ function tomorrow(): Date {
   return date;
 }
 
+/** Medianoche local, `n` dias desde hoy -`tomorrow()` es `dayOffset(1)`. */
+function dayOffset(n: number): Date {
+  const date = new Date();
+  date.setDate(date.getDate() + n);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
 // `serverDayKey` y no `toISOString().slice(0, 10)`: la API ya usa el dia del
 // servidor (hallazgo 3 de la revision), y comparar contra una clave UTC
 // divergiria en cuanto la suite corriera con otra zona horaria.
 const dateKey = serverDayKey;
 
-function getSchedule(app: App, workspaceId: string, days?: number) {
-  const query = days ? `&days=${days}` : "";
+function getSchedule(
+  app: App,
+  workspaceId: string,
+  days?: number,
+  from?: string,
+) {
+  const query = [days ? `&days=${days}` : "", from ? `&from=${from}` : ""].join(
+    "",
+  );
   return app.request(`/api/schedule?workspaceId=${workspaceId}${query}`);
 }
 
@@ -185,6 +200,39 @@ describe("cronograma", () => {
     expect(flow.task.id).toBe(task.id);
   });
 
+  it("gives a task without an estimate a 30-minute slot, not the 10-minute minimum", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const day = tomorrow();
+    const unestimated = await createTask(projectId, columnId, {
+      estimate: null,
+    });
+    const next = await createTask(projectId, columnId, {
+      number: 2,
+      estimate: 1800,
+    });
+    await assign(unestimated.id, userId);
+    await assign(next.id, userId);
+    await planTask(unestimated.id, workspaceId, userId, day, { position: 0 });
+    await planTask(next.id, workspaceId, userId, day, { position: 1 });
+
+    const body = await (await getSchedule(app, workspaceId)).json();
+    const dayLayout = body.days.find(
+      (d: { dayDate: string }) => d.dayDate === dateKey(day),
+    );
+    const flowParts = dayLayout.segments.filter(
+      (s: { type: string }) => s.type === "flow",
+    );
+
+    expect(
+      flowParts.find((s: { taskId: string }) => s.taskId === unestimated.id),
+    ).toMatchObject({ startSecond: 8 * 3600, endSecond: 8 * 3600 + 1800 });
+    // El siguiente empieza donde termina el hueco de 30 min de la primera,
+    // no a los 10 min que daria el minimo general.
+    expect(
+      flowParts.find((s: { taskId: string }) => s.taskId === next.id),
+    ).toMatchObject({ startSecond: 8 * 3600 + 1800 });
+  });
+
   it("splits a flowing entry around a fixed block that falls inside it", async () => {
     const { app, workspaceId, projectId, columnId, userId } = await setup();
     const day = tomorrow();
@@ -282,6 +330,202 @@ describe("cronograma", () => {
       ),
     );
     expect(daysWithLunch).toHaveLength(5);
+  });
+
+  it("stops projecting a repeating block once endsAt has passed", async () => {
+    const { app, workspaceId } = await setup();
+
+    const created = await postBlock(app, workspaceId, {
+      title: "Comida",
+      kind: "break",
+      startMinute: 13 * 60,
+      endMinute: 14 * 60,
+      cadence: { frequency: "daily", interval: 1 },
+      endsAt: dayOffset(2).toISOString(),
+    });
+    expect(created.status).toBe(200);
+
+    const body = await (await getSchedule(app, workspaceId, 5)).json();
+    const daysWithLunch = body.days.filter((d: { segments: unknown[] }) =>
+      d.segments.some(
+        (s: { type: string; entries?: { title: string }[] }) =>
+          s.type === "block" &&
+          s.entries?.some((entry) => entry.title === "Comida"),
+      ),
+    );
+    // Dias 0, 1 y 2 (hoy, manana y pasado manana) tienen el bloque; los dias
+    // 3 y 4 de la ventana de 5, no.
+    expect(daysWithLunch).toHaveLength(3);
+  });
+
+  it("rejects endsAt on a block that does not repeat", async () => {
+    const { app, workspaceId } = await setup();
+
+    const response = await postBlock(app, workspaceId, {
+      title: "Cita",
+      kind: "fixed",
+      startMinute: 60,
+      endMinute: 120,
+      plannedDate: tomorrow().toISOString(),
+      endsAt: dayOffset(5).toISOString(),
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it("moves a single block to another day", async () => {
+    const { app, workspaceId } = await setup();
+    const created = await (
+      await postBlock(app, workspaceId, {
+        title: "Cita",
+        kind: "fixed",
+        startMinute: 60,
+        endMinute: 120,
+        plannedDate: tomorrow().toISOString(),
+      })
+    ).json();
+
+    const nextDay = dayOffset(2);
+    const response = await patchBlock(app, workspaceId, created.id, {
+      title: "Cita",
+      kind: "fixed",
+      startMinute: 60,
+      endMinute: 120,
+      plannedDate: nextDay.toISOString(),
+    });
+    expect(response.status).toBe(200);
+
+    const [moved] = await db
+      .select()
+      .from(schema.scheduleBlockTable)
+      .where(eq(schema.scheduleBlockTable.id, created.id));
+    expect(dateKey(moved?.plannedDate as Date)).toBe(dateKey(nextDay));
+  });
+
+  it("refuses to move the day of a repeating block, and to set an end date on a single one", async () => {
+    const { app, workspaceId } = await setup();
+
+    const single = await (
+      await postBlock(app, workspaceId, {
+        title: "Cita",
+        kind: "fixed",
+        startMinute: 60,
+        endMinute: 120,
+        plannedDate: tomorrow().toISOString(),
+      })
+    ).json();
+    const singleEndsAt = await patchBlock(app, workspaceId, single.id, {
+      title: "Cita",
+      kind: "fixed",
+      startMinute: 60,
+      endMinute: 120,
+      endsAt: dayOffset(5).toISOString(),
+    });
+    expect(singleEndsAt.status).toBe(400);
+
+    const repeating = await (
+      await postBlock(app, workspaceId, {
+        title: "Comida",
+        kind: "break",
+        startMinute: 13 * 60,
+        endMinute: 14 * 60,
+        cadence: { frequency: "daily", interval: 1 },
+      })
+    ).json();
+    const repeatingPlannedDate = await patchBlock(
+      app,
+      workspaceId,
+      repeating.id,
+      {
+        title: "Comida",
+        kind: "break",
+        startMinute: 13 * 60,
+        endMinute: 14 * 60,
+        plannedDate: tomorrow().toISOString(),
+      },
+    );
+    expect(repeatingPlannedDate.status).toBe(400);
+  });
+
+  it("sets and then clears the end date of a repeating block", async () => {
+    const { app, workspaceId } = await setup();
+    const created = await (
+      await postBlock(app, workspaceId, {
+        title: "Comida",
+        kind: "break",
+        startMinute: 13 * 60,
+        endMinute: 14 * 60,
+        cadence: { frequency: "daily", interval: 1 },
+      })
+    ).json();
+
+    const withLimit = await patchBlock(app, workspaceId, created.id, {
+      title: "Comida",
+      kind: "break",
+      startMinute: 13 * 60,
+      endMinute: 14 * 60,
+      endsAt: dayOffset(1).toISOString(),
+    });
+    expect(withLimit.status).toBe(200);
+
+    let body = await (await getSchedule(app, workspaceId, 5)).json();
+    let daysWithLunch = body.days.filter((d: { segments: unknown[] }) =>
+      d.segments.some(
+        (s: { type: string; entries?: { title: string }[] }) =>
+          s.type === "block" &&
+          s.entries?.some((entry) => entry.title === "Comida"),
+      ),
+    );
+    expect(daysWithLunch).toHaveLength(2); // hoy y manana
+
+    const cleared = await patchBlock(app, workspaceId, created.id, {
+      title: "Comida",
+      kind: "break",
+      startMinute: 13 * 60,
+      endMinute: 14 * 60,
+      endsAt: null,
+    });
+    expect(cleared.status).toBe(200);
+
+    body = await (await getSchedule(app, workspaceId, 5)).json();
+    daysWithLunch = body.days.filter((d: { segments: unknown[] }) =>
+      d.segments.some(
+        (s: { type: string; entries?: { title: string }[] }) =>
+          s.type === "block" &&
+          s.entries?.some((entry) => entry.title === "Comida"),
+      ),
+    );
+    expect(daysWithLunch).toHaveLength(5);
+  });
+
+  it("decorates a block segment's entries with the full row, for the edit dialog", async () => {
+    const { app, workspaceId } = await setup();
+    const day = tomorrow();
+    const created = await (
+      await postBlock(app, workspaceId, {
+        title: "Cita",
+        kind: "fixed",
+        startMinute: 60,
+        endMinute: 120,
+        plannedDate: day.toISOString(),
+      })
+    ).json();
+
+    const body = await (await getSchedule(app, workspaceId, 3)).json();
+    const segment = body.days
+      .find((d: { dayDate: string }) => d.dayDate === dateKey(day))
+      ?.segments.find(
+        (s: { type: string; entries?: { title: string }[] }) =>
+          s.type === "block" &&
+          s.entries?.some((entry) => entry.title === "Cita"),
+      );
+
+    expect(segment?.entries[0]?.block).toMatchObject({
+      id: created.id,
+      title: "Cita",
+      kind: "fixed",
+      startMinute: 60,
+      endMinute: 120,
+    });
   });
 
   it("rejects a block that gives neither plannedDate nor cadence, or both", async () => {
@@ -442,5 +686,82 @@ describe("cronograma", () => {
 
     const response = await putEntryTime(app, workspaceId, task.id, 1440);
     expect(response.status).toBe(400);
+  });
+
+  it("reports today's key so the client stops computing it with the browser clock", async () => {
+    const { app, workspaceId } = await setup();
+
+    const body = await (await getSchedule(app, workspaceId)).json();
+    expect(body.serverToday).toBe(dateKey(new Date()));
+  });
+
+  it("accepts a window of up to 42 days and rejects one day beyond it", async () => {
+    const { app, workspaceId } = await setup();
+
+    const full = await getSchedule(app, workspaceId, 42);
+    expect(full.status).toBe(200);
+
+    const tooWide = await getSchedule(app, workspaceId, 43);
+    expect(tooWide.status).toBe(400);
+  });
+
+  it("starts the window at `from` instead of the server's today", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const inTwoWeeks = new Date();
+    inTwoWeeks.setDate(inTwoWeeks.getDate() + 14);
+    inTwoWeeks.setHours(0, 0, 0, 0);
+    const task = await createTask(projectId, columnId, { estimate: 1800 });
+    await assign(task.id, userId);
+    await planTask(task.id, workspaceId, userId, inTwoWeeks, { position: 0 });
+
+    // Sin `from`, la ventana por defecto (7 dias desde hoy) no la alcanza.
+    const defaultWindow = await (await getSchedule(app, workspaceId)).json();
+    expect(
+      defaultWindow.days.some(
+        (d: { dayDate: string }) => d.dayDate === dateKey(inTwoWeeks),
+      ),
+    ).toBe(false);
+
+    const shifted = await (
+      await getSchedule(app, workspaceId, 3, dateKey(inTwoWeeks))
+    ).json();
+    expect(shifted.days.map((d: { dayDate: string }) => d.dayDate)).toEqual([
+      dateKey(inTwoWeeks),
+      dateKey(new Date(inTwoWeeks.getTime() + 86400000)),
+      dateKey(new Date(inTwoWeeks.getTime() + 2 * 86400000)),
+    ]);
+  });
+
+  it("does not leak a plan entry planned from another workspace of the same person", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const day = tomorrow();
+    const task = await createTask(projectId, columnId, { estimate: 1800 });
+    await assign(task.id, userId);
+    await planTask(task.id, workspaceId, userId, day, { position: 0 });
+
+    const otherWorkspace = await addToAnotherWorkspace(userId);
+    const otherFixture = await createProjectFixture({
+      workspaceId: otherWorkspace.id,
+    });
+    const otherTask = await createTask(
+      otherFixture.project.id,
+      otherFixture.columns.todo.id,
+      { estimate: 1800 },
+    );
+    // Misma persona, misma fecha, pero planificada bajo el otro espacio: la
+    // fila lleva `workspaceId: otherWorkspace.id`.
+    await planTask(otherTask.id, otherWorkspace.id, userId, day, {
+      position: 1,
+    });
+
+    const body = await (await getSchedule(app, workspaceId)).json();
+    const dayLayout = body.days.find(
+      (d: { dayDate: string }) => d.dayDate === dateKey(day),
+    );
+    const taskIds = dayLayout.segments
+      .filter((s: { type: string }) => s.type !== "block")
+      .map((s: { taskId: string }) => s.taskId);
+    expect(taskIds).toContain(task.id);
+    expect(taskIds).not.toContain(otherTask.id);
   });
 });

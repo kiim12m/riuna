@@ -12,6 +12,7 @@ export default async function createBlock({
   endMinute,
   plannedDate,
   cadence,
+  endsAt,
 }: {
   workspaceId: string;
   userId: string;
@@ -21,6 +22,8 @@ export default async function createBlock({
   endMinute: number;
   plannedDate: Date | null;
   cadence: Cadence | null;
+  /** Solo tiene sentido junto a `cadence`; quien llama ya lo comprueba. */
+  endsAt: Date | null;
 }) {
   const [block] = await db
     .insert(scheduleBlockTable)
@@ -33,6 +36,7 @@ export default async function createBlock({
       endMinute,
       plannedDate,
       cadence,
+      endsAt,
     })
     .returning();
 

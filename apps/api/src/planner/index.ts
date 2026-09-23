@@ -11,6 +11,14 @@ import setPlanEntry from "./controllers/set-plan-entry";
 const MAX_WINDOW_DAYS = 60;
 const DEFAULT_WINDOW_DAYS = 15;
 
+/** CHECK `personal_plan_entry_start_minute_valid` (`schema.ts`): 0-1439. */
+const startMinuteSchema = v.pipe(
+  v.number(),
+  v.integer(),
+  v.minValue(0),
+  v.maxValue(1439),
+);
+
 const planTaskSchema = v.object({
   id: v.string(),
   number: v.number(),
@@ -161,6 +169,9 @@ const planner = new Hono<{
       v.object({
         plannedDate: v.string(),
         position: v.optional(v.number(), 0),
+        // Anclar directamente al crear/mover, para que "crear desde el
+        // Cronograma" sea una sola llamada en vez de PUT + PUT (ADR 041).
+        startMinute: v.optional(v.nullable(startMinuteSchema)),
       }),
     ),
     workspaceAccess.fromQuery(),
@@ -176,6 +187,7 @@ const planner = new Hono<{
         taskId,
         plannedDate: parseServerDay(body.plannedDate, "plannedDate"),
         position: body.position,
+        startMinute: body.startMinute,
       });
 
       return c.json(entry);

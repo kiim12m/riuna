@@ -1319,6 +1319,19 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
    pero **no se ha podido ejecutar en este entorno**: la configuración de
    Playwright espera la PostgreSQL de `compose.local.yml` en el puerto 5433,
    y este devcontainer no tiene Docker.
+   **Actualización 2026-09-23:** la ventana fija de 7 días sin navegación se
+   sustituyó por un calendario de verdad — vistas Día/Semana/Mes
+   (`schedule-range.ts`) con el rango en la URL, rejilla de 24 h siempre
+   visible (se retira el estado vacío), y una casilla discontinua portada de
+   `create-task-placeholder.component.ts` de super-productivity que crea o
+   planifica una tarea al pulsar sobre un hueco. `GET /schedule` gana `from`
+   y sube a 42 días de ventana máxima; `PUT /planner/:taskId` gana
+   `startMinute` opcional para planear y anclar en una sola llamada. De paso
+   se corrigió que la consulta de `personal_plan_entry` no filtraba por
+   `workspaceId` (sí lo hacían los bloques). Verificado con typecheck, la
+   batería unitaria de la API y la web, y `pnpm i18n:check`; el navegador
+   real y las pruebas de integración (sin Docker en este entorno) quedan
+   pendientes, igual que la prueba e2e ya declarada arriba.
 8. **Mis tareas** ✔ ([ADR 039](adr/039-mis-tareas-vistas-personales.md)) —
    Lista, Tablero, Gantt y Tabla personales sobre el motor de los bloques 3 y
    4, con ADR propia porque cambia la semántica del tablero. Carriles por

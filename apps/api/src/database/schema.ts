@@ -886,6 +886,10 @@ export const scheduleBlockTable = pgTable(
     kind: text("kind").notNull(),
     plannedDate: timestamp("planned_date", { mode: "date" }),
     cadence: jsonb("cadence").$type<Record<string, unknown>>(),
+    /** Opcional: a partir de aqui, un bloque repetido deja de proyectarse.
+     * Mismo nombre y forma que `task_recurrence.ends_at`. Solo tiene sentido
+     * con `cadence` -un bloque suelto ya tiene su unico dia en `planned_date`-. */
+    endsAt: timestamp("ends_at", { mode: "date" }),
     startMinute: smallint("start_minute").notNull(),
     endMinute: smallint("end_minute").notNull(),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
@@ -907,6 +911,10 @@ export const scheduleBlockTable = pgTable(
     check(
       "schedule_block_date_xor_cadence",
       sql`(${table.plannedDate} IS NOT NULL) != (${table.cadence} IS NOT NULL)`,
+    ),
+    check(
+      "schedule_block_ends_at_only_repeating",
+      sql`${table.endsAt} IS NULL OR ${table.cadence} IS NOT NULL`,
     ),
   ],
 );

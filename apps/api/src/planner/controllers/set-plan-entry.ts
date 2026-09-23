@@ -18,12 +18,18 @@ export default async function setPlanEntry({
   taskId,
   plannedDate,
   position,
+  startMinute,
 }: {
   workspaceId: string;
   userId: string;
   taskId: string;
   plannedDate: Date;
   position: number;
+  /**
+   * Ausente: no se toca (mover en el Planificador no debe desanclar una hora
+   * ya puesta desde el Cronograma). Presente (incluido `null`): se escribe.
+   */
+  startMinute?: number | null;
 }) {
   const [task] = await db
     .select({ workspaceId: projectTable.workspaceId })
@@ -42,10 +48,22 @@ export default async function setPlanEntry({
 
   const [entry] = await db
     .insert(personalPlanEntryTable)
-    .values({ workspaceId, userId, taskId, plannedDate, position })
+    .values({
+      workspaceId,
+      userId,
+      taskId,
+      plannedDate,
+      position,
+      ...(startMinute !== undefined ? { startMinute } : {}),
+    })
     .onConflictDoUpdate({
       target: [personalPlanEntryTable.userId, personalPlanEntryTable.taskId],
-      set: { plannedDate, position, updatedAt: new Date() },
+      set: {
+        plannedDate,
+        position,
+        updatedAt: new Date(),
+        ...(startMinute !== undefined ? { startMinute } : {}),
+      },
     })
     .returning();
 

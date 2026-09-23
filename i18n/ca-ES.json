@@ -2745,12 +2745,9 @@
 		"today": "Avui",
 		"overflow": "Sense forat avui",
 		"running": "En marxa",
-		"empty": {
-			"title": "Res a mostrar",
-			"description": "Planifica una tasca per avui o aquesta setmana per veure-la aquí per hores."
-		},
 		"createBlock": {
 			"title": "Bloc nou",
+			"editTitle": "Edita el bloc",
 			"description": "Una cita fixa o un bloqueig que no és una tasca.",
 			"name": "Títol",
 			"namePlaceholder": "Visita d'obra, dinar…",
@@ -2760,11 +2757,53 @@
 			"startTime": "Comença",
 			"endTime": "Acaba",
 			"timesInvalid": "L'hora de fi ha de ser posterior a la d'inici.",
+			"day": "Dia",
 			"repeat": "Repetir",
 			"repeatNone": "No es repeteix",
 			"repeatSome": "Es repeteix cada setmana els dies marcats.",
-			"confirm": "Crear bloc"
-		}
+			"until": "Fins a",
+			"untilSet": "Deixa de repetir-se després d'aquest dia.",
+			"untilNone": "Es repeteix sense data límit.",
+			"confirm": "Crear bloc",
+			"editHint": "Prem per editar",
+			"deleteTitle": "Vols eliminar aquest bloc?",
+			"deleteDescription": "Es treu la cita fixa o el bloqueig. No afecta cap tasca."
+		},
+		"view": {
+			"label": "Vista",
+			"day": "Dia",
+			"week": "Setmana",
+			"month": "Mes"
+		},
+		"nav": {
+			"previousDay": "Dia anterior",
+			"nextDay": "Dia següent",
+			"previousWeek": "Setmana anterior",
+			"nextWeek": "Setmana següent",
+			"previousMonth": "Mes anterior",
+			"nextMonth": "Mes següent",
+			"today": "Avui"
+		},
+		"weekTitle": "Setmana {{week}} · {{range}}",
+		"placeholder": {
+			"clickToCreate": "Fes clic aquí per crear una tasca",
+			"inputPlaceholder": "Títol de la tasca…",
+			"dayPlaceholder": "Títol de la tasca per al dia…",
+			"toggleTimeHint": "Ctrl+1 o fes clic a l'hora per planificar només el dia",
+			"toggleDayHint": "Ctrl+1 o fes clic a la data per triar una hora",
+			"project": "Projecte",
+			"existing": "Tasques sense planificar",
+			"createNew": "Crea \"{{title}}\"",
+			"error": "No s'ha pogut planificar la tasca. S'ha creat i espera a Sense planificar.",
+			"forDay": "Per al dia"
+		},
+		"month": {
+			"more": "+{{count}} més"
+		},
+		"resizeError": "No s'ha pogut canviar la durada. Torna-ho a provar.",
+		"resizeHandle": "Arrossega per canviar la durada",
+		"noEstimate": "Encara sense estimació — franja de mitja hora provisional",
+		"moveDayError": "No s'ha pogut moure la tasca a aquell dia. Torna-ho a provar."
 	},
 	"timeSheet": {
 		"pageTitle": "Part d'hores",
