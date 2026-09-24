@@ -358,6 +358,40 @@ describe("cronograma", () => {
     expect(daysWithLunch).toHaveLength(3);
   });
 
+  it("accepts endsAt as a bare yyyy-mm-dd date, like plannedDate does", async () => {
+    // La UI (`create-block-dialog.tsx`) manda un `<input type=\"date\">` a
+    // secas, sin hora ni zona -lo mismo que ya mandaba `plannedDate`-. Antes
+    // de esta correccion, `endsAt` se leia con `validateAndParseDate`
+    // (`new Date(str)`, medianoche UTC) en vez de `parseServerDay`
+    // (medianoche local), a diferencia de `plannedDate`; las pruebas de
+    // arriba no lo pillaban porque siempre mandan `.toISOString()`, un
+    // instante completo, no una fecha pelada.
+    const { app, workspaceId } = await setup();
+
+    const created = await postBlock(app, workspaceId, {
+      title: "Comida",
+      kind: "break",
+      startMinute: 13 * 60,
+      endMinute: 14 * 60,
+      cadence: { frequency: "daily", interval: 1 },
+      endsAt: dateKey(dayOffset(2)),
+    });
+    expect(created.status).toBe(200);
+
+    const body = await (await getSchedule(app, workspaceId, 5)).json();
+    const daysWithLunch = body.days.filter((d: { segments: unknown[] }) =>
+      d.segments.some(
+        (s: { type: string; entries?: { title: string }[] }) =>
+          s.type === "block" &&
+          s.entries?.some((entry) => entry.title === "Comida"),
+      ),
+    );
+    // El dia elegido (pasado manana) sigue teniendo el bloque -no uno menos,
+    // que es lo que daria interpretar la fecha pelada en UTC en un servidor
+    // con offset negativo.
+    expect(daysWithLunch).toHaveLength(3);
+  });
+
   it("rejects endsAt on a block that does not repeat", async () => {
     const { app, workspaceId } = await setup();
 
@@ -693,6 +727,14 @@ describe("cronograma", () => {
 
     const body = await (await getSchedule(app, workspaceId)).json();
     expect(body.serverToday).toBe(dateKey(new Date()));
+  });
+
+  it("reports the minimum and unestimated durations, so the web stops mirroring them", async () => {
+    const { app, workspaceId } = await setup();
+
+    const body = await (await getSchedule(app, workspaceId)).json();
+    expect(body.minEntrySeconds).toBe(10 * 60);
+    expect(body.unestimatedEntrySeconds).toBe(30 * 60);
   });
 
   it("accepts a window of up to 42 days and rejects one day beyond it", async () => {

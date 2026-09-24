@@ -16,12 +16,17 @@ type MonthItem =
     }
   | { kind: "block"; segment: Extract<ScheduleSegment, { type: "block" }> };
 
-function itemsFor(day: ScheduleDay | undefined): MonthItem[] {
+/** Exportada para probarla aparte: un bloque solapado con el cronometro en
+ * marcha (`mergeBlockers`, `layout.ts`) funde las dos entradas en un mismo
+ * tramo -mirar solo `entries[0]` escondia el bloque real entero cuando el
+ * cronometro ordenaba primero. `some(...)` en vez de mirar un unico indice. */
+export function itemsFor(day: ScheduleDay | undefined): MonthItem[] {
   if (!day) return [];
   return day.segments
     .filter(
       (segment) =>
-        segment.type !== "block" || segment.entries[0]?.kind !== "running",
+        segment.type !== "block" ||
+        segment.entries.some((entry) => entry.kind !== "running"),
     )
     .map((segment) =>
       segment.type === "block"
@@ -114,6 +119,7 @@ export function MonthView({
                       className="truncate rounded border border-dashed border-border/70 bg-muted/40 px-1 text-meta"
                     >
                       {item.segment.entries
+                        .filter((entry) => entry.kind !== "running")
                         .map((entry) => entry.title)
                         .join(" / ")}
                     </div>
@@ -145,9 +151,13 @@ export function MonthView({
                   ),
                 )}
                 {hiddenCount > 0 && (
-                  <span className="px-1 text-meta text-muted-foreground">
+                  <button
+                    type="button"
+                    onClick={() => onSelectDay(dayKey)}
+                    className="px-1 text-left text-meta text-muted-foreground hover:text-foreground hover:underline"
+                  >
                     {t("schedule:month.more", { count: hiddenCount })}
-                  </span>
+                  </button>
                 )}
               </div>
 

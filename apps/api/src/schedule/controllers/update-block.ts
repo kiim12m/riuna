@@ -37,16 +37,21 @@ export default async function updateBlock({
   /** `undefined`: no tocar. `null` quita el limite. Solo valido si repite. */
   endsAt?: Date | null;
 }) {
+  // Mismo alcance para leer y para escribir: si se tocara solo en uno de
+  // los dos, el SELECT que autoriza y el UPDATE que escribe divergirian.
+  const scope = and(
+    eq(scheduleBlockTable.id, id),
+    eq(scheduleBlockTable.userId, userId),
+    eq(scheduleBlockTable.workspaceId, workspaceId),
+  );
+
   const [existing] = await db
-    .select()
+    .select({
+      plannedDate: scheduleBlockTable.plannedDate,
+      cadence: scheduleBlockTable.cadence,
+    })
     .from(scheduleBlockTable)
-    .where(
-      and(
-        eq(scheduleBlockTable.id, id),
-        eq(scheduleBlockTable.userId, userId),
-        eq(scheduleBlockTable.workspaceId, workspaceId),
-      ),
-    );
+    .where(scope);
 
   if (!existing) {
     throw new HTTPException(404, { message: "Block not found" });
@@ -73,14 +78,15 @@ export default async function updateBlock({
       ...(endsAt !== undefined && { endsAt }),
       updatedAt: new Date(),
     })
-    .where(
-      and(
-        eq(scheduleBlockTable.id, id),
-        eq(scheduleBlockTable.userId, userId),
-        eq(scheduleBlockTable.workspaceId, workspaceId),
-      ),
-    )
+    .where(scope)
     .returning();
+
+  // Un DELETE concurrente puede llevarse la fila entre el SELECT de arriba y
+  // este UPDATE: sin esta comprobacion se devolvia un 200 vacio y se
+  // publicaba un evento de un bloque que ya no existe.
+  if (!block) {
+    throw new HTTPException(404, { message: "Block not found" });
+  }
 
   await publishEvent("schedule.changed", { userId });
 

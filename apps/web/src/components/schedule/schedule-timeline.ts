@@ -43,12 +43,6 @@ export function formatClock(minute: number): string {
   return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 }
 
-export const MIN_SEGMENT_DURATION_MINUTES = 10;
-/** Espejo de `UNESTIMATED_ENTRY_SECONDS` (`apps/api/src/schedule/constants.ts`):
- * la base sobre la que sumar el delta al redimensionar una tarea sin
- * estimar -es la duracion que el usuario ya esta viendo y arrastrando. */
-export const UNESTIMATED_ENTRY_SECONDS = 30 * 60;
-
 export type ResizeEdge = "top" | "bottom";
 
 export type ResizeResult = {
@@ -61,13 +55,18 @@ export type ResizeResult = {
  * (`segment-card.tsx`). El borde inferior solo cambia la duracion; la
  * superior mueve el inicio y mantiene fijo el final -arrastrar hacia arriba
  * adelanta la tarea sin alargarla, hacia abajo la retrasa sin acortarla-.
+ *
+ * `bounds.min`/`bounds.max` limitan donde puede caer el borde que se mueve
+ * -el otro extremo del propio tramo, o el bloqueador vecino mas cercano,
+ * segun decida quien llama (`time-grid.tsx`)-; `bounds.minDuration` viene de
+ * la API (`GET /schedule` -> `minEntrySeconds`), no de una copia local.
  */
 export function resizeSegment(
   edge: ResizeEdge,
   startMinute: number,
   durationMinutes: number,
   deltaPx: number,
-  bounds: { min: number; max: number },
+  bounds: { min: number; max: number; minDuration: number },
 ): ResizeResult {
   const deltaMinutes = snapMinute(pxToMinutes(deltaPx));
 
@@ -75,7 +74,7 @@ export function resizeSegment(
     const maxDuration = bounds.max - startMinute;
     const nextDuration = clampMinute(
       durationMinutes + deltaMinutes,
-      MIN_SEGMENT_DURATION_MINUTES,
+      bounds.minDuration,
       maxDuration,
     );
     return { startMinute, durationMinutes: nextDuration };
@@ -85,7 +84,7 @@ export function resizeSegment(
   const nextStart = clampMinute(
     startMinute + deltaMinutes,
     bounds.min,
-    endMinute - MIN_SEGMENT_DURATION_MINUTES,
+    endMinute - bounds.minDuration,
   );
   return { startMinute: nextStart, durationMinutes: endMinute - nextStart };
 }

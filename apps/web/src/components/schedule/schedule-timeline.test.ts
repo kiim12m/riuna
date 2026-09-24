@@ -62,7 +62,7 @@ describe("formatClock", () => {
 });
 
 describe("resizeSegment", () => {
-  const bounds = { min: 0, max: 1440 };
+  const bounds = { min: 0, max: 1440, minDuration: 10 };
 
   it("dragging the bottom edge only changes the duration", () => {
     const result = resizeSegment("bottom", 9 * 60, 30, minutesToPx(20), bounds);

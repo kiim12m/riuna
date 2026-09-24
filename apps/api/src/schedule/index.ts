@@ -9,7 +9,6 @@ import {
   startOfServerDay,
 } from "../utils/day-boundaries";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
-import { validateAndParseDate } from "../utils/validate-dates";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import createBlock from "./controllers/create-block";
 import deleteBlock from "./controllers/delete-block";
@@ -211,9 +210,7 @@ const schedule = new Hono<{
       const plannedDate = body.plannedDate
         ? parseServerDay(body.plannedDate, "plannedDate")
         : null;
-      const endsAt = body.endsAt
-        ? validateAndParseDate(body.endsAt, "endsAt")
-        : null;
+      const endsAt = body.endsAt ? parseServerDay(body.endsAt, "endsAt") : null;
 
       const block = await createBlock({
         workspaceId,
@@ -296,7 +293,7 @@ const schedule = new Hono<{
             ? undefined
             : body.endsAt === null
               ? null
-              : validateAndParseDate(body.endsAt, "endsAt"),
+              : parseServerDay(body.endsAt, "endsAt"),
       });
 
       return c.json(block);
