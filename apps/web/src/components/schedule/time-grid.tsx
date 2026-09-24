@@ -39,8 +39,48 @@ export type EditableBlock = NonNullable<
 export type ScheduleResizeEvent = ResizeInfo & {
   taskId: string;
   projectId: string;
-  currentEstimate: number | null;
+  /** `task.estimate` tal cual (puede ser `null`): a que volver si el segundo
+   * paso de la mutacion (anclar la hora, solo en el borde superior) falla
+   * despues de que el primero (la estimacion) ya se escribiera. */
+  previousEstimate: number | null;
+  /** Base sobre la que sumar `deltaSeconds`: `previousEstimate` si lo hay, si
+   * no `unestimatedEntrySeconds` -es la duracion que el usuario ya esta
+   * viendo y arrastrando, igual que antes, pero ahora viene de la API
+   * (`GET /schedule`), no de una constante local duplicada. */
+  baseEstimateSeconds: number;
+  /** Idem con el minimo: de la API (`minEntrySeconds`). */
+  minEstimateSeconds: number;
 };
+
+/** Los limites de arrastre para redimensionar (no para mover) un tramo: el
+ * final del bloque fijo anterior mas cercano ese dia, y el inicio del
+ * siguiente -nunca el otro extremo del propio tramo, que ya limita
+ * `resizeSegment` con `startMinute`/`durationMinutes`-. Solo mira segmentos
+ * `block`: un tramo puede seguir solapando a otra tarea (queda en conflicto,
+ * como ya pasaba), el limite real es unicamente contra algo que de verdad
+ * ocupa esa hora. */
+export function nearestBlockBounds(
+  segments: ScheduleSegment[],
+  index: number,
+): { min: number; max: number } {
+  let min = DAY_START_MINUTE;
+  for (let i = index - 1; i >= 0; i--) {
+    const sibling = segments[i];
+    if (sibling.type === "block") {
+      min = sibling.endSecond / 60;
+      break;
+    }
+  }
+  let max = DAY_END_MINUTE;
+  for (let i = index + 1; i < segments.length; i++) {
+    const sibling = segments[i];
+    if (sibling.type === "block") {
+      max = sibling.startSecond / 60;
+      break;
+    }
+  }
+  return { min, max };
+}
 
 /**
  * La rejilla por horas del Cronograma (ADR 041, actualizacion 2026-09-23):
@@ -56,6 +96,8 @@ export function TimeGrid({
   isWide,
   workStartMinute,
   workEndMinute,
+  minEntrySeconds,
+  unestimatedEntrySeconds,
   onOpen,
   onMove,
   onMoveDay,
@@ -70,6 +112,10 @@ export function TimeGrid({
   isWide: boolean;
   workStartMinute: number;
   workEndMinute: number;
+  /** De `GET /schedule` (ver `apps/api/src/schedule/constants.ts`), no de una
+   * copia local: `resizeSegment` los necesita para clamped la duracion. */
+  minEntrySeconds: number;
+  unestimatedEntrySeconds: number;
   onOpen: (segment: ScheduleSegment) => void;
   onMove: (taskId: string, minute: number) => void;
   onMoveDay: (
@@ -145,6 +191,8 @@ export function TimeGrid({
             isWide={isWide}
             workStartMinute={workStartMinute}
             workEndMinute={workEndMinute}
+            minEntrySeconds={minEntrySeconds}
+            unestimatedEntrySeconds={unestimatedEntrySeconds}
             onOpen={onOpen}
             onMove={onMove}
             onMoveDay={onMoveDay}
@@ -171,6 +219,8 @@ function TimeGridColumn({
   isWide,
   workStartMinute,
   workEndMinute,
+  minEntrySeconds,
+  unestimatedEntrySeconds,
   onOpen,
   onMove,
   onMoveDay,
@@ -188,6 +238,8 @@ function TimeGridColumn({
   isWide: boolean;
   workStartMinute: number;
   workEndMinute: number;
+  minEntrySeconds: number;
+  unestimatedEntrySeconds: number;
   onOpen: (segment: ScheduleSegment) => void;
   onMove: (taskId: string, minute: number) => void;
   onMoveDay: (
@@ -339,7 +391,7 @@ function TimeGridColumn({
           />
         )}
 
-        {day.segments.map((segment) => {
+        {day.segments.map((segment, index) => {
           if (segment.type === "block") {
             const primary = segment.entries[0];
             return (
@@ -400,6 +452,7 @@ function TimeGridColumn({
           // abajo, y con `segment.task` a secas TypeScript lo vuelve a ver
           // opcional ahi dentro.
           const task = segment.task;
+          const resizeBounds = nearestBlockBounds(day.segments, index);
 
           return (
             <ScheduleSegmentCard
@@ -415,9 +468,25 @@ function TimeGridColumn({
                 segment.type === "pinned" ||
                 (segment.type === "flow" && segment.part === 0)
               }
+              // La ultima parte de una tarea que fluye (o la unica, si no se
+              // partio): partir mas seguido no dejaria hueco donde alargarla
+              // por debajo, igual que `canResizeTop` con la primera.
+              canResizeBottom={
+                segment.type === "pinned" ||
+                (segment.type === "flow" &&
+                  !day.segments.some(
+                    (sibling) =>
+                      sibling.type === "flow" &&
+                      sibling.taskId === segment.taskId &&
+                      sibling.part > segment.part,
+                  ))
+              }
               gridStart={DAY_START_MINUTE}
               minMinute={DAY_START_MINUTE}
               maxMinute={DAY_END_MINUTE}
+              resizeMinMinute={resizeBounds.min}
+              resizeMaxMinute={resizeBounds.max}
+              minDurationMinutes={minEntrySeconds / 60}
               onOpen={() => onOpen(segment)}
               onMove={(minute) => onMove(segment.taskId, minute)}
               onMoveDay={(targetDayKey, minute) =>
@@ -439,7 +508,9 @@ function TimeGridColumn({
                   ...info,
                   taskId: segment.taskId,
                   projectId: task.projectId,
-                  currentEstimate: task.estimate,
+                  previousEstimate: task.estimate,
+                  baseEstimateSeconds: task.estimate || unestimatedEntrySeconds,
+                  minEstimateSeconds: minEntrySeconds,
                 })
               }
               onInteractionChange={onSegmentInteractionChange}

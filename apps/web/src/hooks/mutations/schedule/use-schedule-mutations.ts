@@ -1,10 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  MIN_SEGMENT_DURATION_MINUTES,
-  UNESTIMATED_ENTRY_SECONDS,
-} from "@/components/schedule/schedule-timeline";
 import type { ScheduleResizeEvent } from "@/components/schedule/time-grid";
 import { setPlanEntry } from "@/fetchers/planner";
 import {
@@ -77,26 +73,42 @@ export function useScheduleMutations(workspaceId: string) {
    * tarea, no una columna del Cronograma: es la unica fuente de duracion que
    * existe. `deltaSeconds` es relativo al tramo mostrado, nunca a la
    * estimacion entera -un tramo partido alrededor de un bloque fijo no es la
-   * tarea completa-, asi que se suma sobre `currentEstimate` (o el minimo sin
-   * estimar, si no habia ninguna) en vez de sustituirla.
+   * tarea completa-, asi que se suma sobre `baseEstimateSeconds` en vez de
+   * sustituirla.
+   *
+   * Las dos escrituras (estimacion, y -solo en el borde superior- hora de
+   * anclaje) no son atomicas: si la segunda falla tras la primera, se
+   * compensa devolviendo la estimacion a `previousEstimate` antes de avisar
+   * del error -si no, el toast de error mentiria («no se ha guardado nada»)
+   * mientras la estimacion ya habria cambiado en el servidor-.
    */
   const resizeEntryMutation = useMutation({
     mutationFn: async ({
       taskId,
-      projectId,
-      currentEstimate,
+      previousEstimate,
+      baseEstimateSeconds,
+      minEstimateSeconds,
       deltaSeconds,
       startMinute,
     }: ScheduleResizeEvent) => {
       const nextEstimate = Math.max(
-        MIN_SEGMENT_DURATION_MINUTES * 60,
-        (currentEstimate ?? UNESTIMATED_ENTRY_SECONDS) + deltaSeconds,
+        minEstimateSeconds,
+        baseEstimateSeconds + deltaSeconds,
       );
       await updateTaskEstimate(taskId, nextEstimate);
       if (startMinute !== undefined) {
-        await setEntryTime(workspaceId, taskId, startMinute);
+        try {
+          await setEntryTime(workspaceId, taskId, startMinute);
+        } catch (error) {
+          await updateTaskEstimate(taskId, previousEstimate).catch(() => {
+            // Si tambien falla la compensacion, no hay mas que hacer aqui:
+            // la invalidacion de abajo trae de vuelta lo que haya de verdad
+            // en el servidor, sea lo que sea.
+          });
+          throw error;
+        }
       }
-      return { taskId, projectId };
+      return { taskId };
     },
     onError: () => {
       // La invalidacion de abajo trae de vuelta el tramo real y deshace el

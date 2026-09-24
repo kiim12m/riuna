@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { setPlanEntry } from "@/fetchers/planner";
-import createTask from "@/fetchers/task/create-task";
+import useCreateTask from "@/hooks/mutations/task/use-create-task";
 import { toast } from "@/lib/toast";
 
 /** Duracion por defecto de una tarea creada desde el Cronograma: media hora,
@@ -36,23 +36,27 @@ type PlanAtSlotInput =
 export function usePlanAtSlot(workspaceId: string) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  // Reutiliza el hook de crear tarea, no el fetcher a secas: asi este flujo
+  // no diverge del resto de sitios que crean tareas si `useCreateTask` gana
+  // mas invalidaciones el dia de manana (ya invalida `["tasks", projectId]`
+  // por su cuenta, y `["task", parentId]` si alguna vez esto acepta crear
+  // una subtarea).
+  const createTaskMutation = useCreateTask();
 
   return useMutation({
     mutationFn: async (input: PlanAtSlotInput) => {
       const taskId =
         input.kind === "new"
           ? (
-              await createTask(
-                input.title,
-                "",
-                input.projectId,
-                input.userId,
-                "to-do",
-                undefined,
-                undefined,
-                "medium",
-                { estimate: DEFAULT_ESTIMATE_SECONDS },
-              )
+              await createTaskMutation.mutateAsync({
+                title: input.title,
+                description: "",
+                projectId: input.projectId,
+                userId: input.userId,
+                status: "to-do",
+                priority: "medium",
+                estimate: DEFAULT_ESTIMATE_SECONDS,
+              })
             ).id
           : input.taskId;
 

@@ -46,11 +46,22 @@ type ScheduleSegmentCardProps = {
   /** Borde superior: solo tiene sentido en un tramo anclado o en la primera
    * parte de uno que fluye -partir mas seguido no habria donde anclar. */
   canResizeTop: boolean;
+  /** Borde inferior: igual, pero con la ultima parte. */
+  canResizeBottom: boolean;
   /** Minuto real en el que arranca la rejilla visible: solo para posicionar. */
   gridStart: number;
-  /** Limites de arrastre, en minuto real (normalmente los bordes de la rejilla). */
+  /** Limites de ARRASTRAR (mover el tramo entero), en minuto real -normalmente
+   * los bordes de la rejilla-. */
   minMinute: number;
   maxMinute: number;
+  /** Limites de REDIMENSIONAR: el bloqueador fijo vecino mas cercano, no el
+   * dia entero -`time-grid.tsx#nearestBlockBounds`-. Distintos de
+   * `minMinute`/`maxMinute`: mover el tramo entero encima de un bloque sigue
+   * dejandolo en conflicto, como siempre; alargarlo hasta pisarlo, no. */
+  resizeMinMinute: number;
+  resizeMaxMinute: number;
+  /** De la API (`minEntrySeconds`/60), no de una constante local. */
+  minDurationMinutes: number;
   onOpen: () => void;
   onMove: (minute: number) => void;
   /** Se soltó sobre otra columna (vista Semana): ancla ahi, en vez de en la
@@ -103,9 +114,13 @@ export function ScheduleSegmentCard({
   conflict = false,
   truncated = false,
   canResizeTop,
+  canResizeBottom,
   gridStart,
   minMinute,
   maxMinute,
+  resizeMinMinute,
+  resizeMaxMinute,
+  minDurationMinutes,
   onOpen,
   onMove,
   onMoveDay,
@@ -167,8 +182,9 @@ export function ScheduleSegmentCard({
 
       const resolve = (clientY: number) =>
         resizeSegment(edge, startMinute, durationMinutes, clientY - originY, {
-          min: minMinute,
-          max: maxMinute,
+          min: resizeMinMinute,
+          max: resizeMaxMinute,
+          minDuration: minDurationMinutes,
         });
 
       const move = (ev: PointerEvent) => setResizeState(resolve(ev.clientY));
@@ -344,15 +360,17 @@ export function ScheduleSegmentCard({
        * como el cuerpo del tramo -Enter/Espacio ya cubre abrir la tarea, no
        * hay equivalente de teclado para redimensionar. `stopPropagation` en
        * su pointerdown evita que dispare tambien el arrastre de mover. */}
-      <div
-        aria-hidden="true"
-        title={t("schedule:resizeHandle")}
-        onPointerDown={handleResizePointerDown("bottom")}
-        className="absolute inset-x-0 bottom-0 flex cursor-ns-resize items-end justify-center"
-        style={{ height: RESIZE_HANDLE_PX }}
-      >
-        <div className="mb-px h-0.5 w-6 rounded-full bg-foreground/30 opacity-0 group-hover:opacity-100" />
-      </div>
+      {canResizeBottom && (
+        <div
+          aria-hidden="true"
+          title={t("schedule:resizeHandle")}
+          onPointerDown={handleResizePointerDown("bottom")}
+          className="absolute inset-x-0 bottom-0 flex cursor-ns-resize items-end justify-center"
+          style={{ height: RESIZE_HANDLE_PX }}
+        >
+          <div className="mb-px h-0.5 w-6 rounded-full bg-foreground/30 opacity-0 group-hover:opacity-100" />
+        </div>
+      )}
       {canResizeTop && (
         <div
           aria-hidden="true"

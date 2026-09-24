@@ -116,7 +116,12 @@ function RouteComponent() {
   };
 
   const title = headerTitle(view, anchor, weekStartsOn);
-  const isViewingToday = anchorKey === dayKey(new Date());
+  // El dia del servidor, no `new Date()`: sin esto, el boton "Hoy" y el
+  // resaltado de cada celda (`day.isToday`, que si es del servidor) podian
+  // discrepar si el reloj o la zona horaria del navegador no coincidian con
+  // los del servidor -mismo patron que `planner.tsx`.
+  const today = data?.serverToday ? parseDayKey(data.serverToday) : new Date();
+  const isViewingToday = anchorKey === dayKey(today);
 
   const handleOpen = (segment: ScheduleSegment) => {
     if (segment.type === "block" || !segment.task) return;
@@ -134,7 +139,7 @@ function RouteComponent() {
             title={title}
             onPrevious={() => goToAnchor(shiftAnchor(view, anchor, -1))}
             onNext={() => goToAnchor(shiftAnchor(view, anchor, 1))}
-            onToday={() => goToAnchor(new Date())}
+            onToday={() => goToAnchor(today)}
             isViewingToday={isViewingToday}
             onAddBlock={() => setBlockDialogDay(anchorKey)}
           />
@@ -162,6 +167,8 @@ function RouteComponent() {
               isWide={view === "day"}
               workStartMinute={workStartMinute}
               workEndMinute={workEndMinute}
+              minEntrySeconds={data?.minEntrySeconds ?? 10 * 60}
+              unestimatedEntrySeconds={data?.unestimatedEntrySeconds ?? 30 * 60}
               onOpen={handleOpen}
               onMove={(taskId, minute) =>
                 mutations.setEntryTime.mutate({ taskId, startMinute: minute })

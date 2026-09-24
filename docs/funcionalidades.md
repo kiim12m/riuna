@@ -210,7 +210,9 @@ la tarea y en la propia tabla.
   Admite citas fijas y bloqueos que no son tareas (sueltos o repetidos cada
   semana en días concretos, con fecha límite opcional); un clic sobre uno
   abre su edición (mover de día si es suelto, poner o quitar la fecha límite
-  si repite) o borrarlo. Muestra el cronómetro en marcha.
+  si repite) o borrarlo. Muestra el cronómetro en marcha. La vista Mes lista
+  hasta tres elementos por día y un «+N» que abre la vista Día de esa fecha
+  para ver el resto.
 - **Parte de horas** ([ADR 042](adr/042-parte-de-horas.md)): lo registrado
   por quien mira, cruzando proyectos, en un rango de fechas. Agrupable por
   día, tarea o proyecto; una entrada en marcha cuenta lo transcurrido hasta

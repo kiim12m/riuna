@@ -150,7 +150,7 @@ const planner = new Hono<{
       operationId: "setPersonalPlanEntry",
       tags: ["Planner"],
       description:
-        "Place a task on a day of the current user's plan, or move it. Never changes the task's due date",
+        "Place a task on a day of the current user's plan, or move it. Never changes the task's due date. Omitting `position` keeps the current one if the day doesn't change, or appends to the end of the destination day otherwise",
       responses: {
         200: {
           description: "Plan entry saved",
@@ -168,7 +168,12 @@ const planner = new Hono<{
       "json",
       v.object({
         plannedDate: v.string(),
-        position: v.optional(v.number(), 0),
+        // Ausente: `setPlanEntry` la calcula -misma posicion si no cambia
+        // de dia, al final si cambia o es nueva-. Sin default aqui: un `0`
+        // por defecto mandaba siempre la tarea a la cabeza del dia de
+        // destino al arrastrarla entre columnas del Cronograma, que nunca
+        // manda posicion.
+        position: v.optional(v.number()),
         // Anclar directamente al crear/mover, para que "crear desde el
         // Cronograma" sea una sola llamada en vez de PUT + PUT (ADR 041).
         startMinute: v.optional(v.nullable(startMinuteSchema)),
