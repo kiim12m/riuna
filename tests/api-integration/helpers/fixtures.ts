@@ -12,20 +12,27 @@ export async function createWorkspaceMember(
     userName: string;
     workspaceName: string;
     role: string;
+    // Un usuario que ya existe (p. ej. el de una sesion real), en vez de
+    // fabricar uno nuevo.
+    user: SeededMemberContext["user"];
   }>,
 ): Promise<SeededMemberContext> {
   const userId = `user-${randomUUID()}`;
   const workspaceId = `workspace-${randomUUID()}`;
 
-  const [user] = await db
-    .insert(schema.userTable)
-    .values({
-      id: userId,
-      email: `${userId}@example.com`,
-      emailVerified: true,
-      name: overrides?.userName || "Integration Test User",
-    })
-    .returning();
+  const user =
+    overrides?.user ??
+    (
+      await db
+        .insert(schema.userTable)
+        .values({
+          id: userId,
+          email: `${userId}@example.com`,
+          emailVerified: true,
+          name: overrides?.userName || "Integration Test User",
+        })
+        .returning()
+    )[0];
 
   const [workspace] = await db
     .insert(schema.workspaceTable)
