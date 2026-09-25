@@ -1,5 +1,7 @@
+import { APIError } from "better-auth/api";
 import { and, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { auth } from "../../auth";
 import db from "../../database";
 import {
@@ -19,6 +21,26 @@ type AddWorkspaceMemberParams = {
 export type AddWorkspaceMemberResult =
   | { status: "added"; userId: string }
   | { status: "invited"; invitationId: string };
+
+// `app.onError` solo respeta `HTTPException`: un rechazo 4xx de Better Auth
+// (sin sesion, sin permiso, ya invitado) saldria como 500 y llegaria a Sentry
+// como si fuera un fallo.
+async function relayBetterAuthRejection<T>(call: Promise<T>): Promise<T> {
+  try {
+    return await call;
+  } catch (error) {
+    if (
+      error instanceof APIError &&
+      error.statusCode >= 400 &&
+      error.statusCode < 500
+    ) {
+      throw new HTTPException(error.statusCode as ContentfulStatusCode, {
+        message: error.message,
+      });
+    }
+    throw error;
+  }
+}
 
 async function addWorkspaceMember({
   workspaceId,
@@ -64,14 +86,16 @@ async function addWorkspaceMember({
   // abre el alta con el registro cerrado—, no como algo que haya que aceptar:
   // al crearse la cuenta, `grantPendingInvitations` concede el acceso solo.
   if (!existingUser) {
-    const invitation = await auth.api.createInvitation({
-      body: {
-        email: normalizedEmail,
-        role: role as "member",
-        organizationId: workspaceId,
-      },
-      headers,
-    });
+    const invitation = await relayBetterAuthRejection(
+      auth.api.createInvitation({
+        body: {
+          email: normalizedEmail,
+          role: role as "member",
+          organizationId: workspaceId,
+        },
+        headers,
+      }),
+    );
 
     return { status: "invited", invitationId: invitation.id };
   }
@@ -95,18 +119,20 @@ async function addWorkspaceMember({
     });
   }
 
-  await auth.api.addMember({
-    body: {
-      userId: existingUser.id,
-      organizationId: workspaceId,
-      // El plugin de organizacion solo declara `owner` como rol estatico (ver
-      // auth.ts): `member`, `admin` y `viewer` se siembran por espacio y se
-      // resuelven con control de acceso dinamico, asi que el tipo inferido no
-      // los conoce aunque en ejecucion sean validos.
-      role: role as "owner",
-    },
-    headers,
-  });
+  await relayBetterAuthRejection(
+    auth.api.addMember({
+      body: {
+        userId: existingUser.id,
+        organizationId: workspaceId,
+        // El plugin de organizacion solo declara `owner` como rol estatico
+        // (ver auth.ts): `member`, `admin` y `viewer` se siembran por espacio y
+        // se resuelven con control de acceso dinamico, asi que el tipo inferido
+        // no los conoce aunque en ejecucion sean validos.
+        role: role as "owner",
+      },
+      headers,
+    }),
+  );
 
   await publishEvent("workspace.member.added", {
     workspaceId,
