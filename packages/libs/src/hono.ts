@@ -9,7 +9,9 @@ const apiUrl = resolveApiBaseUrl(import.meta.env.VITE_API_URL);
 // Generate once per tab load
 export const windowId = Math.random().toString(36).substring(2, 11);
 
-export const client = hc<AppType>(apiUrl, {
+// Sin anotar, la declaracion emitida tendria que nombrar tipos internos de la
+// API que `libs` no puede alcanzar (TS2883); `AppType` si es publico.
+export const client: ReturnType<typeof hc<AppType>> = hc<AppType>(apiUrl, {
   fetch: (input: RequestInfo | URL, init?: RequestInit) => {
     return fetch(input, {
       ...init,
