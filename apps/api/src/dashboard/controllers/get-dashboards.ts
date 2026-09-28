@@ -101,6 +101,7 @@ async function seedDefaultDashboard(workspaceId: string, userId: string) {
           title: widget.title,
           config: widget.config,
           span: widget.span,
+          rowSpan: widget.rowSpan,
           position,
         })),
       );

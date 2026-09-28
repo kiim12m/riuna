@@ -30,7 +30,11 @@ export function effectiveGroupBy(
     case "trend":
       return "time";
     case "time":
-      return config.groupBy ?? "assignee";
+      // `none` es el total sin repartir: un solo cubo sin clave, asi que no hay
+      // etiqueta que resolver.
+      return config.groupBy === "none"
+        ? undefined
+        : (config.groupBy ?? "assignee");
     case "epic_progress":
       return "epic";
     case "breakdown":

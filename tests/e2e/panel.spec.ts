@@ -36,7 +36,7 @@ test.describe("Paleta de datos", () => {
       await conTema(page, tema);
       await page.goto(`/dashboard/workspace/${riuna.workspaceId}/home`);
       await expect(
-        page.getByRole("region", { name: "Mis tareas" }),
+        page.getByRole("region", { name: "Vencidas" }),
       ).toBeVisible();
 
       const tokens = await page.evaluate((slots) => {
@@ -65,9 +65,11 @@ test.describe("Paleta de datos", () => {
     page,
     riuna,
   }) => {
-    // El widget «Vencimientos» reparte lo asignado a quien mira por ventana de
-    // vencimiento, asi que hacen falta tareas suyas en ventanas distintas o el
-    // reparto sale vacio y la prueba no mira nada.
+    // Hace falta un reparto con barras de las que muestrear color. La
+    // distribucion de partida ya no siembra ninguno —desde la ADR 043 son ocho
+    // cifras, la semana y una lista—, asi que la prueba se crea el suyo. Y
+    // hacen falta tareas en ventanas distintas o el reparto sale vacio y esto
+    // no mira nada.
     const dia = (n: number) =>
       new Date(Date.now() + n * 86_400_000).toISOString();
 
@@ -81,6 +83,18 @@ test.describe("Paleta de datos", () => {
         userId: riuna.userId,
       });
     }
+
+    const paneles = await riuna.api<Array<{ id: string; createdBy: string }>>(
+      "get",
+      `/api/dashboard?workspaceId=${riuna.workspaceId}`,
+    );
+    const propio = paneles.find((panel) => panel.createdBy === riuna.userId);
+
+    await riuna.api("post", `/api/dashboard/${propio?.id}/widget`, {
+      type: "breakdown",
+      title: "Vencimientos",
+      config: { scope: "assigned", groupBy: "dueWindow" },
+    });
 
     await page.goto(`/dashboard/workspace/${riuna.workspaceId}/home`);
 

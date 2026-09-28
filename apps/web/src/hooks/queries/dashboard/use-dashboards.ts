@@ -10,6 +10,7 @@ import {
   updateDashboard,
   updateWidget,
 } from "@/fetchers/dashboard";
+import { useUserPreferencesStore } from "@/store/user-preferences";
 
 export function useGetDashboards(workspaceId: string) {
   return useQuery({
@@ -32,9 +33,15 @@ export function useGetDashboards(workspaceId: string) {
  * Presupuesto explicito: un panel abierto es un barrido por widget cada minuto.
  */
 export function useGetDashboardData(dashboardId: string | undefined) {
+  // La ventana del widget semanal la calcula el servidor, pero el inicio de
+  // semana es preferencia de quien mira. Va en la clave: sin eso, cambiarla no
+  // refrescaria nada. El prefijo `["dashboard-data"]` se conserva, que es lo
+  // que invalida `use-user-websocket.ts`.
+  const weekStartsOn = useUserPreferencesStore((state) => state.weekStartsOn);
+
   return useQuery({
-    queryKey: ["dashboard-data", dashboardId],
-    queryFn: () => getDashboardData(dashboardId as string),
+    queryKey: ["dashboard-data", dashboardId, weekStartsOn],
+    queryFn: () => getDashboardData(dashboardId as string, weekStartsOn),
     enabled: Boolean(dashboardId),
     staleTime: 30_000,
     refetchInterval: 60_000,

@@ -360,6 +360,11 @@ input:-webkit-autofill:active {
   --density-gap: 0.375rem;
   --density-stack: 0.625rem;
   --density-col-gap: 0.5rem;
+  /* La celda invisible del panel (ADR 043). Una tarjeta de una cifra mide
+     padding x2 + cabecera + hueco + la cifra a --text-page: ~5.1rem. El resto
+     es holgura, porque la fila no crece con el contenido y lo que no cabe se
+     recorta. */
+  --panel-row: 5.5rem;
 }
 
 /* Deep Navy no funciona como color de acción en oscuro: es más oscuro que el
@@ -447,6 +452,7 @@ input:-webkit-autofill:active {
   --density-gap: 0.25rem;
   --density-stack: 0.375rem;
   --density-col-gap: 0.375rem;
+  --panel-row: 5rem;
   --text-body: 0.8125rem;
   --text-body--line-height: 1.15rem;
 }
@@ -482,6 +488,57 @@ input:-webkit-autofill:active {
 }
 
 @layer components {
+  /* La rejilla del panel: doce columnas invisibles y filas de alto fijo
+     (ADR 043). El ancho y el alto de cada widget llegan como dos enteros en
+     linea, `--panel-w` y `--panel-h`.
+
+     `grid-column: span var(--panel-w)` funciona porque `var()` se sustituye
+     antes de comprobar la gramatica; `span min(var(--panel-w), 12)` no, en
+     ningun motor, y por eso el ancho intermedio viaja como un segundo entero
+     ya calculado (`--panel-w-md`) en vez de con una funcion matematica.
+
+     Sin `grid-auto-flow: dense`: rellenar huecos tirando de elementos
+     posteriores desacopla el orden visual del `position`, que es justo lo que
+     escribe el arrastre, y entonces soltar una tarjeta no la deja donde se
+     solto. */
+  .riuna-panel-grid {
+    display: grid;
+    /* minmax(0,1fr) y no 1fr: el `min-width: auto` implicito de 1fr deja que
+       un titulo largo reviente la columna. */
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-auto-rows: var(--panel-row);
+    gap: var(--density-col-gap);
+  }
+
+  .riuna-panel-cell {
+    grid-column: span var(--panel-w, 12);
+    grid-row: span var(--panel-h, 1);
+    min-height: 0;
+  }
+
+  /* Por debajo de 40rem cada widget ocupa la fila: doce columnas en un movil
+     son 26 px cada una. Y el alto deja de estar fijado: en una sola columna la
+     rejilla ya no alinea nada, y encajonar siete dias en dos filas de celda
+     para hacer scroll dentro de una caja de 184 px es peor que dejar crecer la
+     tarjeta, que es lo barato en una pantalla donde sobra el alto. */
+  @media (width < 40rem) {
+    .riuna-panel-grid {
+      grid-auto-rows: minmax(var(--panel-row), auto);
+    }
+
+    .riuna-panel-cell {
+      grid-column: 1 / -1;
+      grid-row: auto;
+    }
+  }
+
+  /* Y entre 40 y 64rem cada uno dobla su fraccion, hasta la fila entera. */
+  @media (40rem <= width < 64rem) {
+    .riuna-panel-cell {
+      grid-column: span var(--panel-w-md, 12);
+    }
+  }
+
   /* Camino de movimiento reducido para el resalte en tiempo real (ADR 021):
      un tinte estático, sin animar, que el componente retira tras ~900 ms.
      "Nada se pierde en silencio". */

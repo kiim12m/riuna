@@ -224,12 +224,22 @@ la tarea y en la propia tabla.
   uno por defecto creado automáticamente. Exportables a `.xlsx`, con una hoja
   por widget.
 - **Widgets**: contador, desglose, tendencia, tiempo registrado, progreso de
-  épica, lista de tareas, bandeja de entrada y objetivo. Las métricas son
-  tareas, completadas, porcentaje completado, estimado y registrado; se agrupan
-  por proyecto, asignado, prioridad, equipo, estado, hecho, vencimiento (sin
-  fecha, vencida, hoy, esta semana, más adelante), épica o tiempo. Cada widget
-  tiene su propio ámbito —todo el espacio o un proyecto—, su propio filtro, y
-  un ancho de 1 a 3 columnas.
+  épica, lista de tareas, **semana en curso**, bandeja de entrada y objetivo.
+  Las métricas son tareas, completadas, porcentaje completado, estimado y
+  registrado; se agrupan por proyecto, asignado, prioridad, equipo, estado,
+  hecho, vencimiento (sin fecha, vencida, hoy, esta semana, más adelante),
+  épica, tiempo o nada —el total sin repartir—. Cada widget tiene su propio
+  ámbito —todo el espacio o un proyecto, y opcionalmente solo lo asignado a
+  quien mira o a sus equipos—, su propio filtro, su propia ventana de
+  vencimiento, y un tamaño propio.
+- **Rejilla redimensionable** de doce columnas invisibles: cada widget se
+  arrastra para moverlo y se estira por la esquina para cambiarle ancho (1-12) y
+  alto (1-6), o se ajusta desde su diálogo. Los widgets se recolocan sin dejar
+  huecos y el ancho se reduce solo en tablet y móvil.
+- **Distribución de partida** en tres alturas: ocho cifras arriba —vencidas,
+  vencen hoy, vencen esta semana, pendientes, cerradas en siete días, alta
+  prioridad, sin fecha y horas registradas—, la semana en curso a ancho
+  completo, y debajo la lista de pendientes con la bandeja al lado.
 - **Objetivos (OKR)**: objetivo con periodo de fechas y **resultados clave**
   medidos con el mismo motor de agregación que los widgets. Compartibles con el
   espacio.

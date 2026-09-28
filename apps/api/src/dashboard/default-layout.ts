@@ -16,7 +16,13 @@ export type DefaultWidget = {
   title: string;
   config: WidgetConfig;
   span: number;
+  rowSpan: number;
 };
+
+/** `done eq false`: el filtro que convierte un recuento en "lo que queda". */
+const OPEN_ONLY = [
+  { id: "open", field: "done", operator: "eq" as const, value: false },
+];
 
 /**
  * La distribucion de partida de un panel personal.
@@ -30,43 +36,110 @@ export type DefaultWidget = {
  * Solo contiene widgets con datos detras hoy. La referencia de la que sale esta
  * pantalla incluia tarjetas de objetivos, notas y finanzas: los objetivos son la
  * rebanada 3 de esta misma fase, y notas y finanzas no existen en Riuna.
+ *
+ * Desde la ADR 043 se lee en tres alturas sobre la rejilla de doce columnas:
+ * ocho cifras que caben en dos filas exactas (8 x 3 = 24), la semana en curso a
+ * ancho completo, y abajo lo que queda por hacer con la bandeja al lado. El
+ * orden importa: es el `position` con el que nacen y el que ordena la
+ * exportacion.
  */
 export const DEFAULT_LAYOUT: DefaultWidget[] = [
+  // Fila 1 y 2: las cifras. Todas sobre lo asignado a quien mira, porque la
+  // pregunta que abre la pantalla es "que me toca", no "como va el espacio".
   {
     type: "count",
-    title: "Mis tareas",
-    // `doneRatio` es lo que da la barra de progreso: hechas sobre el total.
-    config: { scope: "assigned", metric: "doneRatio" },
-    span: 1,
+    title: "Vencidas",
+    config: { scope: "assigned", dueWindow: "overdue", filter: OPEN_ONLY },
+    span: 3,
+    rowSpan: 1,
   },
   {
     type: "count",
-    title: "De mis equipos",
-    config: { scope: "team", metric: "doneRatio" },
-    span: 1,
+    title: "Vencen hoy",
+    config: { scope: "assigned", dueWindow: "today", filter: OPEN_ONLY },
+    span: 3,
+    rowSpan: 1,
   },
   {
-    type: "breakdown",
-    title: "Vencimientos",
-    config: { scope: "assigned", groupBy: "dueWindow" },
-    span: 1,
+    type: "count",
+    title: "Vencen esta semana",
+    config: { scope: "assigned", dueWindow: "week", filter: OPEN_ONLY },
+    span: 3,
+    rowSpan: 1,
   },
+  {
+    type: "count",
+    title: "Pendientes",
+    config: { scope: "assigned", filter: OPEN_ONLY },
+    span: 3,
+    rowSpan: 1,
+  },
+  {
+    type: "count",
+    title: "Cerradas · 7 días",
+    // `rangeDays` es una ventana de **cierre**: la misma que dibuja una
+    // tendencia, aqui reducida a una cifra.
+    config: { scope: "assigned", metric: "doneCount", rangeDays: 7 },
+    span: 3,
+    rowSpan: 1,
+  },
+  {
+    type: "count",
+    title: "Alta prioridad",
+    config: {
+      scope: "assigned",
+      filter: [
+        ...OPEN_ONLY,
+        {
+          id: "urgent",
+          field: "priority",
+          operator: "in",
+          value: ["high", "urgent"],
+        },
+      ],
+    },
+    span: 3,
+    rowSpan: 1,
+  },
+  {
+    type: "count",
+    title: "Sin fecha",
+    config: { scope: "assigned", dueWindow: "none", filter: OPEN_ONLY },
+    span: 3,
+    rowSpan: 1,
+  },
+  {
+    type: "time",
+    title: "Horas · 7 días",
+    // `none` es el total sin repartir: una cifra de horas, no un reparto por
+    // persona.
+    config: { scope: "assigned", groupBy: "none", rangeDays: 7 },
+    span: 3,
+    rowSpan: 1,
+  },
+  // Fila 3: la semana en curso, que es lo que las cifras no pueden decir.
+  {
+    type: "week",
+    title: "Mi semana",
+    config: { scope: "assigned" },
+    span: 12,
+    // Dos filas y no tres: la tira son siete columnas de cuatro tareas como
+    // mucho, y con tres sobraban cien pixeles de vacio bajo el contenido.
+    rowSpan: 2,
+  },
+  // Fila 4: lo que queda por hacer, y al lado lo que ha pasado.
   {
     type: "table",
-    title: "Asignadas a mí",
-    config: { scope: "assigned" },
-    span: 2,
+    title: "Tareas pendientes",
+    config: { scope: "assigned", filter: OPEN_ONLY },
+    span: 8,
+    rowSpan: 4,
   },
   {
     type: "inbox",
     title: "Bandeja",
     config: {},
-    span: 1,
-  },
-  {
-    type: "trend",
-    title: "Cerradas por semana",
-    config: { scope: "assigned", granularity: "week" },
-    span: 3,
+    span: 4,
+    rowSpan: 4,
   },
 ];
