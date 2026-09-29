@@ -32,6 +32,14 @@ export default async function exportDashboard(
   dashboardId: string,
   workspaceId: string,
   userId: string,
+  /**
+   * La misma preferencia que recibe la pantalla. Va hasta aqui porque la hoja
+   * de la semana sale de `getDashboardData`, y sin ella la exportacion pedia
+   * siempre una semana que empieza en lunes mientras el panel podia estar
+   * ensenando otra: dos ventanas de siete dias distintas bajo el mismo titulo,
+   * que es justo lo que este modulo existe para que no pase.
+   */
+  options: { weekStartsOn?: number } = {},
 ) {
   const [dashboard] = await db
     .select()
@@ -53,6 +61,7 @@ export default async function exportDashboard(
     dashboardId,
     workspaceId,
     userId,
+    options,
   );
 
   const byId = new Map(payloads.map((entry) => [entry.id, entry]));
@@ -145,6 +154,31 @@ function sheetBody(
           row.isDone ? "Sí" : "No",
         ],
       })),
+    };
+  }
+
+  if (widget.type === "week") {
+    return {
+      columns: [
+        { header: "Día", kind: "text", width: 14 },
+        { header: "Tarea", kind: "text", width: 50 },
+        { header: "Proyecto", kind: "text", width: 24 },
+        { header: "Prioridad", kind: "text" },
+        { header: "Hecha", kind: "text" },
+      ],
+      // Una fila por tarea, con el dia repetido: es lo que deja filtrar y
+      // ordenar la hoja como una tabla, que es para lo que se exporta.
+      rows: (data.week?.days ?? []).flatMap((day) =>
+        day.tasks.map((task) => ({
+          cells: [
+            day.day,
+            task.title,
+            task.projectName,
+            task.priority,
+            task.isDone ? "Sí" : "No",
+          ],
+        })),
+      ),
     };
   }
 

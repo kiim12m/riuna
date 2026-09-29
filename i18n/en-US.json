@@ -2590,7 +2590,15 @@
 			"noData": "Nothing to show yet",
 			"ofTotal": "{{value}} of {{total}}",
 			"goal": "Goal",
-			"pickGoal": "Pick a goal"
+			"pickGoal": "Pick a goal",
+			"resize": "Resize widget",
+			"width": "Width",
+			"height": "Height",
+			"columns_one": "{{count}} column",
+			"columns_other": "{{count}} columns",
+			"rows_one": "{{count}} row",
+			"rows_other": "{{count}} rows",
+			"personalScope": "Whose work"
 		},
 		"type": {
 			"count": "Count",
@@ -2600,7 +2608,8 @@
 			"epic_progress": "Epic progress",
 			"table": "Task list",
 			"inbox": "Inbox",
-			"goal": "Goal"
+			"goal": "Goal",
+			"week": "This week"
 		},
 		"metric": {
 			"count": "Tasks",
@@ -2618,7 +2627,8 @@
 			"done": "Done",
 			"dueWindow": "Due date",
 			"epic": "Epic",
-			"time": "Over time"
+			"time": "Over time",
+			"none": "Total"
 		},
 		"buckets": {
 			"none": "None",
@@ -2653,11 +2663,27 @@
 			"share": "Share with the workspace",
 			"unshare": "Stop sharing",
 			"export": "Export",
-			"exportError": "The dashboard could not be exported"
+			"exportError": "The dashboard could not be exported",
+			"resetLayout": "Reset layout"
+		},
+		"reset": {
+			"title": "Reset to the default layout?",
+			"description": "Every widget on this dashboard will be replaced with the default ones. Widgets you added or edited will be lost.",
+			"confirm": "Reset",
+			"done": "Layout restored"
 		},
 		"shared": "Shared",
 		"errors": {
 			"saveFailed": "The change could not be saved"
+		},
+		"scope": {
+			"all": "Everyone",
+			"assigned": "Assigned to me",
+			"team": "My teams"
+		},
+		"week": {
+			"more_one": "+{{count}} more",
+			"more_other": "+{{count}} more"
 		}
 	},
 	"goals": {

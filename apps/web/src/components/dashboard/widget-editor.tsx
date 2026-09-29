@@ -1,5 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  PANEL_MAX_ROWS,
+  PANEL_WIDTHS,
+} from "@/components/dashboard/dashboard-grid";
+import { SIZE_BY_TYPE } from "@/components/dashboard/widget-size";
 import FilterBar from "@/components/table-view/filter-bar";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,9 +42,19 @@ const TYPES: WidgetType[] = [
   "time",
   "epic_progress",
   "table",
+  "week",
   "inbox",
   "goal",
 ];
+
+/**
+ * El ambito personal, que hasta ahora solo sabia poner la distribucion de
+ * partida. Sin este control, un widget sembrado con `scope` no tenia forma de
+ * recuperarlo si alguien se lo quitaba.
+ */
+const SCOPES = ["all", "assigned", "team"] as const;
+
+const HEIGHTS = Array.from({ length: PANEL_MAX_ROWS }, (_, i) => i + 1);
 
 /** Que agrupaciones ofrece cada tipo. Es el espejo de `resolveWidget`. */
 const GROUP_BY_BY_TYPE: Partial<Record<WidgetType, WidgetGroupBy[]>> = {
@@ -52,7 +67,7 @@ const GROUP_BY_BY_TYPE: Partial<Record<WidgetType, WidgetGroupBy[]>> = {
     "done",
     "dueWindow",
   ],
-  time: ["assignee", "project", "time"],
+  time: ["none", "assignee", "project", "time"],
 };
 
 export type WidgetDraft = {
@@ -63,6 +78,7 @@ export type WidgetDraft = {
   goalId: string | null;
   config: WidgetConfig;
   span: number;
+  rowSpan: number;
 };
 
 export function WidgetEditor({
@@ -88,7 +104,8 @@ export function WidgetEditor({
     projectId: widget?.projectId ?? null,
     goalId: widget?.goalId ?? null,
     config: (widget?.config as WidgetConfig) ?? {},
-    span: widget?.span ?? 1,
+    span: widget?.span ?? SIZE_BY_TYPE.count.span,
+    rowSpan: widget?.rowSpan ?? SIZE_BY_TYPE.count.rowSpan,
   }));
 
   const fields = useWidgetFields(draft.projectId, workspaceId);
@@ -125,13 +142,21 @@ export function WidgetEditor({
               <Select
                 value={draft.type}
                 onValueChange={(value) =>
-                  setDraft((previous) => ({
-                    ...previous,
-                    type: value as WidgetType,
-                    // Cambiar de tipo invalida la agrupacion anterior: cada uno
-                    // ofrece las suyas.
-                    config: { ...previous.config, groupBy: undefined },
-                  }))
+                  setDraft((previous) => {
+                    const type = value as WidgetType;
+
+                    return {
+                      ...previous,
+                      type,
+                      // Cambiar de tipo invalida la agrupacion anterior: cada
+                      // uno ofrece las suyas.
+                      config: { ...previous.config, groupBy: undefined },
+                      // Y arrastra su tamaño **solo al crear**: en una edicion
+                      // el tamaño es del widget, y pisarlo perderia lo que su
+                      // dueño hubiera ajustado a mano.
+                      ...(widget ? {} : SIZE_BY_TYPE[type]),
+                    };
+                  })
                 }
               >
                 <SelectTrigger id="widget-type">
@@ -257,6 +282,91 @@ export function WidgetEditor({
                 </Select>
               </div>
             )}
+
+            {/* El ambito personal: lo que "Mi trabajo" era como pantalla, y que
+                cualquier widget puede tener desde la ADR 031. */}
+            <div className="space-y-1.5">
+              <Label htmlFor="widget-personal-scope">
+                {t("panels:widget.personalScope")}
+              </Label>
+              <Select
+                value={draft.config.scope ?? "all"}
+                onValueChange={(value) =>
+                  setDraft((p) => ({
+                    ...p,
+                    config: {
+                      ...p.config,
+                      scope:
+                        value === "all"
+                          ? undefined
+                          : (value as "assigned" | "team"),
+                    },
+                  }))
+                }
+              >
+                <SelectTrigger id="widget-personal-scope">
+                  <SelectValue>
+                    {t(`panels:scope.${draft.config.scope ?? "all"}`)}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {SCOPES.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {t(`panels:scope.${option}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* El tamaño tambien se elige aqui, no solo arrastrando la esquina:
+                el tirador no existe con teclado ni por debajo de `lg`, y desde
+                la ADR 043 es la unica geometria que se guarda. */}
+            <div className="space-y-1.5">
+              <Label htmlFor="widget-width">{t("panels:widget.width")}</Label>
+              <Select
+                value={String(draft.span)}
+                onValueChange={(value) =>
+                  setDraft((p) => ({ ...p, span: Number(value) }))
+                }
+              >
+                <SelectTrigger id="widget-width">
+                  <SelectValue>
+                    {t("panels:widget.columns", { count: draft.span })}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {PANEL_WIDTHS.map((width) => (
+                    <SelectItem key={width} value={String(width)}>
+                      {t("panels:widget.columns", { count: width })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="widget-height">{t("panels:widget.height")}</Label>
+              <Select
+                value={String(draft.rowSpan)}
+                onValueChange={(value) =>
+                  setDraft((p) => ({ ...p, rowSpan: Number(value) }))
+                }
+              >
+                <SelectTrigger id="widget-height">
+                  <SelectValue>
+                    {t("panels:widget.rows", { count: draft.rowSpan })}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {HEIGHTS.map((height) => (
+                    <SelectItem key={height} value={String(height)}>
+                      {t("panels:widget.rows", { count: height })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-1.5">

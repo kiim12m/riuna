@@ -1212,8 +1212,17 @@ export const dashboardWidgetTable = pgTable(
       .notNull()
       .default({}),
     position: integer("position").notNull().default(0),
-    /** Cuantas de las tres columnas de la rejilla ocupa. */
+    /** Cuantas de las doce columnas de la rejilla ocupa. Ver ADR 043. */
     span: integer("span").notNull().default(1),
+    /**
+     * Cuantas filas de `--panel-row` ocupa de alto.
+     *
+     * Existe porque una rejilla de ancho enumerado no dice nada del alto: los
+     * widgets crecian con su contenido y una lista de veinte filas al lado de
+     * una tarjeta de una cifra dejaba la rejilla desalineada. Con un alto
+     * declarado, lo que no cabe hace scroll dentro de la tarjeta.
+     */
+    rowSpan: integer("row_span").notNull().default(1),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()
@@ -1224,9 +1233,13 @@ export const dashboardWidgetTable = pgTable(
     index("dashboard_widget_dashboardId_idx").on(table.dashboardId),
     check(
       "dashboard_widget_type_valid",
-      sql`${table.type} IN ('count', 'breakdown', 'trend', 'time', 'epic_progress', 'table', 'inbox', 'goal')`,
+      sql`${table.type} IN ('count', 'breakdown', 'trend', 'time', 'epic_progress', 'table', 'inbox', 'goal', 'week')`,
     ),
-    check("dashboard_widget_span_valid", sql`${table.span} BETWEEN 1 AND 3`),
+    check("dashboard_widget_span_valid", sql`${table.span} BETWEEN 1 AND 12`),
+    check(
+      "dashboard_widget_row_span_valid",
+      sql`${table.rowSpan} BETWEEN 1 AND 6`,
+    ),
   ],
 );
 

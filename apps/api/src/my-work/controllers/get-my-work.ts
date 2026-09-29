@@ -3,17 +3,16 @@ import {
   asc,
   desc,
   eq,
-  gte,
   inArray,
   isNull,
-  lt,
   ne,
+  or,
   type SQL,
   sql,
 } from "drizzle-orm";
 import db from "../../database";
 import { projectTable, taskTable, teamTable } from "../../database/schema";
-import { addDays, startOfServerDay } from "../../utils/day-boundaries";
+import { dueWindowCondition } from "../../utils/due-window";
 import { priorityRankExpression } from "../../view/field-registry";
 import {
   decorateTasks,
@@ -36,32 +35,6 @@ type GetMyWorkOptions = {
   page?: number;
   limit?: number;
 };
-
-/**
- * Ventana de vencimiento, en dias del servidor.
- *
- * Las fronteras salen de `utils/day-boundaries`, compartidas con los paneles
- * de la Fase 7: calcularlas dos veces era pedir que "hoy" acabara significando
- * cosas distintas en dos pantallas.
- */
-function dueWindowCondition(due: MyWorkDueWindow, now: Date): SQL | undefined {
-  if (due === "all") return undefined;
-
-  const startOfToday = startOfServerDay(now);
-
-  // Una fecha nula hace NULL la comparacion, no true, asi que las tareas sin
-  // vencimiento quedan fuera de las tres ventanas sin pedirlo explicitamente.
-  if (due === "overdue") {
-    return lt(taskTable.dueDate, startOfToday);
-  }
-
-  const endOfWindow = addDays(startOfToday, due === "today" ? 1 : 7);
-
-  return and(
-    gte(taskTable.dueDate, startOfToday),
-    lt(taskTable.dueDate, endOfWindow),
-  );
-}
 
 async function getMyWork({
   workspaceId,
@@ -88,9 +61,24 @@ async function getMyWork({
     conditions.push(eq(taskTable.projectId, projectId));
   }
 
-  const dueCondition = dueWindowCondition(due, new Date());
-  if (dueCondition) {
-    conditions.push(dueCondition);
+  // `all` es "sin ventana"; las tres restantes las compila el util que comparte
+  // esta lectura con las tarjetas del panel.
+  //
+  // **`week` aqui son los proximos siete dias contando hoy**, que es lo que
+  // este parametro publico ha significado siempre, y se compone de las dos
+  // ventanas del `CASE` porque alli `week` empieza manana. Cambiarlo en
+  // silencio habria alterado el contrato de `GET /api/my-work/tasks?due=week`
+  // de paso, que no es una decision que corresponda a mover una funcion.
+  if (due === "week") {
+    const now = new Date();
+    conditions.push(
+      or(
+        dueWindowCondition("today", now),
+        dueWindowCondition("week", now),
+      ) as SQL,
+    );
+  } else if (due !== "all") {
+    conditions.push(dueWindowCondition(due, new Date()));
   }
 
   if (scope === "assigned") {

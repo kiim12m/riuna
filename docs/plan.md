@@ -1139,6 +1139,27 @@ sin predicado selectivo.
   que no se toma de paso.
 - **El índice `task (completed_at)` está declarado y no construido**, con la
   condición que lo justificaría escrita en la ADR 030.
+- **Una tarea que vence hoy a las 00:00 se clasifica como vencida**, y por las
+  mismas una que vence mañana a las 00:00 cuenta como de hoy. Lo destapó la
+  prueba de equivalencia de ventanas de la ADR 043 al poner fixtures justo en
+  las fronteras: `task.due_date` es un `timestamp` sin zona y viaja por el
+  convenio UTC de drizzle, así que en un servidor con desfase las horas
+  cercanas a medianoche cruzan de día al guardarse. **No es del panel**: afecta
+  igual a «Hoy», al Planificador y a «Mis tareas», porque todas comparten
+  `dueWindowExpression`. Es la deuda de zona horaria que `day-boundaries.ts`
+  declara desde la Fase 4.5 —«qué zona horaria define un día sigue sin
+  decidirse»—, ahora con un síntoma concreto y reproducible en vez de una nota.
+  Arreglarla es elegir convenio para toda la instalación, no parchear una
+  consulta.
+- ~~**La palanca de colapsar widgets en un solo barrido queda escrita y sin
+  construir.**~~ **Construida y medida** el 2026-09-28
+  ([ADR 043](adr/043-rejilla-de-doce-columnas-del-panel.md)): la distribución de
+  partida nueva son once widgets, ocho de ellos recuentos sobre la misma tabla y
+  el mismo ámbito. Sin el colapso, solo esas cifras se salían del presupuesto
+  (280-343 ms p95 frente a los 148-264 del panel entero con él).
+- ~~**`span` no tiene ningún control en la interfaz**: los únicos anchos que
+  existen son los sembrados.~~ **Cerrada** el 2026-09-28: tirador de esquina más
+  selectores de ancho y alto en el diálogo del widget.
 
 ### Fase 7.5 — Revisión estética (≈1 semana) · **cerrada**
 
@@ -1365,6 +1386,46 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
    verificado en navegador real contra `dev:parallel` (agrupar por día y por
    tarea, entrada en marcha contando en vivo, exportar y descargar el
    `.xlsx`).
+
+10. **La rejilla del panel pasa a doce columnas redimensionables** ✔
+    ([ADR 043](adr/043-rejilla-de-doce-columnas-del-panel.md)) — `span` de 1 a
+    12 y un `row_span` de 1 a 6 sobre una altura de fila fija, con tirador de
+    esquina y controles en el diálogo, que son la única vía con teclado y en
+    móvil. Sin `react-grid-layout` y sin `grid-auto-flow: dense`: lo que
+    faltaba era una celda más fina y un alto declarado, no colocación libre
+    con huecos, y rellenar huecos hacia atrás desacoplaría el orden visual del
+    `position` que escribe el arrastre. El responsive se deriva de dos enteros
+    en línea y tres media queries, sin `matchMedia`.
+
+    La distribución de partida se rehace en tres alturas —ocho cifras, la
+    semana en curso, y la lista de pendientes con la bandeja al lado—, lo que
+    estrena el tipo de widget `week` y una clave `dueWindow` por widget. Con
+    once widgets en serie el presupuesto de 300 ms no daba, así que **se
+    construye por fin la palanca que la ADR 030 dejó escrita**: las tarjetas de
+    recuento que comparten ámbito se resuelven en un solo barrido con un
+    `COUNT(*) FILTER (WHERE …)` por widget (`collapse-counts.ts`).
+    `MAX_WIDGETS_PER_DASHBOARD` sube de 12 a 24 por lo mismo.
+
+    De paso se corrige una **pérdida de datos silenciosa**: `WidgetConfig` en
+    el web no declaraba `scope`, y como el editor guarda el objeto entero,
+    abrir y guardar cualquier widget sembrado le borraba el ámbito personal y
+    lo ensanchaba a todo el espacio. Y `dueWindowCondition` sale de `my-work`
+    a `utils/due-window.ts` —tercer consumidor—, con una prueba que compila las
+    dos formas de la ventana y compara sus fronteras, que nada vigilaba.
+
+    La pasada por navegador encontró dos cosas que ninguna prueba veía: el
+    rótulo del día de hoy usaba `text-brand-foreground` —el color del texto
+    que va *encima* de un relleno de marca— y salía con contraste ~1:1 en los
+    dos temas sin que fallara nada, porque el elemento estaba ahí; y el alto
+    fijo por debajo de 40rem no alineaba nada y solo encajonaba la semana en
+    una caja con scroll.
+
+    **Medido** (2026-09-28, banco de 50.000 tareas): el panel entero sale a
+    **148 ms p95 en caliente y 264 ms en frío**, dentro del presupuesto de 300;
+    las siete cifras solas, una a una, ya costaban 280-343 ms. El `EXPLAIN`
+    lo explica: cinco recuentos colapsados leen 3.038 búferes y uno solo de
+    ellos por separado lee 3.105, así que cinco preguntas cuestan lo que
+    costaba una.
 
 El cronómetro de tarea se mueve al pie de la barra lateral en vez de una
 cabecera —la ADR 022 ya maquetó y descartó esa variante—.

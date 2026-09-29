@@ -1,12 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { saveAs } from "file-saver";
-import { Download, LayoutDashboard, Plus, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+  Download,
+  LayoutDashboard,
+  Plus,
+  RotateCcw,
+  Users,
+} from "lucide-react";
+import { type CSSProperties, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import {
   DashboardGrid,
   SortableWidget,
+  spanForMedium,
 } from "@/components/dashboard/dashboard-grid";
 import { GreetingHeader } from "@/components/dashboard/greeting-header";
 import {
@@ -20,6 +27,15 @@ import {
 } from "@/components/dashboard/widget-editor";
 import PageTitle from "@/components/page-title";
 import { useAuth } from "@/components/providers/auth-provider/hooks/use-auth";
+import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -46,12 +62,25 @@ import {
 } from "@/hooks/queries/dashboard/use-dashboards";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { toast } from "@/lib/toast";
+import { useUserPreferencesStore } from "@/store/user-preferences";
 
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/workspace/$workspaceId/home",
 )({
   component: HomeComponent,
 });
+
+/** El esqueleto reproduce la forma de la distribucion de partida, no un
+ *  rectangulo generico: es lo que evita el salto al llegar los datos. */
+const SKELETON_CELLS = [
+  { key: "a", span: 3, rowSpan: 1 },
+  { key: "b", span: 3, rowSpan: 1 },
+  { key: "c", span: 3, rowSpan: 1 },
+  { key: "d", span: 3, rowSpan: 1 },
+  { key: "e", span: 12, rowSpan: 2 },
+  { key: "f", span: 8, rowSpan: 4 },
+  { key: "g", span: 4, rowSpan: 4 },
+];
 
 /**
  * El panel personal: la pantalla que funde lo que eran "Mi trabajo" y "Panel".
@@ -71,6 +100,9 @@ function HomeComponent() {
   const navigate = useNavigate();
 
   const { data: dashboards, isPending } = useGetDashboards(workspaceId);
+  // La misma preferencia que usa la consulta de datos: el libro de Excel sale
+  // de la misma lectura que la pantalla y tiene que cubrir sus mismos dias.
+  const weekStartsOn = useUserPreferencesStore((state) => state.weekStartsOn);
 
   // El panel que se mira. Por defecto **el propio**, no el primero de la lista:
   // desde que se pueden compartir, la lista trae tambien los de otros, y coger
@@ -136,6 +168,7 @@ function HomeComponent() {
     );
   };
 
+  const [isResetting, setIsResetting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
@@ -143,7 +176,10 @@ function HomeComponent() {
 
     setIsExporting(true);
     try {
-      const { blob, filename } = await exportDashboard(dashboard.id);
+      const { blob, filename } = await exportDashboard(
+        dashboard.id,
+        weekStartsOn,
+      );
       saveAs(blob, filename);
     } catch (error) {
       toast.error(t("panels:actions.exportError"));
@@ -213,6 +249,17 @@ function HomeComponent() {
                   : t("panels:actions.share")}
               </Button>
             )}
+            {dashboard && canEdit && (
+              <Button
+                variant="ghost"
+                size="xs"
+                className="gap-1"
+                onClick={() => setIsResetting(true)}
+              >
+                <RotateCcw className="size-3" />
+                {t("panels:actions.resetLayout")}
+              </Button>
+            )}
             {dashboard && (
               <Button
                 variant="ghost"
@@ -245,9 +292,23 @@ function HomeComponent() {
         <div className="p-4">
           <GreetingHeader />
           {isPending ? (
-            <div className="grid grid-cols-1 gap-(--density-col-gap) sm:grid-cols-2 lg:grid-cols-3">
-              {["a", "b", "c"].map((key) => (
-                <Skeleton key={key} className="h-40 w-full rounded-lg" />
+            // La misma rejilla que el contenido: con la de antes, el primer
+            // pintado enseñaba una distribucion que ya no existe.
+            <div className="riuna-panel-grid">
+              {SKELETON_CELLS.map((cell) => (
+                <div
+                  key={cell.key}
+                  className="riuna-panel-cell"
+                  style={
+                    {
+                      "--panel-w": String(cell.span),
+                      "--panel-w-md": String(spanForMedium(cell.span)),
+                      "--panel-h": String(cell.rowSpan),
+                    } as CSSProperties
+                  }
+                >
+                  <Skeleton className="h-full w-full rounded-lg" />
+                </div>
               ))}
             </div>
           ) : widgets.length === 0 ? (
@@ -287,10 +348,27 @@ function HomeComponent() {
                 const entry = byWidget.get(widget.id);
 
                 return (
-                  <SortableWidget key={widget.id} id={widget.id}>
+                  <SortableWidget
+                    key={widget.id}
+                    id={widget.id}
+                    span={widget.span}
+                    rowSpan={widget.rowSpan}
+                    canResize={canEdit}
+                    // `mutateAsync` y no `mutate`: la rejilla necesita saber
+                    // si el servidor rechazo el tamaño para deshacer la vista
+                    // previa. El `catch` esta aqui para que el rechazo no salga
+                    // ademas como promesa sin capturar.
+                    onResize={(size) =>
+                      mutations.editWidget
+                        .mutateAsync({ id: widget.id, ...size })
+                        .catch((error) => {
+                          onError(error);
+                          throw error;
+                        })
+                    }
+                  >
                     <WidgetCard
                       title={widget.title}
-                      span={widget.span}
                       isLoading={isDataPending}
                       error={entry?.error}
                       {...(canEdit
@@ -329,6 +407,39 @@ function HomeComponent() {
           onSave={save}
         />
       )}
+
+      <AlertDialog open={isResetting} onOpenChange={setIsResetting}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("panels:reset.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("panels:reset.description")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogClose render={<Button variant="outline" size="sm" />}>
+              {t("common:actions.cancel")}
+            </AlertDialogClose>
+            <AlertDialogClose
+              render={
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    if (!dashboard) return;
+                    mutations.resetLayout.mutate(dashboard.id, {
+                      onSuccess: () => toast.success(t("panels:reset.done")),
+                      onError,
+                    });
+                  }}
+                />
+              }
+            >
+              {t("panels:reset.confirm")}
+            </AlertDialogClose>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

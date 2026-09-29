@@ -2590,7 +2590,15 @@
 			"noData": "Todavía no hay nada que enseñar",
 			"ofTotal": "{{value}} de {{total}}",
 			"goal": "Objetivo",
-			"pickGoal": "Elige un objetivo"
+			"pickGoal": "Elige un objetivo",
+			"resize": "Canviar la mida del widget",
+			"width": "Amplada",
+			"height": "Alçada",
+			"columns_one": "{{count}} columna",
+			"columns_other": "{{count}} columnes",
+			"rows_one": "{{count}} fila",
+			"rows_other": "{{count}} files",
+			"personalScope": "Feina de qui"
 		},
 		"type": {
 			"count": "Recuento",
@@ -2600,7 +2608,8 @@
 			"epic_progress": "Avance por épica",
 			"table": "Lista de tareas",
 			"inbox": "Bandeja",
-			"goal": "Objetivo"
+			"goal": "Objetivo",
+			"week": "Aquesta setmana"
 		},
 		"metric": {
 			"count": "Tareas",
@@ -2618,7 +2627,8 @@
 			"done": "Hecha",
 			"dueWindow": "Vencimiento",
 			"epic": "Épica",
-			"time": "En el tiempo"
+			"time": "En el tiempo",
+			"none": "Total"
 		},
 		"buckets": {
 			"none": "Sin asignar",
@@ -2653,11 +2663,27 @@
 			"share": "Compartir con el espacio",
 			"unshare": "Dejar de compartir",
 			"export": "Exportar",
-			"exportError": "No se ha podido exportar el panel"
+			"exportError": "No se ha podido exportar el panel",
+			"resetLayout": "Restaurar distribución"
+		},
+		"reset": {
+			"title": "¿Restaurar la distribución por defecto?",
+			"description": "Todos los widgets de este panel se sustituirán por los de partida. Se perderán los que hayas añadido o editado.",
+			"confirm": "Restaurar",
+			"done": "Distribución restaurada"
 		},
 		"shared": "Compartit",
 		"errors": {
 			"saveFailed": "No se ha podido guardar el cambio"
+		},
+		"scope": {
+			"all": "De tothom",
+			"assigned": "Assignat a mi",
+			"team": "Dels meus equips"
+		},
+		"week": {
+			"more_one": "+{{count}} més",
+			"more_other": "+{{count}} més"
 		}
 	},
 	"goals": {

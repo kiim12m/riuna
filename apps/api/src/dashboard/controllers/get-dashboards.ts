@@ -1,7 +1,7 @@
 import { and, asc, eq, inArray, or } from "drizzle-orm";
 import db from "../../database";
 import { dashboardTable, dashboardWidgetTable } from "../../database/schema";
-import { DEFAULT_LAYOUT } from "../default-layout";
+import { defaultWidgetRows } from "../default-layout";
 
 /**
  * Los paneles de quien pregunta en este espacio, con sus widgets.
@@ -94,16 +94,9 @@ async function seedDefaultDashboard(workspaceId: string, userId: string) {
 
       if (!dashboard) return;
 
-      await tx.insert(dashboardWidgetTable).values(
-        DEFAULT_LAYOUT.map((widget, position) => ({
-          dashboardId: dashboard.id,
-          type: widget.type,
-          title: widget.title,
-          config: widget.config,
-          span: widget.span,
-          position,
-        })),
-      );
+      await tx
+        .insert(dashboardWidgetTable)
+        .values(defaultWidgetRows(dashboard.id));
     });
   } catch (error) {
     if (!isUniqueViolation(error)) throw error;

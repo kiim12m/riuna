@@ -20,12 +20,14 @@ test.describe("Panel personal", () => {
     await page.goto(`/dashboard/workspace/${riuna.workspaceId}/home`);
 
     // Un panel vacio no responde nada: quien entra por primera vez ve su
-    // trabajo, no un boton de "anadir widget".
+    // trabajo, no un boton de "anadir widget". Las tres alturas de la ADR 043:
+    // las cifras, la semana y lo que queda por hacer.
+    await expect(page.getByRole("heading", { name: "Vencidas" })).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Asignadas a mí" }),
+      page.getByRole("heading", { name: "Mi semana" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "De mis equipos" }),
+      page.getByRole("heading", { name: "Tareas pendientes" }),
     ).toBeVisible();
     await expect(page.getByRole("heading", { name: "Bandeja" })).toBeVisible();
 
@@ -33,14 +35,14 @@ test.describe("Panel personal", () => {
     // notificacion de la bandeja, que es correcto y no una duplicidad.
     await expect(
       page
-        .getByRole("region", { name: "Asignadas a mí" })
+        .getByRole("region", { name: "Tareas pendientes" })
         .getByText("Tarea asignada"),
     ).toBeVisible();
 
     // Y se siembra una sola vez: recargar no duplica nada.
     await page.reload();
     await expect(
-      page.getByRole("heading", { name: "Asignadas a mí" }),
+      page.getByRole("heading", { name: "Tareas pendientes" }),
     ).toHaveCount(1);
   });
 
@@ -86,7 +88,7 @@ test.describe("Panel personal", () => {
     const taskId = await createTask(riuna, "Llega sola");
 
     await page.goto(`/dashboard/workspace/${riuna.workspaceId}/home`);
-    const asignadas = page.getByRole("region", { name: "Asignadas a mí" });
+    const asignadas = page.getByRole("region", { name: "Tareas pendientes" });
     await expect(asignadas.getByText("Llega sola")).toHaveCount(0);
 
     // Otra sesion, otro navegador: el servidor no reenvia el evento a la

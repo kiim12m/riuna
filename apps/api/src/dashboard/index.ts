@@ -12,6 +12,7 @@ import exportDashboard from "./controllers/export-dashboard";
 import getDashboardData from "./controllers/get-dashboard-data";
 import getDashboards from "./controllers/get-dashboards";
 import reorderWidgets from "./controllers/reorder-widgets";
+import resetDashboardLayout from "./controllers/reset-dashboard-layout";
 import updateDashboard from "./controllers/update-dashboard";
 import updateWidget from "./controllers/update-widget";
 import {
@@ -22,7 +23,31 @@ import {
 import { WIDGET_TYPES, widgetConfigSchema } from "./widget-config";
 
 const nameSchema = v.pipe(v.string(), v.minLength(1), v.maxLength(120));
-const spanSchema = v.pipe(v.number(), v.minValue(1), v.maxValue(3));
+
+/**
+ * El ancho y el alto en celdas de la rejilla de doce columnas (ADR 043).
+ *
+ * `v.integer()` no estaba y hacia falta: un `span: 2.5` pasaba la validacion y
+ * moria contra el CHECK de la base como un 500, cuando es un 400 de manual.
+ */
+const spanSchema = v.pipe(
+  v.number(),
+  v.integer(),
+  v.minValue(1),
+  v.maxValue(12),
+);
+const rowSpanSchema = v.pipe(
+  v.number(),
+  v.integer(),
+  v.minValue(1),
+  v.maxValue(6),
+);
+
+/** La preferencia de inicio de semana del cliente, que ya usan calendario,
+ * Gantt y Cronograma. Llega como texto porque viaja en la cadena de consulta. */
+const weekStartsOnSchema = v.optional(
+  v.picklist(["0", "1", "2", "3", "4", "5", "6"]),
+);
 
 /**
  * Paneles personales. Fase 7, rebanada 1.
@@ -159,14 +184,18 @@ const dashboard = new Hono<{
       },
     }),
     validator("param", v.object({ id: v.string() })),
+    validator("query", v.object({ weekStartsOn: weekStartsOnSchema })),
     workspaceAccess.fromDashboard("id"),
     // Leer, no escribir: un panel compartido lo ve todo el espacio.
     requireDashboardVisible,
     requireApiKeyScope({ task: ["read"] }),
     async (c) => {
       const { id } = c.req.valid("param");
+      const { weekStartsOn } = c.req.valid("query");
       return c.json(
-        await getDashboardData(id, c.get("workspaceId"), c.get("userId")),
+        await getDashboardData(id, c.get("workspaceId"), c.get("userId"), {
+          weekStartsOn: weekStartsOn ? Number(weekStartsOn) : undefined,
+        }),
       );
     },
   )
@@ -188,16 +217,19 @@ const dashboard = new Hono<{
       },
     }),
     validator("param", v.object({ id: v.string() })),
+    validator("query", v.object({ weekStartsOn: weekStartsOnSchema })),
     workspaceAccess.fromDashboard("id"),
     requireDashboardVisible,
     requireApiKeyScope({ task: ["read"] }),
     async (c) => {
       const { id } = c.req.valid("param");
+      const { weekStartsOn } = c.req.valid("query");
 
       const { buffer, filename, contentType } = await exportDashboard(
         id,
         c.get("workspaceId"),
         c.get("userId"),
+        { weekStartsOn: weekStartsOn ? Number(weekStartsOn) : undefined },
       );
 
       // Sin `Content-Length`: el `compress()` global puede recodificar el
@@ -232,6 +264,7 @@ const dashboard = new Hono<{
         goalId: v.optional(v.nullable(v.string())),
         config: widgetConfigSchema,
         span: v.optional(spanSchema),
+        rowSpan: v.optional(rowSpanSchema),
       }),
     ),
     workspaceAccess.fromDashboard("id"),
@@ -253,7 +286,8 @@ const dashboard = new Hono<{
     describeRoute({
       operationId: "updateWidget",
       tags: ["Dashboards"],
-      description: "Change a widget's title, scope, configuration or width",
+      description:
+        "Change a widget's title, scope, configuration or size in the grid",
       responses: {
         200: {
           description: "Widget updated",
@@ -270,6 +304,7 @@ const dashboard = new Hono<{
         goalId: v.optional(v.nullable(v.string())),
         config: v.optional(widgetConfigSchema),
         span: v.optional(spanSchema),
+        rowSpan: v.optional(rowSpanSchema),
       }),
     ),
     workspaceAccess.fromDashboardWidget("id"),
@@ -328,6 +363,25 @@ const dashboard = new Hono<{
       const { widgetIds } = c.req.valid("json");
       return c.json(await reorderWidgets(id, widgetIds));
     },
+  )
+  .post(
+    "/:id/reset-layout",
+    describeRoute({
+      operationId: "resetDashboardLayout",
+      tags: ["Dashboards"],
+      description:
+        "Replace every widget of a dashboard with the default layout",
+      responses: {
+        200: {
+          description: "Layout restored",
+          content: { "application/json": { schema: resolver(v.any()) } },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    workspaceAccess.fromDashboard("id"),
+    requireDashboardOwner,
+    async (c) => c.json(await resetDashboardLayout(c.req.valid("param").id)),
   );
 
 export default dashboard;

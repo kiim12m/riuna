@@ -75,3 +75,17 @@ export function parseServerDay(value: string, fieldName: string): Date {
   }
   return startOfServerDay(parsed);
 }
+
+/**
+ * El principio de la semana del servidor que contiene `now`.
+ *
+ * `weekStartsOn` es el mismo 0-6 (domingo a sabado) que la preferencia del
+ * cliente, y por eso viaja desde alli: el calendario, el Gantt, el Cronograma y
+ * los filtros ya leen esa preferencia, y una quinta nocion de "cuando empieza
+ * la semana" que solo conociera el panel seria la que acabara discrepando.
+ */
+export function startOfServerWeek(now: Date, weekStartsOn: number): Date {
+  const start = startOfServerDay(now);
+  const offset = (start.getDay() - weekStartsOn + 7) % 7;
+  return addDays(start, -offset);
+}
