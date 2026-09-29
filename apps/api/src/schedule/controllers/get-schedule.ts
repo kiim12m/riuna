@@ -6,10 +6,10 @@ import {
   scheduleBlockTable,
   taskTable,
   teamTable,
-  timeEntryTable,
 } from "../../database/schema";
 import { decorateTasks, getWorkspaceColumns } from "../../my-work/decorate";
 import { computeGhosts } from "../../planner/ghosts";
+import { getRunningEntry } from "../../time-entry/running";
 import { serverDayKey } from "../../utils/day-boundaries";
 import { buildDay, projectRepeatingBlocks } from "../build-day";
 import {
@@ -107,16 +107,9 @@ export default async function getSchedule({
             isNull(scheduleBlockTable.plannedDate),
           ),
         ),
-      db
-        .select()
-        .from(timeEntryTable)
-        .where(
-          and(
-            eq(timeEntryTable.userId, userId),
-            isNull(timeEntryTable.endTime),
-          ),
-        )
-        .limit(1),
+      // La entrada en marcha, si hay alguna (ADR 044): comparte consulta con
+      // el pie de la barra lateral, en vez de mantener aqui su propia copia.
+      getRunningEntry(userId),
       computeGhosts(workspaceId, userId, windowStart, windowEnd),
     ]);
 
@@ -165,7 +158,7 @@ export default async function getSchedule({
       ghostsByDay,
       taskById,
       blockById,
-      runningEntry: runningEntry[0],
+      runningEntry,
       now,
       todayKey,
     }),

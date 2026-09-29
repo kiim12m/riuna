@@ -1,14 +1,27 @@
-import { and, between, eq } from "drizzle-orm";
+import { and, asc, between, eq } from "drizzle-orm";
 import db from "../../database";
 import { projectTable, taskTable, timeEntryTable } from "../../database/schema";
 import { serverDayKey } from "../../utils/day-boundaries";
 import type { TimeSheetGroupBy } from "../constants";
+
+export type TimeSheetEntry = {
+  id: string;
+  taskId: string;
+  taskTitle: string;
+  projectId: string;
+  projectName: string;
+  startTime: Date;
+  endTime: Date | null;
+  seconds: number;
+};
 
 export type TimeSheetGroup = {
   key: string;
   label: string;
   seconds: number;
   entryCount: number;
+  /** Siempre las de quien mira: el parte de horas no lee tiempo de nadie mas. */
+  entries: TimeSheetEntry[];
 };
 
 export type TimeSheetResult = {
@@ -20,11 +33,14 @@ export type TimeSheetResult = {
 };
 
 type Row = {
+  id: string;
   taskId: string;
   taskTitle: string;
   projectId: string;
   projectName: string;
   startTime: Date;
+  endTime: Date | null;
+  duration: number | null;
 };
 
 function groupKey(groupBy: TimeSheetGroupBy, row: Row): [string, string] {
@@ -37,6 +53,10 @@ function groupKey(groupBy: TimeSheetGroupBy, row: Row): [string, string] {
 /**
  * El parte de horas de quien mira, cruzando proyectos del espacio (ADR 042).
  * Los proyectos archivados no se excluyen: es un informe historico.
+ *
+ * Cada grupo lleva sus `entries` -no solo el agregado-, para que la pantalla
+ * las despliegue, edite y borre una a una (ADR 044): son siempre propias, asi
+ * que no hace falta una bandera de "es mia".
  */
 export default async function getTimeSheet({
   workspaceId,
@@ -55,11 +75,13 @@ export default async function getTimeSheet({
 }): Promise<TimeSheetResult> {
   const rows = await db
     .select({
+      id: timeEntryTable.id,
       taskId: timeEntryTable.taskId,
       taskTitle: taskTable.title,
       projectId: taskTable.projectId,
       projectName: projectTable.name,
       startTime: timeEntryTable.startTime,
+      endTime: timeEntryTable.endTime,
       duration: timeEntryTable.duration,
     })
     .from(timeEntryTable)
@@ -71,7 +93,8 @@ export default async function getTimeSheet({
         eq(projectTable.workspaceId, workspaceId),
         between(timeEntryTable.startTime, windowStart, windowEnd),
       ),
-    );
+    )
+    .orderBy(asc(timeEntryTable.startTime));
 
   const groups = new Map<string, TimeSheetGroup>();
   let totalSeconds = 0;
@@ -85,12 +108,30 @@ export default async function getTimeSheet({
     totalSeconds += seconds;
 
     const [key, label] = groupKey(groupBy, row);
+    const entry: TimeSheetEntry = {
+      id: row.id,
+      taskId: row.taskId,
+      taskTitle: row.taskTitle,
+      projectId: row.projectId,
+      projectName: row.projectName,
+      startTime: row.startTime,
+      endTime: row.endTime,
+      seconds,
+    };
+
     const existing = groups.get(key);
     if (existing) {
       existing.seconds += seconds;
       existing.entryCount += 1;
+      existing.entries.push(entry);
     } else {
-      groups.set(key, { key, label, seconds, entryCount: 1 });
+      groups.set(key, {
+        key,
+        label,
+        seconds,
+        entryCount: 1,
+        entries: [entry],
+      });
     }
   }
 

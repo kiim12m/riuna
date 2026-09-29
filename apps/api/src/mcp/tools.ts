@@ -987,6 +987,57 @@ export function registerMcpTools(
   );
 
   registerTool(
+    "get_running_timer",
+    {
+      description:
+        "Get the current user's running time entry, if any, plus the last tracked task to resume when nothing is running.",
+      inputSchema: z.object({
+        workspaceId: nonEmptyString.describe("Workspace ID"),
+      }),
+    },
+    async (args) => {
+      const qs = new URLSearchParams({ workspaceId: args.workspaceId });
+      return run(() =>
+        client.json(`/api/time-entry/running?${qs.toString()}`, {
+          method: "GET",
+        }),
+      );
+    },
+  );
+
+  registerTool(
+    "start_timer",
+    {
+      description:
+        "Start tracking time on a task. Stops whatever the user was tracking before -one timer per person-.",
+      inputSchema: z.object({ taskId: nonEmptyString }),
+    },
+    async (args) =>
+      run(() =>
+        client.json("/api/time-entry/start", {
+          method: "POST",
+          body: JSON.stringify({ taskId: args.taskId }),
+        }),
+      ),
+  );
+
+  registerTool(
+    "stop_timer",
+    {
+      description:
+        "Stop the current user's running time entry. Omit endTime to stop now.",
+      inputSchema: z.object({ endTime: optionalIsoDateTimeSchema }),
+    },
+    async (args) =>
+      run(() =>
+        client.json("/api/time-entry/stop", {
+          method: "POST",
+          body: JSON.stringify(args.endTime ? { endTime: args.endTime } : {}),
+        }),
+      ),
+  );
+
+  registerTool(
     "list_task_activity",
     {
       description: "List a task's activity history.",

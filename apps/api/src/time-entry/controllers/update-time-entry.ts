@@ -1,27 +1,40 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { timeEntryTable } from "../../database/schema";
+import { publishEvent } from "../../events";
 import { resolveDuration } from "../duration";
 
 type UpdateTimeEntryParams = {
   timeEntryId: string;
+  userId: string;
   startTime: Date;
   endTime?: Date;
   description?: string;
 };
 
+/**
+ * Solo el dueno edita su entrada (ADR 044) -antes bastaba con el permiso
+ * `task:update` del espacio, y eso dejaba corregir el registro de otra
+ * persona-. Mismo patron que `deleteTimeEntry`: la condicion va en el propio
+ * `WHERE`.
+ */
 async function updateTimeEntry(params: UpdateTimeEntryParams) {
-  const { timeEntryId, startTime, endTime, description } = params;
+  const { timeEntryId, userId, startTime, endTime, description } = params;
 
   const [existingTimeEntry] = await db
     .select()
     .from(timeEntryTable)
-    .where(eq(timeEntryTable.id, timeEntryId));
+    .where(
+      and(
+        eq(timeEntryTable.id, timeEntryId),
+        eq(timeEntryTable.userId, userId),
+      ),
+    );
 
   if (!existingTimeEntry) {
     throw new HTTPException(404, {
-      message: "Time entry not found",
+      message: "Time entry not found or you are not the owner",
     });
   }
 
@@ -37,8 +50,25 @@ async function updateTimeEntry(params: UpdateTimeEntryParams) {
       duration,
       ...(description !== undefined && { description }),
     })
-    .where(eq(timeEntryTable.id, timeEntryId))
+    .where(
+      and(
+        eq(timeEntryTable.id, timeEntryId),
+        eq(timeEntryTable.userId, userId),
+      ),
+    )
     .returning();
+
+  if (!updatedTimeEntry) {
+    throw new HTTPException(500, {
+      message: "Failed to update time entry",
+    });
+  }
+
+  await publishEvent("time-entry.updated", {
+    timeEntryId: updatedTimeEntry.id,
+    taskId: updatedTimeEntry.taskId,
+    userId,
+  });
 
   return updatedTimeEntry;
 }

@@ -1460,6 +1460,12 @@ export const timeEntryTable = pgTable(
     // Sirve el filtro por usuario solo y el rango de fechas del parte de
     // horas (ADR 042); sustituye al indice de userId solo, que este cubre.
     index("time_entry_userId_startTime_idx").on(table.userId, table.startTime),
+    // Un cronometro por persona (ADR 044), vigilado por la base de datos y no
+    // por la buena voluntad del controlador: mismo patron que
+    // `cycle_one_active_per_project`. `end_time IS NULL` es "en marcha".
+    uniqueIndex("time_entry_one_running_per_user")
+      .on(table.userId)
+      .where(sql`end_time IS NULL`),
   ],
 );
 

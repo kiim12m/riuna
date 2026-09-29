@@ -1,6 +1,7 @@
 import type React from "react";
 import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
+import { MobileTimerPill } from "@/components/timer/mobile-timer-pill";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useUserPreferencesEffects } from "@/hooks/use-user-preferences-effects";
 import { cn } from "@/lib/cn";
@@ -64,6 +65,7 @@ function Layout({ children, className }: LayoutProps) {
         }
       >
         <AppSidebar />
+        <MobileTimerPill />
         <SidebarInset
           className={cn(
             "m-2 flex min-w-0 flex-1 flex-col overflow-auto overscroll-none rounded-xl border border-border/80 bg-background shadow-sm/5",

@@ -59,6 +59,7 @@ describe("updateTimeEntry", () => {
 
     await updateTimeEntry({
       timeEntryId: "time-entry-1",
+      userId: "user-1",
       startTime: nextStartTime,
       description: "renamed",
     });
@@ -89,6 +90,7 @@ describe("updateTimeEntry", () => {
     await expect(
       updateTimeEntry({
         timeEntryId: "time-entry-1",
+        userId: "user-1",
         startTime: new Date("2026-08-10T12:00:00.000Z"),
       }),
     ).rejects.toMatchObject({ status: 400 });
@@ -114,6 +116,7 @@ describe("updateTimeEntry", () => {
     await expect(
       updateTimeEntry({
         timeEntryId: "time-entry-1",
+        userId: "user-1",
         startTime: new Date("2026-08-10T12:00:00.000Z"),
         endTime: new Date("2026-08-10T11:00:00.000Z"),
       }),
@@ -140,6 +143,7 @@ describe("updateTimeEntry", () => {
 
     await updateTimeEntry({
       timeEntryId: "time-entry-1",
+      userId: "user-1",
       startTime: nextStartTime,
     });
 

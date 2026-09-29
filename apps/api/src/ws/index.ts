@@ -486,6 +486,30 @@ subscribeToEvent<{ userId: string }>("schedule.changed", async (data) => {
   }
 });
 
+// Un solo cronometro por persona (ADR 044): arrancar, parar -a mano o porque
+// la tarea entro en una columna final-, editar y borrar son los cuatro
+// cambios que el pie de la barra, Hoy y el parte de horas necesitan saber. La
+// misma cola de eventos ya sirve a `notification/index.ts` para
+// `time-entry.created`; esta es una segunda escucha independiente, no un
+// reemplazo.
+function notifyTimerChanged(userId?: string) {
+  if (userId) {
+    broadcastToUser(userId, { type: "TIMER_CHANGED" });
+  }
+}
+subscribeToEvent<{ userId: string }>("time-entry.created", async (data) => {
+  notifyTimerChanged(data.userId);
+});
+subscribeToEvent<{ userId: string }>("time-entry.stopped", async (data) => {
+  notifyTimerChanged(data.userId);
+});
+subscribeToEvent<{ userId: string }>("time-entry.updated", async (data) => {
+  notifyTimerChanged(data.userId);
+});
+subscribeToEvent<{ userId: string }>("time-entry.deleted", async (data) => {
+  notifyTimerChanged(data.userId);
+});
+
 // "Mi trabajo" cruza proyectos, asi que su invalidacion va por el canal de
 // usuario: la tarea puede cambiar en un proyecto que quien la tiene asignada no
 // esta mirando, y ahi no hay conexion de proyecto que reciba nada.

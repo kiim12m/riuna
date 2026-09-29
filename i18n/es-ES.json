@@ -2850,6 +2850,22 @@
 		"empty": {
 			"title": "Nada en este rango",
 			"description": "No hay tiempo registrado entre estas fechas."
+		},
+		"cannotEditRunning": "Para el cronómetro antes de editar esta entrada.",
+		"deleteEntry": {
+			"title": "¿Eliminar esta entrada?",
+			"description": "Se quita el tiempo registrado. No afecta a la tarea."
+		}
+	},
+	"timer": {
+		"stop": "Parar el cronómetro",
+		"resumeTask": "Reanudar · {{title}}",
+		"untitledTask": "Tarea sin título",
+		"overEstimate": "{{title}} — supera lo estimado",
+		"stopDialog": {
+			"title": "¿Cuándo terminó de verdad?",
+			"description": "Este cronómetro lleva más de diez horas en marcha. Elige la hora real de fin en vez de marcar ahora mismo.",
+			"endTime": "Hora de fin"
 		}
 	}
 }

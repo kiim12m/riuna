@@ -216,7 +216,16 @@ la tarea y en la propia tabla.
 - **Parte de horas** ([ADR 042](adr/042-parte-de-horas.md)): lo registrado
   por quien mira, cruzando proyectos, en un rango de fechas. Agrupable por
   día, tarea o proyecto; una entrada en marcha cuenta lo transcurrido hasta
-  ahora. Exportable a Excel.
+  ahora. Exportable a Excel. Cada grupo se despliega en sus entradas, que se
+  editan (inicio y fin) y se borran con confirmación.
+- **Cronómetro** ([ADR 044](adr/044-cronometro-en-el-pie.md)): un solo
+  cronómetro por persona, en el pie de la barra lateral (punto con pulso,
+  título y `HH:MM:SS`; en raíl solo el punto), con una pastilla flotante
+  aparte en móvil. Arrancar otro para el que estuviera en marcha; se para
+  sola si la tarea entra en una columna final. Sin nada en marcha ofrece
+  «Reanudar» sobre la última tarea sin terminar. Avisa una vez cuando lo
+  registrado supera la estimación, y al parar una entrada de más de diez
+  horas pregunta la hora real de fin. Atajo de teclado para arrancar o parar.
 
 ## 8. Paneles y objetivos
 
@@ -376,9 +385,6 @@ Para que nadie busque lo que no existe:
   Solo existe `workflowRule`, que mapea eventos de integración a columnas.
 - **Importadores de Trello, Jira, Asana y Notion** — fase 8.
 - **Importar** la hoja de SERVITEC: se exporta, no se importa.
-- **Registro de tiempo desde la interfaz.** La API y MCP lo tienen, y los
-  fetchers y hooks del web existen, pero ningún componente los usa. Las horas
-  solo se muestran: informe de ciclo, agregados del árbol y widget.
 - **Agrupar por épica** y elegir qué columnas se ven en la vista Tabla.
 - **Editor de definiciones de campos personalizados**: renombrar, archivar,
   borrar y reordenar existen en la API y no en la interfaz.

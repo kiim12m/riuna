@@ -1427,8 +1427,31 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
     ellos por separado lee 3.105, así que cinco preguntas cuestan lo que
     costaba una.
 
-El cronómetro de tarea se mueve al pie de la barra lateral en vez de una
-cabecera —la ADR 022 ya maquetó y descartó esa variante—.
+11. **Cronómetro** ✔ ([ADR 044](adr/044-cronometro-en-el-pie.md)) — se mueve
+    al pie de la barra lateral en vez de una cabecera, que la ADR 022 ya
+    maquetó y descartó. La API y los hooks web venían del fork de Kaneo sin
+    que ningún componente los usara; ahora un índice parcial único
+    (`time_entry_one_running_per_user`) impone un solo cronómetro por
+    persona en todo el servidor, arrancar uno cierra el que hubiera en una
+    transacción, y se para solo al entrar la tarea en una columna final
+    —un suscriptor a `task.status_changed` que relee `completed_at`, el que
+    ya mantiene el disparador de la ADR 025, en vez de reimplementar qué
+    columna es final—. `PUT`/`DELETE /time-entry/:id` pasan a exigir que la
+    entrada sea propia, con la condición de dueño en el propio `WHERE`
+    —antes bastaba el permiso de espacio—; `DELETE` no existía. Pulso,
+    título y `HH:MM:SS`; en raíl solo el punto. Sin nada en marcha ofrece
+    «Reanudar» sobre la última tarea sin terminar, como el play de la
+    cabecera de super-productivity con `lastCurrentTaskId`. Pastilla propia
+    en móvil, donde la barra es un panel aparte. Aviso —una vez por
+    entrada— al superar la estimación; al parar una de más de diez horas,
+    pregunta la hora real de fin en vez de estampar «ahora». El parte de
+    horas despliega las entradas de cada grupo —siempre propias— para
+    editarlas o borrarlas ahí mismo. `TIMER_CHANGED` por el canal de
+    usuario, mismo patrón que `PLAN_INVALIDATED`. 16 pruebas de integración
+    nuevas más las 11 ya existentes del parte de horas y la duración;
+    verificado con typecheck y la batería unitaria de API (703 pruebas) y
+    web (271); el navegador real queda pendiente, igual que el resto del
+    interludio en este entorno sin Docker.
 
 **Hecho cuando:** entras por «Hoy», planificas tu semana arrastrando entre
 días sin cambiar el vencimiento que ve el equipo, y administrar el espacio ya

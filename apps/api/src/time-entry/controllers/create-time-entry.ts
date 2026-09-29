@@ -5,6 +5,7 @@ import db from "../../database";
 import { taskTable, timeEntryTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { resolveDuration } from "../duration";
+import { closeRunningEntry } from "../running";
 
 async function createTimeEntry({
   taskId,
@@ -21,18 +22,31 @@ async function createTimeEntry({
 }) {
   const duration = resolveDuration(startTime, endTime);
 
-  const [createdTimeEntry] = await db
-    .insert(timeEntryTable)
-    .values({
-      id: createId(),
-      taskId,
-      userId,
-      description: description || "",
-      startTime,
-      endTime: endTime || null,
-      duration,
-    })
-    .returning();
+  // Sin `endTime` esta entrada nace en marcha (ADR 044): cerrar lo que ya
+  // corria y abrir la nueva tienen que pasar juntas, o el indice unico
+  // rechazaria la segunda mientras la primera sigue abierta. Con `endTime` es
+  // un registro manual y no toca nada mas -es el `POST` viejo, que sigue
+  // sirviendo a MCP-.
+  const createdTimeEntry = await db.transaction(async (tx) => {
+    if (!endTime) {
+      await closeRunningEntry(tx, userId, startTime);
+    }
+
+    const [inserted] = await tx
+      .insert(timeEntryTable)
+      .values({
+        id: createId(),
+        taskId,
+        userId,
+        description: description || "",
+        startTime,
+        endTime: endTime || null,
+        duration,
+      })
+      .returning();
+
+    return inserted;
+  });
 
   if (!createdTimeEntry) {
     throw new HTTPException(500, {

@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { cycleTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { isUniqueViolation } from "../../utils/is-unique-violation";
 
 /**
  * Que transiciones de estado se permiten.
@@ -17,17 +18,6 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   active: ["planned"],
   closed: [],
 };
-
-/**
- * Drizzle envuelve el error de Postgres en un `DrizzleQueryError` y deja el
- * original en `cause`, asi que el codigo **no** esta en el primer nivel. Se
- * miran los dos por si la version cambia de opinion.
- */
-function isUniqueViolation(error: unknown): boolean {
-  if (typeof error !== "object" || error === null) return false;
-  const candidate = error as { code?: string; cause?: { code?: string } };
-  return candidate.code === "23505" || candidate.cause?.code === "23505";
-}
 
 async function updateCycle({
   cycleId,

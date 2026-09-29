@@ -133,7 +133,7 @@ describe("parte de horas", () => {
       await getTimeSheet(app, workspaceId, { groupBy: "task" })
     ).json();
 
-    expect(body.groups).toEqual([
+    expect(body.groups).toMatchObject([
       { key: task.id, label: "Sustituir bomba", seconds: 1200, entryCount: 1 },
     ]);
   });
@@ -152,7 +152,7 @@ describe("parte de horas", () => {
       await getTimeSheet(app, workspaceId, { groupBy: "project" })
     ).json();
 
-    expect(body.groups).toEqual([
+    expect(body.groups).toMatchObject([
       { key: projectId, label: project?.name, seconds: 600, entryCount: 1 },
     ]);
   });
@@ -220,6 +220,28 @@ describe("parte de horas", () => {
     expect(response.headers.get("content-disposition")).toContain(
       "parte-de-horas",
     );
+  });
+
+  it("lists each entry inside its group, for editing or deleting one at a time (ADR 044)", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId, {
+      title: "Sustituir bomba",
+    });
+    const start = day(0);
+    await logTime(task.id, userId, start, 1200);
+
+    const body = await (
+      await getTimeSheet(app, workspaceId, { groupBy: "task" })
+    ).json();
+
+    expect(body.groups[0].entries).toHaveLength(1);
+    expect(body.groups[0].entries[0]).toMatchObject({
+      taskId: task.id,
+      taskTitle: "Sustituir bomba",
+      projectId,
+      seconds: 1200,
+    });
+    expect(body.groups[0].entries[0].id).toEqual(expect.any(String));
   });
 
   it("someone outside the workspace cannot read its time sheet", async () => {

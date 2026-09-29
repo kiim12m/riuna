@@ -2850,6 +2850,22 @@
 		"empty": {
 			"title": "Nothing in this range",
 			"description": "No time logged between these dates."
+		},
+		"cannotEditRunning": "Stop the timer before editing this entry.",
+		"deleteEntry": {
+			"title": "Delete this entry?",
+			"description": "This removes the logged time. It does not affect the task."
+		}
+	},
+	"timer": {
+		"stop": "Stop timer",
+		"resumeTask": "Resume · {{title}}",
+		"untitledTask": "Untitled task",
+		"overEstimate": "{{title}} — over the estimate",
+		"stopDialog": {
+			"title": "When did it actually stop?",
+			"description": "This timer has been running for more than ten hours. Pick the real end time instead of stamping it with now.",
+			"endTime": "End time"
 		}
 	}
 }

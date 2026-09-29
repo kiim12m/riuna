@@ -2850,6 +2850,22 @@
 		"empty": {
 			"title": "Res en aquest rang",
 			"description": "No hi ha temps registrat entre aquestes dates."
+		},
+		"cannotEditRunning": "Atura el cronòmetre abans d’editar aquesta entrada.",
+		"deleteEntry": {
+			"title": "Vols eliminar aquesta entrada?",
+			"description": "Es treu el temps registrat. No afecta la tasca."
+		}
+	},
+	"timer": {
+		"stop": "Atura el cronòmetre",
+		"resumeTask": "Reprèn · {{title}}",
+		"untitledTask": "Tasca sense títol",
+		"overEstimate": "{{title}} — supera l’estimació",
+		"stopDialog": {
+			"title": "Quan va acabar de veritat?",
+			"description": "Aquest cronòmetre porta més de deu hores en marxa. Tria l’hora real de fi en lloc de marcar-la ara mateix.",
+			"endTime": "Hora de fi"
 		}
 	}
 }
