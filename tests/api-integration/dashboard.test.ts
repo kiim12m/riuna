@@ -410,6 +410,83 @@ describe("API integration: personal dashboards", () => {
     expect(foreign.status).toBe(400);
   });
 
+  it("restores the default layout, replacing custom widgets", async () => {
+    const member = await createWorkspaceMember({ role: "member" });
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    // La siembra sale del propio endpoint, no de `seedDashboard`: es lo que
+    // hace falta comparar despues de restaurar.
+    const seeded = (await (
+      await app.request(`/api/dashboard?workspaceId=${member.workspace.id}`)
+    ).json()) as Dashboard[];
+    const dashboard = seeded[0];
+    if (!dashboard) throw new Error("dashboard not seeded");
+    const original = dashboard.widgets
+      .map((widget) => ({
+        title: widget.title,
+        span: widget.span,
+        rowSpan: widget.rowSpan,
+        position: widget.position,
+      }))
+      .sort((a, b) => a.position - b.position);
+
+    // Se borra uno y se anade otro ajeno a la distribucion de partida.
+    const toDelete = dashboard.widgets[0];
+    if (!toDelete) throw new Error("no widget to delete");
+    await app.request(`/api/dashboard/widget/${toDelete.id}`, {
+      method: "DELETE",
+    });
+    await app.request(
+      `/api/dashboard/${dashboard.id}/widget`,
+      json({ type: "count", title: "A mano", config: {} }),
+    );
+
+    const reset = await app.request(
+      `/api/dashboard/${dashboard.id}/reset-layout`,
+      { method: "POST" },
+    );
+    expect(reset.status).toBe(200);
+
+    const after = (await (
+      await app.request(`/api/dashboard?workspaceId=${member.workspace.id}`)
+    ).json()) as Dashboard[];
+    const restored = after
+      .find((item) => item.id === dashboard.id)
+      ?.widgets.map((widget) => ({
+        title: widget.title,
+        span: widget.span,
+        rowSpan: widget.rowSpan,
+        position: widget.position,
+      }))
+      .sort((a, b) => a.position - b.position);
+
+    expect(restored).toEqual(original);
+  });
+
+  it("refuses to reset someone else's dashboard", async () => {
+    const owner = await createWorkspaceMember({ role: "admin" });
+    const dashboard = await seedDashboard(owner.workspace.id, owner.user.id);
+
+    const intruder = await createWorkspaceMember({ role: "admin" });
+    await db.insert(schema.workspaceUserTable).values({
+      workspaceId: owner.workspace.id,
+      userId: intruder.user.id,
+      role: "admin",
+      joinedAt: new Date(),
+    });
+
+    mockAuthenticatedSession(intruder.user);
+    const { app } = createApp();
+
+    const response = await app.request(
+      `/api/dashboard/${dashboard.id}/reset-layout`,
+      { method: "POST" },
+    );
+
+    expect(response.status).toBe(403);
+  });
+
   /**
    * La geometria de la rejilla de doce columnas (ADR 043).
    *

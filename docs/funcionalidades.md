@@ -239,7 +239,8 @@ la tarea y en la propia tabla.
 - **Distribución de partida** en tres alturas: ocho cifras arriba —vencidas,
   vencen hoy, vencen esta semana, pendientes, cerradas en siete días, alta
   prioridad, sin fecha y horas registradas—, la semana en curso a ancho
-  completo, y debajo la lista de pendientes con la bandeja al lado.
+  completo, y debajo la lista de pendientes con la bandeja al lado. Restaurable
+  en cualquier momento, sustituyendo los widgets que se hayan añadido o editado.
 - **Objetivos (OKR)**: objetivo con periodo de fechas y **resultados clave**
   medidos con el mismo motor de agregación que los widgets. Compartibles con el
   espacio.

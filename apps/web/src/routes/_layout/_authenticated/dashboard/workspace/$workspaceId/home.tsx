@@ -1,6 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { saveAs } from "file-saver";
-import { Download, LayoutDashboard, Plus, Users } from "lucide-react";
+import {
+  Download,
+  LayoutDashboard,
+  Plus,
+  RotateCcw,
+  Users,
+} from "lucide-react";
 import { type CSSProperties, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import WorkspaceLayout from "@/components/common/workspace-layout";
@@ -21,6 +27,15 @@ import {
 } from "@/components/dashboard/widget-editor";
 import PageTitle from "@/components/page-title";
 import { useAuth } from "@/components/providers/auth-provider/hooks/use-auth";
+import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -153,6 +168,7 @@ function HomeComponent() {
     );
   };
 
+  const [isResetting, setIsResetting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
@@ -231,6 +247,17 @@ function HomeComponent() {
                 {dashboard.isShared
                   ? t("panels:actions.unshare")
                   : t("panels:actions.share")}
+              </Button>
+            )}
+            {dashboard && canEdit && (
+              <Button
+                variant="ghost"
+                size="xs"
+                className="gap-1"
+                onClick={() => setIsResetting(true)}
+              >
+                <RotateCcw className="size-3" />
+                {t("panels:actions.resetLayout")}
               </Button>
             )}
             {dashboard && (
@@ -380,6 +407,39 @@ function HomeComponent() {
           onSave={save}
         />
       )}
+
+      <AlertDialog open={isResetting} onOpenChange={setIsResetting}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("panels:reset.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("panels:reset.description")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogClose render={<Button variant="outline" size="sm" />}>
+              {t("common:actions.cancel")}
+            </AlertDialogClose>
+            <AlertDialogClose
+              render={
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    if (!dashboard) return;
+                    mutations.resetLayout.mutate(dashboard.id, {
+                      onSuccess: () => toast.success(t("panels:reset.done")),
+                      onError,
+                    });
+                  }}
+                />
+              }
+            >
+              {t("panels:reset.confirm")}
+            </AlertDialogClose>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

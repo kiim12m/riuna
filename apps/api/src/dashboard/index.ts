@@ -12,6 +12,7 @@ import exportDashboard from "./controllers/export-dashboard";
 import getDashboardData from "./controllers/get-dashboard-data";
 import getDashboards from "./controllers/get-dashboards";
 import reorderWidgets from "./controllers/reorder-widgets";
+import resetDashboardLayout from "./controllers/reset-dashboard-layout";
 import updateDashboard from "./controllers/update-dashboard";
 import updateWidget from "./controllers/update-widget";
 import {
@@ -362,6 +363,25 @@ const dashboard = new Hono<{
       const { widgetIds } = c.req.valid("json");
       return c.json(await reorderWidgets(id, widgetIds));
     },
+  )
+  .post(
+    "/:id/reset-layout",
+    describeRoute({
+      operationId: "resetDashboardLayout",
+      tags: ["Dashboards"],
+      description:
+        "Replace every widget of a dashboard with the default layout",
+      responses: {
+        200: {
+          description: "Layout restored",
+          content: { "application/json": { schema: resolver(v.any()) } },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    workspaceAccess.fromDashboard("id"),
+    requireDashboardOwner,
+    async (c) => c.json(await resetDashboardLayout(c.req.valid("param").id)),
   );
 
 export default dashboard;

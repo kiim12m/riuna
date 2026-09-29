@@ -166,6 +166,15 @@ export async function reorderWidgets(dashboardId: string, widgetIds: string[]) {
   );
 }
 
+/** Sustituye todos los widgets del panel por los de la distribucion de partida. */
+export async function resetDashboardLayout(dashboardId: string) {
+  return unwrap(
+    await client.dashboard[":id"]["reset-layout"].$post({
+      param: { id: dashboardId },
+    }),
+  );
+}
+
 export type Dashboard = Awaited<ReturnType<typeof getDashboards>>[number];
 export type Widget = Dashboard["widgets"][number];
 export type DashboardData = Awaited<ReturnType<typeof getDashboardData>>;
