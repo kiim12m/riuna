@@ -7,6 +7,7 @@ import {
   projectTable,
 } from "../../database/schema";
 import {
+  DEFAULT_WIDGET_SIZE,
   MAX_WIDGETS_PER_DASHBOARD,
   resolveWidget,
   type WidgetConfig,
@@ -22,6 +23,7 @@ export default async function createWidget({
   goalId,
   config,
   span,
+  rowSpan,
 }: {
   dashboardId: string;
   workspaceId: string;
@@ -31,6 +33,7 @@ export default async function createWidget({
   goalId?: string | null;
   config: WidgetConfig;
   span?: number;
+  rowSpan?: number;
 }) {
   await assertProjectBelongsToWorkspace(projectId, workspaceId);
   await assertGoalIsVisible(goalId, workspaceId, type);
@@ -61,7 +64,11 @@ export default async function createWidget({
       type,
       title,
       config,
-      span: span ?? 1,
+      // El defecto de la columna es 1x1 para todos; el tamano razonable depende
+      // del tipo, y una tabla de veinte filas de una fila de alto no es un
+      // widget sino un recorte.
+      span: span ?? DEFAULT_WIDGET_SIZE[type].span,
+      rowSpan: rowSpan ?? DEFAULT_WIDGET_SIZE[type].rowSpan,
       position: used,
     })
     .returning();

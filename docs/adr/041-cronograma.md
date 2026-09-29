@@ -126,8 +126,10 @@ atajo que la ADR 026 ya rechazó para las tareas.
 - **Una entrada partida dos veces en el mismo día se recorta, no se
   triplica.** Documentado arriba como límite aceptado, no como bug pendiente.
 - **Nada se mueve solo de un día a otro.** Una entrada que no cabe se ve como
-  «sin hueco hoy»; moverla de día sigue siendo una acción del Planificador,
-  no algo que el Cronograma haga por su cuenta.
+  «sin hueco hoy» — no se arrastra a mañana por su cuenta. Moverla de día si
+  sigue siendo una acción explícita, ahora también desde el propio
+  Cronograma (arrastrar entre columnas, ver más abajo), no solo desde el
+  Planificador.
 - **El horario 08:00–18:00 puede no ajustarse a quien no trabaja jornada
   partida estándar.** Igual que la carga de 8 h del Planificador: declarado,
   sin pantalla de ajustes todavía.
@@ -135,10 +137,100 @@ atajo que la ADR 026 ya rechazó para las tareas.
   `cadence` opcional** (junto a `task_recurrence` y, ahora, los bloques
   fijos repetidos): reutiliza el mismo tipo en vez de inventar una cuarta
   forma de decir «cada lunes».
-- **Actualización 2026-09-23.** `get-schedule.ts` calculaba `todayKey` y la
-  clave de cada día con `toISOString().slice(0, 10)` —UTC— mientras
-  `windowStart` salía de `setHours(0,0,0,0)` —hora local—; en un servidor con
-  offset positivo, `isToday` señalaba el día equivocado casi toda la jornada,
-  y con él el recorte «empieza en ahora» y el bloque del cronómetro en
-  marcha. Corregido con `serverDayKey` (`utils/day-boundaries.ts`), la misma
-  puerta que usa el Planificador (ADR 040).
+**Estado actual (revisado 2026-09-24).** Lo de arriba fue la decisión
+original; desde entonces el Cronograma creció de la ventana fija de 7 días a
+un calendario de verdad, acercándolo a Schedule de super-productivity
+(`schedule.component.html`, `schedule-month.component.html`,
+`create-task-placeholder.component.ts`, mismo MIT en `NOTICE`) y ganando la
+edición de bloques que antes solo existía a medias. Por concepto, no por
+fecha de cada cambio -el detalle día a día queda en el historial de git-:
+
+- **Vistas y navegación.** Día/Semana/Mes (`schedule-range.ts`), con la
+  vista y el día ancla en la URL. La rejilla son **24 h fijas**, siempre
+  visible aunque el día esté vacío -se retiró el estado vacío "Nada que
+  mostrar"-, desplazada a la jornada laboral (u "ahora" si el día es hoy) al
+  entrar. El reencuadre depende solo de qué días hay a la vista, no de la
+  identidad del objeto `days` -que cambia en cada refresco tras mutar-, para
+  no saltar a "ahora" cada vez que se mueve o redimensiona una tarea.
+- **Crear desde un hueco.** `CreateTaskPlaceholder` (portado de
+  `create-task-placeholder.component.ts`): en reposo, un mensaje de "pulsa
+  aquí para crear una tarea"; en edición, un campo que crea una tarea nueva
+  (30 min por defecto, como `timeEstimate` allí) o planifica una ya
+  existente sin planificar, con Ctrl+1 para alternar "a esta hora"/"para el
+  día" (`isForDayMode` allí). Puntero-only como el original, con
+  `role="button"` + Enter/Espacio en el fondo de cada columna para quien
+  navega por teclado. Silenciado mientras cualquier tramo de cualquier
+  columna se mueve o redimensiona (`isSegmentInteracting`, en `TimeGrid`,
+  no en cada columna): si viviera por columna, la columna de destino de un
+  arrastre entre días seguiría ofreciendo crear una tarea encima de donde
+  se apunta.
+- **Tareas sin estimar.** Ocupan 30 min (`UNESTIMATED_ENTRY_SECONDS`), no el
+  mínimo de 10 -a 10 min el tramo no se lee-, reservados de verdad en el
+  reparto (`layoutDay`), no solo pintados más grandes; borde punteado y
+  color apagado las distingue (`segment-card.tsx`).
+- **Mover y redimensionar.** Arrastrar un tramo verticalmente ancla o libera
+  `start_minute`, con matemática de puntero continua
+  (`gantt-task-bar.tsx`, `schedule-timeline.ts`). Redimensionar un borde
+  cambia **la estimación de la tarea** (`PUT /task/estimate/:id`), no una
+  columna propia del Cronograma -es la única fuente de duración que existe,
+  compartida con el equipo, el mismo campo que se ve en el detalle y suma
+  en Objetivos y Paneles-: el borde inferior solo cambia la duración, el
+  superior mueve el inicio y también ancla la tarea a la nueva hora. Las
+  asas de redimensionar se limitan al bloqueador fijo vecino más cercano
+  -no al día entero-, y solo se ofrecen en la primera/última parte de una
+  tarea partida (partir un tramo intermedio no dejaría dónde alargarlo). El
+  mínimo de duración y la base sin estimar los manda la API en la propia
+  respuesta (`minEntrySeconds`, `unestimatedEntrySeconds`) en vez de vivir
+  copiados a mano en la web.
+- **Mover de día (vista Semana).** Arrastrar un tramo a la columna de otro
+  día lo replanifica ahí: `dayKeyAtPoint` (`segment-card.tsx`) lee, con
+  `document.elementFromPoint`, el `data-day-key` que `time-grid.tsx` pone en
+  el contenedor de cada rejilla, y pasa por `PUT /planner/:taskId` (cambia
+  `plannedDate` **y** `startMinute` en una sola llamada), no por
+  `setEntryTime`. Mientras se arrastra, la columna de destino dibuja una
+  sombra (`drag-ghost.tsx`) con el título y la franja horaria de destino -el
+  tramo de origen se queda quieto en su sitio, solo atenuado, en vez de
+  seguir al puntero-; al soltar, `moveEntryDay` escribe la caché de todas
+  las vistas de Cronograma en `onMutate` (antes de que la petición salga),
+  para que la tarea no "desaparezca" hasta el refetch. Sin `position`
+  explícita -este gesto solo sabe de hora y día-, `setPlanEntry` conserva la
+  posición si el día no cambia, o la manda al final del día de destino si
+  cambia, en vez de reiniciarla siempre a 0.
+- **Bloques (`schedule_block`).** Citas fijas o descansos, sueltos o
+  repetidos por `cadence` (mismo tipo que `task_recurrence`, reutilizando
+  `parseCadence`/`nextOccurrence`/`firstOnOrAfter`), con el cronómetro en
+  marcha proyectado de solo lectura desde `time_entry`. Un clic sobre un
+  bloque real (no el cronómetro; cada entrada de un tramo fusionado -dos
+  bloques que se solapan- es su propio botón, editable por separado) abre
+  el mismo diálogo de crear, ya relleno, con un botón de eliminar. Nunca
+  cambia si es suelto o repetido -eso sigue siendo borrar y crear de
+  nuevo-, pero dentro de cada forma sí se puede mover: uno suelto cambia de
+  día (`plannedDate` en el PATCH, editable también al crear, no solo fijado
+  al día donde se pulsó "+"); uno repetido pone o quita una fecha límite
+  (`endsAt`, misma columna y patrón que `task_recurrence.ends_at` -parseada
+  como día del servidor, `parseServerDay`, igual que `plannedDate`, no como
+  instante UTC-, que `get-schedule.ts` usa para recortar la proyección
+  igual que `computeGhosts` recorta los fantasmas). `update-block.ts` valida
+  la forma contra la fila real antes de escribir, nunca contra lo que mande
+  quien llama, para devolver 400 en vez de que reviente la CHECK de la
+  tabla con un 500 crudo -y sigue comprobando el resultado de su propio
+  `UPDATE`, no solo el `SELECT` previo, porque un `DELETE` concurrente entre
+  los dos dejaría un 200 con cuerpo vacío-. `get-schedule.ts` decora cada
+  entrada de un tramo `block` con la fila completa (`entries[].block`), no
+  solo `{id, title, kind}`: el diálogo de edición necesita el horario y la
+  forma propios del bloque, que el tramo fusionado y recortado a la ventana
+  no lleva.
+- **El servidor manda, el cliente no recalcula.** `serverToday`,
+  `workStartMinute`/`workEndMinute`, `minEntrySeconds` y
+  `unestimatedEntrySeconds` viajan en la respuesta de `GET /schedule` -mismo
+  patrón que `get-plan.ts` ya usaba para "hoy"-, así que "qué día es hoy" y
+  los mínimos de duración solo se calculan y declaran en un sitio.
+  `getSchedule` (`apps/api/src/schedule/controllers/get-schedule.ts`) delega
+  la proyección de bloques repetidos y el reparto de un día a funciones
+  puras en `build-day.ts`, separadas de las consultas.
+
+Verificado con pruebas unitarias (API y web), de integración
+(`schedule.test.ts`, `planner.test.ts`) y e2e (`schedule.spec.ts`: anclar
+arrastrando, crear desde un hueco, redimensionar, mover de día entre
+columnas) en cada cambio, más pasadas de navegador real para lo puramente
+visual.

@@ -20,6 +20,7 @@ export default async function updateWidget({
   goalId,
   config,
   span,
+  rowSpan,
 }: {
   id: string;
   workspaceId: string;
@@ -28,6 +29,7 @@ export default async function updateWidget({
   goalId?: string | null;
   config?: WidgetConfig;
   span?: number;
+  rowSpan?: number;
 }) {
   const existing = await db.query.dashboardWidgetTable.findFirst({
     where: eq(dashboardWidgetTable.id, id),
@@ -64,6 +66,7 @@ export default async function updateWidget({
       ...(goalId !== undefined && { goalId }),
       ...(config !== undefined && { config }),
       ...(span !== undefined && { span }),
+      ...(rowSpan !== undefined && { rowSpan }),
     })
     .where(eq(dashboardWidgetTable.id, id))
     .returning();

@@ -23,7 +23,8 @@ export type WidgetType =
   | "epic_progress"
   | "table"
   | "inbox"
-  | "goal";
+  | "goal"
+  | "week";
 
 export type WidgetMetric =
   | "count"
@@ -41,9 +42,14 @@ export type WidgetGroupBy =
   | "done"
   | "dueWindow"
   | "epic"
-  | "time";
+  | "time"
+  /** Solo en el widget de tiempo: el total, sin repartir. */
+  | "none";
 
 export type Granularity = "day" | "week" | "month";
+
+/** El mismo vocabulario que `utils/due-window.ts` en la API. */
+export type WidgetDueWindow = "overdue" | "today" | "week" | "later" | "none";
 
 /**
  * El mismo vocabulario editable que una vista guardada (ADR 015), reutilizado
@@ -52,20 +58,41 @@ export type Granularity = "day" | "week" | "month";
  */
 export type WidgetCondition = EditableCondition;
 
+/**
+ * El `config` de un widget, **espejo exacto** de `widgetConfigSchema` en la API.
+ *
+ * Tiene que estar completo, no solo lo que la interfaz edita: el editor siembra
+ * su borrador desde este tipo y despues envia el objeto entero, asi que una
+ * clave que falte aqui se **borra al guardar**. Es lo que pasaba con `scope`:
+ * abrir y guardar cualquier widget sembrado le quitaba en silencio el ambito
+ * personal y lo ensanchaba a todo el espacio de trabajo.
+ */
 export type WidgetConfig = {
   filter?: WidgetCondition[];
+  scope?: "assigned" | "team";
   metric?: WidgetMetric;
   groupBy?: WidgetGroupBy;
   granularity?: Granularity;
   rangeDays?: number;
+  dueWindow?: WidgetDueWindow;
 };
 
 export async function getDashboards(workspaceId: string) {
   return unwrap(await client.dashboard.$get({ query: { workspaceId } }));
 }
 
-export async function getDashboardData(id: string) {
-  return unwrap(await client.dashboard[":id"].data.$post({ param: { id } }));
+/** Los siete valores que admite la ruta, tal cual viajan en la URL. */
+const WEEK_START_PARAMS = ["0", "1", "2", "3", "4", "5", "6"] as const;
+
+export async function getDashboardData(id: string, weekStartsOn: number) {
+  return unwrap(
+    await client.dashboard[":id"].data.$post({
+      param: { id },
+      // La preferencia de inicio de semana de quien mira: la ventana del widget
+      // semanal la calcula el servidor, pero no puede adivinar donde empieza.
+      query: { weekStartsOn: WEEK_START_PARAMS[weekStartsOn] },
+    }),
+  );
 }
 
 export async function createDashboard(input: {
@@ -97,6 +124,7 @@ export async function createWidget(
     goalId?: string | null;
     config: WidgetConfig;
     span?: number;
+    rowSpan?: number;
   },
 ) {
   return unwrap(
@@ -115,6 +143,7 @@ export async function updateWidget(
     goalId?: string | null;
     config?: WidgetConfig;
     span?: number;
+    rowSpan?: number;
   },
 ) {
   return unwrap(
@@ -147,9 +176,15 @@ export type WidgetPayload = DashboardData["widgets"][number];
  *
  * No pasa por `unwrap`: la respuesta es un fichero, no JSON.
  */
-export async function exportDashboard(dashboardId: string) {
+export async function exportDashboard(
+  dashboardId: string,
+  weekStartsOn: number,
+) {
   const response = await client.dashboard[":id"].export.$get({
     param: { id: dashboardId },
+    // La misma preferencia que la pantalla: sin ella la hoja de la semana
+    // cubria siete dias distintos de los que se estaban viendo.
+    query: { weekStartsOn: WEEK_START_PARAMS[weekStartsOn] },
   });
 
   if (!response.ok) {

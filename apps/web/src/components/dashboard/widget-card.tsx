@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/cn";
 
 /**
  * El envoltorio de un widget.
@@ -24,7 +23,6 @@ import { cn } from "@/lib/cn";
 export function WidgetCard({
   title,
   subtitle,
-  span,
   isLoading,
   error,
   onEdit,
@@ -33,7 +31,6 @@ export function WidgetCard({
 }: {
   title: string;
   subtitle?: string;
-  span: number;
   isLoading?: boolean;
   error?: string;
   onEdit?: () => void;
@@ -48,15 +45,14 @@ export function WidgetCard({
   const titleId = useId();
 
   return (
+    // `h-full min-h-0 overflow-hidden`: desde la ADR 043 la fila de la rejilla
+    // tiene alto fijo, asi que la tarjeta lo ocupa entero y lo que no cabe hace
+    // scroll en el cuerpo. El ancho y el alto los pone la celda, no la tarjeta.
     <section
       aria-labelledby={titleId}
-      className={cn(
-        "flex min-w-0 flex-col gap-2 rounded-lg border border-border bg-background p-(--density-card-pad)",
-        span === 2 && "sm:col-span-2",
-        span === 3 && "sm:col-span-2 lg:col-span-3",
-      )}
+      className="flex h-full min-h-0 min-w-0 flex-col gap-2 overflow-hidden rounded-lg border border-border bg-background p-(--density-card-pad)"
     >
-      <header className="flex items-start gap-2">
+      <header className="flex shrink-0 items-start gap-2">
         <div className="min-w-0 flex-1">
           {/* `h2`, no `h3`: el widget es el grupo de primer nivel bajo el
               saludo, que es el `h1` de la pagina. Saltarse el `h2` deja a un
@@ -102,18 +98,23 @@ export function WidgetCard({
         )}
       </header>
 
-      {isLoading ? (
-        <Skeleton className="h-24 w-full rounded-md" />
-      ) : error ? (
-        // Un widget roto no deja el panel en blanco: lo dice y sigue. El caso
-        // real es archivar una definicion de campo que su filtro nombra.
-        <p className="flex items-start gap-2 py-4 text-muted-foreground text-meta">
-          <TriangleAlert className="mt-px size-3.5 shrink-0 text-warning-foreground" />
-          <span>{error}</span>
-        </p>
-      ) : (
-        children
-      )}
+      {/* El `min-h-0` es imprescindible: sin el, un hijo flexible se niega a
+          encoger por debajo de su contenido y la tarjeta desborda la fila en
+          vez de hacer scroll dentro. */}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        {isLoading ? (
+          <Skeleton className="h-full min-h-16 w-full rounded-md" />
+        ) : error ? (
+          // Un widget roto no deja el panel en blanco: lo dice y sigue. El caso
+          // real es archivar una definicion de campo que su filtro nombra.
+          <p className="flex items-start gap-2 py-4 text-muted-foreground text-meta">
+            <TriangleAlert className="mt-px size-3.5 shrink-0 text-warning-foreground" />
+            <span>{error}</span>
+          </p>
+        ) : (
+          children
+        )}
+      </div>
     </section>
   );
 }

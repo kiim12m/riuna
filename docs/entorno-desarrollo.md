@@ -96,3 +96,35 @@ apunta sin interpretarlo.
 - `pnpm … dev -- --port N` le llega a vite como `vite -- --port N`, y vite
   descarta lo que va tras el `--`. El puerto se pasa por `DEV_WEB_PORT`, que lee
   `vite.config.ts`.
+
+## Solo en Windows, fuera del devcontainer
+
+Todo lo de arriba da por hecho el devcontainer, que es Linux. Quien lance esto
+desde Git Bash en Windows se encuentra con dos cosas; **en el devcontainer no
+pasa ninguna de las dos, y no hay que cambiar nada allí**.
+
+**`pnpm dev:parallel` necesita `MSYS_NO_PATHCONV=1`.**
+
+```bash
+MSYS_NO_PATHCONV=1 DEV_DATABASE_URL=postgresql://…/riuna_dev pnpm dev:parallel
+```
+
+El guion exporta `VITE_API_URL=/` —la barra sola es «el mismo origen que la
+página», que es lo que hace funcionar el proxy—, y la capa MSYS de Git Bash
+traduce esa barra a la raíz de la instalación de Git antes de que la vea el
+proceso: llega `C:/Program Files/Git/`. Better Auth resuelve su base contra eso,
+no encuentra protocolo y lanza `Invalid base URL: file://`.
+
+**El modo de fallo es lo caro, no el fallo.** La aplicación no arranca y lo
+único que se ve es una **página en negro**: sin error en la terminal, sin nada
+en la interfaz, y la traza del navegador viene vacía. Da igual por dónde se
+entre, porque la variable ya está mal en el paquete servido.
+
+`MSYS2_ARG_CONV_EXCL="*"` **no vale** para esto: actúa sobre los argumentos de
+la orden, no sobre el entorno. Comprobado (2026-09-28): con `MSYS_NO_PATHCONV=1`
+llega `"/"`, sin él y con `MSYS2_ARG_CONV_EXCL` llega `"C:/Program Files/Git/"`.
+
+**`pnpm dev:db` no aplica.** Está escrito contra `apt` y `pg_ctlcluster`, que es
+la PostgreSQL del devcontainer. En Windows la base la pone uno —un contenedor de
+`postgres:16-alpine` basta— y se le dice al guion cuál con `DEV_DATABASE_URL`.
+Que sea una base **de esta máquina** lo sigue vigilando `dev-parallel.sh`.

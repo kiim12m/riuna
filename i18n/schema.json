@@ -10204,6 +10204,30 @@
 						},
 						"pickGoal": {
 							"type": "string"
+						},
+						"resize": {
+							"type": "string"
+						},
+						"width": {
+							"type": "string"
+						},
+						"height": {
+							"type": "string"
+						},
+						"columns_one": {
+							"type": "string"
+						},
+						"columns_other": {
+							"type": "string"
+						},
+						"rows_one": {
+							"type": "string"
+						},
+						"rows_other": {
+							"type": "string"
+						},
+						"personalScope": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -10220,7 +10244,15 @@
 						"noData",
 						"ofTotal",
 						"goal",
-						"pickGoal"
+						"pickGoal",
+						"resize",
+						"width",
+						"height",
+						"columns_one",
+						"columns_other",
+						"rows_one",
+						"rows_other",
+						"personalScope"
 					]
 				},
 				"type": {
@@ -10250,6 +10282,9 @@
 						},
 						"goal": {
 							"type": "string"
+						},
+						"week": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -10260,7 +10295,8 @@
 						"epic_progress",
 						"table",
 						"inbox",
-						"goal"
+						"goal",
+						"week"
 					]
 				},
 				"metric": {
@@ -10321,6 +10357,9 @@
 						},
 						"time": {
 							"type": "string"
+						},
+						"none": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -10332,7 +10371,8 @@
 						"done",
 						"dueWindow",
 						"epic",
-						"time"
+						"time",
+						"none"
 					]
 				},
 				"buckets": {
@@ -10467,6 +10507,35 @@
 						}
 					},
 					"required": ["saveFailed"]
+				},
+				"scope": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"all": {
+							"type": "string"
+						},
+						"assigned": {
+							"type": "string"
+						},
+						"team": {
+							"type": "string"
+						}
+					},
+					"required": ["all", "assigned", "team"]
+				},
+				"week": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"more_one": {
+							"type": "string"
+						},
+						"more_other": {
+							"type": "string"
+						}
+					},
+					"required": ["more_one", "more_other"]
 				}
 			},
 			"required": [
@@ -10482,7 +10551,9 @@
 				"inbox",
 				"actions",
 				"shared",
-				"errors"
+				"errors",
+				"scope",
+				"week"
 			]
 		},
 		"goals": {
@@ -10793,24 +10864,14 @@
 				"running": {
 					"type": "string"
 				},
-				"empty": {
+				"createBlock": {
 					"type": "object",
 					"additionalProperties": false,
 					"properties": {
 						"title": {
 							"type": "string"
 						},
-						"description": {
-							"type": "string"
-						}
-					},
-					"required": ["title", "description"]
-				},
-				"createBlock": {
-					"type": "object",
-					"additionalProperties": false,
-					"properties": {
-						"title": {
+						"editTitle": {
 							"type": "string"
 						},
 						"description": {
@@ -10840,6 +10901,9 @@
 						"timesInvalid": {
 							"type": "string"
 						},
+						"day": {
+							"type": "string"
+						},
 						"repeat": {
 							"type": "string"
 						},
@@ -10849,12 +10913,31 @@
 						"repeatSome": {
 							"type": "string"
 						},
+						"until": {
+							"type": "string"
+						},
+						"untilSet": {
+							"type": "string"
+						},
+						"untilNone": {
+							"type": "string"
+						},
 						"confirm": {
+							"type": "string"
+						},
+						"editHint": {
+							"type": "string"
+						},
+						"deleteTitle": {
+							"type": "string"
+						},
+						"deleteDescription": {
 							"type": "string"
 						}
 					},
 					"required": [
 						"title",
+						"editTitle",
 						"description",
 						"name",
 						"namePlaceholder",
@@ -10864,11 +10947,146 @@
 						"startTime",
 						"endTime",
 						"timesInvalid",
+						"day",
 						"repeat",
 						"repeatNone",
 						"repeatSome",
-						"confirm"
+						"until",
+						"untilSet",
+						"untilNone",
+						"confirm",
+						"editHint",
+						"deleteTitle",
+						"deleteDescription"
 					]
+				},
+				"view": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"label": {
+							"type": "string"
+						},
+						"day": {
+							"type": "string"
+						},
+						"week": {
+							"type": "string"
+						},
+						"month": {
+							"type": "string"
+						}
+					},
+					"required": ["label", "day", "week", "month"]
+				},
+				"nav": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"previousDay": {
+							"type": "string"
+						},
+						"nextDay": {
+							"type": "string"
+						},
+						"previousWeek": {
+							"type": "string"
+						},
+						"nextWeek": {
+							"type": "string"
+						},
+						"previousMonth": {
+							"type": "string"
+						},
+						"nextMonth": {
+							"type": "string"
+						},
+						"today": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"previousDay",
+						"nextDay",
+						"previousWeek",
+						"nextWeek",
+						"previousMonth",
+						"nextMonth",
+						"today"
+					]
+				},
+				"weekTitle": {
+					"type": "string"
+				},
+				"placeholder": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"clickToCreate": {
+							"type": "string"
+						},
+						"inputPlaceholder": {
+							"type": "string"
+						},
+						"dayPlaceholder": {
+							"type": "string"
+						},
+						"toggleTimeHint": {
+							"type": "string"
+						},
+						"toggleDayHint": {
+							"type": "string"
+						},
+						"project": {
+							"type": "string"
+						},
+						"existing": {
+							"type": "string"
+						},
+						"createNew": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						},
+						"forDay": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"clickToCreate",
+						"inputPlaceholder",
+						"dayPlaceholder",
+						"toggleTimeHint",
+						"toggleDayHint",
+						"project",
+						"existing",
+						"createNew",
+						"error",
+						"forDay"
+					]
+				},
+				"month": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"more": {
+							"type": "string"
+						}
+					},
+					"required": ["more"]
+				},
+				"resizeError": {
+					"type": "string"
+				},
+				"resizeHandle": {
+					"type": "string"
+				},
+				"noEstimate": {
+					"type": "string"
+				},
+				"moveDayError": {
+					"type": "string"
 				}
 			},
 			"required": [
@@ -10876,8 +11094,16 @@
 				"today",
 				"overflow",
 				"running",
-				"empty",
-				"createBlock"
+				"createBlock",
+				"view",
+				"nav",
+				"weekTitle",
+				"placeholder",
+				"month",
+				"resizeError",
+				"resizeHandle",
+				"noEstimate",
+				"moveDayError"
 			]
 		},
 		"timeSheet": {

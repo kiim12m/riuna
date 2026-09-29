@@ -1,9 +1,17 @@
 import { client } from "@riuna/libs";
 import { HttpError } from "@/lib/http-error";
 
-export async function getSchedule(workspaceId: string, days = 7) {
+export async function getSchedule(
+  workspaceId: string,
+  days = 7,
+  from?: string,
+) {
   const response = await client.schedule.$get({
-    query: { workspaceId, days: String(days) },
+    query: {
+      workspaceId,
+      days: String(days),
+      ...(from ? { from } : {}),
+    },
   });
 
   if (!response.ok) {
@@ -38,6 +46,19 @@ export type CreateBlockInput = {
   endMinute: number;
   plannedDate?: string;
   cadence?: Record<string, unknown>;
+  /** Solo junto a `cadence`: hasta cuando se proyecta la serie. */
+  endsAt?: string;
+};
+
+export type UpdateBlockInput = {
+  title: string;
+  kind: "fixed" | "break";
+  startMinute: number;
+  endMinute: number;
+  /** Solo si el bloque es suelto: a que dia se mueve. */
+  plannedDate?: string;
+  /** Solo si repite: hasta cuando. `null` quita el limite. */
+  endsAt?: string | null;
 };
 
 export async function createBlock(
@@ -59,12 +80,7 @@ export async function createBlock(
 export async function updateBlock(
   workspaceId: string,
   id: string,
-  input: {
-    title: string;
-    kind: "fixed" | "break";
-    startMinute: number;
-    endMinute: number;
-  },
+  input: UpdateBlockInput,
 ) {
   const response = await client.schedule.blocks[":id"].$patch({
     param: { id },

@@ -227,6 +227,166 @@ describe("personal planner", () => {
     expect(rows[0]?.plannedDate.toISOString()).toBe(day2.toISOString());
   });
 
+  it("plans and anchors a task to a clock time in a single call", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+
+    const day = new Date();
+    day.setHours(0, 0, 0, 0);
+
+    const response = await putEntry(app, workspaceId, task.id, {
+      plannedDate: day.toISOString(),
+      startMinute: 9 * 60,
+    });
+    expect(response.status).toBe(200);
+
+    const [row] = await db
+      .select()
+      .from(schema.personalPlanEntryTable)
+      .where(eq(schema.personalPlanEntryTable.taskId, task.id));
+    expect(row?.startMinute).toBe(9 * 60);
+  });
+
+  it("moving a task without startMinute leaves an existing anchor untouched", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+
+    const day1 = new Date();
+    day1.setHours(0, 0, 0, 0);
+    const day2 = new Date(day1);
+    day2.setDate(day2.getDate() + 1);
+
+    await putEntry(app, workspaceId, task.id, {
+      plannedDate: day1.toISOString(),
+      startMinute: 10 * 60,
+    });
+    // Sin `startMinute`: mover de dia en el Planificador no debe desanclar
+    // una hora puesta desde el Cronograma.
+    await putEntry(app, workspaceId, task.id, {
+      plannedDate: day2.toISOString(),
+    });
+
+    const [row] = await db
+      .select()
+      .from(schema.personalPlanEntryTable)
+      .where(eq(schema.personalPlanEntryTable.taskId, task.id));
+    expect(row?.startMinute).toBe(10 * 60);
+    expect(row?.plannedDate.toISOString()).toBe(day2.toISOString());
+  });
+
+  it("omitting position on a same-day update keeps the existing one", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+
+    const day = new Date();
+    day.setHours(0, 0, 0, 0);
+
+    await putEntry(app, workspaceId, task.id, {
+      plannedDate: day.toISOString(),
+      position: 2,
+    });
+    // Sin `position` y sin cambiar de dia: solo se esta anclando la hora
+    // (lo que hace `resizeEntry` al redimensionar el borde superior desde
+    // el Cronograma), no debe reordenar la tarea dentro de su dia.
+    await putEntry(app, workspaceId, task.id, {
+      plannedDate: day.toISOString(),
+      startMinute: 9 * 60,
+    });
+
+    const [row] = await db
+      .select()
+      .from(schema.personalPlanEntryTable)
+      .where(eq(schema.personalPlanEntryTable.taskId, task.id));
+    expect(row?.position).toBe(2);
+  });
+
+  it("omitting position on a cross-day move appends after that day's entries", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const [moved, sibling1, sibling2] = await Promise.all([
+      createTask(projectId, columnId),
+      createTask(projectId, columnId, { number: 2 }),
+      createTask(projectId, columnId, { number: 3 }),
+    ]);
+    await Promise.all([
+      assign(moved.id, userId),
+      assign(sibling1.id, userId),
+      assign(sibling2.id, userId),
+    ]);
+
+    const origin = new Date();
+    origin.setHours(0, 0, 0, 0);
+    const destination = new Date(origin);
+    destination.setDate(destination.getDate() + 1);
+
+    await putEntry(app, workspaceId, moved.id, {
+      plannedDate: origin.toISOString(),
+      position: 0,
+    });
+    await putEntry(app, workspaceId, sibling1.id, {
+      plannedDate: destination.toISOString(),
+      position: 0,
+    });
+    await putEntry(app, workspaceId, sibling2.id, {
+      plannedDate: destination.toISOString(),
+      position: 1,
+    });
+
+    // El Cronograma (`moveEntryDay`) solo manda dia y hora, nunca posicion:
+    // antes de esta correccion, el `0` por defecto del validador la mandaba
+    // siempre a la cabeza del dia de destino, por delante de `sibling1`.
+    const response = await putEntry(app, workspaceId, moved.id, {
+      plannedDate: destination.toISOString(),
+      startMinute: 9 * 60,
+    });
+    expect(response.status).toBe(200);
+
+    const [row] = await db
+      .select()
+      .from(schema.personalPlanEntryTable)
+      .where(eq(schema.personalPlanEntryTable.taskId, moved.id));
+    expect(row?.position).toBe(2);
+  });
+
+  it("omitting position on a move to an empty day starts at 0", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+
+    const origin = new Date();
+    origin.setHours(0, 0, 0, 0);
+    const destination = new Date(origin);
+    destination.setDate(destination.getDate() + 7);
+
+    await putEntry(app, workspaceId, task.id, {
+      plannedDate: origin.toISOString(),
+      position: 0,
+    });
+    await putEntry(app, workspaceId, task.id, {
+      plannedDate: destination.toISOString(),
+    });
+
+    const [row] = await db
+      .select()
+      .from(schema.personalPlanEntryTable)
+      .where(eq(schema.personalPlanEntryTable.taskId, task.id));
+    expect(row?.position).toBe(0);
+  });
+
+  it("rejects a plan entry startMinute of 1440 with 400, not 500", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+
+    const response = await putEntry(app, workspaceId, task.id, {
+      plannedDate: new Date().toISOString(),
+      startMinute: 1440,
+    });
+    expect(response.status).toBe(400);
+  });
+
   it("refuses to plan a task from another workspace", async () => {
     const { app, workspaceId } = await setup();
     const other = await createWorkspaceMember({ role: "member" });

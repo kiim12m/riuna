@@ -17,7 +17,7 @@ async function createTask(
   priority: CreateTaskRequest["priority"],
   // Ultimo y opcional a proposito: los ocho sitios que ya crean tareas sueltas
   // no tienen que saber nada del arbol.
-  options?: { parentId?: string | null },
+  options?: { parentId?: string | null; estimate?: number },
 ) {
   if (!projectId) {
     throw new Error("No project selected for task creation");
@@ -33,6 +33,9 @@ async function createTask(
       dueDate: dueDate?.toISOString() || undefined,
       priority,
       ...(options?.parentId ? { parentId: options.parentId } : {}),
+      ...(options?.estimate !== undefined
+        ? { estimate: options.estimate }
+        : {}),
     },
     param: { projectId },
   });

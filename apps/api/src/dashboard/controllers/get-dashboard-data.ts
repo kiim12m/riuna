@@ -4,6 +4,7 @@ import db from "../../database";
 import { dashboardTable, dashboardWidgetTable } from "../../database/schema";
 import { getFieldDefinitionsForProject } from "../../field/controllers/get-field-definitions";
 import getGoals from "../../goal/controllers/get-goals";
+import { startOfServerWeek } from "../../utils/day-boundaries";
 import { buildFilter } from "../../view/build-filter";
 import {
   buildFieldRegistry,
@@ -11,15 +12,18 @@ import {
 } from "../../view/field-registry";
 import { FilterError } from "../../view/filter-to-sql";
 import { getWorkspaceFieldRegistry } from "../../view/workspace-registry";
-import aggregate from "../aggregate";
+import aggregate, { type AggregateResult } from "../aggregate";
+import collapseCountWidgets from "../collapse-counts";
 import resolveKeys, { type KeyLabel, resolveStatusKeys } from "../resolve-keys";
 import topTasks from "../top-tasks";
+import weekTasks from "../week-tasks";
 import {
   resolveWidget,
   trendRange,
   type WidgetConfig,
   type WidgetType,
 } from "../widget-config";
+import { widgetPredicates } from "../widget-predicate";
 
 type WidgetPayload =
   | {
@@ -29,6 +33,10 @@ type WidgetPayload =
         truncated?: boolean;
         labels?: Record<string, KeyLabel>;
         rows?: Awaited<ReturnType<typeof topTasks>>;
+        week?: {
+          start: string;
+          days: Awaited<ReturnType<typeof weekTasks>>;
+        };
         goal?: Awaited<ReturnType<typeof getGoals>>[number];
       };
     }
@@ -55,6 +63,12 @@ export default async function getDashboardData(
   dashboardId: string,
   workspaceId: string,
   userId: string,
+  /**
+   * `weekStartsOn` viaja desde el cliente porque es **su** preferencia: la
+   * misma que ya leen calendario, Gantt y Cronograma. Un defecto de lunes
+   * mantiene compilando a quien llama sin ella, que hoy es la exportacion.
+   */
+  options: { weekStartsOn?: number } = {},
 ) {
   const dashboard = await db.query.dashboardTable.findFirst({
     where: eq(dashboardTable.id, dashboardId),
@@ -104,6 +118,30 @@ export default async function getDashboardData(
     : [];
 
   const now = new Date();
+  const weekStart = startOfServerWeek(now, options.weekStartsOn ?? 1);
+
+  // Las tarjetas de recuento que comparten ambito se resuelven en un solo
+  // barrido; lo que las distingue viaja dentro de su `FILTER`. Sin esto, una
+  // fila de ocho cifras son ocho barridos en serie contra el mismo presupuesto.
+  //
+  // **Es una optimizacion, asi que no puede tumbar el panel.** Ocurre fuera del
+  // `try` por widget que protege al resto, de modo que si fallara —un registro
+  // que no se puede leer, una consulta que el planificador rechaza— cada
+  // tarjeta vuelve por su cuenta a `aggregate()`, que es la ruta que siempre
+  // estuvo ahi. Un panel mas lento es mejor que un panel en blanco.
+  let collapsed = new Map<string, AggregateResult>();
+  try {
+    collapsed = await collapseCountWidgets({
+      widgets,
+      workspaceId,
+      userId,
+      now,
+      registryFor,
+    });
+  } catch (error) {
+    console.error("[dashboard] collapsed count scan failed", error);
+  }
+
   const payload: WidgetPayload[] = [];
 
   for (const widget of widgets) {
@@ -141,6 +179,23 @@ export default async function getDashboardData(
         continue;
       }
 
+      if (type === "week") {
+        const days = await weekTasks({
+          workspaceId,
+          userId,
+          projectId: widget.projectId,
+          scope: config.scope,
+          filter,
+          registry,
+          weekStart,
+        });
+        payload.push({
+          id: widget.id,
+          data: { week: { start: weekStart.toISOString(), days } },
+        });
+        continue;
+      }
+
       if (type === "table") {
         const rows = await topTasks({
           workspaceId,
@@ -156,21 +211,29 @@ export default async function getDashboardData(
 
       const resolved = resolveWidget(type, config, widget.projectId);
       // Toda serie por fecha lleva ventana, no solo la tendencia: el tiempo
-      // agrupado por fecha sin ella se quedaba con los cubos mas antiguos.
+      // agrupado por fecha sin ella se quedaba con los cubos mas antiguos. Y
+      // desde las tarjetas de la fila de arriba, tambien un recuento sin
+      // agrupar que declare `rangeDays`: es como se pregunta "cerradas en los
+      // ultimos siete dias".
       const range =
-        resolved.groupBy === "time" ? trendRange(config, now) : undefined;
+        resolved.groupBy === "time" || config.rangeDays !== undefined
+          ? trendRange(config, now)
+          : undefined;
 
-      const result = await aggregate({
-        workspaceId,
-        userId,
-        scope: config.scope,
-        projectId: widget.projectId,
-        filter,
-        registry,
-        now,
-        ...resolved,
-        ...(range ?? {}),
-      });
+      const result =
+        collapsed.get(widget.id) ??
+        (await aggregate({
+          workspaceId,
+          userId,
+          scope: config.scope,
+          projectId: widget.projectId,
+          filter,
+          registry,
+          extra: widgetPredicates(config, now),
+          now,
+          ...resolved,
+          ...(range ?? {}),
+        }));
 
       const keys = result.buckets.map((bucket) => bucket.key);
       const labels =

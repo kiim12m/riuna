@@ -5,7 +5,8 @@ import { auth } from "../../apps/api/src/auth";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
 import { grantPendingInvitations } from "../../apps/api/src/utils/grant-pending-invitations";
-import { mockAuthenticatedSession } from "./helpers/auth";
+import { seedDefaultWorkspaceRoles } from "../../apps/api/src/utils/seed-default-workspace-roles";
+import { mockAuthenticatedSession, signUpWithCookie } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
 import { createWorkspaceMember } from "./helpers/fixtures";
 
@@ -16,12 +17,16 @@ beforeEach(async () => {
 function addMember(
   workspaceId: string,
   body: { email: string; role?: string },
+  cookie?: string,
 ) {
   const { app } = createApp();
 
   return app.request(`/api/workspace/${workspaceId}/member`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(cookie ? { cookie } : {}),
+    },
     body: JSON.stringify(body),
   });
 }
@@ -87,13 +92,19 @@ describe("API integration: adding a workspace member", () => {
   });
 
   it("creates an invitation when the email has no account yet", async () => {
-    const { user: admin, workspace } = await createWorkspaceMember({
+    // `createInvitation` de Better Auth lee la sesion de la cookie, no del
+    // espia de `getSession`: aqui la sesion tiene que ser real.
+    const { user: admin, cookie } = await signUpWithCookie();
+    const { workspace } = await createWorkspaceMember({
       role: "admin",
+      user: admin,
     });
+    // Los roles `admin`/`member`/`viewer` son filas por espacio; el fixture
+    // inserta el espacio a mano, asi que se siembran como en el arranque.
+    await seedDefaultWorkspaceRoles();
     const email = `sin-cuenta-${randomUUID()}@example.com`;
 
-    mockAuthenticatedSession(admin);
-    const response = await addMember(workspace.id, { email });
+    const response = await addMember(workspace.id, { email }, cookie);
 
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ status: "invited" });
@@ -104,6 +115,21 @@ describe("API integration: adding a workspace member", () => {
       .where(eq(schema.invitationTable.email, email));
     expect(invitations).toHaveLength(1);
     expect(invitations[0].status).toBe("pending");
+  });
+
+  it("answers 401, not 500, when Better Auth rejects the session", async () => {
+    const { user: admin, workspace } = await createWorkspaceMember({
+      role: "admin",
+    });
+
+    // Pasa el middleware de Riuna (sesion espiada) pero no lleva cookie, asi
+    // que `createInvitation` la rechaza por su cuenta.
+    mockAuthenticatedSession(admin);
+    const response = await addMember(workspace.id, {
+      email: `sin-cookie-${randomUUID()}@example.com`,
+    });
+
+    expect(response.status).toBe(401);
   });
 
   it("grants the promised access once the account exists, matching by email alone", async () => {

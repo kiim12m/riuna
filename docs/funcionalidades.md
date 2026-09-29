@@ -194,12 +194,25 @@ la tarea y en la propia tabla.
   días para decidir qué día se piensa hacer cada tarea, sin tocar su fecha de
   vencimiento. Incluye una proyección de las próximas ocurrencias de tareas
   recurrentes todavía no creadas.
-- **Cronograma** ([ADR 041](adr/041-cronograma.md)): línea de tiempo por
-  horas sobre lo ya decidido en el Planificador, dentro de una jornada fija.
-  Arrastrar un tramo lo ancla a una hora concreta; lo que no cabe en el día
-  se lista aparte, sin pasar solo al día siguiente. Admite citas fijas y
-  bloqueos que no son tareas (sueltos o repetidos cada semana en días
-  concretos), y muestra el cronómetro en marcha.
+- **Cronograma** ([ADR 041](adr/041-cronograma.md)): calendario por horas,
+  con vistas Día, Semana y Mes navegables, sobre lo ya decidido en el
+  Planificador. La rejilla (24 h) se ve siempre, aunque el día esté vacío;
+  al pasar el ratón por un hueco aparece una casilla discontinua con la hora
+  y un «pulsa aquí para crear una tarea» — un clic crea una tarea nueva o
+  planifica una ya existente sin planificar, anclada a esa hora o «para el
+  día». Arrastrar un tramo lo ancla a una hora concreta, y en la vista Semana
+  arrastrarlo a otra columna lo mueve también de día — con una sombra en la
+  columna de destino mientras se arrastra y sin salto al soltar; arrastrar
+  uno de sus bordes cambia la duración (borde inferior) o adelanta el inicio
+  (borde superior), escribiendo la estimación de la tarea. Una tarea sin estimar
+  ocupa media hora, con borde punteado y color apagado para distinguirla; lo
+  que no cabe en el día se lista aparte, sin pasar solo al día siguiente.
+  Admite citas fijas y bloqueos que no son tareas (sueltos o repetidos cada
+  semana en días concretos, con fecha límite opcional); un clic sobre uno
+  abre su edición (mover de día si es suelto, poner o quitar la fecha límite
+  si repite) o borrarlo. Muestra el cronómetro en marcha. La vista Mes lista
+  hasta tres elementos por día y un «+N» que abre la vista Día de esa fecha
+  para ver el resto.
 - **Parte de horas** ([ADR 042](adr/042-parte-de-horas.md)): lo registrado
   por quien mira, cruzando proyectos, en un rango de fechas. Agrupable por
   día, tarea o proyecto; una entrada en marcha cuenta lo transcurrido hasta
@@ -211,12 +224,22 @@ la tarea y en la propia tabla.
   uno por defecto creado automáticamente. Exportables a `.xlsx`, con una hoja
   por widget.
 - **Widgets**: contador, desglose, tendencia, tiempo registrado, progreso de
-  épica, lista de tareas, bandeja de entrada y objetivo. Las métricas son
-  tareas, completadas, porcentaje completado, estimado y registrado; se agrupan
-  por proyecto, asignado, prioridad, equipo, estado, hecho, vencimiento (sin
-  fecha, vencida, hoy, esta semana, más adelante), épica o tiempo. Cada widget
-  tiene su propio ámbito —todo el espacio o un proyecto—, su propio filtro, y
-  un ancho de 1 a 3 columnas.
+  épica, lista de tareas, **semana en curso**, bandeja de entrada y objetivo.
+  Las métricas son tareas, completadas, porcentaje completado, estimado y
+  registrado; se agrupan por proyecto, asignado, prioridad, equipo, estado,
+  hecho, vencimiento (sin fecha, vencida, hoy, esta semana, más adelante),
+  épica, tiempo o nada —el total sin repartir—. Cada widget tiene su propio
+  ámbito —todo el espacio o un proyecto, y opcionalmente solo lo asignado a
+  quien mira o a sus equipos—, su propio filtro, su propia ventana de
+  vencimiento, y un tamaño propio.
+- **Rejilla redimensionable** de doce columnas invisibles: cada widget se
+  arrastra para moverlo y se estira por la esquina para cambiarle ancho (1-12) y
+  alto (1-6), o se ajusta desde su diálogo. Los widgets se recolocan sin dejar
+  huecos y el ancho se reduce solo en tablet y móvil.
+- **Distribución de partida** en tres alturas: ocho cifras arriba —vencidas,
+  vencen hoy, vencen esta semana, pendientes, cerradas en siete días, alta
+  prioridad, sin fecha y horas registradas—, la semana en curso a ancho
+  completo, y debajo la lista de pendientes con la bandeja al lado.
 - **Objetivos (OKR)**: objetivo con periodo de fechas y **resultados clave**
   medidos con el mismo motor de agregación que los widgets. Compartibles con el
   espacio.

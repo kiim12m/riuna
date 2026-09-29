@@ -17,9 +17,9 @@ import {
   chartColor,
 } from "@/components/charts/chart-primitives";
 import { Progress } from "@/components/ui/progress";
-import { StatTile } from "@/components/ui/stat-tile";
 import type { Widget, WidgetConfig, WidgetPayload } from "@/fetchers/dashboard";
 import { InboxWidget } from "./inbox-widget";
+import { WeekStrip } from "./week-strip";
 import { bucketLabel, effectiveGroupBy, toHours } from "./widget-labels";
 import { WidgetTaskRow } from "./widget-task-row";
 
@@ -48,11 +48,19 @@ export function WidgetBody({
   const label = (key: string | null) =>
     bucketLabel(key, groupBy, data.labels, t, i18n.language);
 
-  const isHours = widget.type === "time";
+  // Tambien cuando la metrica es `sumLogged`: el valor son segundos vengan del
+  // tipo que vengan, y sin esto la tarjeta de horas enseñaba 25200.
+  const isHours = widget.type === "time" || config.metric === "sumLogged";
   const format = (value: number) =>
     isHours ? `${toHours(value)} h` : String(value);
 
   if (widget.type === "inbox") return <InboxWidget />;
+
+  if (widget.type === "week") {
+    const week = data.week;
+    if (!week) return <Empty />;
+    return <WeekStrip days={week.days} onOpenTask={onOpenTask} />;
+  }
 
   if (widget.type === "goal") {
     const goal = data.goal;
@@ -111,7 +119,12 @@ export function WidgetBody({
     );
   }
 
-  if (widget.type === "count") {
+  // Una cifra sola: el recuento, y el total de horas sin repartir. **Sin
+  // rotulo**: el `h2` de la tarjeta ya dice que es, y en una fila de ocho
+  // tarjetas de 88 px repetir "Completadas" debajo de un titulo que pone
+  // "Cerradas · 7 días" es el mismo dato dos veces. El rotulo se queda en
+  // `StatTile`, donde la pieza se usa sin titulo encima.
+  if (widget.type === "count" || (widget.type === "time" && !groupBy)) {
     const bucket = buckets[0];
     const value = bucket?.value ?? 0;
     const total = bucket?.total;
@@ -121,16 +134,12 @@ export function WidgetBody({
       total && total > 0 ? Math.round((value / total) * 100) : null;
 
     return (
-      <div className="space-y-2">
-        <StatTile
-          className="border-0 p-0"
-          label={t(`panels:metric.${config.metric ?? "count"}`)}
-          value={
-            total === undefined
-              ? format(value)
-              : t("panels:widget.ofTotal", { value, total })
-          }
-        />
+      <div className="flex h-full flex-col justify-center gap-2">
+        <p className="text-page tabular-nums">
+          {total === undefined
+            ? format(value)
+            : t("panels:widget.ofTotal", { value, total })}
+        </p>
         {percent !== null && <Progress value={percent} className="h-1.5" />}
       </div>
     );
@@ -208,7 +217,9 @@ export function WidgetBody({
   // decidio que eso deja elegir la historia a quien dibuja.
   if (widget.type === "trend") {
     return (
-      <div className="h-40 w-full">
+      // `h-full`, no `h-40`: desde la ADR 043 el alto lo pone la fila de la
+      // rejilla, y 10 rem no caben en un widget de dos filas.
+      <div className="h-full min-h-24 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={CHART_MARGIN}>
             <ChartGrid />
@@ -236,7 +247,7 @@ export function WidgetBody({
   // quedan ademas por debajo de 3:1 en tema claro. En horizontal el nombre se
   // lee entero y cada barra dice quien es.
   return (
-    <div className="h-40 w-full">
+    <div className="h-full min-h-24 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} layout="vertical" margin={CHART_MARGIN}>
           <ChartGrid />

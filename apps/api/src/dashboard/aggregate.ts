@@ -88,6 +88,13 @@ export type AggregateRequest = {
   projectId?: string | null;
   filter: FilterNode | null;
   registry: FieldRegistry;
+  /**
+   * Predicados propios de este widget, encima del ambito: hoy la ventana de
+   * vencimiento. Van aparte del filtro porque `collapse-counts.ts` los mete en
+   * un `FILTER (WHERE ...)` y el ambito no, y eso solo funciona si estan
+   * separados desde el principio (`widget-predicate.ts`).
+   */
+  extra?: SQL[];
   metric: WidgetMetric;
   /** Sin agrupacion, el resultado es un solo cubo con clave nula. */
   groupBy?: CategoricalGroupBy | "time";
@@ -142,6 +149,7 @@ export default async function aggregate(
   const conditions = await workspaceTaskConditions(request);
 
   if (!conditions) return { buckets: [], truncated: false };
+  if (request.extra?.length) conditions.push(...request.extra);
   const { metric, groupBy, granularity = "week" } = request;
 
   // La metrica elige la relacion base, y no es cosmetico: con la union de
@@ -318,6 +326,8 @@ async function aggregateLoggedTime({
   conditions,
   groupBy,
   granularity,
+  scope,
+  userId,
   from,
   to,
 }: AggregateRequest & {
@@ -326,22 +336,42 @@ async function aggregateLoggedTime({
 }): Promise<AggregateResult> {
   const scoped = [...conditions];
 
+  // **El ambito personal acota tambien la entrada, no solo la tarea.** Las
+  // condiciones que llegan son de `task`, y con ellas solas "mis horas" eran
+  // *las horas de cualquiera* sobre tareas asignadas a mi: una tarjeta con el
+  // rotulo equivocado, no una cifra aproximada. `time-sheet/` ya definia "lo
+  // registrado por quien mira" como `time_entry.user_id`, y esta es la misma
+  // pregunta.
+  //
+  // `team` no se toca: ahi la pregunta es cuanto se ha registrado sobre el
+  // trabajo del equipo, la registre quien la registre, y eso ya lo acota la
+  // condicion de tarea.
+  if (scope === "assigned") {
+    scoped.push(eq(timeEntryTable.userId, userId));
+  }
+
   // Solo entradas cerradas: una en marcha tiene duracion 0 y saltaria al
   // pararla, que en una medicion es ruido.
   scoped.push(isNotNull(timeEntryTable.endTime));
   if (from) scoped.push(gte(timeEntryTable.startTime, from));
   if (to) scoped.push(lt(timeEntryTable.startTime, to));
 
+  // Sin agrupacion, una sola cifra: el total de horas del ambito. Es lo que
+  // pide una tarjeta de la fila de arriba, y el `groupBy` no puede caer por
+  // defecto en `assignee` como hacia antes, que devolvia un reparto donde se
+  // esperaba un numero.
   const key =
-    groupBy === "time"
-      ? timeKey(sql`${timeEntryTable.startTime}`, granularity)
-      : groupBy === "project"
-        ? sql`${taskTable.projectId}`
-        : sql`${timeEntryTable.userId}`;
+    groupBy === undefined
+      ? null
+      : groupBy === "time"
+        ? timeKey(sql`${timeEntryTable.startTime}`, granularity)
+        : groupBy === "project"
+          ? sql`${taskTable.projectId}`
+          : sql`${timeEntryTable.userId}`;
 
   const rows = await db
     .select({
-      key: sql<string | null>`${key}::text`,
+      key: key ? sql<string | null>`${key}::text` : sql<null>`NULL`,
       value: sql<number>`COALESCE(SUM(${timeEntryTable.duration}), 0)::bigint`,
       total: sql<number>`COUNT(*)::int`,
     })
@@ -354,13 +384,17 @@ async function aggregateLoggedTime({
     // moria con "must appear in the GROUP BY clause".
     .groupBy(...groupByFor(groupBy, key))
     .orderBy(
-      groupBy === "time"
-        ? asc(sql`1`)
-        : desc(sql`COALESCE(SUM(${timeEntryTable.duration}), 0)`),
+      ...(groupBy === undefined
+        ? []
+        : [
+            groupBy === "time"
+              ? asc(sql`1`)
+              : desc(sql`COALESCE(SUM(${timeEntryTable.duration}), 0)`),
+          ]),
     )
-    .limit(bucketCap(groupBy ?? "assignee") + 1);
+    .limit(groupBy === undefined ? 1 : bucketCap(groupBy) + 1);
 
-  return toResult(rows, "sumLogged", groupBy ?? "assignee");
+  return toResult(rows, "sumLogged", groupBy);
 }
 
 /**

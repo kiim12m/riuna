@@ -2590,7 +2590,15 @@
 			"noData": "Nothing to show yet",
 			"ofTotal": "{{value}} of {{total}}",
 			"goal": "Goal",
-			"pickGoal": "Pick a goal"
+			"pickGoal": "Pick a goal",
+			"resize": "Resize widget",
+			"width": "Width",
+			"height": "Height",
+			"columns_one": "{{count}} column",
+			"columns_other": "{{count}} columns",
+			"rows_one": "{{count}} row",
+			"rows_other": "{{count}} rows",
+			"personalScope": "Whose work"
 		},
 		"type": {
 			"count": "Count",
@@ -2600,7 +2608,8 @@
 			"epic_progress": "Epic progress",
 			"table": "Task list",
 			"inbox": "Inbox",
-			"goal": "Goal"
+			"goal": "Goal",
+			"week": "This week"
 		},
 		"metric": {
 			"count": "Tasks",
@@ -2618,7 +2627,8 @@
 			"done": "Done",
 			"dueWindow": "Due date",
 			"epic": "Epic",
-			"time": "Over time"
+			"time": "Over time",
+			"none": "Total"
 		},
 		"buckets": {
 			"none": "None",
@@ -2658,6 +2668,15 @@
 		"shared": "Shared",
 		"errors": {
 			"saveFailed": "The change could not be saved"
+		},
+		"scope": {
+			"all": "Everyone",
+			"assigned": "Assigned to me",
+			"team": "My teams"
+		},
+		"week": {
+			"more_one": "+{{count}} more",
+			"more_other": "+{{count}} more"
 		}
 	},
 	"goals": {
@@ -2745,12 +2764,9 @@
 		"today": "Today",
 		"overflow": "No room left today",
 		"running": "Running",
-		"empty": {
-			"title": "Nothing to show",
-			"description": "Plan a task for today or this week to see it here by the hour."
-		},
 		"createBlock": {
 			"title": "New block",
+			"editTitle": "Edit block",
 			"description": "A fixed appointment or a block of time that isn't a task.",
 			"name": "Title",
 			"namePlaceholder": "Site visit, lunch…",
@@ -2760,11 +2776,53 @@
 			"startTime": "Starts",
 			"endTime": "Ends",
 			"timesInvalid": "The end time must be after the start time.",
+			"day": "Day",
 			"repeat": "Repeat",
 			"repeatNone": "Doesn't repeat",
 			"repeatSome": "Repeats weekly on the marked days.",
-			"confirm": "Create block"
-		}
+			"until": "Until",
+			"untilSet": "Stops repeating after this day.",
+			"untilNone": "Repeats with no end date.",
+			"confirm": "Create block",
+			"editHint": "Click to edit",
+			"deleteTitle": "Delete this block?",
+			"deleteDescription": "This removes the fixed appointment or break. It doesn't affect any tasks."
+		},
+		"view": {
+			"label": "View",
+			"day": "Day",
+			"week": "Week",
+			"month": "Month"
+		},
+		"nav": {
+			"previousDay": "Previous day",
+			"nextDay": "Next day",
+			"previousWeek": "Previous week",
+			"nextWeek": "Next week",
+			"previousMonth": "Previous month",
+			"nextMonth": "Next month",
+			"today": "Today"
+		},
+		"weekTitle": "Week {{week}} · {{range}}",
+		"placeholder": {
+			"clickToCreate": "Click to create a task",
+			"inputPlaceholder": "Task title…",
+			"dayPlaceholder": "Task title for the day…",
+			"toggleTimeHint": "Ctrl+1 or click the time to plan for the day instead",
+			"toggleDayHint": "Ctrl+1 or click the date to pick a time instead",
+			"project": "Project",
+			"existing": "Unplanned tasks",
+			"createNew": "Create \"{{title}}\"",
+			"error": "Couldn't plan the task. It was created and is waiting in Unplanned.",
+			"forDay": "For the day"
+		},
+		"month": {
+			"more": "+{{count}} more"
+		},
+		"resizeError": "Couldn't change the duration. Try again.",
+		"resizeHandle": "Drag to change duration",
+		"noEstimate": "No estimate yet — placeholder half-hour slot",
+		"moveDayError": "Couldn't move the task to that day. Try again."
 	},
 	"timeSheet": {
 		"pageTitle": "Time sheet",

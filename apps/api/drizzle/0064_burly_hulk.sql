@@ -1,0 +1,2 @@
+ALTER TABLE "schedule_block" ADD COLUMN "ends_at" timestamp;--> statement-breakpoint
+ALTER TABLE "schedule_block" ADD CONSTRAINT "schedule_block_ends_at_only_repeating" CHECK ("schedule_block"."ends_at" IS NULL OR "schedule_block"."cadence" IS NOT NULL);

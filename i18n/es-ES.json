@@ -2590,7 +2590,15 @@
 			"noData": "Todavía no hay nada que enseñar",
 			"ofTotal": "{{value}} de {{total}}",
 			"goal": "Objetivo",
-			"pickGoal": "Elige un objetivo"
+			"pickGoal": "Elige un objetivo",
+			"resize": "Cambiar el tamaño del widget",
+			"width": "Ancho",
+			"height": "Alto",
+			"columns_one": "{{count}} columna",
+			"columns_other": "{{count}} columnas",
+			"rows_one": "{{count}} fila",
+			"rows_other": "{{count}} filas",
+			"personalScope": "Trabajo de quién"
 		},
 		"type": {
 			"count": "Recuento",
@@ -2600,7 +2608,8 @@
 			"epic_progress": "Avance por épica",
 			"table": "Lista de tareas",
 			"inbox": "Bandeja",
-			"goal": "Objetivo"
+			"goal": "Objetivo",
+			"week": "Esta semana"
 		},
 		"metric": {
 			"count": "Tareas",
@@ -2618,7 +2627,8 @@
 			"done": "Hecha",
 			"dueWindow": "Vencimiento",
 			"epic": "Épica",
-			"time": "En el tiempo"
+			"time": "En el tiempo",
+			"none": "Total"
 		},
 		"buckets": {
 			"none": "Sin asignar",
@@ -2658,6 +2668,15 @@
 		"shared": "Compartido",
 		"errors": {
 			"saveFailed": "No se ha podido guardar el cambio"
+		},
+		"scope": {
+			"all": "De todo el mundo",
+			"assigned": "Asignado a mí",
+			"team": "De mis equipos"
+		},
+		"week": {
+			"more_one": "+{{count}} más",
+			"more_other": "+{{count}} más"
 		}
 	},
 	"goals": {
@@ -2745,12 +2764,9 @@
 		"today": "Hoy",
 		"overflow": "Sin hueco hoy",
 		"running": "En marcha",
-		"empty": {
-			"title": "Nada que mostrar",
-			"description": "Planifica una tarea para hoy o esta semana para verla aquí por horas."
-		},
 		"createBlock": {
 			"title": "Nuevo bloque",
+			"editTitle": "Editar bloque",
 			"description": "Una cita fija o un bloqueo que no es una tarea.",
 			"name": "Título",
 			"namePlaceholder": "Visita de obra, comida…",
@@ -2760,11 +2776,53 @@
 			"startTime": "Empieza",
 			"endTime": "Termina",
 			"timesInvalid": "La hora de fin tiene que ser posterior a la de inicio.",
+			"day": "Día",
 			"repeat": "Repetir",
 			"repeatNone": "No se repite",
 			"repeatSome": "Se repite cada semana en los días marcados.",
-			"confirm": "Crear bloque"
-		}
+			"until": "Hasta",
+			"untilSet": "Deja de repetirse después de este día.",
+			"untilNone": "Se repite sin fecha límite.",
+			"confirm": "Crear bloque",
+			"editHint": "Pulsa para editar",
+			"deleteTitle": "¿Eliminar este bloque?",
+			"deleteDescription": "Se quita la cita fija o el bloqueo. No afecta a ninguna tarea."
+		},
+		"view": {
+			"label": "Vista",
+			"day": "Día",
+			"week": "Semana",
+			"month": "Mes"
+		},
+		"nav": {
+			"previousDay": "Día anterior",
+			"nextDay": "Día siguiente",
+			"previousWeek": "Semana anterior",
+			"nextWeek": "Semana siguiente",
+			"previousMonth": "Mes anterior",
+			"nextMonth": "Mes siguiente",
+			"today": "Hoy"
+		},
+		"weekTitle": "Semana {{week}} · {{range}}",
+		"placeholder": {
+			"clickToCreate": "Pulsa aquí para crear una tarea",
+			"inputPlaceholder": "Título de la tarea…",
+			"dayPlaceholder": "Título de la tarea para el día…",
+			"toggleTimeHint": "Ctrl+1 o pulsa la hora para planificar solo el día",
+			"toggleDayHint": "Ctrl+1 o pulsa la fecha para elegir una hora",
+			"project": "Proyecto",
+			"existing": "Tareas sin planificar",
+			"createNew": "Crear \"{{title}}\"",
+			"error": "No se ha podido planificar la tarea. Se creó y está esperando en Sin planificar.",
+			"forDay": "Para el día"
+		},
+		"month": {
+			"more": "+{{count}} más"
+		},
+		"resizeError": "No se ha podido cambiar la duración. Inténtalo de nuevo.",
+		"resizeHandle": "Arrastra para cambiar la duración",
+		"noEstimate": "Sin estimación todavía — hueco de media hora provisional",
+		"moveDayError": "No se ha podido mover la tarea a ese día. Inténtalo de nuevo."
 	},
 	"timeSheet": {
 		"pageTitle": "Parte de horas",

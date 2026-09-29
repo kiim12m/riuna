@@ -7,6 +7,9 @@
 
 export const PX_PER_MINUTE = 1.4;
 export const SNAP_MINUTES = 5;
+/** Snap para crear con el raton (`create-task-placeholder.tsx`): 15 min es
+ * mas comodo a golpe de clic que los 5 min del arrastre para anclar. */
+export const CREATE_SNAP_MINUTES = 15;
 
 export function minutesToPx(minutes: number): number {
   return minutes * PX_PER_MINUTE;
@@ -20,8 +23,14 @@ export function pxToMinutes(px: number): number {
   return Math.round(px / PX_PER_MINUTE);
 }
 
-export function snapMinute(minute: number): number {
-  return Math.round(minute / SNAP_MINUTES) * SNAP_MINUTES;
+export function snapMinute(minute: number, step = SNAP_MINUTES): number {
+  return Math.round(minute / step) * step;
+}
+
+/** El minuto del dia bajo `offsetY` dentro de una rejilla que arranca en
+ * `gridStart`, redondeado a `CREATE_SNAP_MINUTES`. */
+export function minuteAtOffset(offsetY: number, gridStart: number): number {
+  return gridStart + snapMinute(pxToMinutes(offsetY), CREATE_SNAP_MINUTES);
 }
 
 export function clampMinute(minute: number, min: number, max: number): number {
@@ -32,6 +41,52 @@ export function formatClock(minute: number): string {
   const hours = Math.floor(minute / 60);
   const mins = minute % 60;
   return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
+}
+
+export type ResizeEdge = "top" | "bottom";
+
+export type ResizeResult = {
+  startMinute: number;
+  durationMinutes: number;
+};
+
+/**
+ * Nueva posicion/duracion de un tramo al arrastrar uno de sus bordes
+ * (`segment-card.tsx`). El borde inferior solo cambia la duracion; la
+ * superior mueve el inicio y mantiene fijo el final -arrastrar hacia arriba
+ * adelanta la tarea sin alargarla, hacia abajo la retrasa sin acortarla-.
+ *
+ * `bounds.min`/`bounds.max` limitan donde puede caer el borde que se mueve
+ * -el otro extremo del propio tramo, o el bloqueador vecino mas cercano,
+ * segun decida quien llama (`time-grid.tsx`)-; `bounds.minDuration` viene de
+ * la API (`GET /schedule` -> `minEntrySeconds`), no de una copia local.
+ */
+export function resizeSegment(
+  edge: ResizeEdge,
+  startMinute: number,
+  durationMinutes: number,
+  deltaPx: number,
+  bounds: { min: number; max: number; minDuration: number },
+): ResizeResult {
+  const deltaMinutes = snapMinute(pxToMinutes(deltaPx));
+
+  if (edge === "bottom") {
+    const maxDuration = bounds.max - startMinute;
+    const nextDuration = clampMinute(
+      durationMinutes + deltaMinutes,
+      bounds.minDuration,
+      maxDuration,
+    );
+    return { startMinute, durationMinutes: nextDuration };
+  }
+
+  const endMinute = startMinute + durationMinutes;
+  const nextStart = clampMinute(
+    startMinute + deltaMinutes,
+    bounds.min,
+    endMinute - bounds.minDuration,
+  );
+  return { startMinute: nextStart, durationMinutes: endMinute - nextStart };
 }
 
 export function hourMarks(startMinute: number, endMinute: number): number[] {

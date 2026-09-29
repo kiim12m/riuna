@@ -3,7 +3,11 @@ import { HTTPException } from "hono/http-exception";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import { parseCadence } from "../recurrence/cadence";
-import { parseServerDay } from "../utils/day-boundaries";
+import {
+  addDays,
+  parseServerDay,
+  startOfServerDay,
+} from "../utils/day-boundaries";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import createBlock from "./controllers/create-block";
@@ -12,7 +16,8 @@ import getSchedule from "./controllers/get-schedule";
 import setEntryTime from "./controllers/set-entry-time";
 import updateBlock from "./controllers/update-block";
 
-const MAX_WINDOW_DAYS = 30;
+/** Seis semanas: la rejilla de un mes completo, alineada a semanas. */
+const MAX_WINDOW_DAYS = 42;
 const DEFAULT_WINDOW_DAYS = 7;
 
 /** Las excepciones de `parseCadence` son errores de quien llama, no del servidor. */
@@ -48,6 +53,8 @@ const blockBodySchema = v.object({
   endMinute: endMinuteSchema,
   plannedDate: v.optional(v.string()),
   cadence: v.optional(v.record(v.string(), v.unknown())),
+  /** Solo junto a `cadence`: hasta cuando se proyecta la serie. */
+  endsAt: v.optional(v.string()),
 });
 
 /**
@@ -68,7 +75,7 @@ const schedule = new Hono<{
       operationId: "getSchedule",
       tags: ["Schedule"],
       description:
-        "The current user's hourly layout for a rolling window: planned entries placed in time, fixed blocks, and the running timer",
+        "The current user's hourly layout for a window of days starting at `from` (default: the server's today): planned entries placed in time, fixed blocks, and the running timer",
       responses: {
         200: {
           description: "The schedule for the requested window",
@@ -80,6 +87,7 @@ const schedule = new Hono<{
       "query",
       v.object({
         workspaceId: v.pipe(v.string(), v.minLength(1)),
+        from: v.optional(v.string()),
         days: v.optional(
           v.pipe(
             v.string(),
@@ -99,12 +107,12 @@ const schedule = new Hono<{
     workspaceAccess.fromQuery(),
     requireApiKeyScope({ task: ["read"] }),
     async (c) => {
-      const { workspaceId, days } = c.req.valid("query");
+      const { workspaceId, from, days } = c.req.valid("query");
 
-      const windowStart = new Date();
-      windowStart.setHours(0, 0, 0, 0);
-      const windowEnd = new Date(windowStart);
-      windowEnd.setDate(windowEnd.getDate() + days - 1);
+      const windowStart = from
+        ? parseServerDay(from, "from")
+        : startOfServerDay(new Date());
+      const windowEnd = addDays(windowStart, days - 1);
       windowEnd.setHours(23, 59, 59, 999);
 
       const result = await getSchedule({
@@ -190,6 +198,11 @@ const schedule = new Hono<{
           message: "endMinute must be after startMinute",
         });
       }
+      if (body.endsAt && !body.cadence) {
+        throw new HTTPException(400, {
+          message: "endsAt only applies to a repeating block",
+        });
+      }
 
       const cadence = body.cadence
         ? asBadRequest(() => parseCadence(body.cadence))
@@ -197,6 +210,7 @@ const schedule = new Hono<{
       const plannedDate = body.plannedDate
         ? parseServerDay(body.plannedDate, "plannedDate")
         : null;
+      const endsAt = body.endsAt ? parseServerDay(body.endsAt, "endsAt") : null;
 
       const block = await createBlock({
         workspaceId,
@@ -207,6 +221,7 @@ const schedule = new Hono<{
         endMinute: body.endMinute,
         plannedDate,
         cadence,
+        endsAt,
       });
 
       return c.json(block);
@@ -217,11 +232,16 @@ const schedule = new Hono<{
     describeRoute({
       operationId: "updateScheduleBlock",
       tags: ["Schedule"],
-      description: "Update a block's title, kind or hours",
+      description:
+        "Update a block's title, kind or hours; move a single block to another day (plannedDate); set or clear the end date of a repeating block (endsAt)",
       responses: {
         200: {
           description: "Block updated",
           content: { "application/json": { schema: resolver(v.any()) } },
+        },
+        400: {
+          description:
+            "plannedDate on a repeating block, or endsAt on a single one",
         },
         404: { description: "The block was not found" },
       },
@@ -238,6 +258,10 @@ const schedule = new Hono<{
         kind: v.picklist(["fixed", "break"]),
         startMinute: startMinuteSchema,
         endMinute: endMinuteSchema,
+        /** Solo si el bloque es suelto: a que dia se mueve. */
+        plannedDate: v.optional(v.string()),
+        /** Solo si repite: hasta cuando. `null` quita el limite. */
+        endsAt: v.optional(v.nullable(v.string())),
       }),
     ),
     workspaceAccess.fromQuery(),
@@ -261,6 +285,15 @@ const schedule = new Hono<{
         kind: body.kind,
         startMinute: body.startMinute,
         endMinute: body.endMinute,
+        plannedDate: body.plannedDate
+          ? parseServerDay(body.plannedDate, "plannedDate")
+          : undefined,
+        endsAt:
+          body.endsAt === undefined
+            ? undefined
+            : body.endsAt === null
+              ? null
+              : parseServerDay(body.endsAt, "endsAt"),
       });
 
       return c.json(block);

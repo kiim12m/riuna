@@ -886,6 +886,10 @@ export const scheduleBlockTable = pgTable(
     kind: text("kind").notNull(),
     plannedDate: timestamp("planned_date", { mode: "date" }),
     cadence: jsonb("cadence").$type<Record<string, unknown>>(),
+    /** Opcional: a partir de aqui, un bloque repetido deja de proyectarse.
+     * Mismo nombre y forma que `task_recurrence.ends_at`. Solo tiene sentido
+     * con `cadence` -un bloque suelto ya tiene su unico dia en `planned_date`-. */
+    endsAt: timestamp("ends_at", { mode: "date" }),
     startMinute: smallint("start_minute").notNull(),
     endMinute: smallint("end_minute").notNull(),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
@@ -907,6 +911,10 @@ export const scheduleBlockTable = pgTable(
     check(
       "schedule_block_date_xor_cadence",
       sql`(${table.plannedDate} IS NOT NULL) != (${table.cadence} IS NOT NULL)`,
+    ),
+    check(
+      "schedule_block_ends_at_only_repeating",
+      sql`${table.endsAt} IS NULL OR ${table.cadence} IS NOT NULL`,
     ),
   ],
 );
@@ -1204,8 +1212,17 @@ export const dashboardWidgetTable = pgTable(
       .notNull()
       .default({}),
     position: integer("position").notNull().default(0),
-    /** Cuantas de las tres columnas de la rejilla ocupa. */
+    /** Cuantas de las doce columnas de la rejilla ocupa. Ver ADR 043. */
     span: integer("span").notNull().default(1),
+    /**
+     * Cuantas filas de `--panel-row` ocupa de alto.
+     *
+     * Existe porque una rejilla de ancho enumerado no dice nada del alto: los
+     * widgets crecian con su contenido y una lista de veinte filas al lado de
+     * una tarjeta de una cifra dejaba la rejilla desalineada. Con un alto
+     * declarado, lo que no cabe hace scroll dentro de la tarjeta.
+     */
+    rowSpan: integer("row_span").notNull().default(1),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()
@@ -1216,9 +1233,13 @@ export const dashboardWidgetTable = pgTable(
     index("dashboard_widget_dashboardId_idx").on(table.dashboardId),
     check(
       "dashboard_widget_type_valid",
-      sql`${table.type} IN ('count', 'breakdown', 'trend', 'time', 'epic_progress', 'table', 'inbox', 'goal')`,
+      sql`${table.type} IN ('count', 'breakdown', 'trend', 'time', 'epic_progress', 'table', 'inbox', 'goal', 'week')`,
     ),
-    check("dashboard_widget_span_valid", sql`${table.span} BETWEEN 1 AND 3`),
+    check("dashboard_widget_span_valid", sql`${table.span} BETWEEN 1 AND 12`),
+    check(
+      "dashboard_widget_row_span_valid",
+      sql`${table.rowSpan} BETWEEN 1 AND 6`,
+    ),
   ],
 );
 

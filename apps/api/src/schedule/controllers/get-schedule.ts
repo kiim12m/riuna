@@ -10,18 +10,14 @@ import {
 } from "../../database/schema";
 import { decorateTasks, getWorkspaceColumns } from "../../my-work/decorate";
 import { computeGhosts } from "../../planner/ghosts";
-import {
-  firstOnOrAfter,
-  nextOccurrence,
-  parseCadence,
-} from "../../recurrence/cadence";
 import { serverDayKey } from "../../utils/day-boundaries";
+import { buildDay, projectRepeatingBlocks } from "../build-day";
 import {
   MIN_ENTRY_DURATION_SECONDS,
+  UNESTIMATED_ENTRY_SECONDS,
   WORK_END_MINUTE,
   WORK_START_MINUTE,
 } from "../constants";
-import { type BlockerInput, type FlowEntry, layoutDay } from "../layout";
 
 const taskColumns = {
   id: taskTable.id,
@@ -37,9 +33,6 @@ const taskColumns = {
   teamId: taskTable.teamId,
   teamName: teamTable.name,
 };
-
-const secondsSinceMidnight = (date: Date): number =>
-  date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
 
 function buildDayKeys(windowStart: Date, windowEnd: Date): string[] {
   const keys: string[] = [];
@@ -83,6 +76,10 @@ export default async function getSchedule({
         .where(
           and(
             eq(personalPlanEntryTable.userId, userId),
+            // Sin esto, una entrada planeada desde otro espacio del mismo
+            // usuario se colaba aqui: los bloques ya filtraban por
+            // workspaceId, esta consulta no.
+            eq(personalPlanEntryTable.workspaceId, workspaceId),
             between(personalPlanEntryTable.plannedDate, windowStart, windowEnd),
           ),
         )
@@ -142,24 +139,7 @@ export default async function getSchedule({
     blocksByDay.set(key, list);
   }
 
-  // Los bloques repetidos se proyectan igual que los fantasmas del
-  // Planificador: nunca se guarda una fila por ocurrencia.
-  for (const block of repeatingBlocks) {
-    if (!block.cadence) continue;
-    try {
-      const cadence = parseCadence(block.cadence);
-      let cursor = firstOnOrAfter(cadence, windowStart);
-      while (cursor <= windowEnd) {
-        const key = serverDayKey(cursor);
-        const list = blocksByDay.get(key) ?? [];
-        list.push(block);
-        blocksByDay.set(key, list);
-        cursor = nextOccurrence(cadence, cursor);
-      }
-    } catch {
-      // Fila corrupta: se ignora en vez de tumbar el Cronograma entero.
-    }
-  }
+  projectRepeatingBlocks(repeatingBlocks, blocksByDay, windowStart, windowEnd);
 
   const ghostsByDay = new Map<string, typeof ghosts>();
   for (const ghost of ghosts) {
@@ -170,72 +150,38 @@ export default async function getSchedule({
   }
 
   const taskById = new Map(decoratedEntries.map((entry) => [entry.id, entry]));
+  // Lo que hace falta para prellenar el dialogo de editar un bloque
+  // (`create-block-dialog.tsx`): la fila real, no el tramo fusionado y
+  // recortado a la ventana que arma `layoutDay` -ese no sabe si es suelto o
+  // repetido, ni su horario propio si se fusiono con otro que se solapaba.
+  const blockById = new Map(
+    [...singleBlocks, ...repeatingBlocks].map((block) => [block.id, block]),
+  );
 
-  const days = buildDayKeys(windowStart, windowEnd).map((dayKey) => {
-    const dayEntries = entriesByDay.get(dayKey) ?? [];
-    const dayBlocks = blocksByDay.get(dayKey) ?? [];
-    const isToday = dayKey === todayKey;
-
-    const flowEntries: FlowEntry[] = dayEntries.map((entry) => ({
-      taskId: entry.id,
-      estimateSeconds: Math.max(
-        entry.estimate ?? 0,
-        MIN_ENTRY_DURATION_SECONDS,
-      ),
-      position: entry.position,
-      pinnedStartSecond:
-        entry.startMinute === null ? null : entry.startMinute * 60,
-    }));
-
-    const blockers: BlockerInput[] = dayBlocks.map((block) => ({
-      id: block.id,
-      kind: block.kind as "fixed" | "break",
-      title: block.title,
-      startSecond: block.startMinute * 60,
-      endSecond: block.endMinute * 60,
-    }));
-
-    if (isToday && runningEntry[0]) {
-      const running = runningEntry[0];
-      blockers.push({
-        id: running.id,
-        kind: "running",
-        title: "",
-        startSecond: secondsSinceMidnight(running.startTime),
-        endSecond: secondsSinceMidnight(now),
-      });
-    }
-
-    const dayStartSecond = isToday
-      ? Math.max(WORK_START_MINUTE * 60, secondsSinceMidnight(now))
-      : WORK_START_MINUTE * 60;
-
-    const layout = layoutDay({
-      flowEntries,
-      blockers,
-      dayStartSecond,
-      dayEndSecond: WORK_END_MINUTE * 60,
-    });
-
-    return {
-      dayDate: dayKey,
-      isToday,
-      segments: layout.segments.map((segment) =>
-        segment.type === "block"
-          ? segment
-          : { ...segment, task: taskById.get(segment.taskId) ?? null },
-      ),
-      overflow: layout.overflow.map((entry) => ({
-        ...entry,
-        task: taskById.get(entry.taskId) ?? null,
-      })),
-      ghosts: ghostsByDay.get(dayKey) ?? [],
-    };
-  });
+  const days = buildDayKeys(windowStart, windowEnd).map((dayKey) =>
+    buildDay(dayKey, {
+      entriesByDay,
+      blocksByDay,
+      ghostsByDay,
+      taskById,
+      blockById,
+      runningEntry: runningEntry[0],
+      now,
+      todayKey,
+    }),
+  );
 
   return {
     days,
     workStartMinute: WORK_START_MINUTE,
     workEndMinute: WORK_END_MINUTE,
+    // Mismo patron que `get-plan.ts`: el cliente deja de calcular "hoy" con
+    // el reloj del navegador para resaltar la columna/celda correcta.
+    serverToday: todayKey,
+    // Idem para los minimos de duracion: antes la web tenia su propia copia
+    // muda de estas dos constantes (`schedule-timeline.ts`), sin nada que
+    // impidiera que se desincronizaran de las de aqui.
+    minEntrySeconds: MIN_ENTRY_DURATION_SECONDS,
+    unestimatedEntrySeconds: UNESTIMATED_ENTRY_SECONDS,
   };
 }
