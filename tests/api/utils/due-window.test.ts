@@ -62,7 +62,7 @@ describe("dueWindowCondition", () => {
   it.each([
     ["overdue", [day(0)]],
     ["today", [day(0), day(1)]],
-    ["week", [day(0), day(7)]],
+    ["week", [day(1), day(7)]],
     ["later", [day(7)]],
     // Sin fecha no compara contra ninguna frontera: es un `IS NULL`.
     ["none", []],
