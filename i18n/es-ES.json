@@ -2663,7 +2663,14 @@
 			"share": "Compartir con el espacio",
 			"unshare": "Dejar de compartir",
 			"export": "Exportar",
-			"exportError": "No se ha podido exportar el panel"
+			"exportError": "No se ha podido exportar el panel",
+			"resetLayout": "Restaurar distribución"
+		},
+		"reset": {
+			"title": "¿Restaurar la distribución por defecto?",
+			"description": "Todos los widgets de este panel se sustituirán por los de partida. Se perderán los que hayas añadido o editado.",
+			"confirm": "Restaurar",
+			"done": "Distribución restaurada"
 		},
 		"shared": "Compartido",
 		"errors": {

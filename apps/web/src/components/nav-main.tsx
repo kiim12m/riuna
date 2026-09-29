@@ -141,8 +141,15 @@ export function NavMain() {
 
   const base = `/dashboard/workspace/${workspace.id}`;
 
-  // Lo que responde "que me toca a mi". Lo ve todo el mundo.
+  // Lo que responde "que me toca a mi". Lo ve todo el mundo. "Mi panel" va
+  // primero: es la vista que resume el resto, y por eso es tambien la pantalla
+  // de inicio del espacio personal.
   const personal: NavItem[] = [
+    {
+      title: t("navigation:sidebar.home"),
+      url: `${base}/home`,
+      icon: LayoutDashboard,
+    },
     {
       title: t("navigation:sidebar.today"),
       url: `${base}/today`,
@@ -163,11 +170,6 @@ export function NavMain() {
       url: `${base}/my-tasks`,
       icon: ListTodo,
       activePrefix: `${base}/my-tasks`,
-    },
-    {
-      title: t("navigation:sidebar.home"),
-      url: `${base}/home`,
-      icon: LayoutDashboard,
     },
     {
       title: t("navigation:sidebar.timeSheet"),

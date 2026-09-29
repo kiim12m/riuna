@@ -2663,7 +2663,14 @@
 			"share": "Share with the workspace",
 			"unshare": "Stop sharing",
 			"export": "Export",
-			"exportError": "The dashboard could not be exported"
+			"exportError": "The dashboard could not be exported",
+			"resetLayout": "Reset layout"
+		},
+		"reset": {
+			"title": "Reset to the default layout?",
+			"description": "Every widget on this dashboard will be replaced with the default ones. Widgets you added or edited will be lost.",
+			"confirm": "Reset",
+			"done": "Layout restored"
 		},
 		"shared": "Shared",
 		"errors": {

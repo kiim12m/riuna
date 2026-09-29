@@ -7,6 +7,7 @@ import {
   getDashboardData,
   getDashboards,
   reorderWidgets,
+  resetDashboardLayout,
   updateDashboard,
   updateWidget,
 } from "@/fetchers/dashboard";
@@ -115,6 +116,10 @@ export function useDashboardMutations(workspaceId: string) {
         dashboardId: string;
         widgetIds: string[];
       }) => reorderWidgets(dashboardId, widgetIds),
+      onSuccess: invalidate,
+    }),
+    resetLayout: useMutation({
+      mutationFn: (dashboardId: string) => resetDashboardLayout(dashboardId),
       onSuccess: invalidate,
     }),
   };

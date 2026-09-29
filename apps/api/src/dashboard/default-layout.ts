@@ -143,3 +143,20 @@ export const DEFAULT_LAYOUT: DefaultWidget[] = [
     rowSpan: 4,
   },
 ];
+
+/**
+ * Las filas de `dashboard_widget` que materializan la distribucion de partida
+ * en un panel. La comparten la siembra y el "restaurar distribucion", que tienen
+ * que dejar exactamente lo mismo.
+ */
+export function defaultWidgetRows(dashboardId: string) {
+  return DEFAULT_LAYOUT.map((widget, position) => ({
+    dashboardId,
+    type: widget.type,
+    title: widget.title,
+    config: widget.config,
+    span: widget.span,
+    rowSpan: widget.rowSpan,
+    position,
+  }));
+}
