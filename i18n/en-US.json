@@ -522,6 +522,18 @@
 			"sidebarDefaultDescription": "Keep sidebar expanded on startup",
 			"density": "Compact density",
 			"densityDescription": "Tighten spacing in task-heavy views",
+			"workScheduleTitle": "Work schedule",
+			"workScheduleSubtitle": "The hours and days the Planner, Schedule and Today use to compute your capacity.",
+			"workStart": "Starts",
+			"workEnd": "Ends",
+			"workTimesInvalid": "The end time must be after the start time.",
+			"lunchEnabled": "Lunch break",
+			"lunchEnabledDescription": "Subtracted from your capacity every work day.",
+			"lunchStart": "Lunch starts",
+			"lunchEnd": "Lunch ends",
+			"workDays": "Work days",
+			"workSaved": "Work schedule saved",
+			"workSaveError": "Could not save the work schedule.",
 			"displayOptions": "Display options",
 			"displayOptionsDescription": "Choose which information to show in task views",
 			"taskNumbers": "Task Numbers",
@@ -2739,6 +2751,31 @@
 		"empty": {
 			"title": "Nothing pending",
 			"description": "You have no tasks assigned in any project."
+		},
+		"status": "Estimated left ~{{remaining}} · Worked today {{worked}}",
+		"previous": {
+			"title_one": "From previous days ({{count}})",
+			"title_other": "From previous days ({{count}})",
+			"addToToday": "Add to today"
+		},
+		"planned": {
+			"title": "Today's plan",
+			"empty": "Nothing planned for today yet."
+		},
+		"urgent": {
+			"title": "Due today or overdue, unplanned",
+			"planToday": "Plan for today"
+		},
+		"done": {
+			"title_one": "Done today ({{count}})",
+			"title_other": "Done today ({{count}})"
+		},
+		"row": {
+			"toggleDone": "Mark task done",
+			"due": {
+				"today": "Due today",
+				"overdue": "Overdue"
+			}
 		}
 	},
 	"myTasks": {
@@ -2761,6 +2798,12 @@
 		"pageTitle": "Planner",
 		"unplanned": "Unplanned",
 		"today": "Today",
+		"previous": "From previous days",
+		"noTasks": "No tasks",
+		"dayLoad": "{{planned}} planned / {{available}} available",
+		"anchorTime": "Time",
+		"removeTime": "Remove time",
+		"plannedElsewhere": "planned for {{date}}",
 		"empty": {
 			"title": "Nothing assigned",
 			"description": "You have no assigned tasks to plan."
@@ -2771,6 +2814,7 @@
 		"today": "Today",
 		"overflow": "No room left today",
 		"running": "Running",
+		"lunch": "Lunch",
 		"createBlock": {
 			"title": "New block",
 			"editTitle": "Edit block",
@@ -2850,6 +2894,24 @@
 		"empty": {
 			"title": "Nothing in this range",
 			"description": "No time logged between these dates."
-		}
+		},
+		"cannotEditRunning": "Stop the timer before editing this entry.",
+		"deleteEntry": {
+			"title": "Delete this entry?",
+			"description": "This removes the logged time. It does not affect the task."
+		},
+		"cannotDeleteRunning": "Stop the timer before deleting this entry."
+	},
+	"timer": {
+		"stop": "Stop timer",
+		"resumeTask": "Resume · {{title}}",
+		"untitledTask": "Untitled task",
+		"overEstimate": "{{title}} — over the estimate",
+		"stopDialog": {
+			"title": "When did it actually stop?",
+			"description": "This timer has been running for more than ten hours. Pick the real end time instead of stamping it with now.",
+			"endTime": "End time"
+		},
+		"start": "Start timer"
 	}
 }

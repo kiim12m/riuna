@@ -1,6 +1,7 @@
 import { and, asc, eq, inArray, or } from "drizzle-orm";
 import db from "../../database";
 import { dashboardTable, dashboardWidgetTable } from "../../database/schema";
+import { isUniqueViolation } from "../../utils/is-unique-violation";
 import { defaultWidgetRows } from "../default-layout";
 
 /**
@@ -103,10 +104,4 @@ async function seedDefaultDashboard(workspaceId: string, userId: string) {
   }
 
   return readDashboards(workspaceId, userId);
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  // Drizzle envuelve el error de Postgres y deja el original en `cause`.
-  const candidate = error as { code?: string; cause?: { code?: string } };
-  return candidate.code === "23505" || candidate.cause?.code === "23505";
 }

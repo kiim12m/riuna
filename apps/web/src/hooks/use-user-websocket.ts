@@ -109,9 +109,28 @@ export function useUserWebSocket() {
           if (message.type === "PLAN_INVALIDATED") {
             queryClient.invalidateQueries({ queryKey: ["planner"] });
             queryClient.invalidateQueries({ queryKey: ["schedule"] });
+            queryClient.invalidateQueries({ queryKey: ["today"] });
+            queryClient.invalidateQueries({ queryKey: ["my-work", "counts"] });
           }
+          // Un bloque fijo o la jornada personal cambian la capacidad y los
+          // bloques fijos que el Planificador y Hoy tambien leen (ADR 045),
+          // no solo el Cronograma que originalmente disparaba este evento.
           if (message.type === "SCHEDULE_INVALIDATED") {
             queryClient.invalidateQueries({ queryKey: ["schedule"] });
+            queryClient.invalidateQueries({ queryKey: ["planner"] });
+            queryClient.invalidateQueries({ queryKey: ["today"] });
+          }
+          // Un solo cronometro por persona (ADR 044): arrancar, parar -a mano
+          // o porque la tarea entro en una columna final- y editar o borrar
+          // una entrada del parte de horas llegan todos por aqui, para que el
+          // pie de la barra y la pastilla movil se enteren aunque el cambio
+          // venga de otra pestana o de un evento del servidor.
+          if (message.type === "TIMER_CHANGED") {
+            queryClient.invalidateQueries({ queryKey: ["time-entry"] });
+            queryClient.invalidateQueries({ queryKey: ["schedule"] });
+            queryClient.invalidateQueries({ queryKey: ["time-sheet"] });
+            queryClient.invalidateQueries({ queryKey: ["today"] });
+            queryClient.invalidateQueries({ queryKey: ["my-work", "counts"] });
           }
           // Una vista de espacio sin proyecto no tiene socket de proyecto que la
           // escuche: llega por aqui. El prefijo cubre las tres claves de

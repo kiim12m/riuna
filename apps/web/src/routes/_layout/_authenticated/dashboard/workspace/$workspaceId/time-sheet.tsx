@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { saveAs } from "file-saver";
-import { FileClock } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ChevronRight, FileClock } from "lucide-react";
+import { Fragment, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import PageTitle from "@/components/page-title";
+import { TimeSheetEntryRow } from "@/components/time-sheet/entry-row";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -34,6 +35,7 @@ import {
 import type { TimeSheetGroupBy } from "@/fetchers/time-sheet";
 import { exportTimeSheet } from "@/fetchers/time-sheet";
 import { useTimeSheet } from "@/hooks/queries/time-sheet/use-time-sheet";
+import { cn } from "@/lib/cn";
 import { formatDuration } from "@/lib/duration";
 import { formatDate } from "@/lib/format";
 import { toast } from "@/lib/toast";
@@ -70,6 +72,21 @@ function RouteComponent() {
   const [end, setEnd] = useState(() => isoDay(new Date()));
   const [groupBy, setGroupBy] = useState<TimeSheetGroupBy>("day");
   const [isExporting, setIsExporting] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    () => new Set(),
+  );
+
+  const toggleGroup = (key: string) => {
+    setExpandedGroups((previous) => {
+      const next = new Set(previous);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   const query = useMemo(() => ({ start, end, groupBy }), [start, end, groupBy]);
   const { data, isPending } = useTimeSheet(workspaceId, query);
@@ -212,17 +229,60 @@ function RouteComponent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {data?.groups.map((group) => (
-                  <TableRow key={group.key}>
-                    <TableCell>{groupLabel(group.key, group.label)}</TableCell>
-                    <TableCell className="text-right text-muted-foreground tabular-nums">
-                      {group.entryCount}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatDuration(group.seconds, i18n.language)}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {data?.groups.map((group) => {
+                  const isOpen = expandedGroups.has(group.key);
+                  return (
+                    <Fragment key={group.key}>
+                      <TableRow
+                        onClick={() => toggleGroup(group.key)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            toggleGroup(group.key);
+                          }
+                        }}
+                        tabIndex={0}
+                        role="button"
+                        className="cursor-pointer"
+                        aria-expanded={isOpen}
+                      >
+                        <TableCell className="flex items-center gap-1.5">
+                          <ChevronRight
+                            className={cn(
+                              "size-3.5 shrink-0 text-muted-foreground transition-transform",
+                              isOpen && "rotate-90",
+                            )}
+                          />
+                          {groupLabel(group.key, group.label)}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground tabular-nums">
+                          {group.entryCount}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {formatDuration(group.seconds, i18n.language)}
+                        </TableCell>
+                      </TableRow>
+                      {isOpen && (
+                        <TableRow key={`${group.key}-entries`}>
+                          <TableCell
+                            colSpan={3}
+                            className="bg-muted/30 py-1.5"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <div className="flex flex-col divide-y divide-border/60">
+                              {group.entries.map((entry) => (
+                                <TimeSheetEntryRow
+                                  key={entry.id}
+                                  entry={entry}
+                                />
+                              ))}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </Fragment>
+                  );
+                })}
               </TableBody>
               <TableFooter>
                 <TableRow>

@@ -4,6 +4,19 @@ import type { TaskFilter } from "@/types/task-filter";
 
 export type PersonalScope = "assigned" | "team";
 
+/** Los dos numeros de la barra lateral: "Hoy" y "Mis tareas" (ADR 046). */
+export async function getMyWorkCounts(workspaceId: string) {
+  const response = await client["my-work"].counts.$get({
+    query: { workspaceId },
+  });
+
+  if (!response.ok) {
+    throw new HttpError(await response.text(), response.status);
+  }
+
+  return response.json();
+}
+
 // El mismo vocabulario que `SEARCH_SORT_FIELDS` en la API. Sin `number` ni
 // `position`: se numeran por proyecto, y ordenar por ellos entre proyectos no
 // significa nada (misma razon que ADR 038 los retira del registro).

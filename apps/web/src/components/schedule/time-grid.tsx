@@ -437,7 +437,13 @@ function TimeGridColumn({
                       </button>
                     ) : (
                       <span key={entry.id} className="truncate">
-                        {entry.title || t("schedule:running")}
+                        {entry.title ||
+                          (entry.kind === "running"
+                            ? t("schedule:running")
+                            : // Un tramo `break` sin bloque real detras es
+                              // la comida sintetica de la jornada (ADR 045):
+                              // nunca tiene fila que editar.
+                              t("schedule:lunch"))}
                       </span>
                     ),
                   )}

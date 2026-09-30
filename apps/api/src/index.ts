@@ -67,6 +67,7 @@ import telegramIntegration from "./telegram-integration";
 import template from "./template";
 import timeEntry from "./time-entry";
 import timeSheet from "./time-sheet";
+import today from "./today";
 import user from "./user";
 import getAvatar from "./user/controllers/get-avatar";
 import { authenticateApiRequest } from "./utils/authenticate-api-request";
@@ -92,6 +93,7 @@ import {
 import { seedDefaultWorkspaceRoles } from "./utils/seed-default-workspace-roles";
 import { validateWorkspaceAccess } from "./utils/validate-workspace-access";
 import view from "./view";
+import workSchedule from "./work-schedule";
 import workflowRule from "./workflow-rule";
 import workspace from "./workspace";
 import {
@@ -612,6 +614,7 @@ export function createApp() {
   const commentApi = api.route("/comment", comment);
   const timeEntryApi = api.route("/time-entry", timeEntry);
   const timeSheetApi = api.route("/time-sheet", timeSheet);
+  const todayApi = api.route("/today", today);
   const labelApi = api.route("/label", label);
   const notificationApi = api.route("/notification", notification);
   const notificationPreferencesApi = api.route(
@@ -626,6 +629,7 @@ export function createApp() {
   const myWorkApi = api.route("/my-work", myWork);
   const plannerApi = api.route("/planner", planner);
   const scheduleApi = api.route("/schedule", schedule);
+  const workScheduleApi = api.route("/work-schedule", workSchedule);
   const searchApi = api.route("/search", search);
   const githubIntegrationApi = api.route(
     "/github-integration",
@@ -814,6 +818,7 @@ export function createApp() {
     myWorkApi,
     plannerApi,
     scheduleApi,
+    workScheduleApi,
     notificationApi,
     notificationPreferencesApi,
     projectApi,
@@ -825,6 +830,7 @@ export function createApp() {
     telegramIntegrationApi,
     timeEntryApi,
     timeSheetApi,
+    todayApi,
     userApi,
     workflowRuleApi,
     workspaceApi,
@@ -969,6 +975,7 @@ const {
   myWorkApi,
   plannerApi,
   scheduleApi,
+  workScheduleApi,
   notificationApi,
   notificationPreferencesApi,
   projectApi,
@@ -980,6 +987,7 @@ const {
   telegramIntegrationApi,
   timeEntryApi,
   timeSheetApi,
+  todayApi,
   userApi,
   workflowRuleApi,
   workspaceApi,
@@ -1014,6 +1022,7 @@ export type AppType =
   | typeof commentApi
   | typeof timeEntryApi
   | typeof timeSheetApi
+  | typeof todayApi
   | typeof labelApi
   | typeof notificationApi
   | typeof notificationPreferencesApi
@@ -1025,6 +1034,7 @@ export type AppType =
   | typeof myWorkApi
   | typeof plannerApi
   | typeof scheduleApi
+  | typeof workScheduleApi
   | typeof searchApi
   | typeof githubIntegrationApi
   | typeof giteaIntegrationApi

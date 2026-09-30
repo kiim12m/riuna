@@ -1248,7 +1248,7 @@ tarea, que no tenía tope alguno y crecía con la ventana.
   que el calendario empiece en domingo. Es una decisión de producto con el rótulo
   desalineado, no un fallo.
 
-### Interludio — Espacio personal y administración (antes de la Fase 8) · **en curso**
+### Interludio — Espacio personal y administración (antes de la Fase 8) · **cerrado**
 
 *Mismo patrón que el interludio de UX antes de la Fase 6: se decide sobre una
 maqueta ([`barra-lateral.html`](design-previews/barra-lateral.html)) antes de
@@ -1427,8 +1427,109 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
     ellos por separado lee 3.105, así que cinco preguntas cuestan lo que
     costaba una.
 
-El cronómetro de tarea se mueve al pie de la barra lateral en vez de una
-cabecera —la ADR 022 ya maquetó y descartó esa variante—.
+11. **Cronómetro** ✔ ([ADR 044](adr/044-cronometro-en-el-pie.md)) — se mueve
+    al pie de la barra lateral en vez de una cabecera, que la ADR 022 ya
+    maquetó y descartó. La API y los hooks web venían del fork de Kaneo sin
+    que ningún componente los usara; ahora un índice parcial único
+    (`time_entry_one_running_per_user`) impone un solo cronómetro por
+    persona en todo el servidor, arrancar uno cierra el que hubiera en una
+    transacción, y se para solo al entrar la tarea en una columna final
+    —un suscriptor a `task.status_changed` que relee `completed_at`, el que
+    ya mantiene el disparador de la ADR 025, en vez de reimplementar qué
+    columna es final—. `PUT`/`DELETE /time-entry/:id` pasan a exigir que la
+    entrada sea propia, con la condición de dueño en el propio `WHERE`
+    —antes bastaba el permiso de espacio—; `DELETE` no existía. Pulso,
+    título y `HH:MM:SS`; en raíl solo el punto. Sin nada en marcha ofrece
+    «Reanudar» sobre la última tarea sin terminar, como el play de la
+    cabecera de super-productivity con `lastCurrentTaskId`. Pastilla propia
+    en móvil, donde la barra es un panel aparte. Aviso —una vez por
+    entrada— al superar la estimación; al parar una de más de diez horas,
+    pregunta la hora real de fin en vez de estampar «ahora». El parte de
+    horas despliega las entradas de cada grupo —siempre propias— para
+    editarlas o borrarlas ahí mismo. `TIMER_CHANGED` por el canal de
+    usuario, mismo patrón que `PLAN_INVALIDATED`. 16 pruebas de integración
+    nuevas más las 11 ya existentes del parte de horas y la duración;
+    verificado con typecheck y la batería unitaria de API (703 pruebas) y
+    web (271); el navegador real queda pendiente, igual que el resto del
+    interludio en este entorno sin Docker.
+12. **Jornada personal** ✔ ([ADR 045](adr/045-jornada-personal.md)) — tabla
+    nueva `user_work_schedule`, única fuente de horario y capacidad para el
+    Planificador y el Cronograma, que hasta ahora tenían cada uno la suya
+    —8 h fijas y 08:00–18:00 fijo— y ni siquiera coincidían entre sí. Sin
+    fila, los valores de super-productivity: 09:00–17:00, sin comida, lunes
+    a viernes. `capacitySeconds` (un número) pasa a `capacityByDay` (uno por
+    día de la ventana): 0 si el día no es laborable, si no la jornada menos
+    la **unión** de la comida y los bloques cerrados de ese día —nunca
+    restados por separado, o un solape contaría un minuto dos veces—. El
+    Cronograma deja de leer una constante de instancia y usa el horario de
+    quien mira; la comida entra ahí como un bloque `break` sintético que
+    nunca se guarda, así que nunca tiene fila que editar. Un día no
+    laborable reparte igual en el Cronograma —lo planificado ahí se puso a
+    propósito—; la máscara solo apaga la capacidad del Planificador.
+    Ajustes en «Mi cuenta › Preferencias», guardados en la API y no en
+    `localStorage`. 9 pruebas de integración nuevas más 12 unitarias de
+    `dayCapacitySeconds`; typecheck y batería unitaria de API (715) y web
+    (271) en verde.
+13. **Planificador en tres secciones** ✔ ([ADR 046](adr/046-planificador-en-tres-secciones.md))
+    — cada día se reparte como en `planner-day.component.html` de
+    super-productivity: sin hora (se reordena, cae en el primer hueco libre
+    del Cronograma en este orden), con hora (tareas ancladas y bloques
+    fijos, ordenados por minuto, ocultos si no hay nada) y vence este día
+    (solo lectura, con «planificada el vie» si ya tiene otro día). Arreglado
+    el reordenado, que mandaba siempre el índice antiguo de la tarjeta:
+    `PUT /planner/order` reescribe la posición de un día entero en el orden
+    recibido. `GET /planner` gana `previous` («De días anteriores», nada se
+    mueve solo), `deadlines`, `fixedBlocksByDay`, y `startMinute` más
+    `loggedSeconds` en cada entrada; la carga pasa de la estimación bruta a
+    lo que queda (`estimate − registrado`, sin fantasmas). Anclar abre un
+    popover con la hora, prellenado con el inicio de la jornada personal
+    (ADR 045); la estimación se edita en la propia tarjeta
+    (`InlineEstimate`, compartido con Hoy) contra el mismo
+    `PUT /task/estimate/:id` que ya existía, con `parseDurationInput`
+    (`1h 30m`, `90m`, `1:30`, `1,5`) que también adopta `task-tree.tsx`. De
+    paso se corrigió que `GET /planner` no filtraba por `workspace_id` —el
+    mismo fallo que la ADR 041 ya había corregido en `get-schedule.ts`, sin
+    aplicar aquí—, con su prueba de regresión. Quedan declarados fuera: la
+    casilla de «hecha», el menú contextual, cargar más días al desplazar y
+    el filtro de «Sin planificar» — ninguno estaba en la maqueta original.
+    16 pruebas de integración nuevas (`planner-sections.test.ts`) más las
+    21 y 27 ya existentes de planner y schedule; typecheck y batería
+    unitaria de API (715) y web (279) en verde.
+
+14. **Hoy y contadores** ✔ ([ADR 047](adr/047-hoy-y-contadores.md)) — «Hoy»
+    deja de ser una lista de lo asignado agrupada por vencimiento (item 5) y
+    pasa a componer sobre el plan personal, como en la maqueta: «De días
+    anteriores» (lo planificado antes de hoy y sin terminar, con «Añadir a
+    hoy»), «Plan de hoy» (se reordena con `dnd-kit` + `PUT /planner/order`,
+    ADR 046), lo urgente sin planificar («vence hoy o vencida», con
+    «Planificar hoy») y «Hechas hoy», plegada. Módulo nuevo `today/`,
+    `GET /today`, con la misma condición de «urgente» (`today/queries.ts`)
+    usada tanto por la lista como por el contador —repetir ese `WHERE` fue
+    la fuga entre espacios que las ADR 041 y 046 ya tuvieron que corregir
+    dos veces—. Casilla de «hecha» nueva en la fila de Hoy:
+    `POST /task/complete/:id` mueve la tarea a la primera columna final o no
+    final de su proyecto y reutiliza `updateTaskStatus` por dentro, así que
+    la cascada, el evento y la parada del cronómetro (ADR 044) no se
+    repiten; la del Planificador sigue pendiente desde la ADR 046, con la
+    ruta ya lista para cuando se retome. `GET /my-work/counts` da los dos
+    números de la barra lateral —«Hoy» y «Mis tareas», con el mismo tope de
+    500 y la misma valla `OFFSET 0` que `get-my-work.ts`—, sin decorar
+    filas: un contador de cada carga de página no puede pagar ese coste.
+    `PLAN_INVALIDATED` y `TIMER_CHANGED` invalidan también `today` y los
+    contadores. Quedan declarados fuera, igual que en el item 13: el campo
+    de añadir rápido, el diálogo «Terminar el día», «Añadir todo a hoy» en
+    bloque y el menú contextual. 27 pruebas de integración nuevas
+    (`today.test.ts`, `my-work-counts.test.ts`, `task-complete.test.ts`);
+    typecheck y batería unitaria de API (715) y web (281) en verde.
+    **Contra lo declarado en los bloques 5-7, el humo de Playwright sí corre
+    en este entorno sin Docker**: `E2E_DATABASE_URL` apuntado a una base
+    propia (`riuna_e2e_test`) en el mismo PostgreSQL nativo que ya usan las
+    pruebas de integración basta, sin `compose.local.yml`. `today.spec.ts`
+    reescrito para la pantalla nueva; de paso salió y se corrigió una
+    regresión real y sin relación con este bloque en `schedule.spec.ts`,
+    que esperaba el ancla de flujo en torno a las 08:00 que la ADR 045 ya
+    había sustituido por las 09:00 por defecto. Las 25 pruebas de
+    `tests/e2e/` quedan en verde.
 
 **Hecho cuando:** entras por «Hoy», planificas tu semana arrastrando entre
 días sin cambiar el vencimiento que ve el equipo, y administrar el espacio ya
@@ -1576,11 +1677,16 @@ automatizaciones e importadores externos. Motor disparador → condición →
 acción sobre los eventos que Kaneo ya emite, e importadores de Trello, Jira,
 Asana y Notion.
 
-Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
+~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la
-prueba de extremo a extremo necesita la PostgreSQL de `compose.local.yml`.
-Correrla es el primer paso si se retoma trabajo en un entorno que sí tenga
-Docker, antes de dar ese bloque por verificado del todo.
+prueba de extremo a extremo necesita la PostgreSQL de `compose.local.yml`.~~
+**Ejecutada (2026-09-30, item 14):** no hace falta Docker ni
+`compose.local.yml` — `E2E_DATABASE_URL` apuntado a una base propia
+(`riuna_e2e_test`) en el PostgreSQL nativo que ya usan las pruebas de
+integración basta. De paso salió una regresión real: el ancla de flujo se
+esperaba en torno a las 08:00, la constante de instancia que la ADR 045 ya
+había sustituido por las 09:00 por defecto. Corregida; las 25 pruebas de
+`tests/e2e/` quedan en verde.
 
 **Revisión de código del interludio (2026-09-23):** `/code-review high` sobre
 los nueve bloques devolvió 10 hallazgos confirmados, ya corregidos. Cuatro con

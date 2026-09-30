@@ -45,6 +45,10 @@ export const shortcuts = {
     labels: "l",
     dueDate: "d",
   },
+  timer: {
+    prefix: getModifierKeyText(),
+    toggle: "e",
+  },
   help: {
     key: "?",
   },

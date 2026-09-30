@@ -4,15 +4,27 @@ import {
   type PlanResponse,
   removePlanEntry,
   setPlanEntry,
+  setPlanOrder,
 } from "@/fetchers/planner";
 
-type Destination = { plannedDate: string; position: number } | null;
+type Destination = {
+  plannedDate: string;
+  position?: number;
+  /** Ausente: no se toca. `null`: desancla. Un numero: ancla a esa hora. */
+  startMinute?: number | null;
+} | null;
 
 /**
  * Arrastrar una tarjeta escribe la cache antes de llamar a la mutacion, igual
  * que `useReorderProjects`: dnd-kit limpia su propio estado en el mismo tick
  * y un `onMutate` que llega detras pintaria el hueco vacio un render de mas.
  * `destination: null` es "sin planificar" -DELETE en vez de PUT-.
+ *
+ * El valor optimista no intenta adivinar `loggedSeconds`/`position` con
+ * precision -por eso el `?? 0`/`?? null` a secas en vez de leerlos de donde
+ * estaba la tarjeta antes, que es un union de tres formas distintas y no
+ * vale la pena estrechar a mano-: `onSettled` los corrige en cuanto vuelve
+ * la respuesta real, que tarda un instante.
  */
 export function usePlannerMutations(workspaceId: string, days: number) {
   const queryClient = useQueryClient();
@@ -26,17 +38,26 @@ export function usePlannerMutations(workspaceId: string, days: number) {
       taskId,
       plannedDate,
       position,
+      startMinute,
     }: {
       taskId: string;
       plannedDate: string;
-      position: number;
-    }) => setPlanEntry(workspaceId, taskId, { plannedDate, position }),
+      position?: number;
+      startMinute?: number | null;
+    }) =>
+      setPlanEntry(workspaceId, taskId, { plannedDate, position, startMinute }),
     onSettled: () => queryClient.invalidateQueries({ queryKey }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: ({ taskId }: { taskId: string }) =>
       removePlanEntry(workspaceId, taskId),
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
+  const orderMutation = useMutation({
+    mutationFn: (input: { plannedDate: string; taskIds: string[] }) =>
+      setPlanOrder(workspaceId, input),
     onSettled: () => queryClient.invalidateQueries({ queryKey }),
   });
 
@@ -47,26 +68,38 @@ export function usePlannerMutations(workspaceId: string, days: number) {
 
       const task =
         previous.entries.find((row) => row.id === taskId) ??
+        previous.previous.find((row) => row.id === taskId) ??
         previous.unplanned.find((row) => row.id === taskId);
       if (!task) return;
 
-      const entriesWithout = previous.entries.filter(
-        (row) => row.id !== taskId,
-      );
-      const unplannedWithout = previous.unplanned.filter(
-        (row) => row.id !== taskId,
-      );
+      const withoutTask = <T extends { id: string }>(rows: T[]) =>
+        rows.filter((row) => row.id !== taskId);
 
       const next: PlanResponse = destination
         ? {
             ...previous,
-            entries: [...entriesWithout, { ...task, ...destination }],
-            unplanned: unplannedWithout,
+            entries: [
+              ...withoutTask(previous.entries),
+              {
+                ...task,
+                plannedDate: destination.plannedDate,
+                position: destination.position ?? 0,
+                startMinute:
+                  destination.startMinute !== undefined
+                    ? destination.startMinute
+                    : null,
+                loggedSeconds:
+                  (task as { loggedSeconds?: number }).loggedSeconds ?? 0,
+              },
+            ],
+            previous: withoutTask(previous.previous),
+            unplanned: withoutTask(previous.unplanned),
           }
         : {
             ...previous,
-            entries: entriesWithout,
-            unplanned: [...unplannedWithout, task],
+            entries: withoutTask(previous.entries),
+            previous: withoutTask(previous.previous),
+            unplanned: [...withoutTask(previous.unplanned), task],
           };
 
       queryClient.setQueryData(queryKey, next);
@@ -80,6 +113,7 @@ export function usePlannerMutations(workspaceId: string, days: number) {
             taskId,
             plannedDate: destination.plannedDate,
             position: destination.position,
+            startMinute: destination.startMinute,
           },
           { onError: rollback },
         );
@@ -90,5 +124,35 @@ export function usePlannerMutations(workspaceId: string, days: number) {
     [queryClient, queryKey, putMutation, deleteMutation],
   );
 
-  return { moveTask };
+  /** Reordena "Sin hora" de un dia. `taskIds` ya viene en el orden final. */
+  const reorderDay = useCallback(
+    (plannedDate: string, taskIds: string[]) => {
+      const previous = queryClient.getQueryData<PlanResponse>(queryKey);
+      if (previous) {
+        const positionByTaskId = new Map(
+          taskIds.map((id, index) => [id, index]),
+        );
+        queryClient.setQueryData<PlanResponse>(queryKey, {
+          ...previous,
+          entries: previous.entries.map((entry) => {
+            const position = positionByTaskId.get(entry.id);
+            return position === undefined ? entry : { ...entry, position };
+          }),
+        });
+      }
+      queryClient.cancelQueries({ queryKey });
+
+      orderMutation.mutate(
+        { plannedDate, taskIds },
+        {
+          onError: () => {
+            if (previous) queryClient.setQueryData(queryKey, previous);
+          },
+        },
+      );
+    },
+    [queryClient, queryKey, orderMutation],
+  );
+
+  return { moveTask, reorderDay };
 }

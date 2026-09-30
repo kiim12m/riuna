@@ -20,10 +20,39 @@ export function startOfServerDay(now: Date): Date {
   return start;
 }
 
+/**
+ * El ultimo instante del dia del servidor -`23:59:59.999`-, para las
+ * consultas que acotan un rango con `BETWEEN` en vez de un limite exclusivo
+ * (`addDays(startOfServerDay(now), 1)`, el idioma de `due-window.ts`). Sin
+ * esto media docena de sitios repetian `setHours(23, 59, 59, 999)` cada uno
+ * por su cuenta.
+ */
+export function endOfServerDay(now: Date): Date {
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
+  return end;
+}
+
 export function addDays(date: Date, days: number): Date {
   const shifted = new Date(date);
   shifted.setDate(shifted.getDate() + days);
   return shifted;
+}
+
+/**
+ * Las claves `yyyy-mm-dd` de cada dia entre `windowStart` y `windowEnd`,
+ * ambos incluidos. La tenia el Cronograma como funcion privada; el
+ * Planificador la necesita igual para repartir `capacityByDay` por dia
+ * (ADR 045), asi que se comparte en vez de duplicarla.
+ */
+export function dayKeysBetween(windowStart: Date, windowEnd: Date): string[] {
+  const keys: string[] = [];
+  let cursor = windowStart;
+  while (cursor <= windowEnd) {
+    keys.push(serverDayKey(cursor));
+    cursor = addDays(cursor, 1);
+  }
+  return keys;
 }
 
 /**

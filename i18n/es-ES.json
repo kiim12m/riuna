@@ -419,6 +419,18 @@
 			"sidebarDefaultDescription": "Mantener la barra lateral al iniciar",
 			"density": "Densidad compacta",
 			"densityDescription": "Aprieta el espaciado en las vistas con muchas tareas",
+			"workScheduleTitle": "Jornada laboral",
+			"workScheduleSubtitle": "Las horas y los días que usan el Planificador, el Cronograma y Hoy para calcular tu capacidad.",
+			"workStart": "Empieza",
+			"workEnd": "Termina",
+			"workTimesInvalid": "La hora de fin tiene que ser posterior a la de inicio.",
+			"lunchEnabled": "Comida",
+			"lunchEnabledDescription": "Se resta de tu capacidad cada día laborable.",
+			"lunchStart": "Empieza la comida",
+			"lunchEnd": "Termina la comida",
+			"workDays": "Días laborables",
+			"workSaved": "Jornada guardada",
+			"workSaveError": "No se pudo guardar la jornada.",
 			"displayOptions": "Opciones de vista",
 			"displayOptionsDescription": "Elige qué información ver en las tareas",
 			"taskNumbers": "Número de tarea",
@@ -2739,6 +2751,31 @@
 		"empty": {
 			"title": "Nada pendiente",
 			"description": "No tienes tareas asignadas en ningún proyecto."
+		},
+		"status": "Estimado restante ~{{remaining}} · Trabajado hoy {{worked}}",
+		"previous": {
+			"title_one": "De días anteriores ({{count}})",
+			"title_other": "De días anteriores ({{count}})",
+			"addToToday": "Añadir a hoy"
+		},
+		"planned": {
+			"title": "Plan de hoy",
+			"empty": "Todavía no hay nada planificado para hoy."
+		},
+		"urgent": {
+			"title": "Vence hoy o vencida, sin planificar",
+			"planToday": "Planificar hoy"
+		},
+		"done": {
+			"title_one": "Hechas hoy ({{count}})",
+			"title_other": "Hechas hoy ({{count}})"
+		},
+		"row": {
+			"toggleDone": "Marcar tarea como hecha",
+			"due": {
+				"today": "Vence hoy",
+				"overdue": "Vencida"
+			}
 		}
 	},
 	"myTasks": {
@@ -2761,6 +2798,12 @@
 		"pageTitle": "Planificador",
 		"unplanned": "Sin planificar",
 		"today": "Hoy",
+		"previous": "De días anteriores",
+		"noTasks": "Sin tareas",
+		"dayLoad": "{{planned}} planificadas de {{available}}",
+		"anchorTime": "Hora",
+		"removeTime": "Quitar hora",
+		"plannedElsewhere": "planificada el {{date}}",
 		"empty": {
 			"title": "Nada asignado",
 			"description": "No tienes tareas asignadas que planificar."
@@ -2771,6 +2814,7 @@
 		"today": "Hoy",
 		"overflow": "Sin hueco hoy",
 		"running": "En marcha",
+		"lunch": "Comida",
 		"createBlock": {
 			"title": "Nuevo bloque",
 			"editTitle": "Editar bloque",
@@ -2850,6 +2894,24 @@
 		"empty": {
 			"title": "Nada en este rango",
 			"description": "No hay tiempo registrado entre estas fechas."
-		}
+		},
+		"cannotEditRunning": "Para el cronómetro antes de editar esta entrada.",
+		"deleteEntry": {
+			"title": "¿Eliminar esta entrada?",
+			"description": "Se quita el tiempo registrado. No afecta a la tarea."
+		},
+		"cannotDeleteRunning": "Para el cronómetro antes de borrar esta entrada."
+	},
+	"timer": {
+		"stop": "Parar el cronómetro",
+		"resumeTask": "Reanudar · {{title}}",
+		"untitledTask": "Tarea sin título",
+		"overEstimate": "{{title}} — supera lo estimado",
+		"stopDialog": {
+			"title": "¿Cuándo terminó de verdad?",
+			"description": "Este cronómetro lleva más de diez horas en marcha. Elige la hora real de fin en vez de marcar ahora mismo.",
+			"endTime": "Hora de fin"
+		},
+		"start": "Iniciar cronómetro"
 	}
 }

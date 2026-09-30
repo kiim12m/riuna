@@ -20,30 +20,9 @@ import {
 } from "@/components/ui/select";
 import type { CreateBlockInput, UpdateBlockInput } from "@/fetchers/schedule";
 import { cn } from "@/lib/cn";
-import { formatDate } from "@/lib/format";
+import { fromMinutes, toMinutes } from "@/lib/minutes";
+import { WEEKDAYS_MONDAY_FIRST, weekdayLabel } from "@/lib/weekdays";
 import type { EditableBlock } from "./time-grid";
-
-// 1 de enero de 2023 fue domingo: referencia estable para nombrar los siete
-// dias de la semana sin depender de en que dia corre esto.
-const WEEK_REFERENCE_SUNDAY = new Date(Date.UTC(2023, 0, 1));
-const WEEKDAYS = [1, 2, 3, 4, 5, 6, 0];
-
-function weekdayLabel(day: number) {
-  const reference = new Date(WEEK_REFERENCE_SUNDAY);
-  reference.setUTCDate(reference.getUTCDate() + day);
-  return formatDate(reference, { weekday: "short" });
-}
-
-function toMinutes(time: string): number {
-  const [hours, minutes] = time.split(":").map(Number);
-  return (hours ?? 0) * 60 + (minutes ?? 0);
-}
-
-function fromMinutes(minute: number): string {
-  const hours = String(Math.floor(minute / 60)).padStart(2, "0");
-  const mins = String(minute % 60).padStart(2, "0");
-  return `${hours}:${mins}`;
-}
 
 /** `yyyy-mm-dd` de un ISO que llega del servidor -Hono serializa los `Date`
  * a texto-, o cadena vacia si no hay fecha. */
@@ -236,7 +215,7 @@ export function CreateBlockDialog({
           <div className="space-y-1.5">
             <Label>{t("schedule:createBlock.repeat")}</Label>
             <div className="flex gap-1">
-              {WEEKDAYS.map((value) => (
+              {WEEKDAYS_MONDAY_FIRST.map((value) => (
                 <button
                   key={value}
                   type="button"

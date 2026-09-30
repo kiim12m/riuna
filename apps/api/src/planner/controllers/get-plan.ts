@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, lte, type SQL, sql } from "drizzle-orm";
+import { and, between, eq, isNull, ne, type SQL, sql } from "drizzle-orm";
 import db from "../../database";
 import {
   personalPlanEntryTable,
@@ -11,28 +11,23 @@ import {
   getWorkspaceColumns,
   notDoneCondition,
 } from "../../my-work/decorate";
-import { serverDayKey } from "../../utils/day-boundaries";
+import { assignedCondition } from "../../my-work/scope";
+import { loadBlocksByDay } from "../../schedule/blocks-by-day";
+import {
+  dayKeysBetween,
+  parseServerDay,
+  serverDayKey,
+} from "../../utils/day-boundaries";
 import { workspaceTaskConditions } from "../../view/workspace-task-query";
+import { capacityForDay } from "../../work-schedule/day-capacity";
+import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
 import { computeGhosts } from "../ghosts";
-
-/** Jornada fija de 8 h por persona (ADR 040). No hay ajuste todavia. */
-export const DAY_CAPACITY_SECONDS = 8 * 60 * 60;
-
-const taskColumns = {
-  id: taskTable.id,
-  number: taskTable.number,
-  title: taskTable.title,
-  status: taskTable.status,
-  priority: taskTable.priority,
-  estimate: taskTable.estimate,
-  dueDate: taskTable.dueDate,
-  projectId: taskTable.projectId,
-  projectName: projectTable.name,
-  projectSlug: projectTable.slug,
-  projectIcon: projectTable.icon,
-  teamId: taskTable.teamId,
-  teamName: teamTable.name,
-};
+import {
+  getEntriesInRange,
+  getPreviousEntries,
+  loggedSecondsByTask,
+  taskColumns,
+} from "../queries";
 
 /** Ninguna fila en `personal_plan_entry`, sin importar la fecha (ADR 040). */
 function notPlannedCondition(userId: string) {
@@ -57,16 +52,41 @@ export default async function getPlan({
   now?: Date;
 }) {
   const serverToday = serverDayKey(now);
-  const [projectColumns, scopeConditions] = await Promise.all([
-    getWorkspaceColumns(workspaceId),
-    workspaceTaskConditions({
-      workspaceId,
-      userId,
-      scope: "assigned",
-      filter: null,
-      registry: {},
-    }),
-  ]);
+  const [projectColumns, scopeConditions, schedule, { blocksByDay }] =
+    await Promise.all([
+      getWorkspaceColumns(workspaceId),
+      workspaceTaskConditions({
+        workspaceId,
+        userId,
+        scope: "assigned",
+        filter: null,
+        registry: {},
+      }),
+      getWorkSchedule(userId),
+      loadBlocksByDay(workspaceId, userId, windowStart, windowEnd),
+    ]);
+
+  const capacityByDay: Record<string, number> = {};
+  const fixedBlocksByDay: Record<
+    string,
+    { id: string; title: string; startMinute: number; endMinute: number }[]
+  > = {};
+  for (const dayKey of dayKeysBetween(windowStart, windowEnd)) {
+    const dayBlocks = blocksByDay.get(dayKey) ?? [];
+    capacityByDay[dayKey] = capacityForDay(
+      schedule,
+      parseServerDay(dayKey, "day"),
+      dayBlocks,
+    );
+    fixedBlocksByDay[dayKey] = dayBlocks
+      .filter((block) => block.kind === "fixed")
+      .map((block) => ({
+        id: block.id,
+        title: block.title,
+        startMinute: block.startMinute,
+        endMinute: block.endMinute,
+      }));
+  }
 
   // El ambito "assigned" siempre resuelve a un predicado -nunca depende de
   // equipos-, pero el tipo lo comparte con "team" y hay que descartar el
@@ -74,9 +94,12 @@ export default async function getPlan({
   if (!scopeConditions) {
     return {
       entries: [],
+      previous: [],
       unplanned: [],
+      deadlines: [],
       ghosts: [],
-      capacitySeconds: DAY_CAPACITY_SECONDS,
+      capacityByDay,
+      fixedBlocksByDay,
       serverToday,
     };
   }
@@ -88,47 +111,83 @@ export default async function getPlan({
   ];
   if (notDone) unplannedConditions.push(notDone);
 
-  const [entryRows, unplannedRows, ghosts] = await Promise.all([
-    db
-      .select({
-        ...taskColumns,
-        plannedDate: personalPlanEntryTable.plannedDate,
-        position: personalPlanEntryTable.position,
-      })
-      .from(personalPlanEntryTable)
-      .innerJoin(taskTable, eq(personalPlanEntryTable.taskId, taskTable.id))
-      .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-      .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))
-      .where(
-        and(
-          eq(personalPlanEntryTable.userId, userId),
-          gte(personalPlanEntryTable.plannedDate, windowStart),
-          lte(personalPlanEntryTable.plannedDate, windowEnd),
-        ),
-      )
-      .orderBy(
-        asc(personalPlanEntryTable.plannedDate),
-        asc(personalPlanEntryTable.position),
+  const deadlineConditions: SQL[] = [
+    eq(projectTable.workspaceId, workspaceId),
+    // Sin esto un proyecto archivado, o una tarea archivada, seguia
+    // asomando en "vence este dia" -la unica lista de la pantalla que no
+    // pasaba por `workspaceTaskConditions`, que ya lo hace por "sin
+    // planificar"-.
+    isNull(projectTable.archivedAt),
+    ne(taskTable.status, "archived"),
+    assignedCondition(userId),
+    between(taskTable.dueDate, windowStart, windowEnd),
+  ];
+  if (notDone) deadlineConditions.push(notDone);
+
+  const [entryRows, previousRows, unplannedRows, deadlineRows, ghosts] =
+    await Promise.all([
+      getEntriesInRange(workspaceId, userId, windowStart, windowEnd),
+      getPreviousEntries(
+        workspaceId,
+        userId,
+        windowStart,
+        notDone ? [notDone] : [],
       ),
-    db
-      .select(taskColumns)
-      .from(taskTable)
-      .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-      .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))
-      .where(and(...unplannedConditions)),
-    computeGhosts(workspaceId, userId, windowStart, windowEnd),
+      db
+        .select(taskColumns)
+        .from(taskTable)
+        .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+        .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))
+        .where(and(...unplannedConditions)),
+      // Lo que vence dentro de la ventana, planificado o no: en Riuna el
+      // vencimiento es un dato aparte del plan (ADR 040), asi que una tarea
+      // planificada para otro dia sigue apareciendo aqui -con su
+      // `plannedDate`, para que la tarjeta diga "planificada el vie"-.
+      db
+        .select({
+          ...taskColumns,
+          plannedDate: personalPlanEntryTable.plannedDate,
+        })
+        .from(taskTable)
+        .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+        .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))
+        .leftJoin(
+          personalPlanEntryTable,
+          and(
+            eq(personalPlanEntryTable.taskId, taskTable.id),
+            eq(personalPlanEntryTable.userId, userId),
+          ),
+        )
+        .where(and(...deadlineConditions)),
+      computeGhosts(workspaceId, userId, windowStart, windowEnd),
+    ]);
+
+  const loggedByTask = await loggedSecondsByTask([
+    ...entryRows.map((row) => row.id),
+    ...previousRows.map((row) => row.id),
   ]);
 
-  const [entries, unplanned] = await Promise.all([
+  const [entries, previous, unplanned, deadlines] = await Promise.all([
     decorateTasks(entryRows, projectColumns),
+    decorateTasks(previousRows, projectColumns),
     decorateTasks(unplannedRows, projectColumns),
+    decorateTasks(deadlineRows, projectColumns),
   ]);
+
+  const withLogged = <T extends { id: string }>(rows: T[]) =>
+    rows.map((row) => ({
+      ...row,
+      loggedSeconds: loggedByTask.get(row.id) ?? 0,
+    }));
 
   return {
-    entries,
+    entries: withLogged(entries),
+    previous: withLogged(previous),
     unplanned,
+    deadlines,
     ghosts,
-    capacitySeconds: DAY_CAPACITY_SECONDS,
+    capacityByDay,
+    fixedBlocksByDay,
     serverToday,
   };
 }

@@ -3,7 +3,12 @@ import { HTTPException } from "hono/http-exception";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import { buildContentDisposition } from "../utils/content-disposition";
-import { parseServerDay } from "../utils/day-boundaries";
+import {
+  addDays,
+  endOfServerDay,
+  parseServerDay,
+  startOfServerDay,
+} from "../utils/day-boundaries";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import { DEFAULT_RANGE_DAYS, MAX_RANGE_DAYS } from "./constants";
@@ -23,11 +28,10 @@ const querySchema = v.object({
  */
 function resolveWindow(start?: string, end?: string) {
   if (!start && !end) {
-    const windowEnd = new Date();
-    windowEnd.setHours(23, 59, 59, 999);
-    const windowStart = new Date(windowEnd);
-    windowStart.setDate(windowStart.getDate() - (DEFAULT_RANGE_DAYS - 1));
-    windowStart.setHours(0, 0, 0, 0);
+    const windowEnd = endOfServerDay(new Date());
+    const windowStart = startOfServerDay(
+      addDays(windowEnd, -(DEFAULT_RANGE_DAYS - 1)),
+    );
     return { windowStart, windowEnd };
   }
 
@@ -38,8 +42,7 @@ function resolveWindow(start?: string, end?: string) {
   }
 
   const windowStart = parseServerDay(start, "start");
-  const windowEnd = parseServerDay(end, "end");
-  windowEnd.setHours(23, 59, 59, 999);
+  const windowEnd = endOfServerDay(parseServerDay(end, "end"));
 
   if (windowEnd < windowStart) {
     throw new HTTPException(400, {

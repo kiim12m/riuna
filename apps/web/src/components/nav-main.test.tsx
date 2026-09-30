@@ -29,6 +29,12 @@ vi.mock("@/hooks/queries/project/use-get-projects", () => ({
   default: () => ({ data: projects }),
 }));
 
+let counts: { today: number; myTasks: number } | undefined;
+
+vi.mock("@/hooks/queries/my-work/use-my-work-counts", () => ({
+  useMyWorkCounts: () => ({ data: counts }),
+}));
+
 const capabilities = {
   canManageWorkspace: false,
   canManageProjects: false,
@@ -72,6 +78,7 @@ function renderNav() {
 beforeEach(() => {
   navigate.mockReset();
   projects = [{ id: "project-1", name: "Obra Norte" }];
+  counts = { today: 7, myTasks: 34 };
   for (const key of Object.keys(capabilities) as Array<
     keyof typeof capabilities
   >) {
@@ -142,6 +149,24 @@ describe("NavMain", () => {
     expect(
       screen.getByText("navigation:sidebar.projectSettings"),
     ).toBeInTheDocument();
+  });
+
+  it("ensena los contadores de Hoy y Mis tareas", () => {
+    renderNav();
+
+    expect(screen.getByText("7")).toBeInTheDocument();
+    expect(screen.getByText("34")).toBeInTheDocument();
+  });
+
+  // Un "0" en el badge de "Hoy" leeria como "ya se sabe que no hay nada
+  // pendiente", cuando en realidad puede que la consulta ni haya respondido
+  // todavia: se oculta el badge entero en vez de ensenar un cero.
+  it("oculta el badge de un contador en cero", () => {
+    counts = { today: 0, myTasks: 5 };
+    renderNav();
+
+    expect(screen.queryByText("0")).toBeNull();
+    expect(screen.getByText("5")).toBeInTheDocument();
   });
 
   // Sin proyectos no hay ajustes de proyecto que ensenar, igual que la vieja

@@ -49,7 +49,26 @@ export async function removePlanEntry(workspaceId: string, taskId: string) {
   return response.json();
 }
 
+/** Reescribe la posicion de un dia entero, en el orden dado (ADR 045). */
+export async function setPlanOrder(
+  workspaceId: string,
+  input: { plannedDate: string; taskIds: string[] },
+) {
+  const response = await client.planner.order.$put({
+    query: { workspaceId },
+    json: input,
+  });
+
+  if (!response.ok) {
+    throw new HttpError(await response.text(), response.status);
+  }
+
+  return response.json();
+}
+
 export type PlanResponse = Awaited<ReturnType<typeof getPlan>>;
 export type PlanTask = PlanResponse["unplanned"][number];
 export type PlanEntry = PlanResponse["entries"][number];
+export type PlanDeadline = PlanResponse["deadlines"][number];
 export type PlanGhost = PlanResponse["ghosts"][number];
+export type PlanFixedBlock = PlanResponse["fixedBlocksByDay"][string][number];

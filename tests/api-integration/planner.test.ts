@@ -460,10 +460,18 @@ describe("personal planner", () => {
     expect(plan.ghosts).toHaveLength(0);
   });
 
-  it("reports the fixed 8-hour capacity", async () => {
+  it("reports 8 hours of capacity on work days and none on weekends by default (ADR 045)", async () => {
     const { app, workspaceId } = await setup();
     const plan = await (await getPlan(app, workspaceId)).json();
-    expect(plan.capacitySeconds).toBe(8 * 60 * 60);
+
+    const entries = Object.entries(plan.capacityByDay) as [string, number][];
+    expect(entries.length).toBeGreaterThan(0);
+
+    for (const [dayKey, seconds] of entries) {
+      const weekday = new Date(`${dayKey}T00:00:00`).getDay();
+      const isWeekend = weekday === 0 || weekday === 6;
+      expect(seconds).toBe(isWeekend ? 0 : 8 * 60 * 60);
+    }
   });
 
   it("someone outside the workspace cannot read its plan", async () => {

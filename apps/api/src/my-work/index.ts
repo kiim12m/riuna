@@ -7,6 +7,7 @@ import { workspaceAccess } from "../utils/workspace-access-middleware";
 import { parseFilterParam } from "../view/filter-schema";
 import { FilterError, type FilterNode } from "../view/filter-to-sql";
 import { getWorkspaceFieldRegistry } from "../view/workspace-registry";
+import getCounts from "./controllers/get-counts";
 import getMyWork from "./controllers/get-my-work";
 import searchTasks, {
   SEARCH_SORT_FIELDS,
@@ -50,6 +51,15 @@ const myWorkTaskSchema = v.object({
       image: v.nullable(v.string()),
     }),
   ),
+});
+
+const countsResponseSchema = v.object({
+  /** Lo que Hoy va a mostrar: `previous.length + planned.length + urgent.length`. */
+  today: v.number(),
+  /** Asignadas y sin terminar en el espacio, topado en 500 (ADR 046). */
+  myTasks: v.number(),
+  /** El dia del servidor, `yyyy-mm-dd`. */
+  serverToday: v.string(),
 });
 
 const myWorkResponseSchema = v.object({
@@ -135,6 +145,34 @@ const myWork = new Hono<{
     workspaceId: string;
   };
 }>()
+  .get(
+    "/counts",
+    describeRoute({
+      operationId: "getMyWorkCounts",
+      tags: ["My work"],
+      description:
+        "The two badge counts the sidebar shows for the current user: how many tasks Today will list, and how many are assigned and open across the workspace",
+      responses: {
+        200: {
+          description: "Both counts",
+          content: {
+            "application/json": { schema: resolver(countsResponseSchema) },
+          },
+        },
+      },
+    }),
+    validator(
+      "query",
+      v.object({ workspaceId: v.pipe(v.string(), v.minLength(1)) }),
+    ),
+    workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["read"] }),
+    async (c) => {
+      const { workspaceId } = c.req.valid("query");
+      const result = await getCounts({ workspaceId, userId: c.get("userId") });
+      return c.json(result);
+    },
+  )
   .get(
     "/tasks",
     describeRoute({

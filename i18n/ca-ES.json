@@ -419,6 +419,18 @@
 			"sidebarDefaultDescription": "Mantener la barra lateral al iniciar",
 			"density": "Densidad compacta",
 			"densityDescription": "Aprieta el espaciado en las vistas con muchas tareas",
+			"workScheduleTitle": "Jornada laboral",
+			"workScheduleSubtitle": "Les hores i els dies que fan servir el Planificador, el Cronograma i Avui per calcular la teva capacitat.",
+			"workStart": "Comença",
+			"workEnd": "Acaba",
+			"workTimesInvalid": "L’hora de fi ha de ser posterior a la d’inici.",
+			"lunchEnabled": "Dinar",
+			"lunchEnabledDescription": "Es resta de la teva capacitat cada dia laborable.",
+			"lunchStart": "Comença el dinar",
+			"lunchEnd": "Acaba el dinar",
+			"workDays": "Dies laborables",
+			"workSaved": "Jornada desada",
+			"workSaveError": "No s’ha pogut desar la jornada.",
 			"displayOptions": "Opcions de vista",
 			"displayOptionsDescription": "Elige qué información ver en las tareas",
 			"taskNumbers": "Número de tarea",
@@ -2739,6 +2751,31 @@
 		"empty": {
 			"title": "Nada pendiente",
 			"description": "No tienes tareas asignadas en ningún proyecto."
+		},
+		"status": "Estimat restant ~{{remaining}} · Treballat avui {{worked}}",
+		"previous": {
+			"title_one": "De dies anteriors ({{count}})",
+			"title_other": "De dies anteriors ({{count}})",
+			"addToToday": "Afegir a avui"
+		},
+		"planned": {
+			"title": "Pla d'avui",
+			"empty": "Encara no hi ha res planificat per avui."
+		},
+		"urgent": {
+			"title": "Venç avui o vençuda, sense planificar",
+			"planToday": "Planificar avui"
+		},
+		"done": {
+			"title_one": "Fetes avui ({{count}})",
+			"title_other": "Fetes avui ({{count}})"
+		},
+		"row": {
+			"toggleDone": "Marcar tasca com a feta",
+			"due": {
+				"today": "Venç avui",
+				"overdue": "Vençuda"
+			}
 		}
 	},
 	"myTasks": {
@@ -2761,6 +2798,12 @@
 		"pageTitle": "Planificador",
 		"unplanned": "Sin planificar",
 		"today": "Hoy",
+		"previous": "De dies anteriors",
+		"noTasks": "Sense tasques",
+		"dayLoad": "{{planned}} planificades de {{available}}",
+		"anchorTime": "Hora",
+		"removeTime": "Treu l’hora",
+		"plannedElsewhere": "planificada el {{date}}",
 		"empty": {
 			"title": "Nada asignado",
 			"description": "No tienes tareas asignadas que planificar."
@@ -2771,6 +2814,7 @@
 		"today": "Avui",
 		"overflow": "Sense forat avui",
 		"running": "En marxa",
+		"lunch": "Dinar",
 		"createBlock": {
 			"title": "Bloc nou",
 			"editTitle": "Edita el bloc",
@@ -2850,6 +2894,24 @@
 		"empty": {
 			"title": "Res en aquest rang",
 			"description": "No hi ha temps registrat entre aquestes dates."
-		}
+		},
+		"cannotEditRunning": "Atura el cronòmetre abans d’editar aquesta entrada.",
+		"deleteEntry": {
+			"title": "Vols eliminar aquesta entrada?",
+			"description": "Es treu el temps registrat. No afecta la tasca."
+		},
+		"cannotDeleteRunning": "Atura el cronòmetre abans d'esborrar aquesta entrada."
+	},
+	"timer": {
+		"stop": "Atura el cronòmetre",
+		"resumeTask": "Reprèn · {{title}}",
+		"untitledTask": "Tasca sense títol",
+		"overEstimate": "{{title}} — supera l’estimació",
+		"stopDialog": {
+			"title": "Quan va acabar de veritat?",
+			"description": "Aquest cronòmetre porta més de deu hores en marxa. Tria l’hora real de fi en lloc de marcar-la ara mateix.",
+			"endTime": "Hora de fi"
+		},
+		"start": "Iniciar cronòmetre"
 	}
 }

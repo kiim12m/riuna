@@ -35,6 +35,7 @@ import { parseFilterParam } from "../view/filter-schema";
 import { FilterError, type FilterNode } from "../view/filter-to-sql";
 import analyzeImport from "./controllers/analyze-import";
 import bulkUpdateTasks from "./controllers/bulk-update-tasks";
+import completeTask from "./controllers/complete-task";
 import createTask from "./controllers/create-task";
 import deleteTask from "./controllers/delete-task";
 import exportTaskSheet from "./controllers/export-task-sheet";
@@ -718,6 +719,41 @@ const task = new Hono<{
       const currentUserId = c.get("userId");
 
       const task = await updateTaskStatus({ id, status, currentUserId });
+
+      return c.json(task);
+    },
+  )
+  .post(
+    "/complete/:id",
+    describeRoute({
+      operationId: "completeTask",
+      tags: ["Tasks"],
+      description:
+        "Mark a task done or undone by moving it to the first final (or first non-final) column of its project, whichever its board calls that -- Hoy and the Planner's checkbox (ADR 046)",
+      responses: {
+        200: {
+          description: "Task moved to the target column",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+        404: {
+          description:
+            "The task does not exist, or its project has no matching column",
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ done: v.boolean() })),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    requireEntitlement,
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { done } = c.req.valid("json");
+      const currentUserId = c.get("userId");
+
+      const task = await completeTask({ id, done, currentUserId });
 
       return c.json(task);
     },

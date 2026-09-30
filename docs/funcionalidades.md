@@ -184,16 +184,32 @@ la tarea y en la propia tabla.
   proyecto.
 - **Mi trabajo**: las tareas propias o de mi equipo de todos los proyectos, con
   filtros de vencimiento (todas, vencidas, hoy, esta semana).
-- **Hoy**: pantalla de entrada del espacio. Lo asignado en todos los
-  proyectos, agrupado por ventana de vencimiento (vencidas, hoy, esta
-  semana), con el detalle abriéndose en un panel lateral.
+- **Hoy** ([ADR 047](adr/047-hoy-y-contadores.md)): pantalla de entrada del
+  espacio, compuesta sobre el plan personal del Planificador. «De días
+  anteriores» (planificado antes de hoy y sin terminar, con «Añadir a hoy»),
+  «Plan de hoy» (se reordena arrastrando), lo urgente sin planificar —vence
+  hoy o vencida, con «Planificar hoy»— y «Hechas hoy», plegada. Cada fila
+  tiene su propio cronómetro, casilla de «hecha» y estimación editable; el
+  detalle se abre en el mismo panel lateral que el resto de vistas. Un
+  resumen dice cuánto queda por hacer y cuánto se ha registrado hoy. La
+  barra lateral muestra un contador junto a «Hoy» y «Mis tareas».
 - **Mis tareas**: Lista, Tablero, Gantt y Tabla personales sobre todos los
   proyectos del espacio ([ADR 039](adr/039-mis-tareas-vistas-personales.md)).
   El Tablero agrupa por ventana de vencimiento, no por estado; sin arrastre.
-- **Planificador** ([ADR 040](adr/040-planificador.md)): ventana rodante de 15
-  días para decidir qué día se piensa hacer cada tarea, sin tocar su fecha de
-  vencimiento. Incluye una proyección de las próximas ocurrencias de tareas
-  recurrentes todavía no creadas.
+- **Planificador** ([ADR 040](adr/040-planificador.md),
+  [ADR 046](adr/046-planificador-en-tres-secciones.md)): ventana rodante de
+  15 días para decidir qué día se piensa hacer cada tarea, sin tocar su
+  fecha de vencimiento. Cada día se reparte en tres secciones: sin hora (se
+  reordena arrastrando), con hora (tareas ancladas y citas fijas del
+  Cronograma, ordenadas por minuto) y vence este día (lo que vence en la
+  ventana, planificado o no). Una columna aparte para lo planificado antes
+  de la ventana y todavía sin terminar, de la que solo se puede arrastrar.
+  Incluye una proyección de las próximas ocurrencias de tareas recurrentes
+  todavía no creadas. La estimación se edita directamente en la tarjeta. La
+  carga de cada día es lo que queda de cada tarea más los bloques fijos,
+  comparado con la jornada personal ([ADR 045](adr/045-jornada-personal.md)):
+  un día sin jornada laboral vale 0, y la comida y los bloques cerrados
+  restan de la capacidad del resto.
 - **Cronograma** ([ADR 041](adr/041-cronograma.md)): calendario por horas,
   con vistas Día, Semana y Mes navegables, sobre lo ya decidido en el
   Planificador. La rejilla (24 h) se ve siempre, aunque el día esté vacío;
@@ -212,11 +228,22 @@ la tarea y en la propia tabla.
   abre su edición (mover de día si es suelto, poner o quitar la fecha límite
   si repite) o borrarlo. Muestra el cronómetro en marcha. La vista Mes lista
   hasta tres elementos por día y un «+N» que abre la vista Día de esa fecha
-  para ver el resto.
+  para ver el resto. El horario de la rejilla es la jornada personal de quien
+  mira, y la comida —si está activa— se ve como un bloque cerrado que nadie
+  puede editar.
 - **Parte de horas** ([ADR 042](adr/042-parte-de-horas.md)): lo registrado
   por quien mira, cruzando proyectos, en un rango de fechas. Agrupable por
   día, tarea o proyecto; una entrada en marcha cuenta lo transcurrido hasta
-  ahora. Exportable a Excel.
+  ahora. Exportable a Excel. Cada grupo se despliega en sus entradas, que se
+  editan (inicio y fin) y se borran con confirmación.
+- **Cronómetro** ([ADR 044](adr/044-cronometro-en-el-pie.md)): un solo
+  cronómetro por persona, en el pie de la barra lateral (punto con pulso,
+  título y `HH:MM:SS`; en raíl solo el punto), con una pastilla flotante
+  aparte en móvil. Arrancar otro para el que estuviera en marcha; se para
+  sola si la tarea entra en una columna final. Sin nada en marcha ofrece
+  «Reanudar» sobre la última tarea sin terminar. Avisa una vez cuando lo
+  registrado supera la estimación, y al parar una entrada de más de diez
+  horas pregunta la hora real de fin. Atajo de teclado para arrancar o parar.
 
 ## 8. Paneles y objetivos
 
@@ -376,9 +403,6 @@ Para que nadie busque lo que no existe:
   Solo existe `workflowRule`, que mapea eventos de integración a columnas.
 - **Importadores de Trello, Jira, Asana y Notion** — fase 8.
 - **Importar** la hoja de SERVITEC: se exporta, no se importa.
-- **Registro de tiempo desde la interfaz.** La API y MCP lo tienen, y los
-  fetchers y hooks del web existen, pero ningún componente los usa. Las horas
-  solo se muestran: informe de ciclo, agregados del árbol y widget.
 - **Agrupar por épica** y elegir qué columnas se ven en la vista Tabla.
 - **Editor de definiciones de campos personalizados**: renombrar, archivar,
   borrar y reordenar existen en la API y no en la interfaz.

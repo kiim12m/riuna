@@ -122,9 +122,10 @@ test.describe("Cronograma", () => {
       .find((s) => s.type === "pinned" && s.taskId === taskId);
 
     expect(pinned).toBeTruthy();
-    // 08:00 + ~60 min de arrastre, con margen por el redondeo de 5 min.
-    expect(pinned?.startSecond).toBeGreaterThan(8 * 3600 + 40 * 60);
-    expect(pinned?.startSecond).toBeLessThan(8 * 3600 + 80 * 60);
+    // 09:00 (inicio de jornada por defecto, ADR 045) + ~60 min de arrastre,
+    // con margen por el redondeo de 5 min.
+    expect(pinned?.startSecond).toBeGreaterThan(9 * 3600 + 40 * 60);
+    expect(pinned?.startSecond).toBeLessThan(9 * 3600 + 80 * 60);
   });
 
   test("creates and plans a task by clicking an empty slot", async ({
@@ -141,8 +142,8 @@ test.describe("Cronograma", () => {
     const column = page.getByTestId(`schedule-column-${dayKey}`);
     await expect(column).toBeVisible({ timeout: 20_000 });
 
-    // Mediodia, bien dentro de la jornada laboral (08:00-18:00, constante de
-    // instancia): 12h * 60min * 1.4 px/min (`PX_PER_MINUTE`), relativo al
+    // Mediodia, bien dentro de la jornada laboral por defecto (09:00-17:00,
+    // ADR 045): 12h * 60min * 1.4 px/min (`PX_PER_MINUTE`), relativo al
     // propio fondo de la columna -que arranca en minuto 0, sin el offset de
     // la cabecera-. `position` deja que Playwright desplace la rejilla -de
     // 24h, mas alta que la ventana- hasta que el punto sea visible, en vez

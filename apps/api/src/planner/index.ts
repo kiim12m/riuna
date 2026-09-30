@@ -1,12 +1,19 @@
 import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
-import { parseServerDay } from "../utils/day-boundaries";
+import {
+  addDays,
+  endOfServerDay,
+  parseServerDay,
+  startOfServerDay,
+} from "../utils/day-boundaries";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import getPlan from "./controllers/get-plan";
 import removePlanEntry from "./controllers/remove-plan-entry";
 import setPlanEntry from "./controllers/set-plan-entry";
+import setPlanOrder from "./controllers/set-plan-order";
+import { planDeadlineSchema, planEntrySchema, planTaskSchema } from "./schemas";
 
 const MAX_WINDOW_DAYS = 60;
 const DEFAULT_WINDOW_DAYS = 15;
@@ -19,47 +26,6 @@ const startMinuteSchema = v.pipe(
   v.maxValue(1439),
 );
 
-const planTaskSchema = v.object({
-  id: v.string(),
-  number: v.number(),
-  title: v.string(),
-  status: v.string(),
-  priority: v.string(),
-  estimate: v.nullable(v.number()),
-  dueDate: v.nullable(v.date()),
-  projectId: v.string(),
-  projectName: v.string(),
-  projectSlug: v.string(),
-  projectIcon: v.nullable(v.string()),
-  teamId: v.nullable(v.string()),
-  teamName: v.nullable(v.string()),
-  statusColumn: v.nullable(
-    v.object({
-      slug: v.string(),
-      name: v.string(),
-      icon: v.nullable(v.string()),
-      isFinal: v.boolean(),
-    }),
-  ),
-  isDone: v.boolean(),
-  labels: v.array(
-    v.object({ id: v.string(), name: v.string(), color: v.string() }),
-  ),
-  assignees: v.array(
-    v.object({
-      id: v.string(),
-      name: v.string(),
-      image: v.nullable(v.string()),
-    }),
-  ),
-});
-
-const planEntrySchema = v.object({
-  ...planTaskSchema.entries,
-  plannedDate: v.date(),
-  position: v.number(),
-});
-
 const planGhostSchema = v.object({
   recurrenceId: v.string(),
   title: v.string(),
@@ -67,11 +33,37 @@ const planGhostSchema = v.object({
   plannedDate: v.date(),
 });
 
+const fixedBlockSchema = v.object({
+  id: v.string(),
+  title: v.string(),
+  startMinute: v.number(),
+  endMinute: v.number(),
+});
+
 const planResponseSchema = v.object({
   entries: v.array(planEntrySchema),
+  /**
+   * Planificadas antes de la ventana y todavia sin terminar -"De dias
+   * anteriores" de super-productivity-. Nunca se mueven solas: hace falta
+   * "Añadir a hoy" para eso.
+   */
+  previous: v.array(planEntrySchema),
   unplanned: v.array(planTaskSchema),
+  /**
+   * Lo que vence dentro de la ventana, planificado o no -el vencimiento es
+   * un dato aparte del plan, ADR 040-.
+   */
+  deadlines: v.array(planDeadlineSchema),
   ghosts: v.array(planGhostSchema),
-  capacitySeconds: v.number(),
+  /**
+   * La capacidad de cada dia de la ventana, por `yyyy-mm-dd` (ADR 045): 0 si
+   * no es laborable, si no la jornada personal menos la comida y los
+   * bloques cerrados de ese dia. Sustituye a la constante fija de 8 h de la
+   * ADR 040.
+   */
+  capacityByDay: v.record(v.string(), v.number()),
+  /** Las citas fijas de cada dia, para "Con hora" y para sumar a la carga. */
+  fixedBlocksByDay: v.record(v.string(), v.array(fixedBlockSchema)),
   /** El dia del servidor, `yyyy-mm-dd`: de ahi arranca la rejilla de 15 dias. */
   serverToday: v.string(),
 });
@@ -128,11 +120,8 @@ const planner = new Hono<{
     async (c) => {
       const { workspaceId, days } = c.req.valid("query");
 
-      const windowStart = new Date();
-      windowStart.setHours(0, 0, 0, 0);
-      const windowEnd = new Date(windowStart);
-      windowEnd.setDate(windowEnd.getDate() + days - 1);
-      windowEnd.setHours(23, 59, 59, 999);
+      const windowStart = startOfServerDay(new Date());
+      const windowEnd = endOfServerDay(addDays(windowStart, days - 1));
 
       const plan = await getPlan({
         workspaceId,
@@ -142,6 +131,51 @@ const planner = new Hono<{
       });
 
       return c.json(plan);
+    },
+  )
+  .put(
+    "/order",
+    describeRoute({
+      operationId: "setPersonalPlanOrder",
+      tags: ["Planner"],
+      description:
+        "Rewrite the position of every entry planned on a day, in the order given. Ids that aren't the current user's, this day's or this workspace's are ignored rather than failing the whole call",
+      responses: {
+        200: {
+          description: "Positions rewritten",
+          content: {
+            "application/json": {
+              schema: resolver(v.object({ updated: v.number() })),
+            },
+          },
+        },
+      },
+    }),
+    validator(
+      "query",
+      v.object({ workspaceId: v.pipe(v.string(), v.minLength(1)) }),
+    ),
+    validator(
+      "json",
+      v.object({
+        plannedDate: v.string(),
+        taskIds: v.array(v.string()),
+      }),
+    ),
+    workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["update"] }),
+    async (c) => {
+      const { workspaceId } = c.req.valid("query");
+      const { plannedDate, taskIds } = c.req.valid("json");
+
+      const result = await setPlanOrder({
+        workspaceId,
+        userId: c.get("userId"),
+        plannedDate: parseServerDay(plannedDate, "plannedDate"),
+        taskIds,
+      });
+
+      return c.json(result);
     },
   )
   .put(
