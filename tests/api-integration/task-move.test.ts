@@ -416,4 +416,56 @@ describe("API integration: moving a task between projects", () => {
     const [stillThere] = await readTasks([root.id]);
     expect(stillThere.projectId).toBe(source.project.id);
   });
+
+  // `move-task.ts` solo publica `task.moved`, nunca `task.status_changed`
+  // -repetirlo duplicaria la actividad y la notificacion que `task.moved` ya
+  // dispara-, asi que `stop-on-done.ts` (ADR 044) se engancha tambien a
+  // `task.moved`. Sin eso, un cronometro en marcha seguiria corriendo tras
+  // aterrizar en una columna final del destino.
+  it("stops a running timer when the move lands the task in a final column of the destination (ADR 044)", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const source = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const destination = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+
+    const rootTree = taskTreeValues(`task-${randomUUID()}`);
+    const root = await insertTask(
+      {
+        projectId: source.project.id,
+        number: 1,
+        columnId: source.columns.todo.id,
+      },
+      rootTree,
+    );
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const started = await app.request("/api/time-entry/start", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ taskId: root.id }),
+    });
+    const entry = await started.json();
+
+    const response = await move(
+      app,
+      root.id,
+      destination.project.id,
+      destination.columns.done.slug,
+    );
+    expect(response.status).toBe(200);
+
+    // El evento se procesa async: sondear en vez de asumir el orden.
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    const [closed] = await db
+      .select()
+      .from(schema.timeEntryTable)
+      .where(eq(schema.timeEntryTable.id, entry.id));
+    expect(closed?.endTime).not.toBeNull();
+  });
 });

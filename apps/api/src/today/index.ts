@@ -6,6 +6,7 @@ import {
   planEntrySchema,
   planTaskSchema,
 } from "../planner/schemas";
+import { DUE_WINDOWS } from "../utils/due-window";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import getToday from "./controllers/get-today";
@@ -14,6 +15,16 @@ import getToday from "./controllers/get-today";
 const doneTaskSchema = v.object({
   ...planTaskSchema.entries,
   loggedSeconds: v.number(),
+});
+
+/**
+ * Una fila de "vence hoy o vencida": la clasificacion la manda el servidor
+ * -siempre "overdue" u "today" aqui, por la propia condicion de la consulta-
+ * en vez de que el cliente compare fechas como texto (ADR 047).
+ */
+const urgentTaskSchema = v.object({
+  ...planDeadlineSchema.entries,
+  dueWindow: v.picklist(DUE_WINDOWS),
 });
 
 const todayResponseSchema = v.object({
@@ -25,7 +36,7 @@ const todayResponseSchema = v.object({
    * Vencido o vence hoy, sin planificar hoy ni antes. Si esta planificada
    * para un dia futuro sale igual, con su `plannedDate` (ADR 046).
    */
-  urgent: v.array(planDeadlineSchema),
+  urgent: v.array(urgentTaskSchema),
   /** Terminadas hoy, y asignadas o planificadas para hoy. */
   done: v.array(doneTaskSchema),
   totals: v.object({

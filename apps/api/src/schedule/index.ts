@@ -5,6 +5,7 @@ import * as v from "valibot";
 import { parseCadence } from "../recurrence/cadence";
 import {
   addDays,
+  endOfServerDay,
   parseServerDay,
   startOfServerDay,
 } from "../utils/day-boundaries";
@@ -112,8 +113,7 @@ const schedule = new Hono<{
       const windowStart = from
         ? parseServerDay(from, "from")
         : startOfServerDay(new Date());
-      const windowEnd = addDays(windowStart, days - 1);
-      windowEnd.setHours(23, 59, 59, 999);
+      const windowEnd = endOfServerDay(addDays(windowStart, days - 1));
 
       const result = await getSchedule({
         workspaceId,

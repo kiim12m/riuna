@@ -1,4 +1,4 @@
-import { and, between, eq, type SQL, sql } from "drizzle-orm";
+import { and, between, eq, isNull, ne, type SQL, sql } from "drizzle-orm";
 import db from "../../database";
 import {
   personalPlanEntryTable,
@@ -19,7 +19,7 @@ import {
   serverDayKey,
 } from "../../utils/day-boundaries";
 import { workspaceTaskConditions } from "../../view/workspace-task-query";
-import { dayCapacitySeconds } from "../../work-schedule/day-capacity";
+import { capacityForDay } from "../../work-schedule/day-capacity";
 import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
 import { computeGhosts } from "../ghosts";
 import {
@@ -73,16 +73,10 @@ export default async function getPlan({
   > = {};
   for (const dayKey of dayKeysBetween(windowStart, windowEnd)) {
     const dayBlocks = blocksByDay.get(dayKey) ?? [];
-    const breakIntervals = dayBlocks
-      .filter((block) => block.kind === "break")
-      .map((block) => ({
-        startMinute: block.startMinute,
-        endMinute: block.endMinute,
-      }));
-    capacityByDay[dayKey] = dayCapacitySeconds(
+    capacityByDay[dayKey] = capacityForDay(
       schedule,
       parseServerDay(dayKey, "day"),
-      breakIntervals,
+      dayBlocks,
     );
     fixedBlocksByDay[dayKey] = dayBlocks
       .filter((block) => block.kind === "fixed")
@@ -119,6 +113,12 @@ export default async function getPlan({
 
   const deadlineConditions: SQL[] = [
     eq(projectTable.workspaceId, workspaceId),
+    // Sin esto un proyecto archivado, o una tarea archivada, seguia
+    // asomando en "vence este dia" -la unica lista de la pantalla que no
+    // pasaba por `workspaceTaskConditions`, que ya lo hace por "sin
+    // planificar"-.
+    isNull(projectTable.archivedAt),
+    ne(taskTable.status, "archived"),
     assignedCondition(userId),
     between(taskTable.dueDate, windowStart, windowEnd),
   ];

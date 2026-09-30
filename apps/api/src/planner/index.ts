@@ -1,7 +1,12 @@
 import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
-import { parseServerDay } from "../utils/day-boundaries";
+import {
+  addDays,
+  endOfServerDay,
+  parseServerDay,
+  startOfServerDay,
+} from "../utils/day-boundaries";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import getPlan from "./controllers/get-plan";
@@ -115,11 +120,8 @@ const planner = new Hono<{
     async (c) => {
       const { workspaceId, days } = c.req.valid("query");
 
-      const windowStart = new Date();
-      windowStart.setHours(0, 0, 0, 0);
-      const windowEnd = new Date(windowStart);
-      windowEnd.setDate(windowEnd.getDate() + days - 1);
-      windowEnd.setHours(23, 59, 59, 999);
+      const windowStart = startOfServerDay(new Date());
+      const windowEnd = endOfServerDay(addDays(windowStart, days - 1));
 
       const plan = await getPlan({
         workspaceId,

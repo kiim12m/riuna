@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  capacityForDay,
   dayCapacitySeconds,
   isWorkDay,
 } from "../../../apps/api/src/work-schedule/day-capacity";
@@ -108,5 +109,26 @@ describe("dayCapacitySeconds", () => {
   it("never goes negative when breaks cover the whole day", () => {
     const breakInterval = [{ startMinute: 0, endMinute: 24 * H }];
     expect(dayCapacitySeconds(DEFAULT, MONDAY, breakInterval)).toBe(0);
+  });
+});
+
+describe("capacityForDay", () => {
+  it("subtracts only the 'break' blocks of the day, ignoring 'fixed' ones", () => {
+    const dayBlocks = [
+      { kind: "break", startMinute: 10 * H, endMinute: 10 * H + 30 },
+      { kind: "fixed", startMinute: 11 * H, endMinute: 12 * H },
+    ];
+    expect(capacityForDay(DEFAULT, MONDAY, dayBlocks)).toBe(8 * 3600 - 30 * 60);
+  });
+
+  it("matches dayCapacitySeconds given the same break intervals", () => {
+    const dayBlocks = [
+      { kind: "break", startMinute: 13 * H, endMinute: 13 * H + 45 },
+    ];
+    expect(capacityForDay(DEFAULT, MONDAY, dayBlocks)).toBe(
+      dayCapacitySeconds(DEFAULT, MONDAY, [
+        { startMinute: 13 * H, endMinute: 13 * H + 45 },
+      ]),
+    );
   });
 });

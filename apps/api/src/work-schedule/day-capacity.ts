@@ -87,3 +87,24 @@ export function dayCapacitySeconds(
 
   return Math.max(0, totalMinutes) * 60;
 }
+
+/**
+ * `dayCapacitySeconds`, pero a partir de los bloques crudos de un dia
+ * (`blocksByDay.get(dayKey)`): filtra los `break` y los recorta a
+ * `MinuteInterval`. El Planificador y Hoy repetian este emparejamiento cada
+ * uno por su cuenta (ADR 045, ADR 047); un cambio en como se derivan los
+ * `break` -por ejemplo un nuevo `kind`- solo hacia falta tocarlo aqui.
+ */
+export function capacityForDay(
+  schedule: WorkSchedule,
+  dayDate: Date,
+  dayBlocks: { kind: string; startMinute: number; endMinute: number }[],
+): number {
+  const breakIntervals = dayBlocks
+    .filter((block) => block.kind === "break")
+    .map((block) => ({
+      startMinute: block.startMinute,
+      endMinute: block.endMinute,
+    }));
+  return dayCapacitySeconds(schedule, dayDate, breakIntervals);
+}

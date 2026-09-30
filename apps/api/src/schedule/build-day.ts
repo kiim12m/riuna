@@ -120,9 +120,10 @@ export function buildDay<
 
   const flowEntries: FlowEntry[] = dayEntries.map((entry) => ({
     taskId: entry.id,
-    estimateSeconds: entry.estimate
-      ? Math.max(entry.estimate, MIN_ENTRY_DURATION_SECONDS)
-      : UNESTIMATED_ENTRY_SECONDS,
+    estimateSeconds:
+      entry.estimate == null
+        ? UNESTIMATED_ENTRY_SECONDS
+        : Math.max(entry.estimate, MIN_ENTRY_DURATION_SECONDS),
     position: entry.position,
     pinnedStartSecond:
       entry.startMinute === null ? null : entry.startMinute * 60,

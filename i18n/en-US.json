@@ -2899,7 +2899,8 @@
 		"deleteEntry": {
 			"title": "Delete this entry?",
 			"description": "This removes the logged time. It does not affect the task."
-		}
+		},
+		"cannotDeleteRunning": "Stop the timer before deleting this entry."
 	},
 	"timer": {
 		"stop": "Stop timer",

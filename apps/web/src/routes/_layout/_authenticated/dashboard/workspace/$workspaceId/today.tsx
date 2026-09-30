@@ -330,9 +330,7 @@ function TodayComponent() {
                       onOpen={() => openDetails(task)}
                       onToggleDone={(done) => toggleDone(task.id, done)}
                       dueBadge={
-                        task.dueDate && task.dueDate < `${data?.serverToday}`
-                          ? "overdue"
-                          : "today"
+                        task.dueWindow === "overdue" ? "overdue" : "today"
                       }
                       action={{
                         label: t("today:urgent.planToday"),

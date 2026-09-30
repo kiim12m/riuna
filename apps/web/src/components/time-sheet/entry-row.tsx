@@ -85,6 +85,12 @@ export function TimeSheetEntryRow({ entry }: { entry: TimeSheetEntry }) {
           type="button"
           aria-label={t("common:actions.delete")}
           onClick={() => setConfirmDelete(true)}
+          disabled={!entry.endTime}
+          title={
+            entry.endTime
+              ? t("common:actions.delete")
+              : t("timeSheet:cannotDeleteRunning")
+          }
           className="rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
         >
           <Trash2 className="size-3.5" />

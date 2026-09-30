@@ -1,4 +1,4 @@
-import { and, eq, gt, isNull, or, type SQL } from "drizzle-orm";
+import { and, eq, gt, isNull, ne, or, type SQL } from "drizzle-orm";
 import db from "../database";
 import {
   personalPlanEntryTable,
@@ -8,7 +8,7 @@ import {
 } from "../database/schema";
 import { assignedCondition } from "../my-work/scope";
 import { taskColumns } from "../planner/queries";
-import { dueWindowCondition } from "../utils/due-window";
+import { dueWindowCondition, dueWindowExpression } from "../utils/due-window";
 
 /**
  * Vencido o vence hoy, sin planificar hoy ni antes (ADR 046). El `LEFT JOIN`
@@ -26,6 +26,11 @@ function urgentConditions(
 ) {
   return and(
     eq(projectTable.workspaceId, workspaceId),
+    // Un proyecto o una tarea archivados no son "urgente": la misma
+    // exclusion que ya aplica `workspaceTaskConditions` en el resto de
+    // lecturas cruzadas de proyecto.
+    isNull(projectTable.archivedAt),
+    ne(taskTable.status, "archived"),
     assignedCondition(userId),
     ...(notDone ? [notDone] : []),
     or(dueWindowCondition("overdue", now), dueWindowCondition("today", now)),
@@ -36,7 +41,13 @@ function urgentConditions(
   );
 }
 
-/** La lista de Hoy: lo urgente con su tarea, proyecto y `plannedDate`. */
+/**
+ * La lista de Hoy: lo urgente con su tarea, proyecto, `plannedDate` y
+ * `dueWindow` -"overdue" o "today", calculado aqui y no en el cliente: un
+ * `Date` viaja como ISO en UTC y `serverToday` es la clave local del
+ * servidor, y compararlos como texto es justo el error que
+ * `day-boundaries.ts` advierte no cometer-.
+ */
 export function urgentTasksQuery(
   workspaceId: string,
   userId: string,
@@ -45,7 +56,11 @@ export function urgentTasksQuery(
   notDone: SQL | null,
 ) {
   return db
-    .select({ ...taskColumns, plannedDate: personalPlanEntryTable.plannedDate })
+    .select({
+      ...taskColumns,
+      plannedDate: personalPlanEntryTable.plannedDate,
+      dueWindow: dueWindowExpression(now),
+    })
     .from(taskTable)
     .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
     .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))

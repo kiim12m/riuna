@@ -2899,7 +2899,8 @@
 		"deleteEntry": {
 			"title": "Vols eliminar aquesta entrada?",
 			"description": "Es treu el temps registrat. No afecta la tasca."
-		}
+		},
+		"cannotDeleteRunning": "Atura el cronòmetre abans d'esborrar aquesta entrada."
 	},
 	"timer": {
 		"stop": "Atura el cronòmetre",

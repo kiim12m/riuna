@@ -167,7 +167,7 @@ export function ScheduleSegmentCard({
   const displayDuration = resizeState?.durationMinutes ?? durationMinutes;
   const top = minutesToPx(displayMinute - gridStart);
   const height = Math.max(minutesToPx(displayDuration), 18);
-  const isEstimated = Boolean(task.estimate);
+  const isEstimated = task.estimate != null;
 
   const ProjectIcon =
     projectIcons[task.projectIcon as keyof typeof projectIcons] ?? Layout;

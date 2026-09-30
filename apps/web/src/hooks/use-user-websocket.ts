@@ -112,8 +112,13 @@ export function useUserWebSocket() {
             queryClient.invalidateQueries({ queryKey: ["today"] });
             queryClient.invalidateQueries({ queryKey: ["my-work", "counts"] });
           }
+          // Un bloque fijo o la jornada personal cambian la capacidad y los
+          // bloques fijos que el Planificador y Hoy tambien leen (ADR 045),
+          // no solo el Cronograma que originalmente disparaba este evento.
           if (message.type === "SCHEDULE_INVALIDATED") {
             queryClient.invalidateQueries({ queryKey: ["schedule"] });
+            queryClient.invalidateQueries({ queryKey: ["planner"] });
+            queryClient.invalidateQueries({ queryKey: ["today"] });
           }
           // Un solo cronometro por persona (ADR 044): arrancar, parar -a mano
           // o porque la tarea entro en una columna final- y editar o borrar

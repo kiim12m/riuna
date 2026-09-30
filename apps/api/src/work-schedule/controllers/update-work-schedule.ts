@@ -1,6 +1,7 @@
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { userWorkScheduleTable } from "../../database/schema";
+import { publishEvent } from "../../events";
 import type { WorkSchedule } from "../get-work-schedule";
 
 /**
@@ -34,6 +35,12 @@ export default async function updateWorkSchedule(
       message: "Failed to save the work schedule",
     });
   }
+
+  // La jornada es la fuente de la capacidad y el horario del Cronograma, el
+  // Planificador y Hoy (ADR 045): otra pestana o dispositivo con alguno de
+  // los tres abiertos tiene que enterarse, igual que ya pasa al tocar un
+  // bloque fijo (`create-block.ts` et al, mismo evento).
+  await publishEvent("schedule.changed", { userId });
 
   return row;
 }

@@ -16,13 +16,13 @@ import { closeRunningEntry } from "./running";
  * marco hecha -alguien puede estar siguiendola mientras otra persona la
  * cierra-.
  */
-subscribeToEvent<{ taskId: string }>("task.status_changed", async (data) => {
-  if (!data.taskId) return;
+async function stopIfDone(taskId: string | undefined) {
+  if (!taskId) return;
 
   const [task] = await db
     .select({ completedAt: taskTable.completedAt })
     .from(taskTable)
-    .where(eq(taskTable.id, data.taskId))
+    .where(eq(taskTable.id, taskId))
     .limit(1);
 
   if (!task?.completedAt) return;
@@ -31,10 +31,7 @@ subscribeToEvent<{ taskId: string }>("task.status_changed", async (data) => {
     .select()
     .from(timeEntryTable)
     .where(
-      and(
-        eq(timeEntryTable.taskId, data.taskId),
-        isNull(timeEntryTable.endTime),
-      ),
+      and(eq(timeEntryTable.taskId, taskId), isNull(timeEntryTable.endTime)),
     );
 
   for (const entry of runningEntries) {
@@ -49,4 +46,20 @@ subscribeToEvent<{ taskId: string }>("task.status_changed", async (data) => {
       });
     }
   }
+}
+
+subscribeToEvent<{ taskId: string }>("task.status_changed", async (data) => {
+  await stopIfDone(data.taskId);
+});
+
+// `move-task.ts` puede aterrizar la tarea -o alguna de sus descendientes- en
+// una columna final del destino, pero solo publica `task.moved`: repetir
+// `task.status_changed` ahi duplicaria la entrada de actividad y la
+// notificacion que ese evento ya dispara por su cuenta (`activity/index.ts`,
+// `notification/index.ts`), asi que este suscriptor se engancha tambien a
+// `task.moved` en vez de pedirle a `move-task.ts` que publique el otro
+// evento. `stopIfDone` relee `completed_at` por su cuenta, sin fiarse de
+// nada del payload salvo el id, asi que da igual quien lo dispare.
+subscribeToEvent<{ taskId: string }>("task.moved", async (data) => {
+  await stopIfDone(data.taskId);
 });

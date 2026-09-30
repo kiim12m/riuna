@@ -3,11 +3,11 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { AlarmClock, Flag, Layout } from "lucide-react";
+import { AlarmClock, Flag } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { PlannerRow } from "@/components/planner/planner-row";
 import { TimePopover } from "@/components/planner/time-popover";
 import { InlineEstimate } from "@/components/timer/inline-estimate";
-import projectIcons from "@/constants/project-icons";
 import type {
   PlanDeadline,
   PlanEntry,
@@ -16,7 +16,6 @@ import type {
 } from "@/fetchers/planner";
 import { cn } from "@/lib/cn";
 import { fromMinutes } from "@/lib/minutes";
-import { getPriorityIcon } from "@/lib/priority";
 import { PlannerTaskCard } from "./task-card";
 
 type TimedRow =
@@ -211,25 +210,15 @@ function TimedEntryRow({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const ProjectIcon =
-    projectIcons[entry.projectIcon as keyof typeof projectIcons] ?? Layout;
-
   return (
-    // biome-ignore lint/a11y/useSemanticElements: sostiene contenido de bloque; los controles de dentro ya son interactivos por su cuenta
-    <div
-      role="button"
-      tabIndex={0}
-      aria-label={entry.title}
-      onClick={onOpen}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onOpen();
-        }
-      }}
-      className="space-y-1 rounded-md border border-border/70 bg-background p-1.5 text-left outline-none transition-colors hover:border-brand/45 focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <div className="flex items-center gap-1.5">
+    <PlannerRow
+      title={entry.title}
+      priority={entry.priority}
+      isDone={entry.isDone}
+      projectName={entry.projectName}
+      projectIcon={entry.projectIcon}
+      onOpen={onOpen}
+      leading={
         <TimePopover
           minute={entry.startMinute ?? 0}
           onSave={onSaveTime}
@@ -237,26 +226,15 @@ function TimedEntryRow({
           open={open}
           onOpenChange={onOpenChange}
         />
-        <span className="shrink-0">{getPriorityIcon(entry.priority)}</span>
-        <span
-          className={cn(
-            "min-w-0 flex-1 truncate text-body",
-            entry.isDone && "text-muted-foreground line-through",
-          )}
-        >
-          {entry.title}
-        </span>
-      </div>
-      <div className="flex items-center gap-1 text-meta text-muted-foreground">
-        <ProjectIcon className="size-3 shrink-0" />
-        <span className="min-w-0 flex-1 truncate">{entry.projectName}</span>
+      }
+      trailing={
         <InlineEstimate
           estimate={entry.estimate}
           loggedSeconds={entry.loggedSeconds}
           onSave={onEstimateChange}
         />
-      </div>
-    </div>
+      }
+    />
   );
 }
 
@@ -279,30 +257,17 @@ function DeadlineRow({
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
-  const ProjectIcon =
-    projectIcons[task.projectIcon as keyof typeof projectIcons] ?? Layout;
 
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="w-full space-y-1 rounded-md border border-border/70 bg-background p-1.5 text-left transition-colors hover:border-brand/45"
-    >
-      <div className="flex items-center gap-1.5">
-        <span className="shrink-0">{getPriorityIcon(task.priority)}</span>
-        <span
-          className={cn(
-            "min-w-0 flex-1 truncate text-body",
-            task.isDone && "text-muted-foreground line-through",
-          )}
-        >
-          {task.title}
-        </span>
-      </div>
-      <div className="flex items-center gap-1 text-meta text-muted-foreground">
-        <ProjectIcon className="size-3 shrink-0" />
-        <span className="min-w-0 flex-1 truncate">{task.projectName}</span>
-        {task.plannedDate && (
+    <PlannerRow
+      title={task.title}
+      priority={task.priority}
+      isDone={task.isDone}
+      projectName={task.projectName}
+      projectIcon={task.projectIcon}
+      onOpen={onOpen}
+      trailing={
+        task.plannedDate && (
           <span className="shrink-0 text-label">
             {t("planner:plannedElsewhere", {
               date: new Date(task.plannedDate).toLocaleDateString(undefined, {
@@ -310,8 +275,8 @@ function DeadlineRow({
               }),
             })}
           </span>
-        )}
-      </div>
-    </button>
+        )
+      }
+    />
   );
 }

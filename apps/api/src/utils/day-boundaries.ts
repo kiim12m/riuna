@@ -20,6 +20,19 @@ export function startOfServerDay(now: Date): Date {
   return start;
 }
 
+/**
+ * El ultimo instante del dia del servidor -`23:59:59.999`-, para las
+ * consultas que acotan un rango con `BETWEEN` en vez de un limite exclusivo
+ * (`addDays(startOfServerDay(now), 1)`, el idioma de `due-window.ts`). Sin
+ * esto media docena de sitios repetian `setHours(23, 59, 59, 999)` cada uno
+ * por su cuenta.
+ */
+export function endOfServerDay(now: Date): Date {
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
+  return end;
+}
+
 export function addDays(date: Date, days: number): Date {
   const shifted = new Date(date);
   shifted.setDate(shifted.getDate() + days);

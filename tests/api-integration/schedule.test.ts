@@ -233,6 +233,32 @@ describe("cronograma", () => {
     ).toMatchObject({ startSecond: 9 * 3600 + 1800 });
   });
 
+  it("gives a task explicitly estimated at 0 the 10-minute minimum, not the unestimated slot", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const day = tomorrow();
+    const zeroEstimate = await createTask(projectId, columnId, {
+      estimate: 0,
+    });
+    await assign(zeroEstimate.id, userId);
+    await planTask(zeroEstimate.id, workspaceId, userId, day, {
+      position: 0,
+    });
+
+    const body = await (await getSchedule(app, workspaceId)).json();
+    const dayLayout = body.days.find(
+      (d: { dayDate: string }) => d.dayDate === dateKey(day),
+    );
+    const flowParts = dayLayout.segments.filter(
+      (s: { type: string }) => s.type === "flow",
+    );
+
+    // 0 no es "sin estimar": es una estimacion de verdad, y el minimo
+    // general (10 min) manda, no el hueco de 30 min de lo sin estimar.
+    expect(
+      flowParts.find((s: { taskId: string }) => s.taskId === zeroEstimate.id),
+    ).toMatchObject({ startSecond: 9 * 3600, endSecond: 9 * 3600 + 600 });
+  });
+
   it("splits a flowing entry around a fixed block that falls inside it", async () => {
     const { app, workspaceId, projectId, columnId, userId } = await setup();
     const day = tomorrow();

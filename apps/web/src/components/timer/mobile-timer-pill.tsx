@@ -25,11 +25,16 @@ export function MobileTimerPill() {
   const { stop, isStopping } = useTimerMutations(workspaceId);
 
   const running = data?.running;
-  const elapsed = useElapsed(running?.startTime);
+  // El `setInterval` de `useElapsed` solo arranca si esto es cierto: en
+  // escritorio, o con el panel movil abierto, la pastilla nunca se ve, y
+  // hasta ahora tickeaba igual sin motivo.
+  const visible =
+    isMobile && !openMobile && Boolean(workspaceId) && Boolean(running);
+  const elapsed = useElapsed(visible ? running?.startTime : undefined);
   const { requestStop, dialogOpen, closeDialog, confirmStop } =
     useStopWithConfirm(stop, elapsed);
 
-  if (!isMobile || openMobile || !workspaceId || !running) {
+  if (!visible || !running) {
     return null;
   }
 

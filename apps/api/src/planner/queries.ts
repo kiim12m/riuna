@@ -69,6 +69,10 @@ export async function getEntriesInRange(
     .orderBy(
       asc(personalPlanEntryTable.plannedDate),
       asc(personalPlanEntryTable.position),
+      // Desempate: dos filas nunca deberian compartir posicion, pero sin un
+      // orden total dos paginas -o dos renders- podrian discreparse entre si
+      // si alguna vez lo hicieran.
+      asc(personalPlanEntryTable.taskId),
     );
 }
 

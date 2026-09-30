@@ -41,7 +41,7 @@ export default function TaskTree({ taskId, projectId }: TaskTreeProps) {
   // cambia la estimacion, este campo tiene que enterarse.
   useEffect(() => {
     setEstimateInput(
-      task?.estimate ? String(secondsToHours(task.estimate)) : "",
+      task?.estimate == null ? "" : String(secondsToHours(task.estimate)),
     );
   }, [task?.estimate]);
 
@@ -55,7 +55,7 @@ export default function TaskTree({ taskId, projectId }: TaskTreeProps) {
 
     if (seconds === undefined) {
       setEstimateInput(
-        task.estimate ? String(secondsToHours(task.estimate)) : "",
+        task.estimate == null ? "" : String(secondsToHours(task.estimate)),
       );
       return;
     }

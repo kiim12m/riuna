@@ -2899,7 +2899,8 @@
 		"deleteEntry": {
 			"title": "¿Eliminar esta entrada?",
 			"description": "Se quita el tiempo registrado. No afecta a la tarea."
-		}
+		},
+		"cannotDeleteRunning": "Para el cronómetro antes de borrar esta entrada."
 	},
 	"timer": {
 		"stop": "Parar el cronómetro",

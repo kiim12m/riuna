@@ -309,6 +309,33 @@ describe("planner: deadlines (due within the window, ADR 045)", () => {
     const plan = await (await getPlan(app, workspaceId)).json();
     expect(plan.deadlines).toHaveLength(0);
   });
+
+  it("does not list a task due in the window from an archived project", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId, {
+      dueDate: daysFrom(today(), 1),
+    });
+    await assign(task.id, userId);
+    await db
+      .update(schema.projectTable)
+      .set({ archivedAt: new Date() })
+      .where(eq(schema.projectTable.id, projectId));
+
+    const plan = await (await getPlan(app, workspaceId)).json();
+    expect(plan.deadlines).toHaveLength(0);
+  });
+
+  it("does not list an archived-status task even if its due date is in the window", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId, {
+      dueDate: daysFrom(today(), 1),
+      status: "archived",
+    });
+    await assign(task.id, userId);
+
+    const plan = await (await getPlan(app, workspaceId)).json();
+    expect(plan.deadlines).toHaveLength(0);
+  });
 });
 
 describe("planner: fixedBlocksByDay (ADR 045)", () => {

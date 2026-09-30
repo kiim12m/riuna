@@ -1,4 +1,4 @@
-import { and, between, eq, isNotNull, or } from "drizzle-orm";
+import { and, between, eq, isNotNull, isNull, ne, or } from "drizzle-orm";
 import db from "../../database";
 import {
   personalPlanEntryTable,
@@ -20,16 +20,14 @@ import {
 } from "../../planner/queries";
 import { loadBlocksByDay } from "../../schedule/blocks-by-day";
 import getTimeSheet from "../../time-sheet/controllers/get-time-sheet";
-import { serverDayKey } from "../../utils/day-boundaries";
-import { dayCapacitySeconds } from "../../work-schedule/day-capacity";
+import {
+  endOfServerDay,
+  serverDayKey,
+  startOfServerDay,
+} from "../../utils/day-boundaries";
+import { capacityForDay } from "../../work-schedule/day-capacity";
 import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
 import { urgentTasksQuery } from "../queries";
-
-function endOfDay(dayStart: Date): Date {
-  const end = new Date(dayStart);
-  end.setHours(23, 59, 59, 999);
-  return end;
-}
 
 /**
  * Hoy: el plan del dia mas lo urgente (ADR 046), composicion pura sobre lo
@@ -45,9 +43,8 @@ export default async function getToday({
   userId: string;
   now?: Date;
 }) {
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
-  const todayEnd = endOfDay(todayStart);
+  const todayStart = startOfServerDay(now);
+  const todayEnd = endOfServerDay(now);
   const todayKey = serverDayKey(now);
 
   const [projectColumns, schedule, { blocksByDay }] = await Promise.all([
@@ -56,16 +53,10 @@ export default async function getToday({
     loadBlocksByDay(workspaceId, userId, todayStart, todayEnd),
   ]);
 
-  const breakIntervals = (blocksByDay.get(todayKey) ?? [])
-    .filter((block) => block.kind === "break")
-    .map((block) => ({
-      startMinute: block.startMinute,
-      endMinute: block.endMinute,
-    }));
-  const capacitySeconds = dayCapacitySeconds(
+  const capacitySeconds = capacityForDay(
     schedule,
     todayStart,
-    breakIntervals,
+    blocksByDay.get(todayKey) ?? [],
   );
 
   const notDone = notDoneCondition(projectColumns);
@@ -104,6 +95,8 @@ export default async function getToday({
         .where(
           and(
             eq(projectTable.workspaceId, workspaceId),
+            isNull(projectTable.archivedAt),
+            ne(taskTable.status, "archived"),
             isNotNull(taskTable.completedAt),
             between(taskTable.completedAt, todayStart, todayEnd),
             or(

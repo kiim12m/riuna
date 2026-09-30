@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
@@ -159,7 +160,7 @@ describe("GET /today (ADR 046)", () => {
     });
   });
 
-  it("lists an overdue assigned task, unplanned, under urgent", async () => {
+  it("lists an overdue assigned task, unplanned, under urgent, with dueWindow", async () => {
     const { app, workspaceId, projectId, columnId, userId } = await setup();
     const task = await createTask(projectId, columnId, {
       dueDate: daysFrom(today(), -3),
@@ -168,7 +169,21 @@ describe("GET /today (ADR 046)", () => {
 
     const body = await (await getToday(app, workspaceId)).json();
     expect(body.urgent).toHaveLength(1);
-    expect(body.urgent[0]).toMatchObject({ id: task.id, plannedDate: null });
+    expect(body.urgent[0]).toMatchObject({
+      id: task.id,
+      plannedDate: null,
+      dueWindow: "overdue",
+    });
+  });
+
+  it("classifies a task due today as dueWindow 'today', not 'overdue'", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId, { dueDate: today() });
+    await assign(task.id, userId);
+
+    const body = await (await getToday(app, workspaceId)).json();
+    expect(body.urgent).toHaveLength(1);
+    expect(body.urgent[0].dueWindow).toBe("today");
   });
 
   it("excludes from urgent a task already planned for today or before", async () => {
@@ -201,6 +216,33 @@ describe("GET /today (ADR 046)", () => {
     const { app, workspaceId, projectId, columnId, userId } = await setup();
     const task = await createTask(projectId, columnId, {
       dueDate: daysFrom(today(), 10),
+    });
+    await assign(task.id, userId);
+
+    const body = await (await getToday(app, workspaceId)).json();
+    expect(body.urgent).toHaveLength(0);
+  });
+
+  it("does not list an overdue task from an archived project under urgent", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId, {
+      dueDate: daysFrom(today(), -1),
+    });
+    await assign(task.id, userId);
+    await db
+      .update(schema.projectTable)
+      .set({ archivedAt: new Date() })
+      .where(eq(schema.projectTable.id, projectId));
+
+    const body = await (await getToday(app, workspaceId)).json();
+    expect(body.urgent).toHaveLength(0);
+  });
+
+  it("does not list an archived-status task under urgent even if its due date is overdue", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId, {
+      dueDate: daysFrom(today(), -1),
+      status: "archived",
     });
     await assign(task.id, userId);
 

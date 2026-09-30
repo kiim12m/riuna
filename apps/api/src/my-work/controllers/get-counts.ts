@@ -3,7 +3,11 @@ import db from "../../database";
 import { projectTable, taskTable } from "../../database/schema";
 import { getEntriesInRange, getPreviousEntries } from "../../planner/queries";
 import { urgentTaskIds } from "../../today/queries";
-import { serverDayKey } from "../../utils/day-boundaries";
+import {
+  endOfServerDay,
+  serverDayKey,
+  startOfServerDay,
+} from "../../utils/day-boundaries";
 import { getWorkspaceColumns, notDoneCondition } from "../decorate";
 import { TOTAL_CAP } from "../pagination";
 import { assignedCondition } from "../scope";
@@ -23,10 +27,8 @@ export default async function getCounts({
   userId: string;
   now?: Date;
 }) {
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
-  const todayEnd = new Date(todayStart);
-  todayEnd.setHours(23, 59, 59, 999);
+  const todayStart = startOfServerDay(now);
+  const todayEnd = endOfServerDay(now);
 
   const projectColumns = await getWorkspaceColumns(workspaceId);
   const notDone = notDoneCondition(projectColumns);

@@ -251,11 +251,16 @@ function RouteComponent() {
     if (wasAlreadyUntimedHere) {
       reorderDay(destDayKey, nextIds);
     } else {
-      moveTask(taskId, {
-        plannedDate: destDayKey,
-        startMinute: null,
-        position: insertAt,
-      });
+      // No se manda `position` aqui: `setPlanEntry` la escribe tal cual, sin
+      // correr a los vecinos, y un indice calculado contra el snapshot local
+      // puede chocar con uno real. `moveTask` solo trae la tarea al dia
+      // -el servidor la anade al final, sin colision posible- y `reorderDay`
+      // -la misma llamada que ya reescribe posiciones 0..n para un
+      // reordenado dentro del dia- deja el orden final exacto. Las dos
+      // reescrituras optimistas caen en el mismo tick, asi que no hay
+      // parpadeo visible entre una y otra.
+      moveTask(taskId, { plannedDate: destDayKey, startMinute: null });
+      reorderDay(destDayKey, nextIds);
     }
   }
 

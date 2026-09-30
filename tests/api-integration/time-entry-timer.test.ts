@@ -222,6 +222,57 @@ describe("timer: one entry running per person (ADR 044)", () => {
     expect(running[0]?.taskId).toBe(taskB.id);
   });
 
+  it("the old POST without endTime also refuses to start on a task that is already done (ADR 044)", async () => {
+    const { user, workspace } = await createWorkspaceMember({ role: "owner" });
+    const { project, columns } = await createProjectFixture({
+      workspaceId: workspace.id,
+    });
+    const task = await createTask(project.id, columns.done.id, {
+      status: columns.done.slug,
+    });
+
+    const app = asUser(user);
+
+    // El mismo candado de `start-timer.ts`, pero por el camino que lo
+    // esquiva: el POST directo (y MCP, que llega a la misma funcion).
+    const response = await app.request("/api/time-entry", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        taskId: task.id,
+        startTime: new Date().toISOString(),
+      }),
+    });
+    expect(response.status).toBe(409);
+    expect(await runningEntriesFor(user.id)).toHaveLength(0);
+  });
+
+  it("the old POST still allows a closed, manual entry on a task that is already done", async () => {
+    const { user, workspace } = await createWorkspaceMember({ role: "owner" });
+    const { project, columns } = await createProjectFixture({
+      workspaceId: workspace.id,
+    });
+    const task = await createTask(project.id, columns.done.id, {
+      status: columns.done.slug,
+    });
+
+    const app = asUser(user);
+    const startTime = new Date(Date.now() - 30 * 60 * 1000);
+
+    // Rellenar el parte de una tarea ya terminada es legitimo: el candado
+    // solo mira las entradas que nacen en marcha (`!endTime`).
+    const response = await app.request("/api/time-entry", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        taskId: task.id,
+        startTime: startTime.toISOString(),
+        endTime: new Date().toISOString(),
+      }),
+    });
+    expect(response.status).toBe(200);
+  });
+
   it("the partial unique index rejects two open entries inserted directly", async () => {
     const { user, workspace } = await createWorkspaceMember({ role: "owner" });
     const { project, columns } = await createProjectFixture({
