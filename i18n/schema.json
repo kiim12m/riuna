@@ -2046,6 +2046,42 @@
 						"densityDescription": {
 							"type": "string"
 						},
+						"workScheduleTitle": {
+							"type": "string"
+						},
+						"workScheduleSubtitle": {
+							"type": "string"
+						},
+						"workStart": {
+							"type": "string"
+						},
+						"workEnd": {
+							"type": "string"
+						},
+						"workTimesInvalid": {
+							"type": "string"
+						},
+						"lunchEnabled": {
+							"type": "string"
+						},
+						"lunchEnabledDescription": {
+							"type": "string"
+						},
+						"lunchStart": {
+							"type": "string"
+						},
+						"lunchEnd": {
+							"type": "string"
+						},
+						"workDays": {
+							"type": "string"
+						},
+						"workSaved": {
+							"type": "string"
+						},
+						"workSaveError": {
+							"type": "string"
+						},
 						"displayOptions": {
 							"type": "string"
 						},
@@ -2113,6 +2149,18 @@
 						"sidebarDefaultDescription",
 						"density",
 						"densityDescription",
+						"workScheduleTitle",
+						"workScheduleSubtitle",
+						"workStart",
+						"workEnd",
+						"workTimesInvalid",
+						"lunchEnabled",
+						"lunchEnabledDescription",
+						"lunchStart",
+						"lunchEnd",
+						"workDays",
+						"workSaved",
+						"workSaveError",
 						"displayOptions",
 						"displayOptionsDescription",
 						"taskNumbers",
@@ -10491,9 +10539,37 @@
 						},
 						"exportError": {
 							"type": "string"
+						},
+						"resetLayout": {
+							"type": "string"
 						}
 					},
-					"required": ["share", "unshare", "export", "exportError"]
+					"required": [
+						"share",
+						"unshare",
+						"export",
+						"exportError",
+						"resetLayout"
+					]
+				},
+				"reset": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"confirm": {
+							"type": "string"
+						},
+						"done": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "description", "confirm", "done"]
 				},
 				"shared": {
 					"type": "string"
@@ -10550,6 +10626,7 @@
 				"greeting",
 				"inbox",
 				"actions",
+				"reset",
 				"shared",
 				"errors",
 				"scope",
@@ -10763,9 +10840,140 @@
 						}
 					},
 					"required": ["title", "description"]
+				},
+				"status": {
+					"type": "string"
+				},
+				"previous": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title_one": {
+							"type": "string"
+						},
+						"title_other": {
+							"type": "string"
+						},
+						"addToToday": {
+							"type": "string"
+						}
+					},
+					"required": ["title_one", "title_other", "addToToday"]
+				},
+				"planned": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "empty"]
+				},
+				"urgent": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"planToday": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "planToday"]
+				},
+				"done": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title_one": {
+							"type": "string"
+						},
+						"title_other": {
+							"type": "string"
+						}
+					},
+					"required": ["title_one", "title_other"]
+				},
+				"row": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"toggleDone": {
+							"type": "string"
+						},
+						"due": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"today": {
+									"type": "string"
+								},
+								"overdue": {
+									"type": "string"
+								}
+							},
+							"required": ["today", "overdue"]
+						}
+					},
+					"required": ["toggleDone", "due"]
+				},
+				"peek": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"label": {
+							"type": "string"
+						},
+						"open": {
+							"type": "string"
+						},
+						"project": {
+							"type": "string"
+						},
+						"status": {
+							"type": "string"
+						},
+						"priority": {
+							"type": "string"
+						},
+						"estimate": {
+							"type": "string"
+						},
+						"logged": {
+							"type": "string"
+						},
+						"due": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"label",
+						"open",
+						"project",
+						"status",
+						"priority",
+						"estimate",
+						"logged",
+						"due"
+					]
 				}
 			},
-			"required": ["pageTitle", "empty"]
+			"required": [
+				"pageTitle",
+				"empty",
+				"status",
+				"previous",
+				"planned",
+				"urgent",
+				"done",
+				"row",
+				"peek"
+			]
 		},
 		"myTasks": {
 			"type": "object",
@@ -10815,9 +11023,12 @@
 						}
 					},
 					"required": ["title", "description"]
+				},
+				"description": {
+					"type": "string"
 				}
 			},
-			"required": ["pageTitle", "tabs", "table", "empty"]
+			"required": ["pageTitle", "tabs", "table", "empty", "description"]
 		},
 		"planner": {
 			"type": "object",
@@ -10832,6 +11043,24 @@
 				"today": {
 					"type": "string"
 				},
+				"previous": {
+					"type": "string"
+				},
+				"noTasks": {
+					"type": "string"
+				},
+				"dayLoad": {
+					"type": "string"
+				},
+				"anchorTime": {
+					"type": "string"
+				},
+				"removeTime": {
+					"type": "string"
+				},
+				"plannedElsewhere": {
+					"type": "string"
+				},
 				"empty": {
 					"type": "object",
 					"additionalProperties": false,
@@ -10844,9 +11073,28 @@
 						}
 					},
 					"required": ["title", "description"]
+				},
+				"description": {
+					"type": "string"
+				},
+				"dayLoadPct": {
+					"type": "string"
 				}
 			},
-			"required": ["pageTitle", "unplanned", "today", "empty"]
+			"required": [
+				"pageTitle",
+				"unplanned",
+				"today",
+				"previous",
+				"noTasks",
+				"dayLoad",
+				"anchorTime",
+				"removeTime",
+				"plannedElsewhere",
+				"empty",
+				"description",
+				"dayLoadPct"
+			]
 		},
 		"schedule": {
 			"type": "object",
@@ -10862,6 +11110,9 @@
 					"type": "string"
 				},
 				"running": {
+					"type": "string"
+				},
+				"lunch": {
 					"type": "string"
 				},
 				"createBlock": {
@@ -11087,6 +11338,38 @@
 				},
 				"moveDayError": {
 					"type": "string"
+				},
+				"legend": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"label": {
+							"type": "string"
+						},
+						"plan": {
+							"type": "string"
+						},
+						"fixed": {
+							"type": "string"
+						},
+						"running": {
+							"type": "string"
+						},
+						"closed": {
+							"type": "string"
+						},
+						"projected": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"label",
+						"plan",
+						"fixed",
+						"running",
+						"closed",
+						"projected"
+					]
 				}
 			},
 			"required": [
@@ -11094,6 +11377,7 @@
 				"today",
 				"overflow",
 				"running",
+				"lunch",
 				"createBlock",
 				"view",
 				"nav",
@@ -11103,7 +11387,8 @@
 				"resizeError",
 				"resizeHandle",
 				"noEstimate",
-				"moveDayError"
+				"moveDayError",
+				"legend"
 			]
 		},
 		"timeSheet": {
@@ -11168,6 +11453,25 @@
 						}
 					},
 					"required": ["title", "description"]
+				},
+				"cannotEditRunning": {
+					"type": "string"
+				},
+				"deleteEntry": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "description"]
+				},
+				"cannotDeleteRunning": {
+					"type": "string"
 				}
 			},
 			"required": [
@@ -11182,7 +11486,55 @@
 				"entries",
 				"hours",
 				"total",
-				"empty"
+				"empty",
+				"cannotEditRunning",
+				"deleteEntry",
+				"cannotDeleteRunning"
+			]
+		},
+		"timer": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"stop": {
+					"type": "string"
+				},
+				"resumeTask": {
+					"type": "string"
+				},
+				"untitledTask": {
+					"type": "string"
+				},
+				"overEstimate": {
+					"type": "string"
+				},
+				"stopDialog": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"endTime": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "description", "endTime"]
+				},
+				"start": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"stop",
+				"resumeTask",
+				"untitledTask",
+				"overEstimate",
+				"stopDialog",
+				"start"
 			]
 		}
 	},
@@ -11205,6 +11557,7 @@
 		"myTasks",
 		"planner",
 		"schedule",
-		"timeSheet"
+		"timeSheet",
+		"timer"
 	]
 }

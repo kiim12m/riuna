@@ -12,6 +12,16 @@ es del interludio de espacio personal y administración.
 | [`gantt.html`](gantt.html) | Maqueta viva del Gantt con el sistema aplicado —la única vista que el rediseño no tocó—: barras finas de teal suave sin texto (la identidad vive en el riel), jerarquía visible (orden de árbol + dos grosores de barra: tarea y subtarea), riel de una línea con color por prioridad, líneas de dependencia fin→inicio, columna del día actual sombreada, cabecera de dos bandas, zoom Día/Semana/Mes/Trimestre con `‹ Hoy ›`, arrastrar y redimensionar reales. | [018](../adr/018-escala-tipografica.md)–[021](../adr/021-sistema-de-movimiento.md); `023` (zoom y bandas, pendiente) |
 | [`barra-lateral.html`](barra-lateral.html) | La barra lateral partida en tres grupos —espacio personal, administración y proyectos—, con el grupo de administración sujeto a permisos. Conmuta entre quien administra y quien no, entre barra abierta y raíl, y entre tema claro y oscuro. Los rellenos de Hoy, Planificador y Cronograma enseñan el cronómetro por fila, el panel derecho de tarea, la capacidad por día y la proyección por horas. | [036](../adr/036-barra-lateral-en-tres-espacios.md) |
 
+## Capturas de lo implementado
+
+[`capturas/`](capturas/) guarda cómo quedaron Hoy, Planificador, Cronograma
+(semana y mes) y Mis tareas tras alinearlos con `barra-lateral.html`
+(2026-09-30), en tema claro y oscuro. Incluyen también el botón «Nueva tarea»
+de la cabecera, en un proyecto y con su diálogo abierto. Salen de una instancia
+de pruebas con datos sembrados, así que los nombres del espacio y del proyecto
+son los del entorno e2e. Sirven para comparar la maqueta con el resultado, no
+como referencia de diseño: la referencia sigue siendo la maqueta.
+
 ## Cómo abrirlas
 
 Ábrelas en el navegador (doble clic o `file://`). Cargan Geist desde Google

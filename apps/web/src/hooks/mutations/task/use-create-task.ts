@@ -34,6 +34,13 @@ function useCreateTask() {
       void queryClient.invalidateQueries({
         queryKey: ["tasks", variables.projectId],
       });
+      // Hoy, el Planificador y Mis tareas no leen de ["tasks", projectId]:
+      // la tarea que se crea asignada desde la cabecera ("Nueva tarea") tiene
+      // que salir en "Sin planificar" sin recargar. Solo se recargan si estan
+      // en pantalla.
+      for (const key of ["my-work", "planner", "today"]) {
+        void queryClient.invalidateQueries({ queryKey: [key] });
+      }
       // El padre cambia: gana una hija y con ella su progreso y sus fechas.
       if (variables.parentId) {
         void queryClient.invalidateQueries({

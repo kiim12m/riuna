@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import PageTitle from "@/components/page-title";
 import { PersonalTasksTabs } from "@/components/personal-tasks/tabs";
@@ -238,6 +239,11 @@ function RouteComponent() {
         }
       >
         <div className="flex h-full min-h-0 flex-col overflow-hidden bg-card">
+          <PageHeading
+            title={t("myTasks:pageTitle")}
+            description={t("myTasks:description")}
+            className="px-4 pt-4 pb-1"
+          />
           <div className="border-border/80 border-b">
             <div className="flex items-center gap-1 px-3 pt-2">
               <ViewPicker

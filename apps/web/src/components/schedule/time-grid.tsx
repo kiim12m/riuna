@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DayLoadBar } from "@/components/planner/day-load-bar";
 import type { ScheduleDay, ScheduleSegment } from "@/fetchers/schedule";
 import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
@@ -12,6 +13,7 @@ import {
   minutesToPx,
 } from "./schedule-timeline";
 import { type ResizeInfo, ScheduleSegmentCard } from "./segment-card";
+import { segmentToneClass } from "./segment-tone";
 
 const DAY_START_MINUTE = 0;
 const DAY_END_MINUTE = 24 * 60;
@@ -167,7 +169,9 @@ export function TimeGrid({
   }, [rangeKey, workStartMinute]);
 
   return (
-    <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto p-4">
+    // Sin relleno arriba: la cabecera de cada dia es `sticky top-0`, y con
+    // `p-4` los tramos que suben al desplazarse asomaban por esa franja.
+    <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto px-4 pb-4">
       <div className="flex" style={{ minHeight: gridHeightPx + 40 }}>
         <div className="sticky top-0 left-0 z-20 w-12 shrink-0 bg-background">
           <div className="h-10" />
@@ -175,7 +179,7 @@ export function TimeGrid({
             {hourMarks(DAY_START_MINUTE, DAY_END_MINUTE).map((mark) => (
               <div
                 key={mark}
-                className="absolute right-1 -translate-y-1/2 text-meta text-muted-foreground"
+                className="absolute right-1 -translate-y-1/2 font-mono text-meta text-muted-foreground tabular-nums"
                 style={{ top: minutesToPx(mark - DAY_START_MINUTE) }}
               >
                 {formatClock(mark)}
@@ -298,9 +302,9 @@ function TimeGridColumn({
         isWide ? "flex-1" : "w-48",
       )}
     >
-      <div className="sticky top-0 z-10 h-10 space-y-1 bg-background px-2 py-1">
+      <div className="sticky top-0 z-10 h-10 space-y-1 border-border border-b bg-background px-2 py-1">
         <div className="flex items-center justify-between">
-          <h2 className="truncate text-section">
+          <h2 className="truncate font-semibold text-meta">
             {day.isToday
               ? `${t("schedule:today")} · ${formatDate(date, { weekday: "short", day: "numeric" })}`
               : formatDate(date, { weekday: "short", day: "numeric" })}
@@ -314,15 +318,7 @@ function TimeGridColumn({
             +
           </button>
         </div>
-        <div className="h-1 overflow-hidden rounded-full bg-muted">
-          <div
-            className={cn(
-              "h-full rounded-full",
-              loadPct > 100 ? "bg-warning-foreground" : "bg-brand",
-            )}
-            style={{ width: `${Math.min(loadPct, 100)}%` }}
-          />
-        </div>
+        <DayLoadBar pct={loadPct} />
       </div>
 
       <div
@@ -380,13 +376,13 @@ function TimeGridColumn({
         {hourMarks(DAY_START_MINUTE, DAY_END_MINUTE).map((mark) => (
           <div
             key={mark}
-            className="pointer-events-none absolute inset-x-0 border-border/40 border-t"
+            className="pointer-events-none absolute inset-x-0 border-muted-foreground/20 border-t border-dashed"
             style={{ top: minutesToPx(mark - DAY_START_MINUTE) }}
           />
         ))}
         {day.isToday && (
           <div
-            className="pointer-events-none absolute inset-x-0 z-10 border-t-2 border-destructive"
+            className="pointer-events-none absolute inset-x-0 z-10 border-destructive border-t-2 before:absolute before:-top-1 before:-left-[3px] before:size-1.5 before:rounded-full before:bg-destructive"
             style={{ top: minutesToPx(nowMinute - DAY_START_MINUTE) }}
           />
         )}
@@ -397,13 +393,13 @@ function TimeGridColumn({
             return (
               <div
                 key={`${segment.startSecond}-${segment.endSecond}`}
-                className={cn(
-                  "absolute inset-x-1 overflow-hidden rounded-md border border-dashed p-1 text-meta",
+                className={segmentToneClass(
                   primary?.kind === "running"
-                    ? "border-destructive/50 bg-destructive/10"
+                    ? "running"
                     : primary?.kind === "break"
-                      ? "border-border/70 bg-muted/60"
-                      : "border-border/70 bg-muted/40",
+                      ? "closed"
+                      : "fixed",
+                  "absolute inset-x-1 overflow-hidden px-1.5 py-0.5 text-meta",
                 )}
                 style={{
                   top: minutesToPx(segment.startSecond / 60 - DAY_START_MINUTE),
@@ -470,6 +466,7 @@ function TimeGridColumn({
               isPinned={segment.type === "pinned"}
               conflict={segment.type === "pinned" && segment.conflict}
               truncated={segment.type === "flow" && segment.truncated}
+              isContinuation={segment.type === "flow" && segment.part > 0}
               canResizeTop={
                 segment.type === "pinned" ||
                 (segment.type === "flow" && segment.part === 0)
@@ -592,11 +589,14 @@ function TimeGridColumn({
       )}
 
       {day.ghosts.length > 0 && (
-        <div className="space-y-1 border-t px-2 py-1.5 opacity-70">
+        <div className="space-y-1 border-t px-2 py-1.5">
           {day.ghosts.map((ghost) => (
             <div
               key={`${ghost.recurrenceId}-${ghost.plannedDate}`}
-              className="truncate rounded border border-dashed px-1 py-0.5 text-meta"
+              className={segmentToneClass(
+                "projected",
+                "truncate px-1.5 py-0.5 text-meta",
+              )}
             >
               {ghost.title}
             </div>

@@ -23,6 +23,12 @@ export function useUpdateTask() {
       queryClient.invalidateQueries({
         queryKey: ["activities", variables.id],
       });
+      // Las lecturas personales tampoco cuelgan de ["tasks", projectId]; el
+      // dialogo de crear tarea termina aqui cuando ya habia creado un
+      // borrador (al subir una imagen), no en `useCreateTask`.
+      for (const key of ["my-work", "planner", "today"]) {
+        queryClient.invalidateQueries({ queryKey: [key] });
+      }
     },
   });
 }

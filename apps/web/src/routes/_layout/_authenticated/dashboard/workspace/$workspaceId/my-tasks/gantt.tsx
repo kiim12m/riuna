@@ -10,6 +10,7 @@ import {
 import { CalendarDays, Layout } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import {
   GanttTaskBar,
@@ -209,6 +210,11 @@ function RouteComponent() {
         }
       >
         <div className="flex h-full min-h-0 flex-col bg-background">
+          <PageHeading
+            title={t("myTasks:pageTitle")}
+            description={t("myTasks:description")}
+            className="px-4 pt-4 pb-1"
+          />
           <div className="border-border/80 border-b px-3 py-2.5 sm:px-4">
             <SegmentedControl
               label={t("tasks:gantt.zoomLabel")}

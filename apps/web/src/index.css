@@ -549,6 +549,16 @@ input:-webkit-autofill:active {
       inset 0 0 0 1px color-mix(in srgb, var(--brand) 30%, transparent) !important;
   }
 
+  /* Rayado del Cronograma para lo que cierra un hueco -bloqueo, comida-:
+     que ahi no cabe nada se lee por la forma, no solo por el gris. */
+  .riuna-stripes {
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--muted-foreground) 14%, transparent) 0 5px,
+      transparent 5px 10px
+    );
+  }
+
   .riuna-tiptap-shell {
     position: relative;
   }

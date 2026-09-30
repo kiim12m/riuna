@@ -10,6 +10,7 @@ import {
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import MobileProjectNav from "@/components/common/header/mobile-project-nav";
+import { NewTaskButton } from "@/components/common/header/new-task-button";
 import ProjectCrumbSelect from "@/components/common/header/project-crumb-select";
 import WorkspaceCrumbSelect from "@/components/common/header/workspace-crumb-select";
 import Layout from "@/components/common/layout";
@@ -257,6 +258,7 @@ export default function ProjectLayout({
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
+            <NewTaskButton />
             {headerActions}
           </div>
         </div>

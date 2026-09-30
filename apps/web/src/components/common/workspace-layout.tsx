@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { NewTaskButton } from "@/components/common/header/new-task-button";
 import Layout from "@/components/common/layout";
 import {
   Breadcrumb,
@@ -78,6 +79,10 @@ export default function WorkspaceLayout({
             </Breadcrumb>
           </div>
           <div className={`${cn("flex items-center gap-1.5", className)}`}>
+            {/* Fuera de un proyecto todo es espacio personal o
+             * administracion: la tarea nace asignada a quien la crea, o no
+             * apareceria en Hoy, el Planificador ni Mis tareas. */}
+            <NewTaskButton assignToMe />
             {headerActions}
           </div>
         </div>

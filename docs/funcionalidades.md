@@ -184,13 +184,21 @@ la tarea y en la propia tabla.
   proyecto.
 - **Mi trabajo**: las tareas propias o de mi equipo de todos los proyectos, con
   filtros de vencimiento (todas, vencidas, hoy, esta semana).
+- **Nueva tarea en la cabecera**: un botón en la barra superior de cada
+  pantalla —espacio personal, administración y proyectos— abre el diálogo de
+  crear tarea, el mismo que «t c». Fuera de un proyecto pide el proyecto y la
+  tarea nace asignada a quien la crea, para que salga al momento en «Sin
+  planificar» y en Mis tareas; dentro de un proyecto toma ese proyecto.
 - **Hoy** ([ADR 047](adr/047-hoy-y-contadores.md)): pantalla de entrada del
   espacio, compuesta sobre el plan personal del Planificador. «De días
   anteriores» (planificado antes de hoy y sin terminar, con «Añadir a hoy»),
   «Plan de hoy» (se reordena arrastrando), lo urgente sin planificar —vence
   hoy o vencida, con «Planificar hoy»— y «Hechas hoy», plegada. Cada fila
-  tiene su propio cronómetro, casilla de «hecha» y estimación editable; el
-  detalle se abre en el mismo panel lateral que el resto de vistas. Un
+  tiene su propio cronómetro, casilla de «hecha» y estimación editable. En
+  pantallas anchas, pulsar una tarea la enseña en un resumen fijo a la
+  derecha —proyecto, estado, prioridad, estimado, registrado (con lo que
+  lleva el cronómetro) y vencimiento— con un botón al detalle completo; en
+  pantallas estrechas se abre directamente el panel lateral. Un
   resumen dice cuánto queda por hacer y cuánto se ha registrado hoy. La
   barra lateral muestra un contador junto a «Hoy» y «Mis tareas».
 - **Mis tareas**: Lista, Tablero, Gantt y Tabla personales sobre todos los
@@ -221,7 +229,7 @@ la tarea y en la propia tabla.
   columna de destino mientras se arrastra y sin salto al soltar; arrastrar
   uno de sus bordes cambia la duración (borde inferior) o adelanta el inicio
   (borde superior), escribiendo la estimación de la tarea. Una tarea sin estimar
-  ocupa media hora, con borde punteado y color apagado para distinguirla; lo
+  ocupa media hora, con un tinte más apagado y el título atenuado; lo
   que no cabe en el día se lista aparte, sin pasar solo al día siguiente.
   Admite citas fijas y bloqueos que no son tareas (sueltos o repetidos cada
   semana en días concretos, con fecha límite opcional); un clic sobre uno
@@ -230,7 +238,9 @@ la tarea y en la propia tabla.
   hasta tres elementos por día y un «+N» que abre la vista Día de esa fecha
   para ver el resto. El horario de la rejilla es la jornada personal de quien
   mira, y la comida —si está activa— se ve como un bloque cerrado que nadie
-  puede editar.
+  puede editar. Una leyenda explica los cinco tonos de la rejilla: del plan
+  (teal), hora fija (navy), en marcha (ámbar), bloque cerrado (rayado) y
+  recurrente proyectada (contorno discontinuo).
 - **Parte de horas** ([ADR 042](adr/042-parte-de-horas.md)): lo registrado
   por quien mira, cruzando proyectos, en un rango de fechas. Agrupable por
   día, tarea o proyecto; una entrada en marcha cuenta lo transcurrido hasta
