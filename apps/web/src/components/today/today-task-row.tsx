@@ -1,9 +1,8 @@
-import { Layout } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { ProjectPill } from "@/components/task/project-pill";
 import { InlineEstimate } from "@/components/timer/inline-estimate";
 import { TimerButton } from "@/components/timer/timer-button";
 import { Checkbox } from "@/components/ui/checkbox";
-import projectIcons from "@/constants/project-icons";
 import { cn } from "@/lib/cn";
 import { formatDuration } from "@/lib/duration";
 import { fromMinutes } from "@/lib/minutes";
@@ -31,6 +30,11 @@ type TodayTaskRowProps = {
   action?: { label: string; onClick: () => void };
   /** «Vence hoy» / «Vencida», cuando no hay estimacion editable que mostrar. */
   dueBadge?: "today" | "overdue";
+  /** Fila par de la lista: la cebra de la maqueta. La decide quien pinta la
+   * lista, no `odd:`: la fila ordenable va envuelta en otro nodo. */
+  shaded?: boolean;
+  /** La que enseña el resumen de la derecha. */
+  selected?: boolean;
 };
 
 /**
@@ -58,16 +62,21 @@ export function TodayTaskRow({
   onEstimateChange,
   action,
   dueBadge,
+  shaded,
+  selected,
 }: TodayTaskRowProps) {
   const { t, i18n } = useTranslation();
-  const ProjectIcon =
-    projectIcons[projectIcon as keyof typeof projectIcons] ?? Layout;
 
   return (
     <div
       data-testid={`today-row-${id}`}
+      aria-current={selected || undefined}
       className={cn(
-        "group flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors duration-(--motion-fast) ease-out-quart hover:bg-accent",
+        "group flex items-center gap-2.5 rounded-md px-2.5 py-2 transition-colors duration-(--motion-fast) ease-out-quart hover:bg-accent",
+        // En este orden: la seleccion tapa la cebra, y el cronometro en
+        // marcha tapa las dos -es lo que mas importa ver de un vistazo-.
+        shaded && "bg-muted",
+        selected && "bg-accent",
         running && "bg-warning/8 hover:bg-warning/12",
       )}
     >
@@ -90,26 +99,29 @@ export function TodayTaskRow({
         </span>
       )}
 
+      {/* El proyecto va dentro del boton y pegado al titulo, como en la
+       * maqueta, y no empujado a la derecha: asi toda la franja central
+       * sigue abriendo la tarea y el hueco final queda para la estimacion. */}
       <button
         type="button"
         onClick={onOpen}
-        className="flex min-w-0 flex-1 items-center gap-1.5 text-left outline-none"
+        className="flex min-w-0 flex-1 items-center gap-1.5 rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span className="shrink-0">{getPriorityIcon(priority)}</span>
         <span
           className={cn(
-            "min-w-0 flex-1 truncate text-body",
+            "min-w-0 truncate text-body",
             isDone && "text-muted-foreground line-through",
           )}
         >
           {title}
         </span>
+        <ProjectPill
+          name={projectName}
+          icon={projectIcon}
+          className="ml-1 hidden sm:inline-flex"
+        />
       </button>
-
-      <span className="hidden shrink-0 items-center gap-1 text-meta text-muted-foreground sm:flex">
-        <ProjectIcon className="size-3" />
-        <span className="max-w-28 truncate">{projectName}</span>
-      </span>
 
       {onEstimateChange ? (
         <InlineEstimate

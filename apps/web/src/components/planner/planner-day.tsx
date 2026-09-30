@@ -5,6 +5,7 @@ import {
 } from "@dnd-kit/sortable";
 import { AlarmClock, Flag } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { DayLoadBar } from "@/components/planner/day-load-bar";
 import { PlannerRow } from "@/components/planner/planner-row";
 import { TimePopover } from "@/components/planner/time-popover";
 import { InlineEstimate } from "@/components/timer/inline-estimate";
@@ -33,7 +34,7 @@ export function PlannerDay({
   dayKey,
   label,
   loadPct,
-  loadLabel,
+  loadHint,
   untimedEntries,
   timedEntries,
   fixedBlocks,
@@ -49,7 +50,9 @@ export function PlannerDay({
   dayKey: string;
   label: string;
   loadPct: number;
-  loadLabel: string;
+  /** La carga en horas («3 h planificadas de 8 h»): va en el tooltip, el
+   * porcentaje es lo que se lee de un vistazo. */
+  loadHint: string;
   untimedEntries: PlanEntry[];
   timedEntries: PlanEntry[];
   fixedBlocks: PlanFixedBlock[];
@@ -88,18 +91,12 @@ export function PlannerDay({
       data-testid={`planner-column-${dayKey}`}
       className="flex h-full w-64 shrink-0 flex-col rounded-lg border border-border/60 bg-sidebar/40"
     >
-      <div className="space-y-1 px-2 py-2">
-        <h2 className="text-section">{label}</h2>
-        <div className="h-1 overflow-hidden rounded-full bg-muted">
-          <div
-            className={cn(
-              "h-full rounded-full",
-              loadPct > 100 ? "bg-warning-foreground" : "bg-brand",
-            )}
-            style={{ width: `${Math.min(loadPct, 100)}%` }}
-          />
-        </div>
-        <p className="text-meta text-muted-foreground">{loadLabel}</p>
+      <div className="space-y-1 px-2 py-2" title={loadHint}>
+        <h2 className="font-semibold text-meta">{label}</h2>
+        <p className="text-meta text-muted-foreground tabular-nums">
+          {t("planner:dayLoadPct", { pct: loadPct })}
+        </p>
+        <DayLoadBar pct={loadPct} />
       </div>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-1.5 pb-2">

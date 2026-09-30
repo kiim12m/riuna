@@ -6,6 +6,7 @@ import { cn } from "@/lib/cn";
 import { formatDate } from "@/lib/format";
 import { CreateTaskPlaceholder } from "./create-task-placeholder";
 import { formatClock } from "./schedule-timeline";
+import { segmentToneClass } from "./segment-tone";
 
 const MAX_VISIBLE_ITEMS = 3;
 
@@ -116,7 +117,14 @@ export function MonthView({
                   item.kind === "block" ? (
                     <div
                       key={`${item.segment.startSecond}-${item.segment.endSecond}`}
-                      className="truncate rounded border border-dashed border-border/70 bg-muted/40 px-1 text-meta"
+                      className={segmentToneClass(
+                        item.segment.entries.some(
+                          (entry) => entry.kind === "fixed",
+                        )
+                          ? "fixed"
+                          : "closed",
+                        "truncate border-l-2 px-1 text-meta",
+                      )}
                     >
                       {item.segment.entries
                         .filter((entry) => entry.kind !== "running")
@@ -128,10 +136,13 @@ export function MonthView({
                       key={`${item.segment.taskId}-${item.segment.startSecond}`}
                       type="button"
                       onClick={() => onOpen(item.segment)}
-                      className={cn(
-                        "flex items-center gap-1 truncate rounded px-1 text-left text-meta hover:bg-muted",
-                        item.segment.type === "pinned" && "bg-brand/10",
-                        !item.segment.task?.estimate && "text-muted-foreground",
+                      className={segmentToneClass(
+                        item.segment.type === "pinned" ? "fixed" : "plan",
+                        cn(
+                          "flex items-center gap-1 truncate border-l-2 px-1 text-left text-meta hover:underline",
+                          !item.segment.task?.estimate &&
+                            "text-muted-foreground",
+                        ),
                       )}
                       title={
                         !item.segment.task?.estimate
@@ -140,7 +151,7 @@ export function MonthView({
                       }
                     >
                       {item.segment.type === "pinned" && (
-                        <span className="shrink-0 text-muted-foreground">
+                        <span className="shrink-0 font-mono text-muted-foreground tabular-nums">
                           {formatClock(item.segment.startSecond / 60)}
                         </span>
                       )}

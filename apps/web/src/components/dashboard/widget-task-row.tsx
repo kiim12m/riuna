@@ -1,5 +1,5 @@
-import { Calendar, CalendarClock, CalendarX, Layout } from "lucide-react";
-import projectIcons from "@/constants/project-icons";
+import { Calendar, CalendarClock, CalendarX } from "lucide-react";
+import { ProjectPill } from "@/components/task/project-pill";
 import { cn } from "@/lib/cn";
 import {
   type DueDateStatus,
@@ -41,41 +41,51 @@ export type WidgetTask = {
 export function WidgetTaskRow({
   task,
   onOpen,
+  variant = "widget",
+  shaded = false,
 }: {
   task: WidgetTask;
   onOpen: () => void;
+  /** `list`: la lista a pagina completa de "Mis tareas", con el aire de las
+   * filas de Hoy. `widget`: la fila compacta de un widget de Mi panel. */
+  variant?: "widget" | "list";
+  /** Fila par de la lista: la cebra de `barra-lateral.html`. */
+  shaded?: boolean;
 }) {
   const dueStatus = getDueDateStatus(task.dueDate, task.isDone);
   const DueIcon = DUE_DATE_ICON[dueStatus];
-  const ProjectIcon =
-    projectIcons[task.projectIcon as keyof typeof projectIcons] ?? Layout;
 
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="flex w-full items-center gap-2 rounded-md px-1 py-1.5 text-left transition-colors duration-(--motion-fast) ease-out-quart hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className={cn(
+        "flex w-full items-center gap-2 rounded-md px-1 py-1.5 text-left transition-colors duration-(--motion-fast) ease-out-quart hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        variant === "list" && "gap-2.5 px-2.5 py-2",
+        shaded && "bg-muted",
+      )}
     >
       <span className="shrink-0">{getPriorityIcon(task.priority)}</span>
 
       <span
         className={cn(
-          "min-w-0 flex-1 truncate text-body",
+          "min-w-0 truncate text-body",
           task.isDone && "text-muted-foreground line-through",
         )}
       >
         {task.title}
       </span>
 
-      <span className="hidden shrink-0 items-center gap-1 text-meta text-muted-foreground lg:flex">
-        <ProjectIcon className="size-3" />
-        <span className="max-w-24 truncate">{task.projectName}</span>
-      </span>
+      <ProjectPill
+        name={task.projectName}
+        icon={task.projectIcon}
+        className="ml-1 hidden lg:inline-flex"
+      />
 
       {task.dueDate && (
         <span
           className={cn(
-            "flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-label",
+            "ml-auto flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-label",
             dueDateStatusColors[dueStatus],
           )}
         >

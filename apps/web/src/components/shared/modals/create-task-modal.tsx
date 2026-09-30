@@ -59,6 +59,10 @@ type CreateTaskModalProps = {
   onClose: () => void;
   status?: string;
   projectId?: string;
+  /** Con quien nace asignada: el boton de la cabecera del espacio personal
+   * la asigna a quien la crea, o no apareceria en Hoy ni en el Planificador.
+   * Sin el, sin asignar, como siempre. */
+  defaultAssigneeId?: string;
 };
 
 type Priority = "no-priority" | "low" | "medium" | "high" | "urgent";
@@ -111,6 +115,7 @@ function CreateTaskModal({
   onClose,
   status,
   projectId,
+  defaultAssigneeId,
 }: CreateTaskModalProps) {
   const { t } = useTranslation();
   const { project, setProject } = useProjectStore();
@@ -439,7 +444,7 @@ function CreateTaskModal({
         setTitle("");
         setDescription("");
         setPriority("no-priority");
-        setAssigneeId("");
+        setAssigneeId(defaultAssigneeId ?? "");
         setStartDate(undefined);
         setDueDate(undefined);
         setLabels([]);
@@ -485,6 +490,12 @@ function CreateTaskModal({
   const selectedUser = workspaceUsers?.members?.find(
     (u) => u.userId === assigneeId,
   );
+
+  // Al abrir, no al montar: el diálogo vive montado y cerrado desde que
+  // carga la página, y la sesión puede llegar después del primer render.
+  useEffect(() => {
+    if (open) setAssigneeId(defaultAssigneeId ?? "");
+  }, [open, defaultAssigneeId]);
 
   useEffect(() => {
     if (labelsOpen && labelsStep === "select" && searchInputRef.current) {

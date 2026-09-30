@@ -13,6 +13,7 @@ import {
   resizeSegment,
   snapMinute,
 } from "./schedule-timeline";
+import { segmentToneClass } from "./segment-tone";
 
 type SegmentTask = {
   id: string;
@@ -43,6 +44,8 @@ type ScheduleSegmentCardProps = {
   isPinned: boolean;
   conflict?: boolean;
   truncated?: boolean;
+  /** Segunda parte o siguientes de un tramo que un bloque partio en dos. */
+  isContinuation?: boolean;
   /** Borde superior: solo tiene sentido en un tramo anclado o en la primera
    * parte de uno que fluye -partir mas seguido no habria donde anclar. */
   canResizeTop: boolean;
@@ -113,6 +116,7 @@ export function ScheduleSegmentCard({
   isPinned,
   conflict = false,
   truncated = false,
+  isContinuation = false,
   canResizeTop,
   canResizeBottom,
   gridStart,
@@ -274,33 +278,25 @@ export function ScheduleSegmentCard({
     <div
       data-testid={`schedule-segment-${task.id}`}
       data-pinned={isPinned}
-      className={cn(
-        "group absolute inset-x-1 overflow-hidden rounded-md shadow-xs",
-        // `border` a secas (1 px) apenas distingue un punteado de una linea
-        // continua; `border-2` deja puntos que de verdad se ven como tales.
-        isEstimated ? "border" : "border-2 border-dotted",
-        // Se atenua y pasa a vora discontinua mientras se arrastra hacia
-        // otro dia: la propia columna no cambia, asi que esto es la unica
-        // senal de que el hueco se esta quedando vacio. Va despues del
-        // border-style de arriba: `cn()` (tailwind-merge) resuelve el
-        // choque de grupo por orden, sin falta de `!important`.
-        isLeaving && "border-dashed opacity-40",
-        // Se "levanta" del resto mientras se mueve dentro del mismo dia.
-        isLifted && "z-30 shadow-lg ring-2 ring-brand/40",
-        isPinned
-          ? isEstimated
-            ? "bg-brand/10"
-            : "bg-brand/5"
-          : isEstimated
-            ? "bg-background"
-            : "bg-muted/20",
-        conflict
-          ? "border-destructive/60"
-          : truncated
-            ? "border-dashed border-warning-foreground/60"
-            : !isEstimated
-              ? "border-border/50"
-              : "border-border/70",
+      className={segmentToneClass(
+        isPinned ? "fixed" : "plan",
+        cn(
+          "group absolute inset-x-1 overflow-hidden",
+          // Sin estimar: el mismo tono, mas tenue; el titulo ya va atenuado
+          // y su `title` dice por que.
+          !isEstimated && (isPinned ? "bg-primary/5" : "bg-brand/5"),
+          // La continuacion de algo que un bloque cerrado partio en dos
+          // (`barra-lateral.html`): filete discontinuo.
+          isContinuation && "border-dashed",
+          truncated && "border-dashed border-l-warning-foreground",
+          conflict && "border-l-destructive ring-1 ring-destructive/40",
+          // Se atenua y pasa a filete discontinuo mientras se arrastra hacia
+          // otro dia: la propia columna no cambia, asi que esto es la unica
+          // senal de que el hueco se esta quedando vacio.
+          isLeaving && "border-dashed opacity-40",
+          // Se "levanta" del resto mientras se mueve dentro del mismo dia.
+          isLifted && "z-30 shadow-lg ring-2 ring-brand/40",
+        ),
       )}
       style={{ top, height }}
     >
@@ -335,7 +331,7 @@ export function ScheduleSegmentCard({
           <div className="flex items-center gap-1 text-meta text-muted-foreground">
             <ProjectIcon className="size-3 shrink-0" />
             <span className="truncate">{task.projectName}</span>
-            <span className="ml-auto shrink-0">
+            <span className="ml-auto shrink-0 font-mono tabular-nums">
               {formatClock(displayMinute)}
             </span>
           </div>

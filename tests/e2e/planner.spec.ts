@@ -108,4 +108,30 @@ test.describe("Planificador", () => {
     });
     expect(await page.getByText("Parte semanal").count()).toBe(15);
   });
+
+  test("'Nueva tarea' en la cabecera la crea asignada y sale en sin planificar sin recargar", async ({
+    page,
+    riuna,
+  }) => {
+    await page.goto(`/dashboard/workspace/${riuna.workspaceId}/planner`);
+
+    await page.getByRole("button", { name: "Nueva tarea" }).click();
+    const dialog = page.getByRole("dialog");
+    // Fuera de un proyecto el dialogo pide uno: no hay ruta de donde sacarlo.
+    await dialog.getByRole("button", { name: "Seleccionar proyecto" }).click();
+    await page.getByRole("button", { name: "Proyecto E2E" }).click();
+    await dialog
+      .getByPlaceholder("Título de la tarea")
+      .fill("Llamar al proveedor");
+    await dialog.getByRole("button", { name: "Crear tarea" }).click();
+
+    // "Sin planificar" solo lista lo asignado a quien mira: que salga aqui
+    // prueba a la vez la asignacion por defecto y la invalidacion de la
+    // consulta del Planificador.
+    await expect(
+      page
+        .locator('[data-testid="planner-column-unplanned"]')
+        .getByText("Llamar al proveedor"),
+    ).toBeVisible({ timeout: 10_000 });
+  });
 });

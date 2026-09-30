@@ -20,6 +20,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CalendarClock } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import PageTitle from "@/components/page-title";
 import { PlannerDay } from "@/components/planner/planner-day";
@@ -294,104 +295,51 @@ function RouteComponent() {
     <>
       <PageTitle title={t("planner:pageTitle")} />
       <WorkspaceLayout title={t("planner:pageTitle")}>
-        {isPending ? (
-          <div className="flex gap-3 p-4">
-            {["a", "b", "c"].map((key) => (
-              <Skeleton key={key} className="h-64 w-56 shrink-0 rounded-lg" />
-            ))}
-          </div>
-        ) : isEmpty ? (
-          <Empty className="min-h-[50vh]">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <CalendarClock />
-              </EmptyMedia>
-              <EmptyTitle>{t("planner:empty.title")}</EmptyTitle>
-              <EmptyDescription>
-                {t("planner:empty.description")}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          >
-            <div className="flex h-full min-h-0 gap-3 overflow-x-auto p-4">
-              <PlannerColumn
-                id={UNPLANNED_ID}
-                title={t("planner:unplanned")}
-                tasks={data?.unplanned ?? []}
-                onOpen={(task) =>
-                  setOpenTask({ taskId: task.id, projectId: task.projectId })
-                }
-                onEstimateChange={setEstimate}
-              />
-
-              {(data?.previous.length ?? 0) > 0 && (
-                <PreviousColumn
-                  tasks={data?.previous ?? []}
+        <div className="flex h-full min-h-0 flex-col">
+          <PageHeading
+            title={t("planner:pageTitle")}
+            description={t("planner:description", { days: WINDOW_DAYS })}
+            className="px-4 pt-4"
+          />
+          {isPending ? (
+            <div className="flex gap-3 p-4">
+              {["a", "b", "c"].map((key) => (
+                <Skeleton key={key} className="h-64 w-56 shrink-0 rounded-lg" />
+              ))}
+            </div>
+          ) : isEmpty ? (
+            <Empty className="min-h-[50vh]">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <CalendarClock />
+                </EmptyMedia>
+                <EmptyTitle>{t("planner:empty.title")}</EmptyTitle>
+                <EmptyDescription>
+                  {t("planner:empty.description")}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCorners}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto p-4">
+                <PlannerColumn
+                  id={UNPLANNED_ID}
+                  title={t("planner:unplanned")}
+                  tasks={data?.unplanned ?? []}
                   onOpen={(task) =>
                     setOpenTask({ taskId: task.id, projectId: task.projectId })
                   }
                   onEstimateChange={setEstimate}
                 />
-              )}
 
-              {days.map((day, index) => {
-                const key = isoDay(day);
-                const dayEntries = entriesByDay.get(key) ?? [];
-                const untimedEntries = dayEntries.filter(
-                  (entry) => entry.startMinute == null,
-                );
-                const timedEntries = dayEntries.filter(
-                  (entry) => entry.startMinute != null,
-                );
-                const fixedBlocks = fixedBlocksByDay[key] ?? [];
-                const ghosts = ghostsByDay.get(key) ?? [];
-                const deadlines = deadlinesByDay.get(key) ?? [];
-
-                const loadSeconds =
-                  dayEntries.reduce(
-                    (total, entry) =>
-                      total +
-                      Math.max(0, (entry.estimate ?? 0) - entry.loggedSeconds),
-                    0,
-                  ) +
-                  fixedBlocks.reduce(
-                    (total, block) =>
-                      total + (block.endMinute - block.startMinute) * 60,
-                    0,
-                  );
-                const capacitySeconds = data?.capacityByDay?.[key] ?? 0;
-                const loadPct =
-                  capacitySeconds > 0
-                    ? Math.round((loadSeconds / capacitySeconds) * 100)
-                    : loadSeconds > 0
-                      ? 100
-                      : 0;
-
-                return (
-                  <PlannerDay
-                    key={key}
-                    dayKey={key}
-                    label={
-                      index === 0
-                        ? `${t("planner:today")} · ${formatDate(day, { weekday: "short", day: "numeric" })}`
-                        : formatDate(day, { weekday: "short", day: "numeric" })
-                    }
-                    loadPct={loadPct}
-                    loadLabel={t("planner:dayLoad", {
-                      planned: formatDuration(loadSeconds, i18n.language),
-                      available: formatDuration(capacitySeconds, i18n.language),
-                    })}
-                    untimedEntries={untimedEntries}
-                    timedEntries={timedEntries}
-                    fixedBlocks={fixedBlocks}
-                    ghosts={ghosts}
-                    deadlines={deadlines}
+                {(data?.previous.length ?? 0) > 0 && (
+                  <PreviousColumn
+                    tasks={data?.previous ?? []}
                     onOpen={(task) =>
                       setOpenTask({
                         taskId: task.id,
@@ -399,24 +347,96 @@ function RouteComponent() {
                       })
                     }
                     onEstimateChange={setEstimate}
-                    onAnchor={handleAnchor}
-                    onUnanchor={handleUnanchor}
-                    timePopoverTaskId={timePopoverTaskId}
-                    onTimePopoverOpenChange={(taskId, open) =>
-                      setTimePopoverTaskId(open ? taskId : null)
-                    }
                   />
-                );
-              })}
-            </div>
+                )}
 
-            <DragOverlay>
-              {activeTask && (
-                <PlannerTaskCard task={activeTask} onOpen={() => {}} />
-              )}
-            </DragOverlay>
-          </DndContext>
-        )}
+                {days.map((day, index) => {
+                  const key = isoDay(day);
+                  const dayEntries = entriesByDay.get(key) ?? [];
+                  const untimedEntries = dayEntries.filter(
+                    (entry) => entry.startMinute == null,
+                  );
+                  const timedEntries = dayEntries.filter(
+                    (entry) => entry.startMinute != null,
+                  );
+                  const fixedBlocks = fixedBlocksByDay[key] ?? [];
+                  const ghosts = ghostsByDay.get(key) ?? [];
+                  const deadlines = deadlinesByDay.get(key) ?? [];
+
+                  const loadSeconds =
+                    dayEntries.reduce(
+                      (total, entry) =>
+                        total +
+                        Math.max(
+                          0,
+                          (entry.estimate ?? 0) - entry.loggedSeconds,
+                        ),
+                      0,
+                    ) +
+                    fixedBlocks.reduce(
+                      (total, block) =>
+                        total + (block.endMinute - block.startMinute) * 60,
+                      0,
+                    );
+                  const capacitySeconds = data?.capacityByDay?.[key] ?? 0;
+                  const loadPct =
+                    capacitySeconds > 0
+                      ? Math.round((loadSeconds / capacitySeconds) * 100)
+                      : loadSeconds > 0
+                        ? 100
+                        : 0;
+
+                  return (
+                    <PlannerDay
+                      key={key}
+                      dayKey={key}
+                      label={
+                        index === 0
+                          ? `${t("planner:today")} · ${formatDate(day, { weekday: "short", day: "numeric" })}`
+                          : formatDate(day, {
+                              weekday: "short",
+                              day: "numeric",
+                            })
+                      }
+                      loadPct={loadPct}
+                      loadHint={t("planner:dayLoad", {
+                        planned: formatDuration(loadSeconds, i18n.language),
+                        available: formatDuration(
+                          capacitySeconds,
+                          i18n.language,
+                        ),
+                      })}
+                      untimedEntries={untimedEntries}
+                      timedEntries={timedEntries}
+                      fixedBlocks={fixedBlocks}
+                      ghosts={ghosts}
+                      deadlines={deadlines}
+                      onOpen={(task) =>
+                        setOpenTask({
+                          taskId: task.id,
+                          projectId: task.projectId,
+                        })
+                      }
+                      onEstimateChange={setEstimate}
+                      onAnchor={handleAnchor}
+                      onUnanchor={handleUnanchor}
+                      timePopoverTaskId={timePopoverTaskId}
+                      onTimePopoverOpenChange={(taskId, open) =>
+                        setTimePopoverTaskId(open ? taskId : null)
+                      }
+                    />
+                  );
+                })}
+              </div>
+
+              <DragOverlay>
+                {activeTask && (
+                  <PlannerTaskCard task={activeTask} onOpen={() => {}} />
+                )}
+              </DragOverlay>
+            </DndContext>
+          )}
+        </div>
       </WorkspaceLayout>
 
       <TaskDetailsSheet
@@ -455,7 +475,7 @@ function PlannerColumn({
     >
       <div className="space-y-1 px-2 py-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-section">{title}</h2>
+          <h2 className="font-semibold text-meta">{title}</h2>
           <span className="text-meta text-muted-foreground">
             {tasks.length}
           </span>
@@ -499,7 +519,7 @@ function PreviousColumn({
     >
       <div className="space-y-1 px-2 py-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-section">{t("planner:previous")}</h2>
+          <h2 className="font-semibold text-meta">{t("planner:previous")}</h2>
           <span className="text-meta text-muted-foreground">
             {tasks.length}
           </span>

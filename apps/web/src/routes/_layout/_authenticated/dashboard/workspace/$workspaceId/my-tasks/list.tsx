@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { List as ListIcon } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import { WidgetTaskRow } from "@/components/dashboard/widget-task-row";
 import PageTitle from "@/components/page-title";
@@ -84,7 +85,11 @@ function RouteComponent() {
           />
         }
       >
-        <div className="p-4">
+        <div className="space-y-4 p-4">
+          <PageHeading
+            title={t("myTasks:pageTitle")}
+            description={t("myTasks:description")}
+          />
           {isPending ? (
             <div className="space-y-2">
               {["a", "b", "c"].map((key) => (
@@ -111,10 +116,12 @@ function RouteComponent() {
                     {t(`panels:buckets.due.${window}`)}
                   </h2>
                   <div className="space-y-0.5">
-                    {groups[window].map((task) => (
+                    {groups[window].map((task, index) => (
                       <WidgetTaskRow
                         key={task.id}
                         task={task}
+                        variant="list"
+                        shaded={index % 2 === 0}
                         onOpen={() =>
                           setOpenTask({
                             taskId: task.id,

@@ -2776,6 +2776,16 @@
 				"today": "Vence hoy",
 				"overdue": "Vencida"
 			}
+		},
+		"peek": {
+			"label": "Resumen de la tarea",
+			"open": "Abrir detalle",
+			"project": "Proyecto",
+			"status": "Estado",
+			"priority": "Prioridad",
+			"estimate": "Estimado",
+			"logged": "Registrado",
+			"due": "Vence"
 		}
 	},
 	"myTasks": {
@@ -2792,7 +2802,8 @@
 		"empty": {
 			"title": "Nada por aquí",
 			"description": "No hay tareas en este ámbito."
-		}
+		},
+		"description": "Tus tareas de todos los proyectos."
 	},
 	"planner": {
 		"pageTitle": "Planificador",
@@ -2807,7 +2818,9 @@
 		"empty": {
 			"title": "Nada asignado",
 			"description": "No tienes tareas asignadas que planificar."
-		}
+		},
+		"description": "Ventana de {{days}} días. Arrastra tareas entre días o desde «Sin planificar».",
+		"dayLoadPct": "{{pct}} % de tu jornada"
 	},
 	"schedule": {
 		"pageTitle": "Cronograma",
@@ -2873,7 +2886,15 @@
 		"resizeError": "No se ha podido cambiar la duración. Inténtalo de nuevo.",
 		"resizeHandle": "Arrastra para cambiar la duración",
 		"noEstimate": "Sin estimación todavía — hueco de media hora provisional",
-		"moveDayError": "No se ha podido mover la tarea a ese día. Inténtalo de nuevo."
+		"moveDayError": "No se ha podido mover la tarea a ese día. Inténtalo de nuevo.",
+		"legend": {
+			"label": "Leyenda",
+			"plan": "Del plan",
+			"fixed": "Hora fija",
+			"running": "En marcha",
+			"closed": "Bloque cerrado",
+			"projected": "Recurrente proyectada"
+		}
 	},
 	"timeSheet": {
 		"pageTitle": "Parte de horas",

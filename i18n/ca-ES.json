@@ -2776,6 +2776,16 @@
 				"today": "Venç avui",
 				"overdue": "Vençuda"
 			}
+		},
+		"peek": {
+			"label": "Resum de la tasca",
+			"open": "Obre el detall",
+			"project": "Projecte",
+			"status": "Estat",
+			"priority": "Prioritat",
+			"estimate": "Estimat",
+			"logged": "Registrat",
+			"due": "Venç"
 		}
 	},
 	"myTasks": {
@@ -2792,7 +2802,8 @@
 		"empty": {
 			"title": "Nada por aquí",
 			"description": "No hay tareas en este ámbito."
-		}
+		},
+		"description": "Les teves tasques de tots els projectes."
 	},
 	"planner": {
 		"pageTitle": "Planificador",
@@ -2807,7 +2818,9 @@
 		"empty": {
 			"title": "Nada asignado",
 			"description": "No tienes tareas asignadas que planificar."
-		}
+		},
+		"description": "Finestra de {{days}} dies. Arrossega tasques entre dies o des de «Sense planificar».",
+		"dayLoadPct": "{{pct}} % de la teva jornada"
 	},
 	"schedule": {
 		"pageTitle": "Cronograma",
@@ -2873,7 +2886,15 @@
 		"resizeError": "No s'ha pogut canviar la durada. Torna-ho a provar.",
 		"resizeHandle": "Arrossega per canviar la durada",
 		"noEstimate": "Encara sense estimació — franja de mitja hora provisional",
-		"moveDayError": "No s'ha pogut moure la tasca a aquell dia. Torna-ho a provar."
+		"moveDayError": "No s'ha pogut moure la tasca a aquell dia. Torna-ho a provar.",
+		"legend": {
+			"label": "Llegenda",
+			"plan": "Del pla",
+			"fixed": "Hora fixa",
+			"running": "En marxa",
+			"closed": "Bloc tancat",
+			"projected": "Recurrent projectada"
+		}
 	},
 	"timeSheet": {
 		"pageTitle": "Part d'hores",

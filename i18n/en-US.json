@@ -2776,6 +2776,16 @@
 				"today": "Due today",
 				"overdue": "Overdue"
 			}
+		},
+		"peek": {
+			"label": "Task summary",
+			"open": "Open details",
+			"project": "Project",
+			"status": "Status",
+			"priority": "Priority",
+			"estimate": "Estimate",
+			"logged": "Logged",
+			"due": "Due"
 		}
 	},
 	"myTasks": {
@@ -2792,7 +2802,8 @@
 		"empty": {
 			"title": "Nothing here",
 			"description": "There are no tasks in this scope."
-		}
+		},
+		"description": "Your tasks across every project."
 	},
 	"planner": {
 		"pageTitle": "Planner",
@@ -2807,7 +2818,9 @@
 		"empty": {
 			"title": "Nothing assigned",
 			"description": "You have no assigned tasks to plan."
-		}
+		},
+		"description": "A {{days}}-day window. Drag tasks between days or from “Unplanned”.",
+		"dayLoadPct": "{{pct}}% of your workday"
 	},
 	"schedule": {
 		"pageTitle": "Schedule",
@@ -2873,7 +2886,15 @@
 		"resizeError": "Couldn't change the duration. Try again.",
 		"resizeHandle": "Drag to change duration",
 		"noEstimate": "No estimate yet — placeholder half-hour slot",
-		"moveDayError": "Couldn't move the task to that day. Try again."
+		"moveDayError": "Couldn't move the task to that day. Try again.",
+		"legend": {
+			"label": "Legend",
+			"plan": "From the plan",
+			"fixed": "Fixed time",
+			"running": "Running",
+			"closed": "Closed block",
+			"projected": "Projected recurrence"
+		}
 	},
 	"timeSheet": {
 		"pageTitle": "Time sheet",
