@@ -1248,7 +1248,7 @@ tarea, que no tenía tope alguno y crecía con la ventana.
   que el calendario empiece en domingo. Es una decisión de producto con el rótulo
   desalineado, no un fallo.
 
-### Interludio — Espacio personal y administración (antes de la Fase 8) · **en curso**
+### Interludio — Espacio personal y administración (antes de la Fase 8) · **cerrado**
 
 *Mismo patrón que el interludio de UX antes de la Fase 6: se decide sobre una
 maqueta ([`barra-lateral.html`](design-previews/barra-lateral.html)) antes de
@@ -1496,6 +1496,41 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
     21 y 27 ya existentes de planner y schedule; typecheck y batería
     unitaria de API (715) y web (279) en verde.
 
+14. **Hoy y contadores** ✔ ([ADR 047](adr/047-hoy-y-contadores.md)) — «Hoy»
+    deja de ser una lista de lo asignado agrupada por vencimiento (item 5) y
+    pasa a componer sobre el plan personal, como en la maqueta: «De días
+    anteriores» (lo planificado antes de hoy y sin terminar, con «Añadir a
+    hoy»), «Plan de hoy» (se reordena con `dnd-kit` + `PUT /planner/order`,
+    ADR 046), lo urgente sin planificar («vence hoy o vencida», con
+    «Planificar hoy») y «Hechas hoy», plegada. Módulo nuevo `today/`,
+    `GET /today`, con la misma condición de «urgente» (`today/queries.ts`)
+    usada tanto por la lista como por el contador —repetir ese `WHERE` fue
+    la fuga entre espacios que las ADR 041 y 046 ya tuvieron que corregir
+    dos veces—. Casilla de «hecha» nueva en la fila de Hoy:
+    `POST /task/complete/:id` mueve la tarea a la primera columna final o no
+    final de su proyecto y reutiliza `updateTaskStatus` por dentro, así que
+    la cascada, el evento y la parada del cronómetro (ADR 044) no se
+    repiten; la del Planificador sigue pendiente desde la ADR 046, con la
+    ruta ya lista para cuando se retome. `GET /my-work/counts` da los dos
+    números de la barra lateral —«Hoy» y «Mis tareas», con el mismo tope de
+    500 y la misma valla `OFFSET 0` que `get-my-work.ts`—, sin decorar
+    filas: un contador de cada carga de página no puede pagar ese coste.
+    `PLAN_INVALIDATED` y `TIMER_CHANGED` invalidan también `today` y los
+    contadores. Quedan declarados fuera, igual que en el item 13: el campo
+    de añadir rápido, el diálogo «Terminar el día», «Añadir todo a hoy» en
+    bloque y el menú contextual. 27 pruebas de integración nuevas
+    (`today.test.ts`, `my-work-counts.test.ts`, `task-complete.test.ts`);
+    typecheck y batería unitaria de API (715) y web (281) en verde.
+    **Contra lo declarado en los bloques 5-7, el humo de Playwright sí corre
+    en este entorno sin Docker**: `E2E_DATABASE_URL` apuntado a una base
+    propia (`riuna_e2e_test`) en el mismo PostgreSQL nativo que ya usan las
+    pruebas de integración basta, sin `compose.local.yml`. `today.spec.ts`
+    reescrito para la pantalla nueva; de paso salió y se corrigió una
+    regresión real y sin relación con este bloque en `schedule.spec.ts`,
+    que esperaba el ancla de flujo en torno a las 08:00 que la ADR 045 ya
+    había sustituido por las 09:00 por defecto. Las 25 pruebas de
+    `tests/e2e/` quedan en verde.
+
 **Hecho cuando:** entras por «Hoy», planificas tu semana arrastrando entre
 días sin cambiar el vencimiento que ve el equipo, y administrar el espacio ya
 no te saca de la barra lateral.
@@ -1642,11 +1677,16 @@ automatizaciones e importadores externos. Motor disparador → condición →
 acción sobre los eventos que Kaneo ya emite, e importadores de Trello, Jira,
 Asana y Notion.
 
-Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
+~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la
-prueba de extremo a extremo necesita la PostgreSQL de `compose.local.yml`.
-Correrla es el primer paso si se retoma trabajo en un entorno que sí tenga
-Docker, antes de dar ese bloque por verificado del todo.
+prueba de extremo a extremo necesita la PostgreSQL de `compose.local.yml`.~~
+**Ejecutada (2026-09-30, item 14):** no hace falta Docker ni
+`compose.local.yml` — `E2E_DATABASE_URL` apuntado a una base propia
+(`riuna_e2e_test`) en el PostgreSQL nativo que ya usan las pruebas de
+integración basta. De paso salió una regresión real: el ancla de flujo se
+esperaba en torno a las 08:00, la constante de instancia que la ADR 045 ya
+había sustituido por las 09:00 por defecto. Corregida; las 25 pruebas de
+`tests/e2e/` quedan en verde.
 
 **Revisión de código del interludio (2026-09-23):** `/code-review high` sobre
 los nueve bloques devolvió 10 hallazgos confirmados, ya corregidos. Cuatro con

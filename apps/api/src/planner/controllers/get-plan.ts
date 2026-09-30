@@ -1,22 +1,10 @@
-import {
-  and,
-  asc,
-  between,
-  eq,
-  gte,
-  inArray,
-  lt,
-  lte,
-  type SQL,
-  sql,
-} from "drizzle-orm";
+import { and, between, eq, type SQL, sql } from "drizzle-orm";
 import db from "../../database";
 import {
   personalPlanEntryTable,
   projectTable,
   taskTable,
   teamTable,
-  timeEntryTable,
 } from "../../database/schema";
 import {
   decorateTasks,
@@ -34,22 +22,12 @@ import { workspaceTaskConditions } from "../../view/workspace-task-query";
 import { dayCapacitySeconds } from "../../work-schedule/day-capacity";
 import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
 import { computeGhosts } from "../ghosts";
-
-const taskColumns = {
-  id: taskTable.id,
-  number: taskTable.number,
-  title: taskTable.title,
-  status: taskTable.status,
-  priority: taskTable.priority,
-  estimate: taskTable.estimate,
-  dueDate: taskTable.dueDate,
-  projectId: taskTable.projectId,
-  projectName: projectTable.name,
-  projectSlug: projectTable.slug,
-  projectIcon: projectTable.icon,
-  teamId: taskTable.teamId,
-  teamName: teamTable.name,
-};
+import {
+  getEntriesInRange,
+  getPreviousEntries,
+  loggedSecondsByTask,
+  taskColumns,
+} from "../queries";
 
 /** Ninguna fila en `personal_plan_entry`, sin importar la fecha (ADR 040). */
 function notPlannedCondition(userId: string) {
@@ -58,32 +36,6 @@ function notPlannedCondition(userId: string) {
     WHERE ${personalPlanEntryTable.userId} = ${userId}
     AND ${personalPlanEntryTable.taskId} = ${taskTable.id}
   )`;
-}
-
-/**
- * Lo registrado por tarea, sumando solo entradas cerradas -igual que
- * `task/tree-aggregates.ts`-: la entrada en marcha no cuenta aqui su
- * transcurrido en vivo, que solo existe una vez por persona (ADR 044) y el
- * Planificador no repinta cada segundo.
- */
-async function loggedSecondsByTask(
-  taskIds: string[],
-): Promise<Map<string, number>> {
-  if (taskIds.length === 0) return new Map();
-
-  const rows = await db
-    .select({
-      taskId: timeEntryTable.taskId,
-      duration: timeEntryTable.duration,
-    })
-    .from(timeEntryTable)
-    .where(inArray(timeEntryTable.taskId, taskIds));
-
-  const totals = new Map<string, number>();
-  for (const row of rows) {
-    totals.set(row.taskId, (totals.get(row.taskId) ?? 0) + (row.duration ?? 0));
-  }
-  return totals;
 }
 
 export default async function getPlan({
@@ -165,13 +117,6 @@ export default async function getPlan({
   ];
   if (notDone) unplannedConditions.push(notDone);
 
-  const previousConditions: SQL[] = [
-    eq(personalPlanEntryTable.userId, userId),
-    eq(personalPlanEntryTable.workspaceId, workspaceId),
-    lt(personalPlanEntryTable.plannedDate, windowStart),
-  ];
-  if (notDone) previousConditions.push(notDone);
-
   const deadlineConditions: SQL[] = [
     eq(projectTable.workspaceId, workspaceId),
     assignedCondition(userId),
@@ -179,49 +124,15 @@ export default async function getPlan({
   ];
   if (notDone) deadlineConditions.push(notDone);
 
-  const entryColumns = {
-    ...taskColumns,
-    plannedDate: personalPlanEntryTable.plannedDate,
-    position: personalPlanEntryTable.position,
-    startMinute: personalPlanEntryTable.startMinute,
-  };
-
   const [entryRows, previousRows, unplannedRows, deadlineRows, ghosts] =
     await Promise.all([
-      db
-        .select(entryColumns)
-        .from(personalPlanEntryTable)
-        .innerJoin(taskTable, eq(personalPlanEntryTable.taskId, taskTable.id))
-        .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-        .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))
-        .where(
-          and(
-            eq(personalPlanEntryTable.userId, userId),
-            // Sin esto, una entrada planeada desde otro espacio del mismo
-            // usuario se colaba aqui en una fecha compartida -mismo fallo
-            // que ya corrigio la ADR 041 en `get-schedule.ts`, sin aplicar
-            // todavia aqui-.
-            eq(personalPlanEntryTable.workspaceId, workspaceId),
-            gte(personalPlanEntryTable.plannedDate, windowStart),
-            lte(personalPlanEntryTable.plannedDate, windowEnd),
-          ),
-        )
-        .orderBy(
-          asc(personalPlanEntryTable.plannedDate),
-          asc(personalPlanEntryTable.position),
-        ),
-      // "De dias anteriores" (super-productivity): planificadas antes de la
-      // ventana y todavia sin terminar. Sin limite de dias hacia atras -a
-      // proposito, declarado-: en la practica nadie deja de volver al
-      // Planificador durante meses.
-      db
-        .select(entryColumns)
-        .from(personalPlanEntryTable)
-        .innerJoin(taskTable, eq(personalPlanEntryTable.taskId, taskTable.id))
-        .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-        .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))
-        .where(and(...previousConditions))
-        .orderBy(asc(personalPlanEntryTable.plannedDate)),
+      getEntriesInRange(workspaceId, userId, windowStart, windowEnd),
+      getPreviousEntries(
+        workspaceId,
+        userId,
+        windowStart,
+        notDone ? [notDone] : [],
+      ),
       db
         .select(taskColumns)
         .from(taskTable)

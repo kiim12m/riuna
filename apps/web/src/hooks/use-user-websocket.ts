@@ -109,6 +109,8 @@ export function useUserWebSocket() {
           if (message.type === "PLAN_INVALIDATED") {
             queryClient.invalidateQueries({ queryKey: ["planner"] });
             queryClient.invalidateQueries({ queryKey: ["schedule"] });
+            queryClient.invalidateQueries({ queryKey: ["today"] });
+            queryClient.invalidateQueries({ queryKey: ["my-work", "counts"] });
           }
           if (message.type === "SCHEDULE_INVALIDATED") {
             queryClient.invalidateQueries({ queryKey: ["schedule"] });
@@ -122,6 +124,8 @@ export function useUserWebSocket() {
             queryClient.invalidateQueries({ queryKey: ["time-entry"] });
             queryClient.invalidateQueries({ queryKey: ["schedule"] });
             queryClient.invalidateQueries({ queryKey: ["time-sheet"] });
+            queryClient.invalidateQueries({ queryKey: ["today"] });
+            queryClient.invalidateQueries({ queryKey: ["my-work", "counts"] });
           }
           // Una vista de espacio sin proyecto no tiene socket de proyecto que la
           // escuche: llega por aqui. El prefijo cubre las tres claves de

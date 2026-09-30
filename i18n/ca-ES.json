@@ -2751,6 +2751,31 @@
 		"empty": {
 			"title": "Nada pendiente",
 			"description": "No tienes tareas asignadas en ningún proyecto."
+		},
+		"status": "Estimat restant ~{{remaining}} · Treballat avui {{worked}}",
+		"previous": {
+			"title_one": "De dies anteriors ({{count}})",
+			"title_other": "De dies anteriors ({{count}})",
+			"addToToday": "Afegir a avui"
+		},
+		"planned": {
+			"title": "Pla d'avui",
+			"empty": "Encara no hi ha res planificat per avui."
+		},
+		"urgent": {
+			"title": "Venç avui o vençuda, sense planificar",
+			"planToday": "Planificar avui"
+		},
+		"done": {
+			"title_one": "Fetes avui ({{count}})",
+			"title_other": "Fetes avui ({{count}})"
+		},
+		"row": {
+			"toggleDone": "Marcar tasca com a feta",
+			"due": {
+				"today": "Venç avui",
+				"overdue": "Vençuda"
+			}
 		}
 	},
 	"myTasks": {
@@ -2885,6 +2910,7 @@
 			"title": "Quan va acabar de veritat?",
 			"description": "Aquest cronòmetre porta més de deu hores en marxa. Tria l’hora real de fi en lloc de marcar-la ara mateix.",
 			"endTime": "Hora de fi"
-		}
+		},
+		"start": "Iniciar cronòmetre"
 	}
 }

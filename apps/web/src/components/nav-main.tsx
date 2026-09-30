@@ -25,9 +25,11 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useMyWorkCounts } from "@/hooks/queries/my-work/use-my-work-counts";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
@@ -44,6 +46,8 @@ type NavItem = {
    * seguir marcada estando en cualquiera de las otras.
    */
   activePrefix?: string;
+  /** El numero de la maqueta junto a "Hoy" y "Mis tareas" (ADR 046). Oculto en raíl. */
+  count?: number;
 };
 
 function NavGroup({
@@ -105,6 +109,11 @@ function NavGroup({
                       {item.title}
                     </span>
                   </SidebarMenuButton>
+                  {Boolean(item.count) && (
+                    <SidebarMenuBadge className="font-normal opacity-75">
+                      {item.count}
+                    </SidebarMenuBadge>
+                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -136,6 +145,7 @@ export function NavMain() {
   const { data: projects } = useGetProjects({
     workspaceId: workspace?.id ?? "",
   });
+  const { data: counts } = useMyWorkCounts(workspace?.id ?? "");
 
   if (!workspace) return null;
 
@@ -154,6 +164,7 @@ export function NavMain() {
       title: t("navigation:sidebar.today"),
       url: `${base}/today`,
       icon: CalendarCheck,
+      count: counts?.today,
     },
     {
       title: t("navigation:sidebar.planner"),
@@ -170,6 +181,7 @@ export function NavMain() {
       url: `${base}/my-tasks`,
       icon: ListTodo,
       activePrefix: `${base}/my-tasks`,
+      count: counts?.myTasks,
     },
     {
       title: t("navigation:sidebar.timeSheet"),

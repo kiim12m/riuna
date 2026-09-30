@@ -184,9 +184,15 @@ la tarea y en la propia tabla.
   proyecto.
 - **Mi trabajo**: las tareas propias o de mi equipo de todos los proyectos, con
   filtros de vencimiento (todas, vencidas, hoy, esta semana).
-- **Hoy**: pantalla de entrada del espacio. Lo asignado en todos los
-  proyectos, agrupado por ventana de vencimiento (vencidas, hoy, esta
-  semana), con el detalle abriéndose en un panel lateral.
+- **Hoy** ([ADR 047](adr/047-hoy-y-contadores.md)): pantalla de entrada del
+  espacio, compuesta sobre el plan personal del Planificador. «De días
+  anteriores» (planificado antes de hoy y sin terminar, con «Añadir a hoy»),
+  «Plan de hoy» (se reordena arrastrando), lo urgente sin planificar —vence
+  hoy o vencida, con «Planificar hoy»— y «Hechas hoy», plegada. Cada fila
+  tiene su propio cronómetro, casilla de «hecha» y estimación editable; el
+  detalle se abre en el mismo panel lateral que el resto de vistas. Un
+  resumen dice cuánto queda por hacer y cuánto se ha registrado hoy. La
+  barra lateral muestra un contador junto a «Hoy» y «Mis tareas».
 - **Mis tareas**: Lista, Tablero, Gantt y Tabla personales sobre todos los
   proyectos del espacio ([ADR 039](adr/039-mis-tareas-vistas-personales.md)).
   El Tablero agrupa por ventana de vencimiento, no por estado; sin arrastre.

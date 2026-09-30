@@ -67,6 +67,7 @@ import telegramIntegration from "./telegram-integration";
 import template from "./template";
 import timeEntry from "./time-entry";
 import timeSheet from "./time-sheet";
+import today from "./today";
 import user from "./user";
 import getAvatar from "./user/controllers/get-avatar";
 import { authenticateApiRequest } from "./utils/authenticate-api-request";
@@ -613,6 +614,7 @@ export function createApp() {
   const commentApi = api.route("/comment", comment);
   const timeEntryApi = api.route("/time-entry", timeEntry);
   const timeSheetApi = api.route("/time-sheet", timeSheet);
+  const todayApi = api.route("/today", today);
   const labelApi = api.route("/label", label);
   const notificationApi = api.route("/notification", notification);
   const notificationPreferencesApi = api.route(
@@ -828,6 +830,7 @@ export function createApp() {
     telegramIntegrationApi,
     timeEntryApi,
     timeSheetApi,
+    todayApi,
     userApi,
     workflowRuleApi,
     workspaceApi,
@@ -984,6 +987,7 @@ const {
   telegramIntegrationApi,
   timeEntryApi,
   timeSheetApi,
+  todayApi,
   userApi,
   workflowRuleApi,
   workspaceApi,
@@ -1018,6 +1022,7 @@ export type AppType =
   | typeof commentApi
   | typeof timeEntryApi
   | typeof timeSheetApi
+  | typeof todayApi
   | typeof labelApi
   | typeof notificationApi
   | typeof notificationPreferencesApi
