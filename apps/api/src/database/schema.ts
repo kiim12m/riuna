@@ -1665,6 +1665,64 @@ export const userNotificationPreferenceTable = pgTable(
   },
 );
 
+// La jornada personal (ADR 045): fuente unica de horario y capacidad para el
+// Planificador, el Cronograma y Hoy. Sin fila, se aplican los valores por
+// defecto de super-productivity -09:00 a 17:00, sin comida, lunes a viernes-,
+// asi que una instalacion existente no cambia hasta que alguien abre "Mi
+// cuenta > Preferencias" y guarda la suya.
+export const userWorkScheduleTable = pgTable(
+  "user_work_schedule",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .unique()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    workStartMinute: smallint("work_start_minute")
+      .notNull()
+      .default(9 * 60),
+    workEndMinute: smallint("work_end_minute")
+      .notNull()
+      .default(17 * 60),
+    lunchEnabled: boolean("lunch_enabled").notNull().default(false),
+    lunchStartMinute: smallint("lunch_start_minute"),
+    lunchEndMinute: smallint("lunch_end_minute"),
+    // Mascara de 7 bits indexada como `Date#getDay()` -bit 0 domingo, bit 1
+    // lunes...-, para leerla con `(workDays >> date.getDay()) & 1` sin
+    // remapear nada. Por defecto lunes a viernes: bits 1-5.
+    workDays: smallint("work_days").notNull().default(0b0_111_110),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    check(
+      "user_work_schedule_minutes_valid",
+      sql`${table.workStartMinute} BETWEEN 0 AND 1439 AND ${table.workEndMinute} BETWEEN 1 AND 1440 AND ${table.workEndMinute} > ${table.workStartMinute}`,
+    ),
+    check(
+      "user_work_schedule_lunch_valid",
+      sql`NOT ${table.lunchEnabled} OR (
+        ${table.lunchStartMinute} IS NOT NULL AND ${table.lunchEndMinute} IS NOT NULL
+        AND ${table.lunchStartMinute} BETWEEN 0 AND 1439
+        AND ${table.lunchEndMinute} BETWEEN 1 AND 1440
+        AND ${table.lunchEndMinute} > ${table.lunchStartMinute}
+      )`,
+    ),
+    check(
+      "user_work_schedule_work_days_valid",
+      sql`${table.workDays} BETWEEN 0 AND 127`,
+    ),
+  ],
+);
+
 export const userNotificationWorkspaceRuleTable = pgTable(
   "user_notification_workspace_rule",
   {

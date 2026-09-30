@@ -477,6 +477,13 @@
 			"when": 1790710632253,
 			"tag": "0067_fast_shockwave",
 			"breakpoints": true
+		},
+		{
+			"idx": 68,
+			"version": "7",
+			"when": 1790713847622,
+			"tag": "0068_panoramic_starjammers",
+			"breakpoints": true
 		}
 	]
 }

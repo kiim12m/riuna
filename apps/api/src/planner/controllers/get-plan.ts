@@ -11,12 +11,16 @@ import {
   getWorkspaceColumns,
   notDoneCondition,
 } from "../../my-work/decorate";
-import { serverDayKey } from "../../utils/day-boundaries";
+import { loadBlocksByDay } from "../../schedule/blocks-by-day";
+import {
+  dayKeysBetween,
+  parseServerDay,
+  serverDayKey,
+} from "../../utils/day-boundaries";
 import { workspaceTaskConditions } from "../../view/workspace-task-query";
+import { dayCapacitySeconds } from "../../work-schedule/day-capacity";
+import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
 import { computeGhosts } from "../ghosts";
-
-/** Jornada fija de 8 h por persona (ADR 040). No hay ajuste todavia. */
-export const DAY_CAPACITY_SECONDS = 8 * 60 * 60;
 
 const taskColumns = {
   id: taskTable.id,
@@ -43,6 +47,40 @@ function notPlannedCondition(userId: string) {
   )`;
 }
 
+/**
+ * La capacidad de cada dia de la ventana, a partir de la jornada personal
+ * (ADR 045): 0 si no es laborable, si no la jornada menos la comida y los
+ * bloques `break` de ese dia -nunca la constante fija de 8 h que tenia la
+ * ADR 040-.
+ */
+async function computeCapacityByDay(
+  workspaceId: string,
+  userId: string,
+  windowStart: Date,
+  windowEnd: Date,
+): Promise<Record<string, number>> {
+  const [schedule, { blocksByDay }] = await Promise.all([
+    getWorkSchedule(userId),
+    loadBlocksByDay(workspaceId, userId, windowStart, windowEnd),
+  ]);
+
+  const capacityByDay: Record<string, number> = {};
+  for (const dayKey of dayKeysBetween(windowStart, windowEnd)) {
+    const breakIntervals = (blocksByDay.get(dayKey) ?? [])
+      .filter((block) => block.kind === "break")
+      .map((block) => ({
+        startMinute: block.startMinute,
+        endMinute: block.endMinute,
+      }));
+    capacityByDay[dayKey] = dayCapacitySeconds(
+      schedule,
+      parseServerDay(dayKey, "day"),
+      breakIntervals,
+    );
+  }
+  return capacityByDay;
+}
+
 export default async function getPlan({
   workspaceId,
   userId,
@@ -57,7 +95,7 @@ export default async function getPlan({
   now?: Date;
 }) {
   const serverToday = serverDayKey(now);
-  const [projectColumns, scopeConditions] = await Promise.all([
+  const [projectColumns, scopeConditions, capacityByDay] = await Promise.all([
     getWorkspaceColumns(workspaceId),
     workspaceTaskConditions({
       workspaceId,
@@ -66,6 +104,7 @@ export default async function getPlan({
       filter: null,
       registry: {},
     }),
+    computeCapacityByDay(workspaceId, userId, windowStart, windowEnd),
   ]);
 
   // El ambito "assigned" siempre resuelve a un predicado -nunca depende de
@@ -76,7 +115,7 @@ export default async function getPlan({
       entries: [],
       unplanned: [],
       ghosts: [],
-      capacitySeconds: DAY_CAPACITY_SECONDS,
+      capacityByDay,
       serverToday,
     };
   }
@@ -128,7 +167,7 @@ export default async function getPlan({
     entries,
     unplanned,
     ghosts,
-    capacitySeconds: DAY_CAPACITY_SECONDS,
+    capacityByDay,
     serverToday,
   };
 }

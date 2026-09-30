@@ -27,6 +27,22 @@ export function addDays(date: Date, days: number): Date {
 }
 
 /**
+ * Las claves `yyyy-mm-dd` de cada dia entre `windowStart` y `windowEnd`,
+ * ambos incluidos. La tenia el Cronograma como funcion privada; el
+ * Planificador la necesita igual para repartir `capacityByDay` por dia
+ * (ADR 045), asi que se comparte en vez de duplicarla.
+ */
+export function dayKeysBetween(windowStart: Date, windowEnd: Date): string[] {
+  const keys: string[] = [];
+  let cursor = windowStart;
+  while (cursor <= windowEnd) {
+    keys.push(serverDayKey(cursor));
+    cursor = addDays(cursor, 1);
+  }
+  return keys;
+}
+
+/**
  * La clave `yyyy-mm-dd` del dia del servidor para una fecha.
  *
  * **Nunca `toISOString().slice(0, 10)`**: eso da el dia en UTC, no en la zona

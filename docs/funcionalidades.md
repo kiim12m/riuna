@@ -193,7 +193,10 @@ la tarea y en la propia tabla.
 - **Planificador** ([ADR 040](adr/040-planificador.md)): ventana rodante de 15
   días para decidir qué día se piensa hacer cada tarea, sin tocar su fecha de
   vencimiento. Incluye una proyección de las próximas ocurrencias de tareas
-  recurrentes todavía no creadas.
+  recurrentes todavía no creadas. La carga de cada día se compara con la
+  jornada personal ([ADR 045](adr/045-jornada-personal.md)): un día sin
+  jornada laboral vale 0, y la comida y los bloques cerrados restan de la
+  capacidad del resto.
 - **Cronograma** ([ADR 041](adr/041-cronograma.md)): calendario por horas,
   con vistas Día, Semana y Mes navegables, sobre lo ya decidido en el
   Planificador. La rejilla (24 h) se ve siempre, aunque el día esté vacío;
@@ -212,7 +215,9 @@ la tarea y en la propia tabla.
   abre su edición (mover de día si es suelto, poner o quitar la fecha límite
   si repite) o borrarlo. Muestra el cronómetro en marcha. La vista Mes lista
   hasta tres elementos por día y un «+N» que abre la vista Día de esa fecha
-  para ver el resto.
+  para ver el resto. El horario de la rejilla es la jornada personal de quien
+  mira, y la comida —si está activa— se ve como un bloque cerrado que nadie
+  puede editar.
 - **Parte de horas** ([ADR 042](adr/042-parte-de-horas.md)): lo registrado
   por quien mira, cruzando proyectos, en un rango de fechas. Agrupable por
   día, tarea o proyecto; una entrada en marcha cuenta lo transcurrido hasta

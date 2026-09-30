@@ -71,7 +71,13 @@ const planResponseSchema = v.object({
   entries: v.array(planEntrySchema),
   unplanned: v.array(planTaskSchema),
   ghosts: v.array(planGhostSchema),
-  capacitySeconds: v.number(),
+  /**
+   * La capacidad de cada dia de la ventana, por `yyyy-mm-dd` (ADR 045): 0 si
+   * no es laborable, si no la jornada personal menos la comida y los
+   * bloques cerrados de ese dia. Sustituye a la constante fija de 8 h de la
+   * ADR 040.
+   */
+  capacityByDay: v.record(v.string(), v.number()),
   /** El dia del servidor, `yyyy-mm-dd`: de ahi arranca la rejilla de 15 dias. */
   serverToday: v.string(),
 });

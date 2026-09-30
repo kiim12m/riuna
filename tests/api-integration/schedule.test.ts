@@ -174,7 +174,7 @@ describe("cronograma", () => {
     await resetTestDatabase();
   });
 
-  it("places a planned task inside the work day, starting at 08:00", async () => {
+  it("places a planned task inside the work day, starting at 09:00", async () => {
     const { app, workspaceId, projectId, columnId, userId } = await setup();
     const day = tomorrow();
     const task = await createTask(projectId, columnId, { estimate: 1800 });
@@ -194,8 +194,8 @@ describe("cronograma", () => {
     );
     expect(flow).toMatchObject({
       taskId: task.id,
-      startSecond: 8 * 3600,
-      endSecond: 8 * 3600 + 1800,
+      startSecond: 9 * 3600,
+      endSecond: 9 * 3600 + 1800,
     });
     expect(flow.task.id).toBe(task.id);
   });
@@ -225,12 +225,12 @@ describe("cronograma", () => {
 
     expect(
       flowParts.find((s: { taskId: string }) => s.taskId === unestimated.id),
-    ).toMatchObject({ startSecond: 8 * 3600, endSecond: 8 * 3600 + 1800 });
+    ).toMatchObject({ startSecond: 9 * 3600, endSecond: 9 * 3600 + 1800 });
     // El siguiente empieza donde termina el hueco de 30 min de la primera,
     // no a los 10 min que daria el minimo general.
     expect(
       flowParts.find((s: { taskId: string }) => s.taskId === next.id),
-    ).toMatchObject({ startSecond: 8 * 3600 + 1800 });
+    ).toMatchObject({ startSecond: 9 * 3600 + 1800 });
   });
 
   it("splits a flowing entry around a fixed block that falls inside it", async () => {
@@ -243,8 +243,8 @@ describe("cronograma", () => {
     await postBlock(app, workspaceId, {
       title: "Visita de obra",
       kind: "fixed",
-      startMinute: 8 * 60 + 15,
-      endMinute: 8 * 60 + 45,
+      startMinute: 9 * 60 + 15,
+      endMinute: 9 * 60 + 45,
       plannedDate: day.toISOString(),
     });
 
@@ -257,7 +257,7 @@ describe("cronograma", () => {
     );
 
     expect(flowParts).toHaveLength(2);
-    expect(flowParts[0]).toMatchObject({ startSecond: 8 * 3600, part: 0 });
+    expect(flowParts[0]).toMatchObject({ startSecond: 9 * 3600, part: 0 });
     expect(flowParts[1]).toMatchObject({ part: 1 });
     expect(
       dayLayout.segments.some((s: { type: string }) => s.type === "block"),

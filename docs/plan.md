@@ -1452,6 +1452,24 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
     verificado con typecheck y la batería unitaria de API (703 pruebas) y
     web (271); el navegador real queda pendiente, igual que el resto del
     interludio en este entorno sin Docker.
+12. **Jornada personal** ✔ ([ADR 045](adr/045-jornada-personal.md)) — tabla
+    nueva `user_work_schedule`, única fuente de horario y capacidad para el
+    Planificador y el Cronograma, que hasta ahora tenían cada uno la suya
+    —8 h fijas y 08:00–18:00 fijo— y ni siquiera coincidían entre sí. Sin
+    fila, los valores de super-productivity: 09:00–17:00, sin comida, lunes
+    a viernes. `capacitySeconds` (un número) pasa a `capacityByDay` (uno por
+    día de la ventana): 0 si el día no es laborable, si no la jornada menos
+    la **unión** de la comida y los bloques cerrados de ese día —nunca
+    restados por separado, o un solape contaría un minuto dos veces—. El
+    Cronograma deja de leer una constante de instancia y usa el horario de
+    quien mira; la comida entra ahí como un bloque `break` sintético que
+    nunca se guarda, así que nunca tiene fila que editar. Un día no
+    laborable reparte igual en el Cronograma —lo planificado ahí se puso a
+    propósito—; la máscara solo apaga la capacidad del Planificador.
+    Ajustes en «Mi cuenta › Preferencias», guardados en la API y no en
+    `localStorage`. 9 pruebas de integración nuevas más 12 unitarias de
+    `dayCapacitySeconds`; typecheck y batería unitaria de API (715) y web
+    (271) en verde.
 
 **Hecho cuando:** entras por «Hoy», planificas tu semana arrastrando entre
 días sin cambiar el vencimiento que ve el equipo, y administrar el espacio ya

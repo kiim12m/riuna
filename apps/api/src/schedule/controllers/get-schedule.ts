@@ -1,22 +1,21 @@
-import { and, asc, between, eq, isNull } from "drizzle-orm";
+import { and, asc, between, eq } from "drizzle-orm";
 import db from "../../database";
 import {
   personalPlanEntryTable,
   projectTable,
-  scheduleBlockTable,
   taskTable,
   teamTable,
 } from "../../database/schema";
 import { decorateTasks, getWorkspaceColumns } from "../../my-work/decorate";
 import { computeGhosts } from "../../planner/ghosts";
 import { getRunningEntry } from "../../time-entry/running";
-import { serverDayKey } from "../../utils/day-boundaries";
-import { buildDay, projectRepeatingBlocks } from "../build-day";
+import { dayKeysBetween, serverDayKey } from "../../utils/day-boundaries";
+import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
+import { loadBlocksByDay } from "../blocks-by-day";
+import { buildDay } from "../build-day";
 import {
   MIN_ENTRY_DURATION_SECONDS,
   UNESTIMATED_ENTRY_SECONDS,
-  WORK_END_MINUTE,
-  WORK_START_MINUTE,
 } from "../constants";
 
 const taskColumns = {
@@ -34,16 +33,6 @@ const taskColumns = {
   teamName: teamTable.name,
 };
 
-function buildDayKeys(windowStart: Date, windowEnd: Date): string[] {
-  const keys: string[] = [];
-  const cursor = new Date(windowStart);
-  while (cursor <= windowEnd) {
-    keys.push(serverDayKey(cursor));
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return keys;
-}
-
 export default async function getSchedule({
   workspaceId,
   userId,
@@ -57,61 +46,49 @@ export default async function getSchedule({
   windowEnd: Date;
   now?: Date;
 }) {
-  const projectColumns = await getWorkspaceColumns(workspaceId);
   const todayKey = serverDayKey(now);
 
-  const [entryRows, singleBlocks, repeatingBlocks, runningEntry, ghosts] =
-    await Promise.all([
-      db
-        .select({
-          ...taskColumns,
-          plannedDate: personalPlanEntryTable.plannedDate,
-          position: personalPlanEntryTable.position,
-          startMinute: personalPlanEntryTable.startMinute,
-        })
-        .from(personalPlanEntryTable)
-        .innerJoin(taskTable, eq(personalPlanEntryTable.taskId, taskTable.id))
-        .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-        .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))
-        .where(
-          and(
-            eq(personalPlanEntryTable.userId, userId),
-            // Sin esto, una entrada planeada desde otro espacio del mismo
-            // usuario se colaba aqui: los bloques ya filtraban por
-            // workspaceId, esta consulta no.
-            eq(personalPlanEntryTable.workspaceId, workspaceId),
-            between(personalPlanEntryTable.plannedDate, windowStart, windowEnd),
-          ),
-        )
-        .orderBy(
-          asc(personalPlanEntryTable.plannedDate),
-          asc(personalPlanEntryTable.position),
+  const [
+    projectColumns,
+    schedule,
+    entryRows,
+    { blocksByDay, blocksById },
+    runningEntry,
+    ghosts,
+  ] = await Promise.all([
+    getWorkspaceColumns(workspaceId),
+    getWorkSchedule(userId),
+    db
+      .select({
+        ...taskColumns,
+        plannedDate: personalPlanEntryTable.plannedDate,
+        position: personalPlanEntryTable.position,
+        startMinute: personalPlanEntryTable.startMinute,
+      })
+      .from(personalPlanEntryTable)
+      .innerJoin(taskTable, eq(personalPlanEntryTable.taskId, taskTable.id))
+      .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+      .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))
+      .where(
+        and(
+          eq(personalPlanEntryTable.userId, userId),
+          // Sin esto, una entrada planeada desde otro espacio del mismo
+          // usuario se colaba aqui: los bloques ya filtraban por
+          // workspaceId, esta consulta no.
+          eq(personalPlanEntryTable.workspaceId, workspaceId),
+          between(personalPlanEntryTable.plannedDate, windowStart, windowEnd),
         ),
-      db
-        .select()
-        .from(scheduleBlockTable)
-        .where(
-          and(
-            eq(scheduleBlockTable.workspaceId, workspaceId),
-            eq(scheduleBlockTable.userId, userId),
-            between(scheduleBlockTable.plannedDate, windowStart, windowEnd),
-          ),
-        ),
-      db
-        .select()
-        .from(scheduleBlockTable)
-        .where(
-          and(
-            eq(scheduleBlockTable.workspaceId, workspaceId),
-            eq(scheduleBlockTable.userId, userId),
-            isNull(scheduleBlockTable.plannedDate),
-          ),
-        ),
-      // La entrada en marcha, si hay alguna (ADR 044): comparte consulta con
-      // el pie de la barra lateral, en vez de mantener aqui su propia copia.
-      getRunningEntry(userId),
-      computeGhosts(workspaceId, userId, windowStart, windowEnd),
-    ]);
+      )
+      .orderBy(
+        asc(personalPlanEntryTable.plannedDate),
+        asc(personalPlanEntryTable.position),
+      ),
+    loadBlocksByDay(workspaceId, userId, windowStart, windowEnd),
+    // La entrada en marcha, si hay alguna (ADR 044): comparte consulta con
+    // el pie de la barra lateral, en vez de mantener aqui su propia copia.
+    getRunningEntry(userId),
+    computeGhosts(workspaceId, userId, windowStart, windowEnd),
+  ]);
 
   const decoratedEntries = await decorateTasks(entryRows, projectColumns);
 
@@ -123,17 +100,6 @@ export default async function getSchedule({
     entriesByDay.set(key, list);
   }
 
-  const blocksByDay = new Map<string, (typeof singleBlocks)[number][]>();
-  for (const block of singleBlocks) {
-    if (!block.plannedDate) continue;
-    const key = serverDayKey(block.plannedDate);
-    const list = blocksByDay.get(key) ?? [];
-    list.push(block);
-    blocksByDay.set(key, list);
-  }
-
-  projectRepeatingBlocks(repeatingBlocks, blocksByDay, windowStart, windowEnd);
-
   const ghostsByDay = new Map<string, typeof ghosts>();
   for (const ghost of ghosts) {
     const key = serverDayKey(ghost.plannedDate);
@@ -143,31 +109,37 @@ export default async function getSchedule({
   }
 
   const taskById = new Map(decoratedEntries.map((entry) => [entry.id, entry]));
-  // Lo que hace falta para prellenar el dialogo de editar un bloque
-  // (`create-block-dialog.tsx`): la fila real, no el tramo fusionado y
-  // recortado a la ventana que arma `layoutDay` -ese no sabe si es suelto o
-  // repetido, ni su horario propio si se fusiono con otro que se solapaba.
-  const blockById = new Map(
-    [...singleBlocks, ...repeatingBlocks].map((block) => [block.id, block]),
-  );
 
-  const days = buildDayKeys(windowStart, windowEnd).map((dayKey) =>
+  const lunchInterval =
+    schedule.lunchEnabled &&
+    schedule.lunchStartMinute != null &&
+    schedule.lunchEndMinute != null
+      ? {
+          startMinute: schedule.lunchStartMinute,
+          endMinute: schedule.lunchEndMinute,
+        }
+      : null;
+
+  const days = dayKeysBetween(windowStart, windowEnd).map((dayKey) =>
     buildDay(dayKey, {
       entriesByDay,
       blocksByDay,
       ghostsByDay,
       taskById,
-      blockById,
+      blockById: blocksById,
       runningEntry,
       now,
       todayKey,
+      workStartMinute: schedule.workStartMinute,
+      workEndMinute: schedule.workEndMinute,
+      lunchInterval,
     }),
   );
 
   return {
     days,
-    workStartMinute: WORK_START_MINUTE,
-    workEndMinute: WORK_END_MINUTE,
+    workStartMinute: schedule.workStartMinute,
+    workEndMinute: schedule.workEndMinute,
     // Mismo patron que `get-plan.ts`: el cliente deja de calcular "hoy" con
     // el reloj del navegador para resaltar la columna/celda correcta.
     serverToday: todayKey,

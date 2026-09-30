@@ -184,7 +184,6 @@ function RouteComponent() {
     moveTask(taskId, { plannedDate: destinationDay, position });
   }
 
-  const capacity = data?.capacitySeconds ?? 8 * 60 * 60;
   const isEmpty =
     !isPending &&
     (data?.entries.length ?? 0) === 0 &&
@@ -237,7 +236,15 @@ function RouteComponent() {
                   (total, entry) => total + (entry.estimate ?? 0),
                   0,
                 );
-                const loadPct = Math.round((loadSeconds / capacity) * 100);
+                // La capacidad es de este dia (ADR 045): un dia no laborable
+                // vale 0, y no hay jornada de la que dividir.
+                const dayCapacity = data?.capacityByDay?.[key] ?? 0;
+                const loadPct =
+                  dayCapacity > 0
+                    ? Math.round((loadSeconds / dayCapacity) * 100)
+                    : loadSeconds > 0
+                      ? 100
+                      : 0;
 
                 return (
                   <PlannerColumn

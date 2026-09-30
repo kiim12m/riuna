@@ -37,6 +37,7 @@ import {
   userNotificationWorkspaceProjectTable,
   userNotificationWorkspaceRuleTable,
   userTable,
+  userWorkScheduleTable,
   verificationTable,
   viewTable,
   workflowRuleTable,
@@ -58,6 +59,7 @@ export const userTableRelations = relations(userTable, ({ many, one }) => ({
   notifications: many(notificationTable),
   notificationPreference: one(userNotificationPreferenceTable),
   notificationWorkspaceRules: many(userNotificationWorkspaceRuleTable),
+  workSchedule: one(userWorkScheduleTable),
   sentInvitations: many(invitationTable),
   apikeys: many(apikeyTable),
 }));
@@ -450,6 +452,16 @@ export const userNotificationPreferenceTableRelations = relations(
   ({ one }) => ({
     user: one(userTable, {
       fields: [userNotificationPreferenceTable.userId],
+      references: [userTable.id],
+    }),
+  }),
+);
+
+export const userWorkScheduleTableRelations = relations(
+  userWorkScheduleTable,
+  ({ one }) => ({
+    user: one(userTable, {
+      fields: [userWorkScheduleTable.userId],
       references: [userTable.id],
     }),
   }),

@@ -7,8 +7,6 @@ import { serverDayKey } from "../utils/day-boundaries";
 import {
   MIN_ENTRY_DURATION_SECONDS,
   UNESTIMATED_ENTRY_SECONDS,
-  WORK_END_MINUTE,
-  WORK_START_MINUTE,
 } from "./constants";
 import { type BlockerInput, type FlowEntry, layoutDay } from "./layout";
 
@@ -93,6 +91,9 @@ export function buildDay<
     runningEntry,
     now,
     todayKey,
+    workStartMinute,
+    workEndMinute,
+    lunchInterval,
   }: {
     entriesByDay: Map<string, Entry[]>;
     blocksByDay: Map<string, Block[]>;
@@ -102,6 +103,15 @@ export function buildDay<
     runningEntry: RunningEntry | undefined;
     now: Date;
     todayKey: string;
+    /** La jornada de quien mira (ADR 045), no una constante de instancia. */
+    workStartMinute: number;
+    workEndMinute: number;
+    /**
+     * `null` si la comida esta apagada. Nunca una fila de `schedule_block`
+     * -de ahi que no pase por `blocksByDay`/`blockById`-, asi que el tramo
+     * resultante nunca tiene `block` que editar (ADR 045).
+     */
+    lunchInterval: { startMinute: number; endMinute: number } | null;
   },
 ) {
   const dayEntries = entriesByDay.get(dayKey) ?? [];
@@ -126,6 +136,18 @@ export function buildDay<
     endSecond: block.endMinute * 60,
   }));
 
+  if (lunchInterval) {
+    blockers.push({
+      id: `lunch-${dayKey}`,
+      kind: "break",
+      // Vacio a proposito: no hay traduccion en la API, y un titulo vacio ya
+      // hace que la web caiga en su propio "Comida"/"Lunch" (`time-grid.tsx`).
+      title: "",
+      startSecond: lunchInterval.startMinute * 60,
+      endSecond: lunchInterval.endMinute * 60,
+    });
+  }
+
   if (isToday && runningEntry) {
     blockers.push({
       id: runningEntry.id,
@@ -137,14 +159,14 @@ export function buildDay<
   }
 
   const dayStartSecond = isToday
-    ? Math.max(WORK_START_MINUTE * 60, secondsSinceMidnight(now))
-    : WORK_START_MINUTE * 60;
+    ? Math.max(workStartMinute * 60, secondsSinceMidnight(now))
+    : workStartMinute * 60;
 
   const layout = layoutDay({
     flowEntries,
     blockers,
     dayStartSecond,
-    dayEndSecond: WORK_END_MINUTE * 60,
+    dayEndSecond: workEndMinute * 60,
   });
 
   return {
