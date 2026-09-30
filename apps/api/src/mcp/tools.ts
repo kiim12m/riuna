@@ -914,6 +914,79 @@ export function registerMcpTools(
   );
 
   registerTool(
+    "get_plan",
+    {
+      description:
+        "The current user's personal plan: tasks placed on a day in a rolling window, tasks still unplanned, projected recurring occurrences, the capacity of each day, and the fixed appointments of each day. Never reflects the task's due date.",
+      inputSchema: z.object({
+        workspaceId: nonEmptyString.describe("Workspace ID"),
+        days: z
+          .number()
+          .int()
+          .min(1)
+          .max(60)
+          .optional()
+          .describe("Window size in days, default 15, max 60"),
+      }),
+    },
+    async (args) => {
+      const qs = new URLSearchParams({ workspaceId: args.workspaceId });
+      if (args.days !== undefined) qs.set("days", String(args.days));
+      return run(() => client.json(`/api/planner?${qs.toString()}`));
+    },
+  );
+
+  registerTool(
+    "plan_task",
+    {
+      description:
+        "Place a task on a day of the current user's plan, or move it. Never changes the task's due date.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        workspaceId: nonEmptyString.describe("Workspace ID"),
+        plannedDate: nonEmptyString.describe("Day to plan for, yyyy-mm-dd"),
+        position: z
+          .number()
+          .int()
+          .optional()
+          .describe(
+            "Position within the day; omit to keep it (same day) or append (new day)",
+          ),
+        startMinute: z
+          .number()
+          .int()
+          .min(0)
+          .max(1439)
+          .nullable()
+          .optional()
+          .describe(
+            "Minutes since midnight to anchor a time, or null to unanchor",
+          ),
+      }),
+    },
+    async (args) => {
+      const qs = new URLSearchParams({ workspaceId: args.workspaceId });
+      return run(() =>
+        client.json(
+          `/api/planner/${encodeURIComponent(args.taskId)}?${qs.toString()}`,
+          {
+            method: "PUT",
+            body: JSON.stringify({
+              plannedDate: args.plannedDate,
+              ...(args.position !== undefined
+                ? { position: args.position }
+                : {}),
+              ...(args.startMinute !== undefined
+                ? { startMinute: args.startMinute }
+                : {}),
+            }),
+          },
+        ),
+      );
+    },
+  );
+
+  registerTool(
     "list_task_time_entries",
     {
       description: "List the time entries logged against a task.",

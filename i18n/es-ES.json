@@ -2773,6 +2773,12 @@
 		"pageTitle": "Planificador",
 		"unplanned": "Sin planificar",
 		"today": "Hoy",
+		"previous": "De días anteriores",
+		"noTasks": "Sin tareas",
+		"dayLoad": "{{planned}} planificadas de {{available}}",
+		"anchorTime": "Hora",
+		"removeTime": "Quitar hora",
+		"plannedElsewhere": "planificada el {{date}}",
 		"empty": {
 			"title": "Nada asignado",
 			"description": "No tienes tareas asignadas que planificar."

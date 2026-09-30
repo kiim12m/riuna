@@ -22,6 +22,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import PageTitle from "@/components/page-title";
+import { PlannerDay } from "@/components/planner/planner-day";
 import { PlannerTaskCard } from "@/components/planner/task-card";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import {
@@ -32,14 +33,24 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { PlanEntry, PlanGhost, PlanTask } from "@/fetchers/planner";
+import type {
+  PlanDeadline,
+  PlanEntry,
+  PlanFixedBlock,
+  PlanGhost,
+  PlanTask,
+} from "@/fetchers/planner";
+import { usePlannerEstimateMutation } from "@/hooks/mutations/planner/use-planner-estimate-mutation";
 import { usePlannerMutations } from "@/hooks/mutations/planner/use-planner-mutations";
 import { usePlanner } from "@/hooks/queries/planner/use-planner";
+import { useWorkSchedule } from "@/hooks/queries/work-schedule/use-work-schedule";
 import { cn } from "@/lib/cn";
+import { formatDuration } from "@/lib/duration";
 import { formatDate } from "@/lib/format";
 
 const WINDOW_DAYS = 15;
 const UNPLANNED_ID = "unplanned";
+const DEFAULT_WORK_START_MINUTE = 9 * 60;
 
 /**
  * `yyyy-mm-dd`, no un instante: sirve igual como id de columna que como carga
@@ -71,18 +82,29 @@ export const Route = createFileRoute(
 });
 
 /**
- * El Planificador: ventana rodante de 15 dias. Arrastrar entre columnas
- * escribe `personal_plan_entry`, nunca `task.due_date` (ADR 040). Columnas
- * discretas -no una linea de tiempo continua-, asi que el arrastre es
- * `dnd-kit` (como `kanban-board`), no la matematica de puntero del Gantt.
+ * El Planificador: ventana rodante de 15 dias, en tres secciones por dia
+ * (sin hora, con hora, vence este dia -ADR 045, `planner-day.component.html`
+ * de super-productivity-), mas una columna de atrasadas de la que solo se
+ * puede arrastrar. Arrastrar entre columnas escribe `personal_plan_entry`,
+ * nunca `task.due_date` (ADR 040). Columnas discretas -no una linea de
+ * tiempo continua-, asi que el arrastre es `dnd-kit` (como `kanban-board`),
+ * no la matematica de puntero del Gantt.
  */
 function RouteComponent() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { workspaceId } = Route.useParams();
   const { data, isPending } = usePlanner(workspaceId, WINDOW_DAYS);
-  const { moveTask } = usePlannerMutations(workspaceId, WINDOW_DAYS);
+  const { data: workSchedule } = useWorkSchedule();
+  const { moveTask, reorderDay } = usePlannerMutations(
+    workspaceId,
+    WINDOW_DAYS,
+  );
+  const { setEstimate } = usePlannerEstimateMutation(workspaceId, WINDOW_DAYS);
 
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
+  const [timePopoverTaskId, setTimePopoverTaskId] = useState<string | null>(
+    null,
+  );
   const [openTask, setOpenTask] = useState<{
     taskId: string;
     projectId: string;
@@ -127,8 +149,27 @@ function RouteComponent() {
     return map;
   }, [data]);
 
+  const deadlinesByDay = useMemo(() => {
+    const map = new Map<string, PlanDeadline[]>();
+    for (const deadline of data?.deadlines ?? []) {
+      if (!deadline.dueDate) continue;
+      const key = isoDay(new Date(deadline.dueDate));
+      const list = map.get(key) ?? [];
+      list.push(deadline);
+      map.set(key, list);
+    }
+    return map;
+  }, [data]);
+
+  const fixedBlocksByDay: Record<string, PlanFixedBlock[]> =
+    data?.fixedBlocksByDay ?? {};
+
   const allTasks = useMemo(
-    () => [...(data?.entries ?? []), ...(data?.unplanned ?? [])],
+    () => [
+      ...(data?.entries ?? []),
+      ...(data?.previous ?? []),
+      ...(data?.unplanned ?? []),
+    ],
     [data],
   );
   const activeTask = allTasks.find((task) => task.id === activeId);
@@ -140,17 +181,6 @@ function RouteComponent() {
     }),
     useSensor(KeyboardSensor),
   );
-
-  function resolveDestinationDay(overId: string): string | null {
-    if (overId === UNPLANNED_ID) return null;
-    if (days.some((day) => isoDay(day) === overId)) return overId;
-
-    // Se solto sobre una tarjeta: su dia es el de la columna destino.
-    for (const [day, entries] of entriesByDay) {
-      if (entries.some((entry) => entry.id === overId)) return day;
-    }
-    return null;
-  }
 
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id);
@@ -167,26 +197,91 @@ function RouteComponent() {
     const isUnplanned =
       overId === UNPLANNED_ID ||
       (data?.unplanned.some((task) => task.id === overId) ?? false);
-
     if (isUnplanned) {
       moveTask(taskId, null);
       return;
     }
 
-    const destinationDay = resolveDestinationDay(overId);
-    if (!destinationDay) return;
+    let destDayKey: string | null = null;
+    let destZone: "untimed" | "timed" | null = null;
 
-    const siblings = entriesByDay.get(destinationDay) ?? [];
-    const position = siblings.some((entry) => entry.id === taskId)
-      ? siblings.findIndex((entry) => entry.id === taskId)
-      : siblings.length;
+    const [maybeDay, maybeZone] = overId.split(":");
+    if (maybeZone === "untimed" || maybeZone === "timed") {
+      destDayKey = maybeDay;
+      destZone = maybeZone;
+    } else {
+      // Se solto sobre una tarjeta: su dia y su seccion son los de destino.
+      for (const [day, entries] of entriesByDay) {
+        const found = entries.find((entry) => entry.id === overId);
+        if (found) {
+          destDayKey = day;
+          destZone = found.startMinute == null ? "untimed" : "timed";
+          break;
+        }
+      }
+    }
+    if (!destDayKey || !destZone) return;
 
-    moveTask(taskId, { plannedDate: destinationDay, position });
+    if (destZone === "timed") {
+      const existing = entriesByDay
+        .get(destDayKey)
+        ?.find((entry) => entry.id === taskId);
+      const minute =
+        existing?.startMinute ??
+        workSchedule?.workStartMinute ??
+        DEFAULT_WORK_START_MINUTE;
+      moveTask(taskId, { plannedDate: destDayKey, startMinute: minute });
+      setTimePopoverTaskId(taskId);
+      return;
+    }
+
+    const untimedIds = (entriesByDay.get(destDayKey) ?? [])
+      .filter((entry) => entry.startMinute == null)
+      .map((entry) => entry.id);
+    const wasAlreadyUntimedHere = untimedIds.includes(taskId);
+    const withoutDragged = untimedIds.filter((id) => id !== taskId);
+    const overIndex = withoutDragged.indexOf(overId);
+    const insertAt = overIndex === -1 ? withoutDragged.length : overIndex;
+    const nextIds = [
+      ...withoutDragged.slice(0, insertAt),
+      taskId,
+      ...withoutDragged.slice(insertAt),
+    ];
+
+    if (wasAlreadyUntimedHere) {
+      reorderDay(destDayKey, nextIds);
+    } else {
+      moveTask(taskId, {
+        plannedDate: destDayKey,
+        startMinute: null,
+        position: insertAt,
+      });
+    }
+  }
+
+  function findDayKeyForTask(taskId: string): string | null {
+    for (const [day, entries] of entriesByDay) {
+      if (entries.some((entry) => entry.id === taskId)) return day;
+    }
+    return null;
+  }
+
+  function handleAnchor(taskId: string, minute: number) {
+    const dayKey = findDayKeyForTask(taskId);
+    if (!dayKey) return;
+    moveTask(taskId, { plannedDate: dayKey, startMinute: minute });
+  }
+
+  function handleUnanchor(taskId: string) {
+    const dayKey = findDayKeyForTask(taskId);
+    if (!dayKey) return;
+    moveTask(taskId, { plannedDate: dayKey, startMinute: null });
   }
 
   const isEmpty =
     !isPending &&
     (data?.entries.length ?? 0) === 0 &&
+    (data?.previous.length ?? 0) === 0 &&
     (data?.unplanned.length ?? 0) === 0 &&
     (data?.ghosts.length ?? 0) === 0;
 
@@ -227,42 +322,83 @@ function RouteComponent() {
                 onOpen={(task) =>
                   setOpenTask({ taskId: task.id, projectId: task.projectId })
                 }
+                onEstimateChange={setEstimate}
               />
+
+              {(data?.previous.length ?? 0) > 0 && (
+                <PreviousColumn
+                  tasks={data?.previous ?? []}
+                  onOpen={(task) =>
+                    setOpenTask({ taskId: task.id, projectId: task.projectId })
+                  }
+                  onEstimateChange={setEstimate}
+                />
+              )}
+
               {days.map((day, index) => {
                 const key = isoDay(day);
-                const entries = entriesByDay.get(key) ?? [];
-                const ghosts = ghostsByDay.get(key) ?? [];
-                const loadSeconds = entries.reduce(
-                  (total, entry) => total + (entry.estimate ?? 0),
-                  0,
+                const dayEntries = entriesByDay.get(key) ?? [];
+                const untimedEntries = dayEntries.filter(
+                  (entry) => entry.startMinute == null,
                 );
-                // La capacidad es de este dia (ADR 045): un dia no laborable
-                // vale 0, y no hay jornada de la que dividir.
-                const dayCapacity = data?.capacityByDay?.[key] ?? 0;
+                const timedEntries = dayEntries.filter(
+                  (entry) => entry.startMinute != null,
+                );
+                const fixedBlocks = fixedBlocksByDay[key] ?? [];
+                const ghosts = ghostsByDay.get(key) ?? [];
+                const deadlines = deadlinesByDay.get(key) ?? [];
+
+                const loadSeconds =
+                  dayEntries.reduce(
+                    (total, entry) =>
+                      total +
+                      Math.max(0, (entry.estimate ?? 0) - entry.loggedSeconds),
+                    0,
+                  ) +
+                  fixedBlocks.reduce(
+                    (total, block) =>
+                      total + (block.endMinute - block.startMinute) * 60,
+                    0,
+                  );
+                const capacitySeconds = data?.capacityByDay?.[key] ?? 0;
                 const loadPct =
-                  dayCapacity > 0
-                    ? Math.round((loadSeconds / dayCapacity) * 100)
+                  capacitySeconds > 0
+                    ? Math.round((loadSeconds / capacitySeconds) * 100)
                     : loadSeconds > 0
                       ? 100
                       : 0;
 
                 return (
-                  <PlannerColumn
+                  <PlannerDay
                     key={key}
-                    id={key}
-                    title={
+                    dayKey={key}
+                    label={
                       index === 0
                         ? `${t("planner:today")} · ${formatDate(day, { weekday: "short", day: "numeric" })}`
                         : formatDate(day, { weekday: "short", day: "numeric" })
                     }
-                    tasks={entries}
-                    ghosts={ghosts}
                     loadPct={loadPct}
+                    loadLabel={t("planner:dayLoad", {
+                      planned: formatDuration(loadSeconds, i18n.language),
+                      available: formatDuration(capacitySeconds, i18n.language),
+                    })}
+                    untimedEntries={untimedEntries}
+                    timedEntries={timedEntries}
+                    fixedBlocks={fixedBlocks}
+                    ghosts={ghosts}
+                    deadlines={deadlines}
                     onOpen={(task) =>
                       setOpenTask({
                         taskId: task.id,
                         projectId: task.projectId,
                       })
+                    }
+                    onEstimateChange={setEstimate}
+                    onAnchor={handleAnchor}
+                    onUnanchor={handleUnanchor}
+                    timePopoverTaskId={timePopoverTaskId}
+                    onTimePopoverOpenChange={(taskId, open) =>
+                      setTimePopoverTaskId(open ? taskId : null)
                     }
                   />
                 );
@@ -292,16 +428,14 @@ function PlannerColumn({
   id,
   title,
   tasks,
-  ghosts = [],
-  loadPct,
   onOpen,
+  onEstimateChange,
 }: {
   id: string;
   title: string;
   tasks: PlanTask[];
-  ghosts?: PlanGhost[];
-  loadPct?: number;
   onOpen: (task: PlanTask) => void;
+  onEstimateChange: (taskId: string, seconds: number | null) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
@@ -321,17 +455,6 @@ function PlannerColumn({
             {tasks.length}
           </span>
         </div>
-        {loadPct !== undefined && (
-          <div className="h-1 overflow-hidden rounded-full bg-muted">
-            <div
-              className={cn(
-                "h-full rounded-full",
-                loadPct > 100 ? "bg-warning-foreground" : "bg-brand",
-              )}
-              style={{ width: `${Math.min(loadPct, 100)}%` }}
-            />
-          </div>
-        )}
       </div>
       <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-1.5 pb-2">
         <SortableContext items={tasks} strategy={verticalListSortingStrategy}>
@@ -340,17 +463,54 @@ function PlannerColumn({
               key={task.id}
               task={task}
               onOpen={() => onOpen(task)}
+              onEstimateChange={(seconds) => onEstimateChange(task.id, seconds)}
             />
           ))}
         </SortableContext>
-        {ghosts.map((ghost) => (
-          <div
-            key={`${ghost.recurrenceId}-${ghost.plannedDate}`}
-            className="cursor-default space-y-1 rounded-md border border-dashed border-border/70 bg-transparent p-1.5 text-left opacity-70"
-          >
-            <span className="truncate text-body">{ghost.title}</span>
-          </div>
-        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * "De dias anteriores" (super-productivity): solo se arrastra desde aqui, no
+ * hacia aqui -no lleva `useDroppable`, asi que nada puede soltarse encima-.
+ */
+function PreviousColumn({
+  tasks,
+  onOpen,
+  onEstimateChange,
+}: {
+  tasks: PlanEntry[];
+  onOpen: (task: PlanEntry) => void;
+  onEstimateChange: (taskId: string, seconds: number | null) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div
+      data-testid="planner-column-previous"
+      className="flex h-full w-56 shrink-0 flex-col rounded-lg border border-warning/40 bg-warning/5"
+    >
+      <div className="space-y-1 px-2 py-2">
+        <div className="flex items-center justify-between">
+          <h2 className="text-section">{t("planner:previous")}</h2>
+          <span className="text-meta text-muted-foreground">
+            {tasks.length}
+          </span>
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-1.5 pb-2">
+        <SortableContext items={tasks} strategy={verticalListSortingStrategy}>
+          {tasks.map((task) => (
+            <PlannerTaskCard
+              key={task.id}
+              task={task}
+              onOpen={() => onOpen(task)}
+              onEstimateChange={(seconds) => onEstimateChange(task.id, seconds)}
+            />
+          ))}
+        </SortableContext>
       </div>
     </div>
   );

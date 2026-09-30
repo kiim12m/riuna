@@ -190,13 +190,20 @@ la tarea y en la propia tabla.
 - **Mis tareas**: Lista, Tablero, Gantt y Tabla personales sobre todos los
   proyectos del espacio ([ADR 039](adr/039-mis-tareas-vistas-personales.md)).
   El Tablero agrupa por ventana de vencimiento, no por estado; sin arrastre.
-- **Planificador** ([ADR 040](adr/040-planificador.md)): ventana rodante de 15
-  días para decidir qué día se piensa hacer cada tarea, sin tocar su fecha de
-  vencimiento. Incluye una proyección de las próximas ocurrencias de tareas
-  recurrentes todavía no creadas. La carga de cada día se compara con la
-  jornada personal ([ADR 045](adr/045-jornada-personal.md)): un día sin
-  jornada laboral vale 0, y la comida y los bloques cerrados restan de la
-  capacidad del resto.
+- **Planificador** ([ADR 040](adr/040-planificador.md),
+  [ADR 046](adr/046-planificador-en-tres-secciones.md)): ventana rodante de
+  15 días para decidir qué día se piensa hacer cada tarea, sin tocar su
+  fecha de vencimiento. Cada día se reparte en tres secciones: sin hora (se
+  reordena arrastrando), con hora (tareas ancladas y citas fijas del
+  Cronograma, ordenadas por minuto) y vence este día (lo que vence en la
+  ventana, planificado o no). Una columna aparte para lo planificado antes
+  de la ventana y todavía sin terminar, de la que solo se puede arrastrar.
+  Incluye una proyección de las próximas ocurrencias de tareas recurrentes
+  todavía no creadas. La estimación se edita directamente en la tarjeta. La
+  carga de cada día es lo que queda de cada tarea más los bloques fijos,
+  comparado con la jornada personal ([ADR 045](adr/045-jornada-personal.md)):
+  un día sin jornada laboral vale 0, y la comida y los bloques cerrados
+  restan de la capacidad del resto.
 - **Cronograma** ([ADR 041](adr/041-cronograma.md)): calendario por horas,
   con vistas Día, Semana y Mes navegables, sobre lo ya decidido en el
   Planificador. La rejilla (24 h) se ve siempre, aunque el día esté vacío;

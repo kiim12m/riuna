@@ -8,7 +8,11 @@ import { useUpdateTaskEstimate } from "@/hooks/mutations/task/use-update-task-es
 import { useUpdateTaskParent } from "@/hooks/mutations/task/use-update-task-parent";
 import useGetTask from "@/hooks/queries/task/use-get-task";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
-import { formatDuration, hoursToSeconds, secondsToHours } from "@/lib/duration";
+import {
+  formatDuration,
+  parseDurationInput,
+  secondsToHours,
+} from "@/lib/duration";
 import { toast } from "@/lib/toast";
 
 type TaskTreeProps = {
@@ -47,17 +51,15 @@ export default function TaskTree({ taskId, projectId }: TaskTreeProps) {
   const hasBranch = Boolean(subtree && subtree.descendantCount > 0);
 
   const commitEstimate = async () => {
-    const trimmed = estimateInput.trim();
-    const parsed = trimmed === "" ? null : Number(trimmed.replace(",", "."));
+    const seconds = parseDurationInput(estimateInput);
 
-    if (parsed !== null && (Number.isNaN(parsed) || parsed < 0)) {
+    if (seconds === undefined) {
       setEstimateInput(
         task.estimate ? String(secondsToHours(task.estimate)) : "",
       );
       return;
     }
 
-    const seconds = parsed === null ? null : hoursToSeconds(parsed);
     if (seconds === (task.estimate ?? null)) return;
 
     try {
@@ -157,8 +159,11 @@ export default function TaskTree({ taskId, projectId }: TaskTreeProps) {
           <Input
             id="task-estimate"
             size="sm"
-            inputMode="decimal"
-            className="w-20 text-right"
+            // "texto" y no "decimal": el campo tambien acepta "1h 30m", "90m"
+            // y "1:30" desde que usa `parseDurationInput` -no solo horas
+            // decimales-, y un teclado numerico movil bloquearia esas letras.
+            inputMode="text"
+            className="w-24 text-right"
             value={estimateInput}
             disabled={!canEdit}
             placeholder="—"
@@ -170,9 +175,6 @@ export default function TaskTree({ taskId, projectId }: TaskTreeProps) {
               if (event.key === "Enter") event.currentTarget.blur();
             }}
           />
-          <span className="text-muted-foreground">
-            {t("tasks:tree.hoursShort")}
-          </span>
         </span>
       </div>
     </section>

@@ -1470,6 +1470,31 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
     `localStorage`. 9 pruebas de integración nuevas más 12 unitarias de
     `dayCapacitySeconds`; typecheck y batería unitaria de API (715) y web
     (271) en verde.
+13. **Planificador en tres secciones** ✔ ([ADR 046](adr/046-planificador-en-tres-secciones.md))
+    — cada día se reparte como en `planner-day.component.html` de
+    super-productivity: sin hora (se reordena, cae en el primer hueco libre
+    del Cronograma en este orden), con hora (tareas ancladas y bloques
+    fijos, ordenados por minuto, ocultos si no hay nada) y vence este día
+    (solo lectura, con «planificada el vie» si ya tiene otro día). Arreglado
+    el reordenado, que mandaba siempre el índice antiguo de la tarjeta:
+    `PUT /planner/order` reescribe la posición de un día entero en el orden
+    recibido. `GET /planner` gana `previous` («De días anteriores», nada se
+    mueve solo), `deadlines`, `fixedBlocksByDay`, y `startMinute` más
+    `loggedSeconds` en cada entrada; la carga pasa de la estimación bruta a
+    lo que queda (`estimate − registrado`, sin fantasmas). Anclar abre un
+    popover con la hora, prellenado con el inicio de la jornada personal
+    (ADR 045); la estimación se edita en la propia tarjeta
+    (`InlineEstimate`, compartido con Hoy) contra el mismo
+    `PUT /task/estimate/:id` que ya existía, con `parseDurationInput`
+    (`1h 30m`, `90m`, `1:30`, `1,5`) que también adopta `task-tree.tsx`. De
+    paso se corrigió que `GET /planner` no filtraba por `workspace_id` —el
+    mismo fallo que la ADR 041 ya había corregido en `get-schedule.ts`, sin
+    aplicar aquí—, con su prueba de regresión. Quedan declarados fuera: la
+    casilla de «hecha», el menú contextual, cargar más días al desplazar y
+    el filtro de «Sin planificar» — ninguno estaba en la maqueta original.
+    16 pruebas de integración nuevas (`planner-sections.test.ts`) más las
+    21 y 27 ya existentes de planner y schedule; typecheck y batería
+    unitaria de API (715) y web (279) en verde.
 
 **Hecho cuando:** entras por «Hoy», planificas tu semana arrastrando entre
 días sin cambiar el vencimiento que ve el equipo, y administrar el espacio ya

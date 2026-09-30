@@ -2773,6 +2773,12 @@
 		"pageTitle": "Planner",
 		"unplanned": "Unplanned",
 		"today": "Today",
+		"previous": "From previous days",
+		"noTasks": "No tasks",
+		"dayLoad": "{{planned}} planned / {{available}} available",
+		"anchorTime": "Time",
+		"removeTime": "Remove time",
+		"plannedElsewhere": "planned for {{date}}",
 		"empty": {
 			"title": "Nothing assigned",
 			"description": "You have no assigned tasks to plan."
