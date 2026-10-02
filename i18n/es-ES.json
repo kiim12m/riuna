@@ -3102,6 +3102,43 @@
 			"finish": "Cerrar el día",
 			"done": "Día cerrado",
 			"error": "No se ha podido cerrar el día"
+		},
+		"planDay": {
+			"title": "Planificar el día",
+			"button": "Planificar el día",
+			"start": "Empezar",
+			"empty": "Aún no hay nada planificado para hoy.",
+			"previous": {
+				"title": "Lo de días anteriores",
+				"hint": "Lo que quedó de días anteriores sin terminar.",
+				"none": "No queda nada de días anteriores."
+			},
+			"urgent": {
+				"title": "Lo urgente",
+				"hint": "Vence hoy o está vencido, y no está planificado.",
+				"none": "Nada urgente."
+			},
+			"unplanned": {
+				"title": "Bandeja y sin planificar",
+				"hint": "Lo tuyo que aún no tiene día, Bandeja incluida.",
+				"none": "Todo tiene día.",
+				"more_one": "Y {{count}} más, en el Planificador.",
+				"more_other": "Y {{count}} más, en el Planificador."
+			},
+			"key": {
+				"title": "Imprescindibles",
+				"hint": "Marca hasta {{max}}: lo que tiene que salir hoy. Llevas {{count}} de {{max}}."
+			},
+			"load": {
+				"title": "Carga frente a tu jornada",
+				"hint": "Planificado {{planned}} de {{available}} disponibles.",
+				"over": "Más de lo que cabe en tu jornada: mueve algo o ajusta una estimación."
+			},
+			"anchor": {
+				"title": "Horas",
+				"hint": "Ancla lo que tiene hora fija. Lo demás se reparte alrededor.",
+				"label": "Hora de «{{title}}»"
+			}
 		}
 	}
 }

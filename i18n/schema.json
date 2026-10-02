@@ -12191,9 +12191,138 @@
 						"done",
 						"error"
 					]
+				},
+				"planDay": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"button": {
+							"type": "string"
+						},
+						"start": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"previous": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"none": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "hint", "none"]
+						},
+						"urgent": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"none": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "hint", "none"]
+						},
+						"unplanned": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"none": {
+									"type": "string"
+								},
+								"more_one": {
+									"type": "string"
+								},
+								"more_other": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "hint", "none", "more_one", "more_other"]
+						},
+						"key": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "hint"]
+						},
+						"load": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"over": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "hint", "over"]
+						},
+						"anchor": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"label": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "hint", "label"]
+						}
+					},
+					"required": [
+						"title",
+						"button",
+						"start",
+						"empty",
+						"previous",
+						"urgent",
+						"unplanned",
+						"key",
+						"load",
+						"anchor"
+					]
 				}
 			},
-			"required": ["stepOf", "back", "next", "exit", "closeDay"]
+			"required": ["stepOf", "back", "next", "exit", "closeDay", "planDay"]
 		}
 	},
 	"required": [

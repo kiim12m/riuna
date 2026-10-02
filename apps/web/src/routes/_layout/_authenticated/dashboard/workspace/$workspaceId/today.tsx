@@ -22,6 +22,7 @@ import {
   CircleCheck,
   Moon,
   Star,
+  Sunrise,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -326,6 +327,19 @@ function TodayComponent() {
               // ni banners. Cerrado, el boton lo dice y permite repasarlo.
               data && (
                 <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      navigate({
+                        to: "/dashboard/workspace/$workspaceId/rituals/plan-day",
+                        params: { workspaceId },
+                      })
+                    }
+                  >
+                    <Sunrise />
+                    {t("rituals:planDay.button")}
+                  </Button>
                   <Button
                     variant={data.dayClosed ? "ghost" : "outline"}
                     size="sm"

@@ -67,6 +67,7 @@ import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksListRou
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/table'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksWaitingRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/waiting'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsCloseDayRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/rituals/close-day'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsPlanDayRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/rituals/plan-day'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/billing'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/general'
@@ -451,6 +452,15 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsCloseDayRoute =
         LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
     } as any,
   )
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsPlanDayRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsPlanDayRouteImport.update(
+    {
+      id: '/rituals/plan-day',
+      path: '/rituals/plan-day',
+      getParentRoute: () =>
+        LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+    } as any,
+  )
 const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceIndexRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceIndexRouteImport.update(
     {
@@ -670,6 +680,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/workspace/$workspaceId/my-tasks/table': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRoute
   '/dashboard/workspace/$workspaceId/my-tasks/waiting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksWaitingRoute
   '/dashboard/workspace/$workspaceId/rituals/close-day': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsCloseDayRoute
+  '/dashboard/workspace/$workspaceId/rituals/plan-day': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsPlanDayRoute
   '/dashboard/workspace/$workspaceId/my-tasks/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/billing': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/general': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute
@@ -739,6 +750,7 @@ export interface FileRoutesByTo {
   '/dashboard/workspace/$workspaceId/my-tasks/table': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRoute
   '/dashboard/workspace/$workspaceId/my-tasks/waiting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksWaitingRoute
   '/dashboard/workspace/$workspaceId/rituals/close-day': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsCloseDayRoute
+  '/dashboard/workspace/$workspaceId/rituals/plan-day': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsPlanDayRoute
   '/dashboard/workspace/$workspaceId/my-tasks': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/billing': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/general': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute
@@ -818,6 +830,7 @@ export interface FileRoutesById {
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/table': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/waiting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksWaitingRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/rituals/close-day': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsCloseDayRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/rituals/plan-day': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsPlanDayRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/billing': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/general': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute
@@ -896,6 +909,7 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/my-tasks/table'
     | '/dashboard/workspace/$workspaceId/my-tasks/waiting'
     | '/dashboard/workspace/$workspaceId/rituals/close-day'
+    | '/dashboard/workspace/$workspaceId/rituals/plan-day'
     | '/dashboard/workspace/$workspaceId/my-tasks/'
     | '/dashboard/workspace/$workspaceId/admin/workspace/billing'
     | '/dashboard/workspace/$workspaceId/admin/workspace/general'
@@ -965,6 +979,7 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/my-tasks/table'
     | '/dashboard/workspace/$workspaceId/my-tasks/waiting'
     | '/dashboard/workspace/$workspaceId/rituals/close-day'
+    | '/dashboard/workspace/$workspaceId/rituals/plan-day'
     | '/dashboard/workspace/$workspaceId/my-tasks'
     | '/dashboard/workspace/$workspaceId/admin/workspace/billing'
     | '/dashboard/workspace/$workspaceId/admin/workspace/general'
@@ -1043,6 +1058,7 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/table'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/waiting'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/rituals/close-day'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/rituals/plan-day'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/billing'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/general'
@@ -1483,6 +1499,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsCloseDayRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
     }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/rituals/plan-day': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/rituals/plan-day'
+      path: '/rituals/plan-day'
+      fullPath: '/dashboard/workspace/$workspaceId/rituals/plan-day'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsPlanDayRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/': {
       id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/'
       path: '/'
@@ -1794,6 +1817,7 @@ interface LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren {
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksTableRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksWaitingRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksWaitingRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsCloseDayRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsCloseDayRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsPlanDayRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsPlanDayRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute
@@ -1845,6 +1869,8 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren: LayoutAuthe
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksWaitingRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsCloseDayRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsCloseDayRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsPlanDayRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsPlanDayRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute:

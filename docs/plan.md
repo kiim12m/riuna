@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 y 1, y 2.1 hechos; sigue el 2.2 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 y 1, y 2.1-2.2 hechos; sigue el 2.3 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -1896,8 +1896,20 @@ verificación.
   - 4 unitarias del siguiente día laborable;
   - 1 de extremo a extremo con el ritual completo;
   - pasada visual.
-- **2.2 Planificar el día** · S. Pura composición, sin API: lo de ayer → lo urgente → Bandeja y
+- **2.2 Planificar el día** ✔ · S. Pura composición, sin API: lo de ayer → lo urgente → Bandeja y
   sin planificar → imprescindibles → carga frente a capacidad → anclar → «Empezar».
+  **Hecho (2026-10-02).** Sin ADR ni API propia.
+  - **Cada paso actúa al momento**, con las mismas mutaciones que Hoy y el
+    menú de fila, así que el siguiente paso ya ve el cambio.
+  - **«Sin planificar»** enseña las 15 primeras y remite al Planificador para
+    el resto.
+  - **Las horas se anclan** al salir del campo o con Intro. «Empezar» arranca
+    el cronómetro en la primera imprescindible, o en la primera del plan si
+    no hay ninguna.
+  - **Botón en la cabecera de Hoy**, junto a «Terminar el día».
+
+  Verificación: 1 prueba de extremo a extremo con los seis pasos y el
+  cronómetro en marcha; pasada visual.
 - **2.3 Revisión semanal** · M. Vaciar la Bandeja, vencidas, «Esperando a», la semana pasada
   —horas, hechas y precisión de estimación— y planificar la siguiente.
 - **2.4 Stand-up** · S. Derivado, sin guardar: ayer, hoy y bloqueos. La persona copia el suyo
@@ -2133,9 +2145,9 @@ captura rápida ([ADR 052](adr/052-captura-rapida.md)), el **1.3**, acciones
 de fila, imprescindibles y plan en bloque
 ([ADR 053](adr/053-acciones-de-fila-imprescindibles-y-plan-en-bloque.md)), y
 el **1.4**, «Esperando a»: **el Bloque 1 está cerrado**. Del **Bloque 2**,
-los rituales, está hecho el **2.1**, terminar el día
-([ADR 054](adr/054-terminar-el-dia-y-la-valoracion-privada.md)); sigue el
-**2.2**, planificar el día. Después del interludio viene la **Fase 8**: automatizaciones e
+los rituales, están hechos el **2.1**, terminar el día
+([ADR 054](adr/054-terminar-el-dia-y-la-valoracion-privada.md)), y el **2.2**,
+planificar el día; sigue el **2.3**, la revisión semanal. Después del interludio viene la **Fase 8**: automatizaciones e
 importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`

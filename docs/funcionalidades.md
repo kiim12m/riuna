@@ -235,6 +235,17 @@ la tarea y en la propia tabla.
 
   El botón pasa a decir «Día cerrado» cuando ya se ha hecho. Repetirlo
   actualiza el cierre.
+- **Planificar el día**: el ritual de la mañana, también con un botón en Hoy.
+  Seis pasos que actúan al momento:
+  1. lo de días anteriores, con «Añadir a hoy» o todo de una vez;
+  2. lo urgente;
+  3. la Bandeja y lo que aún no tiene día;
+  4. hasta tres imprescindibles;
+  5. la carga frente a la jornada, con las estimaciones editables y aviso si
+     no cabe;
+  6. las horas ancladas.
+
+  «Empezar» arranca el cronómetro en la primera imprescindible.
 - **Mi trabajo**: las tareas propias o de mi equipo de todos los proyectos, con
   filtros de vencimiento (todas, vencidas, hoy, esta semana).
 - **Nueva tarea en la cabecera**: un botón en la barra superior de cada

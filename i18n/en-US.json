@@ -3102,6 +3102,43 @@
 			"finish": "Close the day",
 			"done": "Day closed",
 			"error": "The day couldn’t be closed"
+		},
+		"planDay": {
+			"title": "Plan the day",
+			"button": "Plan the day",
+			"start": "Start",
+			"empty": "Nothing planned for today yet.",
+			"previous": {
+				"title": "From earlier days",
+				"hint": "What was left from earlier days and isn’t done.",
+				"none": "Nothing left from earlier days."
+			},
+			"urgent": {
+				"title": "What’s urgent",
+				"hint": "Due today or overdue, and not planned.",
+				"none": "Nothing urgent."
+			},
+			"unplanned": {
+				"title": "Inbox and unplanned",
+				"hint": "What’s yours and has no day yet, your inbox included.",
+				"none": "Everything has a day.",
+				"more_one": "And {{count}} more, in the Planner.",
+				"more_other": "And {{count}} more, in the Planner."
+			},
+			"key": {
+				"title": "Key tasks",
+				"hint": "Mark up to {{max}}: what has to happen today. {{count}} of {{max}} marked."
+			},
+			"load": {
+				"title": "Load against your day",
+				"hint": "Planned {{planned}} of {{available}} available.",
+				"over": "More than fits in your day: move something or adjust an estimate."
+			},
+			"anchor": {
+				"title": "Times",
+				"hint": "Anchor what has a fixed time. The rest flows around it.",
+				"label": "Time for “{{title}}”"
+			}
 		}
 	}
 }
