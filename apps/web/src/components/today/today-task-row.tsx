@@ -1,3 +1,5 @@
+import { Star } from "lucide-react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ProjectPill } from "@/components/task/project-pill";
 import { InlineEstimate } from "@/components/timer/inline-estimate";
@@ -35,6 +37,10 @@ type TodayTaskRowProps = {
   shaded?: boolean;
   /** La que enseña el resumen de la derecha. */
   selected?: boolean;
+  /** Imprescindible del dia, 1-3 (ADR 053): una estrella delante del titulo. */
+  keyRank?: number | null;
+  /** El boton «⋯» de `TaskRowActions`, al final de la fila. */
+  menu?: ReactNode;
 };
 
 /**
@@ -64,6 +70,8 @@ export function TodayTaskRow({
   dueBadge,
   shaded,
   selected,
+  keyRank,
+  menu,
 }: TodayTaskRowProps) {
   const { t, i18n } = useTranslation();
 
@@ -107,6 +115,12 @@ export function TodayTaskRow({
         onClick={onOpen}
         className="flex min-w-0 flex-1 items-center gap-1.5 rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
+        {keyRank != null && (
+          <Star
+            className="size-3.5 shrink-0 fill-current text-warning"
+            aria-label={t("taskActions:key")}
+          />
+        )}
         <span className="shrink-0">{getPriorityIcon(priority)}</span>
         <span
           className={cn(
@@ -159,6 +173,8 @@ export function TodayTaskRow({
           {action.label}
         </button>
       )}
+
+      {menu}
     </div>
   );
 }

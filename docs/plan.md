@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloque 0, 1.1 y 1.2 hechos; sigue el 1.3 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloque 0 y 1.1-1.3 hechos; sigue el 1.4 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -1805,12 +1805,36 @@ verificación.
   - 2 de extremo a extremo: desde Hoy, y con `q` desde otra pantalla hasta el
     Planificador;
   - paridad MCP con 46 herramientas; pasada visual en escritorio y móvil.
-- **1.3 Acciones de fila, imprescindibles y plan en bloque** · M · ADR 053.
+- **1.3 Acciones de fila, imprescindibles y plan en bloque** ✔ · M · [ADR 053](adr/053-acciones-de-fila-imprescindibles-y-plan-en-bloque.md).
   `personal_plan_entry.key_rank` (1-3, único parcial por día: la base impone el máximo de
   tres). `POST /planner/bulk` —deuda declarada en la ADR 047—, `PUT /planner/:taskId/key` y
   `GET /planner?from=` para ir más allá de quince días. Un menú de acciones compartido —hecha,
   cronómetro, hoy, mañana, elegir día, quitar del plan, fijar hora, estimar, imprescindible—
   en Hoy, Planificador, Cronograma y Mis tareas.
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **El menú sale con el botón «⋯» y con el clic derecho.** Los dos pintan
+    las mismas piezas de base-ui, cada uno con su estado de apertura:
+    compartirlo abría los dos a la vez, como enseñó la pasada visual.
+  - **La hora y la estimación van en un diálogo**: un campo de texto dentro
+    de un menú pelea con su navegación por teclado. Elegir día es un
+    calendario en un submenú.
+  - **Mis tareas y el Cronograma no leen el plan**: el menú lo pregunta al
+    abrirse (`GET /planner/entry/:taskId`, que gana `keyRank`).
+  - **Las imprescindibles** van en un grupo propio en Hoy, sin arrastre:
+    su orden es el puesto. Se desmarcan solas al cambiar de día, por un
+    disparador.
+  - **«Añadir todo a hoy»** en «De días anteriores» usa `POST /planner/bulk`.
+  - **La ventana del Planificador** se mueve de semana en semana con
+    `?from=`. «De días anteriores» se sigue contando desde hoy, y `get_plan`
+    de MCP también acepta `from`.
+
+  Verificación:
+  - 11 pruebas de integración. La de dos marcas simultáneas falla sin el
+    candado: solo dos de seis conseguían puesto y el resto daba 500;
+  - 6 de extremo a extremo: tres imprescindibles y el aviso de la cuarta, el
+    contextual sin el otro menú abierto, los dos diálogos, «Añadir todo a
+    hoy», Mis tareas y la ventana más allá de quince días;
+  - pasada visual del menú en Hoy y del contextual en el Planificador.
 - **1.4 «Esperando a»** · S. Lo que creé y asigné a otros y sigue abierto, más lo mío
   bloqueado por tareas ajenas. «Lo creé yo» sale de `activity`, porque `task` no tiene
   `created_by`; si el `EXPLAIN` no cabe en 300 ms, ADR aparte para la columna.
@@ -2056,8 +2080,10 @@ paridad de MCP, [ADR 050](adr/050-recordatorios-por-asignado-y-una-sola-carga.md
 también están hechos: **el Bloque 0 está cerrado**. Del **Bloque 1**, captura
 y acciones, están hechos el **1.1**, la Bandeja
 ([ADR 051](adr/051-la-bandeja-es-un-proyecto-oculto.md)), y el **1.2**, la
-captura rápida ([ADR 052](adr/052-captura-rapida.md)); sigue el **1.3**,
-acciones de fila, imprescindibles y plan en bloque. Después del interludio viene la **Fase 8**: automatizaciones e
+captura rápida ([ADR 052](adr/052-captura-rapida.md)), y el **1.3**, acciones
+de fila, imprescindibles y plan en bloque
+([ADR 053](adr/053-acciones-de-fila-imprescindibles-y-plan-en-bloque.md));
+sigue el **1.4**, «Esperando a». Después del interludio viene la **Fase 8**: automatizaciones e
 importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`

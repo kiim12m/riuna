@@ -201,7 +201,11 @@ test.describe("Planificador: anclar, hecha y sin planificar", () => {
         );
         return lookup.entry;
       })
-      .toEqual({ plannedDay: todayColumnId(), startMinute: 540 });
+      .toEqual({
+        plannedDay: todayColumnId(),
+        startMinute: 540,
+        keyRank: null,
+      });
   });
 
   test("marca una tarea como hecha desde su tarjeta", async ({

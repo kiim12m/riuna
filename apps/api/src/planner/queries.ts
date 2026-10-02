@@ -34,6 +34,7 @@ export const entryColumns = {
   plannedDate: personalPlanEntryTable.plannedDate,
   position: personalPlanEntryTable.position,
   startMinute: personalPlanEntryTable.startMinute,
+  keyRank: personalPlanEntryTable.keyRank,
 };
 
 /**

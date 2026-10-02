@@ -596,7 +596,7 @@ describe("GET /planner/entry/:taskId", () => {
     // El 26 de octubre ya es horario de invierno en Madrid: la columna guarda
     // el 25 a las 23:00 UTC, y la clave tiene que seguir diciendo 26.
     expect(await response.json()).toEqual({
-      entry: { plannedDay: "2026-10-26", startMinute: 570 },
+      entry: { plannedDay: "2026-10-26", startMinute: 570, keyRank: null },
     });
   });
 

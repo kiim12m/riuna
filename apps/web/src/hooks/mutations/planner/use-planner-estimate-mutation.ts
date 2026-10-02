@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import type { PlanEntry, PlanResponse } from "@/fetchers/planner";
 import updateTaskEstimate from "@/fetchers/task/update-task-estimate";
+import { plannerQueryKey } from "@/hooks/queries/planner/use-planner";
 
 /**
  * Editar la estimacion desde una tarjeta del Planificador reutiliza
@@ -9,11 +10,15 @@ import updateTaskEstimate from "@/fetchers/task/update-task-estimate";
  * propios efectos de cache: actualiza la carga del dia al momento y
  * refresca Hoy y el Cronograma, que tambien la muestran (ADR 045).
  */
-export function usePlannerEstimateMutation(workspaceId: string, days: number) {
+export function usePlannerEstimateMutation(
+  workspaceId: string,
+  days: number,
+  from?: string,
+) {
   const queryClient = useQueryClient();
   const queryKey = useMemo(
-    () => ["planner", workspaceId, days],
-    [workspaceId, days],
+    () => plannerQueryKey(workspaceId, days, from),
+    [workspaceId, days, from],
   );
 
   const mutation = useMutation({

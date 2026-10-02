@@ -6,6 +6,7 @@ import {
   setPlanEntry,
   setPlanOrder,
 } from "@/fetchers/planner";
+import { plannerQueryKey } from "@/hooks/queries/planner/use-planner";
 
 type Destination = {
   plannedDate: string;
@@ -26,11 +27,23 @@ type Destination = {
  * vale la pena estrechar a mano-: `onSettled` los corrige en cuanto vuelve
  * la respuesta real, que tarda un instante.
  */
-export function usePlannerMutations(workspaceId: string, days: number) {
+function sameDay(plannedDate: string | null | undefined, dayKey: string) {
+  if (!plannedDate) return false;
+  const date = new Date(plannedDate);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}` === dayKey;
+}
+
+export function usePlannerMutations(
+  workspaceId: string,
+  days: number,
+  from?: string,
+) {
   const queryClient = useQueryClient();
   const queryKey = useMemo(
-    () => ["planner", workspaceId, days],
-    [workspaceId, days],
+    () => plannerQueryKey(workspaceId, days, from),
+    [workspaceId, days, from],
   );
 
   const putMutation = useMutation({
@@ -90,6 +103,14 @@ export function usePlannerMutations(workspaceId: string, days: number) {
                     : null,
                 loggedSeconds:
                   (task as { loggedSeconds?: number }).loggedSeconds ?? 0,
+                // Cambiar de dia la deja normal (disparador de la ADR 053);
+                // en el mismo dia conserva su puesto.
+                keyRank: sameDay(
+                  (task as { plannedDate?: string | null }).plannedDate,
+                  destination.plannedDate,
+                )
+                  ? ((task as { keyRank?: number | null }).keyRank ?? null)
+                  : null,
               },
             ],
             previous: withoutTask(previous.previous),

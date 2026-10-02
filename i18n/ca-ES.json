@@ -2799,7 +2799,8 @@
 		"previous": {
 			"title_one": "De dies anteriors ({{count}})",
 			"title_other": "De dies anteriors ({{count}})",
-			"addToToday": "Afegir a avui"
+			"addToToday": "Afegir a avui",
+			"addAllToToday": "Añadir todo a hoy"
 		},
 		"planned": {
 			"title": "Pla d'avui",
@@ -2829,6 +2830,10 @@
 			"estimate": "Estimat",
 			"logged": "Registrat",
 			"due": "Venç"
+		},
+		"key": {
+			"title_one": "{{count}} imprescindible de 3",
+			"title_other": "{{count}} imprescindibles de 3"
 		}
 	},
 	"myTasks": {
@@ -2866,7 +2871,13 @@
 		},
 		"description": "Finestra de {{days}} dies. Arrossega tasques entre dies o des de «Sense planificar».",
 		"dayLoadPct": "{{pct}} % de la teva jornada",
-		"dropToAnchor": "Suelta aquí para fijar una hora"
+		"dropToAnchor": "Suelta aquí para fijar una hora",
+		"window": {
+			"previous": "Semana anterior",
+			"today": "Hoy",
+			"next": "Semana siguiente",
+			"todayLabel": "Volver a hoy"
+		}
 	},
 	"schedule": {
 		"pageTitle": "Cronograma",
@@ -2992,5 +3003,30 @@
 		"captured": "{{key}} capturada",
 		"capturedInInbox": "{{key}} capturada en tu Bandeja",
 		"error": "No se ha podido capturar la tarea"
+	},
+	"taskActions": {
+		"menuLabel": "Acciones de la tarea",
+		"markDone": "Marcar como hecha",
+		"reopen": "Reabrir",
+		"planToday": "Planificar hoy",
+		"planTomorrow": "Planificar mañana",
+		"pickDay": "Elegir día",
+		"setTime": "Fijar hora…",
+		"unplan": "Quitar del plan",
+		"estimate": "Estimar…",
+		"key": "Imprescindible",
+		"keyFull": "Ese día ya tiene tres imprescindibles",
+		"error": "No se ha podido guardar el cambio",
+		"timeDialog": {
+			"title": "Hora de «{{title}}»",
+			"label": "Hora de inicio",
+			"remove": "Quitar hora"
+		},
+		"estimateDialog": {
+			"title": "Estimación de «{{title}}»",
+			"label": "Estimación",
+			"hint": "1h 30m, 1h30, 90m o 1,5 (horas). Vacío es sin estimar.",
+			"invalid": "Eso no es una duración"
+		}
 	}
 }

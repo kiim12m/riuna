@@ -27,6 +27,7 @@ export default async function getPlanEntry({
     .select({
       plannedDate: personalPlanEntryTable.plannedDate,
       startMinute: personalPlanEntryTable.startMinute,
+      keyRank: personalPlanEntryTable.keyRank,
     })
     .from(personalPlanEntryTable)
     .where(
@@ -42,6 +43,7 @@ export default async function getPlanEntry({
       ? {
           plannedDay: serverDayKey(row.plannedDate),
           startMinute: row.startMinute,
+          keyRank: row.keyRank,
         }
       : null,
   };

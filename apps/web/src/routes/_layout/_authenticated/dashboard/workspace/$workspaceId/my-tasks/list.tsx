@@ -9,6 +9,7 @@ import PageTitle from "@/components/page-title";
 import { LoadMore } from "@/components/personal-tasks/load-more";
 import { PersonalTasksTabs } from "@/components/personal-tasks/tabs";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
+import { TaskRowActions } from "@/components/task-actions/task-row-actions";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import {
   Empty,
@@ -125,21 +126,40 @@ function RouteComponent() {
                   </h2>
                   <div className="space-y-0.5">
                     {groups[window].map((task, index) => (
-                      <WidgetTaskRow
+                      // Mis tareas no lee el plan: el menu lo pregunta al
+                      // abrirse (ADR 053).
+                      <TaskRowActions
                         key={task.id}
-                        task={task}
-                        variant="list"
-                        shaded={index % 2 === 0}
-                        trailing={
-                          <TaskTimerButton task={task} reveal="hover" />
-                        }
-                        onOpen={() =>
-                          setOpenTask({
-                            taskId: task.id,
-                            projectId: task.projectId,
-                          })
-                        }
-                      />
+                        workspaceId={workspaceId}
+                        task={{
+                          id: task.id,
+                          number: task.number,
+                          title: task.title,
+                          projectId: task.projectId,
+                          estimate: task.estimate,
+                          isDone: Boolean(task.isDone),
+                        }}
+                      >
+                        {(menu) => (
+                          <WidgetTaskRow
+                            task={task}
+                            variant="list"
+                            shaded={index % 2 === 0}
+                            trailing={
+                              <>
+                                <TaskTimerButton task={task} reveal="hover" />
+                                {menu}
+                              </>
+                            }
+                            onOpen={() =>
+                              setOpenTask({
+                                taskId: task.id,
+                                projectId: task.projectId,
+                              })
+                            }
+                          />
+                        )}
+                      </TaskRowActions>
                     ))}
                   </div>
                 </section>

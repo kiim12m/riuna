@@ -137,7 +137,12 @@ export default async function getToday({
       loggedSeconds: loggedByTask.get(row.id) ?? 0,
     }));
 
-  const plannedWithLogged = withLogged(planned);
+  // Las imprescindibles primero, por su puesto (ADR 053); el resto, en el
+  // orden del plan. `sort` es estable, asi que dentro de cada grupo se
+  // conserva el de `position`.
+  const plannedWithLogged = withLogged(planned).sort(
+    (a, b) => (a.keyRank ?? 4) - (b.keyRank ?? 4),
+  );
   const estimateRemaining = plannedWithLogged.reduce(
     (total, row) =>
       total + Math.max(0, (row.estimate ?? 0) - row.loggedSeconds),

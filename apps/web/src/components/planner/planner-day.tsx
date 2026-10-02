@@ -8,6 +8,10 @@ import { useTranslation } from "react-i18next";
 import { DayLoadBar } from "@/components/planner/day-load-bar";
 import { PlannerRow } from "@/components/planner/planner-row";
 import { TimePopover } from "@/components/planner/time-popover";
+import {
+  rowPlanOf,
+  TaskRowActions,
+} from "@/components/task-actions/task-row-actions";
 import { InlineEstimate } from "@/components/timer/inline-estimate";
 import type {
   PlanDeadline,
@@ -232,36 +236,52 @@ function TimedEntryRow({
 
   return (
     <div ref={setNodeRef} {...attributes} {...listeners}>
-      <PlannerRow
-        title={entry.title}
-        priority={entry.priority}
-        isDone={entry.isDone}
-        projectName={entry.projectName}
-        projectIcon={entry.projectIcon}
-        onOpen={onOpen}
-        timerTask={entry}
-        onToggleDone={onToggleDone}
-        className={cn(
-          "cursor-grab active:cursor-grabbing",
-          isDragging && "opacity-40",
+      <TaskRowActions
+        task={{
+          id: entry.id,
+          number: entry.number,
+          title: entry.title,
+          projectId: entry.projectId,
+          estimate: entry.estimate,
+          isDone: entry.isDone,
+        }}
+        plan={rowPlanOf(entry)}
+      >
+        {(menu) => (
+          <PlannerRow
+            title={entry.title}
+            priority={entry.priority}
+            isDone={entry.isDone}
+            projectName={entry.projectName}
+            projectIcon={entry.projectIcon}
+            onOpen={onOpen}
+            timerTask={entry}
+            onToggleDone={onToggleDone}
+            keyRank={entry.keyRank}
+            menu={menu}
+            className={cn(
+              "cursor-grab active:cursor-grabbing",
+              isDragging && "opacity-40",
+            )}
+            leading={
+              <TimePopover
+                minute={entry.startMinute ?? 0}
+                onSave={onSaveTime}
+                onRemove={onRemoveTime}
+                open={open}
+                onOpenChange={onOpenChange}
+              />
+            }
+            trailing={
+              <InlineEstimate
+                estimate={entry.estimate}
+                loggedSeconds={entry.loggedSeconds}
+                onSave={onEstimateChange}
+              />
+            }
+          />
         )}
-        leading={
-          <TimePopover
-            minute={entry.startMinute ?? 0}
-            onSave={onSaveTime}
-            onRemove={onRemoveTime}
-            open={open}
-            onOpenChange={onOpenChange}
-          />
-        }
-        trailing={
-          <InlineEstimate
-            estimate={entry.estimate}
-            loggedSeconds={entry.loggedSeconds}
-            onSave={onEstimateChange}
-          />
-        }
-      />
+      </TaskRowActions>
     </div>
   );
 }

@@ -17,6 +17,7 @@ import {
   dayKeysBetween,
   parseServerDay,
   serverDayKey,
+  startOfServerDay,
 } from "../../utils/day-boundaries";
 import { workspaceTaskConditions } from "../../view/workspace-task-query";
 import { capacityForDay } from "../../work-schedule/day-capacity";
@@ -152,10 +153,14 @@ export default async function getPlan({
   const [entryRows, previousRows, unplannedRows, deadlineRows, ghosts] =
     await Promise.all([
       getEntriesInRange(workspaceId, userId, windowStart, windowEnd),
+      // Antes de la ventana o de hoy, lo que llegue antes: con la ventana en
+      // la semana que viene, lo de esta semana no es "de dias anteriores".
       getPreviousEntries(
         workspaceId,
         userId,
-        windowStart,
+        windowStart < startOfServerDay(now)
+          ? windowStart
+          : startOfServerDay(now),
         notDone ? [notDone] : [],
       ),
       db

@@ -849,6 +849,14 @@ export const personalPlanEntryTable = pgTable(
      * fija, actua de bloqueador frente a las demas entradas de ese dia.
      */
     startMinute: smallint("start_minute"),
+    /**
+     * Imprescindible del dia, 1-3 (ADR 053): como mucho tres por persona,
+     * espacio y dia, y lo impone la base con el indice unico parcial de
+     * abajo. Se borra sola al cambiar de dia (disparador
+     * `personal_plan_entry_clear_key_rank`): ser imprescindible el lunes no
+     * dice nada del martes.
+     */
+    keyRank: smallint("key_rank"),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()
@@ -861,9 +869,16 @@ export const personalPlanEntryTable = pgTable(
       table.userId,
       table.plannedDate,
     ),
+    uniqueIndex("personal_plan_entry_key_rank_per_day")
+      .on(table.userId, table.workspaceId, table.plannedDate, table.keyRank)
+      .where(sql`key_rank IS NOT NULL`),
     check(
       "personal_plan_entry_start_minute_valid",
       sql`${table.startMinute} IS NULL OR ${table.startMinute} BETWEEN 0 AND 1439`,
+    ),
+    check(
+      "personal_plan_entry_key_rank_valid",
+      sql`${table.keyRank} IS NULL OR ${table.keyRank} BETWEEN 1 AND 3`,
     ),
   ],
 );

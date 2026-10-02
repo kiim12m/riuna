@@ -11,7 +11,9 @@ import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import getPlan from "./controllers/get-plan";
 import getPlanEntry from "./controllers/get-plan-entry";
+import planBulk from "./controllers/plan-bulk";
 import removePlanEntry from "./controllers/remove-plan-entry";
+import setKey from "./controllers/set-key";
 import setPlanEntry from "./controllers/set-plan-entry";
 import setPlanOrder from "./controllers/set-plan-order";
 import { planDeadlineSchema, planEntrySchema, planTaskSchema } from "./schemas";
@@ -25,6 +27,11 @@ const startMinuteSchema = v.pipe(
   v.integer(),
   v.minValue(0),
   v.maxValue(1439),
+);
+
+const dayKeySchema = v.pipe(
+  v.string(),
+  v.regex(/^\d{4}-\d{2}-\d{2}$/, "Expected a yyyy-mm-dd day"),
 );
 
 const planGhostSchema = v.object({
@@ -84,6 +91,7 @@ const planEntryLookupSchema = v.object({
     v.object({
       plannedDay: v.string(),
       startMinute: v.nullable(v.number()),
+      keyRank: v.nullable(v.number()),
     }),
   ),
 });
@@ -133,14 +141,19 @@ const planner = new Hono<{
           ),
           String(DEFAULT_WINDOW_DAYS),
         ),
+        /** Primer dia de la ventana, `yyyy-mm-dd`; por defecto, hoy (ADR 053). */
+        from: v.optional(dayKeySchema),
       }),
     ),
     workspaceAccess.fromQuery(),
     requireApiKeyScope({ task: ["read"] }),
     async (c) => {
-      const { workspaceId, days } = c.req.valid("query");
+      const { workspaceId, days, from } = c.req.valid("query");
 
-      const windowStart = startOfServerDay(new Date());
+      const windowStart =
+        from !== undefined
+          ? parseServerDay(from, "from")
+          : startOfServerDay(new Date());
       const windowEnd = endOfServerDay(addDays(windowStart, days - 1));
 
       const plan = await getPlan({
@@ -228,6 +241,96 @@ const planner = new Hono<{
       });
 
       return c.json(result);
+    },
+  )
+  .post(
+    "/bulk",
+    describeRoute({
+      operationId: "planPersonalTasksInBulk",
+      tags: ["Planner"],
+      description:
+        "Place several tasks on a day of the current user's plan, appended in the order given, or take them all out of the plan with plannedDate null. Never changes due dates; anchored times are kept. Tasks of another workspace are ignored",
+      responses: {
+        200: {
+          description: "How many entries changed",
+          content: {
+            "application/json": {
+              schema: resolver(v.object({ updated: v.number() })),
+            },
+          },
+        },
+      },
+    }),
+    validator(
+      "query",
+      v.object({ workspaceId: v.pipe(v.string(), v.minLength(1)) }),
+    ),
+    validator(
+      "json",
+      v.object({
+        taskIds: v.pipe(
+          v.array(v.pipe(v.string(), v.minLength(1))),
+          v.minLength(1),
+          v.maxLength(200),
+        ),
+        plannedDate: v.nullable(dayKeySchema),
+      }),
+    ),
+    workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["update"] }),
+    async (c) => {
+      const { workspaceId } = c.req.valid("query");
+      const { taskIds, plannedDate } = c.req.valid("json");
+
+      const result = await planBulk({
+        workspaceId,
+        userId: c.get("userId"),
+        taskIds,
+        plannedDate:
+          plannedDate === null
+            ? null
+            : parseServerDay(plannedDate, "plannedDate"),
+      });
+
+      return c.json(result);
+    },
+  )
+  .put(
+    "/:taskId/key",
+    describeRoute({
+      operationId: "setPersonalPlanKeyTask",
+      tags: ["Planner"],
+      description:
+        "Mark or unmark a planned task as one of the (at most three) key tasks of its day. Marking takes the first free rank; with three already, 409. Moving the entry to another day clears it",
+      responses: {
+        200: {
+          description: "The key rank, or null",
+          content: {
+            "application/json": {
+              schema: resolver(v.object({ keyRank: v.nullable(v.number()) })),
+            },
+          },
+        },
+        404: { description: "The task is not on the current user's plan" },
+        409: { description: "The day already has three key tasks" },
+      },
+    }),
+    validator("param", v.object({ taskId: v.string() })),
+    validator(
+      "query",
+      v.object({ workspaceId: v.pipe(v.string(), v.minLength(1)) }),
+    ),
+    validator("json", v.object({ key: v.boolean() })),
+    workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["update"] }),
+    async (c) => {
+      const { taskId } = c.req.valid("param");
+      const { workspaceId } = c.req.valid("query");
+      const { key } = c.req.valid("json");
+
+      return c.json(
+        await setKey({ workspaceId, userId: c.get("userId"), taskId, key }),
+      );
     },
   )
   .put(

@@ -1,4 +1,4 @@
-import { Layout } from "lucide-react";
+import { Layout, Star } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
@@ -30,6 +30,10 @@ type PlannerRowProps = {
   onToggleDone?: (done: boolean) => void;
   /** Extiende o sustituye el borde/fondo -el arrastre trae los suyos. */
   className?: string;
+  /** Imprescindible del dia (ADR 053): una estrella delante del titulo. */
+  keyRank?: number | null;
+  /** El boton «⋯» de `TaskRowActions`, detras del cronometro. */
+  menu?: ReactNode;
 };
 
 /**
@@ -54,6 +58,8 @@ export function PlannerRow({
   timerTask,
   onToggleDone,
   className,
+  keyRank,
+  menu,
 }: PlannerRowProps) {
   const { t } = useTranslation();
   const ProjectIcon =
@@ -95,6 +101,12 @@ export function PlannerRow({
           </span>
         )}
         {leading}
+        {keyRank != null && (
+          <Star
+            className="size-3 shrink-0 fill-current text-warning"
+            aria-label={t("taskActions:key")}
+          />
+        )}
         <span className="shrink-0">{getPriorityIcon(priority)}</span>
         <span
           className={cn(
@@ -105,6 +117,7 @@ export function PlannerRow({
           {title}
         </span>
         {timerTask && <TaskTimerButton task={timerTask} reveal="hover" />}
+        {menu}
       </div>
       <div className="flex items-center gap-1 text-meta text-muted-foreground">
         <ProjectIcon className="size-3 shrink-0" />

@@ -17,7 +17,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PageHeading } from "@/components/common/page-heading";
@@ -27,6 +27,7 @@ import { PlannerDay } from "@/components/planner/planner-day";
 import { PlannerTaskCard } from "@/components/planner/task-card";
 import { QuickAddInput } from "@/components/quick-add/quick-add-input";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
+import { Button } from "@/components/ui/button";
 import {
   Empty,
   EmptyDescription,
@@ -79,10 +80,25 @@ function addDays(date: Date, days: number) {
   return shifted;
 }
 
+const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/;
+/** Cuanto se mueve la ventana con las flechas: una semana. */
+const WINDOW_STEP_DAYS = 7;
+
+type PlannerSearch = {
+  /** Primer dia de la ventana, `yyyy-mm-dd`; sin el, hoy (ADR 053). */
+  from?: string;
+};
+
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/workspace/$workspaceId/planner",
 )({
   component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>): PlannerSearch => ({
+    from:
+      typeof search.from === "string" && DAY_KEY.test(search.from)
+        ? search.from
+        : undefined,
+  }),
 });
 
 /**
@@ -97,14 +113,33 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { t, i18n } = useTranslation();
   const { workspaceId } = Route.useParams();
+  const { from } = Route.useSearch();
+  const navigate = Route.useNavigate();
   const { canCreateTasks } = useWorkspacePermission();
-  const { data, isPending } = usePlanner(workspaceId, WINDOW_DAYS);
+  const { data, isPending } = usePlanner(workspaceId, WINDOW_DAYS, from);
   const { data: workSchedule } = useWorkSchedule();
   const { moveTask, reorderDay } = usePlannerMutations(
     workspaceId,
     WINDOW_DAYS,
+    from,
   );
-  const { setEstimate } = usePlannerEstimateMutation(workspaceId, WINDOW_DAYS);
+  const { setEstimate } = usePlannerEstimateMutation(
+    workspaceId,
+    WINDOW_DAYS,
+    from,
+  );
+
+  // Mas alla de quince dias (ADR 053): la ventana se mueve de semana en
+  // semana. Volver a hoy quita el parametro, para que la ventana por defecto
+  // siga siendo una sola entrada de cache.
+  const shiftWindow = (days: number | null) => {
+    const base = parseIsoDay(from ?? data?.serverToday ?? isoDay(new Date()));
+    const next = days === null ? undefined : isoDay(addDays(base, days));
+    navigate({
+      search: { from: next === data?.serverToday ? undefined : next },
+      replace: true,
+    });
+  };
   const completeTask = useCompleteTask(workspaceId);
   const toggleDone = (taskId: string, done: boolean) =>
     completeTask.mutate({ taskId, done });
@@ -122,15 +157,17 @@ function RouteComponent() {
   // la columna "Hoy" para apuntar a un dia distinto del que usa la API para
   // decidir que fantasmas y ventanas de vencimiento tocan hoy.
   const days = useMemo(() => {
-    const today = data?.serverToday
-      ? parseIsoDay(data.serverToday)
-      : (() => {
-          const now = new Date();
-          now.setHours(0, 0, 0, 0);
-          return now;
-        })();
-    return Array.from({ length: WINDOW_DAYS }, (_, i) => addDays(today, i));
-  }, [data?.serverToday]);
+    const first = from
+      ? parseIsoDay(from)
+      : data?.serverToday
+        ? parseIsoDay(data.serverToday)
+        : (() => {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            return now;
+          })();
+    return Array.from({ length: WINDOW_DAYS }, (_, i) => addDays(first, i));
+  }, [from, data?.serverToday]);
 
   const entriesByDay = useMemo(() => {
     const map = new Map<string, PlanEntry[]>();
@@ -311,6 +348,35 @@ function RouteComponent() {
             title={t("planner:pageTitle")}
             description={t("planner:description", { days: WINDOW_DAYS })}
             className="px-4 pt-4"
+            actions={
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label={t("planner:window.previous")}
+                  onClick={() => shiftWindow(-WINDOW_STEP_DAYS)}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!from}
+                  aria-label={t("planner:window.todayLabel")}
+                  onClick={() => shiftWindow(null)}
+                >
+                  {t("planner:window.today")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label={t("planner:window.next")}
+                  onClick={() => shiftWindow(WINDOW_STEP_DAYS)}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            }
           />
           {isPending ? (
             <div className="flex gap-3 p-4">
@@ -371,7 +437,7 @@ function RouteComponent() {
                   />
                 )}
 
-                {days.map((day, index) => {
+                {days.map((day) => {
                   const key = isoDay(day);
                   const dayEntries = entriesByDay.get(key) ?? [];
                   const untimedEntries = dayEntries.filter(
@@ -396,7 +462,7 @@ function RouteComponent() {
                       key={key}
                       dayKey={key}
                       label={
-                        index === 0
+                        key === data?.serverToday
                           ? `${t("planner:today")} · ${formatDate(day, { weekday: "short", day: "numeric" })}`
                           : formatDate(day, {
                               weekday: "short",

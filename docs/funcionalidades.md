@@ -211,6 +211,18 @@ la tarea y en la propia tabla.
   que se va a crear. Se abre con la tecla `q` desde cualquier pantalla o desde
   la paleta. Además hay una caja fija en Hoy, que planifica para hoy por
   defecto, en «Sin planificar» del Planificador y en la Bandeja propia.
+- **Acciones de fila**
+  ([ADR 053](adr/053-acciones-de-fila-imprescindibles-y-plan-en-bloque.md)):
+  el mismo menú en Hoy, el Planificador, el Cronograma y Mis tareas. Sale con
+  el botón «⋯» o con el clic derecho, y sirve para:
+  - marcar como hecha y arrancar o parar el cronómetro;
+  - planificar hoy o mañana, o elegir día en un calendario;
+  - fijar la hora y quitar del plan;
+  - estimar;
+  - marcarla como imprescindible.
+- **Imprescindibles**: hasta tres por día, y lo impone la base. Salen
+  primero en Hoy, con una estrella, y dejan de serlo al cambiar de día.
+- **Añadir todo a hoy**: trae de una vez lo que quedó de días anteriores.
 - **Mi trabajo**: las tareas propias o de mi equipo de todos los proyectos, con
   filtros de vencimiento (todas, vencidas, hoy, esta semana).
 - **Nueva tarea en la cabecera**: un botón en la barra superior de cada
@@ -248,6 +260,8 @@ la tarea y en la propia tabla.
   su casilla de «hecha» y su cronómetro. Una columna aparte para lo
   planificado antes de la ventana y todavía sin terminar, de la que solo se
   puede arrastrar.
+  Unas flechas mueven la ventana de semana en semana, más allá de los quince
+  días, y «Hoy» la devuelve.
   Incluye una proyección de las próximas ocurrencias de tareas recurrentes
   todavía no creadas. La estimación se edita directamente en la tarjeta. La
   carga de cada día es lo que queda de cada tarea sin terminar más los bloques

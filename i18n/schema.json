@@ -11030,9 +11030,17 @@
 						},
 						"addToToday": {
 							"type": "string"
+						},
+						"addAllToToday": {
+							"type": "string"
 						}
 					},
-					"required": ["title_one", "title_other", "addToToday"]
+					"required": [
+						"title_one",
+						"title_other",
+						"addToToday",
+						"addAllToToday"
+					]
 				},
 				"planned": {
 					"type": "object",
@@ -11135,6 +11143,19 @@
 						"logged",
 						"due"
 					]
+				},
+				"key": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title_one": {
+							"type": "string"
+						},
+						"title_other": {
+							"type": "string"
+						}
+					},
+					"required": ["title_one", "title_other"]
 				}
 			},
 			"required": [
@@ -11146,7 +11167,8 @@
 				"urgent",
 				"done",
 				"row",
-				"peek"
+				"peek",
+				"key"
 			]
 		},
 		"myTasks": {
@@ -11270,6 +11292,25 @@
 				},
 				"dropToAnchor": {
 					"type": "string"
+				},
+				"window": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"previous": {
+							"type": "string"
+						},
+						"today": {
+							"type": "string"
+						},
+						"next": {
+							"type": "string"
+						},
+						"todayLabel": {
+							"type": "string"
+						}
+					},
+					"required": ["previous", "today", "next", "todayLabel"]
 				}
 			},
 			"required": [
@@ -11285,7 +11326,8 @@
 				"empty",
 				"description",
 				"dayLoadPct",
-				"dropToAnchor"
+				"dropToAnchor",
+				"window"
 			]
 		},
 		"schedule": {
@@ -11776,6 +11818,99 @@
 				"capturedInInbox",
 				"error"
 			]
+		},
+		"taskActions": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"menuLabel": {
+					"type": "string"
+				},
+				"markDone": {
+					"type": "string"
+				},
+				"reopen": {
+					"type": "string"
+				},
+				"planToday": {
+					"type": "string"
+				},
+				"planTomorrow": {
+					"type": "string"
+				},
+				"pickDay": {
+					"type": "string"
+				},
+				"setTime": {
+					"type": "string"
+				},
+				"unplan": {
+					"type": "string"
+				},
+				"estimate": {
+					"type": "string"
+				},
+				"key": {
+					"type": "string"
+				},
+				"keyFull": {
+					"type": "string"
+				},
+				"error": {
+					"type": "string"
+				},
+				"timeDialog": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"label": {
+							"type": "string"
+						},
+						"remove": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "label", "remove"]
+				},
+				"estimateDialog": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"label": {
+							"type": "string"
+						},
+						"hint": {
+							"type": "string"
+						},
+						"invalid": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "label", "hint", "invalid"]
+				}
+			},
+			"required": [
+				"menuLabel",
+				"markDone",
+				"reopen",
+				"planToday",
+				"planTomorrow",
+				"pickDay",
+				"setTime",
+				"unplan",
+				"estimate",
+				"key",
+				"keyFull",
+				"error",
+				"timeDialog",
+				"estimateDialog"
+			]
 		}
 	},
 	"required": [
@@ -11799,6 +11934,7 @@
 		"schedule",
 		"timeSheet",
 		"timer",
-		"quickAdd"
+		"quickAdd",
+		"taskActions"
 	]
 }

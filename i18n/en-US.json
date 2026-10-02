@@ -2799,7 +2799,8 @@
 		"previous": {
 			"title_one": "From previous days ({{count}})",
 			"title_other": "From previous days ({{count}})",
-			"addToToday": "Add to today"
+			"addToToday": "Add to today",
+			"addAllToToday": "Add all to today"
 		},
 		"planned": {
 			"title": "Today's plan",
@@ -2829,6 +2830,10 @@
 			"estimate": "Estimate",
 			"logged": "Logged",
 			"due": "Due"
+		},
+		"key": {
+			"title_one": "{{count}} key task of 3",
+			"title_other": "{{count}} key tasks of 3"
 		}
 	},
 	"myTasks": {
@@ -2866,7 +2871,13 @@
 		},
 		"description": "A {{days}}-day window. Drag tasks between days or from “Unplanned”.",
 		"dayLoadPct": "{{pct}}% of your workday",
-		"dropToAnchor": "Drop here to set a time"
+		"dropToAnchor": "Drop here to set a time",
+		"window": {
+			"previous": "Previous week",
+			"today": "Today",
+			"next": "Next week",
+			"todayLabel": "Back to today"
+		}
 	},
 	"schedule": {
 		"pageTitle": "Schedule",
@@ -2992,5 +3003,30 @@
 		"captured": "{{key}} captured",
 		"capturedInInbox": "{{key}} captured in your inbox",
 		"error": "The task couldn't be captured"
+	},
+	"taskActions": {
+		"menuLabel": "Task actions",
+		"markDone": "Mark as done",
+		"reopen": "Reopen",
+		"planToday": "Plan for today",
+		"planTomorrow": "Plan for tomorrow",
+		"pickDay": "Choose a day",
+		"setTime": "Set a time…",
+		"unplan": "Remove from plan",
+		"estimate": "Estimate…",
+		"key": "Key task",
+		"keyFull": "That day already has three key tasks",
+		"error": "The change couldn't be saved",
+		"timeDialog": {
+			"title": "Time for “{{title}}”",
+			"label": "Start time",
+			"remove": "Remove time"
+		},
+		"estimateDialog": {
+			"title": "Estimate for “{{title}}”",
+			"label": "Estimate",
+			"hint": "1h 30m, 1h30, 90m or 1,5 (hours). Empty means no estimate.",
+			"invalid": "That isn't a duration"
+		}
 	}
 }

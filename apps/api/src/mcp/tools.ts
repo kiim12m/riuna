@@ -928,11 +928,15 @@ export function registerMcpTools(
           .max(60)
           .optional()
           .describe("Window size in days, default 15, max 60"),
+        from: optionalNonEmptyString.describe(
+          "First day of the window, yyyy-mm-dd; default today",
+        ),
       }),
     },
     async (args) => {
       const qs = new URLSearchParams({ workspaceId: args.workspaceId });
       if (args.days !== undefined) qs.set("days", String(args.days));
+      if (args.from !== undefined) qs.set("from", args.from);
       return run(() => client.json(`/api/planner?${qs.toString()}`));
     },
   );

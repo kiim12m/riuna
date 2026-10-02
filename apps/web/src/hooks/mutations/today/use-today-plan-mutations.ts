@@ -54,6 +54,8 @@ export function useTodayPlanMutations(
               (source as { startMinute?: number | null }).startMinute ?? null,
             loggedSeconds:
               (source as { loggedSeconds?: number }).loggedSeconds ?? 0,
+            // Viene de otro dia o de fuera del plan: nunca es imprescindible.
+            keyRank: null,
           };
           queryClient.setQueryData<TodayResponse>(queryKey, {
             ...previous,
