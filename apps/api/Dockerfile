@@ -63,13 +63,17 @@ RUN sed -i 's/"prepare": "husky"/"prepare": ""/g' package.json && \
 FROM node:24.19.0-alpine AS runtime
 
 # Set up user in a single layer
-RUN addgroup -g 1001 appuser && \
+RUN apk add --no-cache tzdata && \
+  addgroup -g 1001 appuser && \
   adduser -u 1001 -G appuser -D appuser && \
   mkdir -p /app/apps/api/data && \
   chown -R appuser:appuser /app
 
 WORKDIR /app
 ENV NODE_ENV=production
+# Mismo criterio que Dockerfile.riuna (ADR 049): la API vive en Madrid y
+# PostgreSQL en UTC; por eso no va en el `.env` que comparten.
+ENV TZ=Europe/Madrid
 
 # Production node_modules built natively on the build platform (pure JS, arch-independent)
 COPY --from=prod-deps --chown=appuser:appuser /app ./

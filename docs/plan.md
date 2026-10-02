@@ -1610,12 +1610,34 @@ verificación.
   barra cerrada— **fallan con el código anterior** (comprobado retirándolo) y
   pasan con este; el humo completo queda en 29 casos en verde, más 7 pruebas
   unitarias del mapa de invalidaciones (288 en el web).
-- **0.2 Zona horaria de la instancia** · S · ADR 049. `TZ=Europe/Madrid` (+ `tzdata`) en
+- **0.2 Zona horaria de la instancia** ✔ · S · [ADR 049](adr/049-la-api-vive-en-madrid.md). `TZ=Europe/Madrid` (+ `tzdata`) en
   `Dockerfile.riuna`, los `compose*.yml`, `charts/riuna` y los scripts de prueba. Un
   normalizador de arranque, como los `utils/migrate-*.ts`, lleva `personal_plan_entry.planned_date`
   y `schedule_block.planned_date`/`ends_at` de la medianoche UTC a la de Madrid; es idempotente,
   porque la medianoche de Madrid nunca cae a las 00:00Z. `task.due_date` no lo necesita: se
   compara por rangos. **Se ensaya sobre una copia de producción antes de desplegar.**
+  **Hecho (2026-10-01).** Sin `TZ` en el `.env`, que `compose` comparte con
+  Postgres. PostgreSQL se queda en UTC, porque sus `now()` escriben en columnas
+  sin zona. Pasar las pruebas en Madrid destapó tres cosas que el UTC tapaba,
+  arregladas y con su prueba:
+  - node-postgres serializaba los `Date` crudos en hora local, y la ventana
+    «vence hoy» se corría dos horas (`defaults.parseInputDatesAsUTC`);
+  - la tendencia, la semana en curso y el burndown cortaban los días en UTC
+    (`serverWallTime`);
+  - el diálogo de bloques leía su día cortando el ISO.
+
+  Y se arregla un fallo que ya estaba en producción: un vencimiento elegido en
+  el calendario salía «vencido» el mismo día en que vencía.
+
+  Verificación:
+  - ensayo sobre una copia de la base de desarrollo: 13 días convertidos, 0 en
+    la segunda vuelta, las 14 filas conservan su día;
+  - integración 659/659 en Madrid, unitarias 717 (API) y 288 (web);
+  - humo 29/29 con API y navegador en Madrid. Al arrancar, la API del humo
+    convirtió 186 días viejos de su propia base.
+
+  **Pendiente de quien despliega:** el ensayo sobre una copia de producción
+  que describe `actualizar.md`.
 - **0.3 Cronómetro en todas partes y tiempo en el detalle** · M. Un `TaskTimerButton` sobre
   `TimerButton` en el detalle, el Planificador, el Cronograma, Mis tareas y el tablero. El
   detalle gana una sección «Tiempo»: lo registrado (también en tareas sin hijas), sus
@@ -1888,11 +1910,13 @@ destructiva.
 El **interludio de espacio personal y administración** está **cerrado**: sus
 catorce bloques están hechos, commiteados y verificados. Lo siguiente es el
 **[interludio de productividad personal y equipo](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente)**,
-con el **sub-bloque 0.1 ya hecho** (pantallas personales frescas y un runtime
-de espacio, [ADR 048](adr/048-frescura-de-las-pantallas-personales.md)). Sigue
-el **0.2**: la instancia pasa a `Europe/Madrid`, normalizando antes los días
-del plan ya guardados. Después viene la **Fase 8**: automatizaciones e
-importadores externos.
+con los sub-bloques **0.1** (pantallas personales frescas,
+[ADR 048](adr/048-frescura-de-las-pantallas-personales.md)) y **0.2** (la API
+en `Europe/Madrid`, [ADR 049](adr/049-la-api-vive-en-madrid.md)) hechos. Antes
+de desplegar el 0.2 hay que ensayar la conversión sobre una copia de
+producción, como explica [actualizar.md](actualizar.md). Sigue el **0.3**:
+cronómetro en todas partes y tiempo en el detalle de la tarea. Después del
+interludio viene la **Fase 8**: automatizaciones e importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la

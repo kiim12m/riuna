@@ -75,6 +75,7 @@ import { authorizeAssetAccess } from "./utils/authorize-asset-access";
 import { getInvitationDetails } from "./utils/check-registration-allowed";
 import { buildContentDisposition } from "./utils/content-disposition";
 import { migrateApiKeyReferenceId } from "./utils/migrate-apikey-reference-id";
+import { migrateDayColumnsToLocalMidnight } from "./utils/migrate-day-columns-to-local-midnight";
 import { migrateNotificationPreferencesSchema } from "./utils/migrate-notification-preferences-schema";
 import { migrateSessionColumn } from "./utils/migrate-session-column";
 import { migrateWorkspaceUserEmail } from "./utils/migrate-workspace-user-email";
@@ -893,6 +894,9 @@ export async function runStartupTasks() {
   await migrateNotificationPreferencesSchema();
   await migrateGitHubIntegration();
   await migrateColumns();
+  // Despues de las migraciones (las tablas tienen que existir) y antes del
+  // planificador de trabajos, que ya lee dias (ADR 049).
+  await migrateDayColumnsToLocalMidnight();
   await seedDefaultWorkspaceRoles();
 
   initializePlugins();

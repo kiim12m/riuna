@@ -17,6 +17,7 @@ import {
   timeEntryTable,
 } from "../database/schema";
 import type { PersonalScope } from "../my-work/scope";
+import { serverWallTime } from "../utils/day-boundaries";
 import { dueWindowExpression } from "../utils/due-window";
 import {
   type FieldRegistry,
@@ -132,8 +133,10 @@ function categoricalKey(groupBy: CategoricalGroupBy, now: Date): SQL {
 function timeKey(column: SQL, granularity: Granularity): SQL {
   // Devuelto como texto a proposito: una fecha cruda la leen drizzle y
   // node-postgres con convenios distintos —UTC frente a la zona local— y las
-  // dos discrepan, que es lo que documenta `tree-aggregates.ts`.
-  return sql`date_trunc(${granularity}, ${column})::text`;
+  // dos discrepan, que es lo que documenta `tree-aggregates.ts`. Y cortado en
+  // la zona del servidor, no en UTC: lo cerrado a las 00:30 de Madrid es de
+  // ese dia, no de la vispera (ADR 049).
+  return sql`date_trunc(${granularity}, ${serverWallTime(column)})::text`;
 }
 
 function toNumber(value: unknown): number {

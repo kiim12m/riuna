@@ -202,7 +202,7 @@ describe("planner: previous (from days before the window, ADR 045)", () => {
     const plan = await (await getPlan(app, workspaceId)).json();
     const todayEntries = plan.entries.filter(
       (e: { plannedDate: string }) =>
-        e.plannedDate.slice(0, 10) === dayKey(today()),
+        dayKey(new Date(e.plannedDate)) === dayKey(today()),
     );
     expect(todayEntries).toHaveLength(0);
   });
@@ -430,7 +430,7 @@ describe("PUT /planner/order", () => {
     const ids = plan.entries
       .filter(
         (e: { plannedDate: string }) =>
-          e.plannedDate.slice(0, 10) === dayKey(day),
+          dayKey(new Date(e.plannedDate)) === dayKey(day),
       )
       .sort(
         (a: { position: number }, b: { position: number }) =>

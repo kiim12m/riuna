@@ -17,6 +17,11 @@ import { defineConfig, devices } from "@playwright/test";
  * redirigida y mas de una tarea persistente, turbo se queda colgado sin abrir el
  * puerto. Esta anotado en la skill `verify` y aqui se respeta.
  */
+// La zona de produccion (ADR 049), para el proceso que lanza las pruebas -sus
+// fechas de ayuda- y para la API, que la hereda del entorno. El navegador va
+// aparte, con `timezoneId`: es donde vive quien usa Riuna.
+process.env.TZ = "Europe/Madrid";
+
 const API_PORT = 1338;
 const WEB_PORT = 5174;
 const DATABASE_URL =
@@ -40,6 +45,7 @@ export default defineConfig({
     // `user.locale → navegador → por defecto`, y Chromium arranca en `en-US`.
     // Sin esto el humo mediria una interfaz que ningun usuario de Riuna ve.
     locale: "es-ES",
+    timezoneId: "Europe/Madrid",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "off",
@@ -63,6 +69,7 @@ export default defineConfig({
         DATABASE_URL,
         PORT: String(API_PORT),
         NODE_ENV: "development",
+        TZ: "Europe/Madrid",
         AUTH_SECRET: "e2e-secret-with-at-least-32-characters",
         RIUNA_API_URL: `http://localhost:${API_PORT}`,
         RIUNA_CLIENT_URL: `http://localhost:${WEB_PORT}`,

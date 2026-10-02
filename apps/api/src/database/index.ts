@@ -1,6 +1,6 @@
 import { config } from "dotenv-mono";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import { defaults, Pool } from "pg";
 import {
   accountTableRelations,
   activityTableRelations,
@@ -208,6 +208,16 @@ type DatabaseInstance = ReturnType<typeof drizzle<typeof schema>>;
 
 let pool: Pool | undefined;
 let dbInstance: DatabaseInstance | undefined;
+
+// Un `Date` que viaja como parametro crudo dentro de un `sql` (las fronteras de
+// dia de `due-window.ts`, por ejemplo) lo serializa node-postgres, no drizzle,
+// y por defecto en hora **local** con desfase -`...T00:00:00+02:00`-. Contra
+// una columna `timestamp` sin zona PostgreSQL ignora el desfase, asi que con la
+// API en Madrid (ADR 049) la frontera se corria dos horas y el `CASE` de la
+// ventana de vencimiento contradecia a la condicion tipada, que si pasa por
+// drizzle y viaja en UTC. Asi los dos caminos guardan y comparan la hora de
+// pared UTC, que es el convenio de todas las columnas sin zona del esquema.
+defaults.parseInputDatesAsUTC = true;
 
 export function getDatabasePool(): Pool {
   if (!pool) {
