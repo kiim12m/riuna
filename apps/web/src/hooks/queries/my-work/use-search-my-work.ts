@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { type SearchMyWorkOptions, searchMyWork } from "@/fetchers/my-work";
+import { personalQueryOptions } from "@/hooks/queries/personal-query-options";
 
 /**
  * Clave bajo `"my-work"` a proposito: `useUserWebSocket` ya invalida ese
@@ -13,6 +14,7 @@ export function useSearchMyWork(workspaceId: string) {
     queryFn: () =>
       searchMyWork({ workspaceId, scope: "assigned", sortBy: "smart" }),
     enabled: Boolean(workspaceId),
+    ...personalQueryOptions,
   });
 }
 
@@ -30,5 +32,6 @@ export function useMyTasksSearch(options: SearchMyWorkOptions) {
     queryKey: ["my-work", "search", options],
     queryFn: () => searchMyWork(options),
     enabled: Boolean(options.workspaceId),
+    ...personalQueryOptions,
   });
 }

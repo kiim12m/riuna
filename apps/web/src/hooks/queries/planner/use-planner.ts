@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getPlan } from "@/fetchers/planner";
+import { personalQueryOptions } from "@/hooks/queries/personal-query-options";
 
 /**
  * Clave propia bajo "planner": `PLAN_INVALIDATED` (canal de usuario) invalida
@@ -11,5 +12,6 @@ export function usePlanner(workspaceId: string, days = 15) {
     queryKey: ["planner", workspaceId, days],
     queryFn: () => getPlan(workspaceId, days),
     enabled: Boolean(workspaceId),
+    ...personalQueryOptions,
   });
 }

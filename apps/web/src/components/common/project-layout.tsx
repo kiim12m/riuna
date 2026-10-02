@@ -14,6 +14,7 @@ import { NewTaskButton } from "@/components/common/header/new-task-button";
 import ProjectCrumbSelect from "@/components/common/header/project-crumb-select";
 import WorkspaceCrumbSelect from "@/components/common/header/workspace-crumb-select";
 import Layout from "@/components/common/layout";
+import { MobileHeaderBell } from "@/components/notification/mobile-header-bell";
 import CreateProjectModal from "@/components/shared/modals/create-project-modal";
 import { Button } from "@/components/ui/button";
 import { KbdSequence } from "@/components/ui/kbd";
@@ -260,6 +261,7 @@ export default function ProjectLayout({
           <div className="flex shrink-0 items-center gap-1.5">
             <NewTaskButton />
             {headerActions}
+            <MobileHeaderBell />
           </div>
         </div>
       </Layout.Header>

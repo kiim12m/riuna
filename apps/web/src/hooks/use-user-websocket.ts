@@ -1,7 +1,12 @@
 import { windowId } from "@riuna/libs";
-import { useQueryClient } from "@tanstack/react-query";
+import { type QueryKey, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { getApiUrl } from "@/fetchers/get-api-url";
+import {
+  DEBOUNCED_USER_MESSAGES,
+  type UserWsMessage,
+  userMessageInvalidations,
+} from "@/hooks/user-ws-invalidations";
 import { authClient } from "@/lib/auth-client";
 
 export function getUserWsUrl() {
@@ -20,12 +25,17 @@ const WS_PING_INTERVAL_MS = 30_000;
  * consulta. Esta ventana los junta en uno, igual que la cola de 100 ms que la
  * difusion por proyecto ya usa en el servidor.
  */
-const MY_WORK_DEBOUNCE_MS = 300;
+const DEBOUNCE_MS = 300;
 
 /**
  * Maintains a user-scoped WebSocket connection for receiving user-targeted
  * real-time events (e.g. NOTIFICATION_CREATED). Invalidates TanStack Query
- * caches as needed, so no polling is required.
+ * caches as needed, so no polling is required. Which keys each message
+ * invalidates lives in `user-ws-invalidations.ts`.
+ *
+ * Se monta una sola vez en `WorkspaceRuntime` (ADR 048), no en la barra
+ * lateral: en movil la barra es un panel que se desmonta al cerrarse, y con
+ * ella se iba la conexion.
  */
 export function useUserWebSocket() {
   const queryClient = useQueryClient();
@@ -34,7 +44,8 @@ export function useUserWebSocket() {
   const retriesRef = useRef(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const myWorkTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -42,29 +53,29 @@ export function useUserWebSocket() {
     retriesRef.current = 0;
 
     /**
-     * El canal de usuario avisa cuando cambia **si una tarea es tuya**, que es
-     * lo que decide si aparece o desaparece del panel personal.
-     *
-     * Invalida las dos claves. `["my-work"]` es la lectura de la API, que sigue
-     * publicada; `["dashboard-data"]` es la pantalla, que desde la Fase 7 es
-     * quien la pinta. Sin esto el panel tardaria hasta un minuto en enterarse
-     * de que alguien le ha asignado algo, y "Mi trabajo" si lo enseñaba al
-     * momento: fundir las dos pantallas no puede costar esa propiedad.
-     *
-     * El resto del contenido —prioridad, fecha, titulo— sigue llegando por el
-     * intervalo: son eventos que disparan en cada arrastre y poner una
-     * resolucion de destinatarios en el camino de mutacion mas caliente del
-     * producto es exactamente lo que la ADR 024 descarto.
+     * Junta en una sola pasada los mensajes que llegan en rafaga
+     * (`DEBOUNCED_USER_MESSAGES`): asignar veinte tareas de golpe son veinte
+     * avisos y deben ser un solo refetch por clave.
      */
-    function scheduleMyWorkInvalidate() {
-      if (myWorkTimerRef.current) {
-        clearTimeout(myWorkTimerRef.current);
+    function scheduleDebounced(type: string) {
+      pendingRef.current.add(type);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
-      myWorkTimerRef.current = setTimeout(() => {
-        myWorkTimerRef.current = null;
-        queryClient.invalidateQueries({ queryKey: ["my-work"] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard-data"] });
-      }, MY_WORK_DEBOUNCE_MS);
+      debounceTimerRef.current = setTimeout(() => {
+        debounceTimerRef.current = null;
+        const types = [...pendingRef.current];
+        pendingRef.current.clear();
+        for (const pending of types) {
+          invalidate(userMessageInvalidations({ type: pending }));
+        }
+      }, DEBOUNCE_MS);
+    }
+
+    function invalidate(keys: QueryKey[]) {
+      for (const queryKey of keys) {
+        queryClient.invalidateQueries({ queryKey });
+      }
     }
 
     function clearPing() {
@@ -91,55 +102,13 @@ export function useUserWebSocket() {
 
       ws.onmessage = (event) => {
         try {
-          const message = JSON.parse(event.data as string) as {
-            type?: string;
-            workspaceId?: string;
-          };
-          if (message.type === "NOTIFICATION_CREATED") {
-            queryClient.invalidateQueries({ queryKey: ["notifications"] });
+          const message = JSON.parse(event.data as string) as UserWsMessage;
+          if (!message.type) return;
+          if (DEBOUNCED_USER_MESSAGES.has(message.type)) {
+            scheduleDebounced(message.type);
+            return;
           }
-          if (message.type === "MY_WORK_INVALIDATED") {
-            scheduleMyWorkInvalidate();
-          }
-          // El plan personal es de una sola persona y no comparte nada con
-          // "my-work": otra sesion propia -otra pestana, el movil- movio una
-          // tarjeta, y esta hay que refrescarla tambien. El Cronograma lee
-          // `personal_plan_entry` ademas de lo suyo (ADR 041), asi que un
-          // cambio de plan tambien lo invalida.
-          if (message.type === "PLAN_INVALIDATED") {
-            queryClient.invalidateQueries({ queryKey: ["planner"] });
-            queryClient.invalidateQueries({ queryKey: ["schedule"] });
-            queryClient.invalidateQueries({ queryKey: ["today"] });
-            queryClient.invalidateQueries({ queryKey: ["my-work", "counts"] });
-          }
-          // Un bloque fijo o la jornada personal cambian la capacidad y los
-          // bloques fijos que el Planificador y Hoy tambien leen (ADR 045),
-          // no solo el Cronograma que originalmente disparaba este evento.
-          if (message.type === "SCHEDULE_INVALIDATED") {
-            queryClient.invalidateQueries({ queryKey: ["schedule"] });
-            queryClient.invalidateQueries({ queryKey: ["planner"] });
-            queryClient.invalidateQueries({ queryKey: ["today"] });
-          }
-          // Un solo cronometro por persona (ADR 044): arrancar, parar -a mano
-          // o porque la tarea entro en una columna final- y editar o borrar
-          // una entrada del parte de horas llegan todos por aqui, para que el
-          // pie de la barra y la pastilla movil se enteren aunque el cambio
-          // venga de otra pestana o de un evento del servidor.
-          if (message.type === "TIMER_CHANGED") {
-            queryClient.invalidateQueries({ queryKey: ["time-entry"] });
-            queryClient.invalidateQueries({ queryKey: ["schedule"] });
-            queryClient.invalidateQueries({ queryKey: ["time-sheet"] });
-            queryClient.invalidateQueries({ queryKey: ["today"] });
-            queryClient.invalidateQueries({ queryKey: ["my-work", "counts"] });
-          }
-          // Una vista de espacio sin proyecto no tiene socket de proyecto que la
-          // escuche: llega por aqui. El prefijo cubre las tres claves de
-          // `["workspace-views", workspaceId, type ?? "all"]`.
-          if (message.type === "VIEW_UPDATED" && message.workspaceId) {
-            queryClient.invalidateQueries({
-              queryKey: ["workspace-views", message.workspaceId],
-            });
-          }
+          invalidate(userMessageInvalidations(message));
         } catch {
           // Ignore malformed messages
         }
@@ -165,10 +134,11 @@ export function useUserWebSocket() {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      if (myWorkTimerRef.current) {
-        clearTimeout(myWorkTimerRef.current);
-        myWorkTimerRef.current = null;
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
       }
+      pendingRef.current.clear();
       wsRef.current?.close();
     };
   }, [session?.user?.id, queryClient]);

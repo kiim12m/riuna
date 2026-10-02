@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **Siguiente** — [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -1596,14 +1596,20 @@ verificación.
 
 **Bloque 0 — Sanear** (≈ 4 semanas)
 
-- **0.1 Pantallas frescas y runtime de espacio** · S · ADR 048. `workspace-runtime.tsx`, sin
+- **0.1 Pantallas frescas y runtime de espacio** ✔ · S · [ADR 048](adr/048-frescura-de-las-pantallas-personales.md). `workspace-runtime.tsx`, sin
   nada que pintar, montado en la ruta del espacio —que persiste entre pantallas— recoge lo
   que hoy vive en la barra lateral: la conexión del canal de usuario, el título con el
   cronómetro, el aviso de estimación superada y Ctrl+E. Un mapa puro mensaje → claves de
   consulta (`MY_WORK_INVALIDATED` añade Hoy, Planificador y Cronograma; `TIMER_CHANGED`, el
   Planificador). Las consultas personales recargan al montar y al volver a la pestaña con 15 s
   de frescura; el valor global no cambia, porque los tableros son pesados. Campana compacta en
-  la cabecera del móvil.
+  la cabecera del móvil. **Hecho (2026-10-01):** tres pruebas de extremo a
+  extremo nuevas en `today.spec.ts` —una asignación hecha desde fuera aparece en
+  Hoy sin recargar; al volver del Planificador a Hoy se ve lo planificado
+  mientras tanto; en móvil la campana de la cabecera cuenta en vivo con la
+  barra cerrada— **fallan con el código anterior** (comprobado retirándolo) y
+  pasan con este; el humo completo queda en 29 casos en verde, más 7 pruebas
+  unitarias del mapa de invalidaciones (288 en el web).
 - **0.2 Zona horaria de la instancia** · S · ADR 049. `TZ=Europe/Madrid` (+ `tzdata`) en
   `Dockerfile.riuna`, los `compose*.yml`, `charts/riuna` y los scripts de prueba. Un
   normalizador de arranque, como los `utils/migrate-*.ts`, lleva `personal_plan_entry.planned_date`
@@ -1882,9 +1888,11 @@ destructiva.
 El **interludio de espacio personal y administración** está **cerrado**: sus
 catorce bloques están hechos, commiteados y verificados. Lo siguiente es el
 **[interludio de productividad personal y equipo](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente)**,
-empezando por el **sub-bloque 0.1**: pantallas personales frescas y un runtime de
-espacio que saca de la barra lateral el tiempo real y el cronómetro. Después
-viene la **Fase 8**: automatizaciones e importadores externos.
+con el **sub-bloque 0.1 ya hecho** (pantallas personales frescas y un runtime
+de espacio, [ADR 048](adr/048-frescura-de-las-pantallas-personales.md)). Sigue
+el **0.2**: la instancia pasa a `Europe/Madrid`, normalizando antes los días
+del plan ya guardados. Después viene la **Fase 8**: automatizaciones e
+importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la

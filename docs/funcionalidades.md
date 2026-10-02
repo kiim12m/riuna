@@ -364,6 +364,12 @@ tiempo, actividad y notificaciones.
   deduplicación, que empujan creación, actualización, borrado y movimiento de
   tareas, además de relaciones, etiquetas, comentarios, ciclos, épicas, vistas,
   campos y notificaciones.
+- **El canal de usuario no depende de la barra lateral**
+  ([ADR 048](adr/048-frescura-de-las-pantallas-personales.md)): sigue conectado
+  al cambiar de pantalla, en los ajustes de cuenta y en móvil con la barra
+  cerrada, donde la campana va en la cabecera. Una tarea que te asignan aparece
+  sola en Hoy, en «Sin planificar» y en Mis tareas, y las pantallas personales
+  se releen al volver a ellas en vez de enseñar lo de antes.
 - **Fan-out opcional por Redis** para varias réplicas, en modo standalone,
   sentinel o cluster. Sin Redis todo funciona igual en instancia única.
 - Un bus de eventos interno alimenta también la actividad, las notificaciones,

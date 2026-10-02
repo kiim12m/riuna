@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import getRunningTimeEntry from "@/fetchers/time-entry/get-running-time-entry";
+import { personalQueryOptions } from "@/hooks/queries/personal-query-options";
 
 /**
  * Clave propia bajo "time-entry": `TIMER_CHANGED` (canal de usuario) invalida
@@ -11,5 +12,6 @@ export function useRunningTimer(workspaceId: string) {
     queryKey: ["time-entry", "running", workspaceId],
     queryFn: () => getRunningTimeEntry(workspaceId),
     enabled: Boolean(workspaceId),
+    ...personalQueryOptions,
   });
 }

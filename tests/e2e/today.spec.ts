@@ -123,4 +123,94 @@ test.describe("Hoy", () => {
 
     await expect(page.getByText("Nada pendiente")).toBeVisible();
   });
+
+  // ADR 048: `MY_WORK_INVALIDATED` solo invalidaba "Mis tareas" y los
+  // paneles, asi que una tarea que te asignaban no llegaba a Hoy hasta
+  // recargar. La asignacion va por la API, fuera de la pestaña, igual que si
+  // la hiciera otra persona desde su sesion.
+  test("una tarea que te asignan desde fuera aparece en Hoy sin recargar", async ({
+    page,
+    riuna,
+  }) => {
+    const taskId = await createTask(riuna, "Revisar presupuesto de obra", {
+      dueDate: new Date().toISOString(),
+    });
+
+    await page.goto(`/dashboard/workspace/${riuna.workspaceId}/today`);
+    await expect(page.getByText("Nada pendiente")).toBeVisible();
+
+    await riuna.api("put", `/api/task/assignee/${taskId}`, {
+      userId: riuna.userId,
+    });
+
+    await expect(
+      page.locator(`[data-testid="today-row-${taskId}"]`),
+    ).toBeVisible();
+  });
+
+  // ADR 048: en movil la barra lateral es un panel que solo existe abierto, y
+  // la conexion del canal de usuario y la campana vivian dentro. Con el panel
+  // cerrado -casi siempre- no habia contador ni tiempo real.
+  test("en móvil la campana de la cabecera cuenta en vivo con la barra cerrada", async ({
+    page,
+    riuna,
+  }) => {
+    // Crear el espacio ya deja una notificacion: se empieza de cero.
+    await riuna.api("delete", "/api/notification/clear-all");
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`/dashboard/workspace/${riuna.workspaceId}/today`);
+    await expect(page.getByText("Nada pendiente")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const bell = page
+      .locator("header")
+      .getByRole("button", { name: "Notificaciones" });
+    await expect(bell).toBeVisible();
+    await expect(bell).not.toContainText("1");
+
+    await riuna.api("post", "/api/notification", {
+      type: "task_created",
+      title: "Aviso de prueba",
+      message: "Aviso de prueba",
+    });
+
+    await expect(bell).toContainText("1");
+  });
+
+  // ADR 048: el cliente global no relee al montar, asi que una pantalla
+  // invalidada mientras no estaba abierta enseñaba lo de antes al volver.
+  test("al volver a Hoy desde el Planificador se ve lo planificado mientras tanto", async ({
+    page,
+    riuna,
+  }) => {
+    const taskId = await createTask(riuna, "Pedir material eléctrico");
+    await riuna.api("put", `/api/task/assignee/${taskId}`, {
+      userId: riuna.userId,
+    });
+
+    await page.goto(`/dashboard/workspace/${riuna.workspaceId}/today`);
+    await expect(page.getByText("Nada pendiente")).toBeVisible();
+
+    await page
+      .getByRole("button", { name: "Planificador", exact: true })
+      .click();
+    await expect(page.getByText("Pedir material eléctrico")).toBeVisible();
+
+    await riuna.api(
+      "put",
+      `/api/planner/${taskId}?workspaceId=${riuna.workspaceId}`,
+      { plannedDate: serverDay(0) },
+    );
+
+    await page.getByRole("button", { name: "Hoy", exact: true }).click();
+
+    const plannedSection = page.locator("section", {
+      has: page.getByRole("heading", { name: "Plan de hoy" }),
+    });
+    await expect(
+      plannedSection.locator(`[data-testid="today-row-${taskId}"]`),
+    ).toBeVisible();
+  });
 });

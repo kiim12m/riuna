@@ -1,16 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import { Play } from "lucide-react";
-import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { shortcuts } from "@/constants/shortcuts";
 import { useTimerMutations } from "@/hooks/mutations/time-entry/use-timer-mutations";
 import { useRunningTimer } from "@/hooks/queries/time-entry/use-running-timer";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useElapsed } from "@/hooks/use-elapsed";
-import { useEstimateWarning } from "@/hooks/use-estimate-warning";
-import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useStopWithConfirm } from "@/hooks/use-stop-with-confirm";
-import { useTimerTitle } from "@/hooks/use-timer-title";
 import { cn } from "@/lib/cn";
 import { formatElapsedClock } from "@/lib/format-clock";
 import { StopDialog } from "./stop-dialog";
@@ -28,6 +23,10 @@ const ROW_CLASS =
  * El titulo va en su propio `<Link>` y el boton de parar es un hermano, no
  * un hijo suyo: un `<button>` dentro de un `<a>` es contenido interactivo
  * anidado, invalido en HTML y confuso para un lector de pantalla.
+ *
+ * Solo pinta: el reloj en el titulo de la pestana, el aviso de estimacion
+ * superada y Ctrl+E viven en `WorkspaceRuntime`, que no se desmonta al
+ * cambiar de pantalla ni al cerrar el panel movil (ADR 048).
  */
 export function SidebarTimer() {
   const { t } = useTranslation();
@@ -46,39 +45,6 @@ export function SidebarTimer() {
   const taskTitle = running?.task?.title ?? t("timer:untitledTask");
   const { requestStop, dialogOpen, closeDialog, confirmStop } =
     useStopWithConfirm(stop, elapsed);
-
-  useTimerTitle(running ? formatElapsedClock(loggedTotal) : undefined);
-  useEstimateWarning(
-    running?.id,
-    overEstimate,
-    t("timer:overEstimate", { title: taskTitle }),
-  );
-
-  // Igual que `kb.togglePlay` de super-productivity: para si hay algo en
-  // marcha, reanuda la ultima si no.
-  const toggle = useCallback(() => {
-    if (running) {
-      requestStop();
-      return;
-    }
-    if (last) {
-      start({
-        id: last.taskId,
-        number: last.taskNumber,
-        title: last.taskTitle,
-        projectId: last.projectId,
-        estimate: null,
-      });
-    }
-  }, [running, last, start, requestStop]);
-
-  useRegisterShortcuts({
-    modifierShortcuts: {
-      [shortcuts.timer.prefix]: {
-        [shortcuts.timer.toggle]: toggle,
-      },
-    },
-  });
 
   if (!workspaceId || (!running && !last)) {
     return null;
