@@ -12485,6 +12485,62 @@
 						"next",
 						"rating"
 					]
+				},
+				"standup": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"button": {
+							"type": "string"
+						},
+						"title": {
+							"type": "string"
+						},
+						"hint": {
+							"type": "string"
+						},
+						"yesterday": {
+							"type": "string"
+						},
+						"today": {
+							"type": "string"
+						},
+						"blockers": {
+							"type": "string"
+						},
+						"nothingDone": {
+							"type": "string"
+						},
+						"nothingPlanned": {
+							"type": "string"
+						},
+						"noBlockers": {
+							"type": "string"
+						},
+						"copy": {
+							"type": "string"
+						},
+						"copied": {
+							"type": "string"
+						},
+						"copyError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"button",
+						"title",
+						"hint",
+						"yesterday",
+						"today",
+						"blockers",
+						"nothingDone",
+						"nothingPlanned",
+						"noBlockers",
+						"copy",
+						"copied",
+						"copyError"
+					]
 				}
 			},
 			"required": [
@@ -12494,7 +12550,8 @@
 				"exit",
 				"closeDay",
 				"planDay",
-				"weeklyReview"
+				"weeklyReview",
+				"standup"
 			]
 		}
 	},

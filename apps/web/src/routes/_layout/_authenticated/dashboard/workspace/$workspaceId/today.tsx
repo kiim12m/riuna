@@ -20,6 +20,7 @@ import {
   CalendarCheck,
   ChevronRight,
   CircleCheck,
+  MessageSquareText,
   Moon,
   Star,
   Sunrise,
@@ -30,6 +31,7 @@ import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import PageTitle from "@/components/page-title";
 import { QuickAddInput } from "@/components/quick-add/quick-add-input";
+import { StandupDialog } from "@/components/rituals/standup-dialog";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import {
   rowPlanOf,
@@ -170,6 +172,7 @@ function TodayComponent() {
   const planBulk = usePlanBulk(workspaceId);
   const { canCreateTasks } = useWorkspacePermission();
 
+  const [standupOpen, setStandupOpen] = useState(false);
   const [openTask, setOpenTask] = useState<{
     taskId: string;
     projectId: string;
@@ -339,6 +342,14 @@ function TodayComponent() {
                   >
                     <Sunrise />
                     {t("rituals:planDay.button")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setStandupOpen(true)}
+                  >
+                    <MessageSquareText />
+                    {t("rituals:standup.button")}
                   </Button>
                   <Button
                     variant={data.dayClosed ? "ghost" : "outline"}
@@ -631,6 +642,12 @@ function TodayComponent() {
         projectId={openTask?.projectId ?? ""}
         workspaceId={workspaceId}
         onClose={() => setOpenTask(null)}
+      />
+
+      <StandupDialog
+        workspaceId={workspaceId}
+        open={standupOpen}
+        onOpenChange={setStandupOpen}
       />
 
       <StopDialog

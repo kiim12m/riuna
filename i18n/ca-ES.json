@@ -3182,6 +3182,20 @@
 			"rating": {
 				"title": "Tu semana"
 			}
+		},
+		"standup": {
+			"button": "Stand-up",
+			"title": "Tu stand-up",
+			"hint": "Sale de tu plan y de tu último cierre; no se guarda. Cópialo donde lo comparta tu equipo.",
+			"yesterday": "Ayer",
+			"today": "Hoy",
+			"blockers": "Bloqueos",
+			"nothingDone": "Nada terminado",
+			"nothingPlanned": "Nada planificado",
+			"noBlockers": "Ninguno",
+			"copy": "Copiar en Markdown",
+			"copied": "Stand-up copiado",
+			"copyError": "No se ha podido copiar"
 		}
 	}
 }

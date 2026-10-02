@@ -81,3 +81,18 @@ export async function closeWeek(
 
   return response.json();
 }
+
+/** El stand-up de quien mira: derivado, nunca guardado ni con la valoracion. */
+export async function getStandup(workspaceId: string) {
+  const response = await client.review.standup.$get({
+    query: { workspaceId },
+  });
+
+  if (!response.ok) {
+    throw new HttpError(await response.text(), response.status);
+  }
+
+  return response.json();
+}
+
+export type StandupResponse = Awaited<ReturnType<typeof getStandup>>;

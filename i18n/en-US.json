@@ -3182,6 +3182,20 @@
 			"rating": {
 				"title": "Your week"
 			}
+		},
+		"standup": {
+			"button": "Stand-up",
+			"title": "Your stand-up",
+			"hint": "From your plan and your latest day close; nothing is stored. Copy it where your team shares it.",
+			"yesterday": "Yesterday",
+			"today": "Today",
+			"blockers": "Blockers",
+			"nothingDone": "Nothing finished",
+			"nothingPlanned": "Nothing planned",
+			"noBlockers": "None",
+			"copy": "Copy as Markdown",
+			"copied": "Stand-up copied",
+			"copyError": "It couldn’t be copied"
 		}
 	}
 }

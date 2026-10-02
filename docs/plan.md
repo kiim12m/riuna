@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 y 1, y 2.1-2.3 hechos; sigue el 2.4 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0, 1 y 2 hechos; sigue el 3 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -1936,10 +1936,39 @@ verificación.
   - 1 de extremo a extremo: vaciar la Bandeja moviendo a un proyecto,
     planificar una vencida, ver las cifras y guardar;
   - pasada visual.
-- **2.4 Stand-up** · S. Derivado, sin guardar: ayer, hoy y bloqueos. La persona copia el suyo
+- **2.4 Stand-up** ✔ · S. Derivado, sin guardar: ayer, hoy y bloqueos. La persona copia el suyo
   en Markdown; el del equipo solo lo ve el responsable (5.3). **Enviarlo a Slack o Telegram se
   aplaza a la Fase 8**, como acción de automatización: las integraciones son por proyecto y
   un departamento no es un proyecto.
+  **Hecho (2026-10-02).** Sin ADR.
+  - **`GET /review/standup`**, calculado en `review/standup.ts`:
+    - ayer es el último día laborable de la jornada personal;
+    - los bloqueos son los del cierre más reciente, de hoy o de ayer;
+    - nunca la valoración. El fichero no nombra la tabla privada, y la prueba
+      de arquitectura de la ADR 054 lo vigila;
+    - el responsable (5.3) reutilizará este mismo cálculo.
+  - **El Markdown lo monta el cliente**, en `lib/standup.ts` y con i18n: la
+    API devuelve datos.
+  - **Diálogo desde un botón en Hoy.** La cabecera de Hoy pasa a partir sus
+    tres botones en varias líneas: en móvil se salían de la pantalla.
+
+  Verificación:
+  - 2 pruebas de integración, que comprueban que la nota privada no sale;
+  - 2 unitarias del Markdown;
+  - 1 de extremo a extremo con el portapapeles;
+  - pasada visual en escritorio y móvil.
+
+  **Verificación del Bloque 2 completo (2026-10-02):**
+  - integración 713 de 716 en la batería completa. Fallaron dos pruebas por
+    tiempos y bloqueos con la máquina cargada:
+    - un *deadlock* del `TRUNCATE` que limpia la base entre pruebas;
+    - la importación grande, intermitente desde el Bloque 0.
+
+    Solas pasan: `task-assignees` a la primera, y la importación 3 de 3
+    seguidas;
+  - de extremo a extremo 53 de 53;
+  - unitarias 352 (web), 727 (API) y 33 (MCP);
+  - typecheck de todos los paquetes, `biome ci` e i18n.
 
 **Bloque 3 — Foco y avisos del navegador** (≈ 2,5 semanas)
 
@@ -2171,8 +2200,9 @@ de fila, imprescindibles y plan en bloque
 el **1.4**, «Esperando a»: **el Bloque 1 está cerrado**. Del **Bloque 2**,
 los rituales, están hechos el **2.1**, terminar el día
 ([ADR 054](adr/054-terminar-el-dia-y-la-valoracion-privada.md)), y el **2.2**,
-planificar el día, y el **2.3**, la revisión semanal; sigue el **2.4**, el
-stand-up. Después del interludio viene la **Fase 8**: automatizaciones e
+planificar el día, el **2.3**, la revisión semanal, y el **2.4**, el stand-up:
+**el Bloque 2 está cerrado**. Sigue el **Bloque 3**, foco y avisos del
+navegador. Después del interludio viene la **Fase 8**: automatizaciones e
 importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`

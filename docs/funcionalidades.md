@@ -259,6 +259,15 @@ la tarea y en la propia tabla.
 
   Revisa la semana en curso; en sus dos primeros días, la anterior, y se
   puede cambiar entre las dos. Los tres rituales están también en la paleta.
+- **Stand-up**: un botón en Hoy lo enseña, derivado al momento y sin
+  guardarse:
+  - ayer, es decir, lo terminado el último día laborable;
+  - hoy: el plan, con las imprescindibles marcadas;
+  - los bloqueos del último cierre.
+
+  Nunca incluye la valoración privada. «Copiar en Markdown» lo deja listo para
+  pegarlo donde el equipo lo comparta; enviarlo solo a Slack o Telegram queda
+  para la Fase 8.
 - **Mi trabajo**: las tareas propias o de mi equipo de todos los proyectos, con
   filtros de vencimiento (todas, vencidas, hoy, esta semana).
 - **Nueva tarea en la cabecera**: un botón en la barra superior de cada

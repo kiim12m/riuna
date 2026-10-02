@@ -7,6 +7,7 @@ import { workspaceAccess } from "../utils/workspace-access-middleware";
 import closeDay from "./controllers/close-day";
 import getReview from "./controllers/get-review";
 import { closeWeek, getWeekReview } from "./controllers/week-review";
+import { getStandup } from "./standup";
 
 const dayKeySchema = v.pipe(
   v.string(),
@@ -58,6 +59,26 @@ const ratingBody = {
   note: optionalText(4000),
 };
 
+const standupTaskSchema = v.object({
+  id: v.string(),
+  number: v.nullable(v.number()),
+  title: v.string(),
+  projectSlug: v.string(),
+  keyRank: v.nullable(v.number()),
+});
+
+const standupSchema = v.object({
+  /** El ultimo dia laborable antes de hoy, `yyyy-mm-dd`. */
+  yesterday: v.object({
+    day: v.string(),
+    done: v.array(standupTaskSchema),
+    closed: v.boolean(),
+  }),
+  today: v.object({ day: v.string(), planned: v.array(standupTaskSchema) }),
+  /** Del cierre mas reciente, de hoy o de ayer. Nunca la valoracion. */
+  blockers: v.nullable(v.string()),
+});
+
 const dayReviewSchema = v.object({
   review: v.nullable(
     v.object({
@@ -86,6 +107,36 @@ const review = new Hono<{
     workspaceId: string;
   };
 }>()
+  .get(
+    "/standup",
+    describeRoute({
+      operationId: "getStandup",
+      tags: ["Review"],
+      description:
+        "The current user's stand-up, derived and never stored: what they finished on their last work day, today's plan with key tasks first, and the blockers of their latest day close. Never the private rating",
+      responses: {
+        200: {
+          description: "The stand-up",
+          content: {
+            "application/json": { schema: resolver(standupSchema) },
+          },
+        },
+      },
+    }),
+    validator(
+      "query",
+      v.object({ workspaceId: v.pipe(v.string(), v.minLength(1)) }),
+    ),
+    workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["read"] }),
+    async (c) =>
+      c.json(
+        await getStandup({
+          workspaceId: c.get("workspaceId"),
+          userId: c.get("userId"),
+        }),
+      ),
+  )
   .get(
     "/day/:date",
     describeRoute({
