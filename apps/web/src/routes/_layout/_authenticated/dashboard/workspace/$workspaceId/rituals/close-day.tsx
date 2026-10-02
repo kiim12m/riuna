@@ -166,6 +166,10 @@ function CloseDayRoute() {
             {t("rituals:closeDay.summary.worked", {
               time: formatDuration(today.totals.workedToday, i18n.language),
             })}
+            {today.totals.focusSessions > 0 &&
+              ` ${t("rituals:closeDay.summary.focus", {
+                count: today.totals.focusSessions,
+              })}`}
           </p>
           {today.done.length > 0 && (
             <ul className="space-y-0.5 text-body">

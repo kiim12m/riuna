@@ -3059,7 +3059,9 @@
 				"done_one": "Has terminado {{count}} tarea.",
 				"done_other": "Has terminado {{count}} tareas.",
 				"nothingDone": "Hoy no se ha terminado nada.",
-				"worked": "Registrado: {{time}}."
+				"worked": "Registrado: {{time}}.",
+				"focus_one": "{{count}} sesión de foco.",
+				"focus_other": "{{count}} sesiones de foco."
 			},
 			"pending": {
 				"title": "Lo que queda",
@@ -3216,6 +3218,48 @@
 			"limits": "Solo con una pestaña de Riuna abierta: sin ninguna, no hay aviso. En segundo plano puede llegar con un minuto de retraso, y posponer vale para este navegador.",
 			"denied": "El navegador tiene bloqueados los avisos de Riuna. Permítelos en los ajustes del sitio y vuelve aquí.",
 			"unsupported": "Este navegador no puede mostrar avisos."
+		}
+	},
+	"focus": {
+		"pageTitle": "Foco · {{title}}",
+		"menuItem": "Modo foco",
+		"leave": "Volver",
+		"start": "Empezar",
+		"stop": "Parar el foco",
+		"takeBreak": "Descansar",
+		"finishNow": "Terminar ya",
+		"skipBreak": "Saltar el descanso",
+		"nextBlock": "Siguiente bloque",
+		"again": "Otra vez",
+		"cycle": "Bloque {{current}} de {{total}}",
+		"minutes": "Minutos",
+		"modeLabel": "Modo de foco",
+		"mode": {
+			"pomodoro": "Pomodoro",
+			"flowtime": "Flowtime",
+			"countdown": "Cuenta atrás"
+		},
+		"modeHint": {
+			"pomodoro": "25 minutos de trabajo y 5 de descanso; cada cuatro bloques, uno largo de 15.",
+			"flowtime": "Trabajas hasta que decides parar; el descanso es un quinto de lo trabajado.",
+			"countdown": "Un bloque de los minutos que elijas."
+		},
+		"phase": {
+			"idle": "Listo para concentrarte",
+			"work": "Trabajando",
+			"short-break": "Descanso",
+			"long-break": "Descanso largo",
+			"ready": "Descanso terminado",
+			"done": "Terminado"
+		},
+		"otherTask": "Hay una sesión de foco en otra tarea: empezar aquí la termina.",
+		"stoppedOutside": "El cronómetro se paró fuera del modo foco: la sesión ha terminado.",
+		"notify": {
+			"breakTitle": "Toca descansar",
+			"breakBody": "{{minutes}} min de descanso. El cronómetro está parado.",
+			"readyTitle": "Descanso terminado",
+			"readyBody": "Vuelve a Riuna para empezar el siguiente bloque.",
+			"doneTitle": "Se acabó el tiempo"
 		}
 	}
 }

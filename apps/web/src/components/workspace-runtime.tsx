@@ -10,6 +10,7 @@ import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useAnchorReminders } from "@/hooks/use-anchor-reminders";
 import { useElapsed } from "@/hooks/use-elapsed";
 import { useEstimateWarning } from "@/hooks/use-estimate-warning";
+import { useFocusRuntime } from "@/hooks/use-focus-runtime";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useStopWithConfirm } from "@/hooks/use-stop-with-confirm";
 import { useTimerTitle } from "@/hooks/use-timer-title";
@@ -56,6 +57,7 @@ export function WorkspaceRuntime() {
 
   useTimerTitle(running ? formatElapsedClock(loggedTotal) : undefined);
   useAnchorReminders(workspaceId);
+  useFocusRuntime(workspaceId);
   useEstimateWarning(
     running?.id,
     overEstimate,

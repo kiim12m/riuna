@@ -12021,6 +12021,12 @@
 								},
 								"worked": {
 									"type": "string"
+								},
+								"focus_one": {
+									"type": "string"
+								},
+								"focus_other": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -12028,7 +12034,9 @@
 								"done_one",
 								"done_other",
 								"nothingDone",
-								"worked"
+								"worked",
+								"focus_one",
+								"focus_other"
 							]
 						},
 						"pending": {
@@ -12624,6 +12632,170 @@
 				}
 			},
 			"required": ["notification", "dialog", "settings"]
+		},
+		"focus": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"pageTitle": {
+					"type": "string"
+				},
+				"menuItem": {
+					"type": "string"
+				},
+				"leave": {
+					"type": "string"
+				},
+				"start": {
+					"type": "string"
+				},
+				"stop": {
+					"type": "string"
+				},
+				"takeBreak": {
+					"type": "string"
+				},
+				"finishNow": {
+					"type": "string"
+				},
+				"skipBreak": {
+					"type": "string"
+				},
+				"nextBlock": {
+					"type": "string"
+				},
+				"again": {
+					"type": "string"
+				},
+				"cycle": {
+					"type": "string"
+				},
+				"minutes": {
+					"type": "string"
+				},
+				"modeLabel": {
+					"type": "string"
+				},
+				"mode": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"pomodoro": {
+							"type": "string"
+						},
+						"flowtime": {
+							"type": "string"
+						},
+						"countdown": {
+							"type": "string"
+						}
+					},
+					"required": ["pomodoro", "flowtime", "countdown"]
+				},
+				"modeHint": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"pomodoro": {
+							"type": "string"
+						},
+						"flowtime": {
+							"type": "string"
+						},
+						"countdown": {
+							"type": "string"
+						}
+					},
+					"required": ["pomodoro", "flowtime", "countdown"]
+				},
+				"phase": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"idle": {
+							"type": "string"
+						},
+						"work": {
+							"type": "string"
+						},
+						"short-break": {
+							"type": "string"
+						},
+						"long-break": {
+							"type": "string"
+						},
+						"ready": {
+							"type": "string"
+						},
+						"done": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"idle",
+						"work",
+						"short-break",
+						"long-break",
+						"ready",
+						"done"
+					]
+				},
+				"otherTask": {
+					"type": "string"
+				},
+				"stoppedOutside": {
+					"type": "string"
+				},
+				"notify": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"breakTitle": {
+							"type": "string"
+						},
+						"breakBody": {
+							"type": "string"
+						},
+						"readyTitle": {
+							"type": "string"
+						},
+						"readyBody": {
+							"type": "string"
+						},
+						"doneTitle": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"breakTitle",
+						"breakBody",
+						"readyTitle",
+						"readyBody",
+						"doneTitle"
+					]
+				}
+			},
+			"required": [
+				"pageTitle",
+				"menuItem",
+				"leave",
+				"start",
+				"stop",
+				"takeBreak",
+				"finishNow",
+				"skipBreak",
+				"nextBlock",
+				"again",
+				"cycle",
+				"minutes",
+				"modeLabel",
+				"mode",
+				"modeHint",
+				"phase",
+				"otherTask",
+				"stoppedOutside",
+				"notify"
+			]
 		}
 	},
 	"required": [
@@ -12650,6 +12822,7 @@
 		"quickAdd",
 		"taskActions",
 		"rituals",
-		"reminders"
+		"reminders",
+		"focus"
 	]
 }

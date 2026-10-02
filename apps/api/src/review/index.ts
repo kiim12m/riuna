@@ -89,6 +89,7 @@ const dayReviewSchema = v.object({
         workedSeconds: v.number(),
         moved: v.number(),
         unplanned: v.number(),
+        focusSessions: v.optional(v.number()),
       }),
     }),
   ),

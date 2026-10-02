@@ -82,6 +82,8 @@ export const timeEntrySchema = v.object({
   startTime: v.date(),
   endTime: v.optional(v.date()),
   duration: v.nullable(v.number()),
+  /** Sesion de trabajo del modo foco, o `null` (ADR 056). */
+  focusMode: v.optional(v.nullable(v.string())),
   createdAt: v.date(),
   updatedAt: v.date(),
 });

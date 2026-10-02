@@ -3059,7 +3059,9 @@
 				"done_one": "You finished {{count}} task.",
 				"done_other": "You finished {{count}} tasks.",
 				"nothingDone": "Nothing was finished today.",
-				"worked": "Logged: {{time}}."
+				"worked": "Logged: {{time}}.",
+				"focus_one": "{{count}} focus session.",
+				"focus_other": "{{count}} focus sessions."
 			},
 			"pending": {
 				"title": "What’s left",
@@ -3216,6 +3218,48 @@
 			"limits": "Only with a Riuna tab open: with none, there is no notice. In the background it may arrive about a minute late, and snoozing applies to this browser only.",
 			"denied": "The browser blocks notifications for Riuna. Allow them in the site settings and come back here.",
 			"unsupported": "This browser cannot show notifications."
+		}
+	},
+	"focus": {
+		"pageTitle": "Focus · {{title}}",
+		"menuItem": "Focus mode",
+		"leave": "Back",
+		"start": "Start",
+		"stop": "Stop focus",
+		"takeBreak": "Take a break",
+		"finishNow": "Finish now",
+		"skipBreak": "Skip the break",
+		"nextBlock": "Next block",
+		"again": "Again",
+		"cycle": "Block {{current}} of {{total}}",
+		"minutes": "Minutes",
+		"modeLabel": "Focus mode",
+		"mode": {
+			"pomodoro": "Pomodoro",
+			"flowtime": "Flowtime",
+			"countdown": "Countdown"
+		},
+		"modeHint": {
+			"pomodoro": "25 minutes of work and 5 of rest; a longer 15-minute break every fourth block.",
+			"flowtime": "Work until you decide to stop; the break is a fifth of what you worked.",
+			"countdown": "One block of the minutes you choose."
+		},
+		"phase": {
+			"idle": "Ready to focus",
+			"work": "Working",
+			"short-break": "Break",
+			"long-break": "Long break",
+			"ready": "Break over",
+			"done": "Done"
+		},
+		"otherTask": "A focus session is running on another task: starting here ends it.",
+		"stoppedOutside": "The timer stopped outside focus mode: the session has ended.",
+		"notify": {
+			"breakTitle": "Time for a break",
+			"breakBody": "{{minutes}} min of rest. The timer is stopped.",
+			"readyTitle": "Break over",
+			"readyBody": "Back to Riuna to start the next block.",
+			"doneTitle": "Time’s up"
 		}
 	}
 }

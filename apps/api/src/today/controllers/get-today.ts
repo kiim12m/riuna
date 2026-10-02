@@ -20,6 +20,7 @@ import {
 } from "../../planner/queries";
 import { isDayClosed } from "../../review/day-closed";
 import { loadBlocksByDay } from "../../schedule/blocks-by-day";
+import { countFocusSessions } from "../../time-entry/focus-sessions";
 import getTimeSheet from "../../time-sheet/controllers/get-time-sheet";
 import {
   endOfServerDay,
@@ -61,12 +62,18 @@ export default async function getToday({
   const todayEnd = endOfServerDay(now);
   const todayKey = serverDayKey(now);
 
-  const [projectColumns, schedule, { blocksByDay }, dayClosed] =
+  const [projectColumns, schedule, { blocksByDay }, dayClosed, focusSessions] =
     await Promise.all([
       getWorkspaceColumns(workspaceId),
       getWorkSchedule(userId),
       loadBlocksByDay(workspaceId, userId, todayStart, todayEnd),
       isDayClosed({ workspaceId, userId, day: todayStart }),
+      countFocusSessions({
+        workspaceId,
+        userId,
+        start: todayStart,
+        end: todayEnd,
+      }),
     ]);
 
   const capacitySeconds = capacityForDay(
@@ -174,6 +181,7 @@ export default async function getToday({
       estimateRemaining,
       workedToday: timeSheet.totalSeconds,
       capacitySeconds,
+      focusSessions,
     },
     serverToday: todayKey,
     /** Si ya se paso por «Terminar el dia» (ADR 054). */

@@ -1558,6 +1558,12 @@ export const timeEntryTable = pgTable(
     startTime: timestamp("start_time", { mode: "date" }).notNull(),
     endTime: timestamp("end_time", { mode: "date" }),
     duration: integer("duration").default(0),
+    /**
+     * Con valor, la entrada es una sesion de trabajo del modo foco
+     * (ADR 056): `pomodoro`, `flowtime` o `countdown`. Se filtra: el cierre
+     * del dia cuenta las sesiones. Los descansos no registran tiempo.
+     */
+    focusMode: text("focus_mode"),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()
@@ -1569,6 +1575,10 @@ export const timeEntryTable = pgTable(
     // Sirve el filtro por usuario solo y el rango de fechas del parte de
     // horas (ADR 042); sustituye al indice de userId solo, que este cubre.
     index("time_entry_userId_startTime_idx").on(table.userId, table.startTime),
+    check(
+      "time_entry_focus_mode_valid",
+      sql`${table.focusMode} IS NULL OR ${table.focusMode} IN ('pomodoro', 'flowtime', 'countdown')`,
+    ),
     // Un cronometro por persona (ADR 044), vigilado por la base de datos y no
     // por la buena voluntad del controlador: mismo patron que
     // `cycle_one_active_per_project`. `end_time IS NULL` es "en marcha".

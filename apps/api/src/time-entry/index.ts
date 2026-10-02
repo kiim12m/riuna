@@ -15,6 +15,7 @@ import getTimeEntry from "./controllers/get-time-entry";
 import startTimer from "./controllers/start-timer";
 import stopTimer from "./controllers/stop-timer";
 import updateTimeEntry from "./controllers/update-time-entry";
+import { FOCUS_MODES } from "./focus-mode";
 // Registra el cierre automatico al terminar la tarea (ADR 044) como efecto
 // de cargar el modulo, igual que `notification/index.ts` con
 // `time-entry.created`: no hace falta llamarlo desde aqui, solo importarlo.
@@ -128,13 +129,24 @@ const timeEntry = new Hono<{
         },
       },
     }),
-    validator("json", v.object({ taskId: v.string() })),
+    validator(
+      "json",
+      v.object({
+        taskId: v.string(),
+        /** Una sesion de trabajo del modo foco (ADR 056). */
+        focusMode: v.optional(v.picklist(FOCUS_MODES)),
+      }),
+    ),
     workspaceAccess.fromTaskId(),
     requireWorkspacePermission({ task: ["update"] }),
     async (c) => {
-      const { taskId } = c.req.valid("json");
+      const { taskId, focusMode } = c.req.valid("json");
       const userId = c.get("userId");
-      const started = await startTimer({ taskId, userId });
+      const started = await startTimer({
+        taskId,
+        userId,
+        focusMode: focusMode ?? null,
+      });
       return c.json(started);
     },
   )

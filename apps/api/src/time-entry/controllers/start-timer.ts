@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { taskTable } from "../../database/schema";
+import type { FocusMode } from "../focus-mode";
 import { getRunningEntry } from "../running";
 import createTimeEntry from "./create-time-entry";
 
@@ -15,12 +16,22 @@ import createTimeEntry from "./create-time-entry";
 async function startTimer({
   taskId,
   userId,
+  focusMode = null,
 }: {
   taskId: string;
   userId: string;
+  /** Sesion de trabajo del modo foco (ADR 056). */
+  focusMode?: FocusMode | null;
 }) {
   const running = await getRunningEntry(userId);
-  if (running && running.taskId === taskId) {
+  // Misma tarea y mismo modo: no hay nada que cambiar. Si cambia el modo
+  // -empezar un pomodoro sobre un cronometro normal-, se abre otra entrada:
+  // la sesion de foco empieza ahi, no cuando empezo el cronometro.
+  if (
+    running &&
+    running.taskId === taskId &&
+    (running.focusMode ?? null) === focusMode
+  ) {
     return running;
   }
 
@@ -42,7 +53,12 @@ async function startTimer({
 
   // Sin `endTime`: nace en marcha, y `createTimeEntry` cierra lo que ya
   // corria (en otra tarea, por el `if` de arriba) antes de abrir esta.
-  return createTimeEntry({ taskId, userId, startTime: new Date() });
+  return createTimeEntry({
+    taskId,
+    userId,
+    startTime: new Date(),
+    focusMode,
+  });
 }
 
 export default startTimer;

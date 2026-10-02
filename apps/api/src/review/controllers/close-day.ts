@@ -108,6 +108,7 @@ export default async function closeDay({
   const summary: DaySummary = {
     done: view.done.length,
     workedSeconds: view.totals.workedToday,
+    focusSessions: view.totals.focusSessions,
     moved: (previous.review?.summary.moved ?? 0) + moved,
     unplanned:
       (previous.review?.summary.unplanned ?? 0) + (decided.size - moved),

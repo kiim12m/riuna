@@ -1,9 +1,13 @@
 import { client } from "@riuna/libs";
 import { HttpError } from "@/lib/http-error";
 
-async function startTimer(taskId: string) {
+/** `focusMode`: una sesion de trabajo del modo foco (ADR 056). */
+async function startTimer(
+  taskId: string,
+  focusMode?: "pomodoro" | "flowtime" | "countdown",
+) {
   const response = await client["time-entry"].start.$post({
-    json: { taskId },
+    json: { taskId, ...(focusMode ? { focusMode } : {}) },
   });
 
   if (!response.ok) {

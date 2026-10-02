@@ -512,6 +512,13 @@
 			"when": 1790930663813,
 			"tag": "0072_day_review",
 			"breakpoints": true
+		},
+		{
+			"idx": 73,
+			"version": "7",
+			"when": 1790946281330,
+			"tag": "0073_time_entry_focus_mode",
+			"breakpoints": true
 		}
 	]
 }

@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import {
   CalendarCheck,
   CalendarDays,
@@ -6,6 +7,7 @@ import {
   CalendarPlus,
   CheckSquare,
   Clock,
+  Crosshair,
   Ellipsis,
   Play,
   Square,
@@ -119,6 +121,7 @@ export function TaskRowActions({
   children,
 }: TaskRowActionsProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { data: activeWorkspace } = useActiveWorkspace();
   const workspaceId = workspaceIdProp ?? activeWorkspace?.id ?? "";
   const queryClient = useQueryClient();
@@ -217,6 +220,19 @@ export function TaskRowActions({
         >
           {isRunningThis ? <Square /> : <Play />}
           {t(isRunningThis ? "timer:stop" : "timer:start")}
+        </MenuItem>
+      )}
+      {canEdit && !task.isDone && (
+        <MenuItem
+          onClick={() =>
+            navigate({
+              to: "/dashboard/workspace/$workspaceId/focus/$taskId",
+              params: { workspaceId, taskId: task.id },
+            })
+          }
+        >
+          <Crosshair />
+          {t("focus:menuItem")}
         </MenuItem>
       )}
 

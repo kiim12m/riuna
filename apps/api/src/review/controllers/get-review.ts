@@ -14,6 +14,11 @@ export type DaySummary = {
   moved: number;
   /** Pendientes que se sacaron del plan al cerrar. */
   unplanned: number;
+  /**
+   * Sesiones del modo foco de ese dia (ADR 056). Falta en los cierres de
+   * antes de que existiera el modo foco.
+   */
+  focusSessions?: number;
 };
 
 /** Las cifras de una semana al revisarla. */

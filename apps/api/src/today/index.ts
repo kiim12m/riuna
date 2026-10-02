@@ -52,6 +52,8 @@ const todayResponseSchema = v.object({
     workedToday: v.number(),
     /** La jornada personal de hoy, menos la comida y los bloques cerrados. */
     capacitySeconds: v.number(),
+    /** Sesiones del modo foco empezadas hoy (ADR 056). */
+    focusSessions: v.number(),
   }),
   /** El dia del servidor, `yyyy-mm-dd`. */
   serverToday: v.string(),

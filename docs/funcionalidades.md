@@ -266,6 +266,18 @@ la tarea y en la propia tabla.
   posponerlo diez minutos o pasar la tarea al siguiente día laborable con la
   misma hora. Solo con una pestaña de Riuna abierta, y una sola avisa: sin
   push ni service worker.
+- **Modo foco** ([ADR 056](adr/056-modo-foco-sobre-entradas-reales.md)):
+  desde el menú de una tarea, a pantalla completa. Hay tres modos:
+  - Pomodoro: 25 minutos de trabajo y 5 de descanso, con uno de 15 cada
+    cuatro;
+  - Flowtime: el descanso es el 20 % de lo trabajado;
+  - cuenta atrás de los minutos que se elijan.
+
+  El trabajo se registra como entradas de tiempo normales, marcadas como
+  sesión de foco, y los descansos no registran nada. Al acabar cada fase
+  avisa. La fase y su reloj se ven en el pie de la barra lateral. Si el
+  cronómetro se para por otro lado, la sesión termina. El cierre del día
+  cuenta las sesiones.
 - **Stand-up**: un botón en Hoy lo enseña, derivado al momento y sin
   guardarse:
   - ayer, es decir, lo terminado el último día laborable;

@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0, 1 y 2, y 3.1 hechos; sigue el 3.2 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0, 1 y 2, y 3.1-3.2 hechos; sigue el 3.3 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -1993,10 +1993,30 @@ verificación.
   - 1 de extremo a extremo con el reloj adelantado y `Notification`
     sustituida;
   - pasada visual del ajuste y del diálogo.
-- **3.2 Modo foco** · M · ADR 056. Máquina pura en el cliente —Pomodoro 25/5/15×4, Flowtime con
+- **3.2 Modo foco** ✔ · M · [ADR 056](adr/056-modo-foco-sobre-entradas-reales.md). Máquina pura en el cliente —Pomodoro 25/5/15×4, Flowtime con
   un descanso del 20 % de lo trabajado, cuenta atrás— sobre entradas de tiempo reales:
   `time_entry.focus_mode`, que se filtra porque el cierre del día cuenta las sesiones. Los
   descansos no registran tiempo, y el cronómetro del servidor manda.
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **Tras un descanso la sesión queda «lista»**: el siguiente bloque no
+    empieza solo.
+  - **El descanso de Flowtime** va de 1 a 30 minutos.
+  - **`POST /time-entry/start`** abre otra entrada si cambia el modo en la
+    misma tarea, y no hace nada si es el mismo.
+  - **`GET /today` cuenta las sesiones del día**, y el cierre las guarda.
+    `GET /time-entry/task/:taskId` devuelve el modo de cada entrada.
+  - **El cronómetro del servidor manda**, con 15 segundos de gracia para que
+    el arranque llegue a su consulta.
+  - **Pantalla completa** en `focus/$taskId`, la fase en el pie de la barra
+    lateral y «Modo foco» en el menú de fila. La primera pasada visual
+    enseñó la pantalla encogida en una columna: el contenedor padre es flex
+    y faltaba el ancho completo.
+
+  Verificación:
+  - 9 pruebas unitarias;
+  - 4 de integración;
+  - 1 de extremo a extremo con el reloj adelantado;
+  - pasada visual.
 - **3.3 Avisos de ritmo** · S. Descanso, «no estás registrando» en horario laboral (como mucho
   uno por hora) y cronómetro en marcha pasada la jornada.
 
@@ -2217,9 +2237,10 @@ los rituales, están hechos el **2.1**, terminar el día
 ([ADR 054](adr/054-terminar-el-dia-y-la-valoracion-privada.md)), y el **2.2**,
 planificar el día, el **2.3**, la revisión semanal, y el **2.4**, el stand-up:
 **el Bloque 2 está cerrado**. Del **Bloque 3**, foco y avisos del navegador,
-está hecho el **3.1**, los avisos a la hora anclada
-([ADR 055](adr/055-avisos-del-navegador-sin-service-worker.md)); sigue el
-**3.2**, el modo foco.
+están hechos el **3.1**, los avisos a la hora anclada
+([ADR 055](adr/055-avisos-del-navegador-sin-service-worker.md)), y el **3.2**,
+el modo foco ([ADR 056](adr/056-modo-foco-sobre-entradas-reales.md)); sigue el
+**3.3**, los avisos de ritmo.
 Después del interludio viene la **Fase 8**: automatizaciones e
 importadores externos.
 

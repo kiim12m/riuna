@@ -3,6 +3,7 @@ import { useCallback, useMemo } from "react";
 import type { RunningTimeEntryResponse } from "@/fetchers/time-entry/get-running-time-entry";
 import startTimer from "@/fetchers/time-entry/start-timer";
 import stopTimer from "@/fetchers/time-entry/stop-timer";
+import type { FocusMode } from "@/lib/focus/machine";
 
 type StartableTask = {
   id: string;
@@ -36,7 +37,13 @@ export function useTimerMutations(workspaceId: string) {
   }, [queryClient, queryKey]);
 
   const startMutation = useMutation({
-    mutationFn: (taskId: string) => startTimer(taskId),
+    mutationFn: ({
+      taskId,
+      focusMode,
+    }: {
+      taskId: string;
+      focusMode?: FocusMode;
+    }) => startTimer(taskId, focusMode),
     onSettled: invalidateAffected,
   });
 
@@ -46,7 +53,7 @@ export function useTimerMutations(workspaceId: string) {
   });
 
   const start = useCallback(
-    (task: StartableTask) => {
+    (task: StartableTask, focusMode?: FocusMode) => {
       const previous =
         queryClient.getQueryData<RunningTimeEntryResponse>(queryKey);
       queryClient.cancelQueries({ queryKey });
@@ -60,9 +67,10 @@ export function useTimerMutations(workspaceId: string) {
         last: null,
       });
 
-      startMutation.mutate(task.id, {
-        onError: () => queryClient.setQueryData(queryKey, previous),
-      });
+      startMutation.mutate(
+        { taskId: task.id, focusMode },
+        { onError: () => queryClient.setQueryData(queryKey, previous) },
+      );
     },
     [queryClient, queryKey, startMutation],
   );
