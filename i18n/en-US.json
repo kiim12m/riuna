@@ -3213,11 +3213,27 @@
 		},
 		"settings": {
 			"title": "Browser notifications",
-			"subtitle": "A notice at the anchored time of each of today’s tasks.",
+			"subtitle": "At the anchored time of each task today and, if you choose them, to keep the pace of your workday.",
 			"toggle": "Notify me in this browser",
 			"limits": "Only with a Riuna tab open: with none, there is no notice. In the background it may arrive about a minute late, and snoozing applies to this browser only.",
 			"denied": "The browser blocks notifications for Riuna. Allow them in the site settings and come back here.",
-			"unsupported": "This browser cannot show notifications."
+			"unsupported": "This browser cannot show notifications.",
+			"nudgesTitle": "Rhythm nudges",
+			"nudgesHint": "Each one is turned on separately, and only in this browser.",
+			"nudgesNeedToggle": "Turn on browser notifications above to choose them.",
+			"nudges": {
+				"break": "Break: after 90 minutes of tracking in a row",
+				"idle": "Not tracking: during your workday, after 15 minutes without a timer; at most once an hour",
+				"overtime": "After hours: the timer is still running when your workday ends"
+			}
+		},
+		"nudge": {
+			"breakTitle": "{{duration}} without a break",
+			"breakBody": "Step away for a few minutes: you will notice it when you come back.",
+			"idleTitle": "You're not tracking time",
+			"idleBody": "Start the timer on whatever you're working on.",
+			"overtimeTitle": "Your workday is over",
+			"overtimeBody": "The timer is still running on “{{title}}”."
 		}
 	},
 	"focus": {

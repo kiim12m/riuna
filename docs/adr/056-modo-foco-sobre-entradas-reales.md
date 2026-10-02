@@ -1,4 +1,4 @@
-# ADR 056 — Modo foco sobre entradas de tiempo reales
+# ADR 056 — Modo foco y avisos de ritmo sobre entradas de tiempo reales
 
 **Fecha:** 2026-10-02 · **Estado:** aceptada
 
@@ -39,6 +39,20 @@ daría dos verdades sobre el tiempo trabajado.
 - **Pantalla completa** en `focus/$taskId`, sin barra lateral. Fuera de ella,
   la fase y su reloj se ven en el pie de la barra lateral. Se entra desde el
   menú de fila (ADR 053).
+- **Avisos de ritmo** (`lib/reminders/workday-nudges.ts`), reglas puras sobre
+  la jornada personal (ADR 045), por la misma vía que los de la ADR 055:
+  - descanso, tras 90 minutos seguidos registrando, y otra vez cada 90. Una
+    cadena de entradas con huecos de menos de 5 minutos cuenta como seguida:
+    cambiar de tarea no es descansar. Pomodoro y la cuenta atrás ya marcan
+    sus descansos;
+  - sin registrar: en la jornada, fuera de la comida y de los descansos del
+    foco, tras 15 minutos sin cronómetro, como mucho uno por hora;
+  - fuera de jornada: el cronómetro sigue pasada la hora de salida, en un
+    día no laborable o desde otro día. Una vez al día.
+
+  `GET /time-entry/running` da `workingSince` y `lastStoppedAt`, que cuentan
+  todos los espacios porque es la misma persona trabajando. Cada aviso se
+  activa aparte, por navegador, y están apagados de serie.
 
 **Consecuencias.**
 
@@ -47,10 +61,16 @@ daría dos verdades sobre el tiempo trabajado.
   modo.
 - **Sin una pestaña abierta, el bloque no se para solo a su hora.** El
   cronómetro sigue en el servidor hasta que se vuelve. Es el mismo límite de
-  los avisos del navegador.
+  los avisos del navegador, y los de ritmo tampoco suenan.
+- **Las ausencias aún no existen** (Bloque 5). Hasta entonces, un día de
+  ausencia que sea laborable avisa de que no se registra, si hay una pestaña
+  abierta.
 - **Verificado:**
   - 9 pruebas unitarias de la máquina;
   - 4 de integración: el modo guardado y contado, la idempotencia, el CHECK y
     el resumen del cierre;
   - 1 de extremo a extremo de un pomodoro: trabajo, descanso sin registrar,
-    siguiente bloque y fin cuando el cronómetro se para desde fuera.
+    siguiente bloque y fin cuando el cronómetro se para desde fuera;
+  - de los avisos de ritmo: 8 pruebas unitarias de las reglas, 4 de
+    integración de `workingSince` y `lastStoppedAt`, y 1 de extremo a
+    extremo, del ajuste al aviso.

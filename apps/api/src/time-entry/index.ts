@@ -72,9 +72,11 @@ const runningTimeEntryResponseSchema = v.object({
       startTime: v.date(),
       task: v.optional(runningTaskSchema),
       loggedBeforeSeconds: v.number(),
+      workingSince: v.date(),
     }),
   ),
   last: v.nullable(lastEntrySchema),
+  lastStoppedAt: v.nullable(v.date()),
 });
 
 const timeEntry = new Hono<{
@@ -88,7 +90,7 @@ const timeEntry = new Hono<{
       operationId: "getRunningTimeEntry",
       tags: ["Time Entries"],
       description:
-        "The current user's running time entry, if any, plus the last entry to offer as a resume target when nothing is running",
+        "The current user's running time entry, if any, with when the current streak of work without a break began; when nothing is running, the last entry to offer as a resume target and when the user last stopped tracking in any workspace",
       responses: {
         200: {
           description: "The current tracking state",

@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0, 1 y 2, y 3.1-3.2 hechos; sigue el 3.3 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0, 1, 2 y 3 hechos; sigue el Bloque 4 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -2017,8 +2017,37 @@ verificación.
   - 4 de integración;
   - 1 de extremo a extremo con el reloj adelantado;
   - pasada visual.
-- **3.3 Avisos de ritmo** · S. Descanso, «no estás registrando» en horario laboral (como mucho
+- **3.3 Avisos de ritmo** ✔ · S. Descanso, «no estás registrando» en horario laboral (como mucho
   uno por hora) y cronómetro en marcha pasada la jornada.
+  **Hecho (2026-10-02).** Sin ADR propia: van en la
+  [ADR 056](adr/056-modo-foco-sobre-entradas-reales.md), con el modo foco. Decisiones de detalle:
+  - **Descanso tras 90 minutos seguidos**, y otra vez cada 90. Las entradas
+    con huecos de menos de 5 minutos cuentan como seguidas: cambiar de tarea
+    no es descansar.
+  - **`GET /time-entry/running` da `workingSince` y `lastStoppedAt`**, de
+    todos los espacios, con el índice `(user_id, start_time)` que ya había.
+  - **«Sin registrar» espera 15 minutos** desde la entrada, la vuelta de la
+    comida o la última parada. No suena en los descansos del foco.
+  - **«Fuera de jornada» no avisa a quien empieza antes de su hora**, solo
+    pasada la salida, en un día no laborable o con un cronómetro de otro día.
+  - **Cada aviso se activa aparte**, por navegador, y vienen apagados.
+  - **Las ausencias, cuando lleguen (5.1), tendrán que callar «sin
+    registrar».**
+
+  Verificación:
+  - 8 pruebas unitarias de las reglas;
+  - 4 de integración, una con un hueco de 5 minutos justos, que destapó un
+    `<` que debía ser `<=`;
+  - 1 de extremo a extremo con `Notification` sustituida. Enseñó que el
+    primer aviso ya suena en la página de ajustes, porque el runtime vive en
+    todo el panel;
+  - pasada visual del ajuste en escritorio y a 375 px.
+
+  **Verificación del Bloque 3 completo (2026-10-02):**
+  - integración 726 de 726, con 1 omitida;
+  - de extremo a extremo 56 de 56;
+  - unitarias 376 (web), 727 (API) y 33 (MCP);
+  - typecheck de todos los paquetes, `biome ci` e i18n.
 
 **Bloque 4 — Calendario** (≈ 3 semanas) · *si falta tiempo, se recorta primero 4.2*
 
@@ -2236,11 +2265,12 @@ el **1.4**, «Esperando a»: **el Bloque 1 está cerrado**. Del **Bloque 2**,
 los rituales, están hechos el **2.1**, terminar el día
 ([ADR 054](adr/054-terminar-el-dia-y-la-valoracion-privada.md)), y el **2.2**,
 planificar el día, el **2.3**, la revisión semanal, y el **2.4**, el stand-up:
-**el Bloque 2 está cerrado**. Del **Bloque 3**, foco y avisos del navegador,
-están hechos el **3.1**, los avisos a la hora anclada
-([ADR 055](adr/055-avisos-del-navegador-sin-service-worker.md)), y el **3.2**,
-el modo foco ([ADR 056](adr/056-modo-foco-sobre-entradas-reales.md)); sigue el
-**3.3**, los avisos de ritmo.
+**el Bloque 2 está cerrado**. También lo está el **Bloque 3**, foco y avisos
+del navegador: el **3.1**, los avisos a la hora anclada
+([ADR 055](adr/055-avisos-del-navegador-sin-service-worker.md)), el **3.2**,
+el modo foco, y el **3.3**, los avisos de ritmo
+([ADR 056](adr/056-modo-foco-sobre-entradas-reales.md)). Sigue el
+**Bloque 4**, el calendario, empezando por el **4.1**, exportar ICS.
 Después del interludio viene la **Fase 8**: automatizaciones e
 importadores externos.
 

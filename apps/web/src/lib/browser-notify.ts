@@ -1,3 +1,5 @@
+import type { NudgePreferences } from "@/lib/reminders/workday-nudges";
+
 /**
  * Avisos del navegador (ADR 055), sin service worker ni push: solo suenan con
  * una pestaña de Riuna abierta. Todo lo que recuerda -si estan activados, que
@@ -9,6 +11,7 @@
 const ENABLED_KEY = "riuna:browser-notify:enabled";
 const FIRED_KEY = "riuna:reminders:fired";
 const SNOOZED_KEY = "riuna:reminders:snoozed";
+const NUDGES_KEY = "riuna:nudges";
 /** Lo avisado se olvida a los dos dias: las claves llevan su fecha. */
 const KEEP_MS = 2 * 24 * 60 * 60 * 1000;
 
@@ -61,13 +64,16 @@ export function disableBrowserNotify() {
   write(ENABLED_KEY, false);
 }
 
-export function readFired(now = Date.now()): Set<string> {
+/** Lo ya avisado, con cuando: los avisos de ritmo miran la ultima vez. */
+export function readFiredTimes(now = Date.now()): Record<string, number> {
   const fired = read<Record<string, number>>(FIRED_KEY, {});
-  return new Set(
-    Object.entries(fired)
-      .filter(([, at]) => now - at < KEEP_MS)
-      .map(([key]) => key),
+  return Object.fromEntries(
+    Object.entries(fired).filter(([, at]) => now - at < KEEP_MS),
   );
+}
+
+export function readFired(now = Date.now()): Set<string> {
+  return new Set(Object.keys(readFiredTimes(now)));
 }
 
 export function markFired(key: string, now = Date.now()) {
@@ -85,6 +91,24 @@ export function readSnoozes(): Record<string, number> {
 
 export function snoozeUntil(taskId: string, until: number) {
   write(SNOOZED_KEY, { ...readSnoozes(), [taskId]: until });
+}
+
+/**
+ * Que avisos de ritmo quiere este navegador (ADR 056). Ninguno por defecto:
+ * activar los avisos del navegador es para la hora anclada, y los de ritmo
+ * se piden uno a uno.
+ */
+export function readNudgePreferences(): NudgePreferences {
+  return {
+    break: false,
+    idle: false,
+    overtime: false,
+    ...read<Partial<NudgePreferences>>(NUDGES_KEY, {}),
+  };
+}
+
+export function writeNudgePreferences(preferences: NudgePreferences) {
+  write(NUDGES_KEY, preferences);
 }
 
 /**

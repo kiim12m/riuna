@@ -3213,11 +3213,27 @@
 		},
 		"settings": {
 			"title": "Avisos del navegador",
-			"subtitle": "Un aviso a la hora anclada de cada tarea de hoy.",
+			"subtitle": "A la hora anclada de cada tarea de hoy y, si los eliges, para llevar el ritmo de la jornada.",
 			"toggle": "Avisarme en este navegador",
 			"limits": "Solo con una pestaña de Riuna abierta: sin ninguna, no hay aviso. En segundo plano puede llegar con un minuto de retraso, y posponer vale para este navegador.",
 			"denied": "El navegador tiene bloqueados los avisos de Riuna. Permítelos en los ajustes del sitio y vuelve aquí.",
-			"unsupported": "Este navegador no puede mostrar avisos."
+			"unsupported": "Este navegador no puede mostrar avisos.",
+			"nudgesTitle": "Avisos de ritmo",
+			"nudgesHint": "Cada uno se activa aparte, y solo en este navegador.",
+			"nudgesNeedToggle": "Activa arriba los avisos del navegador para elegirlos.",
+			"nudges": {
+				"break": "Descanso: tras 90 minutos seguidos registrando",
+				"idle": "Sin registrar: en tu jornada, tras 15 minutos sin cronómetro; como mucho uno por hora",
+				"overtime": "Fuera de jornada: el cronómetro sigue en marcha al acabarla"
+			}
+		},
+		"nudge": {
+			"breakTitle": "{{duration}} sin parar",
+			"breakBody": "Levántate unos minutos: se nota a la vuelta.",
+			"idleTitle": "No estás registrando",
+			"idleBody": "Arranca el cronómetro en lo que estés haciendo.",
+			"overtimeTitle": "Tu jornada ha terminado",
+			"overtimeBody": "El cronómetro sigue en marcha en «{{title}}»."
 		}
 	},
 	"focus": {

@@ -278,6 +278,16 @@ la tarea y en la propia tabla.
   avisa. La fase y su reloj se ven en el pie de la barra lateral. Si el
   cronómetro se para por otro lado, la sesión termina. El cierre del día
   cuenta las sesiones.
+- **Avisos de ritmo** (también en la
+  [ADR 056](adr/056-modo-foco-sobre-entradas-reales.md)): bajo los avisos del
+  navegador, en Ajustes › Preferencias, cada uno por separado y apagados de
+  serie:
+  - descanso, tras 90 minutos seguidos registrando, aunque se cambie de
+    tarea;
+  - sin registrar: en la jornada, tras 15 minutos sin cronómetro, como mucho
+    uno por hora;
+  - fuera de jornada: el cronómetro sigue en marcha pasada la hora de
+    salida.
 - **Stand-up**: un botón en Hoy lo enseña, derivado al momento y sin
   guardarse:
   - ayer, es decir, lo terminado el último día laborable;

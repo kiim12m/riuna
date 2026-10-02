@@ -15,6 +15,7 @@ import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useStopWithConfirm } from "@/hooks/use-stop-with-confirm";
 import { useTimerTitle } from "@/hooks/use-timer-title";
 import { useUserWebSocket } from "@/hooks/use-user-websocket";
+import { useWorkdayNudges } from "@/hooks/use-workday-nudges";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { formatElapsedClock } from "@/lib/format-clock";
 import { useQuickAddStore } from "@/store/quick-add";
@@ -58,6 +59,7 @@ export function WorkspaceRuntime() {
   useTimerTitle(running ? formatElapsedClock(loggedTotal) : undefined);
   useAnchorReminders(workspaceId);
   useFocusRuntime(workspaceId);
+  useWorkdayNudges(workspaceId);
   useEstimateWarning(
     running?.id,
     overEstimate,

@@ -12619,6 +12619,31 @@
 						},
 						"unsupported": {
 							"type": "string"
+						},
+						"nudgesTitle": {
+							"type": "string"
+						},
+						"nudgesHint": {
+							"type": "string"
+						},
+						"nudgesNeedToggle": {
+							"type": "string"
+						},
+						"nudges": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"break": {
+									"type": "string"
+								},
+								"idle": {
+									"type": "string"
+								},
+								"overtime": {
+									"type": "string"
+								}
+							},
+							"required": ["break", "idle", "overtime"]
 						}
 					},
 					"required": [
@@ -12627,11 +12652,47 @@
 						"toggle",
 						"limits",
 						"denied",
-						"unsupported"
+						"unsupported",
+						"nudgesTitle",
+						"nudgesHint",
+						"nudgesNeedToggle",
+						"nudges"
+					]
+				},
+				"nudge": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"breakTitle": {
+							"type": "string"
+						},
+						"breakBody": {
+							"type": "string"
+						},
+						"idleTitle": {
+							"type": "string"
+						},
+						"idleBody": {
+							"type": "string"
+						},
+						"overtimeTitle": {
+							"type": "string"
+						},
+						"overtimeBody": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"breakTitle",
+						"breakBody",
+						"idleTitle",
+						"idleBody",
+						"overtimeTitle",
+						"overtimeBody"
 					]
 				}
 			},
-			"required": ["notification", "dialog", "settings"]
+			"required": ["notification", "dialog", "settings", "nudge"]
 		},
 		"focus": {
 			"type": "object",
