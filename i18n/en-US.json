@@ -2296,6 +2296,24 @@
 			"label": "Team",
 			"unknown": "Unknown team"
 		},
+		"time": {
+			"title": "Time",
+			"plan": "Your plan",
+			"unplanned": "Not planned",
+			"unplan": "Remove from plan",
+			"planError": "Couldn't update your plan",
+			"logged": "Logged",
+			"running": "running",
+			"noEntries": "No time logged yet.",
+			"add": "Log time",
+			"date": "Date",
+			"start": "Start",
+			"duration": "Duration",
+			"durationPlaceholder": "1h 30m",
+			"invalidDuration": "Write a duration like 1h 30m, 90m or 1:30.",
+			"added": "Time logged",
+			"addError": "Couldn't log the time"
+		},
 		"tree": {
 			"title": "Branch",
 			"expand": "Expand branch",

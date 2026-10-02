@@ -2,6 +2,7 @@ import {
   buildExchangeWorkbookOf,
   type ExchangeSheet,
 } from "../../task/exchange/build-file";
+import { serverDayKey } from "../../utils/day-boundaries";
 import type { TimeSheetGroupBy } from "../constants";
 import getTimeSheet from "./get-time-sheet";
 
@@ -43,7 +44,10 @@ export default async function exportTimeSheet(params: {
     })),
   };
 
-  const filename = `parte-de-horas-${params.windowStart.toISOString().slice(0, 10)}-${params.windowEnd.toISOString().slice(0, 10)}.xlsx`;
+  // El dia del servidor, no el de UTC: con la API en Madrid (ADR 049) el
+  // inicio del rango es la vispera a las 22:00 UTC, y el nombre del fichero
+  // decia un dia antes del que se habia pedido.
+  const filename = `parte-de-horas-${serverDayKey(params.windowStart)}-${serverDayKey(params.windowEnd)}.xlsx`;
 
   return {
     buffer: await buildExchangeWorkbookOf([sheet]),

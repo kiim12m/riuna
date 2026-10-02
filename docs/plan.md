@@ -1638,12 +1638,41 @@ verificación.
 
   **Pendiente de quien despliega:** el ensayo sobre una copia de producción
   que describe `actualizar.md`.
-- **0.3 Cronómetro en todas partes y tiempo en el detalle** · M. Un `TaskTimerButton` sobre
+- **0.3 Cronómetro en todas partes y tiempo en el detalle** ✔ · M. Un `TaskTimerButton` sobre
   `TimerButton` en el detalle, el Planificador, el Cronograma, Mis tareas y el tablero. El
   detalle gana una sección «Tiempo»: lo registrado (también en tareas sin hijas), sus
   entradas, «Añadir tiempo» a mano y el día planificado (`GET /planner/entry/:taskId`, nueva).
   El parte de horas enseña el título de la tarea en cada entrada y calcula en día local; la
   pastilla del móvil reanuda.
+  **Hecho (2026-10-01).** Sin ADR propia: no hay decisión estructural, solo
+  piezas que componen lo que ya existía.
+  - `TaskTimerButton` lee el cronómetro en marcha por su cuenta y solo monta
+    el diálogo de parada larga en la tarea que corre. No se ofrece a quien no
+    puede editar tareas, porque `POST /time-entry/start` daría 403.
+  - `GET /planner/entry/:taskId` devuelve el día como clave del servidor, no
+    como instante, y filtra por espacio.
+  - Las entradas de una tarea pasan a la clave `["time-entry", "task", id]`.
+    Así `TIMER_CHANGED` las refresca; antes `["time-entries"]` quedaba fuera.
+  - El nombre del Excel del parte deja de salir un día corto.
+  - Nueva variante CSS `touch:` para lo que en escritorio aparece al pasar el
+    ratón.
+
+  Verificación:
+  - 3 pruebas de integración nuevas de la ruta, incluida la de otro espacio,
+    y 1 del nombre del Excel;
+  - 3 de extremo a extremo (`task-time.spec.ts`): arrancar y parar desde el
+    detalle, registrar a mano y verlo en el parte con su título, y planificar
+    desde el detalle. La del parte **pasaba sin desplegar el grupo**, porque el
+    pie de la barra también nombra la tarea («Reanudar · …»); acotada a la
+    tabla, falla sin el cambio y pasa con él;
+  - humo completo 32/32, más una pasada visual con capturas del detalle, el
+    Planificador, el Cronograma, Mis tareas, el tablero, el parte y el móvil.
+
+  Queda anotado:
+  - `apps/api/openapi.json` no se regenera desde la Fase 5. Regenerarlo mete
+    unas 9.000 líneas ajenas y la URL de la API del `.env`; pide su propio
+    cambio, con la URL saneada.
+  - El calendario heredado nombra los días en inglés.
 - **0.4 Planificador, atajos y paleta** · M. La zona «con hora» siempre presente, las ancladas
   arrastrables, casilla de hecha (`POST /task/complete/:id`, que ya existe). `s/p/a/l/d`
   registrados; «t c» se asigna a quien crea fuera de un proyecto. La paleta lleva a las
@@ -1914,9 +1943,10 @@ con los sub-bloques **0.1** (pantallas personales frescas,
 [ADR 048](adr/048-frescura-de-las-pantallas-personales.md)) y **0.2** (la API
 en `Europe/Madrid`, [ADR 049](adr/049-la-api-vive-en-madrid.md)) hechos. Antes
 de desplegar el 0.2 hay que ensayar la conversión sobre una copia de
-producción, como explica [actualizar.md](actualizar.md). Sigue el **0.3**:
-cronómetro en todas partes y tiempo en el detalle de la tarea. Después del
-interludio viene la **Fase 8**: automatizaciones e importadores externos.
+producción, como explica [actualizar.md](actualizar.md). El **0.3** (cronómetro
+en todas partes y tiempo en el detalle) también está hecho. Sigue el **0.4**:
+Planificador, atajos y paleta. Después del interludio viene la **Fase 8**:
+automatizaciones e importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la

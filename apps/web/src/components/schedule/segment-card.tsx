@@ -1,6 +1,7 @@
 import { Layout, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import projectIcons from "@/constants/project-icons";
 import { cn } from "@/lib/cn";
 import { getPriorityIcon } from "@/lib/priority";
@@ -17,6 +18,8 @@ import { segmentToneClass } from "./segment-tone";
 
 type SegmentTask = {
   id: string;
+  number: number | null;
+  projectId: string;
   title: string;
   priority: string;
   projectIcon: string | null;
@@ -314,7 +317,14 @@ export function ScheduleSegmentCard({
         }}
         className="flex h-full w-full cursor-grab flex-col gap-0.5 p-1 text-left outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <div className="flex items-center gap-1">
+        {/* Con la tarea anclada, la "X" de desanclar aparece en la esquina al
+         * pasar el puntero: el hueco a la derecha evita que tape el cronometro. */}
+        <div
+          className={cn(
+            "flex items-center gap-1",
+            isPinned && onUnpin && "pr-4",
+          )}
+        >
           <span className="shrink-0">{getPriorityIcon(task.priority)}</span>
           <span
             className={cn(
@@ -326,6 +336,7 @@ export function ScheduleSegmentCard({
           >
             {task.title}
           </span>
+          <TaskTimerButton task={task} reveal="hover" />
         </div>
         {height > 30 && (
           <div className="flex items-center gap-1 text-meta text-muted-foreground">

@@ -2296,6 +2296,24 @@
 			"label": "Equip",
 			"unknown": "Equip desconegut"
 		},
+		"time": {
+			"title": "Tiempo",
+			"plan": "Tu plan",
+			"unplanned": "Sin planificar",
+			"unplan": "Quitar del plan",
+			"planError": "No se pudo actualizar tu plan",
+			"logged": "Registrado",
+			"running": "en marcha",
+			"noEntries": "Aún no hay tiempo registrado.",
+			"add": "Añadir tiempo",
+			"date": "Fecha",
+			"start": "Inicio",
+			"duration": "Duración",
+			"durationPlaceholder": "1h 30m",
+			"invalidDuration": "Escribe una duración como 1h 30m, 90m o 1:30.",
+			"added": "Tiempo registrado",
+			"addError": "No se pudo registrar el tiempo"
+		},
 		"tree": {
 			"title": "Rama",
 			"expand": "Desplegar la rama",

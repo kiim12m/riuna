@@ -9050,6 +9050,78 @@
 					},
 					"required": ["label", "unknown"]
 				},
+				"time": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"plan": {
+							"type": "string"
+						},
+						"unplanned": {
+							"type": "string"
+						},
+						"unplan": {
+							"type": "string"
+						},
+						"planError": {
+							"type": "string"
+						},
+						"logged": {
+							"type": "string"
+						},
+						"running": {
+							"type": "string"
+						},
+						"noEntries": {
+							"type": "string"
+						},
+						"add": {
+							"type": "string"
+						},
+						"date": {
+							"type": "string"
+						},
+						"start": {
+							"type": "string"
+						},
+						"duration": {
+							"type": "string"
+						},
+						"durationPlaceholder": {
+							"type": "string"
+						},
+						"invalidDuration": {
+							"type": "string"
+						},
+						"added": {
+							"type": "string"
+						},
+						"addError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"plan",
+						"unplanned",
+						"unplan",
+						"planError",
+						"logged",
+						"running",
+						"noEntries",
+						"add",
+						"date",
+						"start",
+						"duration",
+						"durationPlaceholder",
+						"invalidDuration",
+						"added",
+						"addError"
+					]
+				},
 				"tree": {
 					"type": "object",
 					"additionalProperties": false,
@@ -9172,6 +9244,7 @@
 				"subtasks",
 				"table",
 				"team",
+				"time",
 				"tree",
 				"update",
 				"view"

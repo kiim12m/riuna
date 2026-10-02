@@ -8,6 +8,7 @@ import { WidgetTaskRow } from "@/components/dashboard/widget-task-row";
 import PageTitle from "@/components/page-title";
 import { PersonalTasksTabs } from "@/components/personal-tasks/tabs";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
+import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import {
   Empty,
   EmptyDescription,
@@ -122,6 +123,9 @@ function RouteComponent() {
                         task={task}
                         variant="list"
                         shaded={index % 2 === 0}
+                        trailing={
+                          <TaskTimerButton task={task} reveal="hover" />
+                        }
                         onOpen={() =>
                           setOpenTask({
                             taskId: task.id,

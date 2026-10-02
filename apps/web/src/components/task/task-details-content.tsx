@@ -6,6 +6,7 @@ import CommentInput from "@/components/activity/comment-input";
 import { isCommentActivity } from "@/components/activity/utils";
 import { ExternalLinksAccordion } from "@/components/external-links/external-links-accordion";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
+import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import { Timeline } from "@/components/ui/timeline";
 import useGetActivitiesByTaskId from "@/hooks/queries/activity/use-get-activities-by-task-id";
 import useExternalLinks from "@/hooks/queries/external-link/use-external-links";
@@ -15,6 +16,7 @@ import type { ExternalLink } from "@/types/external-link";
 import TaskDescription from "./task-description";
 import TaskRelations from "./task-relations";
 import TaskSubtasks from "./task-subtasks";
+import TaskTime from "./task-time";
 import TaskTitle from "./task-title";
 import TaskTree from "./task-tree";
 
@@ -71,9 +73,24 @@ export default function TaskDetailsContent({
             </span>
           </button>
         )}
-        <p className="text-xs font-semibold text-foreground/70">
-          {project?.slug}-{task?.number}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-semibold text-foreground/70">
+            {project?.slug}-{task?.number}
+          </p>
+          {task && (
+            <TaskTimerButton
+              task={{
+                id: task.id,
+                number: task.number ?? null,
+                title: task.title,
+                projectId,
+                estimate: task.estimate ?? null,
+                // "Hecha" es `completed_at`, una sola definicion (ADR 030).
+                isDone: Boolean(task.completedAt),
+              }}
+            />
+          )}
+        </div>
         <TaskTitle taskId={taskId} />
         <TaskDescription taskId={taskId} />
       </div>
@@ -88,6 +105,15 @@ export default function TaskDetailsContent({
       {task && (
         <div className="mt-4">
           <TaskTree taskId={taskId} projectId={projectId} />
+        </div>
+      )}
+      {task && (
+        <div className="mt-4">
+          <TaskTime
+            taskId={taskId}
+            workspaceId={workspaceId}
+            estimate={task.estimate ?? null}
+          />
         </div>
       )}
       <div className="mt-4">

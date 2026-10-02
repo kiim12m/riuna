@@ -19,6 +19,7 @@ import {
 import type { TimeSheetGroup } from "@/fetchers/time-sheet";
 import { useTimeSheetEntryMutations } from "@/hooks/mutations/time-sheet/use-time-sheet-entry-mutations";
 import { formatDuration } from "@/lib/duration";
+import { formatDateShort } from "@/lib/format";
 import { EditEntryForm } from "./edit-entry-form";
 
 type TimeSheetEntry = TimeSheetGroup["entries"][number];
@@ -27,8 +28,20 @@ type TimeSheetEntry = TimeSheetGroup["entries"][number];
  * Una entrada dentro de un grupo desplegado: siempre es propia -el parte de
  * horas no lee tiempo de nadie mas (ADR 042)-, asi que editar y borrar estan
  * disponibles sin comprobar nada mas.
+ *
+ * Lleva el titulo de su tarea salvo agrupando por tarea, donde ya es la
+ * cabecera del grupo: agrupando por dia o por proyecto, las entradas eran
+ * horas sin nombre. Y la fecha salvo agrupando por dia, por lo mismo.
  */
-export function TimeSheetEntryRow({ entry }: { entry: TimeSheetEntry }) {
+export function TimeSheetEntryRow({
+  entry,
+  showTask = true,
+  showDate = false,
+}: {
+  entry: TimeSheetEntry;
+  showTask?: boolean;
+  showDate?: boolean;
+}) {
   const { t, i18n } = useTranslation();
   const [editOpen, setEditOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -46,12 +59,22 @@ export function TimeSheetEntryRow({ entry }: { entry: TimeSheetEntry }) {
 
   return (
     <div className="flex items-center gap-2 py-1 pl-6 text-meta">
-      <span className="font-mono tabular-nums text-muted-foreground">
+      {showDate && (
+        <span className="shrink-0 tabular-nums text-muted-foreground">
+          {formatDateShort(entry.startTime, i18n.language)}
+        </span>
+      )}
+      <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
         {startLabel} – {endLabel}
       </span>
-      <span className="tabular-nums">
+      <span className="shrink-0 tabular-nums">
         {formatDuration(entry.seconds, i18n.language)}
       </span>
+      {showTask && (
+        <span className="min-w-0 truncate" title={entry.taskTitle}>
+          {entry.taskTitle}
+        </span>
+      )}
       <span className="ml-auto flex items-center gap-1">
         <Popover open={editOpen} onOpenChange={setEditOpen}>
           <PopoverTrigger

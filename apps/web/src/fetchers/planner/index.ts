@@ -13,6 +13,23 @@ export async function getPlan(workspaceId: string, days = 15) {
   return response.json();
 }
 
+/**
+ * Donde esta una tarea en el plan de quien mira, para su detalle. El dia llega
+ * ya como `yyyy-mm-dd` del servidor, no como instante que recortar aqui.
+ */
+export async function getPlanEntry(workspaceId: string, taskId: string) {
+  const response = await client.planner.entry[":taskId"].$get({
+    param: { taskId },
+    query: { workspaceId },
+  });
+
+  if (!response.ok) {
+    throw new HttpError(await response.text(), response.status);
+  }
+
+  return response.json();
+}
+
 export async function setPlanEntry(
   workspaceId: string,
   taskId: string,

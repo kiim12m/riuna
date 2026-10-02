@@ -51,6 +51,7 @@ export function PlannerTaskCard({
         projectName={task.projectName}
         projectIcon={task.projectIcon}
         onOpen={onOpen}
+        timerTask={task}
         className={cn(
           "cursor-grab active:cursor-grabbing",
           isDragging && "border-ring/40 bg-card shadow-lg hover:border-ring/40",

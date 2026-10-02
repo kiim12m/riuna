@@ -1,4 +1,5 @@
 import { Calendar, CalendarClock, CalendarX } from "lucide-react";
+import type { ReactNode } from "react";
 import { ProjectPill } from "@/components/task/project-pill";
 import { cn } from "@/lib/cn";
 import {
@@ -43,6 +44,7 @@ export function WidgetTaskRow({
   onOpen,
   variant = "widget",
   shaded = false,
+  trailing,
 }: {
   task: WidgetTask;
   onOpen: () => void;
@@ -51,18 +53,26 @@ export function WidgetTaskRow({
   variant?: "widget" | "list";
   /** Fila par de la lista: la cebra de `barra-lateral.html`. */
   shaded?: boolean;
+  /**
+   * Un control propio al final -el cronometro en "Mis tareas"-. Va **fuera**
+   * del boton de la fila, como hermano: un boton dentro de otro no es HTML
+   * valido. Sin el, la fila es exactamente la de siempre.
+   */
+  trailing?: ReactNode;
 }) {
   const dueStatus = getDueDateStatus(task.dueDate, task.isDone);
   const DueIcon = DUE_DATE_ICON[dueStatus];
 
-  return (
+  const row = (
     <button
       type="button"
       onClick={onOpen}
       className={cn(
-        "flex w-full items-center gap-2 rounded-md px-1 py-1.5 text-left transition-colors duration-(--motion-fast) ease-out-quart hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "flex w-full items-center gap-2 rounded-md px-1 py-1.5 text-left transition-colors duration-(--motion-fast) ease-out-quart focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         variant === "list" && "gap-2.5 px-2.5 py-2",
-        shaded && "bg-muted",
+        trailing
+          ? "min-w-0 flex-1"
+          : cn("hover:bg-accent", shaded && "bg-muted"),
       )}
     >
       <span className="shrink-0">{getPriorityIcon(task.priority)}</span>
@@ -94,5 +104,19 @@ export function WidgetTaskRow({
         </span>
       )}
     </button>
+  );
+
+  if (!trailing) return row;
+
+  return (
+    <div
+      className={cn(
+        "group flex items-center rounded-md pr-2 transition-colors duration-(--motion-fast) ease-out-quart hover:bg-accent",
+        shaded && "bg-muted",
+      )}
+    >
+      {row}
+      {trailing}
+    </div>
   );
 }

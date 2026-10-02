@@ -246,8 +246,9 @@ la tarea y en la propia tabla.
 - **Parte de horas** ([ADR 042](adr/042-parte-de-horas.md)): lo registrado
   por quien mira, cruzando proyectos, en un rango de fechas. Agrupable por
   día, tarea o proyecto; una entrada en marcha cuenta lo transcurrido hasta
-  ahora. Exportable a Excel. Cada grupo se despliega en sus entradas, que se
-  editan (inicio y fin) y se borran con confirmación.
+  ahora. Exportable a Excel. Cada grupo se despliega en sus entradas —con el
+  título de su tarea, y la fecha si no se agrupa por día—, que se editan
+  (inicio y fin) y se borran con confirmación.
 - **Cronómetro** ([ADR 044](adr/044-cronometro-en-el-pie.md)): un solo
   cronómetro por persona, en el pie de la barra lateral (punto con pulso,
   título y `HH:MM:SS`; en raíl solo el punto), con una pastilla flotante
@@ -256,6 +257,17 @@ la tarea y en la propia tabla.
   «Reanudar» sobre la última tarea sin terminar. Avisa una vez cuando lo
   registrado supera la estimación, y al parar una entrada de más de diez
   horas pregunta la hora real de fin. Atajo de teclado para arrancar o parar.
+  **Se arranca desde cualquier tarea**: Hoy, el detalle, las tarjetas del
+  Planificador, los tramos del Cronograma, la Lista de Mis tareas y el
+  tablero de proyecto. En escritorio aparece al pasar el ratón por la fila; en
+  marcha y en pantallas táctiles se ve siempre. Solo lo ofrece a quien puede
+  editar tareas. En móvil, sin nada en marcha, la pastilla ofrece «Reanudar».
+- **Tiempo en el detalle de la tarea**: el día en que la tiene quien mira en
+  su plan, con un calendario para cambiarlo o quitarla del plan; lo
+  registrado en la propia tarea frente a lo estimado (aunque no tenga hijas);
+  cada entrada, de quien sea, con su fecha y duración; y **registro manual**
+  (fecha, hora de inicio y duración en cualquier forma: `1h 30m`, `90m`,
+  `1:30`).
 
 ## 8. Paneles y objetivos
 

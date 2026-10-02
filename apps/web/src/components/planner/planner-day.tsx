@@ -215,6 +215,7 @@ function TimedEntryRow({
       projectName={entry.projectName}
       projectIcon={entry.projectIcon}
       onOpen={onOpen}
+      timerTask={entry}
       leading={
         <TimePopover
           minute={entry.startMinute ?? 0}

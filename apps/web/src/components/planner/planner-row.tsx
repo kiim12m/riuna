@@ -1,5 +1,6 @@
 import { Layout } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
+import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import projectIcons from "@/constants/project-icons";
 import { cn } from "@/lib/cn";
 import { getPriorityIcon } from "@/lib/priority";
@@ -15,6 +16,11 @@ type PlannerRowProps = {
   leading?: ReactNode;
   /** El hueco final: la estimacion editable, o una etiqueta de solo lectura. */
   trailing?: ReactNode;
+  /**
+   * La tarea, para el cronometro al final de la fila del titulo. Ausente en
+   * las filas de solo lectura ("Vence este dia").
+   */
+  timerTask?: ComponentProps<typeof TaskTimerButton>["task"];
   /** Extiende o sustituye el borde/fondo -el arrastre trae los suyos. */
   className?: string;
 };
@@ -38,6 +44,7 @@ export function PlannerRow({
   onOpen,
   leading,
   trailing,
+  timerTask,
   className,
 }: PlannerRowProps) {
   const ProjectIcon =
@@ -57,7 +64,7 @@ export function PlannerRow({
         }
       }}
       className={cn(
-        "space-y-1 rounded-md border bg-background p-1.5 text-left outline-none transition-[border-color,box-shadow] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-ring",
+        "group space-y-1 rounded-md border bg-background p-1.5 text-left outline-none transition-[border-color,box-shadow] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-ring",
         "border-border/70 hover:border-brand/45 hover:shadow-xs",
         className,
       )}
@@ -73,6 +80,7 @@ export function PlannerRow({
         >
           {title}
         </span>
+        {timerTask && <TaskTimerButton task={timerTask} reveal="hover" />}
       </div>
       <div className="flex items-center gap-1 text-meta text-muted-foreground">
         <ProjectIcon className="size-3 shrink-0" />

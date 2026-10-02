@@ -10,6 +10,7 @@ import {
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import getPlan from "./controllers/get-plan";
+import getPlanEntry from "./controllers/get-plan-entry";
 import removePlanEntry from "./controllers/remove-plan-entry";
 import setPlanEntry from "./controllers/set-plan-entry";
 import setPlanOrder from "./controllers/set-plan-order";
@@ -66,6 +67,16 @@ const planResponseSchema = v.object({
   fixedBlocksByDay: v.record(v.string(), v.array(fixedBlockSchema)),
   /** El dia del servidor, `yyyy-mm-dd`: de ahi arranca la rejilla de 15 dias. */
   serverToday: v.string(),
+});
+
+/** Donde esta una tarea en el plan de quien mira, para su detalle. */
+const planEntryLookupSchema = v.object({
+  entry: v.nullable(
+    v.object({
+      plannedDay: v.string(),
+      startMinute: v.nullable(v.number()),
+    }),
+  ),
 });
 
 /**
@@ -131,6 +142,38 @@ const planner = new Hono<{
       });
 
       return c.json(plan);
+    },
+  )
+  .get(
+    "/entry/:taskId",
+    describeRoute({
+      operationId: "getPersonalPlanEntry",
+      tags: ["Planner"],
+      description:
+        "Where one task sits in the current user's plan, for the task detail: the planned day as yyyy-mm-dd in the server's time zone and the anchored minute, or null when it is unplanned",
+      responses: {
+        200: {
+          description: "The plan entry, or null",
+          content: {
+            "application/json": { schema: resolver(planEntryLookupSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ taskId: v.string() })),
+    validator(
+      "query",
+      v.object({ workspaceId: v.pipe(v.string(), v.minLength(1)) }),
+    ),
+    workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["read"] }),
+    async (c) => {
+      const { taskId } = c.req.valid("param");
+      const { workspaceId } = c.req.valid("query");
+
+      return c.json(
+        await getPlanEntry({ userId: c.get("userId"), workspaceId, taskId }),
+      );
     },
   )
   .put(
