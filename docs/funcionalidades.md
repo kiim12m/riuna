@@ -115,10 +115,11 @@ horas, etiquetas, épicas, ciclo, campos personalizados y número de ticket.
 - **Menú contextual** con clic derecho sobre la tarjeta, con las acciones
   frecuentes.
 - **Atajos en el detalle**: `j` y `k` navegan entre tareas; `Tab` y
-  `Shift+Tab` sangran y promueven en el modo jerarquía. Los atajos `s`
-  estado, `p` prioridad, `a` asignado, `l` etiquetas y `d` fecha **están
-  definidos pero no registrados: hoy no hacen nada**. Se conectan en el
-  sub-bloque 0.4 del interludio de productividad.
+  `Shift+Tab` sangran y promueven en el modo jerarquía. Con el detalle
+  abierto, `s` estado, `p` prioridad, `a` asignado, `l` etiquetas (en
+  pantallas anchas, donde se ven) y `d` vencimiento abren su selector. Solo
+  a quien puede editar tareas. Mientras el detalle está abierto, `p` es la
+  prioridad y no el prefijo de `p c`/`p l`.
 - Copiar el enlace de la tarea y **copiar el nombre de rama Git**.
 
 **Editor de descripción y comentarios** (TipTap): menú slash, encabezados,
@@ -212,8 +213,13 @@ la tarea y en la propia tabla.
   fecha de vencimiento. Cada día se reparte en tres secciones: sin hora (se
   reordena arrastrando), con hora (tareas ancladas y citas fijas del
   Cronograma, ordenadas por minuto) y vence este día (lo que vence en la
-  ventana, planificado o no). Una columna aparte para lo planificado antes
-  de la ventana y todavía sin terminar, de la que solo se puede arrastrar.
+  ventana, planificado o no). La sección con hora está siempre, aunque el
+  día no tenga nada con hora: soltar ahí ancla la tarea al inicio de la
+  jornada y abre el selector de hora. Las tareas ancladas se arrastran a otro
+  día, conservando su hora, o a «sin hora», que la suelta. Cada tarjeta lleva
+  su casilla de «hecha» y su cronómetro. Una columna aparte para lo
+  planificado antes de la ventana y todavía sin terminar, de la que solo se
+  puede arrastrar.
   Incluye una proyección de las próximas ocurrencias de tareas recurrentes
   todavía no creadas. La estimación se edita directamente en la tarjeta. La
   carga de cada día es lo que queda de cada tarea más los bloques fijos,
@@ -300,8 +306,14 @@ la tarea y en la propia tabla.
 
 - **Etiquetas** de espacio de trabajo con color, creables al vuelo desde la
   tarea.
-- **Paleta de comandos** con `Ctrl/Cmd+K`: navegar a proyectos, crear tarea,
-  proyecto o espacio, cambiar el tema y abrir la ayuda de atajos.
+- **Paleta de comandos** con `Ctrl/Cmd+K`:
+  - ir a las pantallas personales (Hoy, Planificador, Cronograma, Mis tareas,
+    Parte de horas, Mi panel, Objetivos) o a cualquier proyecto del espacio
+    (`p`+`l` abre la paleta en esa lista);
+  - parar el cronómetro o reanudar la última tarea;
+  - crear tarea, proyecto o espacio. Fuera de un proyecto, la tarea nace
+    asignada a quien la crea, igual que con el botón de la cabecera;
+  - cambiar el tema y abrir la ayuda de atajos.
 - **Búsqueda global** con `/`: tareas, proyectos, espacios, comentarios y
   actividad, más búsqueda por ID corto de tarea (`DEP-23`).
 - **Notificaciones in-app** con campana, contador de no leídas, marcar todas
@@ -397,7 +409,13 @@ tiempo, actividad y notificaciones.
   asignados, fechas, etiquetas y prioridad en las tarjetas.
 - **Atajos de teclado** con ayuda buscable (`?`): crear (`t`+`c`, `p`+`c`,
   `w`+`c`), cambiar de vista (`v`+`b`, `v`+`l`, `v`+`k`, `v`+`c`, `v`+`g`),
-  navegar (`j`/`k`), notificaciones (`n`+`o`) y barra lateral (`Ctrl/Cmd+B`).
+  navegar (`j`/`k`), notificaciones (`n`+`o`), cambiar de espacio (`w`+`s`),
+  cronómetro (`Ctrl/Cmd+E`), barra lateral (`Ctrl/Cmd+B`) y los del detalle
+  de la tarea (`s`, `p`, `a`, `l`, `d`). La ayuda los lista todos.
+- **En pantallas táctiles**, lo que en escritorio aparece al pasar el ratón
+  —el cronómetro de una fila, «Añadir a hoy», crear en la vista Mes— se ve
+  siempre, y en el Cronograma un toque sobre un hueco abre la casilla de
+  crear tarea a esa hora.
 - Navegación móvil propia para las vistas de proyecto.
 
 ## 15. Operación

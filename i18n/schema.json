@@ -5809,6 +5809,12 @@
 								}
 							},
 							"required": ["navigate", "open", "close"]
+						},
+						"goTo": {
+							"type": "string"
+						},
+						"timer": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -5826,7 +5832,9 @@
 						"keyboardShortcuts",
 						"inputPlaceholder",
 						"empty",
-						"footer"
+						"footer",
+						"goTo",
+						"timer"
 					]
 				},
 				"notifications": {
@@ -6130,6 +6138,9 @@
 								},
 								"quickSelect": {
 									"type": "string"
+								},
+								"taskDetails": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -6137,7 +6148,8 @@
 								"create",
 								"views",
 								"navigation",
-								"quickSelect"
+								"quickSelect",
+								"taskDetails"
 							]
 						},
 						"items": {
@@ -6191,6 +6203,36 @@
 								},
 								"quickSelectNumber": {
 									"type": "string"
+								},
+								"toggleTimer": {
+									"type": "string"
+								},
+								"openNotifications": {
+									"type": "string"
+								},
+								"switchWorkspace": {
+									"type": "string"
+								},
+								"goToProject": {
+									"type": "string"
+								},
+								"ganttView": {
+									"type": "string"
+								},
+								"setStatus": {
+									"type": "string"
+								},
+								"setPriority": {
+									"type": "string"
+								},
+								"setAssignee": {
+									"type": "string"
+								},
+								"setLabels": {
+									"type": "string"
+								},
+								"setDueDate": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -6209,7 +6251,17 @@
 								"nextTask",
 								"prevTask",
 								"openTask",
-								"quickSelectNumber"
+								"quickSelectNumber",
+								"toggleTimer",
+								"openNotifications",
+								"switchWorkspace",
+								"goToProject",
+								"ganttView",
+								"setStatus",
+								"setPriority",
+								"setAssignee",
+								"setLabels",
+								"setDueDate"
 							]
 						}
 					},
@@ -11152,6 +11204,9 @@
 				},
 				"dayLoadPct": {
 					"type": "string"
+				},
+				"dropToAnchor": {
+					"type": "string"
 				}
 			},
 			"required": [
@@ -11166,7 +11221,8 @@
 				"plannedElsewhere",
 				"empty",
 				"description",
-				"dayLoadPct"
+				"dayLoadPct",
+				"dropToAnchor"
 			]
 		},
 		"schedule": {

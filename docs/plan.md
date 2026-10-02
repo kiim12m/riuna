@@ -1673,11 +1673,40 @@ verificación.
     unas 9.000 líneas ajenas y la URL de la API del `.env`; pide su propio
     cambio, con la URL saneada.
   - El calendario heredado nombra los días en inglés.
-- **0.4 Planificador, atajos y paleta** · M. La zona «con hora» siempre presente, las ancladas
+- **0.4 Planificador, atajos y paleta** ✔ · M. La zona «con hora» siempre presente, las ancladas
   arrastrables, casilla de hecha (`POST /task/complete/:id`, que ya existe). `s/p/a/l/d`
   registrados; «t c» se asigna a quien crea fuera de un proyecto. La paleta lleva a las
   pantallas personales y al cronómetro, y el «?» deja de despachar un `KeyboardEvent`
   sintético. En táctil, las acciones de Hoy se ven y el Cronograma crea con un toque.
+  **Hecho (2026-10-01).** Sin ADR propia: no hay decisión estructural.
+
+  Lo que salió:
+  - **El bucle del `?` era real.** «Atajos de teclado» desde la paleta lanzaba
+    cuatro `RangeError: Maximum call stack size exceeded`, comprobado en el
+    navegador con el código anterior. Ahora la paleta abre la ayuda con un
+    store (`store/shortcuts-help.ts`), y el `?` real lo sigue atendiendo el
+    propio diálogo.
+  - **Los atajos del detalle** gobiernan cinco selectores, que pasan a admitir
+    `open`/`onOpenChange` desde fuera (`useControllableOpen`). Solo se abre el
+    de la disposición que se ve, porque el lateral monta la móvil y la de
+    escritorio a la vez. Con el detalle abierto, `p` tapa las secuencias
+    `p c`/`p l`; queda documentado.
+  - **`p l`** abre la paleta, que ahora lista los proyectos. Antes navegaba a
+    la raíz del espacio, que lleva a Hoy.
+  - **Variante CSS `touch:`** en Hoy, el Cronograma y la vista Mes. En el
+    Cronograma, un toque calcula el hueco desde el propio toque, porque
+    `pointerleave` llega antes que el clic.
+  - **Se sospechó** un bucle de renders por `useRegisterShortcuts`, que
+    vuelve a registrar cada vez que cambia su objeto de configuración. Medido
+    en el navegador: ni avisos de React ni pérdida de fotogramas (57 fps en
+    reposo). No se confirma; lo nuevo memoriza su configuración igualmente.
+
+  Verificación:
+  - 6 pruebas de extremo a extremo nuevas, que fallan con el código anterior
+    y pasan con el nuevo: anclar en un día vacío, casilla de hecha, soltar en
+    «Sin planificar» sin peticiones, `p` abre la prioridad, la paleta lleva
+    al Planificador, la ayuda desde la paleta sin errores;
+  - humo completo 38/38, unitarias del web 288, typecheck.
 - **0.5 Recordatorios, coherencia y paridad MCP** · M · ADR 050. Recordatorio de vencimiento
   para **cada** asignado, deduplicado por persona (el `reminder_type` lleva el usuario, como
   ya hace `project-webhook-reminders.ts`) y rearmado por un disparador `AFTER UPDATE OF
@@ -1944,9 +1973,11 @@ con los sub-bloques **0.1** (pantallas personales frescas,
 en `Europe/Madrid`, [ADR 049](adr/049-la-api-vive-en-madrid.md)) hechos. Antes
 de desplegar el 0.2 hay que ensayar la conversión sobre una copia de
 producción, como explica [actualizar.md](actualizar.md). El **0.3** (cronómetro
-en todas partes y tiempo en el detalle) también está hecho. Sigue el **0.4**:
-Planificador, atajos y paleta. Después del interludio viene la **Fase 8**:
-automatizaciones e importadores externos.
+en todas partes y tiempo en el detalle) y el **0.4** (Planificador, atajos y
+paleta) también están hechos. Sigue el **0.5**: recordatorios para cada
+asignado, la misma carga en el Planificador y el Cronograma, y paridad de MCP.
+Después del interludio viene la **Fase 8**: automatizaciones e importadores
+externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la

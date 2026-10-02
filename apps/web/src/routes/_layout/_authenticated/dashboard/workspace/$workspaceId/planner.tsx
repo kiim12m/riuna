@@ -43,6 +43,7 @@ import type {
 } from "@/fetchers/planner";
 import { usePlannerEstimateMutation } from "@/hooks/mutations/planner/use-planner-estimate-mutation";
 import { usePlannerMutations } from "@/hooks/mutations/planner/use-planner-mutations";
+import { useCompleteTask } from "@/hooks/mutations/task/use-complete-task";
 import { usePlanner } from "@/hooks/queries/planner/use-planner";
 import { useWorkSchedule } from "@/hooks/queries/work-schedule/use-work-schedule";
 import { cn } from "@/lib/cn";
@@ -101,6 +102,9 @@ function RouteComponent() {
     WINDOW_DAYS,
   );
   const { setEstimate } = usePlannerEstimateMutation(workspaceId, WINDOW_DAYS);
+  const completeTask = useCompleteTask(workspaceId);
+  const toggleDone = (taskId: string, done: boolean) =>
+    completeTask.mutate({ taskId, done });
 
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [timePopoverTaskId, setTimePopoverTaskId] = useState<string | null>(
@@ -199,6 +203,9 @@ function RouteComponent() {
       overId === UNPLANNED_ID ||
       (data?.unplanned.some((task) => task.id === overId) ?? false);
     if (isUnplanned) {
+      // Ya estaba sin planificar: soltarla dentro de su propia columna no
+      // cambia nada, y antes mandaba un DELETE que acababa en 404.
+      if (data?.unplanned.some((task) => task.id === taskId)) return;
       moveTask(taskId, null);
       return;
     }
@@ -224,15 +231,16 @@ function RouteComponent() {
     if (!destDayKey || !destZone) return;
 
     if (destZone === "timed") {
-      const existing = entriesByDay
-        .get(destDayKey)
-        ?.find((entry) => entry.id === taskId);
+      // La hora que ya tuviera, venga de este dia o de otro: una tarea
+      // anclada que cambia de dia conserva su hora. Solo si no tenia ninguna
+      // se ancla al inicio de la jornada y se abre el selector para ajustarla.
+      const current = data?.entries.find((entry) => entry.id === taskId);
       const minute =
-        existing?.startMinute ??
+        current?.startMinute ??
         workSchedule?.workStartMinute ??
         DEFAULT_WORK_START_MINUTE;
       moveTask(taskId, { plannedDate: destDayKey, startMinute: minute });
-      setTimePopoverTaskId(taskId);
+      if (current?.startMinute == null) setTimePopoverTaskId(taskId);
       return;
     }
 
@@ -335,6 +343,7 @@ function RouteComponent() {
                     setOpenTask({ taskId: task.id, projectId: task.projectId })
                   }
                   onEstimateChange={setEstimate}
+                  onToggleDone={toggleDone}
                 />
 
                 {(data?.previous.length ?? 0) > 0 && (
@@ -347,6 +356,7 @@ function RouteComponent() {
                       })
                     }
                     onEstimateChange={setEstimate}
+                    onToggleDone={toggleDone}
                   />
                 )}
 
@@ -420,6 +430,7 @@ function RouteComponent() {
                       onEstimateChange={setEstimate}
                       onAnchor={handleAnchor}
                       onUnanchor={handleUnanchor}
+                      onToggleDone={toggleDone}
                       timePopoverTaskId={timePopoverTaskId}
                       onTimePopoverOpenChange={(taskId, open) =>
                         setTimePopoverTaskId(open ? taskId : null)
@@ -455,12 +466,14 @@ function PlannerColumn({
   tasks,
   onOpen,
   onEstimateChange,
+  onToggleDone,
 }: {
   id: string;
   title: string;
   tasks: PlanTask[];
   onOpen: (task: PlanTask) => void;
   onEstimateChange: (taskId: string, seconds: number | null) => void;
+  onToggleDone: (taskId: string, done: boolean) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
@@ -489,6 +502,7 @@ function PlannerColumn({
               task={task}
               onOpen={() => onOpen(task)}
               onEstimateChange={(seconds) => onEstimateChange(task.id, seconds)}
+              onToggleDone={(done) => onToggleDone(task.id, done)}
             />
           ))}
         </SortableContext>
@@ -505,10 +519,12 @@ function PreviousColumn({
   tasks,
   onOpen,
   onEstimateChange,
+  onToggleDone,
 }: {
   tasks: PlanEntry[];
   onOpen: (task: PlanEntry) => void;
   onEstimateChange: (taskId: string, seconds: number | null) => void;
+  onToggleDone: (taskId: string, done: boolean) => void;
 }) {
   const { t } = useTranslation();
 
@@ -533,6 +549,7 @@ function PreviousColumn({
               task={task}
               onOpen={() => onOpen(task)}
               onEstimateChange={(seconds) => onEstimateChange(task.id, seconds)}
+              onToggleDone={(done) => onToggleDone(task.id, done)}
             />
           ))}
         </SortableContext>

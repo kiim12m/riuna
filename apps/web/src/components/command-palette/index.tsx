@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import SearchCommandMenu from "@/components/search-command-menu";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import CreateWorkspaceModal from "@/components/shared/modals/create-workspace-modal";
+import { StopDialog } from "@/components/timer/stop-dialog";
 import {
   Command,
   CommandCollection,
@@ -23,10 +24,14 @@ import {
 } from "@/components/ui/command";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { shortcuts } from "@/constants/shortcuts";
+import { useTimerMutations } from "@/hooks/mutations/time-entry/use-timer-mutations";
 import useGetConfig from "@/hooks/queries/config/use-get-config";
+import useGetProjects from "@/hooks/queries/project/use-get-projects";
+import { useRunningTimer } from "@/hooks/queries/time-entry/use-running-timer";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { authClient } from "@/lib/auth-client";
+import { useShortcutsHelpStore } from "@/store/shortcuts-help";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import CreateProjectModal from "../shared/modals/create-project-modal";
 
@@ -36,6 +41,9 @@ type PaletteActionItem = {
   shortcut?: string;
   onRun: () => void;
 };
+
+/** Diez horas: mas alla, un cronometro olvidado (`useStopWithConfirm`). */
+const LONG_RUNNING_SECONDS = 10 * 60 * 60;
 
 type PaletteGroup = {
   value: string;
@@ -62,13 +70,17 @@ function CommandPalette() {
   const projectIdFromRoute =
     location.pathname.match(/\/project\/([^/]+)/)?.[1] ?? undefined;
   const isBacklogView = location.pathname.endsWith("/backlog");
+  const workspaceId = workspace?.id ?? "";
+  const { data: projects = [] } = useGetProjects({ workspaceId });
+  const { data: timer } = useRunningTimer(workspaceId);
+  const { start, stop, isStopping } = useTimerMutations(workspaceId);
+  const [stopDialogOpen, setStopDialogOpen] = useState(false);
+  const setHelpOpen = useShortcutsHelpStore((state) => state.setOpen);
 
+  // Sin `?` aqui: lo atiende el propio dialogo de ayuda, que escucha la
+  // tecla real. Registrarlo en el proveedor y despacharlo de nuevo era un
+  // bucle (ver `store/shortcuts-help.ts`).
   useRegisterShortcuts({
-    shortcuts: {
-      [shortcuts.help.key]: () => {
-        document.dispatchEvent(new KeyboardEvent("keydown", { key: "?" }));
-      },
-    },
     modifierShortcuts: {
       [shortcuts.palette.prefix]: {
         [shortcuts.palette.open]: () => {
@@ -78,13 +90,9 @@ function CommandPalette() {
     },
     sequentialShortcuts: {
       [shortcuts.project.prefix]: {
-        [shortcuts.project.list]: () => {
-          if (!workspace?.id) return;
-          navigate({
-            to: "/dashboard/workspace/$workspaceId",
-            params: { workspaceId: workspace.id },
-          });
-        },
+        // La raiz del espacio lleva ahora a Hoy (interludio, bloque 5), asi
+        // que "ir a la lista de proyectos" abre la paleta, que los lista.
+        [shortcuts.project.list]: () => setOpen(true),
         [shortcuts.project.create]: () => setIsCreateProjectOpen(true),
       },
       [shortcuts.task.prefix]: {
@@ -104,102 +112,213 @@ function CommandPalette() {
     setOpen(false);
   }, []);
 
-  const groupedItems = useMemo<PaletteGroup[]>(
-    () => [
+  // Las pantallas personales: hasta ahora la paleta no llevaba a ninguna.
+  const goToGroup = useMemo<PaletteGroup>(() => {
+    const screens = [
+      { value: "today", to: "today", label: t("navigation:sidebar.today") },
       {
-        value: "suggestions",
-        label: t("navigation:commandPalette.suggestions"),
-        items: [
-          {
-            value: "projects",
-            label: t("navigation:commandPalette.projects"),
-            shortcut: `${shortcuts.project.prefix} ${shortcuts.project.list}`,
-            onRun: () => {
-              if (!workspace?.id) return;
-              navigate({
-                to: "/dashboard/workspace/$workspaceId",
-                params: { workspaceId: workspace.id },
-              });
-            },
-          },
-          {
-            value: "search",
-            label: t("navigation:commandPalette.search"),
-            shortcut: shortcuts.search.prefix,
-            onRun: () => setIsSearchOpen(true),
-          },
-          {
-            value: "members",
-            label: t("navigation:commandPalette.members", {
-              defaultValue: "Members",
+        value: "planner",
+        to: "planner",
+        label: t("navigation:sidebar.planner"),
+      },
+      {
+        value: "schedule",
+        to: "schedule",
+        label: t("navigation:sidebar.schedule"),
+      },
+      {
+        value: "my-tasks",
+        to: "my-tasks",
+        label: t("navigation:sidebar.myTasks"),
+      },
+      {
+        value: "time-sheet",
+        to: "time-sheet",
+        label: t("navigation:sidebar.timeSheet"),
+      },
+      { value: "home", to: "home", label: t("navigation:sidebar.home") },
+      { value: "goals", to: "goals", label: t("navigation:sidebar.goals") },
+    ] as const;
+
+    return {
+      value: "go-to",
+      label: t("navigation:commandPalette.goTo"),
+      items: screens.map((screen) => ({
+        value: `go-to-${screen.value}`,
+        label: screen.label,
+        onRun: () =>
+          navigate({
+            to: `/dashboard/workspace/$workspaceId/${screen.to}`,
+            params: { workspaceId },
+          }),
+      })),
+    };
+  }, [navigate, t, workspaceId]);
+
+  // Parar lo que corre -con la misma pregunta de hora de fin que el pie si
+  // lleva mas de diez horas- o reanudar la ultima tarea sin terminar.
+  const timerGroup = useMemo<PaletteGroup>(() => {
+    const running = timer?.running;
+    const last = timer?.last;
+    const items: PaletteActionItem[] = [];
+    if (running) {
+      items.push({
+        value: "timer-stop",
+        label: t("timer:stop"),
+        onRun: () => {
+          const seconds =
+            (Date.now() - new Date(running.startTime).getTime()) / 1000;
+          if (seconds > LONG_RUNNING_SECONDS) {
+            setTimeout(() => setStopDialogOpen(true), 100);
+          } else {
+            stop();
+          }
+        },
+      });
+    } else if (last) {
+      items.push({
+        value: "timer-resume",
+        label: t("timer:resumeTask", { title: last.taskTitle }),
+        onRun: () =>
+          start({
+            id: last.taskId,
+            number: last.taskNumber,
+            title: last.taskTitle,
+            projectId: last.projectId,
+            estimate: null,
+          }),
+      });
+    }
+    return {
+      value: "timer",
+      label: t("navigation:commandPalette.timer"),
+      items,
+    };
+  }, [t, timer, start, stop]);
+
+  // `p l` abre la paleta: aqui estan los proyectos del espacio.
+  const projectsGroup = useMemo<PaletteGroup>(
+    () => ({
+      value: "projects",
+      label: t("navigation:commandPalette.projects"),
+      items: projects
+        .filter((project) => !project.archivedAt)
+        .map((project) => ({
+          value: `project-${project.id}`,
+          label: project.name,
+          onRun: () =>
+            navigate({
+              to: "/dashboard/workspace/$workspaceId/project/$projectId/board",
+              params: { workspaceId, projectId: project.id },
             }),
-            onRun: () => {
-              if (!workspace?.id) return;
-              navigate({
-                to: "/dashboard/workspace/$workspaceId/members",
-                params: { workspaceId: workspace.id },
-              });
+        })),
+    }),
+    [navigate, t, projects, workspaceId],
+  );
+
+  const groupedItems = useMemo<PaletteGroup[]>(
+    () =>
+      [
+        {
+          value: "suggestions",
+          label: t("navigation:commandPalette.suggestions"),
+          items: [
+            {
+              value: "projects",
+              label: t("navigation:commandPalette.projects"),
+              onRun: () => {
+                if (!workspace?.id) return;
+                navigate({
+                  to: "/dashboard/workspace/$workspaceId/admin/projects",
+                  params: { workspaceId: workspace.id },
+                });
+              },
             },
-          },
-          {
-            value: "create-task",
-            label: t("navigation:commandPalette.createTask"),
-            shortcut: `${shortcuts.task.prefix} ${shortcuts.task.create}`,
-            onRun: () => setIsCreateTaskOpen(true),
-          },
-          {
-            value: "create-project",
-            label: t("navigation:commandPalette.createProject"),
-            shortcut: `${shortcuts.project.prefix} ${shortcuts.project.create}`,
-            onRun: () => setIsCreateProjectOpen(true),
-          },
-        ],
-      },
-      {
-        value: "commands",
-        label: t("navigation:commandPalette.commands"),
-        items: [
-          ...(canCreateWorkspace
-            ? [
-                {
-                  value: "create-workspace",
-                  label: t("navigation:commandPalette.createWorkspace"),
-                  shortcut: `${shortcuts.workspace.prefix} ${shortcuts.workspace.create}`,
-                  onRun: () => setIsCreateWorkspaceOpen(true),
-                },
-              ]
-            : []),
-          {
-            value: "theme-light",
-            label: t("navigation:commandPalette.lightTheme"),
-            onRun: () => setTheme("light"),
-          },
-          {
-            value: "theme-dark",
-            label: t("navigation:commandPalette.darkTheme"),
-            onRun: () => setTheme("dark"),
-          },
-          {
-            value: "theme-system",
-            label: t("navigation:commandPalette.systemTheme"),
-            onRun: () => setTheme("system"),
-          },
-          {
-            value: "keyboard-shortcuts",
-            label: t("navigation:commandPalette.keyboardShortcuts"),
-            shortcut: "?",
-            onRun: () => {
-              setTimeout(() => {
-                document.dispatchEvent(
-                  new KeyboardEvent("keydown", { key: "?" }),
-                );
-              }, 100);
+            {
+              value: "search",
+              label: t("navigation:commandPalette.search"),
+              shortcut: shortcuts.search.prefix,
+              onRun: () => setIsSearchOpen(true),
             },
-          },
-        ],
-      },
+            {
+              value: "members",
+              label: t("navigation:commandPalette.members", {
+                defaultValue: "Members",
+              }),
+              onRun: () => {
+                if (!workspace?.id) return;
+                navigate({
+                  to: "/dashboard/workspace/$workspaceId/members",
+                  params: { workspaceId: workspace.id },
+                });
+              },
+            },
+            {
+              value: "create-task",
+              label: t("navigation:commandPalette.createTask"),
+              shortcut: `${shortcuts.task.prefix} ${shortcuts.task.create}`,
+              onRun: () => setIsCreateTaskOpen(true),
+            },
+            {
+              value: "create-project",
+              label: t("navigation:commandPalette.createProject"),
+              shortcut: `${shortcuts.project.prefix} ${shortcuts.project.create}`,
+              onRun: () => setIsCreateProjectOpen(true),
+            },
+          ],
+        },
+        {
+          value: "commands",
+          label: t("navigation:commandPalette.commands"),
+          items: [
+            ...(canCreateWorkspace
+              ? [
+                  {
+                    value: "create-workspace",
+                    label: t("navigation:commandPalette.createWorkspace"),
+                    shortcut: `${shortcuts.workspace.prefix} ${shortcuts.workspace.create}`,
+                    onRun: () => setIsCreateWorkspaceOpen(true),
+                  },
+                ]
+              : []),
+            {
+              value: "theme-light",
+              label: t("navigation:commandPalette.lightTheme"),
+              onRun: () => setTheme("light"),
+            },
+            {
+              value: "theme-dark",
+              label: t("navigation:commandPalette.darkTheme"),
+              onRun: () => setTheme("dark"),
+            },
+            {
+              value: "theme-system",
+              label: t("navigation:commandPalette.systemTheme"),
+              onRun: () => setTheme("system"),
+            },
+            {
+              value: "keyboard-shortcuts",
+              label: t("navigation:commandPalette.keyboardShortcuts"),
+              shortcut: "?",
+              // Un respiro para que la paleta termine de cerrarse antes de
+              // abrir otro dialogo encima.
+              onRun: () => setTimeout(() => setHelpOpen(true), 100),
+            },
+          ],
+        },
+        ...(workspace?.id ? [goToGroup, timerGroup, projectsGroup] : []),
+      ].filter((group) => group.items.length > 0),
+    [
+      navigate,
+      setTheme,
+      t,
+      workspace?.id,
+      canCreateWorkspace,
+      setHelpOpen,
+      goToGroup,
+      timerGroup,
+      projectsGroup,
     ],
-    [navigate, setTheme, t, workspace?.id, canCreateWorkspace],
   );
 
   const shortcutHandlers = useMemo(() => {
@@ -336,7 +455,20 @@ function CommandPalette() {
         open={isCreateTaskOpen}
         projectId={projectIdFromRoute}
         status={isBacklogView ? "planned" : undefined}
+        // Igual que el boton de la cabecera: fuera de un proyecto la tarea
+        // nace asignada a quien la crea, o no saldria en Hoy ni en el
+        // Planificador.
+        defaultAssigneeId={projectIdFromRoute ? undefined : session?.user?.id}
         onClose={() => setIsCreateTaskOpen(false)}
+      />
+      <StopDialog
+        open={stopDialogOpen}
+        onClose={() => setStopDialogOpen(false)}
+        onConfirm={(endTime) => {
+          stop(endTime);
+          setStopDialogOpen(false);
+        }}
+        isPending={isStopping}
       />
       <CreateWorkspaceModal
         open={isCreateWorkspaceOpen}

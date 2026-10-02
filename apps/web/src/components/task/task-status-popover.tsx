@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
 import { ShortcutNumber } from "@/components/ui/shortcut-number";
 import { useUpdateTaskStatus } from "@/hooks/mutations/task/use-update-task-status";
 import { useGetColumns } from "@/hooks/queries/column/use-get-columns";
+import { useControllableOpen } from "@/hooks/use-controllable-open";
 import { useNumberedShortcuts } from "@/hooks/use-numbered-shortcuts";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { getColumnIcon } from "@/lib/column";
@@ -20,14 +21,22 @@ import type Task from "@/types/task";
 type TaskStatusPopoverProps = {
   task: Task;
   children: React.ReactNode;
+  /**
+   * Abierto desde fuera -los atajos del detalle-. Sin ellos, el desplegable
+   * lleva su propio estado, como siempre.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export default function TaskStatusPopover({
   task,
   children,
+  open: openProp,
+  onOpenChange,
 }: TaskStatusPopoverProps) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useControllableOpen(openProp, onOpenChange);
   const { data: columns, isLoading, isError } = useGetColumns(task.projectId);
   const statusOptions = useMemo(
     () =>
@@ -59,7 +68,7 @@ export default function TaskStatusPopover({
         );
       }
     },
-    [t, task, updateTaskStatus],
+    [t, task, updateTaskStatus, setOpen],
   );
 
   const shortcutOptions = useMemo(

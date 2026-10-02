@@ -1468,7 +1468,9 @@
 				"navigate": "Navegar",
 				"open": "Abrir",
 				"close": "Cerrar"
-			}
+			},
+			"goTo": "Ir a",
+			"timer": "Cronómetro"
 		},
 		"notifications": "Notificaciones",
 		"sidebar": {
@@ -1549,12 +1551,13 @@
 				"create": "Crear",
 				"views": "Vistas",
 				"navigation": "Navegación",
-				"quickSelect": "Selección rápida (en ventana emergente)"
+				"quickSelect": "Selección rápida (en ventana emergente)",
+				"taskDetails": "Detalle de la tarea"
 			},
 			"items": {
 				"openCommandPalette": "Abrir paleta de comandos",
 				"globalSearch": "Búsqueda global",
-				"toggleSidebar": "Abir barra lateral",
+				"toggleSidebar": "Abrir barra lateral",
 				"showShortcuts": "Mostrar atajos de teclado",
 				"closeModal": "Cerrar modal/ventana emergente",
 				"createTask": "Crear tarea",
@@ -1567,7 +1570,17 @@
 				"prevTask": "Tarea anterior",
 				"openTask": "Abrir tarea seleccionada",
 				"quickSelectNumber": "Seleccionar opción por número",
-				"calendarView": "Cambiar a vista de calendario"
+				"calendarView": "Cambiar a vista de calendario",
+				"toggleTimer": "Iniciar o parar el cronómetro",
+				"openNotifications": "Abrir notificaciones",
+				"switchWorkspace": "Cambiar de espacio de trabajo",
+				"goToProject": "Ir a un proyecto",
+				"ganttView": "Cambiar a vista de Gantt",
+				"setStatus": "Cambiar el estado",
+				"setPriority": "Cambiar la prioridad",
+				"setAssignee": "Cambiar el responsable",
+				"setLabels": "Cambiar las etiquetas",
+				"setDueDate": "Cambiar el vencimiento"
 			}
 		}
 	},
@@ -2838,7 +2851,8 @@
 			"description": "No tienes tareas asignadas que planificar."
 		},
 		"description": "Ventana de {{days}} días. Arrastra tareas entre días o desde «Sin planificar».",
-		"dayLoadPct": "{{pct}} % de tu jornada"
+		"dayLoadPct": "{{pct}} % de tu jornada",
+		"dropToAnchor": "Suelta aquí para fijar una hora"
 	},
 	"schedule": {
 		"pageTitle": "Cronograma",

@@ -1468,7 +1468,9 @@
 				"navigate": "Navega",
 				"open": "Obre",
 				"close": "Tanca"
-			}
+			},
+			"goTo": "Ir a",
+			"timer": "Cronómetro"
 		},
 		"notifications": "Notificacions",
 		"sidebar": {
@@ -1549,7 +1551,8 @@
 				"create": "Crea",
 				"views": "Vistes",
 				"navigation": "Navegació",
-				"quickSelect": "Selecció ràpida (en finestra emergent)"
+				"quickSelect": "Selecció ràpida (en finestra emergent)",
+				"taskDetails": "Detalle de la tarea"
 			},
 			"items": {
 				"openCommandPalette": "Obre la paleta d'ordres",
@@ -1567,7 +1570,17 @@
 				"prevTask": "Tasca anterior",
 				"openTask": "Obre la tasca seleccionada",
 				"quickSelectNumber": "Selecciona una opció pel número",
-				"calendarView": "Canvia a la vista de calendari"
+				"calendarView": "Canvia a la vista de calendari",
+				"toggleTimer": "Iniciar o parar el cronómetro",
+				"openNotifications": "Abrir notificaciones",
+				"switchWorkspace": "Cambiar de espacio de trabajo",
+				"goToProject": "Ir a un proyecto",
+				"ganttView": "Cambiar a vista de Gantt",
+				"setStatus": "Cambiar el estado",
+				"setPriority": "Cambiar la prioridad",
+				"setAssignee": "Cambiar el responsable",
+				"setLabels": "Cambiar las etiquetas",
+				"setDueDate": "Cambiar el vencimiento"
 			}
 		}
 	},
@@ -2838,7 +2851,8 @@
 			"description": "No tienes tareas asignadas que planificar."
 		},
 		"description": "Finestra de {{days}} dies. Arrossega tasques entre dies o des de «Sense planificar».",
-		"dayLoadPct": "{{pct}} % de la teva jornada"
+		"dayLoadPct": "{{pct}} % de la teva jornada",
+		"dropToAnchor": "Suelta aquí para fijar una hora"
 	},
 	"schedule": {
 		"pageTitle": "Cronograma",

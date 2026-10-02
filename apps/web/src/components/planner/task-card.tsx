@@ -10,6 +10,8 @@ type PlannerTaskCardProps = {
   onOpen: () => void;
   /** Ausente en tarjetas de solo lectura (la de arrastre, "Vence este dia"). */
   onEstimateChange?: (seconds: number | null) => void;
+  /** Igual: la tarjeta que se arrastra no lleva casilla. */
+  onToggleDone?: (done: boolean) => void;
 };
 
 /**
@@ -25,6 +27,7 @@ export function PlannerTaskCard({
   task,
   onOpen,
   onEstimateChange,
+  onToggleDone,
 }: PlannerTaskCardProps) {
   const {
     attributes,
@@ -52,6 +55,7 @@ export function PlannerTaskCard({
         projectIcon={task.projectIcon}
         onOpen={onOpen}
         timerTask={task}
+        onToggleDone={onToggleDone}
         className={cn(
           "cursor-grab active:cursor-grabbing",
           isDragging && "border-ring/40 bg-card shadow-lg hover:border-ring/40",

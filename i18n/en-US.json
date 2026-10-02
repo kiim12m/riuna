@@ -1468,7 +1468,9 @@
 				"navigate": "Navigate",
 				"open": "Open",
 				"close": "Close"
-			}
+			},
+			"goTo": "Go to",
+			"timer": "Timer"
 		},
 		"notifications": "Notifications",
 		"sidebar": {
@@ -1549,7 +1551,8 @@
 				"create": "Create",
 				"views": "Views",
 				"navigation": "Navigation",
-				"quickSelect": "Quick Select (in popovers)"
+				"quickSelect": "Quick Select (in popovers)",
+				"taskDetails": "Task details"
 			},
 			"items": {
 				"openCommandPalette": "Open command palette",
@@ -1567,7 +1570,17 @@
 				"nextTask": "Next task",
 				"prevTask": "Previous task",
 				"openTask": "Open selected task",
-				"quickSelectNumber": "Select option by number"
+				"quickSelectNumber": "Select option by number",
+				"toggleTimer": "Start or stop the timer",
+				"openNotifications": "Open notifications",
+				"switchWorkspace": "Switch workspace",
+				"goToProject": "Go to a project",
+				"ganttView": "Switch to Gantt view",
+				"setStatus": "Change status",
+				"setPriority": "Change priority",
+				"setAssignee": "Change assignee",
+				"setLabels": "Change labels",
+				"setDueDate": "Change due date"
 			}
 		}
 	},
@@ -2838,7 +2851,8 @@
 			"description": "You have no assigned tasks to plan."
 		},
 		"description": "A {{days}}-day window. Drag tasks between days or from “Unplanned”.",
-		"dayLoadPct": "{{pct}}% of your workday"
+		"dayLoadPct": "{{pct}}% of your workday",
+		"dropToAnchor": "Drop here to set a time"
 	},
 	"schedule": {
 		"pageTitle": "Schedule",

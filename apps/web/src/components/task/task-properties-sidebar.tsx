@@ -8,6 +8,7 @@ import {
   Plus,
   Users,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import labelColors from "@/constants/label-colors";
+import { shortcuts } from "@/constants/shortcuts";
 import { useGetColumns } from "@/hooks/queries/column/use-get-columns";
 import useGetGiteaIntegration from "@/hooks/queries/gitea-integration/use-get-gitea-integration";
 import useGetGithubIntegration from "@/hooks/queries/github-integration/use-get-github-integration";
@@ -28,6 +30,9 @@ import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import useGetTask from "@/hooks/queries/task/use-get-task";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
+import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useMediaQuery } from "@/hooks/use-media-query";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
 import { getColumnIcon } from "@/lib/column";
 import {
@@ -82,6 +87,9 @@ type TaskPropertiesSidebarProps = {
   compact?: boolean;
 };
 
+type PropertyKey = "status" | "priority" | "assignee" | "labels" | "dueDate";
+type SidebarLayout = "compact" | "mobile" | "desktop" | "labels";
+
 export default function TaskPropertiesSidebar({
   taskId,
   projectId,
@@ -121,6 +129,48 @@ export default function TaskPropertiesSidebar({
   const assignee = workspaceUsers?.members?.find(
     (member) => member.userId === task?.userId,
   );
+
+  // Los atajos del detalle -`s` estado, `p` prioridad, `a` asignado, `l`
+  // etiquetas, `d` vencimiento- abren el selector correspondiente. Estaban
+  // definidos en `constants/shortcuts.ts` y documentados, pero nadie los
+  // registraba. Fuera del modo compacto el lateral monta a la vez su
+  // disposicion movil y la de escritorio -una oculta por CSS-, asi que solo
+  // se gobierna el selector de la que se ve: abrir el de la oculta lo anclaria
+  // a un elemento invisible. Las etiquetas solo se ven a partir de `lg`.
+  const { canUpdateTasks } = useWorkspacePermission();
+  const canEdit = canUpdateTasks();
+  const isWide = useMediaQuery("(min-width: 1024px)");
+  const activeLayout: SidebarLayout = compact
+    ? "compact"
+    : isWide
+      ? "desktop"
+      : "mobile";
+  const [openProperty, setOpenProperty] = useState<PropertyKey | null>(null);
+  const control = (key: PropertyKey, layout: SidebarLayout) =>
+    (layout === "labels" ? isWide : layout === activeLayout)
+      ? {
+          open: openProperty === key,
+          onOpenChange: (open: boolean) => setOpenProperty(open ? key : null),
+        }
+      : {};
+
+  // Memorizado: `useRegisterShortcuts` vuelve a registrar en cuanto cambia
+  // el objeto, y cada registro re-renderiza a quien usa el proveedor.
+  const propertyShortcuts = useMemo(
+    (): { shortcuts: Record<string, () => void> } => ({
+      shortcuts: canEdit
+        ? {
+            [shortcuts.taskDetails.status]: () => setOpenProperty("status"),
+            [shortcuts.taskDetails.priority]: () => setOpenProperty("priority"),
+            [shortcuts.taskDetails.assignee]: () => setOpenProperty("assignee"),
+            [shortcuts.taskDetails.labels]: () => setOpenProperty("labels"),
+            [shortcuts.taskDetails.dueDate]: () => setOpenProperty("dueDate"),
+          }
+        : {},
+    }),
+    [canEdit],
+  );
+  useRegisterShortcuts(propertyShortcuts);
 
   // Con varios asignados el nombre del principal se queda corto, asi que la
   // etiqueta pasa a contarlos. El avatar sigue siendo el del principal.
@@ -213,7 +263,10 @@ export default function TaskPropertiesSidebar({
 
             <div className="flex flex-row flex-wrap gap-1 items-center p-2 w-full">
               {task && (
-                <TaskStatusPopover task={task}>
+                <TaskStatusPopover
+                  task={task}
+                  {...control("status", "compact")}
+                >
                   <Button
                     variant="ghost"
                     size="sm"
@@ -231,7 +284,10 @@ export default function TaskPropertiesSidebar({
                 </TaskStatusPopover>
               )}
               {task && (
-                <TaskPriorityPopover task={task}>
+                <TaskPriorityPopover
+                  task={task}
+                  {...control("priority", "compact")}
+                >
                   <Button
                     variant="ghost"
                     size="sm"
@@ -245,7 +301,11 @@ export default function TaskPropertiesSidebar({
                 </TaskPriorityPopover>
               )}
               {task && (
-                <TaskAssigneePopover task={task} workspaceId={workspaceId}>
+                <TaskAssigneePopover
+                  task={task}
+                  workspaceId={workspaceId}
+                  {...control("assignee", "compact")}
+                >
                   <Button
                     variant="ghost"
                     size="sm"
@@ -327,7 +387,10 @@ export default function TaskPropertiesSidebar({
                 </TaskStartDatePopover>
               )}
               {task && (
-                <TaskDueDatePopover task={task}>
+                <TaskDueDatePopover
+                  task={task}
+                  {...control("dueDate", "compact")}
+                >
                   <Button
                     variant="ghost"
                     size="sm"
@@ -433,7 +496,10 @@ export default function TaskPropertiesSidebar({
 
               <div className="flex flex-row flex-wrap gap-1 items-center p-2 w-full">
                 {task && (
-                  <TaskStatusPopover task={task}>
+                  <TaskStatusPopover
+                    task={task}
+                    {...control("status", "mobile")}
+                  >
                     <Button
                       variant="ghost"
                       size="sm"
@@ -451,7 +517,10 @@ export default function TaskPropertiesSidebar({
                   </TaskStatusPopover>
                 )}
                 {task && (
-                  <TaskPriorityPopover task={task}>
+                  <TaskPriorityPopover
+                    task={task}
+                    {...control("priority", "mobile")}
+                  >
                     <Button
                       variant="ghost"
                       size="sm"
@@ -465,7 +534,11 @@ export default function TaskPropertiesSidebar({
                   </TaskPriorityPopover>
                 )}
                 {task && (
-                  <TaskAssigneePopover task={task} workspaceId={workspaceId}>
+                  <TaskAssigneePopover
+                    task={task}
+                    workspaceId={workspaceId}
+                    {...control("assignee", "mobile")}
+                  >
                     <Button
                       variant="ghost"
                       size="sm"
@@ -547,7 +620,10 @@ export default function TaskPropertiesSidebar({
                   </TaskStartDatePopover>
                 )}
                 {task && (
-                  <TaskDueDatePopover task={task}>
+                  <TaskDueDatePopover
+                    task={task}
+                    {...control("dueDate", "mobile")}
+                  >
                     <Button
                       variant="ghost"
                       size="sm"
@@ -655,7 +731,10 @@ export default function TaskPropertiesSidebar({
 
               <div className="flex flex-col gap-2 px-3 py-3">
                 {task && (
-                  <TaskStatusPopover task={task}>
+                  <TaskStatusPopover
+                    task={task}
+                    {...control("status", "desktop")}
+                  >
                     <Button
                       variant="ghost"
                       size="sm"
@@ -673,7 +752,10 @@ export default function TaskPropertiesSidebar({
                   </TaskStatusPopover>
                 )}
                 {task && (
-                  <TaskPriorityPopover task={task}>
+                  <TaskPriorityPopover
+                    task={task}
+                    {...control("priority", "desktop")}
+                  >
                     <Button
                       variant="ghost"
                       size="sm"
@@ -687,7 +769,11 @@ export default function TaskPropertiesSidebar({
                   </TaskPriorityPopover>
                 )}
                 {task && (
-                  <TaskAssigneePopover task={task} workspaceId={workspaceId}>
+                  <TaskAssigneePopover
+                    task={task}
+                    workspaceId={workspaceId}
+                    {...control("assignee", "desktop")}
+                  >
                     <Button
                       variant="ghost"
                       size="sm"
@@ -769,7 +855,10 @@ export default function TaskPropertiesSidebar({
                   </TaskStartDatePopover>
                 )}
                 {task && (
-                  <TaskDueDatePopover task={task}>
+                  <TaskDueDatePopover
+                    task={task}
+                    {...control("dueDate", "desktop")}
+                  >
                     <Button
                       variant="ghost"
                       size="sm"
@@ -854,7 +943,11 @@ export default function TaskPropertiesSidebar({
                 )}
 
               {task && (
-                <TaskLabelsPopover task={task} workspaceId={workspaceId}>
+                <TaskLabelsPopover
+                  task={task}
+                  workspaceId={workspaceId}
+                  {...control("labels", "labels")}
+                >
                   <Button
                     variant="ghost"
                     size="sm"

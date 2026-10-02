@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { ShortcutNumber } from "@/components/ui/shortcut-number";
 import { useUpdateTaskPriority } from "@/hooks/mutations/task/use-update-task-status-priority";
+import { useControllableOpen } from "@/hooks/use-controllable-open";
 import { useNumberedShortcuts } from "@/hooks/use-numbered-shortcuts";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { getPriorityLabel } from "@/lib/i18n/domain";
@@ -19,6 +20,12 @@ import type Task from "@/types/task";
 type TaskPriorityPopoverProps = {
   task: Task;
   children: React.ReactNode;
+  /**
+   * Abierto desde fuera -los atajos del detalle-. Sin ellos, el desplegable
+   * lleva su propio estado, como siempre.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 const priorityOptions = [
@@ -32,9 +39,11 @@ const priorityOptions = [
 export default function TaskPriorityPopover({
   task,
   children,
+  open: openProp,
+  onOpenChange,
 }: TaskPriorityPopoverProps) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useControllableOpen(openProp, onOpenChange);
   const { mutateAsync: updateTaskPriority } = useUpdateTaskPriority();
   const { canUpdateTasks } = useWorkspacePermission();
   const canEdit = canUpdateTasks();
@@ -55,7 +64,7 @@ export default function TaskPriorityPopover({
         );
       }
     },
-    [t, task, updateTaskPriority],
+    [t, task, updateTaskPriority, setOpen],
   );
 
   const shortcutOptions = useMemo(

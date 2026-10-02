@@ -356,7 +356,19 @@ function TimeGridColumn({
           onPointerLeave={() => {
             if (!isCreating) setHoverMinute(null);
           }}
-          onClick={() => setIsCreating(true)}
+          onClick={(event) => {
+            if (isSegmentInteracting) return;
+            // Con raton, el hueco ya lo marco `onPointerMove`. Con un toque no
+            // hay "pasar por encima" -y `pointerleave` llega antes que el
+            // clic y lo borra-, asi que el minuto sale del propio toque.
+            const rect = event.currentTarget.getBoundingClientRect();
+            setHoverMinute(
+              (current) =>
+                current ??
+                minuteAtOffset(event.clientY - rect.top, DAY_START_MINUTE),
+            );
+            setIsCreating(true);
+          }}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();

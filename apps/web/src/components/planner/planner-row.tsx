@@ -1,6 +1,8 @@
 import { Layout } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
+import { Checkbox } from "@/components/ui/checkbox";
 import projectIcons from "@/constants/project-icons";
 import { cn } from "@/lib/cn";
 import { getPriorityIcon } from "@/lib/priority";
@@ -21,6 +23,11 @@ type PlannerRowProps = {
    * las filas de solo lectura ("Vence este dia").
    */
   timerTask?: ComponentProps<typeof TaskTimerButton>["task"];
+  /**
+   * La casilla de "hecha" -`POST /task/complete/:id`, la misma de Hoy-.
+   * Ausente en las filas de solo lectura y en la tarjeta que se arrastra.
+   */
+  onToggleDone?: (done: boolean) => void;
   /** Extiende o sustituye el borde/fondo -el arrastre trae los suyos. */
   className?: string;
 };
@@ -45,8 +52,10 @@ export function PlannerRow({
   leading,
   trailing,
   timerTask,
+  onToggleDone,
   className,
 }: PlannerRowProps) {
+  const { t } = useTranslation();
   const ProjectIcon =
     projectIcons[projectIcon as keyof typeof projectIcons] ?? Layout;
 
@@ -70,6 +79,21 @@ export function PlannerRow({
       )}
     >
       <div className="flex items-center gap-1.5">
+        {onToggleDone && (
+          // biome-ignore lint/a11y/noStaticElementInteractions: solo corta la propagacion hacia la fila, que se abre y se arrastra; el control es la casilla
+          <span
+            className="flex shrink-0"
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
+            <Checkbox
+              checked={isDone}
+              onCheckedChange={(checked) => onToggleDone(checked === true)}
+              aria-label={t("today:row.toggleDone")}
+            />
+          </span>
+        )}
         {leading}
         <span className="shrink-0">{getPriorityIcon(priority)}</span>
         <span

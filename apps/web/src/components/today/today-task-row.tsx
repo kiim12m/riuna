@@ -154,7 +154,7 @@ export function TodayTaskRow({
             event.stopPropagation();
             action.onClick();
           }}
-          className="shrink-0 rounded px-1.5 py-0.5 text-label text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100"
+          className="shrink-0 rounded px-1.5 py-0.5 text-label text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100 touch:opacity-100"
         >
           {action.label}
         </button>
