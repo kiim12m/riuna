@@ -519,6 +519,13 @@
 			"when": 1790946281330,
 			"tag": "0073_time_entry_focus_mode",
 			"breakpoints": true
+		},
+		{
+			"idx": 74,
+			"version": "7",
+			"when": 1790952094835,
+			"tag": "0074_calendar_feed",
+			"breakpoints": true
 		}
 	]
 }

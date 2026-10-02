@@ -23,6 +23,7 @@ export function ConfirmDeleteDialog({
   description,
   onConfirm,
   isPending = false,
+  confirmLabel,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -30,6 +31,8 @@ export function ConfirmDeleteDialog({
   description: string;
   onConfirm: () => void;
   isPending?: boolean;
+  /** Por defecto «Borrar»; revocar un enlace no es borrar nada visible. */
+  confirmLabel?: string;
 }) {
   const { t } = useTranslation();
 
@@ -54,7 +57,7 @@ export function ConfirmDeleteDialog({
               />
             }
           >
-            {t("common:actions.delete")}
+            {confirmLabel ?? t("common:actions.delete")}
           </AlertDialogClose>
         </AlertDialogFooter>
       </AlertDialogContent>

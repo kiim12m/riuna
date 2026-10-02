@@ -3277,5 +3277,25 @@
 			"readyBody": "Back to Riuna to start the next block.",
 			"doneTitle": "Time’s up"
 		}
+	},
+	"calendar": {
+		"feed": {
+			"title": "Calendar",
+			"subtitle": "Subscribe from Google Calendar, Outlook or your phone to your plan with times, your schedule blocks and your due dates in {{workspace}}.",
+			"inactive": "No calendar link yet.",
+			"activeSince": "Link active since {{date}}.",
+			"create": "Create link",
+			"regenerate": "Regenerate",
+			"revoke": "Revoke",
+			"onlyOnce": "Copy it now: it will not be shown again.",
+			"copy": "Copy link",
+			"copied": "Link copied",
+			"open": "Open in calendar",
+			"privacy": "Anyone with the link sees those titles. If it leaks, regenerate it: the old one stops working. Calendars refresh it on their own schedule, Google every few hours.",
+			"regenerateTitle": "Regenerate the calendar link?",
+			"revokeTitle": "Revoke the calendar link?",
+			"confirmDescription": "The current link stops working right away, and calendars subscribed to it stop updating.",
+			"error": "The calendar link could not be created."
+		}
 	}
 }

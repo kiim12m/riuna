@@ -288,6 +288,15 @@ la tarea y en la propia tabla.
     uno por hora;
   - fuera de jornada: el cronómetro sigue en marcha pasada la hora de
     salida.
+- **Enlace del calendario**
+  ([ADR 057](adr/057-exportar-el-calendario-por-token.md)): en Ajustes ›
+  Preferencias, un enlace `.ics` por persona y espacio para suscribirse desde
+  Google Calendar, Outlook o el móvil. Lleva el plan con hora, los bloques
+  del Cronograma (los repetidos, como series) y los vencimientos de lo
+  asignado, como días enteros. La ventana va de un mes atrás a tres meses
+  adelante. El enlace se enseña una vez, y se puede regenerar o revocar.
+  Quien lo tenga ve esos títulos, y deja de valer si la persona sale del
+  espacio.
 - **Stand-up**: un botón en Hoy lo enseña, derivado al momento y sin
   guardarse:
   - ayer, es decir, lo terminado el último día laborable;

@@ -22,6 +22,8 @@ import * as v from "valibot";
 import activity from "./activity";
 import { auth } from "./auth";
 import billing from "./billing";
+import calendar from "./calendar";
+import serveFeed from "./calendar/controllers/serve-feed";
 import capture from "./capture";
 import column from "./column";
 import comment from "./comment";
@@ -256,6 +258,41 @@ export function createApp() {
   api.post(
     "/gitea-integration/webhook/:integrationId",
     handleGiteaWebhookRoute,
+  );
+
+  // El calendario de una persona por su enlace (ADR 057): sin sesion, la
+  // credencial es el token. Solo casa con `….ics`, asi que no tapa las rutas
+  // de `calendar/`.
+  api.get(
+    "/calendar/:file{.+\\.ics}",
+    describeRoute({
+      operationId: "getCalendarFeedIcs",
+      tags: ["Calendar"],
+      description:
+        "A user's calendar as iCalendar: their plan with times, their schedule blocks and the due dates of what is assigned to them. The token in the file name is the credential",
+      security: [],
+      responses: {
+        200: {
+          description: "The calendar",
+          content: { "text/calendar": { schema: { type: "string" } } },
+        },
+        404: { description: "Unknown, revoked or regenerated link" },
+      },
+    }),
+    async (c) => {
+      const token = c.req.param("file").replace(/\.ics$/, "");
+      const body = await serveFeed(token);
+      if (body === null) {
+        throw new HTTPException(404, { message: "Calendar not found" });
+      }
+      return c.body(body, 200, {
+        "Content-Type": "text/calendar; charset=utf-8",
+        "Content-Disposition": 'inline; filename="riuna.ics"',
+        "Cache-Control": "private, max-age=300",
+        "Referrer-Policy": "no-referrer",
+        "X-Content-Type-Options": "nosniff",
+      });
+    },
   );
 
   const invitationPublicApi = api.get("/invitation/public/:id", async (c) => {
@@ -632,6 +669,7 @@ export function createApp() {
   const myWorkApi = api.route("/my-work", myWork);
   const plannerApi = api.route("/planner", planner);
   const captureApi = api.route("/capture", capture);
+  const calendarApi = api.route("/calendar", calendar);
   const reviewApi = api.route("/review", review);
   const scheduleApi = api.route("/schedule", schedule);
   const workScheduleApi = api.route("/work-schedule", workSchedule);
@@ -823,6 +861,7 @@ export function createApp() {
     myWorkApi,
     plannerApi,
     captureApi,
+    calendarApi,
     reviewApi,
     scheduleApi,
     workScheduleApi,
@@ -985,6 +1024,7 @@ const {
   myWorkApi,
   plannerApi,
   captureApi,
+  calendarApi,
   reviewApi,
   scheduleApi,
   workScheduleApi,
@@ -1046,6 +1086,7 @@ export type AppType =
   | typeof myWorkApi
   | typeof plannerApi
   | typeof captureApi
+  | typeof calendarApi
   | typeof reviewApi
   | typeof scheduleApi
   | typeof workScheduleApi

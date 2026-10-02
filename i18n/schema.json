@@ -12857,6 +12857,85 @@
 				"stoppedOutside",
 				"notify"
 			]
+		},
+		"calendar": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"feed": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"subtitle": {
+							"type": "string"
+						},
+						"inactive": {
+							"type": "string"
+						},
+						"activeSince": {
+							"type": "string"
+						},
+						"create": {
+							"type": "string"
+						},
+						"regenerate": {
+							"type": "string"
+						},
+						"revoke": {
+							"type": "string"
+						},
+						"onlyOnce": {
+							"type": "string"
+						},
+						"copy": {
+							"type": "string"
+						},
+						"copied": {
+							"type": "string"
+						},
+						"open": {
+							"type": "string"
+						},
+						"privacy": {
+							"type": "string"
+						},
+						"regenerateTitle": {
+							"type": "string"
+						},
+						"revokeTitle": {
+							"type": "string"
+						},
+						"confirmDescription": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"subtitle",
+						"inactive",
+						"activeSince",
+						"create",
+						"regenerate",
+						"revoke",
+						"onlyOnce",
+						"copy",
+						"copied",
+						"open",
+						"privacy",
+						"regenerateTitle",
+						"revokeTitle",
+						"confirmDescription",
+						"error"
+					]
+				}
+			},
+			"required": ["feed"]
 		}
 	},
 	"required": [
@@ -12884,6 +12963,7 @@
 		"taskActions",
 		"rituals",
 		"reminders",
-		"focus"
+		"focus",
+		"calendar"
 	]
 }

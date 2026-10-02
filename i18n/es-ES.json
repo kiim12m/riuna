@@ -3277,5 +3277,25 @@
 			"readyBody": "Vuelve a Riuna para empezar el siguiente bloque.",
 			"doneTitle": "Se acabó el tiempo"
 		}
+	},
+	"calendar": {
+		"feed": {
+			"title": "Calendario",
+			"subtitle": "Suscríbete desde Google Calendar, Outlook o el móvil a tu plan con hora, tus bloques y tus vencimientos de {{workspace}}.",
+			"inactive": "Aún no hay enlace del calendario.",
+			"activeSince": "Enlace activo desde el {{date}}.",
+			"create": "Crear enlace",
+			"regenerate": "Regenerar",
+			"revoke": "Revocar",
+			"onlyOnce": "Cópialo ahora: no se volverá a mostrar.",
+			"copy": "Copiar enlace",
+			"copied": "Enlace copiado",
+			"open": "Abrir en el calendario",
+			"privacy": "Quien tenga el enlace ve esos títulos. Si se filtra, regenéralo: el anterior deja de valer. Cada calendario lo actualiza a su ritmo; Google, cada pocas horas.",
+			"regenerateTitle": "¿Regenerar el enlace del calendario?",
+			"revokeTitle": "¿Revocar el enlace del calendario?",
+			"confirmDescription": "El enlace actual deja de funcionar al momento, y los calendarios suscritos dejan de actualizarse.",
+			"error": "No se pudo crear el enlace del calendario."
+		}
 	}
 }

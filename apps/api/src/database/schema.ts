@@ -1842,6 +1842,38 @@ export const userWorkScheduleTable = pgTable(
   ],
 );
 
+// El enlace del calendario de una persona en un espacio (ADR 057). Solo se
+// guarda el sha256 del token: el token se enseña una vez al crearlo, y
+// regenerar o revocar mata el anterior al momento.
+export const calendarFeedTable = pgTable(
+  "calendar_feed",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    tokenHash: text("token_hash").notNull().unique(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("calendar_feed_workspace_user").on(
+      table.workspaceId,
+      table.userId,
+    ),
+  ],
+);
+
 export const userNotificationWorkspaceRuleTable = pgTable(
   "user_notification_workspace_rule",
   {

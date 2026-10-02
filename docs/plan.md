@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0, 1, 2 y 3 hechos; sigue el Bloque 4 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 a 4 hechos (el 4.2, aplazado); sigue el 5 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -2049,17 +2049,54 @@ verificación.
   - unitarias 376 (web), 727 (API) y 33 (MCP);
   - typecheck de todos los paquetes, `biome ci` e i18n.
 
-**Bloque 4 — Calendario** (≈ 3 semanas) · *si falta tiempo, se recorta primero 4.2*
+**Bloque 4 — Calendario** (≈ 3 semanas) · *si falta tiempo, se recorta primero 4.2* · **cerrado con el 4.1; el 4.2, aplazado**
 
-- **4.1 Exportar ICS** · S-M · ADR 057. Feed por token: solo se guarda su sha256, se enseña una
+- **4.1 Exportar ICS** ✔ · S-M · [ADR 057](adr/057-exportar-el-calendario-por-token.md). Feed por token: solo se guarda su sha256, se enseña una
   vez, y se puede regenerar o revocar. Escritor propio: el plan con hora, los bloques (una
   cadencia de intervalo 1 se escribe como RRULE con `TZID=Europe/Madrid`; las demás, ocurrencia
   a ocurrencia) y los vencimientos como días enteros.
-- **4.2 Importar iCal** · L · ADR 058. `ical.js` (MPL-2.0, sin dependencias transitivas): expandir
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **Uno por persona y espacio**, en Ajustes › Preferencias, con el nombre
+    del espacio activo. El enlace entero solo se ve al crearlo o regenerarlo.
+  - **Solo con sesión:** las claves de API no pueden crear, ver ni revocar
+    el enlace.
+  - **En cada petición se busca el hash y se comprueba que la persona sigue
+    en el espacio**, antes de la caché de cinco minutos: revocar, regenerar
+    o salir del espacio cortan el enlace al momento.
+  - **Las series empiezan el día en que se creó el bloque.** Los mensuales
+    después del 28 van ocurrencia a ocurrencia, porque «el 31» se recorta en
+    los meses cortos y `BYMONTHDAY` se los salta.
+  - **Las horas sueltas van en UTC**, válidas en cualquier zona. Las series
+    llevan su `VTIMEZONE` de Madrid, porque Outlook la necesita.
+  - **«✓» delante de lo terminado**, y «Vence:» o «Due:» según el idioma de
+    la persona.
+
+  Verificación:
+  - 8 pruebas unitarias del escritor y de la decisión entre serie y
+    ocurrencias;
+  - 6 de integración. Quitando la comprobación de pertenencia o el rechazo
+    de las claves de API, fallan las suyas;
+  - 1 de extremo a extremo, del ajuste al `.ics` sin cookies;
+  - lectura con `ical.js`, fuera del repositorio: la serie de los lunes da
+    las 10:00 de Madrid a ambos lados del cambio de hora;
+  - pasada visual del ajuste en escritorio y a 375 px.
+
+  **Verificación del Bloque 4 completo (2026-10-02):**
+  - integración 732 de 732, con 1 omitida;
+  - de extremo a extremo 56 de 57. Falló «crear una tarea desde un hueco»
+    del Cronograma, que también falla 1 de cada 3 veces sola. Es una carrera
+    de la prueba, ajena al 4.1: crear desde un hueco son dos peticiones, y la
+    prueba leía la API con la segunda en vuelo. Ahora espera a que la tarea
+    esté anclada, y pasa 8 de 8;
+  - unitarias 376 (web), 735 (API) y 33 (MCP);
+  - typecheck de todos los paquetes, `biome ci` e i18n.
+- **4.2 Importar iCal** · *aplazado* · L · ADR 058. `ical.js` (MPL-2.0, sin dependencias transitivas): expandir
   a mano RRULE, EXDATE, RECURRENCE-ID y los TZID de Outlook es una trampa. La URL se guarda
   cifrada, con guarda anti-SSRF en cada salto, y un trabajo cada quince minutos con
   arrendamiento llena una caché de ocurrencias. Las reuniones entran como bloques fijos de solo
   lectura: cuentan en la carga del Planificador y el Cronograma, y el responsable no las ve.
+  **Aplazado (2026-10-02).** El usuario lo decidió al cerrar el 4.1, antes de
+  añadir `ical.js`. La ADR 058 queda reservada para cuando se retome.
 
 **Bloque 5 — Equipo** (≈ 2,5 semanas)
 
@@ -2082,15 +2119,16 @@ semanas nominales, 4-5 meses reales.**
 **Riesgos.** (1) El cambio de zona horaria sobre datos existentes, con la igualdad exacta de
 `planned_date` y el cambio de hora del 25 de octubre. (2) La visibilidad del responsable:
 privacidad y fugas entre espacios. (3) Que alguien espere privacidad de la Bandeja. (4) Que
-alguien espere avisos sin tener la pestaña abierta. (5) La importación de iCal: SSRF,
-secretos, una licencia nueva y la variedad de feeds.
+alguien espere avisos sin tener la pestaña abierta. (5) La importación de iCal, aplazada:
+SSRF, secretos, una licencia nueva y la variedad de feeds.
 
 **Aplazado a sabiendas:** hábitos y contadores · push, PWA y service worker ·
 autoplanificar · bandeja de notificaciones completa · mapa de calor · zona horaria por
 persona · enviar el stand-up a Slack o Telegram (Fase 8) · matriz de Eisenhower · editar la
 recurrencia desde la propia tarea · tiempo real en la vista del responsable · CalDAV y
 sincronización bidireccional · avisos de los rituales (decidido: solo botón) · que el
-responsable edite el plan ajeno (decidido: solo lectura) · saltarse las recurrentes en festivo.
+responsable edite el plan ajeno (decidido: solo lectura) · saltarse las recurrentes en festivo ·
+importar iCal (4.2, decidido al cerrar el 4.1).
 
 **Verificación**, en cada sub-bloque:
 
@@ -2107,8 +2145,9 @@ responsable edite el plan ajeno (decidido: solo lectura) · saltarse las recurre
   calendario.
 
 **Hecho cuando:** capturas una tarea con una línea, cierras el día decidiendo qué pasa con lo
-pendiente, trabajas en foco con avisos del navegador, ves tus reuniones en el Cronograma, y tu
-responsable ve tu plan y tu carga —con ausencias y festivos— pero no tu valoración.
+pendiente, trabajas en foco con avisos del navegador, ves tu plan con hora en tu calendario, y
+tu responsable ve tu plan y tu carga —con ausencias y festivos— pero no tu valoración. Ver tus
+reuniones en el Cronograma se aplazó con el 4.2.
 
 ### Fase 8 — Automatizaciones e importadores externos (≈3 semanas)
 Motor disparador → condición → acción (`automation`, `automation_run`) sobre
@@ -2270,7 +2309,10 @@ del navegador: el **3.1**, los avisos a la hora anclada
 ([ADR 055](adr/055-avisos-del-navegador-sin-service-worker.md)), el **3.2**,
 el modo foco, y el **3.3**, los avisos de ritmo
 ([ADR 056](adr/056-modo-foco-sobre-entradas-reales.md)). Sigue el
-**Bloque 4**, el calendario, empezando por el **4.1**, exportar ICS.
+**Bloque 4**, el calendario, se cerró con el **4.1**, exportar ICS
+([ADR 057](adr/057-exportar-el-calendario-por-token.md)): el **4.2**, importar
+iCal, quedó aplazado. Sigue el **Bloque 5**, equipo, empezando por el **5.1**,
+ausencias y festivos.
 Después del interludio viene la **Fase 8**: automatizaciones e
 importadores externos.
 
