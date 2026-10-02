@@ -988,6 +988,66 @@ export function registerMcpTools(
   );
 
   registerTool(
+    "get_today",
+    {
+      description:
+        "The current user's day: what is planned for today (anchored times first), what was planned earlier and is still open, what is overdue or due today and unplanned, and what was finished today.",
+      inputSchema: z.object({
+        workspaceId: nonEmptyString.describe("Workspace ID"),
+      }),
+    },
+    async (args) => {
+      const qs = new URLSearchParams({ workspaceId: args.workspaceId });
+      return run(() => client.json(`/api/today?${qs.toString()}`));
+    },
+  );
+
+  registerTool(
+    "capture_task",
+    {
+      description:
+        "Capture a task assigned to the current user, in their personal inbox unless a project is given. plannedDate places it on a day of the personal plan and never sets the due date; dueDate is the due date. Estimate is in seconds.",
+      inputSchema: z.object({
+        workspaceId: nonEmptyString.describe("Workspace ID"),
+        title: nonEmptyString,
+        projectId: optionalNonEmptyString.describe(
+          "Project ID; omit for the current user's inbox",
+        ),
+        priority: prioritySchema.optional(),
+        estimate: z
+          .number()
+          .int()
+          .min(0)
+          .optional()
+          .describe("Estimate in seconds"),
+        dueDate: optionalNonEmptyString.describe("Due day, yyyy-mm-dd"),
+        plannedDate: optionalNonEmptyString.describe(
+          "Day of the personal plan, yyyy-mm-dd",
+        ),
+        startMinute: z
+          .number()
+          .int()
+          .min(0)
+          .max(1439)
+          .optional()
+          .describe("Minutes since midnight to anchor; needs plannedDate"),
+        labelIds: z
+          .array(nonEmptyString)
+          .max(20)
+          .optional()
+          .describe("Workspace label IDs"),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json("/api/capture", {
+          method: "POST",
+          body: JSON.stringify(args),
+        }),
+      ),
+  );
+
+  registerTool(
     "list_task_time_entries",
     {
       description: "List the time entries logged against a task.",

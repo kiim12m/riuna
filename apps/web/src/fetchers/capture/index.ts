@@ -24,3 +24,26 @@ export async function ensureInbox(workspaceId: string) {
   if (!inbox) throw new HttpError("Inbox not created", 500);
   return inbox;
 }
+
+export type CaptureTaskInput = {
+  workspaceId: string;
+  title: string;
+  projectId?: string;
+  priority?: "no-priority" | "low" | "medium" | "high" | "urgent";
+  estimate?: number;
+  dueDate?: string;
+  plannedDate?: string;
+  startMinute?: number;
+  labelIds?: string[];
+};
+
+/** Captura rapida (ADR 052): la tarea, asignada a quien la crea. */
+export async function captureTask(input: CaptureTaskInput) {
+  const response = await client.capture.$post({ json: input });
+
+  if (!response.ok) {
+    throw new HttpError(await response.text(), response.status);
+  }
+
+  return response.json();
+}

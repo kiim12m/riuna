@@ -6175,6 +6175,9 @@
 								"closeModal": {
 									"type": "string"
 								},
+								"quickAdd": {
+									"type": "string"
+								},
 								"createTask": {
 									"type": "string"
 								},
@@ -6245,6 +6248,7 @@
 								"toggleSidebar",
 								"showShortcuts",
 								"closeModal",
+								"quickAdd",
 								"createTask",
 								"createProject",
 								"createWorkspace",
@@ -11724,6 +11728,54 @@
 				"stopDialog",
 				"start"
 			]
+		},
+		"quickAdd": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"label": {
+					"type": "string"
+				},
+				"dialogTitle": {
+					"type": "string"
+				},
+				"dialogDescription": {
+					"type": "string"
+				},
+				"placeholder": {
+					"type": "string"
+				},
+				"hint": {
+					"type": "string"
+				},
+				"preview": {
+					"type": "string"
+				},
+				"due": {
+					"type": "string"
+				},
+				"captured": {
+					"type": "string"
+				},
+				"capturedInInbox": {
+					"type": "string"
+				},
+				"error": {
+					"type": "string"
+				}
+			},
+			"required": [
+				"label",
+				"dialogTitle",
+				"dialogDescription",
+				"placeholder",
+				"hint",
+				"preview",
+				"due",
+				"captured",
+				"capturedInInbox",
+				"error"
+			]
 		}
 	},
 	"required": [
@@ -11746,6 +11798,7 @@
 		"planner",
 		"schedule",
 		"timeSheet",
-		"timer"
+		"timer",
+		"quickAdd"
 	]
 }

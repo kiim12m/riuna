@@ -195,6 +195,22 @@ la tarea y en la propia tabla.
   en Mis tareas, Hoy, la búsqueda y los paneles como las de cualquier otro
   proyecto, y la cabecera lo explica. Si la persona sale del espacio o se
   borra su cuenta, pasa a ser un proyecto normal, con sus tareas.
+- **Captura rápida** ([ADR 052](adr/052-captura-rapida.md)): una línea se
+  convierte en tarea al pulsar Intro, asignada a quien la escribe y en su
+  Bandeja salvo que diga otro proyecto. La sintaxis es cerrada y en castellano:
+  - `1h30`, `1,5h` o `30m` para la estimación;
+  - `@hoy`, `@mañana`, `@vie` o `@15/10`, con hora opcional detrás
+    (`@mañana 10:00`), para el día del plan, nunca para el vencimiento;
+  - `!vie` o `!15/10` para el vencimiento;
+  - `#etiqueta` para una etiqueta que ya existe;
+  - `+CLAVE` para el proyecto;
+  - `*alta` o `*urgente` para la prioridad;
+  - `\` delante, para dejar una palabra tal cual.
+
+  Lo que no se entiende se queda en el título, y unos chips debajo enseñan lo
+  que se va a crear. Se abre con la tecla `q` desde cualquier pantalla o desde
+  la paleta. Además hay una caja fija en Hoy, que planifica para hoy por
+  defecto, en «Sin planificar» del Planificador y en la Bandeja propia.
 - **Mi trabajo**: las tareas propias o de mi equipo de todos los proyectos, con
   filtros de vencimiento (todas, vencidas, hoy, esta semana).
 - **Nueva tarea en la cabecera**: un botón en la barra superior de cada
@@ -386,7 +402,7 @@ la tarea y en la propia tabla.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 44 herramientas**. Una prueba de paridad
+Dos caminos con **las mismas 46 herramientas**. Una prueba de paridad
 (`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
 antes el paquete stdio se había quedado sin las cinco del plan personal y el
 cronómetro.
@@ -400,7 +416,9 @@ cronómetro.
 
 Las herramientas cubren identidad y espacios, proyectos, tareas, comentarios,
 etiquetas, épicas, relaciones, miembros, búsqueda, columnas, registro de
-tiempo, actividad y notificaciones.
+tiempo, actividad y notificaciones, además del plan personal, el cronómetro,
+Hoy (`get_today`) y la captura a la Bandeja (`capture_task`). `list_projects`
+no lista las Bandejas.
 
 ## 13. Tiempo real
 

@@ -52,4 +52,7 @@ export const shortcuts = {
   help: {
     key: "?",
   },
+  quickAdd: {
+    key: "q",
+  },
 } as const;

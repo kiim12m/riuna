@@ -79,6 +79,10 @@ function useShortcutCategories(): ShortcutCategory[] {
         title: t("navigation:keyboardShortcuts.categories.create"),
         shortcuts: [
           {
+            keys: [shortcuts.quickAdd.key],
+            description: t("navigation:keyboardShortcuts.items.quickAdd"),
+          },
+          {
             keys: [shortcuts.task.prefix, shortcuts.task.create],
             description: t("navigation:keyboardShortcuts.items.createTask"),
           },

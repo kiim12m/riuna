@@ -31,6 +31,7 @@ import { useRunningTimer } from "@/hooks/queries/time-entry/use-running-timer";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { authClient } from "@/lib/auth-client";
+import { useQuickAddStore } from "@/store/quick-add";
 import { useShortcutsHelpStore } from "@/store/shortcuts-help";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import CreateProjectModal from "../shared/modals/create-project-modal";
@@ -76,6 +77,7 @@ function CommandPalette() {
   const { start, stop, isStopping } = useTimerMutations(workspaceId);
   const [stopDialogOpen, setStopDialogOpen] = useState(false);
   const setHelpOpen = useShortcutsHelpStore((state) => state.setOpen);
+  const setQuickAddOpen = useQuickAddStore((state) => state.setOpen);
 
   // Sin `?` aqui: lo atiende el propio dialogo de ayuda, que escucha la
   // tecla real. Registrarlo en el proveedor y despacharlo de nuevo era un
@@ -260,6 +262,18 @@ function CommandPalette() {
               shortcut: `${shortcuts.task.prefix} ${shortcuts.task.create}`,
               onRun: () => setIsCreateTaskOpen(true),
             },
+            // Sin `shortcut`: la paleta dispara los de sus elementos mientras
+            // se escribe en ella, y `q` saltaria con cualquier busqueda que la
+            // lleve. Fuera de la paleta la abre `q` (`WorkspaceRuntime`).
+            ...(workspace?.id
+              ? [
+                  {
+                    value: "quick-add",
+                    label: t("quickAdd:dialogTitle"),
+                    onRun: () => setTimeout(() => setQuickAddOpen(true), 100),
+                  },
+                ]
+              : []),
             {
               value: "create-project",
               label: t("navigation:commandPalette.createProject"),
@@ -316,6 +330,7 @@ function CommandPalette() {
       workspace?.id,
       canCreateWorkspace,
       setHelpOpen,
+      setQuickAddOpen,
       goToGroup,
       timerGroup,
       projectsGroup,

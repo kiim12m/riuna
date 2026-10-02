@@ -2,18 +2,49 @@ import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import { requireEntitlement } from "../billing/require-entitlement-middleware";
-import { projectSchema } from "../schemas";
+import { projectSchema, taskSchema } from "../schemas";
+import { VALID_PRIORITIES } from "../task/validate-task-fields";
 import {
   requireApiKeyScope,
   requireWorkspacePermission,
 } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
+import captureTask from "./controllers/capture-task";
 import { ensureInbox, findInbox } from "./inbox";
 
 const inboxResponseSchema = v.object({ inbox: v.nullable(projectSchema) });
 
 const workspaceIdSchema = v.object({
   workspaceId: v.pipe(v.string(), v.minLength(1)),
+});
+
+const dayKeySchema = v.pipe(
+  v.string(),
+  v.regex(/^\d{4}-\d{2}-\d{2}$/, "Expected a yyyy-mm-dd day"),
+);
+
+const captureSchema = v.object({
+  workspaceId: v.pipe(v.string(), v.minLength(1)),
+  title: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(500)),
+  projectId: v.optional(v.pipe(v.string(), v.minLength(1))),
+  priority: v.optional(v.picklist(VALID_PRIORITIES)),
+  estimate: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0))),
+  dueDate: v.optional(dayKeySchema),
+  plannedDate: v.optional(dayKeySchema),
+  /** CHECK `personal_plan_entry_start_minute_valid`: 0-1439. */
+  startMinute: v.optional(
+    v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(1439)),
+  ),
+  labelIds: v.optional(
+    v.pipe(v.array(v.pipe(v.string(), v.minLength(1))), v.maxLength(20)),
+  ),
+});
+
+const captureResponseSchema = v.object({
+  task: taskSchema,
+  projectSlug: v.string(),
+  /** Si cayo en la Bandeja de quien captura. */
+  inInbox: v.boolean(),
 });
 
 /**
@@ -74,6 +105,35 @@ const capture = new Hono<{
     async (c) => {
       const inbox = await ensureInbox(c.get("workspaceId"), c.get("userId"));
       return c.json({ inbox: inbox ?? null });
+    },
+  )
+  .post(
+    "/",
+    describeRoute({
+      operationId: "captureTask",
+      tags: ["Capture"],
+      description:
+        "Create a task assigned to the current user, in their inbox unless a project is given. plannedDate places it on a day of the personal plan and never sets the due date; dueDate is the due date. Labels must be workspace labels",
+      responses: {
+        200: {
+          description: "The captured task",
+          content: {
+            "application/json": { schema: resolver(captureResponseSchema) },
+          },
+        },
+      },
+    }),
+    validator("json", captureSchema),
+    workspaceAccess.fromBody(),
+    requireWorkspacePermission({ task: ["create"] }),
+    requireEntitlement,
+    async (c) => {
+      const captured = await captureTask({
+        ...c.req.valid("json"),
+        workspaceId: c.get("workspaceId"),
+        userId: c.get("userId"),
+      });
+      return c.json(captured);
     },
   );
 

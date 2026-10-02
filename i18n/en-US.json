@@ -1561,6 +1561,7 @@
 				"toggleSidebar": "Toggle sidebar",
 				"showShortcuts": "Show keyboard shortcuts",
 				"closeModal": "Close modal/popover",
+				"quickAdd": "Quick capture",
 				"createTask": "Create task",
 				"createProject": "Create project",
 				"createWorkspace": "Create workspace",
@@ -2979,5 +2980,17 @@
 			"endTime": "End time"
 		},
 		"start": "Start timer"
+	},
+	"quickAdd": {
+		"label": "Quick capture",
+		"dialogTitle": "Quick capture",
+		"dialogDescription": "Enter creates the task; Esc closes.",
+		"placeholder": "Capture a task… @mañana 10:00 1h #label",
+		"hint": "@day plans it · !day is the due date · #label · +KEY project · *priority · 1h30 estimate · \\ keeps a word as written",
+		"preview": "What will be captured",
+		"due": "Due {{day}}",
+		"captured": "{{key}} captured",
+		"capturedInInbox": "{{key}} captured in your inbox",
+		"error": "The task couldn't be captured"
 	}
 }

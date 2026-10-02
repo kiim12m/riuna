@@ -1561,6 +1561,7 @@
 				"toggleSidebar": "Abrir barra lateral",
 				"showShortcuts": "Mostrar atajos de teclado",
 				"closeModal": "Cerrar modal/ventana emergente",
+				"quickAdd": "Captura rápida",
 				"createTask": "Crear tarea",
 				"createProject": "Crear proyecto",
 				"createWorkspace": "Crear espacio de trabajo",
@@ -2979,5 +2980,17 @@
 			"endTime": "Hora de fin"
 		},
 		"start": "Iniciar cronómetro"
+	},
+	"quickAdd": {
+		"label": "Captura rápida",
+		"dialogTitle": "Captura rápida",
+		"dialogDescription": "Intro crea la tarea; Esc cierra.",
+		"placeholder": "Captura una tarea… @mañana 10:00 1h #etiqueta",
+		"hint": "@día la planifica · !día vence · #etiqueta · +CLAVE proyecto · *prioridad · 1h30 estimación · \\ deja la palabra tal cual",
+		"preview": "Lo que se va a capturar",
+		"due": "Vence {{day}}",
+		"captured": "{{key}} capturada",
+		"capturedInInbox": "{{key}} capturada en tu Bandeja",
+		"error": "No se ha podido capturar la tarea"
 	}
 }

@@ -22,6 +22,7 @@ import { useTranslation } from "react-i18next";
 import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import PageTitle from "@/components/page-title";
+import { QuickAddInput } from "@/components/quick-add/quick-add-input";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import { StopDialog } from "@/components/timer/stop-dialog";
 import { TodayPeek } from "@/components/today/today-peek";
@@ -48,6 +49,7 @@ import { useRunningTimer } from "@/hooks/queries/time-entry/use-running-timer";
 import { useToday } from "@/hooks/queries/today/use-today";
 import { useElapsed } from "@/hooks/use-elapsed";
 import { useStopWithConfirm } from "@/hooks/use-stop-with-confirm";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { formatDuration } from "@/lib/duration";
 
 export const Route = createFileRoute(
@@ -134,6 +136,7 @@ function TodayComponent() {
     data?.serverToday ?? "",
   );
   const completeTask = useCompleteTask(workspaceId);
+  const { canCreateTasks } = useWorkspacePermission();
 
   const [openTask, setOpenTask] = useState<{
     taskId: string;
@@ -246,6 +249,14 @@ function TodayComponent() {
               })
             }
           />
+          {/* Lo que se captura desde Hoy es para hoy, salvo que diga otro dia. */}
+          {data && canCreateTasks() && (
+            <QuickAddInput
+              workspaceId={workspaceId}
+              defaultPlannedDate={data.serverToday}
+              className="max-w-2xl"
+            />
+          )}
           {isPending ? (
             <div className="space-y-2">
               {["a", "b", "c"].map((key) => (

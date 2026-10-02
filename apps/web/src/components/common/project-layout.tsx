@@ -16,6 +16,8 @@ import ProjectCrumbSelect from "@/components/common/header/project-crumb-select"
 import WorkspaceCrumbSelect from "@/components/common/header/workspace-crumb-select";
 import Layout from "@/components/common/layout";
 import { MobileHeaderBell } from "@/components/notification/mobile-header-bell";
+import { useAuth } from "@/components/providers/auth-provider/hooks/use-auth";
+import { QuickAddInput } from "@/components/quick-add/quick-add-input";
 import CreateProjectModal from "@/components/shared/modals/create-project-modal";
 import { Button } from "@/components/ui/button";
 import { KbdSequence } from "@/components/ui/kbd";
@@ -34,6 +36,7 @@ import {
 import { shortcuts } from "@/constants/shortcuts";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import { useProjectWebSocket } from "@/hooks/use-project-websocket";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
 
 type ProjectLayoutProps = {
@@ -68,6 +71,11 @@ export default function ProjectLayout({
   const navigate = useNavigate();
   const location = useLocation();
   const { data: project } = useGetProject({ id: projectId, workspaceId });
+  const { user } = useAuth();
+  const { canCreateTasks } = useWorkspacePermission();
+  // En la Bandeja propia, la captura rapida a mano: es a lo que se viene.
+  const isOwnInbox =
+    Boolean(project?.ownerUserId) && project?.ownerUserId === user?.id;
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
     useState(false);
 
@@ -293,6 +301,12 @@ export default function ProjectLayout({
           </div>
         </div>
       </Layout.Header>
+
+      {isOwnInbox && canCreateTasks() && (
+        <div className="shrink-0 border-border/80 border-b px-3 py-2">
+          <QuickAddInput workspaceId={workspaceId} showHint={false} />
+        </div>
+      )}
 
       <Layout.Content>{children}</Layout.Content>
 

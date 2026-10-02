@@ -1561,6 +1561,7 @@
 				"toggleSidebar": "Obre la barra lateral",
 				"showShortcuts": "Mostra les dreceres de teclat",
 				"closeModal": "Tanca la finestra emergent",
+				"quickAdd": "Captura rápida",
 				"createTask": "Crea una tasca",
 				"createProject": "Crea un projecte",
 				"createWorkspace": "Crea un espai de treball",
@@ -2979,5 +2980,17 @@
 			"endTime": "Hora de fi"
 		},
 		"start": "Iniciar cronòmetre"
+	},
+	"quickAdd": {
+		"label": "Captura rápida",
+		"dialogTitle": "Captura rápida",
+		"dialogDescription": "Intro crea la tarea; Esc cierra.",
+		"placeholder": "Captura una tarea… @mañana 10:00 1h #etiqueta",
+		"hint": "@día la planifica · !día vence · #etiqueta · +CLAVE proyecto · *prioridad · 1h30 estimación · \\ deja la palabra tal cual",
+		"preview": "Lo que se va a capturar",
+		"due": "Vence {{day}}",
+		"captured": "{{key}} capturada",
+		"capturedInInbox": "{{key}} capturada en tu Bandeja",
+		"error": "No se ha podido capturar la tarea"
 	}
 }

@@ -1,5 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { QuickAddDialog } from "@/components/quick-add/quick-add-dialog";
 import { StopDialog } from "@/components/timer/stop-dialog";
 import { shortcuts } from "@/constants/shortcuts";
 import { useTimerMutations } from "@/hooks/mutations/time-entry/use-timer-mutations";
@@ -11,7 +12,9 @@ import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useStopWithConfirm } from "@/hooks/use-stop-with-confirm";
 import { useTimerTitle } from "@/hooks/use-timer-title";
 import { useUserWebSocket } from "@/hooks/use-user-websocket";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { formatElapsedClock } from "@/lib/format-clock";
+import { useQuickAddStore } from "@/store/quick-add";
 
 /**
  * Lo que tiene que seguir vivo mientras se navega por el panel, montado una
@@ -25,9 +28,10 @@ import { formatElapsedClock } from "@/lib/format-clock";
  * que solo existe abierto, no habia conexion ni atajo casi nunca. Los ajustes
  * de cuenta, que no tienen barra, tampoco los tenian.
  *
- * No pinta nada salvo el dialogo de parar: Ctrl+E sobre una entrada de mas de
- * diez horas pregunta la hora real de fin (`useStopWithConfirm`), y ese
- * dialogo tiene que existir aunque la barra no este montada.
+ * No pinta nada salvo dos dialogos: el de parar -Ctrl+E sobre una entrada de
+ * mas de diez horas pregunta la hora real de fin (`useStopWithConfirm`), y
+ * ese dialogo tiene que existir aunque la barra no este montada- y el de
+ * captura rapida que abre `q`.
  */
 export function WorkspaceRuntime() {
   useUserWebSocket();
@@ -75,6 +79,12 @@ export function WorkspaceRuntime() {
     }
   }, [running, last, start, requestStop]);
 
+  // `q`, la captura rapida (ADR 052), en cualquier pantalla. Comodidad, no
+  // autorizacion: `POST /capture` exige `task:create` igual.
+  const { canCreateTasks } = useWorkspacePermission();
+  const openQuickAdd = useQuickAddStore((state) => state.setOpen);
+  const canCapture = Boolean(workspaceId) && canCreateTasks();
+
   useRegisterShortcuts({
     modifierShortcuts: {
       [shortcuts.timer.prefix]: {
@@ -83,12 +93,27 @@ export function WorkspaceRuntime() {
     },
   });
 
+  useRegisterShortcuts(
+    useMemo(
+      () =>
+        canCapture
+          ? {
+              shortcuts: { [shortcuts.quickAdd.key]: () => openQuickAdd(true) },
+            }
+          : {},
+      [canCapture, openQuickAdd],
+    ),
+  );
+
   return (
-    <StopDialog
-      open={dialogOpen}
-      onClose={closeDialog}
-      onConfirm={confirmStop}
-      isPending={isStopping}
-    />
+    <>
+      <StopDialog
+        open={dialogOpen}
+        onClose={closeDialog}
+        onConfirm={confirmStop}
+        isPending={isStopping}
+      />
+      <QuickAddDialog workspaceId={workspaceId} />
+    </>
   );
 }

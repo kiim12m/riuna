@@ -18,13 +18,14 @@ import {
 } from "@dnd-kit/sortable";
 import { createFileRoute } from "@tanstack/react-router";
 import { CalendarClock } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import PageTitle from "@/components/page-title";
 import { PlannerDay } from "@/components/planner/planner-day";
 import { PlannerTaskCard } from "@/components/planner/task-card";
+import { QuickAddInput } from "@/components/quick-add/quick-add-input";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import {
   Empty,
@@ -46,6 +47,7 @@ import { usePlannerMutations } from "@/hooks/mutations/planner/use-planner-mutat
 import { useCompleteTask } from "@/hooks/mutations/task/use-complete-task";
 import { usePlanner } from "@/hooks/queries/planner/use-planner";
 import { useWorkSchedule } from "@/hooks/queries/work-schedule/use-work-schedule";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
 import { formatDuration } from "@/lib/duration";
 import { formatDate } from "@/lib/format";
@@ -95,6 +97,7 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { t, i18n } = useTranslation();
   const { workspaceId } = Route.useParams();
+  const { canCreateTasks } = useWorkspacePermission();
   const { data, isPending } = usePlanner(workspaceId, WINDOW_DAYS);
   const { data: workSchedule } = useWorkSchedule();
   const { moveTask, reorderDay } = usePlannerMutations(
@@ -338,6 +341,14 @@ function RouteComponent() {
                 <PlannerColumn
                   id={UNPLANNED_ID}
                   title={t("planner:unplanned")}
+                  header={
+                    canCreateTasks() && (
+                      <QuickAddInput
+                        workspaceId={workspaceId}
+                        showHint={false}
+                      />
+                    )
+                  }
                   tasks={data?.unplanned ?? []}
                   onOpen={(task) =>
                     setOpenTask({ taskId: task.id, projectId: task.projectId })
@@ -447,6 +458,7 @@ function RouteComponent() {
 function PlannerColumn({
   id,
   title,
+  header,
   tasks,
   onOpen,
   onEstimateChange,
@@ -454,6 +466,8 @@ function PlannerColumn({
 }: {
   id: string;
   title: string;
+  /** Bajo el titulo: la captura rapida en «Sin planificar». */
+  header?: ReactNode;
   tasks: PlanTask[];
   onOpen: (task: PlanTask) => void;
   onEstimateChange: (taskId: string, seconds: number | null) => void;
@@ -477,6 +491,7 @@ function PlannerColumn({
             {tasks.length}
           </span>
         </div>
+        {header}
       </div>
       <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-1.5 pb-2">
         <SortableContext items={tasks} strategy={verticalListSortingStrategy}>

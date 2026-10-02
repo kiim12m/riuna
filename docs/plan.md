@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloque 0 y 1.1 hechos; sigue el 1.2 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloque 0, 1.1 y 1.2 hechos; sigue el 1.3 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -1773,12 +1773,38 @@ verificación.
     el widget renombrado;
   - 1 unitaria de la barra lateral; typecheck; pasada visual en escritorio y
     móvil.
-- **1.2 Captura rápida** · M · ADR 052. Parser puro sin dependencia —el vocabulario es cerrado—:
+- **1.2 Captura rápida** ✔ · M · [ADR 052](adr/052-captura-rapida.md). Parser puro sin dependencia —el vocabulario es cerrado—:
   estimación `1h 30m 1h30 1,5h` · día del plan `@hoy @mañana @lun @15/10 [10:00]` —plan y hora,
   **nunca** vencimiento— · vencimiento `!mañana !15/10` · `#etiqueta` (solo las que existen) ·
   `+PROY` (por defecto, la Bandeja) · prioridad `*alta *a *urgente` · `\` para escribirlo
   literal. Chips de vista previa, tecla `q`, y `POST /capture` sobre `createTask` y
   `setPlanEntry`. MCP `capture_task` y `get_today`.
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **Un día de la semana es el próximo**, nunca hoy: `@lun` en lunes es el de
+    la semana que viene, y para hoy está `@hoy`. Una fecha sin año es la
+    próxima vez que llega. La hora se escribe detrás del día
+    (`@mañana 10:00`), y `@10:00` solo es hoy a esa hora.
+  - **`#etiqueta`** casa sin distinguir mayúsculas ni tildes, y los espacios
+    del nombre se escriben con guion. Lo que no casa se queda en el título.
+  - **La tarea empieza en la primera columna sin terminar** del proyecto, que
+    puede no ser `to-do`.
+  - **Dónde está:** la tecla `q` desde cualquier pantalla, la paleta, Hoy
+    (planifica para hoy por defecto), «Sin planificar» y la cabecera de la
+    Bandeja propia.
+  - **La paleta no lleva la `q` como atajo** de su elemento: dispara los
+    atajos mientras se escribe en ella, y saltaría con cualquier búsqueda.
+  - **API:** `POST /capture` lo valida todo antes de crear nada: solo
+    etiquetas del espacio, nunca una copia colgada de otra tarea, que
+    `assignLabelToTask` movería.
+
+  Verificación:
+  - 57 pruebas unitarias del parser;
+  - 9 de integración: Bandeja al primer uso, plan sin vencimiento, vencimiento
+    sin plan, columna inicial, etiquetas, rechazos sin crear nada, permisos,
+    y que sale en `GET /today`;
+  - 2 de extremo a extremo: desde Hoy, y con `q` desde otra pantalla hasta el
+    Planificador;
+  - paridad MCP con 46 herramientas; pasada visual en escritorio y móvil.
 - **1.3 Acciones de fila, imprescindibles y plan en bloque** · M · ADR 053.
   `personal_plan_entry.key_rank` (1-3, único parcial por día: la base impone el máximo de
   tres). `POST /planner/bulk` —deuda declarada en la ADR 047—, `PUT /planner/:taskId/key` y
@@ -2028,9 +2054,10 @@ en todas partes y tiempo en el detalle), el **0.4** (Planificador, atajos y
 paleta) y el **0.5** (recordatorios por asignado, una sola carga del día y
 paridad de MCP, [ADR 050](adr/050-recordatorios-por-asignado-y-una-sola-carga.md))
 también están hechos: **el Bloque 0 está cerrado**. Del **Bloque 1**, captura
-y acciones, está hecho el **1.1**, la Bandeja
-([ADR 051](adr/051-la-bandeja-es-un-proyecto-oculto.md)); sigue el **1.2**, la
-captura rápida. Después del interludio viene la **Fase 8**: automatizaciones e
+y acciones, están hechos el **1.1**, la Bandeja
+([ADR 051](adr/051-la-bandeja-es-un-proyecto-oculto.md)), y el **1.2**, la
+captura rápida ([ADR 052](adr/052-captura-rapida.md)); sigue el **1.3**,
+acciones de fila, imprescindibles y plan en bloque. Después del interludio viene la **Fase 8**: automatizaciones e
 importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
