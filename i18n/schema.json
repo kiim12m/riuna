@@ -11193,9 +11193,12 @@
 						},
 						"table": {
 							"type": "string"
+						},
+						"waiting": {
+							"type": "string"
 						}
 					},
-					"required": ["list", "board", "gantt", "table"]
+					"required": ["list", "board", "gantt", "table", "waiting"]
 				},
 				"table": {
 					"type": "object",
@@ -11228,6 +11231,64 @@
 				},
 				"loadMore": {
 					"type": "string"
+				},
+				"waiting": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"delegated_one": {
+							"type": "string"
+						},
+						"delegated_other": {
+							"type": "string"
+						},
+						"blocked_one": {
+							"type": "string"
+						},
+						"blocked_other": {
+							"type": "string"
+						},
+						"waitingOn": {
+							"type": "string"
+						},
+						"blockedBy": {
+							"type": "string"
+						},
+						"capped": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"description": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "description"]
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"delegated_one",
+						"delegated_other",
+						"blocked_one",
+						"blocked_other",
+						"waitingOn",
+						"blockedBy",
+						"capped",
+						"empty"
+					]
 				}
 			},
 			"required": [
@@ -11237,7 +11298,8 @@
 				"empty",
 				"description",
 				"shownOf",
-				"loadMore"
+				"loadMore",
+				"waiting"
 			]
 		},
 		"planner": {

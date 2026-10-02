@@ -246,7 +246,11 @@ la tarea y en la propia tabla.
   proyectos del espacio ([ADR 039](adr/039-mis-tareas-vistas-personales.md)).
   El Tablero agrupa por ventana de vencimiento, no por estado; sin arrastre.
   La Lista y el Tablero cargan de 100 en 100, con «Mostrando N de M» y
-  «Cargar más».
+  «Cargar más». La pestaña **«Esperando a»** reúne lo que depende de otra
+  persona:
+  - lo que creaste y asignaste a otra persona, y sigue abierto, con a quién
+    esperas;
+  - lo tuyo bloqueado por una tarea abierta que no es tuya, con cuál.
 - **Planificador** ([ADR 040](adr/040-planificador.md),
   [ADR 046](adr/046-planificador-en-tres-secciones.md)): ventana rodante de
   15 días para decidir qué día se piensa hacer cada tarea, sin tocar su

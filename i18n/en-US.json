@@ -2842,7 +2842,8 @@
 			"list": "List",
 			"board": "Board",
 			"gantt": "Gantt",
-			"table": "Table"
+			"table": "Table",
+			"waiting": "Waiting on"
 		},
 		"table": {
 			"moreResults": "Showing {{shown}} of {{total}}. Narrow it down with a filter to see the rest."
@@ -2853,7 +2854,22 @@
 		},
 		"description": "Your tasks across every project.",
 		"shownOf": "Showing {{shown}} of {{total}}",
-		"loadMore": "Load more"
+		"loadMore": "Load more",
+		"waiting": {
+			"title": "Waiting on",
+			"description": "What depends on someone else: tasks you created and assigned to another person, and your tasks blocked by someone else’s.",
+			"delegated_one": "Delegated · {{count}}",
+			"delegated_other": "Delegated · {{count}}",
+			"blocked_one": "Blocked · {{count}}",
+			"blocked_other": "Blocked · {{count}}",
+			"waitingOn": "Waiting on {{names}}",
+			"blockedBy": "Blocked by {{tasks}}",
+			"capped": "Showing the first {{limit}}.",
+			"empty": {
+				"title": "Not waiting on anyone",
+				"description": "Tasks you assign to others, and yours blocked by someone else’s, show up here."
+			}
+		}
 	},
 	"planner": {
 		"pageTitle": "Planner",

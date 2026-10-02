@@ -2842,7 +2842,8 @@
 			"list": "Lista",
 			"board": "Tablero",
 			"gantt": "Gantt",
-			"table": "Tabla"
+			"table": "Tabla",
+			"waiting": "Esperando a"
 		},
 		"table": {
 			"moreResults": "Mostrando {{shown}} de {{total}}. Acota con un filtro para ver el resto."
@@ -2853,7 +2854,22 @@
 		},
 		"description": "Les teves tasques de tots els projectes.",
 		"shownOf": "Mostrando {{shown}} de {{total}}",
-		"loadMore": "Cargar más"
+		"loadMore": "Cargar más",
+		"waiting": {
+			"title": "Esperando a",
+			"description": "Lo que depende de otra persona: lo que creaste y asignaste a otra, y lo tuyo bloqueado por tareas ajenas.",
+			"delegated_one": "Delegada · {{count}}",
+			"delegated_other": "Delegadas · {{count}}",
+			"blocked_one": "Bloqueada · {{count}}",
+			"blocked_other": "Bloqueadas · {{count}}",
+			"waitingOn": "Esperando a {{names}}",
+			"blockedBy": "Bloqueada por {{tasks}}",
+			"capped": "Se enseñan las {{limit}} primeras.",
+			"empty": {
+				"title": "No esperas a nadie",
+				"description": "Aquí salen las tareas que asignas a otras personas y las tuyas bloqueadas por tareas ajenas."
+			}
+		}
 	},
 	"planner": {
 		"pageTitle": "Planificador",

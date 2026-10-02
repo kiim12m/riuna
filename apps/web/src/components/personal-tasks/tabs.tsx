@@ -1,5 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
-import { CalendarRange, List, SquareKanban, Table2 } from "lucide-react";
+import {
+  CalendarRange,
+  Hourglass,
+  List,
+  SquareKanban,
+  Table2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -11,6 +17,7 @@ const TABS = [
   { view: "board", icon: SquareKanban },
   { view: "gantt", icon: CalendarRange },
   { view: "table", icon: Table2 },
+  { view: "waiting", icon: Hourglass },
 ] as const;
 
 export type PersonalTasksView = (typeof TABS)[number]["view"];
@@ -29,9 +36,9 @@ function tabClass(isActive: boolean) {
 
 /**
  * Cabecera compartida de "Mis tareas": el conmutador entre Lista, Tablero,
- * Gantt y Tabla, mas el ambito (asignadas a mi / de mis equipos). Vive en
- * `headerActions` de `WorkspaceLayout` en las cuatro rutas, igual que el
- * selector de vista de un proyecto vive en `ProjectLayout`.
+ * Gantt, Tabla y «Esperando a», mas el ambito (asignadas a mi / de mis
+ * equipos). Vive en `headerActions` de `WorkspaceLayout` en las cinco rutas,
+ * igual que el selector de vista de un proyecto vive en `ProjectLayout`.
  */
 export function PersonalTasksTabs({
   workspaceId,
@@ -41,23 +48,26 @@ export function PersonalTasksTabs({
 }: {
   workspaceId: string;
   active: PersonalTasksView;
-  scope: PersonalScope;
-  onScopeChange: (scope: PersonalScope) => void;
+  /** Ausente en «Esperando a», que no tiene ambito de equipo. */
+  scope?: PersonalScope;
+  onScopeChange?: (scope: PersonalScope) => void;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
     <div className="flex items-center gap-2">
-      <SegmentedControl
-        label={t("goals:target.scope")}
-        value={scope}
-        onValueChange={onScopeChange}
-        options={[
-          { value: "assigned", label: t("goals:scope.assigned") },
-          { value: "team", label: t("goals:scope.team") },
-        ]}
-      />
+      {scope && onScopeChange && (
+        <SegmentedControl
+          label={t("goals:target.scope")}
+          value={scope}
+          onValueChange={onScopeChange}
+          options={[
+            { value: "assigned", label: t("goals:scope.assigned") },
+            { value: "team", label: t("goals:scope.team") },
+          ]}
+        />
+      )}
       <div className="flex items-center gap-0.5 rounded-lg border border-border/80 bg-card p-0.5">
         {TABS.map(({ view, icon: Icon }) => (
           <Button

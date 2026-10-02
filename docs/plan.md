@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloque 0 y 1.1-1.3 hechos; sigue el 1.4 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 y 1 hechos; punto de control antes del 2 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -1835,9 +1835,39 @@ verificación.
     contextual sin el otro menú abierto, los dos diálogos, «Añadir todo a
     hoy», Mis tareas y la ventana más allá de quince días;
   - pasada visual del menú en Hoy y del contextual en el Planificador.
-- **1.4 «Esperando a»** · S. Lo que creé y asigné a otros y sigue abierto, más lo mío
+- **1.4 «Esperando a»** ✔ · S. Lo que creé y asigné a otros y sigue abierto, más lo mío
   bloqueado por tareas ajenas. «Lo creé yo» sale de `activity`, porque `task` no tiene
   `created_by`; si el `EXPLAIN` no cabe en 300 ms, ADR aparte para la columna.
+  **Hecho (2026-10-02).** Sin ADR: la medición no pidió la columna.
+  - **`GET /my-work/waiting`** devuelve dos listas, topadas en 100 cada una:
+    - **delegadas:** lo que creé, abierto, con alguien asignado y sin mí;
+    - **bloqueadas:** lo mío abierto con una tarea abierta delante que no es
+      mía, por una relación `blocks`, y con cuál.
+  - **«Lo creé yo»** sale de la actividad `created`.
+  - **La tarea que bloquea tiene que ser del mismo espacio**: una relación
+    puede cruzarlos, y si no se exige, se filtraría el título de una tarea
+    ajena.
+  - **Medido en el banco de 50.000 tareas**, al que se añadieron 200.000 filas
+    de actividad y 2.000 relaciones: p95 de 57 ms. La consulta de delegadas
+    tarda 13 ms y va entera por índices. No hace falta `created_by`.
+  - **Pestaña «Esperando a» en Mis tareas**, sin ámbito de equipo.
+
+  Verificación:
+  - 4 pruebas de integración. La del espacio de la tarea que bloquea falla
+    sin su guarda;
+  - 1 de extremo a extremo: lo bloqueado sale con su bloqueo y desaparece al
+    terminarlo;
+  - pasada visual.
+
+  **Verificación del Bloque 1 completo (2026-10-02):**
+  - integración 706 de 706, con una prueba del 0.3 ajustada a la forma nueva
+    de `GET /planner/entry`, que ahora lleva `keyRank`;
+  - de extremo a extremo 49 de 49. Dos pruebas anteriores necesitaron
+    ajuste: la misma forma nueva, y el botón «Hoy» de la ventana del
+    Planificador, que ahora se llama «Volver a hoy» para no confundirse con
+    el de la barra lateral;
+  - unitarias 346 (web), 726 (API) y 33 (MCP);
+  - typecheck de todos los paquetes, Biome e i18n.
 
 **Bloque 2 — Rituales** (≈ 3 semanas)
 
@@ -2080,10 +2110,11 @@ paridad de MCP, [ADR 050](adr/050-recordatorios-por-asignado-y-una-sola-carga.md
 también están hechos: **el Bloque 0 está cerrado**. Del **Bloque 1**, captura
 y acciones, están hechos el **1.1**, la Bandeja
 ([ADR 051](adr/051-la-bandeja-es-un-proyecto-oculto.md)), y el **1.2**, la
-captura rápida ([ADR 052](adr/052-captura-rapida.md)), y el **1.3**, acciones
+captura rápida ([ADR 052](adr/052-captura-rapida.md)), el **1.3**, acciones
 de fila, imprescindibles y plan en bloque
-([ADR 053](adr/053-acciones-de-fila-imprescindibles-y-plan-en-bloque.md));
-sigue el **1.4**, «Esperando a». Después del interludio viene la **Fase 8**: automatizaciones e
+([ADR 053](adr/053-acciones-de-fila-imprescindibles-y-plan-en-bloque.md)), y
+el **1.4**, «Esperando a»: **el Bloque 1 está cerrado**, y toca su punto de
+control antes del **Bloque 2**, los rituales. Después del interludio viene la **Fase 8**: automatizaciones e
 importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
