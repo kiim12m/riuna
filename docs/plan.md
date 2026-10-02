@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloque 0 hecho; sigue el 1 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloque 0 y 1.1 hechos; sigue el 1.2 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -1742,11 +1742,37 @@ verificación.
 
 **Bloque 1 — Captura y acciones** (≈ 3 semanas) · *punto de control al cerrarlo*
 
-- **1.1 Bandeja** · S · ADR 051. `project.owner_user_id → user ON DELETE SET NULL` con un único
+- **1.1 Bandeja** ✔ · S · [ADR 051](adr/051-la-bandeja-es-un-proyecto-oculto.md). `project.owner_user_id → user ON DELETE SET NULL` con un único
   parcial por espacio y persona. Se oculta en `get-projects.ts` —que cubre la barra lateral,
   los selectores, la administración y `list_projects` de MCP— y en los proyectos de la
   búsqueda; **no** en las lecturas de tareas. Se crea al primer uso, segura ante dos capturas
   simultáneas. Si se borra a la persona, pasa a ser un proyecto normal y nada se pierde.
+  **Hecho (2026-10-02).** Además de lo previsto:
+  - **También al salir del espacio.** Un disparador `AFTER DELETE` en
+    `workspace_member` la devuelve a proyecto normal. Si no, sus tareas
+    quedaban en un proyecto que ya no salía en ninguna lista. Salir tiene
+    varios caminos —quitar a un miembro, abandonar el espacio, borrar la
+    cuenta—, así que la regla vive en la base.
+  - **La respuesta de reordenar proyectos** tampoco la incluye: también es
+    una lista.
+  - **`POST /capture/inbox`** la crea y `GET /capture/inbox` la lee sin
+    crearla. La entrada «Bandeja» lleva a `/inbox`, que la crea si hace falta
+    y abre sus tareas en «Tareas»: la vista «Backlog» de Kaneo solo enseña lo
+    planeado y lo archivado. La paleta también lleva a ella. Solo la ve quien
+    puede crear tareas, o quien ya la tiene.
+  - **`insertProject()` sale de `createProject`**, para que la Bandeja nazca
+    con las mismas columnas y el mismo candado de orden.
+  - **El widget «Bandeja» del panel pasa a llamarse «Notificaciones»**, que
+    es lo que enseña. Si no, «Bandeja» nombraba dos cosas distintas. La
+    migración solo renombra los que conservan el título de partida.
+
+  Verificación:
+  - 11 pruebas de integración. Las de ocultar en listas y búsqueda, y la de
+    salir del espacio, fallan sin el cambio;
+  - 1 de extremo a extremo desde la barra lateral, y las 4 de «Mi panel» con
+    el widget renombrado;
+  - 1 unitaria de la barra lateral; typecheck; pasada visual en escritorio y
+    móvil.
 - **1.2 Captura rápida** · M · ADR 052. Parser puro sin dependencia —el vocabulario es cerrado—:
   estimación `1h 30m 1h30 1,5h` · día del plan `@hoy @mañana @lun @15/10 [10:00]` —plan y hora,
   **nunca** vencimiento— · vencimiento `!mañana !15/10` · `#etiqueta` (solo las que existen) ·
@@ -2001,9 +2027,11 @@ producción, como explica [actualizar.md](actualizar.md). El **0.3** (cronómetr
 en todas partes y tiempo en el detalle), el **0.4** (Planificador, atajos y
 paleta) y el **0.5** (recordatorios por asignado, una sola carga del día y
 paridad de MCP, [ADR 050](adr/050-recordatorios-por-asignado-y-una-sola-carga.md))
-también están hechos: **el Bloque 0 está cerrado**. Sigue el **Bloque 1**,
-captura y acciones, empezando por el **1.1**, la Bandeja. Después del
-interludio viene la **Fase 8**: automatizaciones e importadores externos.
+también están hechos: **el Bloque 0 está cerrado**. Del **Bloque 1**, captura
+y acciones, está hecho el **1.1**, la Bandeja
+([ADR 051](adr/051-la-bandeja-es-un-proyecto-oculto.md)); sigue el **1.2**, la
+captura rápida. Después del interludio viene la **Fase 8**: automatizaciones e
+importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la

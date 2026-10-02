@@ -1478,6 +1478,7 @@
 			"admin": "Administració",
 			"projects": "Projectes",
 			"today": "Avui",
+			"inbox": "Bandeja",
 			"planner": "Planificador",
 			"schedule": "Cronograma",
 			"myTasks": "Les meves tasques",
@@ -1582,6 +1583,12 @@
 				"setLabels": "Cambiar las etiquetas",
 				"setDueDate": "Cambiar el vencimiento"
 			}
+		},
+		"inbox": {
+			"unavailableTitle": "No se ha podido abrir tu Bandeja",
+			"unavailableDescription": "Puede que tu papel en este espacio no permita crear tareas, y una Bandeja solo guarda tareas que creas tú.",
+			"visibilityLabel": "Quién ve esta Bandeja",
+			"notPrivate": "Una Bandeja no sale en las listas de proyectos, pero no es privada: quien ve las tareas del espacio ve también las suyas."
 		}
 	},
 	"notifications": {
@@ -2652,7 +2659,7 @@
 			"time": "Tiempo registrado",
 			"epic_progress": "Avance por épica",
 			"table": "Lista de tareas",
-			"inbox": "Bandeja",
+			"inbox": "Notificaciones",
 			"goal": "Objetivo",
 			"week": "Aquesta setmana"
 		},
@@ -2701,8 +2708,8 @@
 			"subtitle": "Todo lo que tienes entre manos, en un sitio."
 		},
 		"inbox": {
-			"error": "No se ha podido cargar tu bandeja",
-			"empty": "Tu bandeja está vacía"
+			"error": "No se han podido cargar tus notificaciones",
+			"empty": "No tienes notificaciones"
 		},
 		"actions": {
 			"share": "Compartir con el espacio",

@@ -1478,6 +1478,7 @@
 			"admin": "Administration",
 			"projects": "Projects",
 			"today": "Today",
+			"inbox": "Inbox",
 			"planner": "Planner",
 			"schedule": "Schedule",
 			"myTasks": "My tasks",
@@ -1582,6 +1583,12 @@
 				"setLabels": "Change labels",
 				"setDueDate": "Change due date"
 			}
+		},
+		"inbox": {
+			"unavailableTitle": "Your inbox couldn't be opened",
+			"unavailableDescription": "Your role in this workspace may not allow creating tasks, and an inbox only holds tasks you create.",
+			"visibilityLabel": "Who can see this inbox",
+			"notPrivate": "An inbox doesn't appear in project lists, but it isn't private: anyone who can see this workspace's tasks can see its tasks too."
 		}
 	},
 	"notifications": {
@@ -2652,7 +2659,7 @@
 			"time": "Logged time",
 			"epic_progress": "Epic progress",
 			"table": "Task list",
-			"inbox": "Inbox",
+			"inbox": "Notifications",
 			"goal": "Goal",
 			"week": "This week"
 		},
@@ -2701,8 +2708,8 @@
 			"subtitle": "Everything you have going, in one place."
 		},
 		"inbox": {
-			"error": "Your inbox could not be loaded",
-			"empty": "Your inbox is empty"
+			"error": "Your notifications could not be loaded",
+			"empty": "You have no notifications"
 		},
 		"actions": {
 			"share": "Share with the workspace",

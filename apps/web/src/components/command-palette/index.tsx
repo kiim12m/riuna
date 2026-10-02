@@ -116,6 +116,7 @@ function CommandPalette() {
   const goToGroup = useMemo<PaletteGroup>(() => {
     const screens = [
       { value: "today", to: "today", label: t("navigation:sidebar.today") },
+      { value: "inbox", to: "inbox", label: t("navigation:sidebar.inbox") },
       {
         value: "planner",
         to: "planner",

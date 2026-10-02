@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { projectTable } from "../../database/schema";
@@ -84,8 +84,13 @@ async function reorderProjects(
         .where(eq(projectTable.id, id));
     }
 
+    // Inboxes hold a rank too, but this answer is a project list, and inboxes
+    // stay out of every project list (ADR 051).
     return tx.query.projectTable.findMany({
-      where: eq(projectTable.workspaceId, workspaceId),
+      where: and(
+        eq(projectTable.workspaceId, workspaceId),
+        isNull(projectTable.ownerUserId),
+      ),
       orderBy: [
         asc(projectTable.position),
         asc(projectTable.createdAt),

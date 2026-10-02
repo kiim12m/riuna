@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
 import db from "../../database";
 import {
   activityTable,
@@ -317,6 +317,8 @@ async function globalSearch(params: SearchParams): Promise<{
       .where(
         and(
           workspaceFilter,
+          // Las Bandejas no salen como proyectos (ADR 051); sus tareas, si.
+          isNull(projectTable.ownerUserId),
           or(
             ilike(projectTable.name, searchPattern),
             ilike(projectTable.description, searchPattern),

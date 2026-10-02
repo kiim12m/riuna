@@ -67,7 +67,8 @@ export function registerTools(
   server.registerTool(
     "list_projects",
     {
-      description: "List projects in a workspace.",
+      description:
+        "List projects in a workspace. Personal inboxes are hidden from this list; their tasks are not private.",
       inputSchema: z.object({
         workspaceId: nonEmptyString.describe("Workspace ID"),
         includeArchived: z

@@ -185,6 +185,16 @@ la tarea y en la propia tabla.
 - **Plantillas**: guardar un proyecto entero —columnas, épicas y tareas— o un
   árbol de tareas como plantilla del espacio, y aplicarla en cualquier
   proyecto.
+- **Bandeja** ([ADR 051](adr/051-la-bandeja-es-un-proyecto-oculto.md)): un
+  proyecto por persona y espacio para dejar lo que llega sin decidir aún a qué
+  proyecto va. Se entra desde el espacio personal y se crea la primera vez.
+  Funciona como cualquier proyecto —tablero, lista, detalle y «Mover a otro
+  proyecto»— pero **no sale en las listas** de proyectos: ni en la barra
+  lateral, ni en los selectores, ni en la administración, ni en la búsqueda de
+  proyectos, ni en `list_projects` de MCP. **No es privada**: sus tareas salen
+  en Mis tareas, Hoy, la búsqueda y los paneles como las de cualquier otro
+  proyecto, y la cabecera lo explica. Si la persona sale del espacio o se
+  borra su cuenta, pasa a ser un proyecto normal, con sus tareas.
 - **Mi trabajo**: las tareas propias o de mi equipo de todos los proyectos, con
   filtros de vencimiento (todas, vencidas, hoy, esta semana).
 - **Nueva tarea en la cabecera**: un botón en la barra superior de cada
@@ -285,7 +295,9 @@ la tarea y en la propia tabla.
   uno por defecto creado automáticamente. Exportables a `.xlsx`, con una hoja
   por widget.
 - **Widgets**: contador, desglose, tendencia, tiempo registrado, progreso de
-  épica, lista de tareas, **semana en curso**, bandeja de entrada y objetivo.
+  épica, lista de tareas, **semana en curso**, notificaciones y objetivo. El de
+  notificaciones se llamaba «Bandeja» hasta que ese nombre pasó al proyecto de
+  captura.
   Las métricas son tareas, completadas, porcentaje completado, estimado y
   registrado; se agrupan por proyecto, asignado, prioridad, equipo, estado,
   hecho, vencimiento (sin fecha, vencida, hoy, esta semana, más adelante),
@@ -300,7 +312,7 @@ la tarea y en la propia tabla.
 - **Distribución de partida** en tres alturas: ocho cifras arriba —vencidas,
   vencen hoy, vencen esta semana, pendientes, cerradas en siete días, alta
   prioridad, sin fecha y horas registradas—, la semana en curso a ancho
-  completo, y debajo la lista de pendientes con la bandeja al lado. Restaurable
+  completo, y debajo la lista de pendientes con las notificaciones al lado. Restaurable
   en cualquier momento, sustituyendo los widgets que se hayan añadido o editado.
 - **Objetivos (OKR)**: objetivo con periodo de fechas y **resultados clave**
   medidos con el mismo motor de agregación que los widgets. Compartibles con el

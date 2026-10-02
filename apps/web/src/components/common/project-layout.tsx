@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
   CalendarDays,
   CalendarRange,
+  Info,
   SquareKanban,
   SquircleDashed,
   Table2,
@@ -18,6 +19,11 @@ import { MobileHeaderBell } from "@/components/notification/mobile-header-bell";
 import CreateProjectModal from "@/components/shared/modals/create-project-modal";
 import { Button } from "@/components/ui/button";
 import { KbdSequence } from "@/components/ui/kbd";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   Tooltip,
@@ -197,6 +203,28 @@ export default function ProjectLayout({
                 onAddProject={() => setIsCreateProjectModalOpen(true)}
               />
             </div>
+
+            {/* Oculta, no privada (ADR 051): que nadie la tome por privada. Un
+                popover y no un tooltip, para que tambien se lea en tactil. */}
+            {project?.ownerUserId && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    className="h-7 w-7 shrink-0 px-0 text-muted-foreground"
+                    aria-label={t("navigation:inbox.visibilityLabel")}
+                  >
+                    <Info className="size-3.5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="max-w-xs" align="start">
+                  <p className="p-2 text-sm">
+                    {t("navigation:inbox.notPrivate")}
+                  </p>
+                </PopoverContent>
+              </Popover>
+            )}
 
             {showViewSwitcher && (
               <div className="hidden h-7 items-center gap-0.5 rounded-lg border border-border/80 bg-background p-0.5 sm:inline-flex">

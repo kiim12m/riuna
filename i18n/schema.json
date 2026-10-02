@@ -5856,6 +5856,9 @@
 						"today": {
 							"type": "string"
 						},
+						"inbox": {
+							"type": "string"
+						},
 						"planner": {
 							"type": "string"
 						},
@@ -5898,6 +5901,7 @@
 						"admin",
 						"projects",
 						"today",
+						"inbox",
 						"planner",
 						"schedule",
 						"myTasks",
@@ -6273,6 +6277,30 @@
 						"categories",
 						"items"
 					]
+				},
+				"inbox": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"unavailableTitle": {
+							"type": "string"
+						},
+						"unavailableDescription": {
+							"type": "string"
+						},
+						"visibilityLabel": {
+							"type": "string"
+						},
+						"notPrivate": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"unavailableTitle",
+						"unavailableDescription",
+						"visibilityLabel",
+						"notPrivate"
+					]
 				}
 			},
 			"required": [
@@ -6286,7 +6314,8 @@
 				"workspaceSwitcher",
 				"page",
 				"projectSettings",
-				"keyboardShortcuts"
+				"keyboardShortcuts",
+				"inbox"
 			]
 		},
 		"notifications": {

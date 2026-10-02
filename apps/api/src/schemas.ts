@@ -23,6 +23,8 @@ export const projectSchema = v.object({
   cascadeClose: v.boolean(),
   cascadeArchive: v.boolean(),
   maxTaskDepth: v.number(),
+  /** Con valor, es la Bandeja de esa persona (ADR 051). */
+  ownerUserId: v.nullable(v.string()),
 });
 
 export const taskSchema = v.object({

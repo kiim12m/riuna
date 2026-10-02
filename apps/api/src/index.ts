@@ -22,6 +22,7 @@ import * as v from "valibot";
 import activity from "./activity";
 import { auth } from "./auth";
 import billing from "./billing";
+import capture from "./capture";
 import column from "./column";
 import comment from "./comment";
 import config from "./config";
@@ -629,6 +630,7 @@ export function createApp() {
   const templateApi = api.route("/template", template);
   const myWorkApi = api.route("/my-work", myWork);
   const plannerApi = api.route("/planner", planner);
+  const captureApi = api.route("/capture", capture);
   const scheduleApi = api.route("/schedule", schedule);
   const workScheduleApi = api.route("/work-schedule", workSchedule);
   const searchApi = api.route("/search", search);
@@ -818,6 +820,7 @@ export function createApp() {
     labelApi,
     myWorkApi,
     plannerApi,
+    captureApi,
     scheduleApi,
     workScheduleApi,
     notificationApi,
@@ -978,6 +981,7 @@ const {
   labelApi,
   myWorkApi,
   plannerApi,
+  captureApi,
   scheduleApi,
   workScheduleApi,
   notificationApi,
@@ -1037,6 +1041,7 @@ export type AppType =
   | typeof templateApi
   | typeof myWorkApi
   | typeof plannerApi
+  | typeof captureApi
   | typeof scheduleApi
   | typeof workScheduleApi
   | typeof searchApi

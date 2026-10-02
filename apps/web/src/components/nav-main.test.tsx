@@ -35,11 +35,18 @@ vi.mock("@/hooks/queries/my-work/use-my-work-counts", () => ({
   useMyWorkCounts: () => ({ data: counts }),
 }));
 
+let inbox: { id: string } | null = null;
+
+vi.mock("@/hooks/queries/capture/use-inbox", () => ({
+  useInbox: () => ({ data: inbox }),
+}));
+
 const capabilities = {
   canManageWorkspace: false,
   canManageProjects: false,
   canManageTeam: false,
   canInviteUsers: false,
+  canCreateTasks: false,
 };
 
 vi.mock("@/hooks/use-workspace-permission", () => ({
@@ -48,6 +55,7 @@ vi.mock("@/hooks/use-workspace-permission", () => ({
     canManageProjects: () => capabilities.canManageProjects,
     canManageTeam: () => capabilities.canManageTeam,
     canInviteUsers: () => capabilities.canInviteUsers,
+    canCreateTasks: () => capabilities.canCreateTasks,
   }),
 }));
 
@@ -79,6 +87,7 @@ beforeEach(() => {
   navigate.mockReset();
   projects = [{ id: "project-1", name: "Obra Norte" }];
   counts = { today: 7, myTasks: 34 };
+  inbox = null;
   for (const key of Object.keys(capabilities) as Array<
     keyof typeof capabilities
   >) {
@@ -167,6 +176,25 @@ describe("NavMain", () => {
 
     expect(screen.queryByText("0")).toBeNull();
     expect(screen.getByText("5")).toBeInTheDocument();
+  });
+
+  // La Bandeja se crea al primer uso, y solo puede usarla quien crea tareas.
+  // Si ya existe -le quitaron el permiso despues-, se sigue ensenando: sus
+  // tareas no desaparecen por eso.
+  it("ensena la Bandeja a quien puede crear tareas o ya la tiene", () => {
+    renderNav();
+    expect(screen.queryByText("navigation:sidebar.inbox")).toBeNull();
+    cleanup();
+
+    capabilities.canCreateTasks = true;
+    renderNav();
+    expect(screen.getByText("navigation:sidebar.inbox")).toBeInTheDocument();
+    cleanup();
+
+    capabilities.canCreateTasks = false;
+    inbox = { id: "inbox-1" };
+    renderNav();
+    expect(screen.getByText("navigation:sidebar.inbox")).toBeInTheDocument();
   });
 
   // Sin proyectos no hay ajustes de proyecto que ensenar, igual que la vieja

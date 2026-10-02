@@ -344,6 +344,13 @@ export const projectTable = pgTable(
     cascadeClose: boolean("cascade_close").notNull().default(false),
     cascadeArchive: boolean("cascade_archive").notNull().default(false),
     maxTaskDepth: integer("max_task_depth").notNull().default(5),
+    // Con valor, el proyecto es la Bandeja de esa persona (ADR 051): no sale
+    // en las listas de proyectos, pero sus tareas no son privadas. Al borrar
+    // a la persona, o al salir ella del espacio, vuelve a ser un proyecto
+    // normal y no se pierde nada.
+    ownerUserId: text("owner_user_id").references(() => userTable.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     unique("project_workspace_id_id_unique").on(table.workspaceId, table.id),
@@ -351,6 +358,9 @@ export const projectTable = pgTable(
       table.workspaceId,
       table.position,
     ),
+    uniqueIndex("project_one_inbox_per_member")
+      .on(table.workspaceId, table.ownerUserId)
+      .where(sql`owner_user_id IS NOT NULL`),
   ],
 );
 
