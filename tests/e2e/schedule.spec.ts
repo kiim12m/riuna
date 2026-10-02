@@ -165,24 +165,29 @@ test.describe("Cronograma", () => {
       timeout: 10_000,
     });
 
-    const schedule = await riuna.api<{
-      days: Array<{
-        dayDate: string;
-        segments: Array<{
-          type: string;
-          startSecond: number;
-          task?: { title: string } | null;
+    // Crear desde un hueco son dos peticiones -la tarea y luego su hora-, y
+    // el titulo ya se ve con la segunda en vuelo: se espera a que la API la
+    // tenga anclada en vez de leerla una sola vez.
+    const pinnedSegment = async () => {
+      const schedule = await riuna.api<{
+        days: Array<{
+          dayDate: string;
+          segments: Array<{
+            type: string;
+            startSecond: number;
+            task?: { title: string } | null;
+          }>;
         }>;
-      }>;
-    }>(
-      "get",
-      `/api/schedule?workspaceId=${riuna.workspaceId}&from=${dayKey}&days=1`,
-    );
-
-    const created = schedule.days[0]?.segments.find(
-      (s) => s.type === "pinned" && s.task?.title === title,
-    );
-    expect(created).toBeTruthy();
+      }>(
+        "get",
+        `/api/schedule?workspaceId=${riuna.workspaceId}&from=${dayKey}&days=1`,
+      );
+      return schedule.days[0]?.segments.find(
+        (s) => s.type === "pinned" && s.task?.title === title,
+      );
+    };
+    await expect.poll(pinnedSegment).toBeTruthy();
+    const created = await pinnedSegment();
     // Redondeado a 15 min (`CREATE_SNAP_MINUTES`): 11:52:30-12:07:30.
     expect(created?.startSecond).toBeGreaterThan(11 * 3600 + 52 * 60);
     expect(created?.startSecond).toBeLessThan(12 * 3600 + 8 * 60);
