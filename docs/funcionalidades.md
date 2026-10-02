@@ -114,9 +114,11 @@ horas, etiquetas, épicas, ciclo, campos personalizados y número de ticket.
   eliminar.
 - **Menú contextual** con clic derecho sobre la tarjeta, con las acciones
   frecuentes.
-- **Atajos en el detalle**: `s` estado, `p` prioridad, `a` asignado,
-  `l` etiquetas, `d` fecha. `j` y `k` navegan entre tareas; `Tab` y
-  `Shift+Tab` sangran y promueven en el modo jerarquía.
+- **Atajos en el detalle**: `j` y `k` navegan entre tareas; `Tab` y
+  `Shift+Tab` sangran y promueven en el modo jerarquía. Los atajos `s`
+  estado, `p` prioridad, `a` asignado, `l` etiquetas y `d` fecha **están
+  definidos pero no registrados: hoy no hacen nada**. Se conectan en el
+  sub-bloque 0.4 del interludio de productividad.
 - Copiar el enlace de la tarea y **copiar el nombre de rama Git**.
 
 **Editor de descripción y comentarios** (TipTap): menú slash, encabezados,
@@ -339,7 +341,11 @@ la tarea y en la propia tabla.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 39 herramientas**:
+Dos caminos, **todavía no con las mismas herramientas**: el servidor HTTP
+tiene 44 y el paquete stdio 39. Al stdio le faltan las cinco del plan
+personal y el cronómetro —`get_plan`, `plan_task`, `get_running_timer`,
+`start_timer` y `stop_timer`—, que se portan en el sub-bloque 0.5 del
+interludio de productividad.
 
 - **Servidor HTTP integrado** en la API, en `/api/mcp`, con OAuth 2.1 y PKCE
   S256, registro dinámico de clientes, página de consentimiento explícito y

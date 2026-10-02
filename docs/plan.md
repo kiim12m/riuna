@@ -24,9 +24,10 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
+| Interludio — Productividad personal y equipo | 18 | **Siguiente** — [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
-| **Total Bloque A** | **35** | |
+| **Total Bloque A** | **35** + 18 del interludio | |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -1535,6 +1536,215 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
 días sin cambiar el vencimiento que ve el equipo, y administrar el espacio ya
 no te saca de la barra lateral.
 
+### Interludio — Productividad personal y equipo (antes de la Fase 8) · **pendiente**
+
+*Nace de una revisión de lo que la parte de productividad **hace de verdad** —leyendo el
+código, no esta documentación— comparada con
+[Super Productivity](https://github.com/super-productivity/super-productivity) v19.1 y con
+metodologías (GTD, time blocking, Pomodoro/Flowtime, eat the frog, migración de Bullet
+Journal, evidence-based scheduling). Las decisiones de producto se tomaron preguntando antes
+de planificar (2026-09-30/10-01) y son vinculantes para todo el interludio.*
+
+**Dónde está Riuna.** La cadena personal está completa —Planificador → Cronograma → Hoy →
+Cronómetro → Parte de horas, con jornada personal— y en planificar por días y por horas ya
+está a la par de Super Productivity. Lo que falta es captura rápida, acciones de tarea en
+todas partes, rituales, foco, recordatorios por tarea, calendario externo, y lo de equipo,
+que Super Productivity, monousuario, no puede tener. Y antes de nada, diez defectos
+verificados.
+
+**Decisiones del usuario:**
+
+- **Personal primero**, equipo después.
+- **El responsable de departamento** —una marca `is_lead` en el equipo— ve el plan, la carga,
+  los cierres y el stand-up de su gente, **solo en lectura**: para cambiar algo reasigna o
+  cambia el vencimiento, como hasta ahora. Cada persona ve un aviso de que su responsable ve
+  su plan.
+- **La valoración del día** (impacto, energía, nota) **es siempre privada**: ni el
+  responsable la ve.
+- **Cuatro rituales** —planificar el día, terminar el día, revisión semanal y stand-up—, que
+  **solo se abren con un botón**: sin avisos, banners ni notificaciones.
+- **El stand-up solo lo ven la persona y su responsable**, no los compañeros.
+- **Modo foco completo**: Pomodoro, Flowtime y cuenta atrás, con avisos de ritmo.
+- **Avisos solo por el navegador**, con una pestaña abierta: sin push ni service worker.
+- **La Bandeja es un proyecto por persona, oculto en las listas de los demás pero no
+  privado**: sus tareas se leen por búsqueda o enlace como todo en Riuna, y la interfaz lo dice.
+- **Calendario en las dos direcciones**: exportar ICS e importar iCal.
+- **Ausencias y festivos** entran. La ausencia **no guarda el motivo** —una baja médica es un
+  dato sensible—: el responsable solo ve «ausente».
+- **Zona horaria**: todo el mundo está en la península, así que la instancia pasa a
+  `Europe/Madrid`; la zona por persona sigue como deuda.
+- **Sanear primero**.
+
+**Hallazgos verificados en el código, que arregla el Bloque 0:**
+
+| # | Hallazgo | Dónde |
+|---|---|---|
+| 1 | Pantallas con datos viejos: `refetchOnMount: false` global y sin sondeo en Hoy, Planificador y Cronograma; una consulta invalidada mientras no está en pantalla no se recarga al volver | `apps/web/src/query-client/index.ts:65-66` |
+| 2 | Una tarea recién asignada no llega a Hoy ni a «Sin planificar»: `MY_WORK_INVALIDATED` solo invalida `my-work` y los paneles; `TIMER_CHANGED` no invalida el Planificador | `apps/web/src/hooks/use-user-websocket.ts:59-68` |
+| 3 | El cronómetro **solo arranca desde Hoy**; no hay registro manual (los hooks existen sin consumidor); el detalle no enseña tiempo ni día planificado | `components/timer/timer-button.tsx` |
+| 4 | Planificador: no se ancla una hora en un día sin filas con hora (la zona no se pinta); las ancladas no se arrastran; sin casilla de hecha | `components/planner/planner-day.tsx:103` |
+| 5 | Los atajos `s/p/a/l/d` del detalle están definidos y **no registrados**; «t c» no se asigna a quien crea y el botón de cabecera sí; la paleta no lleva a Hoy, Planificador ni Cronograma; posible recursión del «?» | `constants/shortcuts.ts`, `command-palette/index.tsx:69,194` |
+| 6 | El recordatorio de vencimiento solo llega al **responsable principal**, y solo se rearma desde un endpoint de los varios que cambian la fecha | `scheduler/due-date-reminders.ts:44,54`, `update-task-due-date.ts:28` |
+| 7 | Móvil: el tiempo real, la campana y el cronómetro viven en la barra lateral, desmontada mientras la hoja está cerrada; las acciones de Hoy solo aparecen con el ratón encima | `workspace-switcher.tsx:40`, `sidebar-timer.tsx` |
+| 8 | La carga del Cronograma usa otra fórmula que el Planificador; borrar un widget o un objetivo no pide confirmación; Mis tareas corta en 100 sin avisar; el parte de horas calcula el rango en UTC | `schedule/time-grid.tsx:282`, `time-sheet.tsx:46`, `export-time-sheet.ts:46` |
+| 9 | MCP: el servidor HTTP tiene 44 herramientas y el paquete stdio 39 —le faltan las del plan y el cronómetro— | `apps/api/src/mcp/tools.ts`, `packages/mcp/src/tools/register.ts` |
+| 10 | «Hoy» es el día del servidor —UTC en Docker— y `planned_date` se compara por **igualdad exacta**: cambiar la zona sin normalizar los datos rompe el orden del plan y «Hechas hoy» | `set-plan-order.ts:43`, `set-plan-entry.ts:57`, `get-today.ts:92` |
+
+**Bloques.** Tamaños a ~8 h/semana: **S** unos días · **M** ≈ 1 semana · **L** 2+ semanas.
+Cada sub-bloque se entrega solo, en su rama, con su ADR —la numeración sigue en la 048— y su
+verificación.
+
+**Bloque 0 — Sanear** (≈ 4 semanas)
+
+- **0.1 Pantallas frescas y runtime de espacio** · S · ADR 048. `workspace-runtime.tsx`, sin
+  nada que pintar, montado en la ruta del espacio —que persiste entre pantallas— recoge lo
+  que hoy vive en la barra lateral: la conexión del canal de usuario, el título con el
+  cronómetro, el aviso de estimación superada y Ctrl+E. Un mapa puro mensaje → claves de
+  consulta (`MY_WORK_INVALIDATED` añade Hoy, Planificador y Cronograma; `TIMER_CHANGED`, el
+  Planificador). Las consultas personales recargan al montar y al volver a la pestaña con 15 s
+  de frescura; el valor global no cambia, porque los tableros son pesados. Campana compacta en
+  la cabecera del móvil.
+- **0.2 Zona horaria de la instancia** · S · ADR 049. `TZ=Europe/Madrid` (+ `tzdata`) en
+  `Dockerfile.riuna`, los `compose*.yml`, `charts/riuna` y los scripts de prueba. Un
+  normalizador de arranque, como los `utils/migrate-*.ts`, lleva `personal_plan_entry.planned_date`
+  y `schedule_block.planned_date`/`ends_at` de la medianoche UTC a la de Madrid; es idempotente,
+  porque la medianoche de Madrid nunca cae a las 00:00Z. `task.due_date` no lo necesita: se
+  compara por rangos. **Se ensaya sobre una copia de producción antes de desplegar.**
+- **0.3 Cronómetro en todas partes y tiempo en el detalle** · M. Un `TaskTimerButton` sobre
+  `TimerButton` en el detalle, el Planificador, el Cronograma, Mis tareas y el tablero. El
+  detalle gana una sección «Tiempo»: lo registrado (también en tareas sin hijas), sus
+  entradas, «Añadir tiempo» a mano y el día planificado (`GET /planner/entry/:taskId`, nueva).
+  El parte de horas enseña el título de la tarea en cada entrada y calcula en día local; la
+  pastilla del móvil reanuda.
+- **0.4 Planificador, atajos y paleta** · M. La zona «con hora» siempre presente, las ancladas
+  arrastrables, casilla de hecha (`POST /task/complete/:id`, que ya existe). `s/p/a/l/d`
+  registrados; «t c» se asigna a quien crea fuera de un proyecto. La paleta lleva a las
+  pantallas personales y al cronómetro, y el «?» deja de despachar un `KeyboardEvent`
+  sintético. En táctil, las acciones de Hoy se ven y el Cronograma crea con un toque.
+- **0.5 Recordatorios, coherencia y paridad MCP** · M · ADR 050. Recordatorio de vencimiento
+  para **cada** asignado, deduplicado por persona (el `reminder_type` lleva el usuario, como
+  ya hace `project-webhook-reminders.ts`) y rearmado por un disparador `AFTER UPDATE OF
+  due_date`: muchos escritores, la misma razón que la ADR 025. Una sola función `dayLoad()`
+  para la carga del Planificador y del Cronograma. Confirmar al borrar widget y objetivo; Mis
+  tareas con «Cargar más». Las cinco herramientas del plan y el cronómetro, también en el
+  paquete stdio, con una prueba de paridad entre los dos registros.
+
+**Bloque 1 — Captura y acciones** (≈ 3 semanas) · *punto de control al cerrarlo*
+
+- **1.1 Bandeja** · S · ADR 051. `project.owner_user_id → user ON DELETE SET NULL` con un único
+  parcial por espacio y persona. Se oculta en `get-projects.ts` —que cubre la barra lateral,
+  los selectores, la administración y `list_projects` de MCP— y en los proyectos de la
+  búsqueda; **no** en las lecturas de tareas. Se crea al primer uso, segura ante dos capturas
+  simultáneas. Si se borra a la persona, pasa a ser un proyecto normal y nada se pierde.
+- **1.2 Captura rápida** · M · ADR 052. Parser puro sin dependencia —el vocabulario es cerrado—:
+  estimación `1h 30m 1h30 1,5h` · día del plan `@hoy @mañana @lun @15/10 [10:00]` —plan y hora,
+  **nunca** vencimiento— · vencimiento `!mañana !15/10` · `#etiqueta` (solo las que existen) ·
+  `+PROY` (por defecto, la Bandeja) · prioridad `*alta *a *urgente` · `\` para escribirlo
+  literal. Chips de vista previa, tecla `q`, y `POST /capture` sobre `createTask` y
+  `setPlanEntry`. MCP `capture_task` y `get_today`.
+- **1.3 Acciones de fila, imprescindibles y plan en bloque** · M · ADR 053.
+  `personal_plan_entry.key_rank` (1-3, único parcial por día: la base impone el máximo de
+  tres). `POST /planner/bulk` —deuda declarada en la ADR 047—, `PUT /planner/:taskId/key` y
+  `GET /planner?from=` para ir más allá de quince días. Un menú de acciones compartido —hecha,
+  cronómetro, hoy, mañana, elegir día, quitar del plan, fijar hora, estimar, imprescindible—
+  en Hoy, Planificador, Cronograma y Mis tareas.
+- **1.4 «Esperando a»** · S. Lo que creé y asigné a otros y sigue abierto, más lo mío
+  bloqueado por tareas ajenas. «Lo creé yo» sale de `activity`, porque `task` no tiene
+  `created_by`; si el `EXPLAIN` no cabe en 300 ms, ADR aparte para la columna.
+
+**Bloque 2 — Rituales** (≈ 3 semanas)
+
+- **2.1 Terminar el día** · M · ADR 054. `review` guarda lo que el responsable puede ver
+  (`period` día|semana, bloqueos, resumen) y `review_private`, 1:1, la valoración. **La
+  separación es estructural**: el camino del responsable no puede unir la tabla privada, y una
+  prueba de arquitectura lo vigila. Pasos: resumen → **decisión obligatoria** sobre cada
+  pendiente (mañana, otro día o quitar del plan) → bloqueos → valoración privada → plan de
+  mañana. Botón en la cabecera de Hoy.
+- **2.2 Planificar el día** · S. Pura composición, sin API: lo de ayer → lo urgente → Bandeja y
+  sin planificar → imprescindibles → carga frente a capacidad → anclar → «Empezar».
+- **2.3 Revisión semanal** · M. Vaciar la Bandeja, vencidas, «Esperando a», la semana pasada
+  —horas, hechas y precisión de estimación— y planificar la siguiente.
+- **2.4 Stand-up** · S. Derivado, sin guardar: ayer, hoy y bloqueos. La persona copia el suyo
+  en Markdown; el del equipo solo lo ve el responsable (5.3). **Enviarlo a Slack o Telegram se
+  aplaza a la Fase 8**, como acción de automatización: las integraciones son por proyecto y
+  un departamento no es un proyecto.
+
+**Bloque 3 — Foco y avisos del navegador** (≈ 2,5 semanas)
+
+- **3.1 Avisos y recordatorio a la hora anclada** · M · ADR 055. Dispara una sola pestaña
+  (`navigator.locks`), sin repetir lo ya avisado. `GET /today` da el instante de cada hora
+  anclada, calculado en el servidor. Sin service worker la notificación no puede llevar
+  botones: al pulsarla se abre un diálogo con «Empezar», «Posponer 10 min» y «Mañana».
+  **Límites declarados**: sin pestaña abierta no avisa, en segundo plano puede retrasarse
+  alrededor de un minuto, y posponer vale para ese navegador.
+- **3.2 Modo foco** · M · ADR 056. Máquina pura en el cliente —Pomodoro 25/5/15×4, Flowtime con
+  un descanso del 20 % de lo trabajado, cuenta atrás— sobre entradas de tiempo reales:
+  `time_entry.focus_mode`, que se filtra porque el cierre del día cuenta las sesiones. Los
+  descansos no registran tiempo, y el cronómetro del servidor manda.
+- **3.3 Avisos de ritmo** · S. Descanso, «no estás registrando» en horario laboral (como mucho
+  uno por hora) y cronómetro en marcha pasada la jornada.
+
+**Bloque 4 — Calendario** (≈ 3 semanas) · *si falta tiempo, se recorta primero 4.2*
+
+- **4.1 Exportar ICS** · S-M · ADR 057. Feed por token: solo se guarda su sha256, se enseña una
+  vez, y se puede regenerar o revocar. Escritor propio: el plan con hora, los bloques (una
+  cadencia de intervalo 1 se escribe como RRULE con `TZID=Europe/Madrid`; las demás, ocurrencia
+  a ocurrencia) y los vencimientos como días enteros.
+- **4.2 Importar iCal** · L · ADR 058. `ical.js` (MPL-2.0, sin dependencias transitivas): expandir
+  a mano RRULE, EXDATE, RECURRENCE-ID y los TZID de Outlook es una trampa. La URL se guarda
+  cifrada, con guarda anti-SSRF en cada salto, y un trabajo cada quince minutos con
+  arrendamiento llena una caché de ocurrencias. Las reuniones entran como bloques fijos de solo
+  lectura: cuentan en la carga del Planificador y el Cronograma, y el responsable no las ve.
+
+**Bloque 5 — Equipo** (≈ 2,5 semanas)
+
+- **5.1 Ausencias y festivos** · S-M · ADR 060. `user_time_off` —rangos de días, **sin motivo**,
+  con nota privada—, que gestiona la propia persona junto a su jornada, y `workspace_holiday`,
+  que gestiona quien administra el espacio. Un día no disponible vale 0, como uno no laborable
+  (ADR 045). Las recurrentes se siguen generando en festivo: declarado.
+- **5.2 Responsable de departamento** · S · ADR 059. `team_member.is_lead`. **Un único punto
+  de visibilidad**, `lead/visibility.ts`, por el que pasa todo controlador del responsable:
+  las ADR 041, 046 y 047 ya pagaron tres fugas entre espacios por repetir un `WHERE`. Ningún
+  endpoint de `lead/` escribe.
+- **5.3 «Mi equipo»** · M. Por persona: plan, capacidad con ausencias y festivos, carga, hechas,
+  horas, el cierre **público** y el stand-up, todo en lote —unas ocho consultas para el equipo
+  entero— y con sondeo de 60 s.
+
+**Orden.** 0.1 → 0.2 → (0.3, 0.4, 0.5) · 1.1 → 1.2 · 0.3 → 1.3 → 2.1/2.2 · 1.4 → 2.3 ·
+2.1 → 2.4 · 3.1 → 3.2/3.3 · 4.1 → 4.2 · 0.5 → 5.1 · 5.1 + 5.2 + 2.4 → 5.3. **Unas 18
+semanas nominales, 4-5 meses reales.**
+
+**Riesgos.** (1) El cambio de zona horaria sobre datos existentes, con la igualdad exacta de
+`planned_date` y el cambio de hora del 25 de octubre. (2) La visibilidad del responsable:
+privacidad y fugas entre espacios. (3) Que alguien espere privacidad de la Bandeja. (4) Que
+alguien espere avisos sin tener la pestaña abierta. (5) La importación de iCal: SSRF,
+secretos, una licencia nueva y la variedad de feeds.
+
+**Aplazado a sabiendas:** hábitos y contadores · push, PWA y service worker ·
+autoplanificar · bandeja de notificaciones completa · mapa de calor · zona horaria por
+persona · enviar el stand-up a Slack o Telegram (Fase 8) · matriz de Eisenhower · editar la
+recurrencia desde la propia tarea · tiempo real en la vista del responsable · CalDAV y
+sincronización bidireccional · avisos de los rituales (decidido: solo botón) · que el
+responsable edite el plan ajeno (decidido: solo lectura) · saltarse las recurrentes en festivo.
+
+**Verificación**, en cada sub-bloque:
+
+- **Pruebas unitarias** de toda función pura nueva.
+- **Pruebas de integración** de cada invariante:
+  - la captura no toca `due_date`;
+  - nunca hay más de tres imprescindibles;
+  - el aviso de vencimiento llega a cada asignado;
+  - los campos privados no salen para nadie más;
+  - el responsable no ve otros espacios y no puede escribir;
+  - ausencias y festivos dejan la capacidad a cero.
+- **e2e** con `E2E_DATABASE_URL` → `riuna_e2e_test`.
+- **`EXPLAIN`** en el banco de 50.000 tareas para «Esperando a», la vista del responsable y el
+  calendario.
+
+**Hecho cuando:** capturas una tarea con una línea, cierras el día decidiendo qué pasa con lo
+pendiente, trabajas en foco con avisos del navegador, ves tus reuniones en el Cronograma, y tu
+responsable ve tu plan y tu carga —con ausencias y festivos— pero no tu valoración.
+
 ### Fase 8 — Automatizaciones e importadores externos (≈3 semanas)
 Motor disparador → condición → acción (`automation`, `automation_run`) sobre
 los eventos que Kaneo ya emite, ampliando su `workflowRule` en lugar de
@@ -1669,13 +1879,12 @@ destructiva.
 
 ## Siguiente paso
 
-El **interludio de espacio personal y administración** está **cerrado**: los
-nueve bloques (barra lateral en tres espacios, lectura de tareas del
-espacio, «Hoy», el Planificador, el Cronograma, «Mis tareas» y el Parte de
-horas) están hechos, commiteados y verificados. Sigue la **Fase 8**:
-automatizaciones e importadores externos. Motor disparador → condición →
-acción sobre los eventos que Kaneo ya emite, e importadores de Trello, Jira,
-Asana y Notion.
+El **interludio de espacio personal y administración** está **cerrado**: sus
+catorce bloques están hechos, commiteados y verificados. Lo siguiente es el
+**[interludio de productividad personal y equipo](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente)**,
+empezando por el **sub-bloque 0.1**: pantallas personales frescas y un runtime de
+espacio que saca de la barra lateral el tiempo real y el cronómetro. Después
+viene la **Fase 8**: automatizaciones e importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la
