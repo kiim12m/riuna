@@ -12553,6 +12553,77 @@
 				"weeklyReview",
 				"standup"
 			]
+		},
+		"reminders": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"notification": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"body": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "body"]
+				},
+				"dialog": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"description": {
+							"type": "string"
+						},
+						"start": {
+							"type": "string"
+						},
+						"snooze": {
+							"type": "string"
+						},
+						"nextDay": {
+							"type": "string"
+						}
+					},
+					"required": ["description", "start", "snooze", "nextDay"]
+				},
+				"settings": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"subtitle": {
+							"type": "string"
+						},
+						"toggle": {
+							"type": "string"
+						},
+						"limits": {
+							"type": "string"
+						},
+						"denied": {
+							"type": "string"
+						},
+						"unsupported": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"subtitle",
+						"toggle",
+						"limits",
+						"denied",
+						"unsupported"
+					]
+				}
+			},
+			"required": ["notification", "dialog", "settings"]
 		}
 	},
 	"required": [
@@ -12578,6 +12649,7 @@
 		"timer",
 		"quickAdd",
 		"taskActions",
-		"rituals"
+		"rituals",
+		"reminders"
 	]
 }

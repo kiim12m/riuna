@@ -259,6 +259,13 @@ la tarea y en la propia tabla.
 
   Revisa la semana en curso; en sus dos primeros días, la anterior, y se
   puede cambiar entre las dos. Los tres rituales están también en la paleta.
+- **Avisos del navegador**
+  ([ADR 055](adr/055-avisos-del-navegador-sin-service-worker.md)): se
+  activan en Ajustes › Preferencias para ese navegador, y avisan a la hora
+  anclada de cada tarea de hoy. Al pulsar el aviso se puede empezar,
+  posponerlo diez minutos o pasar la tarea al siguiente día laborable con la
+  misma hora. Solo con una pestaña de Riuna abierta, y una sola avisa: sin
+  push ni service worker.
 - **Stand-up**: un botón en Hoy lo enseña, derivado al momento y sin
   guardarse:
   - ayer, es decir, lo terminado el último día laborable;

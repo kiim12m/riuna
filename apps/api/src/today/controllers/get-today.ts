@@ -31,6 +31,19 @@ import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
 import { urgentTasksQuery } from "../queries";
 
 /**
+ * El instante de una hora anclada (ADR 055): la medianoche del dia mas sus
+ * minutos, en la zona del servidor. `setHours` cuenta la hora de pared, asi
+ * que el 25 de octubre las 10:00 siguen siendo las 10:00 aunque ese dia dure
+ * 25 horas. Lo calcula la API para que ningun navegador lo haga a su manera.
+ */
+function startsAtOf(entry: { plannedDate: Date; startMinute: number | null }) {
+  if (entry.startMinute === null) return null;
+  const at = new Date(entry.plannedDate);
+  at.setHours(0, entry.startMinute, 0, 0);
+  return at;
+}
+
+/**
  * Hoy: el plan del dia mas lo urgente (ADR 046), composicion pura sobre lo
  * que el Planificador ya lee -mismas consultas de `planner/queries.ts`, para
  * que una tarea atrasada se vea igual en los dos sitios-.
@@ -143,9 +156,9 @@ export default async function getToday({
   // Las imprescindibles primero, por su puesto (ADR 053); el resto, en el
   // orden del plan. `sort` es estable, asi que dentro de cada grupo se
   // conserva el de `position`.
-  const plannedWithLogged = withLogged(planned).sort(
-    (a, b) => (a.keyRank ?? 4) - (b.keyRank ?? 4),
-  );
+  const plannedWithLogged = withLogged(planned)
+    .sort((a, b) => (a.keyRank ?? 4) - (b.keyRank ?? 4))
+    .map((row) => ({ ...row, startsAt: startsAtOf(row) }));
   const estimateRemaining = plannedWithLogged.reduce(
     (total, row) =>
       total + Math.max(0, (row.estimate ?? 0) - row.loggedSeconds),

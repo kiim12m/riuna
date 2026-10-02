@@ -1,11 +1,13 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { QuickAddDialog } from "@/components/quick-add/quick-add-dialog";
+import { ReminderDialog } from "@/components/reminders/reminder-dialog";
 import { StopDialog } from "@/components/timer/stop-dialog";
 import { shortcuts } from "@/constants/shortcuts";
 import { useTimerMutations } from "@/hooks/mutations/time-entry/use-timer-mutations";
 import { useRunningTimer } from "@/hooks/queries/time-entry/use-running-timer";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
+import { useAnchorReminders } from "@/hooks/use-anchor-reminders";
 import { useElapsed } from "@/hooks/use-elapsed";
 import { useEstimateWarning } from "@/hooks/use-estimate-warning";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
@@ -53,6 +55,7 @@ export function WorkspaceRuntime() {
     useStopWithConfirm(stop, elapsed);
 
   useTimerTitle(running ? formatElapsedClock(loggedTotal) : undefined);
+  useAnchorReminders(workspaceId);
   useEstimateWarning(
     running?.id,
     overEstimate,
@@ -114,6 +117,7 @@ export function WorkspaceRuntime() {
         isPending={isStopping}
       />
       <QuickAddDialog workspaceId={workspaceId} />
+      <ReminderDialog workspaceId={workspaceId} />
     </>
   );
 }

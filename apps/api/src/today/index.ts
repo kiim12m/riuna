@@ -31,7 +31,13 @@ const todayResponseSchema = v.object({
   /** Planificadas antes de hoy y todavia sin terminar -"De dias anteriores". */
   previous: v.array(planEntrySchema),
   /** El plan de hoy: sin terminar, con o sin hora. */
-  planned: v.array(planEntrySchema),
+  planned: v.array(
+    v.object({
+      ...planEntrySchema.entries,
+      /** El instante de la hora anclada, o `null` sin hora (ADR 055). */
+      startsAt: v.nullable(v.date()),
+    }),
+  ),
   /**
    * Vencido o vence hoy, sin planificar hoy ni antes. Si esta planificada
    * para un dia futuro sale igual, con su `plannedDate` (ADR 046).

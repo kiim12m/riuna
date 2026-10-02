@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0, 1 y 2 hechos; sigue el 3 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0, 1 y 2, y 3.1 hechos; sigue el 3.2 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -1972,12 +1972,27 @@ verificación.
 
 **Bloque 3 — Foco y avisos del navegador** (≈ 2,5 semanas)
 
-- **3.1 Avisos y recordatorio a la hora anclada** · M · ADR 055. Dispara una sola pestaña
+- **3.1 Avisos y recordatorio a la hora anclada** ✔ · M · [ADR 055](adr/055-avisos-del-navegador-sin-service-worker.md). Dispara una sola pestaña
   (`navigator.locks`), sin repetir lo ya avisado. `GET /today` da el instante de cada hora
   anclada, calculado en el servidor. Sin service worker la notificación no puede llevar
   botones: al pulsarla se abre un diálogo con «Empezar», «Posponer 10 min» y «Mañana».
   **Límites declarados**: sin pestaña abierta no avisa, en segundo plano puede retrasarse
   alrededor de un minuto, y posponer vale para ese navegador.
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **Ventana de 15 minutos:** una hora anclada que pasó hace más no avisa al
+    abrir la pestaña.
+  - **«Mañana» es «Pasar al» siguiente día laborable**, conservando la hora.
+  - **Sin `BroadcastChannel`:** `localStorage` ya lo comparten las pestañas,
+    y el cerrojo de `navigator.locks` evita que dos avisen a la vez.
+  - **El interruptor está en Ajustes › Preferencias** y es por navegador.
+    Solo se lee Hoy en segundo plano si está activado.
+
+  Verificación:
+  - 7 pruebas unitarias;
+  - 3 de integración de `startsAt`, incluida la del 25 de octubre;
+  - 1 de extremo a extremo con el reloj adelantado y `Notification`
+    sustituida;
+  - pasada visual del ajuste y del diálogo.
 - **3.2 Modo foco** · M · ADR 056. Máquina pura en el cliente —Pomodoro 25/5/15×4, Flowtime con
   un descanso del 20 % de lo trabajado, cuenta atrás— sobre entradas de tiempo reales:
   `time_entry.focus_mode`, que se filtra porque el cierre del día cuenta las sesiones. Los
@@ -2201,8 +2216,11 @@ el **1.4**, «Esperando a»: **el Bloque 1 está cerrado**. Del **Bloque 2**,
 los rituales, están hechos el **2.1**, terminar el día
 ([ADR 054](adr/054-terminar-el-dia-y-la-valoracion-privada.md)), y el **2.2**,
 planificar el día, el **2.3**, la revisión semanal, y el **2.4**, el stand-up:
-**el Bloque 2 está cerrado**. Sigue el **Bloque 3**, foco y avisos del
-navegador. Después del interludio viene la **Fase 8**: automatizaciones e
+**el Bloque 2 está cerrado**. Del **Bloque 3**, foco y avisos del navegador,
+está hecho el **3.1**, los avisos a la hora anclada
+([ADR 055](adr/055-avisos-del-navegador-sin-service-worker.md)); sigue el
+**3.2**, el modo foco.
+Después del interludio viene la **Fase 8**: automatizaciones e
 importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`

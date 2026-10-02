@@ -3197,5 +3197,25 @@
 			"copied": "Stand-up copiado",
 			"copyError": "No se ha podido copiar"
 		}
+	},
+	"reminders": {
+		"notification": {
+			"title": "Es la hora",
+			"body": "{{time}} · {{title}}"
+		},
+		"dialog": {
+			"description": "Anclada a las {{time}}.",
+			"start": "Empezar",
+			"snooze": "Posponer 10 min",
+			"nextDay": "Pasar al {{day}}"
+		},
+		"settings": {
+			"title": "Avisos del navegador",
+			"subtitle": "Un aviso a la hora anclada de cada tarea de hoy.",
+			"toggle": "Avisarme en este navegador",
+			"limits": "Solo con una pestaña de Riuna abierta: sin ninguna, no hay aviso. En segundo plano puede llegar con un minuto de retraso, y posponer vale para este navegador.",
+			"denied": "El navegador tiene bloqueados los avisos de Riuna. Permítelos en los ajustes del sitio y vuelve aquí.",
+			"unsupported": "Este navegador no puede mostrar avisos."
+		}
 	}
 }
