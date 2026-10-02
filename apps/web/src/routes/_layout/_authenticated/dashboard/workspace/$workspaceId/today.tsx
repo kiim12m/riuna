@@ -15,8 +15,14 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { createFileRoute } from "@tanstack/react-router";
-import { CalendarCheck, ChevronRight, Star } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  CalendarCheck,
+  ChevronRight,
+  CircleCheck,
+  Moon,
+  Star,
+} from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PageHeading } from "@/components/common/page-heading";
@@ -150,6 +156,7 @@ function rowTask(task: TodayTask | TodayEntry | TodayUrgent, isDone: boolean) {
 function TodayComponent() {
   const { t, i18n } = useTranslation();
   const { workspaceId } = Route.useParams();
+  const navigate = useNavigate();
   const { data, isPending } = useToday(workspaceId);
   const { data: runningData } = useRunningTimer(workspaceId);
   const { start, stop, isStopping } = useTimerMutations(workspaceId);
@@ -313,6 +320,31 @@ function TodayComponent() {
                 ),
                 worked: formatDuration(data.totals.workedToday, i18n.language),
               })
+            }
+            actions={
+              // Los rituales solo se abren con un boton (ADR 054): ni avisos
+              // ni banners. Cerrado, el boton lo dice y permite repasarlo.
+              data && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant={data.dayClosed ? "ghost" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      navigate({
+                        to: "/dashboard/workspace/$workspaceId/rituals/close-day",
+                        params: { workspaceId },
+                      })
+                    }
+                  >
+                    {data.dayClosed ? <CircleCheck /> : <Moon />}
+                    {t(
+                      data.dayClosed
+                        ? "rituals:closeDay.closed"
+                        : "rituals:closeDay.button",
+                    )}
+                  </Button>
+                </div>
+              )
             }
           />
           {/* Lo que se captura desde Hoy es para hoy, salvo que diga otro dia. */}

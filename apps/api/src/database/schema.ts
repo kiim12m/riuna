@@ -817,6 +817,90 @@ export const taskRecurrenceTable = pgTable(
  * sola fila por persona -unica por `(user_id, task_id)`-, y cae en cascada con
  * el usuario o la tarea: un plan no sobrevive a lo que planifica.
  */
+/**
+ * El cierre de un periodo -dia o semana- de una persona en un espacio
+ * (ADR 054): lo que su responsable de departamento puede ver. La valoracion
+ * va aparte, en `review_private`, y **nunca** aqui: la separacion es
+ * estructural para que ninguna lectura del responsable pueda unirla.
+ */
+export const reviewTable = pgTable(
+  "review",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    /** `day` o `week`. */
+    period: text("period").notNull(),
+    /** Medianoche de Madrid del primer dia del periodo, como `planned_date`. */
+    periodStart: timestamp("period_start", { mode: "date" }).notNull(),
+    /** Lo que frena, en texto libre. */
+    blockers: text("blockers"),
+    /** Cifras del periodo al cerrarlo: hechas, registrado, movidas… */
+    summary: jsonb("summary").notNull().default({}),
+    closedAt: timestamp("closed_at", { mode: "date" }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("review_user_period_unique").on(
+      table.userId,
+      table.workspaceId,
+      table.period,
+      table.periodStart,
+    ),
+    check("review_period_valid", sql`${table.period} IN ('day', 'week')`),
+  ],
+);
+
+/**
+ * La valoracion de un cierre, 1:1 con `review` (ADR 054): impacto, energia y
+ * una nota. **Siempre privada**: solo la lee la propia persona, desde el
+ * modulo `review/`. Una prueba de arquitectura falla si otro modulo la nombra.
+ */
+export const reviewPrivateTable = pgTable(
+  "review_private",
+  {
+    reviewId: text("review_id")
+      .primaryKey()
+      .references(() => reviewTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    impact: smallint("impact"),
+    energy: smallint("energy"),
+    note: text("note"),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    check(
+      "review_private_impact_valid",
+      sql`${table.impact} IS NULL OR ${table.impact} BETWEEN 1 AND 4`,
+    ),
+    check(
+      "review_private_energy_valid",
+      sql`${table.energy} IS NULL OR ${table.energy} BETWEEN 1 AND 3`,
+    ),
+  ],
+);
+
 export const personalPlanEntryTable = pgTable(
   "personal_plan_entry",
   {

@@ -49,6 +49,8 @@ const todayResponseSchema = v.object({
   }),
   /** El dia del servidor, `yyyy-mm-dd`. */
   serverToday: v.string(),
+  /** Si ya se paso por «Terminar el dia» (ADR 054). */
+  dayClosed: v.boolean(),
 });
 
 /**

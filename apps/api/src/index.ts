@@ -57,6 +57,7 @@ import { migrateGitHubIntegration } from "./plugins/github/migration";
 import project from "./project";
 import { getPublicProject } from "./project/controllers/get-public-project";
 import recurrence from "./recurrence";
+import review from "./review";
 import schedule from "./schedule";
 import { initializeScheduler, shutdownScheduler } from "./scheduler";
 import search from "./search";
@@ -631,6 +632,7 @@ export function createApp() {
   const myWorkApi = api.route("/my-work", myWork);
   const plannerApi = api.route("/planner", planner);
   const captureApi = api.route("/capture", capture);
+  const reviewApi = api.route("/review", review);
   const scheduleApi = api.route("/schedule", schedule);
   const workScheduleApi = api.route("/work-schedule", workSchedule);
   const searchApi = api.route("/search", search);
@@ -821,6 +823,7 @@ export function createApp() {
     myWorkApi,
     plannerApi,
     captureApi,
+    reviewApi,
     scheduleApi,
     workScheduleApi,
     notificationApi,
@@ -982,6 +985,7 @@ const {
   myWorkApi,
   plannerApi,
   captureApi,
+  reviewApi,
   scheduleApi,
   workScheduleApi,
   notificationApi,
@@ -1042,6 +1046,7 @@ export type AppType =
   | typeof myWorkApi
   | typeof plannerApi
   | typeof captureApi
+  | typeof reviewApi
   | typeof scheduleApi
   | typeof workScheduleApi
   | typeof searchApi

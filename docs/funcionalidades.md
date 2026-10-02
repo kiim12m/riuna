@@ -223,6 +223,18 @@ la tarea y en la propia tabla.
 - **Imprescindibles**: hasta tres por día, y lo impone la base. Salen
   primero en Hoy, con una estrella, y dejan de serlo al cambiar de día.
 - **Añadir todo a hoy**: trae de una vez lo que quedó de días anteriores.
+- **Terminar el día**
+  ([ADR 054](adr/054-terminar-el-dia-y-la-valoracion-privada.md)): un ritual
+  en cinco pasos que se abre con un botón en la cabecera de Hoy:
+  1. el resumen: lo terminado y lo registrado;
+  2. una decisión obligatoria sobre cada pendiente: el siguiente día
+     laborable, otro día o fuera del plan;
+  3. qué te frena;
+  4. tu valoración del día (impacto, energía y una nota), **que solo ves tú**;
+  5. lo que tienes para el próximo día.
+
+  El botón pasa a decir «Día cerrado» cuando ya se ha hecho. Repetirlo
+  actualiza el cierre.
 - **Mi trabajo**: las tareas propias o de mi equipo de todos los proyectos, con
   filtros de vencimiento (todas, vencidas, hoy, esta semana).
 - **Nueva tarea en la cabecera**: un botón en la barra superior de cada

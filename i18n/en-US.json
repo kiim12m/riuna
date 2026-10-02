@@ -3044,5 +3044,64 @@
 			"hint": "1h 30m, 1h30, 90m or 1,5 (hours). Empty means no estimate.",
 			"invalid": "That isn't a duration"
 		}
+	},
+	"rituals": {
+		"stepOf": "Step {{current}} of {{total}}",
+		"back": "Back",
+		"next": "Next",
+		"exit": "Leave",
+		"closeDay": {
+			"title": "Finish the day",
+			"button": "Finish the day",
+			"closed": "Day closed",
+			"summary": {
+				"title": "How the day went",
+				"done_one": "You finished {{count}} task.",
+				"done_other": "You finished {{count}} tasks.",
+				"nothingDone": "Nothing was finished today.",
+				"worked": "Logged: {{time}}."
+			},
+			"pending": {
+				"title": "What’s left",
+				"hint": "Decide for each one: another day or out of the plan. Nothing stays hanging.",
+				"none": "Nothing left. Well done.",
+				"allTo": "All to {{day}}",
+				"otherDay": "Another day",
+				"unplan": "Out of the plan",
+				"undecided_one": "{{count}} without a decision",
+				"undecided_other": "{{count}} without a decision"
+			},
+			"blockers": {
+				"title": "What’s holding you back",
+				"hint": "Your department lead will see this, if you have one.",
+				"placeholder": "Waiting on materials, on a reply…"
+			},
+			"rating": {
+				"title": "Your day",
+				"hint": "Only you see this.",
+				"impact": "Impact",
+				"impactLevels": {
+					"1": "Little",
+					"2": "Some",
+					"3": "Quite a lot",
+					"4": "A lot"
+				},
+				"energy": "Energy",
+				"energyLevels": {
+					"1": "Low",
+					"2": "Normal",
+					"3": "High"
+				},
+				"note": "Note"
+			},
+			"next": {
+				"title": "Next: {{day}}",
+				"hint": "What’s planned for your next work day.",
+				"empty": "Nothing planned yet."
+			},
+			"finish": "Close the day",
+			"done": "Day closed",
+			"error": "The day couldn’t be closed"
+		}
 	}
 }

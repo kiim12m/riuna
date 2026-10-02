@@ -3044,5 +3044,64 @@
 			"hint": "1h 30m, 1h30, 90m o 1,5 (horas). Vacío es sin estimar.",
 			"invalid": "Eso no es una duración"
 		}
+	},
+	"rituals": {
+		"stepOf": "Paso {{current}} de {{total}}",
+		"back": "Atrás",
+		"next": "Siguiente",
+		"exit": "Salir",
+		"closeDay": {
+			"title": "Terminar el día",
+			"button": "Terminar el día",
+			"closed": "Día cerrado",
+			"summary": {
+				"title": "Cómo ha ido el día",
+				"done_one": "Has terminado {{count}} tarea.",
+				"done_other": "Has terminado {{count}} tareas.",
+				"nothingDone": "Hoy no se ha terminado nada.",
+				"worked": "Registrado: {{time}}."
+			},
+			"pending": {
+				"title": "Lo que queda",
+				"hint": "Decide qué pasa con cada una: otro día o fuera del plan. Nada se queda colgando.",
+				"none": "No queda nada pendiente.",
+				"allTo": "Todo a {{day}}",
+				"otherDay": "Otro día",
+				"unplan": "Fuera del plan",
+				"undecided_one": "{{count}} sin decidir",
+				"undecided_other": "{{count}} sin decidir"
+			},
+			"blockers": {
+				"title": "Qué te frena",
+				"hint": "Lo verá tu responsable de departamento, si lo tienes.",
+				"placeholder": "Esperando material, una respuesta…"
+			},
+			"rating": {
+				"title": "Tu día",
+				"hint": "Solo lo ves tú.",
+				"impact": "Impacto",
+				"impactLevels": {
+					"1": "Poco",
+					"2": "Algo",
+					"3": "Bastante",
+					"4": "Mucho"
+				},
+				"energy": "Energía",
+				"energyLevels": {
+					"1": "Baja",
+					"2": "Normal",
+					"3": "Alta"
+				},
+				"note": "Nota"
+			},
+			"next": {
+				"title": "Lo siguiente: {{day}}",
+				"hint": "Lo que tienes planificado para tu próximo día laborable.",
+				"empty": "Aún no hay nada planificado."
+			},
+			"finish": "Cerrar el día",
+			"done": "Día cerrado",
+			"error": "No se ha podido cerrar el día"
+		}
 	}
 }

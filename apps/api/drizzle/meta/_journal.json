@@ -505,6 +505,13 @@
 			"when": 1790923667640,
 			"tag": "0071_plan_entry_key_rank",
 			"breakpoints": true
+		},
+		{
+			"idx": 72,
+			"version": "7",
+			"when": 1790930663813,
+			"tag": "0072_day_review",
+			"breakpoints": true
 		}
 	]
 }

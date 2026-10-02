@@ -11973,6 +11973,227 @@
 				"timeDialog",
 				"estimateDialog"
 			]
+		},
+		"rituals": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"stepOf": {
+					"type": "string"
+				},
+				"back": {
+					"type": "string"
+				},
+				"next": {
+					"type": "string"
+				},
+				"exit": {
+					"type": "string"
+				},
+				"closeDay": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"button": {
+							"type": "string"
+						},
+						"closed": {
+							"type": "string"
+						},
+						"summary": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"done_one": {
+									"type": "string"
+								},
+								"done_other": {
+									"type": "string"
+								},
+								"nothingDone": {
+									"type": "string"
+								},
+								"worked": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"done_one",
+								"done_other",
+								"nothingDone",
+								"worked"
+							]
+						},
+						"pending": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"none": {
+									"type": "string"
+								},
+								"allTo": {
+									"type": "string"
+								},
+								"otherDay": {
+									"type": "string"
+								},
+								"unplan": {
+									"type": "string"
+								},
+								"undecided_one": {
+									"type": "string"
+								},
+								"undecided_other": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"hint",
+								"none",
+								"allTo",
+								"otherDay",
+								"unplan",
+								"undecided_one",
+								"undecided_other"
+							]
+						},
+						"blockers": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"placeholder": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "hint", "placeholder"]
+						},
+						"rating": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"impact": {
+									"type": "string"
+								},
+								"impactLevels": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"1": {
+											"type": "string"
+										},
+										"2": {
+											"type": "string"
+										},
+										"3": {
+											"type": "string"
+										},
+										"4": {
+											"type": "string"
+										}
+									},
+									"required": ["1", "2", "3", "4"]
+								},
+								"energy": {
+									"type": "string"
+								},
+								"energyLevels": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"1": {
+											"type": "string"
+										},
+										"2": {
+											"type": "string"
+										},
+										"3": {
+											"type": "string"
+										}
+									},
+									"required": ["1", "2", "3"]
+								},
+								"note": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"hint",
+								"impact",
+								"impactLevels",
+								"energy",
+								"energyLevels",
+								"note"
+							]
+						},
+						"next": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"empty": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "hint", "empty"]
+						},
+						"finish": {
+							"type": "string"
+						},
+						"done": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"button",
+						"closed",
+						"summary",
+						"pending",
+						"blockers",
+						"rating",
+						"next",
+						"finish",
+						"done",
+						"error"
+					]
+				}
+			},
+			"required": ["stepOf", "back", "next", "exit", "closeDay"]
 		}
 	},
 	"required": [
@@ -11997,6 +12218,7 @@
 		"timeSheet",
 		"timer",
 		"quickAdd",
-		"taskActions"
+		"taskActions",
+		"rituals"
 	]
 }

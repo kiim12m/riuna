@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 y 1 hechos; punto de control antes del 2 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 y 1, y 2.1 hechos; sigue el 2.2 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -1871,12 +1871,31 @@ verificación.
 
 **Bloque 2 — Rituales** (≈ 3 semanas)
 
-- **2.1 Terminar el día** · M · ADR 054. `review` guarda lo que el responsable puede ver
+- **2.1 Terminar el día** ✔ · M · [ADR 054](adr/054-terminar-el-dia-y-la-valoracion-privada.md). `review` guarda lo que el responsable puede ver
   (`period` día|semana, bloqueos, resumen) y `review_private`, 1:1, la valoración. **La
   separación es estructural**: el camino del responsable no puede unir la tabla privada, y una
   prueba de arquitectura lo vigila. Pasos: resumen → **decisión obligatoria** sobre cada
   pendiente (mañana, otro día o quitar del plan) → bloqueos → valoración privada → plan de
   mañana. Botón en la cabecera de Hoy.
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **Pendiente** es lo mismo que enseña Hoy: lo planificado ese día y lo de
+    días anteriores, sin terminar. Sin una decisión por cada una,
+    `PUT /review/day/:date` responde 400.
+  - **«Mañana» es el siguiente día laborable** de la jornada personal: un
+    viernes, el lunes.
+  - **Las cifras del cierre** salen de `getToday` en el mediodía de ese día.
+    Cerrar otra vez acumula las movidas en vez de borrarlas.
+  - **`dayClosed` en `GET /today`** sale de un fichero que no importa la tabla
+    privada, y una prueba de arquitectura vigila que nadie más la nombre.
+  - **`RitualShell`**, el armazón de pasos, queda para los demás rituales.
+
+  Verificación:
+  - 5 pruebas de integración;
+  - la de arquitectura, que falla con un fichero de prueba que nombra la tabla
+    fuera del módulo;
+  - 4 unitarias del siguiente día laborable;
+  - 1 de extremo a extremo con el ritual completo;
+  - pasada visual.
 - **2.2 Planificar el día** · S. Pura composición, sin API: lo de ayer → lo urgente → Bandeja y
   sin planificar → imprescindibles → carga frente a capacidad → anclar → «Empezar».
 - **2.3 Revisión semanal** · M. Vaciar la Bandeja, vencidas, «Esperando a», la semana pasada
@@ -2113,8 +2132,10 @@ y acciones, están hechos el **1.1**, la Bandeja
 captura rápida ([ADR 052](adr/052-captura-rapida.md)), el **1.3**, acciones
 de fila, imprescindibles y plan en bloque
 ([ADR 053](adr/053-acciones-de-fila-imprescindibles-y-plan-en-bloque.md)), y
-el **1.4**, «Esperando a»: **el Bloque 1 está cerrado**, y toca su punto de
-control antes del **Bloque 2**, los rituales. Después del interludio viene la **Fase 8**: automatizaciones e
+el **1.4**, «Esperando a»: **el Bloque 1 está cerrado**. Del **Bloque 2**,
+los rituales, está hecho el **2.1**, terminar el día
+([ADR 054](adr/054-terminar-el-dia-y-la-valoracion-privada.md)); sigue el
+**2.2**, planificar el día. Después del interludio viene la **Fase 8**: automatizaciones e
 importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
