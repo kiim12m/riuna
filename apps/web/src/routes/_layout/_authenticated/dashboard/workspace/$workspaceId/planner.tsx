@@ -373,28 +373,12 @@ function RouteComponent() {
                   const ghosts = ghostsByDay.get(key) ?? [];
                   const deadlines = deadlinesByDay.get(key) ?? [];
 
-                  const loadSeconds =
-                    dayEntries.reduce(
-                      (total, entry) =>
-                        total +
-                        Math.max(
-                          0,
-                          (entry.estimate ?? 0) - entry.loggedSeconds,
-                        ),
-                      0,
-                    ) +
-                    fixedBlocks.reduce(
-                      (total, block) =>
-                        total + (block.endMinute - block.startMinute) * 60,
-                      0,
-                    );
-                  const capacitySeconds = data?.capacityByDay?.[key] ?? 0;
-                  const loadPct =
-                    capacitySeconds > 0
-                      ? Math.round((loadSeconds / capacitySeconds) * 100)
-                      : loadSeconds > 0
-                        ? 100
-                        : 0;
+                  // La carga la calcula la API con la misma `dayLoad` que
+                  // el Cronograma (ADR 050), en vez de una copia aqui.
+                  const load = data?.loadByDay?.[key];
+                  const loadSeconds = load?.loadSeconds ?? 0;
+                  const capacitySeconds = load?.capacitySeconds ?? 0;
+                  const loadPct = load?.pct ?? 0;
 
                   return (
                     <PlannerDay

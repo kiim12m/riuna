@@ -279,15 +279,11 @@ function TimeGridColumn({
     if (isSegmentInteracting) setHoverMinute(null);
   }, [isSegmentInteracting]);
 
-  const loadSeconds = day.segments
-    .filter((segment) => segment.type === "flow" || segment.type === "pinned")
-    .reduce(
-      (total, segment) => total + (segment.endSecond - segment.startSecond),
-      0,
-    );
-  const loadPct = Math.round(
-    (loadSeconds / ((workEndMinute - workStartMinute) * 60)) * 100,
-  );
+  // La carga la calcula la API con la misma `dayLoad` que el Planificador
+  // (ADR 050). Antes se sumaban aqui los tramos -con el relleno de 30 min de
+  // lo no estimado- frente a la jornada bruta, sin restar comida ni dias
+  // libres, y el mismo dia salia con otro porcentaje que en el Planificador.
+  const loadPct = day.load.pct;
 
   const stopCreating = () => {
     setIsCreating(false);

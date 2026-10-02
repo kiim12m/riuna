@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { type SearchMyWorkOptions, searchMyWork } from "@/fetchers/my-work";
 import { personalQueryOptions } from "@/hooks/queries/personal-query-options";
 
@@ -31,6 +31,24 @@ export function useMyTasksSearch(options: SearchMyWorkOptions) {
   return useQuery({
     queryKey: ["my-work", "search", options],
     queryFn: () => searchMyWork(options),
+    enabled: Boolean(options.workspaceId),
+    ...personalQueryOptions,
+  });
+}
+
+/**
+ * La Lista y el Tablero de "Mis tareas", pagina a pagina: antes pedian 100 y
+ * callaban el resto. Bajo `["my-work"]` igual que las demas, asi que el
+ * canal de usuario las sigue invalidando; al releer, TanStack vuelve a pedir
+ * todas las paginas ya cargadas.
+ */
+export function useMyTasksPages(options: Omit<SearchMyWorkOptions, "page">) {
+  return useInfiniteQuery({
+    queryKey: ["my-work", "search-pages", options],
+    queryFn: ({ pageParam }) => searchMyWork({ ...options, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last.pagination.hasMore ? last.pagination.page + 1 : undefined,
     enabled: Boolean(options.workspaceId),
     ...personalQueryOptions,
   });

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { type CSSProperties, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ConfirmDeleteDialog } from "@/components/common/confirm-delete-dialog";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import {
   DashboardGrid,
@@ -129,6 +130,8 @@ function HomeComponent() {
 
   const mutations = useDashboardMutations(workspaceId);
   const [editing, setEditing] = useState<Widget | null>(null);
+  // Borrar un widget se hacia de un clic y sin vuelta atras.
+  const [deleting, setDeleting] = useState<Widget | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
   const byWidget = useMemo(() => {
@@ -374,10 +377,7 @@ function HomeComponent() {
                       {...(canEdit
                         ? {
                             onEdit: () => setEditing(widget),
-                            onDelete: () =>
-                              mutations.removeWidget.mutate(widget.id, {
-                                onError,
-                              }),
+                            onDelete: () => setDeleting(widget),
                           }
                         : {})}
                     >
@@ -394,6 +394,20 @@ function HomeComponent() {
           )}
         </div>
       </WorkspaceLayout>
+
+      <ConfirmDeleteDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && setDeleting(null)}
+        title={t("panels:widget.deleteConfirmTitle", {
+          title: deleting?.title ?? "",
+        })}
+        description={t("panels:widget.deleteConfirmDescription")}
+        isPending={mutations.removeWidget.isPending}
+        onConfirm={() => {
+          if (deleting) mutations.removeWidget.mutate(deleting.id, { onError });
+          setDeleting(null);
+        }}
+      />
 
       {(isAdding || editing) && (
         <WidgetEditor

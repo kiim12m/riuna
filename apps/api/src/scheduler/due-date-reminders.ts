@@ -1,13 +1,16 @@
-import { and, between, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, between, eq, isNull, ne, or, sql } from "drizzle-orm";
 import db from "../database";
 import {
-  columnTable,
+  taskAssigneeTable,
   taskReminderSentTable,
   taskTable,
   userNotificationPreferenceTable,
 } from "../database/schema";
 import createNotification from "../notification/controllers/create-notification";
-import { REMINDER_WINDOW_MINUTES } from "./reminder-timing";
+import {
+  MAX_REMINDER_LEAD_MINUTES,
+  REMINDER_WINDOW_MINUTES,
+} from "./reminder-timing";
 
 type ReminderType = "configured_before" | "overdue";
 
@@ -32,48 +35,81 @@ function buildWindows(now: Date) {
   };
 }
 
+/**
+ * El registro de "ya avisado" va por persona (ADR 050): `configured_before:<id>`
+ * u `overdue:<id>`, el mismo patron que `generic_webhook:<id>` en
+ * `project-webhook-reminders.ts`.
+ */
+function sentKey(reminderType: ReminderType, userId: string) {
+  return `${reminderType}:${userId}`;
+}
+
+/**
+ * Una fila por **asignado** -`task_assignee`, que incluye al responsable
+ * principal (ADR 010)-, no por tarea: hasta la ADR 050 solo avisaba a
+ * `task.assignee_id`, y quien estaba asignado ademas no se enteraba de nada.
+ * Cada persona con su propia antelacion y su propio interruptor.
+ */
 async function getTasksNeedingReminder(
   windowStart: Date,
   windowEnd: Date,
   reminderType: ReminderType,
 ) {
+  // Un prefiltro sargable sobre `due_date`: la antelacion de cada persona
+  // esta acotada, asi que solo pueden tocar ahora los vencimientos de esta
+  // franja. Sin el, la condicion con la antelacion por persona obligaba a
+  // mirar todas las tareas con vencimiento.
+  const dueRange =
+    reminderType === "configured_before"
+      ? between(
+          taskTable.dueDate,
+          windowStart,
+          new Date(windowEnd.getTime() + MAX_REMINDER_LEAD_MINUTES * MINUTE_MS),
+        )
+      : between(taskTable.dueDate, windowStart, windowEnd);
+
   const results = await db
     .select({
       id: taskTable.id,
       title: taskTable.title,
-      userId: taskTable.userId,
+      userId: taskAssigneeTable.userId,
       dueDate: taskTable.dueDate,
       projectId: taskTable.projectId,
       leadTimeMinutes:
         userNotificationPreferenceTable.dueDateReminderLeadTimeMinutes,
     })
-    .from(taskTable)
-    .leftJoin(columnTable, eq(taskTable.columnId, columnTable.id))
+    .from(taskAssigneeTable)
+    .innerJoin(taskTable, eq(taskTable.id, taskAssigneeTable.taskId))
     .leftJoin(
       userNotificationPreferenceTable,
-      eq(userNotificationPreferenceTable.userId, taskTable.userId),
+      eq(userNotificationPreferenceTable.userId, taskAssigneeTable.userId),
     )
     .leftJoin(
       taskReminderSentTable,
       and(
         eq(taskReminderSentTable.taskId, taskTable.id),
-        eq(taskReminderSentTable.reminderType, reminderType),
+        eq(
+          taskReminderSentTable.reminderType,
+          sql`${reminderType} || ':' || ${taskAssigneeTable.userId}`,
+        ),
       ),
     )
     .where(
       and(
-        isNotNull(taskTable.userId),
-        isNotNull(taskTable.dueDate),
+        dueRange,
         reminderType === "configured_before"
           ? sql`${taskTable.dueDate} - (COALESCE(${userNotificationPreferenceTable.dueDateReminderLeadTimeMinutes}, 1440) * interval '1 minute') BETWEEN ${windowStart.toISOString()} AND ${windowEnd.toISOString()}`
-          : between(taskTable.dueDate, windowStart, windowEnd),
+          : undefined,
         isNull(taskReminderSentTable.id),
         or(
           isNull(userNotificationPreferenceTable.id),
           eq(userNotificationPreferenceTable.dueDateReminderEnabled, true),
         ),
-        // Exclude tasks in final columns (completed); include tasks with no column
-        or(isNull(columnTable.isFinal), eq(columnTable.isFinal, false)),
+        // "Hecha" es `completed_at` (ADR 030). Y lo archivado tampoco avisa:
+        // archivar borra `completed_at`, y sin columna la comprobacion
+        // anterior por `column.is_final` lo dejaba pasar.
+        isNull(taskTable.completedAt),
+        ne(taskTable.status, "archived"),
       ),
     );
 
@@ -84,7 +120,7 @@ async function processReminder(
   task: {
     id: string;
     title: string;
-    userId: string | null;
+    userId: string;
     dueDate: Date | null;
     projectId: string;
     leadTimeMinutes: number | null;
@@ -92,15 +128,13 @@ async function processReminder(
   reminderType: ReminderType,
   notificationType: "due_date_reminder" | "task_overdue",
 ) {
-  if (!task.userId) return;
-
   // Insert sent record first; if it already exists, skip notification
   try {
     const [inserted] = await db
       .insert(taskReminderSentTable)
       .values({
         taskId: task.id,
-        reminderType,
+        reminderType: sentKey(reminderType, task.userId),
       })
       .onConflictDoNothing({
         target: [
@@ -114,6 +148,7 @@ async function processReminder(
   } catch (error) {
     console.error("Failed to record due date reminder", {
       taskId: task.id,
+      userId: task.userId,
       reminderType,
       error,
     });

@@ -63,6 +63,15 @@ const planResponseSchema = v.object({
    * ADR 040.
    */
   capacityByDay: v.record(v.string(), v.number()),
+  /** La carga de cada dia, con la misma `dayLoad` que el Cronograma (ADR 050). */
+  loadByDay: v.record(
+    v.string(),
+    v.object({
+      loadSeconds: v.number(),
+      capacitySeconds: v.number(),
+      pct: v.number(),
+    }),
+  ),
   /** Las citas fijas de cada dia, para "Con hora" y para sumar a la carga. */
   fixedBlocksByDay: v.record(v.string(), v.array(fixedBlockSchema)),
   /** El dia del servidor, `yyyy-mm-dd`: de ahi arranca la rejilla de 15 dias. */

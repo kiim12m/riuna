@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Target } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ConfirmDeleteDialog } from "@/components/common/confirm-delete-dialog";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import { GoalCard } from "@/components/goal/goal-card";
 import { GoalDialog, TargetDialog } from "@/components/goal/goal-dialogs";
@@ -51,6 +52,8 @@ function GoalsComponent() {
   const [goalDialog, setGoalDialog] = useState<{ goal: Goal | null } | null>(
     null,
   );
+  // Borrar un objetivo se llevaba sus resultados clave de un clic.
+  const [deletingGoal, setDeletingGoal] = useState<Goal | null>(null);
   const [targetDialog, setTargetDialog] = useState<{
     goalId: string;
     target: GoalTarget | null;
@@ -122,7 +125,7 @@ function GoalsComponent() {
                   {...(canEdit(goal)
                     ? {
                         onEdit: () => setGoalDialog({ goal }),
-                        onDelete: () => deleteGoal.mutate(goal.id, { onError }),
+                        onDelete: () => setDeletingGoal(goal),
                         onToggleShare: () =>
                           updateGoal.mutate(
                             { id: goal.id, isShared: !goal.isShared },
@@ -142,6 +145,20 @@ function GoalsComponent() {
           )}
         </div>
       </WorkspaceLayout>
+
+      <ConfirmDeleteDialog
+        open={deletingGoal !== null}
+        onOpenChange={(open) => !open && setDeletingGoal(null)}
+        title={t("goals:deleteConfirmTitle", {
+          name: deletingGoal?.name ?? "",
+        })}
+        description={t("goals:deleteConfirmDescription")}
+        isPending={deleteGoal.isPending}
+        onConfirm={() => {
+          if (deletingGoal) deleteGoal.mutate(deletingGoal.id, { onError });
+          setDeletingGoal(null);
+        }}
+      />
 
       {goalDialog && (
         <GoalDialog

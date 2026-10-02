@@ -10401,6 +10401,12 @@
 						},
 						"personalScope": {
 							"type": "string"
+						},
+						"deleteConfirmTitle": {
+							"type": "string"
+						},
+						"deleteConfirmDescription": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -10425,7 +10431,9 @@
 						"columns_other",
 						"rows_one",
 						"rows_other",
-						"personalScope"
+						"personalScope",
+						"deleteConfirmTitle",
+						"deleteConfirmDescription"
 					]
 				},
 				"type": {
@@ -10933,6 +10941,12 @@
 						}
 					},
 					"required": ["saveFailed"]
+				},
+				"deleteConfirmTitle": {
+					"type": "string"
+				},
+				"deleteConfirmDescription": {
+					"type": "string"
 				}
 			},
 			"required": [
@@ -10943,7 +10957,9 @@
 				"target",
 				"scope",
 				"shared",
-				"errors"
+				"errors",
+				"deleteConfirmTitle",
+				"deleteConfirmDescription"
 			]
 		},
 		"today": {
@@ -11151,9 +11167,23 @@
 				},
 				"description": {
 					"type": "string"
+				},
+				"shownOf": {
+					"type": "string"
+				},
+				"loadMore": {
+					"type": "string"
 				}
 			},
-			"required": ["pageTitle", "tabs", "table", "empty", "description"]
+			"required": [
+				"pageTitle",
+				"tabs",
+				"table",
+				"empty",
+				"description",
+				"shownOf",
+				"loadMore"
+			]
 		},
 		"planner": {
 			"type": "object",

@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloque 0 hecho; sigue el 1 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -1707,13 +1707,38 @@ verificación.
     «Sin planificar» sin peticiones, `p` abre la prioridad, la paleta lleva
     al Planificador, la ayuda desde la paleta sin errores;
   - humo completo 38/38, unitarias del web 288, typecheck.
-- **0.5 Recordatorios, coherencia y paridad MCP** · M · ADR 050. Recordatorio de vencimiento
+- **0.5 Recordatorios, coherencia y paridad MCP** ✔ · M · [ADR 050](adr/050-recordatorios-por-asignado-y-una-sola-carga.md). Recordatorio de vencimiento
   para **cada** asignado, deduplicado por persona (el `reminder_type` lleva el usuario, como
   ya hace `project-webhook-reminders.ts`) y rearmado por un disparador `AFTER UPDATE OF
   due_date`: muchos escritores, la misma razón que la ADR 025. Una sola función `dayLoad()`
   para la carga del Planificador y del Cronograma. Confirmar al borrar widget y objetivo; Mis
   tareas con «Cargar más». Las cinco herramientas del plan y el cronómetro, también en el
   paquete stdio, con una prueba de paridad entre los dos registros.
+  **Hecho (2026-10-01).** Además de lo previsto:
+  - **Lo archivado tampoco avisa.** El trabajo excluía lo terminado por
+    `column.is_final`, y una tarea archivada, sin columna, recibía avisos.
+    Ahora usa `completed_at` (ADR 030) y descarta lo archivado aparte.
+  - **Un prefiltro sargable sobre `due_date`**, porque la antelación está
+    acotada a 30 días.
+  - **La carga deja de contar lo ya hecho.**
+  - **`user_work_schedule` no estaba registrada en el esquema de drizzle**,
+    el mismo hueco que `task_assignee` en la Fase 1. Lo destapó la prueba
+    de carga.
+  - **La confirmación de borrado** es un componente compartido
+    (`ConfirmDeleteDialog`), sobre el mismo `AlertDialog` que el resto
+    repetía a mano.
+
+  Verificación:
+  - 6 pruebas de integración de recordatorios, que fallan todas con el
+    trabajo anterior;
+  - una que fija la misma carga en el Planificador y el Cronograma, y 4
+    unitarias de `dayLoad`;
+  - la prueba de paridad MCP, que falla sin las cinco herramientas;
+  - una de extremo a extremo con 101 tareas para «Cargar más»;
+  - integración 669/670 con la API en Madrid: la que falta es la
+    importación grande, que agota el tiempo de conexión cuando la máquina
+    está cargada y pasa sola (19/19), como ya pasó en el 0.2;
+  - unitarias 726 (API) y 288 (web), humo 39/39, typecheck.
 
 **Bloque 1 — Captura y acciones** (≈ 3 semanas) · *punto de control al cerrarlo*
 
@@ -1973,11 +1998,12 @@ con los sub-bloques **0.1** (pantallas personales frescas,
 en `Europe/Madrid`, [ADR 049](adr/049-la-api-vive-en-madrid.md)) hechos. Antes
 de desplegar el 0.2 hay que ensayar la conversión sobre una copia de
 producción, como explica [actualizar.md](actualizar.md). El **0.3** (cronómetro
-en todas partes y tiempo en el detalle) y el **0.4** (Planificador, atajos y
-paleta) también están hechos. Sigue el **0.5**: recordatorios para cada
-asignado, la misma carga en el Planificador y el Cronograma, y paridad de MCP.
-Después del interludio viene la **Fase 8**: automatizaciones e importadores
-externos.
+en todas partes y tiempo en el detalle), el **0.4** (Planificador, atajos y
+paleta) y el **0.5** (recordatorios por asignado, una sola carga del día y
+paridad de MCP, [ADR 050](adr/050-recordatorios-por-asignado-y-una-sola-carga.md))
+también están hechos: **el Bloque 0 está cerrado**. Sigue el **Bloque 1**,
+captura y acciones, empezando por el **1.1**, la Bandeja. Después del
+interludio viene la **Fase 8**: automatizaciones e importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la

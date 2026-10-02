@@ -2641,7 +2641,9 @@
 			"columns_other": "{{count}} columnes",
 			"rows_one": "{{count}} fila",
 			"rows_other": "{{count}} files",
-			"personalScope": "Feina de qui"
+			"personalScope": "Feina de qui",
+			"deleteConfirmTitle": "¿Borrar «{{title}}»?",
+			"deleteConfirmDescription": "El widget desaparece de este panel. Las tareas y los datos no se tocan."
 		},
 		"type": {
 			"count": "Recuento",
@@ -2775,7 +2777,9 @@
 		"shared": "Compartido",
 		"errors": {
 			"saveFailed": "No se ha podido guardar el cambio"
-		}
+		},
+		"deleteConfirmTitle": "¿Borrar «{{name}}»?",
+		"deleteConfirmDescription": "Se borran el objetivo y todos sus resultados clave. No se puede deshacer."
 	},
 	"today": {
 		"pageTitle": "Hoy",
@@ -2834,7 +2838,9 @@
 			"title": "Nada por aquí",
 			"description": "No hay tareas en este ámbito."
 		},
-		"description": "Les teves tasques de tots els projectes."
+		"description": "Les teves tasques de tots els projectes.",
+		"shownOf": "Mostrando {{shown}} de {{total}}",
+		"loadMore": "Cargar más"
 	},
 	"planner": {
 		"pageTitle": "Planificador",

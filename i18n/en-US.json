@@ -2641,7 +2641,9 @@
 			"columns_other": "{{count}} columns",
 			"rows_one": "{{count}} row",
 			"rows_other": "{{count}} rows",
-			"personalScope": "Whose work"
+			"personalScope": "Whose work",
+			"deleteConfirmTitle": "Delete “{{title}}”?",
+			"deleteConfirmDescription": "The widget is removed from this dashboard. Its tasks and data are not touched."
 		},
 		"type": {
 			"count": "Count",
@@ -2775,7 +2777,9 @@
 		"shared": "Shared",
 		"errors": {
 			"saveFailed": "The change could not be saved"
-		}
+		},
+		"deleteConfirmTitle": "Delete “{{name}}”?",
+		"deleteConfirmDescription": "The goal and all its key results are deleted. This can't be undone."
 	},
 	"today": {
 		"pageTitle": "Today",
@@ -2834,7 +2838,9 @@
 			"title": "Nothing here",
 			"description": "There are no tasks in this scope."
 		},
-		"description": "Your tasks across every project."
+		"description": "Your tasks across every project.",
+		"shownOf": "Showing {{shown}} of {{total}}",
+		"loadMore": "Load more"
 	},
 	"planner": {
 		"pageTitle": "Planner",

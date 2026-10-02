@@ -20,6 +20,7 @@ import {
 } from "../../utils/day-boundaries";
 import { workspaceTaskConditions } from "../../view/workspace-task-query";
 import { capacityForDay } from "../../work-schedule/day-capacity";
+import { type DayLoad, dayLoad } from "../../work-schedule/day-load";
 import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
 import { computeGhosts } from "../ghosts";
 import {
@@ -88,6 +89,29 @@ export default async function getPlan({
       }));
   }
 
+  // La carga de cada dia sale de aqui y no del navegador (ADR 050): la misma
+  // `dayLoad` que usa el Cronograma.
+  const loadByDayOf = (
+    entries: {
+      plannedDate: Date;
+      estimate: number | null;
+      loggedSeconds: number;
+      isDone: boolean;
+    }[],
+  ) => {
+    const loadByDay: Record<string, DayLoad> = {};
+    for (const dayKey of Object.keys(capacityByDay)) {
+      loadByDay[dayKey] = dayLoad({
+        entries: entries.filter(
+          (entry) => serverDayKey(entry.plannedDate) === dayKey,
+        ),
+        fixedBlocks: fixedBlocksByDay[dayKey] ?? [],
+        capacitySeconds: capacityByDay[dayKey] ?? 0,
+      });
+    }
+    return loadByDay;
+  };
+
   // El ambito "assigned" siempre resuelve a un predicado -nunca depende de
   // equipos-, pero el tipo lo comparte con "team" y hay que descartar el
   // `null` para TypeScript.
@@ -99,6 +123,7 @@ export default async function getPlan({
       deadlines: [],
       ghosts: [],
       capacityByDay,
+      loadByDay: loadByDayOf([]),
       fixedBlocksByDay,
       serverToday,
     };
@@ -180,13 +205,16 @@ export default async function getPlan({
       loggedSeconds: loggedByTask.get(row.id) ?? 0,
     }));
 
+  const entriesWithLogged = withLogged(entries);
+
   return {
-    entries: withLogged(entries),
+    entries: entriesWithLogged,
     previous: withLogged(previous),
     unplanned,
     deadlines,
     ghosts,
     capacityByDay,
+    loadByDay: loadByDayOf(entriesWithLogged),
     fixedBlocksByDay,
     serverToday,
   };

@@ -94,6 +94,7 @@ import {
   userNotificationWorkspaceProjectTable,
   userNotificationWorkspaceRuleTable,
   userTable,
+  userWorkScheduleTable,
   verificationTable,
   viewTable,
   workflowRuleTable,
@@ -152,6 +153,11 @@ export const schema = {
   userNotificationPreferenceTable,
   userNotificationWorkspaceProjectTable,
   userNotificationWorkspaceRuleTable,
+  // Faltaba: sus relaciones estaban registradas y la tabla no, asi que
+  // `schema.userWorkScheduleTable` y `db.query` no la conocian. Los
+  // controladores la importan directamente y por eso nada fallaba en
+  // produccion -el mismo hueco que la Fase 1 encontro con `task_assignee`-.
+  userWorkScheduleTable,
   verificationTable,
   viewTable,
   workflowRuleTable,

@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
-import { taskReminderSentTable, taskTable } from "../../database/schema";
+import { taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 
 async function updateTaskDueDate({
@@ -23,11 +23,9 @@ async function updateTaskDueDate({
     });
   }
 
-  // Clear sent reminders so new due date triggers fresh notifications
-  await db
-    .delete(taskReminderSentTable)
-    .where(eq(taskReminderSentTable.taskId, id));
-
+  // Los avisos ya enviados se rearman solos al cambiar la fecha: lo hace el
+  // disparador `task_rearm_due_reminders` (ADR 050), para todos los caminos
+  // que escriben `due_date`, no solo este.
   const [updatedTask] = await db
     .update(taskTable)
     .set({ dueDate: dueDate || null })

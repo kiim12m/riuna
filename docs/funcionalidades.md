@@ -207,6 +207,8 @@ la tarea y en la propia tabla.
 - **Mis tareas**: Lista, Tablero, Gantt y Tabla personales sobre todos los
   proyectos del espacio ([ADR 039](adr/039-mis-tareas-vistas-personales.md)).
   El Tablero agrupa por ventana de vencimiento, no por estado; sin arrastre.
+  La Lista y el Tablero cargan de 100 en 100, con «Mostrando N de M» y
+  «Cargar más».
 - **Planificador** ([ADR 040](adr/040-planificador.md),
   [ADR 046](adr/046-planificador-en-tres-secciones.md)): ventana rodante de
   15 días para decidir qué día se piensa hacer cada tarea, sin tocar su
@@ -222,10 +224,12 @@ la tarea y en la propia tabla.
   puede arrastrar.
   Incluye una proyección de las próximas ocurrencias de tareas recurrentes
   todavía no creadas. La estimación se edita directamente en la tarjeta. La
-  carga de cada día es lo que queda de cada tarea más los bloques fijos,
-  comparado con la jornada personal ([ADR 045](adr/045-jornada-personal.md)):
-  un día sin jornada laboral vale 0, y la comida y los bloques cerrados
-  restan de la capacidad del resto.
+  carga de cada día es lo que queda de cada tarea sin terminar más los bloques
+  fijos, comparado con la jornada personal
+  ([ADR 045](adr/045-jornada-personal.md)): un día sin jornada laboral vale 0,
+  y la comida y los bloques cerrados restan de la capacidad del resto. La
+  calcula la API, y el Cronograma enseña exactamente la misma
+  ([ADR 050](adr/050-recordatorios-por-asignado-y-una-sola-carga.md)).
 - **Cronograma** ([ADR 041](adr/041-cronograma.md)): calendario por horas,
   con vistas Día, Semana y Mes navegables, sobre lo ya decidido en el
   Planificador. La rejilla (24 h) se ve siempre, aunque el día esté vacío;
@@ -300,7 +304,7 @@ la tarea y en la propia tabla.
   en cualquier momento, sustituyendo los widgets que se hayan añadido o editado.
 - **Objetivos (OKR)**: objetivo con periodo de fechas y **resultados clave**
   medidos con el mismo motor de agregación que los widgets. Compartibles con el
-  espacio.
+  espacio. Borrar un objetivo, o un widget de un panel, pide confirmación.
 
 ## 9. Etiquetas, búsqueda y notificaciones
 
@@ -325,6 +329,11 @@ la tarea y en la propia tabla.
   —qué canales y qué proyectos, todos o una selección— y **antelación
   configurable del recordatorio de vencimiento**, de una hora a treinta días.
   Los secretos se guardan cifrados.
+- **El recordatorio de vencimiento y el de «vencida» llegan a cada asignado**,
+  no solo al responsable principal, cada uno con su antelación. No avisan de
+  lo terminado ni de lo archivado, y se vuelven a armar en cuanto cambia el
+  vencimiento, se cambie desde donde se cambie
+  ([ADR 050](adr/050-recordatorios-por-asignado-y-una-sola-carga.md)).
 
 ## 10. Importación y exportación
 
@@ -365,11 +374,10 @@ la tarea y en la propia tabla.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos, **todavía no con las mismas herramientas**: el servidor HTTP
-tiene 44 y el paquete stdio 39. Al stdio le faltan las cinco del plan
-personal y el cronómetro —`get_plan`, `plan_task`, `get_running_timer`,
-`start_timer` y `stop_timer`—, que se portan en el sub-bloque 0.5 del
-interludio de productividad.
+Dos caminos con **las mismas 44 herramientas**. Una prueba de paridad
+(`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
+antes el paquete stdio se había quedado sin las cinco del plan personal y el
+cronómetro.
 
 - **Servidor HTTP integrado** en la API, en `/api/mcp`, con OAuth 2.1 y PKCE
   S256, registro dinámico de clientes, página de consentimiento explícito y
