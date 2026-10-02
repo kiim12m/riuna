@@ -12320,9 +12320,182 @@
 						"load",
 						"anchor"
 					]
+				},
+				"weeklyReview": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"button": {
+							"type": "string"
+						},
+						"finish": {
+							"type": "string"
+						},
+						"done": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						},
+						"more_one": {
+							"type": "string"
+						},
+						"more_other": {
+							"type": "string"
+						},
+						"inbox": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"none": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "hint", "none"]
+						},
+						"overdue": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"none": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "hint", "none"]
+						},
+						"waiting": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "hint"]
+						},
+						"week": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"which": {
+									"type": "string"
+								},
+								"done": {
+									"type": "string"
+								},
+								"worked": {
+									"type": "string"
+								},
+								"accuracy": {
+									"type": "string"
+								},
+								"onTarget": {
+									"type": "string"
+								},
+								"over": {
+									"type": "string"
+								},
+								"under": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"which",
+								"done",
+								"worked",
+								"accuracy",
+								"onTarget",
+								"over",
+								"under"
+							]
+						},
+						"next": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"unplanned_one": {
+									"type": "string"
+								},
+								"unplanned_other": {
+									"type": "string"
+								},
+								"openPlanner": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"hint",
+								"unplanned_one",
+								"unplanned_other",
+								"openPlanner"
+							]
+						},
+						"rating": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								}
+							},
+							"required": ["title"]
+						}
+					},
+					"required": [
+						"title",
+						"button",
+						"finish",
+						"done",
+						"error",
+						"more_one",
+						"more_other",
+						"inbox",
+						"overdue",
+						"waiting",
+						"week",
+						"next",
+						"rating"
+					]
 				}
 			},
-			"required": ["stepOf", "back", "next", "exit", "closeDay", "planDay"]
+			"required": [
+				"stepOf",
+				"back",
+				"next",
+				"exit",
+				"closeDay",
+				"planDay",
+				"weeklyReview"
+			]
 		}
 	},
 	"required": [

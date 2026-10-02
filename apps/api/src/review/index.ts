@@ -6,6 +6,7 @@ import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import closeDay from "./controllers/close-day";
 import getReview from "./controllers/get-review";
+import { closeWeek, getWeekReview } from "./controllers/week-review";
 
 const dayKeySchema = v.pipe(
   v.string(),
@@ -22,6 +23,27 @@ const privateSchema = v.nullable(
     note: v.nullable(v.string()),
   }),
 );
+
+const weekSummarySchema = v.object({
+  done: v.number(),
+  workedSeconds: v.number(),
+  estimatedSeconds: v.number(),
+  loggedOnEstimatedSeconds: v.number(),
+});
+
+const weekReviewSchema = v.object({
+  review: v.nullable(
+    v.object({
+      closedAt: v.date(),
+      blockers: v.nullable(v.string()),
+      summary: weekSummarySchema,
+    }),
+  ),
+  /** Solo para la propia persona: la valoracion nunca sale de aqui. */
+  private: privateSchema,
+  /** Las cifras de esa semana al dia, este cerrada o no. */
+  stats: weekSummarySchema,
+});
 
 const ratingBody = {
   blockers: optionalText(2000),
@@ -150,6 +172,81 @@ const review = new Hono<{
           userId: c.get("userId"),
           date,
           decisions: body.decisions,
+          blockers: body.blockers || null,
+          impact: body.impact,
+          energy: body.energy,
+          note: body.note || null,
+        }),
+      );
+    },
+  )
+  .get(
+    "/week/:start",
+    describeRoute({
+      operationId: "getWeekReview",
+      tags: ["Review"],
+      description:
+        "The current user's review of the seven days starting on `start`: the saved review and private rating, if any, and the week's figures as they stand",
+      responses: {
+        200: {
+          description: "The week review",
+          content: {
+            "application/json": { schema: resolver(weekReviewSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ start: dayKeySchema })),
+    validator(
+      "query",
+      v.object({ workspaceId: v.pipe(v.string(), v.minLength(1)) }),
+    ),
+    workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["read"] }),
+    async (c) => {
+      const { start } = c.req.valid("param");
+      return c.json(
+        await getWeekReview({
+          workspaceId: c.get("workspaceId"),
+          userId: c.get("userId"),
+          start: parseServerDay(start, "start"),
+        }),
+      );
+    },
+  )
+  .put(
+    "/week/:start",
+    describeRoute({
+      operationId: "closeWeek",
+      tags: ["Review"],
+      description:
+        "Save the current user's weekly review of the seven days starting on `start`: blockers and the week's figures, plus the private rating apart. Saving again updates it",
+      responses: {
+        200: {
+          description: "The saved week review",
+          content: {
+            "application/json": { schema: resolver(weekReviewSchema) },
+          },
+        },
+        400: { description: "A week that has not started yet" },
+      },
+    }),
+    validator("param", v.object({ start: dayKeySchema })),
+    validator(
+      "query",
+      v.object({ workspaceId: v.pipe(v.string(), v.minLength(1)) }),
+    ),
+    validator("json", v.object(ratingBody)),
+    workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["update"] }),
+    async (c) => {
+      const { start } = c.req.valid("param");
+      const body = c.req.valid("json");
+      return c.json(
+        await closeWeek({
+          workspaceId: c.get("workspaceId"),
+          userId: c.get("userId"),
+          start: parseServerDay(start, "start"),
           blockers: body.blockers || null,
           impact: body.impact,
           energy: body.energy,

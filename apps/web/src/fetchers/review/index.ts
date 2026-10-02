@@ -44,3 +44,40 @@ export async function closeDay(
 
   return response.json();
 }
+
+/** La revision de la semana que empieza en `start`, con sus cifras al dia. */
+export async function getWeekReview(workspaceId: string, start: string) {
+  const response = await client.review.week[":start"].$get({
+    param: { start },
+    query: { workspaceId },
+  });
+
+  if (!response.ok) {
+    throw new HttpError(await response.text(), response.status);
+  }
+
+  return response.json();
+}
+
+export type WeekReviewResponse = Awaited<ReturnType<typeof getWeekReview>>;
+
+export type CloseWeekInput = Omit<CloseDayInput, "decisions">;
+
+/** Guarda la revision semanal: bloqueos y cifras, la valoracion aparte. */
+export async function closeWeek(
+  workspaceId: string,
+  start: string,
+  input: CloseWeekInput,
+) {
+  const response = await client.review.week[":start"].$put({
+    param: { start },
+    query: { workspaceId },
+    json: input,
+  });
+
+  if (!response.ok) {
+    throw new HttpError(await response.text(), response.status);
+  }
+
+  return response.json();
+}

@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 y 1, y 2.1-2.2 hechos; sigue el 2.3 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 y 1, y 2.1-2.3 hechos; sigue el 2.4 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -1910,8 +1910,32 @@ verificación.
 
   Verificación: 1 prueba de extremo a extremo con los seis pasos y el
   cronómetro en marcha; pasada visual.
-- **2.3 Revisión semanal** · M. Vaciar la Bandeja, vencidas, «Esperando a», la semana pasada
+- **2.3 Revisión semanal** ✔ · M. Vaciar la Bandeja, vencidas, «Esperando a», la semana pasada
   —horas, hechas y precisión de estimación— y planificar la siguiente.
+  **Hecho (2026-10-02).** Sin ADR propia: el cierre semanal es el periodo
+  `week` de la ADR 054.
+  - **`GET/PUT /review/week/:start`**: los siete días desde `start`. Las
+    cifras se recalculan en cada lectura y se congelan en el resumen al
+    guardar.
+  - **La precisión** solo cuenta lo terminado con estimación y tiempo
+    registrado. Una tarea sin medir no dice que se tardara menos: la primera
+    pasada visual enseñaba «100 % menos».
+  - **Qué semana se revisa:** la que está en curso, según la preferencia de
+    comienzo de semana. En sus dos primeros días, la anterior. Se puede
+    cambiar entre las dos.
+  - **Vaciar la Bandeja** mueve cada tarea a su proyecto sin salir del
+    ritual: `TaskMovePopover` gana `onMoved`, que sustituye la navegación.
+  - **Comparte con el cierre del día:**
+    - `saveReview` y `getReview`;
+    - el paso de bloqueos y valoración, extraído a `RatingStep`.
+  - **Botón en el Planificador**, y los tres rituales en la paleta.
+
+  Verificación:
+  - 3 pruebas de integración: cifras con lo de fuera de la semana, lo ajeno
+    y lo sin medir; guardar sin pisar el cierre del día; semana futura;
+  - 1 de extremo a extremo: vaciar la Bandeja moviendo a un proyecto,
+    planificar una vencida, ver las cifras y guardar;
+  - pasada visual.
 - **2.4 Stand-up** · S. Derivado, sin guardar: ayer, hoy y bloqueos. La persona copia el suyo
   en Markdown; el del equipo solo lo ve el responsable (5.3). **Enviarlo a Slack o Telegram se
   aplaza a la Fase 8**, como acción de automatización: las integraciones son por proyecto y
@@ -2147,7 +2171,8 @@ de fila, imprescindibles y plan en bloque
 el **1.4**, «Esperando a»: **el Bloque 1 está cerrado**. Del **Bloque 2**,
 los rituales, están hechos el **2.1**, terminar el día
 ([ADR 054](adr/054-terminar-el-dia-y-la-valoracion-privada.md)), y el **2.2**,
-planificar el día; sigue el **2.3**, la revisión semanal. Después del interludio viene la **Fase 8**: automatizaciones e
+planificar el día, y el **2.3**, la revisión semanal; sigue el **2.4**, el
+stand-up. Después del interludio viene la **Fase 8**: automatizaciones e
 importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`

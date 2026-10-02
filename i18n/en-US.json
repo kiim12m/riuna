@@ -3139,6 +3139,49 @@
 				"hint": "Anchor what has a fixed time. The rest flows around it.",
 				"label": "Time for “{{title}}”"
 			}
+		},
+		"weeklyReview": {
+			"title": "Weekly review",
+			"button": "Weekly review",
+			"finish": "Close the week",
+			"done": "Week reviewed",
+			"error": "The week couldn’t be saved",
+			"more_one": "And {{count}} more.",
+			"more_other": "And {{count}} more.",
+			"inbox": {
+				"title": "Empty the inbox",
+				"hint": "Move each task to its project, give it a day, finish it or drop it.",
+				"none": "Your inbox is empty."
+			},
+			"overdue": {
+				"title": "Overdue",
+				"hint": "Yours, past its due date and not done: plan it, finish it or change its date.",
+				"none": "Nothing overdue."
+			},
+			"waiting": {
+				"title": "Waiting on",
+				"hint": "What depends on someone else: a nudge may be due."
+			},
+			"week": {
+				"title": "The week: {{range}}",
+				"which": "Week to review",
+				"done": "Done",
+				"worked": "Logged",
+				"accuracy": "Against estimates",
+				"onTarget": "On target",
+				"over": "{{pct}} % over",
+				"under": "{{pct}} % under"
+			},
+			"next": {
+				"title": "Next week: {{range}}",
+				"hint": "Load per work day, and what still has no day.",
+				"unplanned_one": "{{count}} task without a day:",
+				"unplanned_other": "{{count}} tasks without a day:",
+				"openPlanner": "Open next week in the Planner"
+			},
+			"rating": {
+				"title": "Your week"
+			}
 		}
 	}
 }

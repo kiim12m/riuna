@@ -246,6 +246,19 @@ la tarea y en la propia tabla.
   6. las horas ancladas.
 
   «Empezar» arranca el cronómetro en la primera imprescindible.
+- **Revisión semanal**: se abre con un botón en el Planificador. Seis pasos:
+  1. vaciar la Bandeja: mover cada tarea a su proyecto sin salir del ritual,
+     planificarla o terminarla;
+  2. lo vencido;
+  3. «Esperando a»;
+  4. la semana: lo terminado, lo registrado y la precisión frente a lo
+     estimado, solo en lo que se estimó y se midió;
+  5. la carga de cada día laborable de la siguiente semana, con lo que aún no
+     tiene día;
+  6. qué te frena y tu valoración, también privada.
+
+  Revisa la semana en curso; en sus dos primeros días, la anterior, y se
+  puede cambiar entre las dos. Los tres rituales están también en la paleta.
 - **Mi trabajo**: las tareas propias o de mi equipo de todos los proyectos, con
   filtros de vencimiento (todas, vencidas, hoy, esta semana).
 - **Nueva tarea en la cabecera**: un botón en la barra superior de cada

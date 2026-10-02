@@ -16,6 +16,16 @@ export type DaySummary = {
   unplanned: number;
 };
 
+/** Las cifras de una semana al revisarla. */
+export type WeekSummary = {
+  done: number;
+  workedSeconds: number;
+  /** Suma de la estimacion de lo terminado con estimacion y tiempo registrado. */
+  estimatedSeconds: number;
+  /** Lo registrado en esas mismas tareas: frente a lo estimado, la precision. */
+  loggedOnEstimatedSeconds: number;
+};
+
 /**
  * El cierre de un periodo de quien mira, con su valoracion. Solo lo lee la
  * propia persona: la parte privada sale de este modulo y de ningun otro

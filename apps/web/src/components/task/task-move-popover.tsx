@@ -27,12 +27,18 @@ type TaskMovePopoverProps = {
   task: Task;
   workspaceId: string;
   triggerClassName?: string;
+  /**
+   * Con el, mover no lleva a la tarea en su nuevo proyecto: lo usan los
+   * rituales, que no deben sacar a nadie de donde esta.
+   */
+  onMoved?: () => void;
 };
 
 export default function TaskMovePopover({
   task,
   workspaceId,
   triggerClassName,
+  onMoved,
 }: TaskMovePopoverProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -106,6 +112,10 @@ export default function TaskMovePopover({
       });
 
       setOpen(false);
+      if (onMoved) {
+        onMoved();
+        return;
+      }
       startTransition(() => {
         navigate({
           to: "/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId",

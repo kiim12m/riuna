@@ -141,6 +141,22 @@ function CommandPalette() {
       },
       { value: "home", to: "home", label: t("navigation:sidebar.home") },
       { value: "goals", to: "goals", label: t("navigation:sidebar.goals") },
+      // Los rituales solo se abren a peticion (ADR 054): un boton o esto.
+      {
+        value: "plan-day",
+        to: "rituals/plan-day",
+        label: t("rituals:planDay.title"),
+      },
+      {
+        value: "close-day",
+        to: "rituals/close-day",
+        label: t("rituals:closeDay.title"),
+      },
+      {
+        value: "weekly-review",
+        to: "rituals/weekly-review",
+        label: t("rituals:weeklyReview.title"),
+      },
     ] as const;
 
     return {

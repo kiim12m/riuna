@@ -3139,6 +3139,49 @@
 				"hint": "Ancla lo que tiene hora fija. Lo demás se reparte alrededor.",
 				"label": "Hora de «{{title}}»"
 			}
+		},
+		"weeklyReview": {
+			"title": "Revisión semanal",
+			"button": "Revisión semanal",
+			"finish": "Cerrar la semana",
+			"done": "Semana revisada",
+			"error": "No se ha podido guardar la semana",
+			"more_one": "Y {{count}} más.",
+			"more_other": "Y {{count}} más.",
+			"inbox": {
+				"title": "Vaciar la Bandeja",
+				"hint": "Lleva cada tarea a su proyecto, dale un día, termínala o descártala.",
+				"none": "Tu Bandeja está vacía."
+			},
+			"overdue": {
+				"title": "Vencidas",
+				"hint": "Tuyas, pasadas de fecha y sin terminar: planifícalas, termínalas o cambia la fecha.",
+				"none": "Nada vencido."
+			},
+			"waiting": {
+				"title": "Esperando a",
+				"hint": "Lo que depende de otra persona: quizá toque un recordatorio."
+			},
+			"week": {
+				"title": "La semana: {{range}}",
+				"which": "Semana que revisas",
+				"done": "Hechas",
+				"worked": "Registrado",
+				"accuracy": "Frente a lo estimado",
+				"onTarget": "Clavado",
+				"over": "{{pct}} % más",
+				"under": "{{pct}} % menos"
+			},
+			"next": {
+				"title": "La siguiente: {{range}}",
+				"hint": "La carga de cada día laborable, y lo que aún no tiene día.",
+				"unplanned_one": "{{count}} tarea sin día:",
+				"unplanned_other": "{{count}} tareas sin día:",
+				"openPlanner": "Abrir la semana que viene en el Planificador"
+			},
+			"rating": {
+				"title": "Tu semana"
+			}
 		}
 	}
 }

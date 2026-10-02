@@ -17,7 +17,12 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  CalendarClock,
+  CalendarRange,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { type ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PageHeading } from "@/components/common/page-heading";
@@ -350,6 +355,20 @@ function RouteComponent() {
             className="px-4 pt-4"
             actions={
               <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mr-2"
+                  onClick={() =>
+                    navigate({
+                      to: "/dashboard/workspace/$workspaceId/rituals/weekly-review",
+                      params: { workspaceId },
+                    })
+                  }
+                >
+                  <CalendarRange className="size-4" />
+                  {t("rituals:weeklyReview.button")}
+                </Button>
                 <Button
                   variant="outline"
                   size="icon-sm"
