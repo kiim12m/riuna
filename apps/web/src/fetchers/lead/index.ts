@@ -40,3 +40,40 @@ export async function setTeamLead(
 
   return response.json();
 }
+
+/** A quien ve quien mira como responsable: vacio si no lleva a nadie. */
+export async function getTeamMembers(workspaceId: string) {
+  const response = await client.lead.members.$get({ query: { workspaceId } });
+
+  if (!response.ok) {
+    throw new HttpError(await response.text(), response.status);
+  }
+
+  return response.json();
+}
+
+/** El dia de la gente de quien mira (5.3), en solo lectura. */
+export async function getTeamDay(workspaceId: string, date?: string) {
+  const response = await client.lead.day.$get({
+    query: { workspaceId, ...(date ? { date } : {}) },
+  });
+
+  if (!response.ok) {
+    throw new HttpError(await response.text(), response.status);
+  }
+
+  return response.json();
+}
+
+export type TeamDay = Awaited<ReturnType<typeof getTeamDay>>;
+export type TeamDayMember = TeamDay["members"][number];
+
+export async function getTeamStandup(workspaceId: string) {
+  const response = await client.lead.standup.$get({ query: { workspaceId } });
+
+  if (!response.ok) {
+    throw new HttpError(await response.text(), response.status);
+  }
+
+  return response.json();
+}

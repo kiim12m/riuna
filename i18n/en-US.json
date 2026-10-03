@@ -1490,7 +1490,8 @@
 			"workspaceAdmin": "Workspace",
 			"projectSettings": "Project settings",
 			"more": "More",
-			"backToBoard": "Back to board"
+			"backToBoard": "Back to board",
+			"team": "My team"
 		},
 		"projectList": {
 			"viewProject": "View Project",
@@ -3340,6 +3341,28 @@
 			"toggle": "Lead of the team: {{name}}",
 			"hint": "The lead of a team reads the plan, the workload and the day closes of the rest of the team, never their rating. They cannot change anything.",
 			"error": "The team lead could not be changed."
+		},
+		"team": {
+			"title": "My team",
+			"description": "Your people’s day, read-only: their plan, workload and day closes, never their rating.",
+			"view": "View",
+			"tabs": {
+				"day": "Today",
+				"standup": "Stand-up"
+			},
+			"load": "{{planned}} planned / {{available}} available",
+			"nothingPlanned": "Nothing planned today.",
+			"figures_one": "{{count}} finished · {{worked}} logged",
+			"figures_other": "{{count}} finished · {{worked}} logged",
+			"closed": "Closed the day.",
+			"blockers": "Held back by: {{blockers}}",
+			"noBlockers": "Nothing holding them back.",
+			"notClosed": "Has not closed the day yet.",
+			"copyAll": "Copy all",
+			"empty": {
+				"title": "Nobody to lead",
+				"description": "When you lead a team, you will see your people’s day here."
+			}
 		}
 	}
 }

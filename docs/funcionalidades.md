@@ -313,6 +313,16 @@ la tarea y en la propia tabla.
   Ese responsable puede leer el plan y los cierres del resto del equipo,
   nunca su valoración ni cambiar nada. Cada miembro con responsable lo ve
   avisado en Hoy y en el Planificador.
+- **Mi equipo** (también en la
+  [ADR 059](adr/059-responsable-de-departamento.md)): solo para quien lleva a
+  alguien, en la navegación personal. Tiene una tarjeta por persona con:
+  - su plan de hoy, las imprescindibles delante;
+  - la carga frente a su capacidad, con ausencias y festivos;
+  - lo terminado y lo registrado;
+  - y su cierre público, sin valoración.
+
+  En otra pestaña, el stand-up de cada uno, con «Copiar todo». Se relee
+  cada minuto y no permite cambiar nada.
 - **Stand-up**: un botón en Hoy lo enseña, derivado al momento y sin
   guardarse:
   - ayer, es decir, lo terminado el último día laborable;

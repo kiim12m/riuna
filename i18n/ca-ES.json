@@ -1490,7 +1490,8 @@
 			"workspaceAdmin": "Espai",
 			"projectSettings": "Configuració del projecte",
 			"more": "Més",
-			"backToBoard": "Torna al tauler"
+			"backToBoard": "Torna al tauler",
+			"team": "Mi equipo"
 		},
 		"projectList": {
 			"viewProject": "Mostra el projecte",
@@ -3340,6 +3341,28 @@
 			"toggle": "Responsable del equipo: {{name}}",
 			"hint": "Quien sea responsable lee el plan, la carga y los cierres del resto del equipo, nunca su valoración. No puede cambiar nada.",
 			"error": "No se pudo cambiar el responsable del equipo."
+		},
+		"team": {
+			"title": "Mi equipo",
+			"description": "El día de tu gente, en solo lectura: su plan, su carga y sus cierres, nunca su valoración.",
+			"view": "Vista",
+			"tabs": {
+				"day": "Hoy",
+				"standup": "Stand-up"
+			},
+			"load": "{{planned}} planificadas de {{available}}",
+			"nothingPlanned": "Nada planificado hoy.",
+			"figures_one": "{{count}} terminada · {{worked}} registradas",
+			"figures_other": "{{count}} terminadas · {{worked}} registradas",
+			"closed": "Cerró el día.",
+			"blockers": "Le frena: {{blockers}}",
+			"noBlockers": "Sin bloqueos.",
+			"notClosed": "Aún no ha cerrado el día.",
+			"copyAll": "Copiar todo",
+			"empty": {
+				"title": "Nadie a tu cargo",
+				"description": "Cuando seas responsable de un equipo, aquí verás el día de tu gente."
+			}
 		}
 	}
 }

@@ -5894,6 +5894,9 @@
 						},
 						"backToBoard": {
 							"type": "string"
+						},
+						"team": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -5913,7 +5916,8 @@
 						"workspaceAdmin",
 						"projectSettings",
 						"more",
-						"backToBoard"
+						"backToBoard",
+						"team"
 					]
 				},
 				"projectList": {
@@ -13096,9 +13100,93 @@
 						}
 					},
 					"required": ["badge", "toggle", "hint", "error"]
+				},
+				"team": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"view": {
+							"type": "string"
+						},
+						"tabs": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"day": {
+									"type": "string"
+								},
+								"standup": {
+									"type": "string"
+								}
+							},
+							"required": ["day", "standup"]
+						},
+						"load": {
+							"type": "string"
+						},
+						"nothingPlanned": {
+							"type": "string"
+						},
+						"figures_one": {
+							"type": "string"
+						},
+						"figures_other": {
+							"type": "string"
+						},
+						"closed": {
+							"type": "string"
+						},
+						"blockers": {
+							"type": "string"
+						},
+						"noBlockers": {
+							"type": "string"
+						},
+						"notClosed": {
+							"type": "string"
+						},
+						"copyAll": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"description": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "description"]
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"view",
+						"tabs",
+						"load",
+						"nothingPlanned",
+						"figures_one",
+						"figures_other",
+						"closed",
+						"blockers",
+						"noBlockers",
+						"notClosed",
+						"copyAll",
+						"empty"
+					]
 				}
 			},
-			"required": ["notice_one", "notice_other", "teams"]
+			"required": ["notice_one", "notice_other", "teams", "team"]
 		}
 	},
 	"required": [

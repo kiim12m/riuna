@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 a 4 hechos (el 4.2, aplazado), y 5.1-5.2; sigue el 5.3 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **Cerrado** — Bloques 0 a 5; el 4.2 (importar iCal), aplazado · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--cerrado) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -1536,7 +1536,7 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
 días sin cambiar el vencimiento que ve el equipo, y administrar el espacio ya
 no te saca de la barra lateral.
 
-### Interludio — Productividad personal y equipo (antes de la Fase 8) · **pendiente**
+### Interludio — Productividad personal y equipo (antes de la Fase 8) · **cerrado**
 
 *Nace de una revisión de lo que la parte de productividad **hace de verdad** —leyendo el
 código, no esta documentación— comparada con
@@ -2163,9 +2163,44 @@ verificación.
   - 1 de extremo a extremo con dos personas: la segunda entra por una
     invitación pendiente;
   - pasada visual del diálogo y del aviso.
-- **5.3 «Mi equipo»** · M. Por persona: plan, capacidad con ausencias y festivos, carga, hechas,
+- **5.3 «Mi equipo»** ✔ · M. Por persona: plan, capacidad con ausencias y festivos, carga, hechas,
   horas, el cierre **público** y el stand-up, todo en lote —unas ocho consultas para el equipo
   entero— y con sondeo de 60 s.
+  **Hecho (2026-10-03).** Sin ADR propia: va en la
+  [ADR 059](adr/059-responsable-de-departamento.md). Decisiones de detalle:
+  - **`GET /lead/day` y `GET /lead/standup`** pasan por `visibility.ts` y
+    cargan en lote: nueve consultas el día y siete el stand-up, sea cual sea
+    el tamaño del equipo.
+  - **Los bloques, las jornadas y los días no disponibles ganan versión de
+    varias personas**, y la de una sola delega en ella: la regla sigue en
+    un solo sitio.
+  - **El stand-up del responsable es el mismo que la persona ve en Hoy.**
+    Cada «ayer» sale de la jornada de cada uno, y una prueba compara los dos
+    campo a campo.
+  - **Ruta `team`, «Mi equipo»** en la navegación personal, solo para quien
+    lleva a alguien. Tiene una tarjeta por persona y una pestaña de stand-up
+    con «Copiar todo». Ningún botón sobre el plan ajeno.
+  - **Se relee cada minuto**: el tiempo real queda aplazado a sabiendas.
+
+  Verificación:
+  - 3 pruebas de integración: el día sin nada privado ni de fuera del
+    equipo, el stand-up idéntico al propio, y nada para quien no lleva a
+    nadie;
+  - **banco de 50.000 tareas con un equipo de 20 personas**: el día da p95
+    de 34 ms con 200 tareas terminadas hoy, y el stand-up de 21 ms;
+  - 1 prueba de extremo a extremo y la de la navegación;
+  - pasada visual en escritorio y a 375 px.
+
+  **Verificación del Bloque 5 completo (2026-10-03):**
+  - integración 742 de 743, con 1 omitida. Falló la importación grande,
+    intermitente desde el Bloque 0, que sola pasa 19 de 19;
+  - de extremo a extremo 60 de 61. Falló «una ausencia deja hoy sin
+    horas»: al quitar la ausencia, el `DELETE` salió del navegador y no tuvo
+    respuesta. Pasó 4 de 5, 8 de 8 y 20 de 20 al repetirla. En las 20 se
+    registraron en el servidor la llegada y el fin de cada `DELETE`, y todos
+    tardaron de 5 a 38 ms. **Queda sin explicar**; se vigila;
+  - unitarias 378 (web), 743 (API) y 33 (MCP);
+  - typecheck de todos los paquetes, `biome ci` e i18n.
 
 **Orden.** 0.1 → 0.2 → (0.3, 0.4, 0.5) · 1.1 → 1.2 · 0.3 → 1.3 → 2.1/2.2 · 1.4 → 2.3 ·
 2.1 → 2.4 · 3.1 → 3.2/3.3 · 4.1 → 4.2 · 0.5 → 5.1 · 5.1 + 5.2 + 2.4 → 5.3. **Unas 18
@@ -2339,40 +2374,16 @@ destructiva.
 ## Siguiente paso
 
 El **interludio de espacio personal y administración** está **cerrado**: sus
-catorce bloques están hechos, commiteados y verificados. Lo siguiente es el
-**[interludio de productividad personal y equipo](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente)**,
-con los sub-bloques **0.1** (pantallas personales frescas,
-[ADR 048](adr/048-frescura-de-las-pantallas-personales.md)) y **0.2** (la API
-en `Europe/Madrid`, [ADR 049](adr/049-la-api-vive-en-madrid.md)) hechos. Antes
-de desplegar el 0.2 hay que ensayar la conversión sobre una copia de
-producción, como explica [actualizar.md](actualizar.md). El **0.3** (cronómetro
-en todas partes y tiempo en el detalle), el **0.4** (Planificador, atajos y
-paleta) y el **0.5** (recordatorios por asignado, una sola carga del día y
-paridad de MCP, [ADR 050](adr/050-recordatorios-por-asignado-y-una-sola-carga.md))
-también están hechos: **el Bloque 0 está cerrado**. Del **Bloque 1**, captura
-y acciones, están hechos el **1.1**, la Bandeja
-([ADR 051](adr/051-la-bandeja-es-un-proyecto-oculto.md)), y el **1.2**, la
-captura rápida ([ADR 052](adr/052-captura-rapida.md)), el **1.3**, acciones
-de fila, imprescindibles y plan en bloque
-([ADR 053](adr/053-acciones-de-fila-imprescindibles-y-plan-en-bloque.md)), y
-el **1.4**, «Esperando a»: **el Bloque 1 está cerrado**. Del **Bloque 2**,
-los rituales, están hechos el **2.1**, terminar el día
-([ADR 054](adr/054-terminar-el-dia-y-la-valoracion-privada.md)), y el **2.2**,
-planificar el día, el **2.3**, la revisión semanal, y el **2.4**, el stand-up:
-**el Bloque 2 está cerrado**. También lo está el **Bloque 3**, foco y avisos
-del navegador: el **3.1**, los avisos a la hora anclada
-([ADR 055](adr/055-avisos-del-navegador-sin-service-worker.md)), el **3.2**,
-el modo foco, y el **3.3**, los avisos de ritmo
-([ADR 056](adr/056-modo-foco-sobre-entradas-reales.md)). El **Bloque 4**, el
-calendario, se cerró con el **4.1**, exportar ICS
-([ADR 057](adr/057-exportar-el-calendario-por-token.md)): el **4.2**, importar
-iCal, quedó aplazado. Del **Bloque 5**, equipo, están hechos el **5.1**,
-ausencias y festivos ([ADR 060](adr/060-ausencias-y-festivos.md)), y el
-**5.2**, el responsable de departamento
-([ADR 059](adr/059-responsable-de-departamento.md)); sigue el **5.3**, «Mi
-equipo».
-Después del interludio viene la **Fase 8**: automatizaciones e
-importadores externos.
+catorce bloques están hechos, commiteados y verificados. También lo está el
+**[interludio de productividad personal y equipo](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--cerrado)**:
+sus cinco bloques están hechos, con el **4.2**, importar iCal, aplazado a
+petición del usuario (la ADR 058 queda reservada). Cada bloque tiene su PR
+apilada sobre la anterior, de la #28 a la del Bloque 5. Antes de desplegar
+hay que ensayar la conversión de días del 0.2 sobre una copia de producción,
+como explica [actualizar.md](actualizar.md), y aplicar las migraciones
+0070-0076, que solo añaden.
+
+Lo siguiente es la **Fase 8**: automatizaciones e importadores externos.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la

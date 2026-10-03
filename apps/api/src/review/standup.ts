@@ -22,7 +22,7 @@ type StandupTask = {
  * El ultimo dia laborable antes de `day` segun la jornada personal
  * (ADR 045): un lunes, el viernes. Sin ningun dia laborable, el dia anterior.
  */
-function previousWorkDay(
+export function previousWorkDay(
   day: Date,
   schedule: Awaited<ReturnType<typeof getWorkSchedule>>,
 ) {

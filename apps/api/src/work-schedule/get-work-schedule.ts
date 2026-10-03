@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import db from "../database";
 import { userWorkScheduleTable } from "../database/schema";
 
@@ -26,6 +26,35 @@ export const DEFAULT_WORK_SCHEDULE: WorkSchedule = {
   lunchEndMinute: null,
   workDays: 0b0_111_110,
 };
+
+const scheduleColumns = {
+  userId: userWorkScheduleTable.userId,
+  workStartMinute: userWorkScheduleTable.workStartMinute,
+  workEndMinute: userWorkScheduleTable.workEndMinute,
+  lunchEnabled: userWorkScheduleTable.lunchEnabled,
+  lunchStartMinute: userWorkScheduleTable.lunchStartMinute,
+  lunchEndMinute: userWorkScheduleTable.lunchEndMinute,
+  workDays: userWorkScheduleTable.workDays,
+};
+
+/**
+ * Las jornadas de varias personas en una consulta, para la vista del
+ * responsable (ADR 059). Quien no guardo la suya tiene la de por defecto.
+ */
+export async function getWorkSchedules(
+  userIds: string[],
+): Promise<Map<string, WorkSchedule>> {
+  const schedules = new Map<string, WorkSchedule>(
+    userIds.map((userId) => [userId, DEFAULT_WORK_SCHEDULE]),
+  );
+  if (userIds.length === 0) return schedules;
+  const rows = await db
+    .select(scheduleColumns)
+    .from(userWorkScheduleTable)
+    .where(inArray(userWorkScheduleTable.userId, userIds));
+  for (const { userId, ...schedule } of rows) schedules.set(userId, schedule);
+  return schedules;
+}
 
 export async function getWorkSchedule(userId: string): Promise<WorkSchedule> {
   const [row] = await db

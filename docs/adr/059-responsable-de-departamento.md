@@ -38,8 +38,14 @@ Auth.
   en dos equipos con responsables distintos, los ve a los dos.
 - **Sacar a alguien del equipo o del espacio corta la visibilidad al
   momento**: no hay copia de quién ve a quién.
-- **La vista del responsable llega en el 5.3.** El 5.2 deja la regla, el
-  interruptor y el aviso.
-- **Verificado:** pruebas de integración de la regla (otro equipo, otro
-  espacio, fuera del espacio, sin marca, uno mismo), del permiso del
-  interruptor y del aviso, más la prueba de arquitectura de solo lectura.
+- **La vista del responsable («Mi equipo», 5.3) carga en lote:** nueve
+  consultas para el día del equipo entero y siete para su stand-up. Para
+  eso, los bloques, las jornadas y los días no disponibles ganan versión de
+  varias personas, y la de una sola delega en ella. Con 20 personas sobre
+  50.000 tareas, p95 de 34 ms y 21 ms. Se relee cada minuto, sin tiempo
+  real.
+- **Verificado:**
+  - pruebas de integración de la regla (otro equipo, otro espacio, fuera
+    del espacio, sin marca, uno mismo), del permiso del interruptor, del
+    aviso y de la vista: nada privado, y el stand-up idéntico al propio;
+  - la prueba de arquitectura de solo lectura.

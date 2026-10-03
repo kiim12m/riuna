@@ -14,6 +14,7 @@ import {
   SlidersHorizontal,
   Target,
   Users,
+  UsersRound,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
@@ -31,6 +32,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useInbox } from "@/hooks/queries/capture/use-inbox";
+import { useTeamMembers } from "@/hooks/queries/lead/use-team";
 import { useMyWorkCounts } from "@/hooks/queries/my-work/use-my-work-counts";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
@@ -150,6 +152,8 @@ export function NavMain() {
   });
   const { data: counts } = useMyWorkCounts(workspace?.id ?? "");
   const { data: inbox } = useInbox(workspace?.id ?? "");
+  // «Mi equipo» solo para quien lleva a alguien (ADR 059).
+  const { data: ledMembers } = useTeamMembers(workspace?.id ?? "");
 
   if (!workspace) return null;
 
@@ -200,6 +204,15 @@ export function NavMain() {
       activePrefix: `${base}/my-tasks`,
       count: counts?.myTasks,
     },
+    ...(ledMembers && ledMembers.length > 0
+      ? [
+          {
+            title: t("navigation:sidebar.team"),
+            url: `${base}/team`,
+            icon: UsersRound,
+          },
+        ]
+      : []),
     {
       title: t("navigation:sidebar.timeSheet"),
       url: `${base}/time-sheet`,

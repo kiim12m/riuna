@@ -36,6 +36,11 @@ vi.mock("@/hooks/queries/my-work/use-my-work-counts", () => ({
 }));
 
 let inbox: { id: string } | null = null;
+let ledMembers: Array<{ id: string; name: string }> = [];
+
+vi.mock("@/hooks/queries/lead/use-team", () => ({
+  useTeamMembers: () => ({ data: ledMembers }),
+}));
 
 vi.mock("@/hooks/queries/capture/use-inbox", () => ({
   useInbox: () => ({ data: inbox }),
@@ -88,6 +93,7 @@ beforeEach(() => {
   projects = [{ id: "project-1", name: "Obra Norte" }];
   counts = { today: 7, myTasks: 34 };
   inbox = null;
+  ledMembers = [];
   for (const key of Object.keys(capabilities) as Array<
     keyof typeof capabilities
   >) {
@@ -195,6 +201,18 @@ describe("NavMain", () => {
     inbox = { id: "inbox-1" };
     renderNav();
     expect(screen.getByText("navigation:sidebar.inbox")).toBeInTheDocument();
+  });
+
+  // «Mi equipo» es la vista del responsable de departamento (ADR 059): quien
+  // no lleva a nadie no la ve.
+  it("ensena «Mi equipo» solo a quien lleva a alguien", () => {
+    renderNav();
+    expect(screen.queryByText("navigation:sidebar.team")).toBeNull();
+    cleanup();
+
+    ledMembers = [{ id: "user-2", name: "Ana" }];
+    renderNav();
+    expect(screen.getByText("navigation:sidebar.team")).toBeInTheDocument();
   });
 
   // Sin proyectos no hay ajustes de proyecto que ensenar, igual que la vieja

@@ -1,4 +1,4 @@
-import { and, between, eq, gte, lte } from "drizzle-orm";
+import { and, between, eq, gte, inArray, lte } from "drizzle-orm";
 import db from "../database";
 import { userTimeOffTable, workspaceHolidayTable } from "../database/schema";
 import {
@@ -14,6 +14,8 @@ import {
  */
 export type Unavailable = { kind: "holiday" | "time-off"; name: string | null };
 
+type Window = { workspaceId: string; start: Date; end: Date };
+
 /**
  * Los dias no disponibles de una persona dentro de una ventana, por
  * `yyyy-mm-dd`: los festivos del espacio y sus ausencias en el. La unica
@@ -21,16 +23,34 @@ export type Unavailable = { kind: "holiday" | "time-off"; name: string | null };
  * capacidad del dia a 0 (`capacityForDay`).
  */
 export async function loadUnavailableDays({
-  workspaceId,
   userId,
+  ...window
+}: Window & { userId: string }): Promise<Map<string, Unavailable>> {
+  const byUser = await loadUnavailableDaysForUsers({
+    ...window,
+    userIds: [userId],
+  });
+  return byUser.get(userId) ?? new Map();
+}
+
+/**
+ * `loadUnavailableDays` para varias personas en dos consultas, para la vista
+ * del responsable (ADR 059): la misma regla, una sola vez.
+ */
+export async function loadUnavailableDaysForUsers({
+  workspaceId,
+  userIds,
   start,
   end,
-}: {
-  workspaceId: string;
-  userId: string;
-  start: Date;
-  end: Date;
-}): Promise<Map<string, Unavailable>> {
+}: Window & { userIds: string[] }): Promise<
+  Map<string, Map<string, Unavailable>>
+> {
+  const byUser = new Map<string, Map<string, Unavailable>>(
+    userIds.map((userId) => [userId, new Map()]),
+  );
+  // Sin esta salida, `inArray(col, [])` compila a `in ()`.
+  if (userIds.length === 0) return byUser;
+
   const [holidays, ranges] = await Promise.all([
     db
       .select({
@@ -46,13 +66,14 @@ export async function loadUnavailableDays({
       ),
     db
       .select({
+        userId: userTimeOffTable.userId,
         startsOn: userTimeOffTable.startsOn,
         endsOn: userTimeOffTable.endsOn,
       })
       .from(userTimeOffTable)
       .where(
         and(
-          eq(userTimeOffTable.userId, userId),
+          inArray(userTimeOffTable.userId, userIds),
           eq(userTimeOffTable.workspaceId, workspaceId),
           lte(userTimeOffTable.startsOn, end),
           gte(userTimeOffTable.endsOn, startOfServerDay(start)),
@@ -60,8 +81,9 @@ export async function loadUnavailableDays({
       ),
   ]);
 
-  const days = new Map<string, Unavailable>();
   for (const range of ranges) {
+    const days = byUser.get(range.userId);
+    if (!days) continue;
     const from = startOfServerDay(
       range.startsOn > start ? range.startsOn : start,
     );
@@ -71,11 +93,13 @@ export async function loadUnavailableDays({
     }
   }
   // Si coinciden, se ve el festivo: es lo que explica el dia a cualquiera.
-  for (const holiday of holidays) {
-    days.set(serverDayKey(holiday.day), {
-      kind: "holiday",
-      name: holiday.name,
-    });
+  for (const days of byUser.values()) {
+    for (const holiday of holidays) {
+      days.set(serverDayKey(holiday.day), {
+        kind: "holiday",
+        name: holiday.name,
+      });
+    }
   }
-  return days;
+  return byUser;
 }
