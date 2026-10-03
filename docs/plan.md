@@ -2509,9 +2509,11 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     de **20 ms a 0,5 ms** y el planificador lo usa. Parcial (`WHERE completed_at IS NOT NULL`),
     así que solo pesa lo cerrado. Ver nota en la ADR 030.
 
+*Verificación de la tanda 2 (2026-10-03/04): integración 754 de 755 (1 omitida, ninguna fallada), humo 64 de 65, unitarias 754 (API), 390 (web) y 33 (MCP), typecheck de los seis paquetes, Biome e i18n. La que falla, `weekly-review.spec.ts`, **falla igual en `main`**: depende del día de la semana (los dos primeros días de la semana la revisión es la de la semana anterior y lo cerrado hoy no cuenta), y se vio al cruzar la medianoche del sábado al domingo. Va al punto 18.*
+
 **Tanda 3 — pruebas y estabilidad** · S–M
-18. Las tres pruebas intermitentes: la importación grande, el *deadlock* del `TRUNCATE` y el
-    e2e «una ausencia deja hoy sin horas».
+18. Las pruebas intermitentes: la importación grande, el *deadlock* del `TRUNCATE`, el
+    e2e «una ausencia deja hoy sin horas» y `weekly-review.spec.ts`, que depende del día de la semana.
 19. Las pruebas de componente del web no arrancan en el devcontainer (jsdom).
 20. Los dos casos de humo que faltan (el de la Fase 0 y el asistente de importación), los tres
     gestos de la Fase 4 sin probar, y Playwright en CI.
