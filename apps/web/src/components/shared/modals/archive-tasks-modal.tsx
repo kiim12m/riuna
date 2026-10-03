@@ -38,7 +38,7 @@ export function ArchiveTasksModal({
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
                 <Archive className="h-6 w-6 text-primary" />
               </div>
-              <DialogTitle className="text-2xl font-bold tracking-tight text-foreground leading-tight">
+              <DialogTitle className="text-page text-foreground">
                 Archive Tasks
               </DialogTitle>
             </DialogHeader>

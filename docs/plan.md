@@ -1238,7 +1238,7 @@ tarea, que no tenía tope alguno y crecía con la ventana.
 
 **Deuda declarada:**
 
-- **48 clases de tamaño de Tailwind fuera de los siete papeles** —`text-lg` (23),
+- ~~**48 clases de tamaño de Tailwind fuera de los siete papeles**~~ (cerrado, punto 11 del cierre de la deuda) —`text-lg` (23),
   `text-2xl` (24), `text-4xl` (1)— en acceso, alta, invitaciones y proyecto
   público. Medidas y acotadas, no barridas a ciegas: son pantallas que esta
   revisión no recorrió.
@@ -2455,7 +2455,19 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     persona, así que ya no pueden diferenciarse; `previousWorkDay` se mueve a su propio fichero
     para no hacer un ciclo `review` ↔ `lead`. Las pruebas que comparan el propio con el del
     responsable campo a campo siguen en verde.
-11. Las 48 clases `text-lg`/`2xl`/`4xl` pasan a los siete papeles tipográficos.
+11. ✔ Las 48 clases `text-lg`/`2xl`/`4xl` pasan a los siete papeles tipográficos. **Hecho
+    (2026-10-03).** Eran 47 en 38 ficheros (el inventario se había quedado corto: los ajustes
+    del espacio y del proyecto añadieron más). Los `h1` de página → `text-page`; los títulos de
+    tarjeta, diálogo y sección → `text-section`; el importe de facturación → `text-display`.
+    Se quitan de paso los pesos e interlineados sueltos que el papel ya lleva. `type-scale.test.ts`
+    vigila que no vuelvan (falla con una clase puesta a propósito). Visto en inicio de sesión,
+    ajustes, búsqueda y crear espacio; en la búsqueda hizo falta `font-normal`, porque el papel
+    pone 600 y un campo de texto no lo quiere.
+
+    **Hallazgo, fuera del inventario:** quedan `text-xl` (títulos de todos los diálogos, el
+    onboarding, el logotipo y el `Empty`), `text-3xl` (error público) y `text-7xl` (reloj del
+    modo foco). Los diálogos van a 20 px y el manual pide 16 px para modales: cambiarlo es una
+    decisión visual de toda la aplicación, y no se toma de paso.
 12. `i18n:check` detecta claves usadas que no existen.
 13. Regenerar `apps/api/openapi.json` (sin tocar desde 2026-08-27), con la URL saneada.
 14. Tonos 4 y 5 de la paleta de datos por debajo de 3:1: etiquetas del eje o vista de tabla.

@@ -119,7 +119,7 @@ export function PublicTaskDetailModal({
 
           <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
             <div className="space-y-3">
-              <h2 className="pr-8 text-2xl font-heading font-semibold leading-tight text-foreground">
+              <h2 className="pr-8 text-page font-heading text-foreground">
                 {task.title}
               </h2>
 

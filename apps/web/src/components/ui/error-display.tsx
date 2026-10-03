@@ -53,7 +53,7 @@ export function ErrorDisplay({
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/12">
             <AlertTriangle className="h-6 w-6 text-destructive-foreground" />
           </div>
-          <CardTitle className="text-lg">{resolvedTitle}</CardTitle>
+          <CardTitle className="text-section">{resolvedTitle}</CardTitle>
           <CardDescription className="text-sm">
             {t(parsedError.message)}
           </CardDescription>

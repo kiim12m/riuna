@@ -229,9 +229,7 @@ function RouteComponent() {
         <PageTitle title={t("settings:workspaceRoles.pageTitle")} />
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold">
-              {t("settings:workspaceRoles.title")}
-            </h1>
+            <h1 className="text-page">{t("settings:workspaceRoles.title")}</h1>
             <p className="text-muted-foreground">
               {t("settings:workspaceRoles.noAccess")}
             </p>
@@ -246,9 +244,7 @@ function RouteComponent() {
       <PageTitle title={t("settings:workspaceRoles.pageTitle")} />
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold">
-            {t("settings:workspaceRoles.title")}
-          </h1>
+          <h1 className="text-page">{t("settings:workspaceRoles.title")}</h1>
           <p className="text-muted-foreground">
             {t("settings:workspaceRoles.subtitle", {
               workspaceName:

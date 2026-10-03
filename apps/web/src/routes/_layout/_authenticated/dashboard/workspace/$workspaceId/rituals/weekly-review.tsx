@@ -507,7 +507,7 @@ function Figure({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-md border border-border/70 p-3">
       <dt className="text-meta text-muted-foreground">{label}</dt>
-      <dd className="font-semibold text-lg tabular-nums">{value}</dd>
+      <dd className="text-section tabular-nums">{value}</dd>
     </div>
   );
 }

@@ -80,7 +80,7 @@ function RouteComponent() {
                 </div>
                 <div className="flex flex-col gap-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <h1 className="text-lg font-semibold text-foreground truncate">
+                    <h1 className="text-page text-foreground truncate">
                       {project.name}
                     </h1>
                     <span className="px-1.5 py-0.5 text-label bg-muted text-muted-foreground rounded font-medium shrink-0">

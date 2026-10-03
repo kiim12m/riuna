@@ -226,7 +226,7 @@ que hizo perder el arreglo.
     propios (0,68 · 0,72 · 0,79 · 0,965 · 1,24 rem). Es una superficie de prosa
     con necesidades tipográficas distintas de la interfaz densa, así que se deja
     como excepción **acotada y declarada**, no como deriva.
-20. **48 clases de tamaño de Tailwind fuera de los siete papeles**: `text-lg`
+20. ~~**48 clases de tamaño de Tailwind fuera de los siete papeles**~~ **Hecho (2026-10-03):** `text-lg`
     (23), `text-2xl` (24) y `text-4xl` (1). Están en pantallas que esta revisión
     no recorrió —acceso, alta, invitaciones, proyecto público—, así que se
     quedan **medidas y acotadas** en vez de barridas a ciegas.

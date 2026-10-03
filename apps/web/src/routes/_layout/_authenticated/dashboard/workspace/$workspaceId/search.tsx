@@ -88,7 +88,7 @@ function SearchComponent() {
                 placeholder={t("workspace:search.placeholder")}
                 value={searchInput}
                 onChange={(e) => handleInputChange(e.target.value)}
-                className="pl-10 h-12 text-lg"
+                className="pl-10 h-12 text-section font-normal"
                 autoFocus
               />
               {showLoading && (
@@ -169,7 +169,7 @@ function SearchComponent() {
               ) : (
                 <div className="text-center py-12">
                   <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-lg font-medium mb-2">
+                  <p className="text-section mb-2">
                     {t("workspace:search.noResultsTitle")}
                   </p>
                   <p className="text-muted-foreground">
