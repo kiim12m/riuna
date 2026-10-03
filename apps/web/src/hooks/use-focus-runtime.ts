@@ -25,6 +25,14 @@ import { useFocusStore } from "@/store/focus";
 const AUTHORITY_GRACE_MS = 15 * 1000;
 
 /**
+ * Si el final de un bloque se comprueba con mas retraso que esto -el portatil
+ * suspendido, la pestaña dormida-, la entrada se cierra a la hora del final y
+ * no ahora. Por debajo se para "ahora": un desfase entre el reloj del
+ * navegador y el del servidor nunca deja una hora de fin anterior al inicio.
+ */
+const LATE_STOP_MS = 60 * 1000;
+
+/**
  * Lo que el modo foco hace solo (ADR 056), en cualquier pantalla: al acabar
  * un bloque de trabajo para el cronometro y avisa del descanso; al acabar el
  * descanso, avisa. Una sola pestaña actua, con el mismo cerrojo y las mismas
@@ -88,8 +96,12 @@ export function useFocusRuntime(workspaceId: string) {
 
           setSession(next);
           // Los descansos no registran tiempo: el bloque que acaba para el
-          // cronometro.
-          if (current.phase === "work") stop();
+          // cronometro, a su hora si se comprueba tarde.
+          if (current.phase === "work") {
+            const ended = phaseEndsAt(current);
+            const late = ended !== null && Date.now() - ended > LATE_STOP_MS;
+            stop(late ? new Date(ended).toISOString() : undefined);
+          }
           announce(next);
         });
       },

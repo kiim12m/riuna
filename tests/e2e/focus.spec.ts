@@ -6,7 +6,11 @@ function keyOf(date: Date) {
   return `${date.getFullYear()}-${month}-${day}`;
 }
 
-type Entry = { focusMode: string | null; endTime: string | null };
+type Entry = {
+  focusMode: string | null;
+  endTime: string | null;
+  duration: number | null;
+};
 
 /**
  * El modo foco (sub-bloque 3.2 del interludio de productividad, ADR 056): un
@@ -85,5 +89,60 @@ test.describe("Modo foco", () => {
       `/api/today?workspaceId=${riuna.workspaceId}`,
     );
     expect(today.totals.focusSessions).toBe(2);
+  });
+
+  // Revision de codigo del interludio, hallazgo 2: el bloque se cerraba
+  // cuando el navegador lo comprobaba, no a su hora. Con el portatil
+  // suspendido, un pomodoro de 25 minutos registraba lo que durase la siesta.
+  test("un bloque que se comprueba tarde se registra hasta su hora de fin", async ({
+    page,
+    riuna,
+  }) => {
+    const taskId = await createTask(riuna, "Revisar presupuesto");
+    await riuna.api("put", `/api/task/assignee/${taskId}`, {
+      userId: riuna.userId,
+    });
+    await riuna.api(
+      "put",
+      `/api/planner/${taskId}?workspaceId=${riuna.workspaceId}`,
+      { plannedDate: keyOf(new Date()) },
+    );
+
+    await page.clock.install({ time: new Date() });
+    await page.goto(
+      `/dashboard/workspace/${riuna.workspaceId}/focus/${taskId}`,
+    );
+    await page.getByRole("button", { name: "Empezar" }).click({
+      timeout: 30_000,
+    });
+    await expect(page.getByTestId("focus-phase")).toHaveText("Trabajando");
+    await expect
+      .poll(
+        async () =>
+          (
+            await riuna.api<{ running: { task: { id: string } } | null }>(
+              "get",
+              `/api/time-entry/running?workspaceId=${riuna.workspaceId}`,
+            )
+          ).running?.task.id ?? null,
+      )
+      .toBe(taskId);
+
+    // Cuarenta minutos de golpe: el aviso del final llega quince tarde.
+    await page.clock.fastForward("40:00");
+    await expect(page.getByTestId("focus-phase")).toHaveText("Descanso");
+    await expect
+      .poll(
+        async () =>
+          (await riuna.api<Entry[]>("get", `/api/time-entry/task/${taskId}`))[0]
+            ?.duration ?? null,
+      )
+      .not.toBeNull();
+    const [entry] = await riuna.api<Entry[]>(
+      "get",
+      `/api/time-entry/task/${taskId}`,
+    );
+    expect(entry.duration).toBeGreaterThan(25 * 60 - 30);
+    expect(entry.duration).toBeLessThan(25 * 60 + 30);
   });
 });
