@@ -12,11 +12,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { CreateCyclePayload } from "@/fetchers/cycle";
+import { dayKey } from "@/lib/day-key";
 
 function isoDay(offsetDays: number) {
   const date = new Date();
   date.setDate(date.getDate() + offsetDays);
-  return date.toISOString().slice(0, 10);
+  return dayKey(date);
 }
 
 export function CreateCycleDialog({

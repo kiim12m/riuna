@@ -2433,7 +2433,13 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
 
 **Tanda 2 — arreglos pequeños** · S
 7. «Pasar al siguiente día laborable» salta festivos y ausencias.
-8. Un solo formateador `yyyy-mm-dd` en la web y un solo esquema de día en la API.
+8. ✔ Un solo formateador `yyyy-mm-dd` en la web y un solo esquema de día en la API.
+   **Hecho (2026-10-03).** Sin ADR: es un ayudante, no una decisión estructural. Web:
+   `lib/day-key.ts` (`dayKey`, `parseDayKey`) sustituye a 13 copias; API:
+   `utils/day-key-schema.ts` sustituye a 5. De paso, el rango por defecto de «Crear ciclo»
+   dejó de cortar en UTC —el fallo de la víspera entre las 00:00 y las 02:00 que la ADR 049
+   dejó anotado—. Verificación: typecheck, 383 unitarias del web (con `day-key.test.ts`),
+   95 de integración de los routers tocados y 44 e2e de las pantallas que usan días.
 9. Festivos, ausencias y el interruptor de responsable publican eventos.
 10. El stand-up propio reutiliza las lecturas en lote de `lead/` (hoy, unas 25 consultas).
 11. Las 48 clases `text-lg`/`2xl`/`4xl` pasan a los siete papeles tipográficos.
@@ -2550,8 +2556,8 @@ fallaba antes del arreglo:
   lecturas en lote de «Mi equipo»;
 - ~~el normalizador de días del 0.2 recorre dos tablas enteras en cada
   arranque;~~ retirado (punto 2 del cierre de la deuda);
-- el formateador de `yyyy-mm-dd` está repetido unas ocho veces en la web, y
-  el esquema de día en cinco routers de la API;
+- ~~el formateador de `yyyy-mm-dd` está repetido unas ocho veces en la web, y
+  el esquema de día en cinco routers de la API;~~ unificados (punto 8 del cierre de la deuda);
 - «Pasar al siguiente día laborable» del cierre aún no salta festivos ni
   ausencias.
 

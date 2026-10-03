@@ -6,7 +6,6 @@ import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import { TeamMemberCard } from "@/components/lead/team-member-card";
 import PageTitle from "@/components/page-title";
-import { parseDayKey } from "@/components/schedule/schedule-range";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -19,6 +18,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTeamDay, useTeamStandup } from "@/hooks/queries/lead/use-team";
 import { copyToClipboard } from "@/lib/copy-to-clipboard";
+import { parseDayKey } from "@/lib/day-key";
 import { formatDate } from "@/lib/format";
 import { type StandupLabels, standupMarkdown } from "@/lib/standup";
 import { toast } from "@/lib/toast";

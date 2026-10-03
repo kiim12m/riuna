@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { format } from "date-fns";
 import { saveAs } from "file-saver";
 import { ChevronRight, FileClock } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
@@ -37,20 +36,12 @@ import type { TimeSheetGroupBy } from "@/fetchers/time-sheet";
 import { exportTimeSheet } from "@/fetchers/time-sheet";
 import { useTimeSheet } from "@/hooks/queries/time-sheet/use-time-sheet";
 import { cn } from "@/lib/cn";
+import { dayKey } from "@/lib/day-key";
 import { formatDuration } from "@/lib/duration";
 import { formatDate } from "@/lib/format";
 import { toast } from "@/lib/toast";
 
 const DEFAULT_RANGE_DAYS = 7;
-
-/**
- * `yyyy-mm-dd` del dia **local**. Antes recortaba `toISOString()`, que es UTC:
- * entre las 00:00 y las 02:00 de Madrid el rango por defecto acababa ayer y el
- * parte no ensenaba lo de hoy (ADR 049).
- */
-function isoDay(date: Date) {
-  return format(date, "yyyy-MM-dd");
-}
 
 function daysAgo(days: number) {
   const date = new Date();
@@ -73,9 +64,9 @@ function RouteComponent() {
   const { workspaceId } = Route.useParams();
 
   const [start, setStart] = useState(() =>
-    isoDay(daysAgo(DEFAULT_RANGE_DAYS - 1)),
+    dayKey(daysAgo(DEFAULT_RANGE_DAYS - 1)),
   );
-  const [end, setEnd] = useState(() => isoDay(new Date()));
+  const [end, setEnd] = useState(() => dayKey(new Date()));
   const [groupBy, setGroupBy] = useState<TimeSheetGroupBy>("day");
   const [isExporting, setIsExporting] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(

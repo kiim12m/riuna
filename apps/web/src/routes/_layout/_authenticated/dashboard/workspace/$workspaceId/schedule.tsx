@@ -6,9 +6,7 @@ import PageTitle from "@/components/page-title";
 import { CreateBlockDialog } from "@/components/schedule/create-block-dialog";
 import { MonthView } from "@/components/schedule/month-view";
 import {
-  dayKey,
   headerTitle,
-  parseDayKey,
   rangeFor,
   type ScheduleView,
   shiftAnchor,
@@ -30,6 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { ScheduleDay, ScheduleSegment } from "@/fetchers/schedule";
 import { useScheduleMutations } from "@/hooks/mutations/schedule/use-schedule-mutations";
 import { useSchedule } from "@/hooks/queries/schedule/use-schedule";
+import { dayKey, parseDayKey } from "@/lib/day-key";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 
 type ScheduleSearchParams = {

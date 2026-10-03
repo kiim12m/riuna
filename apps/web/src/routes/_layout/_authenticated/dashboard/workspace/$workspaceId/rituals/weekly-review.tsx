@@ -10,7 +10,6 @@ import {
   type RitualStep,
 } from "@/components/rituals/ritual-shell";
 import { RitualTaskRow } from "@/components/rituals/ritual-task-row";
-import { parseDayKey } from "@/components/schedule/schedule-range";
 import TaskMovePopover from "@/components/task/task-move-popover";
 import { TaskRowActions } from "@/components/task-actions/task-row-actions";
 import { Button } from "@/components/ui/button";
@@ -25,6 +24,7 @@ import { useWaiting } from "@/hooks/queries/my-work/use-waiting";
 import { usePlanner } from "@/hooks/queries/planner/use-planner";
 import { useWeekReview } from "@/hooks/queries/review/use-week-review";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
+import { dayKey, parseDayKey } from "@/lib/day-key";
 import { formatDuration } from "@/lib/duration";
 import { formatDate } from "@/lib/format";
 import { toast } from "@/lib/toast";
@@ -39,16 +39,10 @@ export const Route = createFileRoute(
 
 const SHOWN = 15;
 
-function keyOf(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
 function addDays(key: string, days: number) {
   const date = parseDayKey(key);
   date.setDate(date.getDate() + days);
-  return keyOf(date);
+  return dayKey(date);
 }
 
 /**
@@ -61,7 +55,7 @@ function defaultWeekStart(weekStartsOn: number) {
   today.setHours(0, 0, 0, 0);
   const sinceStart = (today.getDay() - weekStartsOn + 7) % 7;
   today.setDate(today.getDate() - sinceStart - (sinceStart < 2 ? 7 : 0));
-  return keyOf(today);
+  return dayKey(today);
 }
 
 function weekLabel(start: string) {

@@ -8,6 +8,7 @@ import {
   parseServerDay,
   startOfServerDay,
 } from "../utils/day-boundaries";
+import { dayKeySchema } from "../utils/day-key-schema";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import getPlan from "./controllers/get-plan";
@@ -28,11 +29,6 @@ const startMinuteSchema = v.pipe(
   v.integer(),
   v.minValue(0),
   v.maxValue(1439),
-);
-
-const dayKeySchema = v.pipe(
-  v.string(),
-  v.regex(/^\d{4}-\d{2}-\d{2}$/, "Expected a yyyy-mm-dd day"),
 );
 
 const planGhostSchema = v.object({

@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { parseDayKey } from "@/components/schedule/schedule-range";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +12,7 @@ import { useTaskPlanMutations } from "@/hooks/mutations/planner/use-task-plan-mu
 import { useTimerMutations } from "@/hooks/mutations/time-entry/use-timer-mutations";
 import { useWorkSchedule } from "@/hooks/queries/work-schedule/use-work-schedule";
 import { snoozeUntil } from "@/lib/browser-notify";
+import { dayKey, parseDayKey } from "@/lib/day-key";
 import { formatDate } from "@/lib/format";
 import { fromMinutes } from "@/lib/minutes";
 import { nextWorkDayKey } from "@/lib/work-days";
@@ -20,13 +20,6 @@ import { useReminderStore } from "@/store/reminder";
 
 const SNOOZE_MS = 10 * 60 * 1000;
 const DEFAULT_WORK_DAYS = 0b0_111_110;
-
-function todayKey() {
-  const date = new Date();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-}
 
 /**
  * Lo que se decide al pulsar un aviso (ADR 055): sin service worker la
@@ -43,7 +36,7 @@ export function ReminderDialog({ workspaceId }: { workspaceId: string }) {
   const { data: schedule } = useWorkSchedule();
 
   const nextDay = nextWorkDayKey(
-    todayKey(),
+    dayKey(new Date()),
     schedule?.workDays ?? DEFAULT_WORK_DAYS,
   );
 

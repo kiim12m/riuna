@@ -20,9 +20,9 @@ import {
 } from "@/components/ui/select";
 import type { CreateBlockInput, UpdateBlockInput } from "@/fetchers/schedule";
 import { cn } from "@/lib/cn";
+import { dayKey } from "@/lib/day-key";
 import { fromMinutes, toMinutes } from "@/lib/minutes";
 import { WEEKDAYS_MONDAY_FIRST, weekdayLabel } from "@/lib/weekdays";
-import { dayKey } from "./schedule-range";
 import type { EditableBlock } from "./time-grid";
 
 /** `yyyy-mm-dd` de un ISO que llega del servidor -Hono serializa los `Date`

@@ -1,3 +1,4 @@
+import { dayKey } from "@/lib/day-key";
 import { type FocusSession, isBreak } from "@/lib/focus/machine";
 
 /**
@@ -38,12 +39,6 @@ export type Nudge =
   | { kind: "idle"; key: string }
   | { kind: "overtime"; key: string };
 
-function dayKeyOf(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
 /** El instante de hoy a `minute` minutos de la medianoche local. */
 function atMinute(today: Date, minute: number) {
   const at = new Date(today);
@@ -75,7 +70,7 @@ export function workdayNudges({
   fired: Record<string, number>;
 }): Nudge[] {
   const today = new Date(now);
-  const dayKey = dayKeyOf(today);
+  const todayKey = dayKey(today);
   const minute = today.getHours() * 60 + today.getMinutes();
   const workDay = !dayOff && ((schedule.workDays >> today.getDay()) & 1) === 1;
   const lunch =
@@ -108,8 +103,8 @@ export function workdayNudges({
   }
 
   if (running && preferences.overtime) {
-    const fromEarlierDay = dayKeyOf(new Date(running.startTime)) !== dayKey;
-    const key = `nudge:overtime:${dayKey}`;
+    const fromEarlierDay = dayKey(new Date(running.startTime)) !== todayKey;
+    const key = `nudge:overtime:${todayKey}`;
     if (
       (!workDay || minute >= schedule.workEndMinute || fromEarlierDay) &&
       !(key in fired)
@@ -138,7 +133,7 @@ export function workdayNudges({
         .map(([, at]) => at),
     );
     if (now - since >= IDLE_AFTER_MS && now - lastIdle >= IDLE_REPEAT_MS) {
-      nudges.push({ kind: "idle", key: `nudge:idle:${dayKey}:${minute}` });
+      nudges.push({ kind: "idle", key: `nudge:idle:${todayKey}:${minute}` });
     }
   }
 
