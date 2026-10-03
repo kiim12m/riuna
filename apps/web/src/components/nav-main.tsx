@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   ListTodo,
   type LucideIcon,
-  Target,
   UsersRound,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -171,11 +170,9 @@ export function NavMain() {
       url: `${base}/time-sheet`,
       icon: FileClock,
     },
-    {
-      title: t("navigation:sidebar.goals"),
-      url: `${base}/goals`,
-      icon: Target,
-    },
+    // «Objetivos» salio de la barra para limpiarla (ADR 061): por ahora no se
+    // usa. La pagina sigue en `…/goals`, en la paleta y en el widget de
+    // objetivo de «Mi panel».
   ];
 
   // La administracion del espacio ya no va aqui: esta en el menu del avatar,

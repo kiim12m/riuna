@@ -461,7 +461,9 @@ la tarea y en la propia tabla.
   en cualquier momento, sustituyendo los widgets que se hayan añadido o editado.
 - **Objetivos (OKR)**: objetivo con periodo de fechas y **resultados clave**
   medidos con el mismo motor de agregación que los widgets. Compartibles con el
-  espacio. Borrar un objetivo, o un widget de un panel, pide confirmación.
+  espacio. Borrar un objetivo, o un widget de un panel, pide confirmación. Por
+  ahora no tiene entrada en la barra lateral: se abre desde la paleta o en
+  `…/goals` ([ADR 061](adr/061-la-administracion-en-el-menu-del-avatar.md)).
 
 ## 9. Etiquetas, búsqueda y notificaciones
 
@@ -583,8 +585,8 @@ no lista los proyectos Personal.
   —el cronómetro de una fila, «Añadir a hoy», crear en la vista Mes— se ve
   siempre, y en el Cronograma un toque sobre un hueco abre la casilla de
   crear tarea a esa hora.
-- **Barra lateral en dos grupos**: el espacio personal y los proyectos, con
-  «Personal» fijo arriba. La administración del espacio —Proyectos, Miembros y
+- **Barra lateral en dos grupos**: el espacio personal —sin «Objetivos» por
+  ahora— y los proyectos, con «Personal» fijo arriba. La administración del espacio —Proyectos, Miembros y
   equipos, Espacio y Ajustes de proyecto— está en el menú del avatar, debajo
   de «Ajustes», y solo sale lo que el papel de cada uno permite
   ([ADR 061](adr/061-la-administracion-en-el-menu-del-avatar.md)).

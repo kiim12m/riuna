@@ -82,7 +82,8 @@ describe("NavMain", () => {
       screen.getByText("navigation:sidebar.timeSheet"),
     ).toBeInTheDocument();
     expect(screen.getByText("navigation:sidebar.home")).toBeInTheDocument();
-    expect(screen.getByText("navigation:sidebar.goals")).toBeInTheDocument();
+    // Fuera de la barra por ahora (ADR 061): se llega por la paleta.
+    expect(screen.queryByText("navigation:sidebar.goals")).toBeNull();
   });
 
   // La administracion se fue al menu del avatar (`useAdminNavItems`) para

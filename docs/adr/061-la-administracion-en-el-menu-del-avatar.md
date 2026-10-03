@@ -13,6 +13,9 @@ sacar de ella la administración.
 - **La administración va al menú del avatar**, debajo de «Ajustes», como
   sección «Administración»: Proyectos, Miembros y equipos, Espacio y Ajustes
   de proyecto. La barra queda con el espacio personal y los proyectos.
+- **«Objetivos» también sale de la barra**: por ahora no se usa. La página
+  sigue en `…/goals`, en la paleta y en el widget de objetivo de «Mi panel»;
+  volver a enseñarla es devolver una entrada a `nav-main.tsx`.
 - **Las mismas puertas que antes** (`useAdminNavItems`): cada entrada sale
   solo con su capacidad, nunca por el rol, y sin ninguna no se ve ni la
   etiqueta. Las rutas `…/admin/…` y su layout no cambian.
