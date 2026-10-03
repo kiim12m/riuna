@@ -1636,8 +1636,10 @@ verificación.
   - humo 29/29 con API y navegador en Madrid. Al arrancar, la API del humo
     convirtió 186 días viejos de su propia base.
 
-  **Pendiente de quien despliega:** el ensayo sobre una copia de producción
-  que describe `actualizar.md`.
+  **Ensayo sobre una copia de producción (2026-10-03):** con los Bloques 0
+  a 5 encima, la conversión de días lleva las 5 entradas del plan a la
+  medianoche de Madrid sin que ninguna cambie de fecha, y la segunda vuelta no
+  toca nada.
 - **0.3 Cronómetro en todas partes y tiempo en el detalle** ✔ · M. Un `TaskTimerButton` sobre
   `TimerButton` en el detalle, el Planificador, el Cronograma, Mis tareas y el tablero. El
   detalle gana una sección «Tiempo»: lo registrado (también en tareas sin hijas), sus
@@ -2383,18 +2385,29 @@ El **interludio de espacio personal y administración** está **cerrado**: sus
 catorce bloques están hechos, commiteados y verificados. También lo está el
 **[interludio de productividad personal y equipo](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--cerrado)**:
 sus cinco bloques están hechos, con el **4.2**, importar iCal, aplazado a
-petición del usuario (la ADR 058 queda reservada). Cada bloque tiene su PR
-apilada sobre la anterior, de la #28 a la del Bloque 5. Antes de desplegar
-hay que ensayar la conversión de días del 0.2 sobre una copia de producción,
-como explica [actualizar.md](actualizar.md), y aplicar las migraciones
-0070-0076, que solo añaden.
+petición del usuario (la ADR 058 queda reservada). Está todo en `main`
+(2026-10-03): de la PR #28 (Bloque 0) a la #33 (Bloque 5), la #34 con los
+arreglos de la revisión de código y la #36 con «Personal» en Proyectos, la
+administración en el menú del avatar y «Objetivos» fuera de la barra.
+
+**Ensayo del despliegue (2026-10-03).** Sobre una copia de producción, con lo
+mismo que hace la API al arrancar y sin planificador, plugins ni WebSocket:
+- las migraciones 0069-0076 se aplican sin errores; la 0077, que llegó
+  después, se aplicó sobre la misma copia y renombró la Bandeja creada al
+  probarla;
+- la conversión de días del 0.2 lleva las 5 entradas del plan a la medianoche
+  de Madrid sin cambiar ninguna de fecha, y la segunda vuelta no toca nada;
+- Hoy, el Planificador, el Cronograma, el stand-up y «Mi equipo» cargan para
+  cada persona en cada espacio.
+
+Falta desplegar la instancia como explica [actualizar.md](actualizar.md).
 
 Lo siguiente es la **Fase 8**: automatizaciones e importadores externos.
 
 **Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
 seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.
-Los diez fallos están corregidos en la rama `fix/interludio-revision`, cada
-uno con una prueba que fallaba antes del arreglo:
+Los diez fallos están corregidos (PR #34), cada uno con una prueba que
+fallaba antes del arreglo:
 1. el cierre del día contaba un cronómetro en marcha solo hasta las 12:00;
 2. un bloque de foco que se comprobaba tarde registraba hasta la
    comprobación, no hasta su hora;
