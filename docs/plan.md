@@ -2134,8 +2134,8 @@ verificación.
   - **Si un festivo cae dentro de una ausencia, se ve el festivo.**
   - **El aviso de «sin registrar» calla en un día no disponible.** El de
     cronómetro fuera de jornada, no.
-  - **Pendiente:** «Pasar al siguiente día laborable» aún no salta festivos
-    ni ausencias, y un festivo nuevo llega a los demás al volver a leer, no
+  - **Pendiente:** ~~«Pasar al siguiente día laborable» aún no salta festivos
+    ni ausencias~~ (cerrado, punto 7 del cierre de la deuda), y un festivo nuevo llega a los demás al volver a leer, no
     por WebSocket.
 
   Verificación:
@@ -2432,7 +2432,11 @@ importación grande, intermitente, que sola pasó 19 de 19 en dos de tres vuelta
 unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
 
 **Tanda 2 — arreglos pequeños** · S
-7. «Pasar al siguiente día laborable» salta festivos y ausencias.
+7. ✔ «Pasar al siguiente día laborable» salta festivos y ausencias. **Hecho (2026-10-03).**
+   `nextWorkDayKey` recibe el conjunto de días no disponibles (`unavailableDayKeys`, a partir de
+   `GET /availability/holidays` y `/time-off`, que la web ya leía) y lo usan «Terminar el día» y
+   el diálogo de aviso («Mañana»). El conjunto va vacío mientras carga. Prueba e2e en
+   `close-day.spec.ts` que falla sin el cambio, más 5 unitarias.
 8. ✔ Un solo formateador `yyyy-mm-dd` en la web y un solo esquema de día en la API.
    **Hecho (2026-10-03).** Sin ADR: es un ayudante, no una decisión estructural. Web:
    `lib/day-key.ts` (`dayKey`, `parseDayKey`) sustituye a 13 copias; API:
@@ -2558,8 +2562,8 @@ fallaba antes del arreglo:
   arranque;~~ retirado (punto 2 del cierre de la deuda);
 - ~~el formateador de `yyyy-mm-dd` está repetido unas ocho veces en la web, y
   el esquema de día en cinco routers de la API;~~ unificados (punto 8 del cierre de la deuda);
-- «Pasar al siguiente día laborable» del cierre aún no salta festivos ni
-  ausencias.
+- ~~«Pasar al siguiente día laborable» del cierre aún no salta festivos ni
+  ausencias.~~ Cerrado (punto 7 del cierre de la deuda).
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la

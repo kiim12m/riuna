@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import type { TodayEntry } from "@/fetchers/today";
 import { useCloseDay } from "@/hooks/mutations/review/use-close-day";
+import { useUnavailableDays } from "@/hooks/queries/availability/use-availability";
 import { usePlanner } from "@/hooks/queries/planner/use-planner";
 import { useDayReview } from "@/hooks/queries/review/use-day-review";
 import { useToday } from "@/hooks/queries/today/use-today";
@@ -87,8 +88,9 @@ function CloseDayRoute() {
     () => [...(today?.previous ?? []), ...(today?.planned ?? [])],
     [today],
   );
+  const unavailable = useUnavailableDays(workspaceId);
   const nextDay = date
-    ? nextWorkDayKey(date, schedule?.workDays ?? DEFAULT_WORK_DAYS)
+    ? nextWorkDayKey(date, schedule?.workDays ?? DEFAULT_WORK_DAYS, unavailable)
     : "";
   const undecided = pending.filter((task) => !(task.id in decisions));
 

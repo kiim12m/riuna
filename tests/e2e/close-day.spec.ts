@@ -108,4 +108,44 @@ test.describe("Terminar el día", () => {
     );
     expect(entry.entry).toBeNull();
   });
+
+  test("«Todo a…» salta un festivo", async ({ page, riuna }) => {
+    // El siguiente dia laborable (lunes a viernes, la jornada por defecto) y
+    // el que le sigue: si el primero es festivo, «mañana» es el segundo.
+    const workDay = (after: string) => {
+      const [year, month, day] = after.split("-").map(Number);
+      const date = new Date(year, month - 1, day);
+      do {
+        date.setDate(date.getDate() + 1);
+      } while (date.getDay() === 0 || date.getDay() === 6);
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${date.getFullYear()}-${m}-${d}`;
+    };
+    const holiday = workDay(localDay(0));
+    const expected = workDay(holiday);
+
+    await riuna.api(
+      "post",
+      `/api/availability/holidays?workspaceId=${riuna.workspaceId}`,
+      { day: holiday, name: "Fiesta local" },
+    );
+    await myTask(riuna, "Pedir material", localDay(0));
+
+    await page.goto(`/dashboard/workspace/${riuna.workspaceId}/today`);
+    await page
+      .getByRole("button", { name: "Terminar el día" })
+      .click({ timeout: 30_000 });
+    await page.getByRole("button", { name: "Siguiente" }).click();
+
+    const [year, month, day] = expected.split("-").map(Number);
+    const label = new Intl.DateTimeFormat("es-ES", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    }).format(new Date(year, month - 1, day));
+    await expect(page.getByRole("button", { name: /^Todo a / })).toHaveText(
+      `Todo a ${label}`,
+    );
+  });
 });

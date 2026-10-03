@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { useTaskPlanMutations } from "@/hooks/mutations/planner/use-task-plan-mutations";
 import { useTimerMutations } from "@/hooks/mutations/time-entry/use-timer-mutations";
+import { useUnavailableDays } from "@/hooks/queries/availability/use-availability";
 import { useWorkSchedule } from "@/hooks/queries/work-schedule/use-work-schedule";
 import { snoozeUntil } from "@/lib/browser-notify";
 import { dayKey, parseDayKey } from "@/lib/day-key";
@@ -35,9 +36,12 @@ export function ReminderDialog({ workspaceId }: { workspaceId: string }) {
   const { plan } = useTaskPlanMutations(workspaceId, entry?.id ?? "");
   const { data: schedule } = useWorkSchedule();
 
+  const unavailable = useUnavailableDays(workspaceId);
+
   const nextDay = nextWorkDayKey(
     dayKey(new Date()),
     schedule?.workDays ?? DEFAULT_WORK_DAYS,
+    unavailable,
   );
 
   return (
