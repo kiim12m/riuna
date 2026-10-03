@@ -68,6 +68,10 @@ siguen pendientes.
   | `label` | create, read, update, delete |
   | `workspace` | read, update, delete, manage_settings |
 
+- **Quién puede qué por defecto**: `member` crea y edita tareas, **las asigna**
+  ([ADR 062](adr/062-los-miembros-asignan-tareas.md)) y crea proyectos; definir
+  campos personalizados, borrar y administrar el espacio quedan para `admin` y
+  `owner`.
 - La autorización es **siempre** de la API (`requireWorkspacePermission`).
   Ocultar una acción en la interfaz no es una comprobación de permisos. El
   alcance de una API key se intersecta con el rol de su dueño.

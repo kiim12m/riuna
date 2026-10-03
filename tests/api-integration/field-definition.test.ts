@@ -363,10 +363,10 @@ describe("field definition permissions", () => {
 
   // Hallazgo, no decision: el rol `member` heredado de Kaneo tiene
   // `project: ["create", "read"]` y NO `update`, asi que definir campos queda
-  // hoy en manos de `admin` y `owner` incluso dentro de un proyecto. Es el
-  // mismo descubrimiento que la Fase 1 hizo con `task:assign`. Rellenar el
-  // valor de un campo si esta al alcance de un miembro, porque eso es
-  // `task:update`, que si tiene.
+  // hoy en manos de `admin` y `owner` incluso dentro de un proyecto. Es una
+  // decision (ADR 062): `member` si asigna tareas, pero definir campos cambia
+  // la estructura del proyecto. Rellenar el valor de un campo si esta al
+  // alcance de un miembro, porque eso es `task:update`, que si tiene.
   it("stops a member from defining a project field, because project:update is admin-only", async () => {
     const { app, projectId } = await setup("member");
 

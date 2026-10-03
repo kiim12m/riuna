@@ -547,6 +547,13 @@
 			"when": 1791029203217,
 			"tag": "0077_personal_project",
 			"breakpoints": true
+		},
+		{
+			"idx": 78,
+			"version": "7",
+			"when": 1791051348462,
+			"tag": "0078_member_can_assign_tasks",
+			"breakpoints": true
 		}
 	]
 }

@@ -54,6 +54,17 @@ async function createWorkspaceRoleRow(
   });
 }
 
+// Un rol que edita tareas pero no las reparte: la unica forma de vigilar la
+// puerta `task:assign` dentro de una actualizacion, ahora que `member` la tiene.
+async function createEditorWithoutAssign() {
+  const editor = await createWorkspaceMember({ role: "editor-no-assign" });
+  await createWorkspaceRoleRow(editor.workspace.id, "editor-no-assign", {
+    project: ["read"],
+    task: ["create", "read", "update"],
+  });
+  return editor;
+}
+
 async function postCreateTask(
   app: ReturnType<typeof createApp>["app"],
   projectId: string,
@@ -358,8 +369,8 @@ describe("API integration: workspace RBAC enforcement", () => {
       expect(persisted).toBeDefined();
     });
 
-    it("blocks a member from assigning a task in bulk", async () => {
-      const member = await createWorkspaceMember({ role: "member" });
+    it("blocks a role without task:assign from assigning a task in bulk", async () => {
+      const member = await createEditorWithoutAssign();
       const { project, columns } = await createProjectFixture({
         workspaceId: member.workspace.id,
       });
@@ -620,8 +631,8 @@ describe("API integration: workspace RBAC enforcement", () => {
       expect(persisted?.userId).toBe(member.user.id);
     });
 
-    it("blocks a member from assigning an unassigned task through full update", async () => {
-      const member = await createWorkspaceMember({ role: "member" });
+    it("blocks a role without task:assign from assigning an unassigned task through full update", async () => {
+      const member = await createEditorWithoutAssign();
       const { project, columns } = await createProjectFixture({
         workspaceId: member.workspace.id,
       });
@@ -634,7 +645,7 @@ describe("API integration: workspace RBAC enforcement", () => {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          title: "Member attempt",
+          title: "Editor attempt",
           description: "nope",
           priority: "low",
           status: "to-do",
@@ -651,8 +662,8 @@ describe("API integration: workspace RBAC enforcement", () => {
       expect(persisted?.userId).toBeNull();
     });
 
-    it("blocks a member from unassigning a task through full update", async () => {
-      const member = await createWorkspaceMember({ role: "member" });
+    it("blocks a role without task:assign from unassigning a task through full update", async () => {
+      const member = await createEditorWithoutAssign();
       const { project, columns } = await createProjectFixture({
         workspaceId: member.workspace.id,
       });
@@ -665,7 +676,7 @@ describe("API integration: workspace RBAC enforcement", () => {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          title: "Member attempt",
+          title: "Editor attempt",
           description: "nope",
           priority: "low",
           status: "to-do",
@@ -740,8 +751,8 @@ describe("API integration: workspace RBAC enforcement", () => {
   });
 
   describe("resource coverage: task:assign", () => {
-    it("blocks a member from assigning a task (assign is admin-tier)", async () => {
-      const member = await createWorkspaceMember({ role: "member" });
+    it("blocks a viewer from assigning a task", async () => {
+      const member = await createWorkspaceMember({ role: "viewer" });
       const { project, columns } = await createProjectFixture({
         workspaceId: member.workspace.id,
       });
@@ -756,6 +767,24 @@ describe("API integration: workspace RBAC enforcement", () => {
         body: JSON.stringify({ userId: member.user.id }),
       });
       expect(response.status).toBe(403);
+    });
+
+    it("allows a member to assign a task", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project, columns } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const task = await seedTask(project.id, columns.todo.id);
+
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const response = await app.request(`/api/task/assignee/${task.id}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ userId: member.user.id }),
+      });
+      expect(response.status).toBe(200);
     });
 
     it("allows an admin to assign a task", async () => {

@@ -55,9 +55,10 @@ describe("built-in role privileges", () => {
     expect(viewer.statements.workspace).toEqual(["read"]);
   });
 
-  it("member can create/read/update tasks but not delete or manage settings", () => {
+  it("member can create/read/update/assign tasks but not delete or manage settings", () => {
     expect(member.statements.task).toContain("create");
     expect(member.statements.task).toContain("update");
+    expect(member.statements.task).toContain("assign");
     expect(member.statements.task).not.toContain("delete");
     expect(member.statements.project).toContain("create");
     expect(member.statements.project).not.toContain("delete");

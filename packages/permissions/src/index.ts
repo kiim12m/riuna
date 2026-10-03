@@ -27,7 +27,7 @@ export const viewer = ac.newRole({
 export const member = ac.newRole({
   ...memberAc.statements,
   project: ["create", "read"],
-  task: ["create", "read", "update"],
+  task: ["create", "read", "update", "assign"],
   label: ["create", "read", "update", "delete"],
   workspace: ["read"],
 });

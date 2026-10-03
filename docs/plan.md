@@ -122,7 +122,8 @@ gestor de tareas básico y nada propio.
     y por eso nada fallaba en producción, pero `db.query.taskAssigneeTable` no
     existía y la relación `task → assignees` no se podía recorrer. Arreglado
     registrando tabla y relaciones.
-  - **Asignar exige `task:assign`, que solo tienen `admin` y `owner`.** Un
+  - ~~**Asignar exige `task:assign`, que solo tienen `admin` y `owner`.**~~ **Cerrado
+    (2026-10-03, [ADR 062](adr/062-los-miembros-asignan-tareas.md)).** Un
     miembro puede crear y editar tareas, pero no repartirlas: ni a una persona
     ni a un departamento. Viene de los roles heredados, no es de esta fase, y
     hoy queda documentado en las pruebas. Si el reparto por departamento tiene
@@ -2407,7 +2408,12 @@ filtros.
    el aviso de que PostgreSQL no está en UTC. **Hecho (2026-10-03).** El aviso vive ahora en
    `utils/warn-if-database-not-utc.ts`; de las seis pruebas de `day-columns-timezone` quedan las
    dos que no dependían de la conversión. Detalle en la ADR 049.
-3. `task:assign` para el rol `member` (migración de los `workspace_role` existentes).
+3. ✔ `task:assign` para el rol `member` (migración de los `workspace_role` existentes).
+   **Hecho (2026-10-03)**, [ADR 062](adr/062-los-miembros-asignan-tareas.md). La migración 0078
+   solo toca las filas que conservan el reparto sembrado. Cuatro pruebas nuevas, que fallan sin
+   el cambio; las tres del RBAC que vigilaban la puerta `assign` pasan a un rol que edita pero no
+   reparte. De paso, `task-team` leía la actividad sin esperar al suscriptor (carrera que fallaba
+   dos de dos con la máquina cargada): ahora usa `vi.waitFor`, como `task-assignees`.
 4. El `<h2>` de «Rama» en la tarea, a 14 px.
 5. El calendario heredado nombra los días en inglés.
 6. `GET /api/my-work/tasks` sin consumidor web: se mantiene como API pública y se cierra la nota.

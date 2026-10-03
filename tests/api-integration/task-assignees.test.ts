@@ -77,11 +77,10 @@ describe("API integration: multiple task assignees", () => {
     await resetTestDatabase();
   });
 
-  // Asignar exige `task:assign`, que en los roles heredados solo tienen
-  // `admin` y `owner`: un miembro puede crear y editar tareas, pero no
-  // repartirlas. Por eso los casos que esperan un 200 usan `admin`.
-  it("refuses a plain member, who has no assign permission", async () => {
-    const member = await createWorkspaceMember({ role: "member" });
+  // Asignar exige `task:assign`. Lo tienen `member`, `admin` y `owner`;
+  // `viewer` no.
+  it("refuses a viewer, who has no assign permission", async () => {
+    const member = await createWorkspaceMember({ role: "viewer" });
     const { project, columns } = await createProjectFixture({
       workspaceId: member.workspace.id,
     });
@@ -98,6 +97,26 @@ describe("API integration: multiple task assignees", () => {
 
     expect(response.status).toBe(403);
     await expect(readAssignees(task.id)).resolves.toEqual([]);
+  });
+
+  it("lets a plain member replace the assignees of a task", async () => {
+    const member = await createWorkspaceMember({ role: "member" });
+    const { project, columns } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const task = await createTask(project.id, columns.todo.id);
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const response = await app.request(`/api/task/assignees/${task.id}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ userIds: [member.user.id] }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(readAssignees(task.id)).resolves.toEqual([member.user.id]);
   });
 
   it("rejects unauthenticated assignee replacement", async () => {
