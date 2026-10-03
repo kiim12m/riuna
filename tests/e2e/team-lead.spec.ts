@@ -12,6 +12,7 @@ test.describe("Responsable de departamento", () => {
     browser,
     baseURL,
   }) => {
+    test.setTimeout(120_000);
     const origin = baseURL ?? "http://localhost:5174";
     const ana = await addTeammate({ riuna, browser, origin, name: "Ana" });
     const anaPage = ana.page;
@@ -60,10 +61,22 @@ test.describe("Responsable de departamento", () => {
       )
       .toEqual([{ teamId: team.id, userId: riuna.userId }]);
 
-    await anaPage.reload();
+    // Sin recargar: al volver a su pestaña, Ana ya lo ve (revision de codigo
+    // del interludio, hallazgo 4). Se avisa a la pagina de que vuelve a estar
+    // visible hasta que pasen los quince segundos de margen de la consulta.
+    await expect
+      .poll(
+        async () => {
+          await anaPage.evaluate(() =>
+            window.dispatchEvent(new Event("visibilitychange")),
+          );
+          return anaPage.getByTestId("lead-notice").count();
+        },
+        { timeout: 40_000, intervals: [2_000] },
+      )
+      .toBe(1);
     await expect(anaPage.getByTestId("lead-notice")).toHaveText(
       "Tu responsable, E2E, ve tu plan y tus cierres, nunca tu valoración.",
-      { timeout: 30_000 },
     );
     await ana.context.close();
   });

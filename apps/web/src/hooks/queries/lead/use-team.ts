@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getTeamDay, getTeamMembers, getTeamStandup } from "@/fetchers/lead";
+import { personalQueryOptions } from "@/hooks/queries/personal-query-options";
 
 /**
  * La vista del responsable no tiene tiempo real (aplazado a sabiendas): se
@@ -12,6 +13,8 @@ export function useTeamMembers(workspaceId: string) {
     queryKey: ["lead", "members", workspaceId],
     queryFn: () => getTeamMembers(workspaceId),
     enabled: Boolean(workspaceId),
+    // «Mi equipo» aparece en la barra sin recargar cuando te marcan.
+    ...personalQueryOptions,
   });
 }
 
@@ -21,6 +24,7 @@ export function useTeamDay(workspaceId: string, date?: string) {
     queryFn: () => getTeamDay(workspaceId, date),
     enabled: Boolean(workspaceId),
     refetchInterval: TEAM_POLL_MS,
+    ...personalQueryOptions,
   });
 }
 
@@ -30,5 +34,6 @@ export function useTeamStandup(workspaceId: string, enabled = true) {
     queryFn: () => getTeamStandup(workspaceId),
     enabled: Boolean(workspaceId) && enabled,
     refetchInterval: TEAM_POLL_MS,
+    ...personalQueryOptions,
   });
 }
