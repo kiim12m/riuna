@@ -686,3 +686,88 @@ describe("API integration: multiple task assignees", () => {
     });
   });
 });
+
+describe("API integration: assignees in the task list", () => {
+  beforeEach(async () => {
+    await resetTestDatabase();
+  });
+
+  // Tablero y lista pintan la pila de asignados con lo que trae el listado,
+  // sin pedir cada tarea por separado.
+  it("lists every assignee of a shared task, the single one of a plain task, and none of an unassigned one", async () => {
+    const admin = await createWorkspaceMember({ role: "admin" });
+    const { project, columns } = await createProjectFixture({
+      workspaceId: admin.workspace.id,
+    });
+    const ana = await addWorkspaceMember(admin.workspace.id, "Ana");
+    const luis = await addWorkspaceMember(admin.workspace.id, "Luis");
+    const shared = await createTask(project.id, columns.todo.id);
+    const single = await db
+      .insert(schema.taskTable)
+      .values({
+        ...taskTreeValues(),
+        projectId: project.id,
+        title: "Una sola persona",
+        status: "to-do",
+        columnId: columns.todo.id,
+        priority: "medium",
+        number: 2,
+        position: 1,
+      })
+      .returning()
+      .then((rows) => rows[0]);
+    const none = await db
+      .insert(schema.taskTable)
+      .values({
+        ...taskTreeValues(),
+        projectId: project.id,
+        title: "Sin nadie",
+        status: "to-do",
+        columnId: columns.todo.id,
+        priority: "medium",
+        number: 3,
+        position: 2,
+      })
+      .returning()
+      .then((rows) => rows[0]);
+    if (!single || !none) throw new Error("Failed to seed tasks");
+
+    mockAuthenticatedSession(admin.user);
+    const { app } = createApp();
+    const assign = (taskId: string, userIds: string[]) =>
+      app.request(`/api/task/assignees/${taskId}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ userIds }),
+      });
+    expect((await assign(shared.id, [ana.id, luis.id])).status).toBe(200);
+    expect((await assign(single.id, [luis.id])).status).toBe(200);
+
+    const response = await app.request(`/api/task/tasks/${project.id}`);
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      data: {
+        columns: {
+          tasks: {
+            id: string;
+            assignees: { id: string; name: string; image: string | null }[];
+          }[];
+        }[];
+      };
+    };
+    const byId = new Map(
+      body.data.columns.flatMap((column) =>
+        column.tasks.map((task) => [task.id, task.assignees] as const),
+      ),
+    );
+
+    expect(byId.get(shared.id)).toEqual([
+      { id: ana.id, name: "Ana", image: null },
+      { id: luis.id, name: "Luis", image: null },
+    ]);
+    expect(byId.get(single.id)).toEqual([
+      { id: luis.id, name: "Luis", image: null },
+    ]);
+    expect(byId.get(none.id)).toEqual([]);
+  });
+});

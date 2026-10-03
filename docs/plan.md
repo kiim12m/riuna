@@ -145,8 +145,8 @@ gestor de tareas básico y nada propio.
   correcto, en vez de comprobar que lo guardado sobrevive; y montaban sin
   `StrictMode`, sin el cual el fallo no se reproduce. Las guardas nuevas de los
   dos hooks fallan contra el código anterior, comprobado revirtiéndolo.
-- Las tarjetas de tablero y lista muestran solo al responsable principal; la
-  lista completa de asignados solo se ve en el detalle.
+- ~~Las tarjetas de tablero y lista muestran solo al responsable principal; la
+  lista completa de asignados solo se ve en el detalle.~~ Cerrado (punto 15 del cierre de la deuda).
 - ~~Falta la ADR de la asignación a equipos y los múltiples asignados.~~
   Escrita: [ADR 010](adr/010-asignacion-a-equipos-y-multiples-asignados.md).
   Conservar `assignee_id` como responsable principal y repetirlo dentro de
@@ -2485,7 +2485,15 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     horizontales con `interval: 0`). Se comprobó cada uso de la paleta: el reparto en barras y el
     reparto en lista rotulan cada cubo con su nombre, y todo lo demás (burndown, velocidad,
     tendencia) usa solo `--chart-1`. La condición de relevo de la regla —rótulo visible— se cumple.
-15. Las tarjetas de tablero y lista muestran todos los asignados.
+15. ✔ Las tarjetas de tablero y lista muestran todos los asignados. **Hecho (2026-10-03).**
+    `GET /task/tasks/:projectId` devuelve `assignees` en cada tarea: el conjunto completo, en orden
+    de asignación; para las de varias personas, desde `task_assignee` (`task/multi-assignees.ts`,
+    solo las que tienen más de un asignado); para las de una, el responsable principal que ya se leía.
+    **Medido** en el banco de 50.000 tareas (proyecto de 10.000, 261 con varios asignados):
+    **26 ms**, todo por índices. En la web, `AssigneeStack` sustituye a tres bloques de avatar
+    repetidos (tablero, lista y backlog) y de paso elimina una búsqueda en los miembros del
+    espacio por cada tarjeta. Prueba de integración del contrato y e2e del tablero, que falla sin
+    el cambio. Quedan fuera los asignados por equipo, que ya tienen su propia etiqueta.
 16. `dueDate eq <día>` compara un instante: comparar por rango del día de Madrid.
 17. Índice `task (completed_at)`: medir en el banco y construir solo si se cumple la condición de la ADR 030.
 
