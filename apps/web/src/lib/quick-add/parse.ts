@@ -109,9 +109,13 @@ function resolveDay(word: string, today: Date): Date | null {
   const folded = fold(word);
   const base = startOfDay(today);
 
-  if (folded in RELATIVE_DAYS) return addDays(base, RELATIVE_DAYS[folded]);
+  // `Object.hasOwn` y no `in`: con `in`, «constructor» o «__proto__» casaban
+  // con lo que el objeto hereda y salia un dia NaN.
+  if (Object.hasOwn(RELATIVE_DAYS, folded)) {
+    return addDays(base, RELATIVE_DAYS[folded]);
+  }
 
-  if (folded in WEEKDAYS) {
+  if (Object.hasOwn(WEEKDAYS, folded)) {
     const ahead = (WEEKDAYS[folded] - base.getDay() + 7) % 7 || 7;
     return addDays(base, ahead);
   }
@@ -227,7 +231,8 @@ export function parseQuickAdd(
     }
 
     if (sigil === "*" && rest) {
-      const priority = PRIORITIES[fold(rest)];
+      const key = fold(rest);
+      const priority = Object.hasOwn(PRIORITIES, key) ? PRIORITIES[key] : null;
       if (priority) {
         result.priority = priority;
         continue;

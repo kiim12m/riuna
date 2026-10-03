@@ -271,3 +271,24 @@ describe("parseQuickAdd: literal y combinado", () => {
     });
   });
 });
+
+// Revision de codigo del interludio, hallazgo 9: los diccionarios son objetos
+// llanos, y `in` o `[...]` casaban con lo que heredan de Object.prototype.
+describe("parseQuickAdd: palabras que no son tokens", () => {
+  it("deja en el titulo lo que solo casa con propiedades heredadas", () => {
+    for (const word of [
+      "@constructor",
+      "!constructor",
+      "*constructor",
+      "@__proto__",
+      "*tostring",
+    ]) {
+      expect(parse(`Revisar ${word}`)).toMatchObject({
+        title: `Revisar ${word}`,
+        plannedDate: null,
+        dueDate: null,
+        priority: null,
+      });
+    }
+  });
+});
