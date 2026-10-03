@@ -3331,5 +3331,15 @@
 			"duplicate": "Ese día ya tiene un festivo.",
 			"error": "No se pudo guardar el festivo."
 		}
+	},
+	"lead": {
+		"notice_one": "Tu responsable, {{names}}, ve tu plan y tus cierres, nunca tu valoración.",
+		"notice_other": "Tus responsables, {{names}}, ven tu plan y tus cierres, nunca tu valoración.",
+		"teams": {
+			"badge": "Responsable",
+			"toggle": "Responsable del equipo: {{name}}",
+			"hint": "Quien sea responsable lee el plan, la carga y los cierres del resto del equipo, nunca su valoración. No puede cambiar nada.",
+			"error": "No se pudo cambiar el responsable del equipo."
+		}
 	}
 }

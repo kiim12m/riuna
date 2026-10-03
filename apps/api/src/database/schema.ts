@@ -258,6 +258,10 @@ export const teamMemberTable = pgTable(
       .notNull()
       .references(() => userTable.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at"),
+    // Responsable del departamento (ADR 059): ve en solo lectura el plan y
+    // los cierres de los demas del equipo, nunca su valoracion. Better Auth
+    // no la conoce: al añadir a alguien queda en `false`.
+    isLead: boolean("is_lead").notNull().default(false),
   },
   (table) => [
     index("teamMember_teamId_idx").on(table.teamId),

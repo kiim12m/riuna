@@ -27,6 +27,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
+import { LeadNotice } from "@/components/lead/lead-notice";
 import PageTitle from "@/components/page-title";
 import { PlannerDay } from "@/components/planner/planner-day";
 import { PlannerTaskCard } from "@/components/planner/task-card";
@@ -397,6 +398,7 @@ function RouteComponent() {
               </div>
             }
           />
+          <LeadNotice workspaceId={workspaceId} className="px-4 pt-2" />
           {isPending ? (
             <div className="flex gap-3 p-4">
               {["a", "b", "c"].map((key) => (

@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 a 4 hechos (el 4.2, aplazado), y 5.1; sigue el 5.2 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 a 4 hechos (el 4.2, aplazado), y 5.1-5.2; sigue el 5.3 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -2132,10 +2132,37 @@ verificación.
   - pasada visual en escritorio y a 375 px. Con un festivo, en la columna
     estrecha del Cronograma, la fecha se encogía hasta «d…»: ahora se recorta
     la marca.
-- **5.2 Responsable de departamento** · S · ADR 059. `team_member.is_lead`. **Un único punto
+- **5.2 Responsable de departamento** ✔ · S · [ADR 059](adr/059-responsable-de-departamento.md). `team_member.is_lead`. **Un único punto
   de visibilidad**, `lead/visibility.ts`, por el que pasa todo controlador del responsable:
   las ADR 041, 046 y 047 ya pagaron tres fugas entre espacios por repetir un `WHERE`. Ningún
   endpoint de `lead/` escribe.
+  **Hecho (2026-10-03).** Decisiones de detalle:
+  - **Dos módulos:** `team-lead/` marca al responsable con el permiso de
+    gestionar miembros (`member:update`), y `lead/` solo lee. Una prueba de
+    arquitectura falla si `lead/` registra una ruta que escriba, escribe en
+    la base o publica eventos.
+  - **Una sola consulta de pares** (responsable, miembro) para los dos
+    sentidos. Exige que el equipo sea de este espacio, que el responsable
+    lleve la marca, que los dos sigan en el espacio y que no sean la misma
+    persona.
+  - **El interruptor va en el diálogo de miembros del equipo**, y quien no
+    puede gestionarlo ve la etiqueta «Responsable».
+  - **El aviso** «Tu responsable, X, ve tu plan y tus cierres, nunca tu
+    valoración» sale en Hoy y en el Planificador, con
+    `GET /lead/my-leads`.
+  - **Better Auth no conoce la columna:** al añadir a alguien queda en
+    `false`, y sacarle del equipo se la lleva.
+
+  Verificación:
+  - 3 pruebas de integración de la regla, el interruptor y el aviso. La
+    primera versión no detectaba quitar el filtro de espacio del equipo,
+    porque la persona del otro espacio no estaba en este; ahora lo está y
+    lo detecta;
+  - la prueba de arquitectura de solo lectura, comprobada con una escritura
+    metida a propósito;
+  - 1 de extremo a extremo con dos personas: la segunda entra por una
+    invitación pendiente;
+  - pasada visual del diálogo y del aviso.
 - **5.3 «Mi equipo»** · M. Por persona: plan, capacidad con ausencias y festivos, carga, hechas,
   horas, el cierre **público** y el stand-up, todo en lote —unas ocho consultas para el equipo
   entero— y con sondeo de 60 s.
@@ -2339,9 +2366,11 @@ el modo foco, y el **3.3**, los avisos de ritmo
 ([ADR 056](adr/056-modo-foco-sobre-entradas-reales.md)). El **Bloque 4**, el
 calendario, se cerró con el **4.1**, exportar ICS
 ([ADR 057](adr/057-exportar-el-calendario-por-token.md)): el **4.2**, importar
-iCal, quedó aplazado. Del **Bloque 5**, equipo, está hecho el **5.1**,
-ausencias y festivos ([ADR 060](adr/060-ausencias-y-festivos.md)); sigue el
-**5.2**, el responsable de departamento.
+iCal, quedó aplazado. Del **Bloque 5**, equipo, están hechos el **5.1**,
+ausencias y festivos ([ADR 060](adr/060-ausencias-y-festivos.md)), y el
+**5.2**, el responsable de departamento
+([ADR 059](adr/059-responsable-de-departamento.md)); sigue el **5.3**, «Mi
+equipo».
 Después del interludio viene la **Fase 8**: automatizaciones e
 importadores externos.
 

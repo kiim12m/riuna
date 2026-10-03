@@ -307,6 +307,12 @@ la tarea y en la propia tabla.
   Un día no disponible cuenta cero horas en el Planificador, el Cronograma y
   Hoy, que lo marcan con «Festivo · nombre» o «Ausente», y ese día no suena
   el aviso de «sin registrar».
+- **Responsable de departamento**
+  ([ADR 059](adr/059-responsable-de-departamento.md)): en el diálogo de
+  miembros de un equipo, quien gestiona miembros marca a su responsable.
+  Ese responsable puede leer el plan y los cierres del resto del equipo,
+  nunca su valoración ni cambiar nada. Cada miembro con responsable lo ve
+  avisado en Hoy y en el Planificador.
 - **Stand-up**: un botón en Hoy lo enseña, derivado al momento y sin
   guardarse:
   - ayer, es decir, lo terminado el último día laborable;

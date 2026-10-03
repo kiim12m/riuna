@@ -1,4 +1,4 @@
-import { test as base, expect } from "@playwright/test";
+import { type Browser, test as base, expect } from "@playwright/test";
 
 export const API_URL = process.env.E2E_API_URL ?? "http://localhost:1338";
 
@@ -115,4 +115,62 @@ export async function createTask(
   );
 
   return task.id;
+}
+
+/**
+ * Una segunda persona en el espacio de la prueba, con su propio navegador.
+ * Entra por una invitacion pendiente: al registrarse con ese correo, la API
+ * la añade al espacio (`grantPendingInvitations`), sin pasar por el correo.
+ */
+export async function addTeammate({
+  riuna,
+  browser,
+  origin,
+  name,
+}: {
+  riuna: RiunaContext;
+  browser: Browser;
+  origin: string;
+  name: string;
+}) {
+  const email = `e2e-${name.toLowerCase()}-${Date.now()}@example.com`;
+  await riuna.api("post", "/api/auth/organization/invite-member", {
+    email,
+    role: "member",
+    organizationId: riuna.workspaceId,
+  });
+
+  const context = await browser.newContext({
+    baseURL: origin,
+    locale: "es-ES",
+    timezoneId: "Europe/Madrid",
+  });
+  const page = await context.newPage();
+  const api = async <T = unknown>(
+    method: "get" | "post" | "put" | "patch" | "delete",
+    path: string,
+    body?: unknown,
+  ): Promise<T> => {
+    const response = await page.request[method](`${API_URL}${path}`, {
+      headers: { "content-type": "application/json", Origin: origin },
+      ...(body === undefined ? {} : { data: body }),
+    });
+    if (!response.ok()) {
+      throw new Error(
+        `${method.toUpperCase()} ${path} -> ${response.status()} ${await response.text()}`,
+      );
+    }
+    return (await response.json()) as T;
+  };
+
+  const signUp = await api<{ user: { id: string } }>(
+    "post",
+    "/api/auth/sign-up/email",
+    { email, password: "E2e-passw0rd!", name },
+  );
+  await api("post", "/api/auth/organization/set-active", {
+    organizationId: riuna.workspaceId,
+  });
+
+  return { id: signUp.user.id, page, context, api };
 }

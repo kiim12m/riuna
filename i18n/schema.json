@@ -13067,6 +13067,38 @@
 				}
 			},
 			"required": ["day", "timeOff", "holidays"]
+		},
+		"lead": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"notice_one": {
+					"type": "string"
+				},
+				"notice_other": {
+					"type": "string"
+				},
+				"teams": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"badge": {
+							"type": "string"
+						},
+						"toggle": {
+							"type": "string"
+						},
+						"hint": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						}
+					},
+					"required": ["badge", "toggle", "hint", "error"]
+				}
+			},
+			"required": ["notice_one", "notice_other", "teams"]
 		}
 	},
 	"required": [
@@ -13096,6 +13128,7 @@
 		"reminders",
 		"focus",
 		"calendar",
-		"availability"
+		"availability",
+		"lead"
 	]
 }

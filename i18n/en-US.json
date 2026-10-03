@@ -3331,5 +3331,15 @@
 			"duplicate": "That day already has a holiday.",
 			"error": "The holiday could not be saved."
 		}
+	},
+	"lead": {
+		"notice_one": "Your lead, {{names}}, sees your plan and your day closes, never your rating.",
+		"notice_other": "Your leads, {{names}}, see your plan and your day closes, never your rating.",
+		"teams": {
+			"badge": "Lead",
+			"toggle": "Lead of the team: {{name}}",
+			"hint": "The lead of a team reads the plan, the workload and the day closes of the rest of the team, never their rating. They cannot change anything.",
+			"error": "The team lead could not be changed."
+		}
 	}
 }

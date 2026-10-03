@@ -30,6 +30,7 @@ import { useTranslation } from "react-i18next";
 import { DayOffBadge } from "@/components/availability/day-off-badge";
 import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
+import { LeadNotice } from "@/components/lead/lead-notice";
 import PageTitle from "@/components/page-title";
 import { QuickAddInput } from "@/components/quick-add/quick-add-input";
 import { StandupDialog } from "@/components/rituals/standup-dialog";
@@ -373,6 +374,7 @@ function TodayComponent() {
               )
             }
           />
+          <LeadNotice workspaceId={workspaceId} />
           {data?.unavailable && (
             <p className="flex flex-wrap items-center gap-2 text-meta text-muted-foreground">
               <DayOffBadge dayOff={data.unavailable} />

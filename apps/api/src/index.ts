@@ -48,6 +48,7 @@ import goal from "./goal";
 import getInstanceStatus from "./instance/controllers/get-instance-status";
 import invitation from "./invitation";
 import label from "./label";
+import lead from "./lead";
 import mcpRoutes, { mcpWellKnownRoutes } from "./mcp";
 import { migrateColumns } from "./migrations/column-migration";
 import myWork from "./my-work";
@@ -68,6 +69,7 @@ import slackIntegration from "./slack-integration";
 import { getPrivateObject } from "./storage/s3";
 import task from "./task";
 import taskRelation from "./task-relation";
+import teamLead from "./team-lead";
 import telegramIntegration from "./telegram-integration";
 import template from "./template";
 import timeEntry from "./time-entry";
@@ -672,6 +674,8 @@ export function createApp() {
   const captureApi = api.route("/capture", capture);
   const calendarApi = api.route("/calendar", calendar);
   const availabilityApi = api.route("/availability", availability);
+  const leadApi = api.route("/lead", lead);
+  const teamLeadApi = api.route("/team-lead", teamLead);
   const reviewApi = api.route("/review", review);
   const scheduleApi = api.route("/schedule", schedule);
   const workScheduleApi = api.route("/work-schedule", workSchedule);
@@ -865,6 +869,8 @@ export function createApp() {
     captureApi,
     calendarApi,
     availabilityApi,
+    leadApi,
+    teamLeadApi,
     reviewApi,
     scheduleApi,
     workScheduleApi,
@@ -1029,6 +1035,8 @@ const {
   captureApi,
   calendarApi,
   availabilityApi,
+  leadApi,
+  teamLeadApi,
   reviewApi,
   scheduleApi,
   workScheduleApi,
@@ -1092,6 +1100,8 @@ export type AppType =
   | typeof captureApi
   | typeof calendarApi
   | typeof availabilityApi
+  | typeof leadApi
+  | typeof teamLeadApi
   | typeof reviewApi
   | typeof scheduleApi
   | typeof workScheduleApi
