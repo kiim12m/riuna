@@ -128,3 +128,15 @@ llega `"/"`, sin él y con `MSYS2_ARG_CONV_EXCL` llega `"C:/Program Files/Git/"`
 la PostgreSQL del devcontainer. En Windows la base la pone uno —un contenedor de
 `postgres:16-alpine` basta— y se le dice al guion cuál con `DEV_DATABASE_URL`.
 Que sea una base **de esta máquina** lo sigue vigilando `dev-parallel.sh`.
+
+## Regenerar la especificación OpenAPI
+
+`apps/api/openapi.json` es lo que lee quien integra con la API. Si cambias rutas o
+validadores, la prueba `openapi-up-to-date` falla hasta que lo regeneres:
+
+```bash
+RIUNA_API_URL=http://localhost:1337 pnpm --filter @riuna/api openapi:export
+```
+
+Fija la URL a mano: la API carga el `.env` de la raíz, y sin eso el fichero se
+llevaría la URL de tu máquina (`servers`).

@@ -1678,9 +1678,9 @@ verificación.
     Planificador, el Cronograma, Mis tareas, el tablero, el parte y el móvil.
 
   Queda anotado:
-  - `apps/api/openapi.json` no se regenera desde la Fase 5. Regenerarlo mete
+  - ~~`apps/api/openapi.json` no se regenera desde la Fase 5. Regenerarlo mete
     unas 9.000 líneas ajenas y la URL de la API del `.env`; pide su propio
-    cambio, con la URL saneada.
+    cambio, con la URL saneada.~~ Regenerado (punto 13 del cierre de la deuda).
   - ~~El calendario heredado nombra los días en inglés.~~ Era el selector de fecha;
     cerrado (punto 5 del cierre de la deuda).
 - **0.4 Planificador, atajos y paleta** ✔ · M. La zona «con hora» siempre presente, las ancladas
@@ -2473,7 +2473,12 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     de objeto). Hoy no hay ninguno: el hueco que dejó la Fase 7.5 estaba cerrado, ahora además
     vigilado. Se descartan los identificadores de permiso (`workspace:read`), que parecen claves;
     las claves construidas con `${…}` no se pueden ver. Comprobado con una clave inventada.
-13. Regenerar `apps/api/openapi.json` (sin tocar desde 2026-08-27), con la URL saneada.
+13. ✔ Regenerar `apps/api/openapi.json` (sin tocar desde 2026-08-27), con la URL saneada.
+    **Hecho (2026-10-03).** 197 rutas. La URL del servidor salía del `.env` (una IP de Tailscale):
+    se regenera con `RIUNA_API_URL=http://localhost:1337 pnpm --filter @riuna/api openapi:export`.
+    Para que no vuelva a caducar en silencio, `tests/api/openapi-up-to-date.test.ts` compara el
+    fichero con la especificación viva, salvo `servers`; falla con una ruta quitada y pasa sin
+    `.env`, que es como corre la CI.
 14. Tonos 4 y 5 de la paleta de datos por debajo de 3:1: etiquetas del eje o vista de tabla.
 15. Las tarjetas de tablero y lista muestran todos los asignados.
 16. `dueDate eq <día>` compara un instante: comparar por rango del día de Madrid.
