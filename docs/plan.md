@@ -1142,9 +1142,9 @@ sin predicado selectivo.
 - **Se pierden los filtros de página de «Mi trabajo»** —vencimiento, proyecto,
   completadas— que valían para toda la pantalla. Cada widget lleva ahora el suyo,
   que es más flexible y menos inmediato.
-- **`GET /api/my-work/tasks` se queda sin consumidor web.** Sigue publicada,
+- ~~**`GET /api/my-work/tasks` se queda sin consumidor web.**~~ Sigue publicada,
   documentada y probada; retirarla es una decisión sobre la superficie pública
-  que no se toma de paso.
+  que no se toma de paso. **Cerrado (2026-10-03):** se mantiene como API pública.
 - **El índice `task (completed_at)` está declarado y no construido**, con la
   condición que lo justificaría escrita en la ADR 030.
 - **Una tarea que vence hoy a las 00:00 se clasifica como vencida**, y por las
@@ -2423,7 +2423,9 @@ filtros.
    `DayPicker` no recibía `locale` y pintaba «October 2026» y los días en inglés. Ahora recibe
    `es` o `enUS` según la lengua activa, y el desplegable de mes usa la misma. Lo vigila
    `date-picker.spec.ts`, que falla sin el cambio.
-6. `GET /api/my-work/tasks` sin consumidor web: se mantiene como API pública y se cierra la nota.
+6. ✔ `GET /api/my-work/tasks` sin consumidor web: se mantiene como API pública y se cierra la nota.
+   **Hecho (2026-10-03).** Sigue publicada, documentada y probada; la usan las claves de API y los
+   scripts. Retirar una ruta pública no se hace por no tener consumidor propio.
 
 **Tanda 2 — arreglos pequeños** · S
 7. «Pasar al siguiente día laborable» salta festivos y ausencias.
