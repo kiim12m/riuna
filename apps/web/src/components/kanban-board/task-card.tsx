@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import {
   AlertDialog,
   AlertDialogClose,
@@ -418,6 +419,18 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
                     </HoverCard>
                   );
                 })()}
+              <TaskTimerButton
+                task={{
+                  id: task.id,
+                  number: task.number,
+                  title: task.title,
+                  projectId: task.projectId,
+                  estimate: task.estimate ?? null,
+                  isDone: taskIsCompleted,
+                }}
+                reveal="hover"
+                className="ml-auto"
+              />
             </div>
           </div>
         </ContextMenuTrigger>

@@ -39,8 +39,8 @@ const OPEN_ONLY = [
  *
  * Desde la ADR 043 se lee en tres alturas sobre la rejilla de doce columnas:
  * ocho cifras que caben en dos filas exactas (8 x 3 = 24), la semana en curso a
- * ancho completo, y abajo lo que queda por hacer con la bandeja al lado. El
- * orden importa: es el `position` con el que nacen y el que ordena la
+ * ancho completo, y abajo lo que queda por hacer con las notificaciones al
+ * lado. El orden importa: es el `position` con el que nacen y el que ordena la
  * exportacion.
  */
 export const DEFAULT_LAYOUT: DefaultWidget[] = [
@@ -137,7 +137,9 @@ export const DEFAULT_LAYOUT: DefaultWidget[] = [
   },
   {
     type: "inbox",
-    title: "Bandeja",
+    // Sus notificaciones. Se llamaba "Bandeja" hasta que ese nombre paso a ser
+    // el proyecto de captura de cada persona (ADR 051).
+    title: "Notificaciones",
     config: {},
     span: 4,
     rowSpan: 4,

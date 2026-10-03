@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { NewTaskButton } from "@/components/common/header/new-task-button";
 import Layout from "@/components/common/layout";
+import { MobileHeaderBell } from "@/components/notification/mobile-header-bell";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -84,6 +85,7 @@ export default function WorkspaceLayout({
              * apareceria en Hoy, el Planificador ni Mis tareas. */}
             <NewTaskButton assignToMe />
             {headerActions}
+            <MobileHeaderBell />
           </div>
         </div>
       </Layout.Header>

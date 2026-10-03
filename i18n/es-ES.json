@@ -1468,7 +1468,9 @@
 				"navigate": "Navegar",
 				"open": "Abrir",
 				"close": "Cerrar"
-			}
+			},
+			"goTo": "Ir a",
+			"timer": "Cronómetro"
 		},
 		"notifications": "Notificaciones",
 		"sidebar": {
@@ -1476,6 +1478,7 @@
 			"admin": "Administración",
 			"projects": "Proyectos",
 			"today": "Hoy",
+			"inbox": "Personal",
 			"planner": "Planificador",
 			"schedule": "Cronograma",
 			"myTasks": "Mis tareas",
@@ -1487,7 +1490,8 @@
 			"workspaceAdmin": "Espacio",
 			"projectSettings": "Ajustes de proyecto",
 			"more": "Más",
-			"backToBoard": "Volver al tablero"
+			"backToBoard": "Volver al tablero",
+			"team": "Mi equipo"
 		},
 		"projectList": {
 			"viewProject": "Ver Proyecto",
@@ -1549,14 +1553,16 @@
 				"create": "Crear",
 				"views": "Vistas",
 				"navigation": "Navegación",
-				"quickSelect": "Selección rápida (en ventana emergente)"
+				"quickSelect": "Selección rápida (en ventana emergente)",
+				"taskDetails": "Detalle de la tarea"
 			},
 			"items": {
 				"openCommandPalette": "Abrir paleta de comandos",
 				"globalSearch": "Búsqueda global",
-				"toggleSidebar": "Abir barra lateral",
+				"toggleSidebar": "Abrir barra lateral",
 				"showShortcuts": "Mostrar atajos de teclado",
 				"closeModal": "Cerrar modal/ventana emergente",
+				"quickAdd": "Captura rápida",
 				"createTask": "Crear tarea",
 				"createProject": "Crear proyecto",
 				"createWorkspace": "Crear espacio de trabajo",
@@ -1567,8 +1573,24 @@
 				"prevTask": "Tarea anterior",
 				"openTask": "Abrir tarea seleccionada",
 				"quickSelectNumber": "Seleccionar opción por número",
-				"calendarView": "Cambiar a vista de calendario"
+				"calendarView": "Cambiar a vista de calendario",
+				"toggleTimer": "Iniciar o parar el cronómetro",
+				"openNotifications": "Abrir notificaciones",
+				"switchWorkspace": "Cambiar de espacio de trabajo",
+				"goToProject": "Ir a un proyecto",
+				"ganttView": "Cambiar a vista de Gantt",
+				"setStatus": "Cambiar el estado",
+				"setPriority": "Cambiar la prioridad",
+				"setAssignee": "Cambiar el responsable",
+				"setLabels": "Cambiar las etiquetas",
+				"setDueDate": "Cambiar el vencimiento"
 			}
+		},
+		"inbox": {
+			"unavailableTitle": "No se ha podido abrir tu proyecto Personal",
+			"unavailableDescription": "Puede que tu papel en este espacio no permita crear tareas, y Personal solo guarda tareas que creas tú.",
+			"visibilityLabel": "Quién ve Personal",
+			"notPrivate": "Personal no sale en las listas de proyectos de los demás, pero no es privado: quien ve las tareas del espacio ve también las suyas."
 		}
 	},
 	"notifications": {
@@ -2296,6 +2318,24 @@
 			"label": "Equipo",
 			"unknown": "Equipo desconocido"
 		},
+		"time": {
+			"title": "Tiempo",
+			"plan": "Tu plan",
+			"unplanned": "Sin planificar",
+			"unplan": "Quitar del plan",
+			"planError": "No se pudo actualizar tu plan",
+			"logged": "Registrado",
+			"running": "en marcha",
+			"noEntries": "Aún no hay tiempo registrado.",
+			"add": "Añadir tiempo",
+			"date": "Fecha",
+			"start": "Inicio",
+			"duration": "Duración",
+			"durationPlaceholder": "1h 30m",
+			"invalidDuration": "Escribe una duración como 1h 30m, 90m o 1:30.",
+			"added": "Tiempo registrado",
+			"addError": "No se pudo registrar el tiempo"
+		},
 		"tree": {
 			"title": "Rama",
 			"expand": "Desplegar la rama",
@@ -2610,7 +2650,9 @@
 			"columns_other": "{{count}} columnas",
 			"rows_one": "{{count}} fila",
 			"rows_other": "{{count}} filas",
-			"personalScope": "Trabajo de quién"
+			"personalScope": "Trabajo de quién",
+			"deleteConfirmTitle": "¿Borrar «{{title}}»?",
+			"deleteConfirmDescription": "El widget desaparece de este panel. Las tareas y los datos no se tocan."
 		},
 		"type": {
 			"count": "Recuento",
@@ -2619,7 +2661,7 @@
 			"time": "Tiempo registrado",
 			"epic_progress": "Avance por épica",
 			"table": "Lista de tareas",
-			"inbox": "Bandeja",
+			"inbox": "Notificaciones",
 			"goal": "Objetivo",
 			"week": "Esta semana"
 		},
@@ -2668,8 +2710,8 @@
 			"subtitle": "Todo lo que tienes entre manos, en un sitio."
 		},
 		"inbox": {
-			"error": "No se ha podido cargar tu bandeja",
-			"empty": "Tu bandeja está vacía"
+			"error": "No se han podido cargar tus notificaciones",
+			"empty": "No tienes notificaciones"
 		},
 		"actions": {
 			"share": "Compartir con el espacio",
@@ -2744,7 +2786,9 @@
 		"shared": "Compartido",
 		"errors": {
 			"saveFailed": "No se ha podido guardar el cambio"
-		}
+		},
+		"deleteConfirmTitle": "¿Borrar «{{name}}»?",
+		"deleteConfirmDescription": "Se borran el objetivo y todos sus resultados clave. No se puede deshacer."
 	},
 	"today": {
 		"pageTitle": "Hoy",
@@ -2756,7 +2800,8 @@
 		"previous": {
 			"title_one": "De días anteriores ({{count}})",
 			"title_other": "De días anteriores ({{count}})",
-			"addToToday": "Añadir a hoy"
+			"addToToday": "Añadir a hoy",
+			"addAllToToday": "Añadir todo a hoy"
 		},
 		"planned": {
 			"title": "Plan de hoy",
@@ -2786,6 +2831,10 @@
 			"estimate": "Estimado",
 			"logged": "Registrado",
 			"due": "Vence"
+		},
+		"key": {
+			"title_one": "{{count}} imprescindible de 3",
+			"title_other": "{{count}} imprescindibles de 3"
 		}
 	},
 	"myTasks": {
@@ -2794,7 +2843,8 @@
 			"list": "Lista",
 			"board": "Tablero",
 			"gantt": "Gantt",
-			"table": "Tabla"
+			"table": "Tabla",
+			"waiting": "Esperando a"
 		},
 		"table": {
 			"moreResults": "Mostrando {{shown}} de {{total}}. Acota con un filtro para ver el resto."
@@ -2803,7 +2853,24 @@
 			"title": "Nada por aquí",
 			"description": "No hay tareas en este ámbito."
 		},
-		"description": "Tus tareas de todos los proyectos."
+		"description": "Tus tareas de todos los proyectos.",
+		"shownOf": "Mostrando {{shown}} de {{total}}",
+		"loadMore": "Cargar más",
+		"waiting": {
+			"title": "Esperando a",
+			"description": "Lo que depende de otra persona: lo que creaste y asignaste a otra, y lo tuyo bloqueado por tareas ajenas.",
+			"delegated_one": "Delegada · {{count}}",
+			"delegated_other": "Delegadas · {{count}}",
+			"blocked_one": "Bloqueada · {{count}}",
+			"blocked_other": "Bloqueadas · {{count}}",
+			"waitingOn": "Esperando a {{names}}",
+			"blockedBy": "Bloqueada por {{tasks}}",
+			"capped": "Se enseñan las {{limit}} primeras.",
+			"empty": {
+				"title": "No esperas a nadie",
+				"description": "Aquí salen las tareas que asignas a otras personas y las tuyas bloqueadas por tareas ajenas."
+			}
+		}
 	},
 	"planner": {
 		"pageTitle": "Planificador",
@@ -2820,7 +2887,14 @@
 			"description": "No tienes tareas asignadas que planificar."
 		},
 		"description": "Ventana de {{days}} días. Arrastra tareas entre días o desde «Sin planificar».",
-		"dayLoadPct": "{{pct}} % de tu jornada"
+		"dayLoadPct": "{{pct}} % de tu jornada",
+		"dropToAnchor": "Suelta aquí para fijar una hora",
+		"window": {
+			"previous": "Semana anterior",
+			"today": "Hoy",
+			"next": "Semana siguiente",
+			"todayLabel": "Volver a hoy"
+		}
 	},
 	"schedule": {
 		"pageTitle": "Cronograma",
@@ -2934,5 +3008,361 @@
 			"endTime": "Hora de fin"
 		},
 		"start": "Iniciar cronómetro"
+	},
+	"quickAdd": {
+		"label": "Captura rápida",
+		"dialogTitle": "Captura rápida",
+		"dialogDescription": "Intro crea la tarea; Esc cierra.",
+		"placeholder": "Captura una tarea… @mañana 10:00 1h #etiqueta",
+		"hint": "@día la planifica · !día vence · #etiqueta · +CLAVE proyecto · *prioridad · 1h30 estimación · \\ deja la palabra tal cual",
+		"preview": "Lo que se va a capturar",
+		"due": "Vence {{day}}",
+		"captured": "{{key}} capturada",
+		"capturedInInbox": "{{key}} capturada en Personal",
+		"error": "No se ha podido capturar la tarea"
+	},
+	"taskActions": {
+		"menuLabel": "Acciones de la tarea",
+		"markDone": "Marcar como hecha",
+		"reopen": "Reabrir",
+		"planToday": "Planificar hoy",
+		"planTomorrow": "Planificar mañana",
+		"pickDay": "Elegir día",
+		"setTime": "Fijar hora…",
+		"unplan": "Quitar del plan",
+		"estimate": "Estimar…",
+		"key": "Imprescindible",
+		"keyFull": "Ese día ya tiene tres imprescindibles",
+		"error": "No se ha podido guardar el cambio",
+		"timeDialog": {
+			"title": "Hora de «{{title}}»",
+			"label": "Hora de inicio",
+			"remove": "Quitar hora"
+		},
+		"estimateDialog": {
+			"title": "Estimación de «{{title}}»",
+			"label": "Estimación",
+			"hint": "1h 30m, 1h30, 90m o 1,5 (horas). Vacío es sin estimar.",
+			"invalid": "Eso no es una duración"
+		}
+	},
+	"rituals": {
+		"stepOf": "Paso {{current}} de {{total}}",
+		"back": "Atrás",
+		"next": "Siguiente",
+		"exit": "Salir",
+		"closeDay": {
+			"title": "Terminar el día",
+			"button": "Terminar el día",
+			"closed": "Día cerrado",
+			"summary": {
+				"title": "Cómo ha ido el día",
+				"done_one": "Has terminado {{count}} tarea.",
+				"done_other": "Has terminado {{count}} tareas.",
+				"nothingDone": "Hoy no se ha terminado nada.",
+				"worked": "Registrado: {{time}}.",
+				"focus_one": "{{count}} sesión de foco.",
+				"focus_other": "{{count}} sesiones de foco."
+			},
+			"pending": {
+				"title": "Lo que queda",
+				"hint": "Decide qué pasa con cada una: otro día o fuera del plan. Nada se queda colgando.",
+				"none": "No queda nada pendiente.",
+				"allTo": "Todo a {{day}}",
+				"otherDay": "Otro día",
+				"unplan": "Fuera del plan",
+				"undecided_one": "{{count}} sin decidir",
+				"undecided_other": "{{count}} sin decidir"
+			},
+			"blockers": {
+				"title": "Qué te frena",
+				"hint": "Lo verá tu responsable de departamento, si lo tienes.",
+				"placeholder": "Esperando material, una respuesta…"
+			},
+			"rating": {
+				"title": "Tu día",
+				"hint": "Solo lo ves tú.",
+				"impact": "Impacto",
+				"impactLevels": {
+					"1": "Poco",
+					"2": "Algo",
+					"3": "Bastante",
+					"4": "Mucho"
+				},
+				"energy": "Energía",
+				"energyLevels": {
+					"1": "Baja",
+					"2": "Normal",
+					"3": "Alta"
+				},
+				"note": "Nota"
+			},
+			"next": {
+				"title": "Lo siguiente: {{day}}",
+				"hint": "Lo que tienes planificado para tu próximo día laborable.",
+				"empty": "Aún no hay nada planificado."
+			},
+			"finish": "Cerrar el día",
+			"done": "Día cerrado",
+			"error": "No se ha podido cerrar el día"
+		},
+		"planDay": {
+			"title": "Planificar el día",
+			"button": "Planificar el día",
+			"start": "Empezar",
+			"empty": "Aún no hay nada planificado para hoy.",
+			"previous": {
+				"title": "Lo de días anteriores",
+				"hint": "Lo que quedó de días anteriores sin terminar.",
+				"none": "No queda nada de días anteriores."
+			},
+			"urgent": {
+				"title": "Lo urgente",
+				"hint": "Vence hoy o está vencido, y no está planificado.",
+				"none": "Nada urgente."
+			},
+			"unplanned": {
+				"title": "Personal y sin planificar",
+				"hint": "Lo tuyo que aún no tiene día, lo de Personal incluido.",
+				"none": "Todo tiene día.",
+				"more_one": "Y {{count}} más, en el Planificador.",
+				"more_other": "Y {{count}} más, en el Planificador."
+			},
+			"key": {
+				"title": "Imprescindibles",
+				"hint": "Marca hasta {{max}}: lo que tiene que salir hoy. Llevas {{count}} de {{max}}."
+			},
+			"load": {
+				"title": "Carga frente a tu jornada",
+				"hint": "Planificado {{planned}} de {{available}} disponibles.",
+				"over": "Más de lo que cabe en tu jornada: mueve algo o ajusta una estimación."
+			},
+			"anchor": {
+				"title": "Horas",
+				"hint": "Ancla lo que tiene hora fija. Lo demás se reparte alrededor.",
+				"label": "Hora de «{{title}}»"
+			}
+		},
+		"weeklyReview": {
+			"title": "Revisión semanal",
+			"button": "Revisión semanal",
+			"finish": "Cerrar la semana",
+			"done": "Semana revisada",
+			"error": "No se ha podido guardar la semana",
+			"more_one": "Y {{count}} más.",
+			"more_other": "Y {{count}} más.",
+			"inbox": {
+				"title": "Repasar lo personal",
+				"hint": "Lleva cada tarea a su proyecto, dale un día, termínala o descártala.",
+				"none": "No tienes nada en Personal."
+			},
+			"overdue": {
+				"title": "Vencidas",
+				"hint": "Tuyas, pasadas de fecha y sin terminar: planifícalas, termínalas o cambia la fecha.",
+				"none": "Nada vencido."
+			},
+			"waiting": {
+				"title": "Esperando a",
+				"hint": "Lo que depende de otra persona: quizá toque un recordatorio."
+			},
+			"week": {
+				"title": "La semana: {{range}}",
+				"which": "Semana que revisas",
+				"done": "Hechas",
+				"worked": "Registrado",
+				"accuracy": "Frente a lo estimado",
+				"onTarget": "Clavado",
+				"over": "{{pct}} % más",
+				"under": "{{pct}} % menos"
+			},
+			"next": {
+				"title": "La siguiente: {{range}}",
+				"hint": "La carga de cada día laborable, y lo que aún no tiene día.",
+				"unplanned_one": "{{count}} tarea sin día:",
+				"unplanned_other": "{{count}} tareas sin día:",
+				"openPlanner": "Abrir la semana que viene en el Planificador"
+			},
+			"rating": {
+				"title": "Tu semana"
+			}
+		},
+		"standup": {
+			"button": "Stand-up",
+			"title": "Tu stand-up",
+			"hint": "Sale de tu plan y de tu último cierre; no se guarda. Cópialo donde lo comparta tu equipo.",
+			"yesterday": "Ayer",
+			"today": "Hoy",
+			"blockers": "Bloqueos",
+			"nothingDone": "Nada terminado",
+			"nothingPlanned": "Nada planificado",
+			"noBlockers": "Ninguno",
+			"copy": "Copiar en Markdown",
+			"copied": "Stand-up copiado",
+			"copyError": "No se ha podido copiar"
+		}
+	},
+	"reminders": {
+		"notification": {
+			"title": "Es la hora",
+			"body": "{{time}} · {{title}}"
+		},
+		"dialog": {
+			"description": "Anclada a las {{time}}.",
+			"start": "Empezar",
+			"snooze": "Posponer 10 min",
+			"nextDay": "Pasar al {{day}}"
+		},
+		"settings": {
+			"title": "Avisos del navegador",
+			"subtitle": "A la hora anclada de cada tarea de hoy y, si los eliges, para llevar el ritmo de la jornada.",
+			"toggle": "Avisarme en este navegador",
+			"limits": "Solo con una pestaña de Riuna abierta: sin ninguna, no hay aviso. En segundo plano puede llegar con un minuto de retraso, y posponer vale para este navegador.",
+			"denied": "El navegador tiene bloqueados los avisos de Riuna. Permítelos en los ajustes del sitio y vuelve aquí.",
+			"unsupported": "Este navegador no puede mostrar avisos.",
+			"nudgesTitle": "Avisos de ritmo",
+			"nudgesHint": "Cada uno se activa aparte, y solo en este navegador.",
+			"nudgesNeedToggle": "Activa arriba los avisos del navegador para elegirlos.",
+			"nudges": {
+				"break": "Descanso: tras 90 minutos seguidos registrando",
+				"idle": "Sin registrar: en tu jornada, tras 15 minutos sin cronómetro; como mucho uno por hora",
+				"overtime": "Fuera de jornada: el cronómetro sigue en marcha al acabarla"
+			}
+		},
+		"nudge": {
+			"breakTitle": "{{duration}} sin parar",
+			"breakBody": "Levántate unos minutos: se nota a la vuelta.",
+			"idleTitle": "No estás registrando",
+			"idleBody": "Arranca el cronómetro en lo que estés haciendo.",
+			"overtimeTitle": "Tu jornada ha terminado",
+			"overtimeBody": "El cronómetro sigue en marcha en «{{title}}»."
+		}
+	},
+	"focus": {
+		"pageTitle": "Foco · {{title}}",
+		"menuItem": "Modo foco",
+		"leave": "Volver",
+		"start": "Empezar",
+		"stop": "Parar el foco",
+		"takeBreak": "Descansar",
+		"finishNow": "Terminar ya",
+		"skipBreak": "Saltar el descanso",
+		"nextBlock": "Siguiente bloque",
+		"again": "Otra vez",
+		"cycle": "Bloque {{current}} de {{total}}",
+		"minutes": "Minutos",
+		"modeLabel": "Modo de foco",
+		"mode": {
+			"pomodoro": "Pomodoro",
+			"flowtime": "Flowtime",
+			"countdown": "Cuenta atrás"
+		},
+		"modeHint": {
+			"pomodoro": "25 minutos de trabajo y 5 de descanso; cada cuatro bloques, uno largo de 15.",
+			"flowtime": "Trabajas hasta que decides parar; el descanso es un quinto de lo trabajado.",
+			"countdown": "Un bloque de los minutos que elijas."
+		},
+		"phase": {
+			"idle": "Listo para concentrarte",
+			"work": "Trabajando",
+			"short-break": "Descanso",
+			"long-break": "Descanso largo",
+			"ready": "Descanso terminado",
+			"done": "Terminado"
+		},
+		"otherTask": "Hay una sesión de foco en otra tarea: empezar aquí la termina.",
+		"stoppedOutside": "El cronómetro se paró fuera del modo foco: la sesión ha terminado.",
+		"notify": {
+			"breakTitle": "Toca descansar",
+			"breakBody": "{{minutes}} min de descanso. El cronómetro está parado.",
+			"readyTitle": "Descanso terminado",
+			"readyBody": "Vuelve a Riuna para empezar el siguiente bloque.",
+			"doneTitle": "Se acabó el tiempo"
+		}
+	},
+	"calendar": {
+		"feed": {
+			"title": "Calendario",
+			"subtitle": "Suscríbete desde Google Calendar, Outlook o el móvil a tu plan con hora, tus bloques y tus vencimientos de {{workspace}}.",
+			"inactive": "Aún no hay enlace del calendario.",
+			"activeSince": "Enlace activo desde el {{date}}.",
+			"create": "Crear enlace",
+			"regenerate": "Regenerar",
+			"revoke": "Revocar",
+			"onlyOnce": "Cópialo ahora: no se volverá a mostrar.",
+			"copy": "Copiar enlace",
+			"copied": "Enlace copiado",
+			"open": "Abrir en el calendario",
+			"privacy": "Quien tenga el enlace ve esos títulos. Si se filtra, regenéralo: el anterior deja de valer. Cada calendario lo actualiza a su ritmo; Google, cada pocas horas.",
+			"regenerateTitle": "¿Regenerar el enlace del calendario?",
+			"revokeTitle": "¿Revocar el enlace del calendario?",
+			"confirmDescription": "El enlace actual deja de funcionar al momento, y los calendarios suscritos dejan de actualizarse.",
+			"error": "No se pudo crear el enlace del calendario."
+		}
+	},
+	"availability": {
+		"day": {
+			"holiday": "Festivo · {{name}}",
+			"timeOff": "Ausente",
+			"noCapacity": "Hoy no cuenta horas disponibles."
+		},
+		"timeOff": {
+			"title": "Ausencias",
+			"subtitle": "Los días que no trabajarás en {{workspace}}: cuentan cero horas en tu Planificador y tu Cronograma.",
+			"empty": "No hay ausencias próximas.",
+			"from": "Desde",
+			"to": "Hasta",
+			"note": "Nota",
+			"notePlaceholder": "Solo la ves tú",
+			"add": "Añadir ausencia",
+			"remove": "Quitar la ausencia",
+			"privacy": "No hay motivo, a propósito. La nota es solo tuya: los demás solo ven «Ausente».",
+			"error": "No se pudo guardar la ausencia.",
+			"tooLong": "Revisa las fechas: una ausencia va de un día a otro, como mucho un año."
+		},
+		"holidays": {
+			"title": "Festivos",
+			"subtitle": "Días libres para todo el espacio.",
+			"cardDescription": "Todos los miembros los ven en su Planificador y su Cronograma, sin horas disponibles ese día.",
+			"empty": "Aún no hay festivos.",
+			"day": "Día",
+			"name": "Nombre",
+			"namePlaceholder": "Fiesta local",
+			"add": "Añadir festivo",
+			"remove": "Quitar {{name}}",
+			"duplicate": "Ese día ya tiene un festivo.",
+			"error": "No se pudo guardar el festivo."
+		}
+	},
+	"lead": {
+		"notice_one": "Tu responsable, {{names}}, ve tu plan y tus cierres, nunca tu valoración.",
+		"notice_other": "Tus responsables, {{names}}, ven tu plan y tus cierres, nunca tu valoración.",
+		"teams": {
+			"badge": "Responsable",
+			"toggle": "Responsable del equipo: {{name}}",
+			"hint": "Quien sea responsable lee el plan, la carga y los cierres del resto del equipo, nunca su valoración. No puede cambiar nada.",
+			"error": "No se pudo cambiar el responsable del equipo."
+		},
+		"team": {
+			"title": "Mi equipo",
+			"description": "El día de tu gente, en solo lectura: su plan, su carga y sus cierres, nunca su valoración.",
+			"view": "Vista",
+			"tabs": {
+				"day": "Hoy",
+				"standup": "Stand-up"
+			},
+			"load": "{{planned}} planificadas de {{available}}",
+			"nothingPlanned": "Nada planificado hoy.",
+			"figures_one": "{{count}} terminada · {{worked}} registradas",
+			"figures_other": "{{count}} terminadas · {{worked}} registradas",
+			"closed": "Cerró el día.",
+			"blockers": "Le frena: {{blockers}}",
+			"noBlockers": "Sin bloqueos.",
+			"notClosed": "Aún no ha cerrado el día.",
+			"copyAll": "Copiar todo",
+			"empty": {
+				"title": "Nadie a tu cargo",
+				"description": "Cuando seas responsable de un equipo, aquí verás el día de tu gente."
+			}
+		}
 	}
 }

@@ -116,3 +116,31 @@ test.describe("Mis tareas", () => {
     ).toBeVisible();
   });
 });
+
+// Sub-bloque 0.5 del interludio de productividad: la Lista pedia 100 tareas y
+// callaba el resto. Ahora dice cuantas hay y carga la pagina siguiente.
+test.describe("Mis tareas: mas de una pagina", () => {
+  test("la Lista dice «N de M» y «Cargar más» trae el resto", async ({
+    page,
+    riuna,
+  }) => {
+    test.setTimeout(120_000);
+    for (let index = 1; index <= 101; index += 1) {
+      await createTask(riuna, `Tarea ${String(index).padStart(3, "0")}`, {
+        userId: riuna.userId,
+      });
+    }
+
+    await page.goto(`/dashboard/workspace/${riuna.workspaceId}/my-tasks/list`);
+    await expect(page.getByText("Mostrando 100 de 101")).toBeVisible({
+      timeout: 30_000,
+    });
+
+    await page.getByRole("button", { name: "Cargar más" }).click();
+
+    await expect(page.getByText("Mostrando 100 de 101")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Cargar más" })).toHaveCount(
+      0,
+    );
+  });
+});

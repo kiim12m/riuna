@@ -2,7 +2,7 @@ import { and, eq, gte, lt, lte, sql } from "drizzle-orm";
 import db from "../database";
 import { projectTable, taskTable } from "../database/schema";
 import type { PersonalScope } from "../my-work/scope";
-import { addDays, serverDayKey } from "../utils/day-boundaries";
+import { addDays, serverDayKey, serverWallTime } from "../utils/day-boundaries";
 import {
   type FieldRegistry,
   priorityRankExpression,
@@ -86,6 +86,12 @@ export default async function weekTasks({
     lt(taskTable.dueDate, weekEnd),
   ];
 
+  // El dia de cada vencimiento en la zona del servidor, el mismo con el que
+  // `serverDayKey` reparte las filas abajo: cortar en UTC partia un dia de
+  // Madrid en dos, y el "+N" y el top de cada columna salian de mezclas
+  // (ADR 049).
+  const dueDay = serverWallTime(taskTable.dueDate);
+
   const ranked = db
     .select({
       id: taskTable.id,
@@ -99,11 +105,11 @@ export default async function weekTasks({
       projectId: taskTable.projectId,
       projectName: projectTable.name,
       rank: sql<number>`ROW_NUMBER() OVER (
-        PARTITION BY date_trunc('day', ${taskTable.dueDate})
+        PARTITION BY date_trunc('day', ${dueDay})
         ORDER BY ${priorityRankExpression} DESC, ${taskTable.id}
       )`.as("rank"),
       dayTotal: sql<number>`COUNT(*) OVER (
-        PARTITION BY date_trunc('day', ${taskTable.dueDate})
+        PARTITION BY date_trunc('day', ${dueDay})
       )::int`.as("day_total"),
     })
     .from(taskTable)

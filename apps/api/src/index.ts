@@ -21,7 +21,11 @@ import {
 import * as v from "valibot";
 import activity from "./activity";
 import { auth } from "./auth";
+import availability from "./availability";
 import billing from "./billing";
+import calendar from "./calendar";
+import serveFeed from "./calendar/controllers/serve-feed";
+import capture from "./capture";
 import column from "./column";
 import comment from "./comment";
 import config from "./config";
@@ -44,6 +48,7 @@ import goal from "./goal";
 import getInstanceStatus from "./instance/controllers/get-instance-status";
 import invitation from "./invitation";
 import label from "./label";
+import lead from "./lead";
 import mcpRoutes, { mcpWellKnownRoutes } from "./mcp";
 import { migrateColumns } from "./migrations/column-migration";
 import myWork from "./my-work";
@@ -56,6 +61,7 @@ import { migrateGitHubIntegration } from "./plugins/github/migration";
 import project from "./project";
 import { getPublicProject } from "./project/controllers/get-public-project";
 import recurrence from "./recurrence";
+import review from "./review";
 import schedule from "./schedule";
 import { initializeScheduler, shutdownScheduler } from "./scheduler";
 import search from "./search";
@@ -63,6 +69,7 @@ import slackIntegration from "./slack-integration";
 import { getPrivateObject } from "./storage/s3";
 import task from "./task";
 import taskRelation from "./task-relation";
+import teamLead from "./team-lead";
 import telegramIntegration from "./telegram-integration";
 import template from "./template";
 import timeEntry from "./time-entry";
@@ -75,6 +82,7 @@ import { authorizeAssetAccess } from "./utils/authorize-asset-access";
 import { getInvitationDetails } from "./utils/check-registration-allowed";
 import { buildContentDisposition } from "./utils/content-disposition";
 import { migrateApiKeyReferenceId } from "./utils/migrate-apikey-reference-id";
+import { migrateDayColumnsToLocalMidnight } from "./utils/migrate-day-columns-to-local-midnight";
 import { migrateNotificationPreferencesSchema } from "./utils/migrate-notification-preferences-schema";
 import { migrateSessionColumn } from "./utils/migrate-session-column";
 import { migrateWorkspaceUserEmail } from "./utils/migrate-workspace-user-email";
@@ -253,6 +261,41 @@ export function createApp() {
   api.post(
     "/gitea-integration/webhook/:integrationId",
     handleGiteaWebhookRoute,
+  );
+
+  // El calendario de una persona por su enlace (ADR 057): sin sesion, la
+  // credencial es el token. Solo casa con `….ics`, asi que no tapa las rutas
+  // de `calendar/`.
+  api.get(
+    "/calendar/:file{.+\\.ics}",
+    describeRoute({
+      operationId: "getCalendarFeedIcs",
+      tags: ["Calendar"],
+      description:
+        "A user's calendar as iCalendar: their plan with times, their schedule blocks and the due dates of what is assigned to them. The token in the file name is the credential",
+      security: [],
+      responses: {
+        200: {
+          description: "The calendar",
+          content: { "text/calendar": { schema: { type: "string" } } },
+        },
+        404: { description: "Unknown, revoked or regenerated link" },
+      },
+    }),
+    async (c) => {
+      const token = c.req.param("file").replace(/\.ics$/, "");
+      const body = await serveFeed(token);
+      if (body === null) {
+        throw new HTTPException(404, { message: "Calendar not found" });
+      }
+      return c.body(body, 200, {
+        "Content-Type": "text/calendar; charset=utf-8",
+        "Content-Disposition": 'inline; filename="riuna.ics"',
+        "Cache-Control": "private, max-age=300",
+        "Referrer-Policy": "no-referrer",
+        "X-Content-Type-Options": "nosniff",
+      });
+    },
   );
 
   const invitationPublicApi = api.get("/invitation/public/:id", async (c) => {
@@ -628,6 +671,12 @@ export function createApp() {
   const templateApi = api.route("/template", template);
   const myWorkApi = api.route("/my-work", myWork);
   const plannerApi = api.route("/planner", planner);
+  const captureApi = api.route("/capture", capture);
+  const calendarApi = api.route("/calendar", calendar);
+  const availabilityApi = api.route("/availability", availability);
+  const leadApi = api.route("/lead", lead);
+  const teamLeadApi = api.route("/team-lead", teamLead);
+  const reviewApi = api.route("/review", review);
   const scheduleApi = api.route("/schedule", schedule);
   const workScheduleApi = api.route("/work-schedule", workSchedule);
   const searchApi = api.route("/search", search);
@@ -817,6 +866,12 @@ export function createApp() {
     labelApi,
     myWorkApi,
     plannerApi,
+    captureApi,
+    calendarApi,
+    availabilityApi,
+    leadApi,
+    teamLeadApi,
+    reviewApi,
     scheduleApi,
     workScheduleApi,
     notificationApi,
@@ -893,6 +948,9 @@ export async function runStartupTasks() {
   await migrateNotificationPreferencesSchema();
   await migrateGitHubIntegration();
   await migrateColumns();
+  // Despues de las migraciones (las tablas tienen que existir) y antes del
+  // planificador de trabajos, que ya lee dias (ADR 049).
+  await migrateDayColumnsToLocalMidnight();
   await seedDefaultWorkspaceRoles();
 
   initializePlugins();
@@ -974,6 +1032,12 @@ const {
   labelApi,
   myWorkApi,
   plannerApi,
+  captureApi,
+  calendarApi,
+  availabilityApi,
+  leadApi,
+  teamLeadApi,
+  reviewApi,
   scheduleApi,
   workScheduleApi,
   notificationApi,
@@ -1033,6 +1097,12 @@ export type AppType =
   | typeof templateApi
   | typeof myWorkApi
   | typeof plannerApi
+  | typeof captureApi
+  | typeof calendarApi
+  | typeof availabilityApi
+  | typeof leadApi
+  | typeof teamLeadApi
+  | typeof reviewApi
   | typeof scheduleApi
   | typeof workScheduleApi
   | typeof searchApi

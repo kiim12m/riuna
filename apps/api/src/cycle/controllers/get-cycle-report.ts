@@ -2,6 +2,7 @@ import { and, eq, isNotNull, ne, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { cycleTable, taskTable } from "../../database/schema";
+import { serverWallTime } from "../../utils/day-boundaries";
 
 type BurndownRow = {
   day: string;
@@ -58,6 +59,16 @@ async function getCycleReport(cycleId: string) {
       and(eq(taskTable.cycleId, cycleId), ne(taskTable.status, "archived")),
     );
 
+  // Los dias del burndown son los de la zona del servidor, como "hoy" en el
+  // resto de Riuna (ADR 049): en UTC, lo cerrado entre las 00:00 y las 02:00 de
+  // Madrid contaba en la vispera, y el punto de hoy no se media hasta las 02:00.
+  const startDay = serverWallTime(
+    sql`${cycle.startDate.toISOString()}::timestamp`,
+  );
+  const endDay = serverWallTime(sql`${seriesEnd.toISOString()}::timestamp`);
+  const asOfDay = serverWallTime(sql`${asOf.toISOString()}::timestamp`);
+  const completedAt = serverWallTime(sql`s."completed_at"`);
+
   const burndown = await db.execute<BurndownRow>(sql`
     WITH scope AS (
       SELECT t."id", t."estimate", t."completed_at"
@@ -66,21 +77,21 @@ async function getCycleReport(cycleId: string) {
     ),
     days AS (
       SELECT generate_series(
-        date_trunc('day', ${cycle.startDate.toISOString()}::timestamp),
-        date_trunc('day', ${seriesEnd.toISOString()}::timestamp),
+        date_trunc('day', ${startDay}),
+        date_trunc('day', ${endDay}),
         interval '1 day'
       ) AS day
     )
     SELECT
       to_char(d.day, 'YYYY-MM-DD') AS day,
-      (d.day <= date_trunc('day', ${asOf.toISOString()}::timestamp)) AS measured,
+      (d.day <= date_trunc('day', ${asOfDay})) AS measured,
       COUNT(s."id") FILTER (
         WHERE s."completed_at" IS NULL
-           OR s."completed_at" >= d.day + interval '1 day'
+           OR ${completedAt} >= d.day + interval '1 day'
       )::int AS remaining_tasks,
       COALESCE(SUM(s."estimate") FILTER (
         WHERE s."completed_at" IS NULL
-           OR s."completed_at" >= d.day + interval '1 day'
+           OR ${completedAt} >= d.day + interval '1 day'
       ), 0)::bigint AS remaining_seconds
     FROM days d
     LEFT JOIN scope s ON true

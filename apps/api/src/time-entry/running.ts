@@ -1,4 +1,4 @@
-import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, desc, eq, gte, isNotNull, isNull, lt } from "drizzle-orm";
 import db from "../database";
 import { projectTable, taskTable, timeEntryTable } from "../database/schema";
 import { getWorkspaceColumns, notDoneCondition } from "../my-work/decorate";
@@ -25,6 +25,72 @@ export async function getRunningEntry(userId: string, database: DbOrTx = db) {
     .limit(1);
 
   return entry;
+}
+
+/**
+ * Un hueco de al menos esto sin cronometro cuenta como descanso para los
+ * avisos de ritmo (ADR 056): cambiar de tarea no es descansar.
+ */
+export const BREAK_GAP_MS = 5 * 60 * 1000;
+
+/** Mas atras no se busca: nadie trabaja doce horas sin un hueco. */
+const STREAK_LOOKBACK_MS = 12 * 60 * 60 * 1000;
+
+/**
+ * Desde cuando trabaja sin descanso quien tiene el cronometro en marcha: el
+ * principio de la cadena de entradas que acaba en la que corre, sin huecos de
+ * `BREAK_GAP_MS` o mas entre ellas. Cuenta todos los espacios: es la misma
+ * persona trabajando.
+ */
+export async function getWorkingSince(
+  userId: string,
+  running: { startTime: Date },
+): Promise<Date> {
+  const earlier = await db
+    .select({
+      startTime: timeEntryTable.startTime,
+      endTime: timeEntryTable.endTime,
+    })
+    .from(timeEntryTable)
+    .where(
+      and(
+        eq(timeEntryTable.userId, userId),
+        isNotNull(timeEntryTable.endTime),
+        lt(timeEntryTable.startTime, running.startTime),
+        gte(
+          timeEntryTable.startTime,
+          new Date(running.startTime.getTime() - STREAK_LOOKBACK_MS),
+        ),
+      ),
+    )
+    .orderBy(desc(timeEntryTable.startTime));
+
+  let since = running.startTime;
+  for (const entry of earlier) {
+    if (!entry.endTime) continue;
+    if (entry.endTime.getTime() <= since.getTime() - BREAK_GAP_MS) break;
+    if (entry.startTime < since) since = entry.startTime;
+  }
+  return since;
+}
+
+/**
+ * Cuando acabo la ultima entrada de la persona, en cualquier espacio: lo que
+ * mira el aviso de "no estas registrando". La que empezo la ultima es, salvo
+ * entradas a mano raras, la que acabo la ultima, y asi el indice
+ * `(user_id, start_time)` sirve.
+ */
+export async function getLastStoppedAt(userId: string): Promise<Date | null> {
+  const [entry] = await db
+    .select({ endTime: timeEntryTable.endTime })
+    .from(timeEntryTable)
+    .where(
+      and(eq(timeEntryTable.userId, userId), isNotNull(timeEntryTable.endTime)),
+    )
+    .orderBy(desc(timeEntryTable.startTime))
+    .limit(1);
+
+  return entry?.endTime ?? null;
 }
 
 export type LastEntry = {

@@ -346,7 +346,12 @@ describe("GET /today (ADR 046)", () => {
   it("reports the default 8-hour capacity for today", async () => {
     const { app, workspaceId } = await setup();
     const body = await (await getToday(app, workspaceId)).json();
-    expect(body.totals.capacitySeconds).toBe(8 * 60 * 60);
+    // La jornada por defecto es de lunes a viernes (ADR 045): en fin de
+    // semana, hoy no tiene horas. Sin esto la prueba fallaba los sabados.
+    const weekday = new Date().getDay();
+    expect(body.totals.capacitySeconds).toBe(
+      weekday >= 1 && weekday <= 5 ? 8 * 60 * 60 : 0,
+    );
   });
 
   it("does not leak a plan entry from another workspace of the same person", async () => {

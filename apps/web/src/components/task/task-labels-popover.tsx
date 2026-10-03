@@ -13,6 +13,7 @@ import useCreateLabel from "@/hooks/mutations/label/use-create-label";
 import useDetachLabelFromTask from "@/hooks/mutations/label/use-detach-label-from-task";
 import useGetLabelsByTask from "@/hooks/queries/label/use-get-labels-by-task";
 import useGetLabelsByWorkspace from "@/hooks/queries/label/use-get-labels-by-workspace";
+import { useControllableOpen } from "@/hooks/use-controllable-open";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
 import { getTaskLabelOptions } from "@/lib/get-task-label-options";
@@ -47,6 +48,12 @@ type TaskLabelsPopoverProps = {
   workspaceId: string;
   children: React.ReactNode;
   triggerNativeButton?: boolean;
+  /**
+   * Abierto desde fuera -los atajos del detalle-. Sin ellos, el desplegable
+   * lleva su propio estado, como siempre.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 type PopoverStep = "select" | "color";
@@ -56,9 +63,11 @@ export default function TaskLabelsPopover({
   workspaceId,
   children,
   triggerNativeButton = true,
+  open: openProp,
+  onOpenChange,
 }: TaskLabelsPopoverProps) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useControllableOpen(openProp, onOpenChange);
   const [step, setStep] = useState<PopoverStep>("select");
   const [searchValue, setSearchValue] = useState("");
   const [selectedColor, setSelectedColor] = useState<LabelColor>("gray");

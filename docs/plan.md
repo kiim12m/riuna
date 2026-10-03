@@ -24,9 +24,10 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
+| Interludio — Productividad personal y equipo | 18 | **Cerrado** — Bloques 0 a 5; el 4.2 (importar iCal), aplazado · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--cerrado) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
-| **Total Bloque A** | **35** | |
+| **Total Bloque A** | **35** + 18 del interludio | |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -1535,6 +1536,715 @@ proyectos— y el grupo personal, que nace corto, se llena en bloques:
 días sin cambiar el vencimiento que ve el equipo, y administrar el espacio ya
 no te saca de la barra lateral.
 
+### Interludio — Productividad personal y equipo (antes de la Fase 8) · **cerrado**
+
+*Nace de una revisión de lo que la parte de productividad **hace de verdad** —leyendo el
+código, no esta documentación— comparada con
+[Super Productivity](https://github.com/super-productivity/super-productivity) v19.1 y con
+metodologías (GTD, time blocking, Pomodoro/Flowtime, eat the frog, migración de Bullet
+Journal, evidence-based scheduling). Las decisiones de producto se tomaron preguntando antes
+de planificar (2026-09-30/10-01) y son vinculantes para todo el interludio.*
+
+**Dónde está Riuna.** La cadena personal está completa —Planificador → Cronograma → Hoy →
+Cronómetro → Parte de horas, con jornada personal— y en planificar por días y por horas ya
+está a la par de Super Productivity. Lo que falta es captura rápida, acciones de tarea en
+todas partes, rituales, foco, recordatorios por tarea, calendario externo, y lo de equipo,
+que Super Productivity, monousuario, no puede tener. Y antes de nada, diez defectos
+verificados.
+
+**Decisiones del usuario:**
+
+- **Personal primero**, equipo después.
+- **El responsable de departamento** —una marca `is_lead` en el equipo— ve el plan, la carga,
+  los cierres y el stand-up de su gente, **solo en lectura**: para cambiar algo reasigna o
+  cambia el vencimiento, como hasta ahora. Cada persona ve un aviso de que su responsable ve
+  su plan.
+- **La valoración del día** (impacto, energía, nota) **es siempre privada**: ni el
+  responsable la ve.
+- **Cuatro rituales** —planificar el día, terminar el día, revisión semanal y stand-up—, que
+  **solo se abren con un botón**: sin avisos, banners ni notificaciones.
+- **El stand-up solo lo ven la persona y su responsable**, no los compañeros.
+- **Modo foco completo**: Pomodoro, Flowtime y cuenta atrás, con avisos de ritmo.
+- **Avisos solo por el navegador**, con una pestaña abierta: sin push ni service worker.
+- **La Bandeja es un proyecto por persona, oculto en las listas de los demás pero no
+  privado**: sus tareas se leen por búsqueda o enlace como todo en Riuna, y la interfaz lo dice.
+- **Calendario en las dos direcciones**: exportar ICS e importar iCal.
+- **Ausencias y festivos** entran. La ausencia **no guarda el motivo** —una baja médica es un
+  dato sensible—: el responsable solo ve «ausente».
+- **Zona horaria**: todo el mundo está en la península, así que la instancia pasa a
+  `Europe/Madrid`; la zona por persona sigue como deuda.
+- **Sanear primero**.
+
+**Hallazgos verificados en el código, que arregla el Bloque 0:**
+
+| # | Hallazgo | Dónde |
+|---|---|---|
+| 1 | Pantallas con datos viejos: `refetchOnMount: false` global y sin sondeo en Hoy, Planificador y Cronograma; una consulta invalidada mientras no está en pantalla no se recarga al volver | `apps/web/src/query-client/index.ts:65-66` |
+| 2 | Una tarea recién asignada no llega a Hoy ni a «Sin planificar»: `MY_WORK_INVALIDATED` solo invalida `my-work` y los paneles; `TIMER_CHANGED` no invalida el Planificador | `apps/web/src/hooks/use-user-websocket.ts:59-68` |
+| 3 | El cronómetro **solo arranca desde Hoy**; no hay registro manual (los hooks existen sin consumidor); el detalle no enseña tiempo ni día planificado | `components/timer/timer-button.tsx` |
+| 4 | Planificador: no se ancla una hora en un día sin filas con hora (la zona no se pinta); las ancladas no se arrastran; sin casilla de hecha | `components/planner/planner-day.tsx:103` |
+| 5 | Los atajos `s/p/a/l/d` del detalle están definidos y **no registrados**; «t c» no se asigna a quien crea y el botón de cabecera sí; la paleta no lleva a Hoy, Planificador ni Cronograma; posible recursión del «?» | `constants/shortcuts.ts`, `command-palette/index.tsx:69,194` |
+| 6 | El recordatorio de vencimiento solo llega al **responsable principal**, y solo se rearma desde un endpoint de los varios que cambian la fecha | `scheduler/due-date-reminders.ts:44,54`, `update-task-due-date.ts:28` |
+| 7 | Móvil: el tiempo real, la campana y el cronómetro viven en la barra lateral, desmontada mientras la hoja está cerrada; las acciones de Hoy solo aparecen con el ratón encima | `workspace-switcher.tsx:40`, `sidebar-timer.tsx` |
+| 8 | La carga del Cronograma usa otra fórmula que el Planificador; borrar un widget o un objetivo no pide confirmación; Mis tareas corta en 100 sin avisar; el parte de horas calcula el rango en UTC | `schedule/time-grid.tsx:282`, `time-sheet.tsx:46`, `export-time-sheet.ts:46` |
+| 9 | MCP: el servidor HTTP tiene 44 herramientas y el paquete stdio 39 —le faltan las del plan y el cronómetro— | `apps/api/src/mcp/tools.ts`, `packages/mcp/src/tools/register.ts` |
+| 10 | «Hoy» es el día del servidor —UTC en Docker— y `planned_date` se compara por **igualdad exacta**: cambiar la zona sin normalizar los datos rompe el orden del plan y «Hechas hoy» | `set-plan-order.ts:43`, `set-plan-entry.ts:57`, `get-today.ts:92` |
+
+**Bloques.** Tamaños a ~8 h/semana: **S** unos días · **M** ≈ 1 semana · **L** 2+ semanas.
+Cada sub-bloque se entrega solo, en su rama, con su ADR —la numeración sigue en la 048— y su
+verificación.
+
+**Bloque 0 — Sanear** (≈ 4 semanas)
+
+- **0.1 Pantallas frescas y runtime de espacio** ✔ · S · [ADR 048](adr/048-frescura-de-las-pantallas-personales.md). `workspace-runtime.tsx`, sin
+  nada que pintar, montado en la ruta del espacio —que persiste entre pantallas— recoge lo
+  que hoy vive en la barra lateral: la conexión del canal de usuario, el título con el
+  cronómetro, el aviso de estimación superada y Ctrl+E. Un mapa puro mensaje → claves de
+  consulta (`MY_WORK_INVALIDATED` añade Hoy, Planificador y Cronograma; `TIMER_CHANGED`, el
+  Planificador). Las consultas personales recargan al montar y al volver a la pestaña con 15 s
+  de frescura; el valor global no cambia, porque los tableros son pesados. Campana compacta en
+  la cabecera del móvil. **Hecho (2026-10-01):** tres pruebas de extremo a
+  extremo nuevas en `today.spec.ts` —una asignación hecha desde fuera aparece en
+  Hoy sin recargar; al volver del Planificador a Hoy se ve lo planificado
+  mientras tanto; en móvil la campana de la cabecera cuenta en vivo con la
+  barra cerrada— **fallan con el código anterior** (comprobado retirándolo) y
+  pasan con este; el humo completo queda en 29 casos en verde, más 7 pruebas
+  unitarias del mapa de invalidaciones (288 en el web).
+- **0.2 Zona horaria de la instancia** ✔ · S · [ADR 049](adr/049-la-api-vive-en-madrid.md). `TZ=Europe/Madrid` (+ `tzdata`) en
+  `Dockerfile.riuna`, los `compose*.yml`, `charts/riuna` y los scripts de prueba. Un
+  normalizador de arranque, como los `utils/migrate-*.ts`, lleva `personal_plan_entry.planned_date`
+  y `schedule_block.planned_date`/`ends_at` de la medianoche UTC a la de Madrid; es idempotente,
+  porque la medianoche de Madrid nunca cae a las 00:00Z. `task.due_date` no lo necesita: se
+  compara por rangos. **Se ensaya sobre una copia de producción antes de desplegar.**
+  **Hecho (2026-10-01).** Sin `TZ` en el `.env`, que `compose` comparte con
+  Postgres. PostgreSQL se queda en UTC, porque sus `now()` escriben en columnas
+  sin zona. Pasar las pruebas en Madrid destapó tres cosas que el UTC tapaba,
+  arregladas y con su prueba:
+  - node-postgres serializaba los `Date` crudos en hora local, y la ventana
+    «vence hoy» se corría dos horas (`defaults.parseInputDatesAsUTC`);
+  - la tendencia, la semana en curso y el burndown cortaban los días en UTC
+    (`serverWallTime`);
+  - el diálogo de bloques leía su día cortando el ISO.
+
+  Y se arregla un fallo que ya estaba en producción: un vencimiento elegido en
+  el calendario salía «vencido» el mismo día en que vencía.
+
+  Verificación:
+  - ensayo sobre una copia de la base de desarrollo: 13 días convertidos, 0 en
+    la segunda vuelta, las 14 filas conservan su día;
+  - integración 659/659 en Madrid, unitarias 717 (API) y 288 (web);
+  - humo 29/29 con API y navegador en Madrid. Al arrancar, la API del humo
+    convirtió 186 días viejos de su propia base.
+
+  **Pendiente de quien despliega:** el ensayo sobre una copia de producción
+  que describe `actualizar.md`.
+- **0.3 Cronómetro en todas partes y tiempo en el detalle** ✔ · M. Un `TaskTimerButton` sobre
+  `TimerButton` en el detalle, el Planificador, el Cronograma, Mis tareas y el tablero. El
+  detalle gana una sección «Tiempo»: lo registrado (también en tareas sin hijas), sus
+  entradas, «Añadir tiempo» a mano y el día planificado (`GET /planner/entry/:taskId`, nueva).
+  El parte de horas enseña el título de la tarea en cada entrada y calcula en día local; la
+  pastilla del móvil reanuda.
+  **Hecho (2026-10-01).** Sin ADR propia: no hay decisión estructural, solo
+  piezas que componen lo que ya existía.
+  - `TaskTimerButton` lee el cronómetro en marcha por su cuenta y solo monta
+    el diálogo de parada larga en la tarea que corre. No se ofrece a quien no
+    puede editar tareas, porque `POST /time-entry/start` daría 403.
+  - `GET /planner/entry/:taskId` devuelve el día como clave del servidor, no
+    como instante, y filtra por espacio.
+  - Las entradas de una tarea pasan a la clave `["time-entry", "task", id]`.
+    Así `TIMER_CHANGED` las refresca; antes `["time-entries"]` quedaba fuera.
+  - El nombre del Excel del parte deja de salir un día corto.
+  - Nueva variante CSS `touch:` para lo que en escritorio aparece al pasar el
+    ratón.
+
+  Verificación:
+  - 3 pruebas de integración nuevas de la ruta, incluida la de otro espacio,
+    y 1 del nombre del Excel;
+  - 3 de extremo a extremo (`task-time.spec.ts`): arrancar y parar desde el
+    detalle, registrar a mano y verlo en el parte con su título, y planificar
+    desde el detalle. La del parte **pasaba sin desplegar el grupo**, porque el
+    pie de la barra también nombra la tarea («Reanudar · …»); acotada a la
+    tabla, falla sin el cambio y pasa con él;
+  - humo completo 32/32, más una pasada visual con capturas del detalle, el
+    Planificador, el Cronograma, Mis tareas, el tablero, el parte y el móvil.
+
+  Queda anotado:
+  - `apps/api/openapi.json` no se regenera desde la Fase 5. Regenerarlo mete
+    unas 9.000 líneas ajenas y la URL de la API del `.env`; pide su propio
+    cambio, con la URL saneada.
+  - El calendario heredado nombra los días en inglés.
+- **0.4 Planificador, atajos y paleta** ✔ · M. La zona «con hora» siempre presente, las ancladas
+  arrastrables, casilla de hecha (`POST /task/complete/:id`, que ya existe). `s/p/a/l/d`
+  registrados; «t c» se asigna a quien crea fuera de un proyecto. La paleta lleva a las
+  pantallas personales y al cronómetro, y el «?» deja de despachar un `KeyboardEvent`
+  sintético. En táctil, las acciones de Hoy se ven y el Cronograma crea con un toque.
+  **Hecho (2026-10-01).** Sin ADR propia: no hay decisión estructural.
+
+  Lo que salió:
+  - **El bucle del `?` era real.** «Atajos de teclado» desde la paleta lanzaba
+    cuatro `RangeError: Maximum call stack size exceeded`, comprobado en el
+    navegador con el código anterior. Ahora la paleta abre la ayuda con un
+    store (`store/shortcuts-help.ts`), y el `?` real lo sigue atendiendo el
+    propio diálogo.
+  - **Los atajos del detalle** gobiernan cinco selectores, que pasan a admitir
+    `open`/`onOpenChange` desde fuera (`useControllableOpen`). Solo se abre el
+    de la disposición que se ve, porque el lateral monta la móvil y la de
+    escritorio a la vez. Con el detalle abierto, `p` tapa las secuencias
+    `p c`/`p l`; queda documentado.
+  - **`p l`** abre la paleta, que ahora lista los proyectos. Antes navegaba a
+    la raíz del espacio, que lleva a Hoy.
+  - **Variante CSS `touch:`** en Hoy, el Cronograma y la vista Mes. En el
+    Cronograma, un toque calcula el hueco desde el propio toque, porque
+    `pointerleave` llega antes que el clic.
+  - **Se sospechó** un bucle de renders por `useRegisterShortcuts`, que
+    vuelve a registrar cada vez que cambia su objeto de configuración. Medido
+    en el navegador: ni avisos de React ni pérdida de fotogramas (57 fps en
+    reposo). No se confirma; lo nuevo memoriza su configuración igualmente.
+
+  Verificación:
+  - 6 pruebas de extremo a extremo nuevas, que fallan con el código anterior
+    y pasan con el nuevo: anclar en un día vacío, casilla de hecha, soltar en
+    «Sin planificar» sin peticiones, `p` abre la prioridad, la paleta lleva
+    al Planificador, la ayuda desde la paleta sin errores;
+  - humo completo 38/38, unitarias del web 288, typecheck.
+- **0.5 Recordatorios, coherencia y paridad MCP** ✔ · M · [ADR 050](adr/050-recordatorios-por-asignado-y-una-sola-carga.md). Recordatorio de vencimiento
+  para **cada** asignado, deduplicado por persona (el `reminder_type` lleva el usuario, como
+  ya hace `project-webhook-reminders.ts`) y rearmado por un disparador `AFTER UPDATE OF
+  due_date`: muchos escritores, la misma razón que la ADR 025. Una sola función `dayLoad()`
+  para la carga del Planificador y del Cronograma. Confirmar al borrar widget y objetivo; Mis
+  tareas con «Cargar más». Las cinco herramientas del plan y el cronómetro, también en el
+  paquete stdio, con una prueba de paridad entre los dos registros.
+  **Hecho (2026-10-01).** Además de lo previsto:
+  - **Lo archivado tampoco avisa.** El trabajo excluía lo terminado por
+    `column.is_final`, y una tarea archivada, sin columna, recibía avisos.
+    Ahora usa `completed_at` (ADR 030) y descarta lo archivado aparte.
+  - **Un prefiltro sargable sobre `due_date`**, porque la antelación está
+    acotada a 30 días.
+  - **La carga deja de contar lo ya hecho.**
+  - **`user_work_schedule` no estaba registrada en el esquema de drizzle**,
+    el mismo hueco que `task_assignee` en la Fase 1. Lo destapó la prueba
+    de carga.
+  - **La confirmación de borrado** es un componente compartido
+    (`ConfirmDeleteDialog`), sobre el mismo `AlertDialog` que el resto
+    repetía a mano.
+
+  Verificación:
+  - 6 pruebas de integración de recordatorios, que fallan todas con el
+    trabajo anterior;
+  - una que fija la misma carga en el Planificador y el Cronograma, y 4
+    unitarias de `dayLoad`;
+  - la prueba de paridad MCP, que falla sin las cinco herramientas;
+  - una de extremo a extremo con 101 tareas para «Cargar más»;
+  - integración 669/670 con la API en Madrid: la que falta es la
+    importación grande, que agota el tiempo de conexión cuando la máquina
+    está cargada y pasa sola (19/19), como ya pasó en el 0.2;
+  - unitarias 726 (API) y 288 (web), humo 39/39, typecheck.
+
+**Bloque 1 — Captura y acciones** (≈ 3 semanas) · *punto de control al cerrarlo*
+
+- **1.1 Bandeja** ✔ · S · [ADR 051](adr/051-la-bandeja-es-un-proyecto-oculto.md). `project.owner_user_id → user ON DELETE SET NULL` con un único
+  parcial por espacio y persona. Se oculta en `get-projects.ts` —que cubre la barra lateral,
+  los selectores, la administración y `list_projects` de MCP— y en los proyectos de la
+  búsqueda; **no** en las lecturas de tareas. Se crea al primer uso, segura ante dos capturas
+  simultáneas. Si se borra a la persona, pasa a ser un proyecto normal y nada se pierde.
+  **Hecho (2026-10-02).** Además de lo previsto:
+  - **También al salir del espacio.** Un disparador `AFTER DELETE` en
+    `workspace_member` la devuelve a proyecto normal. Si no, sus tareas
+    quedaban en un proyecto que ya no salía en ninguna lista. Salir tiene
+    varios caminos —quitar a un miembro, abandonar el espacio, borrar la
+    cuenta—, así que la regla vive en la base.
+  - **La respuesta de reordenar proyectos** tampoco la incluye: también es
+    una lista.
+  - **`POST /capture/inbox`** la crea y `GET /capture/inbox` la lee sin
+    crearla. La entrada «Bandeja» lleva a `/inbox`, que la crea si hace falta
+    y abre sus tareas en «Tareas»: la vista «Backlog» de Kaneo solo enseña lo
+    planeado y lo archivado. La paleta también lleva a ella. Solo la ve quien
+    puede crear tareas, o quien ya la tiene.
+  - **`insertProject()` sale de `createProject`**, para que la Bandeja nazca
+    con las mismas columnas y el mismo candado de orden.
+  - **El widget «Bandeja» del panel pasa a llamarse «Notificaciones»**, que
+    es lo que enseña. Si no, «Bandeja» nombraba dos cosas distintas. La
+    migración solo renombra los que conservan el título de partida.
+
+  Verificación:
+  - 11 pruebas de integración. Las de ocultar en listas y búsqueda, y la de
+    salir del espacio, fallan sin el cambio;
+  - 1 de extremo a extremo desde la barra lateral, y las 4 de «Mi panel» con
+    el widget renombrado;
+  - 1 unitaria de la barra lateral; typecheck; pasada visual en escritorio y
+    móvil.
+
+  **Cambio posterior (2026-10-03): se llama «Personal».** Tras verla en la
+  copia de producción, el usuario pidió llevarla a «Proyectos». Cada persona
+  ve la suya fija en lo alto de su grupo «Proyectos», con clave `PER`; la
+  migración 0077 renombra las ya creadas. Sigue oculta para los demás y no es
+  privada, así que no se llama «privado». Detalle en la ADR 051.
+- **1.2 Captura rápida** ✔ · M · [ADR 052](adr/052-captura-rapida.md). Parser puro sin dependencia —el vocabulario es cerrado—:
+  estimación `1h 30m 1h30 1,5h` · día del plan `@hoy @mañana @lun @15/10 [10:00]` —plan y hora,
+  **nunca** vencimiento— · vencimiento `!mañana !15/10` · `#etiqueta` (solo las que existen) ·
+  `+PROY` (por defecto, la Bandeja) · prioridad `*alta *a *urgente` · `\` para escribirlo
+  literal. Chips de vista previa, tecla `q`, y `POST /capture` sobre `createTask` y
+  `setPlanEntry`. MCP `capture_task` y `get_today`.
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **Un día de la semana es el próximo**, nunca hoy: `@lun` en lunes es el de
+    la semana que viene, y para hoy está `@hoy`. Una fecha sin año es la
+    próxima vez que llega. La hora se escribe detrás del día
+    (`@mañana 10:00`), y `@10:00` solo es hoy a esa hora.
+  - **`#etiqueta`** casa sin distinguir mayúsculas ni tildes, y los espacios
+    del nombre se escriben con guion. Lo que no casa se queda en el título.
+  - **La tarea empieza en la primera columna sin terminar** del proyecto, que
+    puede no ser `to-do`.
+  - **Dónde está:** la tecla `q` desde cualquier pantalla, la paleta, Hoy
+    (planifica para hoy por defecto), «Sin planificar» y la cabecera de la
+    Bandeja propia.
+  - **La paleta no lleva la `q` como atajo** de su elemento: dispara los
+    atajos mientras se escribe en ella, y saltaría con cualquier búsqueda.
+  - **API:** `POST /capture` lo valida todo antes de crear nada: solo
+    etiquetas del espacio, nunca una copia colgada de otra tarea, que
+    `assignLabelToTask` movería.
+
+  Verificación:
+  - 57 pruebas unitarias del parser;
+  - 9 de integración: Bandeja al primer uso, plan sin vencimiento, vencimiento
+    sin plan, columna inicial, etiquetas, rechazos sin crear nada, permisos,
+    y que sale en `GET /today`;
+  - 2 de extremo a extremo: desde Hoy, y con `q` desde otra pantalla hasta el
+    Planificador;
+  - paridad MCP con 46 herramientas; pasada visual en escritorio y móvil.
+- **1.3 Acciones de fila, imprescindibles y plan en bloque** ✔ · M · [ADR 053](adr/053-acciones-de-fila-imprescindibles-y-plan-en-bloque.md).
+  `personal_plan_entry.key_rank` (1-3, único parcial por día: la base impone el máximo de
+  tres). `POST /planner/bulk` —deuda declarada en la ADR 047—, `PUT /planner/:taskId/key` y
+  `GET /planner?from=` para ir más allá de quince días. Un menú de acciones compartido —hecha,
+  cronómetro, hoy, mañana, elegir día, quitar del plan, fijar hora, estimar, imprescindible—
+  en Hoy, Planificador, Cronograma y Mis tareas.
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **El menú sale con el botón «⋯» y con el clic derecho.** Los dos pintan
+    las mismas piezas de base-ui, cada uno con su estado de apertura:
+    compartirlo abría los dos a la vez, como enseñó la pasada visual.
+  - **La hora y la estimación van en un diálogo**: un campo de texto dentro
+    de un menú pelea con su navegación por teclado. Elegir día es un
+    calendario en un submenú.
+  - **Mis tareas y el Cronograma no leen el plan**: el menú lo pregunta al
+    abrirse (`GET /planner/entry/:taskId`, que gana `keyRank`).
+  - **Las imprescindibles** van en un grupo propio en Hoy, sin arrastre:
+    su orden es el puesto. Se desmarcan solas al cambiar de día, por un
+    disparador.
+  - **«Añadir todo a hoy»** en «De días anteriores» usa `POST /planner/bulk`.
+  - **La ventana del Planificador** se mueve de semana en semana con
+    `?from=`. «De días anteriores» se sigue contando desde hoy, y `get_plan`
+    de MCP también acepta `from`.
+
+  Verificación:
+  - 11 pruebas de integración. La de dos marcas simultáneas falla sin el
+    candado: solo dos de seis conseguían puesto y el resto daba 500;
+  - 6 de extremo a extremo: tres imprescindibles y el aviso de la cuarta, el
+    contextual sin el otro menú abierto, los dos diálogos, «Añadir todo a
+    hoy», Mis tareas y la ventana más allá de quince días;
+  - pasada visual del menú en Hoy y del contextual en el Planificador.
+- **1.4 «Esperando a»** ✔ · S. Lo que creé y asigné a otros y sigue abierto, más lo mío
+  bloqueado por tareas ajenas. «Lo creé yo» sale de `activity`, porque `task` no tiene
+  `created_by`; si el `EXPLAIN` no cabe en 300 ms, ADR aparte para la columna.
+  **Hecho (2026-10-02).** Sin ADR: la medición no pidió la columna.
+  - **`GET /my-work/waiting`** devuelve dos listas, topadas en 100 cada una:
+    - **delegadas:** lo que creé, abierto, con alguien asignado y sin mí;
+    - **bloqueadas:** lo mío abierto con una tarea abierta delante que no es
+      mía, por una relación `blocks`, y con cuál.
+  - **«Lo creé yo»** sale de la actividad `created`.
+  - **La tarea que bloquea tiene que ser del mismo espacio**: una relación
+    puede cruzarlos, y si no se exige, se filtraría el título de una tarea
+    ajena.
+  - **Medido en el banco de 50.000 tareas**, al que se añadieron 200.000 filas
+    de actividad y 2.000 relaciones: p95 de 57 ms. La consulta de delegadas
+    tarda 13 ms y va entera por índices. No hace falta `created_by`.
+  - **Pestaña «Esperando a» en Mis tareas**, sin ámbito de equipo.
+
+  Verificación:
+  - 4 pruebas de integración. La del espacio de la tarea que bloquea falla
+    sin su guarda;
+  - 1 de extremo a extremo: lo bloqueado sale con su bloqueo y desaparece al
+    terminarlo;
+  - pasada visual.
+
+  **Verificación del Bloque 1 completo (2026-10-02):**
+  - integración 706 de 706, con una prueba del 0.3 ajustada a la forma nueva
+    de `GET /planner/entry`, que ahora lleva `keyRank`;
+  - de extremo a extremo 49 de 49. Dos pruebas anteriores necesitaron
+    ajuste: la misma forma nueva, y el botón «Hoy» de la ventana del
+    Planificador, que ahora se llama «Volver a hoy» para no confundirse con
+    el de la barra lateral;
+  - unitarias 346 (web), 726 (API) y 33 (MCP);
+  - typecheck de todos los paquetes, Biome e i18n.
+
+**Bloque 2 — Rituales** (≈ 3 semanas)
+
+- **2.1 Terminar el día** ✔ · M · [ADR 054](adr/054-terminar-el-dia-y-la-valoracion-privada.md). `review` guarda lo que el responsable puede ver
+  (`period` día|semana, bloqueos, resumen) y `review_private`, 1:1, la valoración. **La
+  separación es estructural**: el camino del responsable no puede unir la tabla privada, y una
+  prueba de arquitectura lo vigila. Pasos: resumen → **decisión obligatoria** sobre cada
+  pendiente (mañana, otro día o quitar del plan) → bloqueos → valoración privada → plan de
+  mañana. Botón en la cabecera de Hoy.
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **Pendiente** es lo mismo que enseña Hoy: lo planificado ese día y lo de
+    días anteriores, sin terminar. Sin una decisión por cada una,
+    `PUT /review/day/:date` responde 400.
+  - **«Mañana» es el siguiente día laborable** de la jornada personal: un
+    viernes, el lunes.
+  - **Las cifras del cierre** salen de `getToday` en el mediodía de ese día.
+    Cerrar otra vez acumula las movidas en vez de borrarlas.
+  - **`dayClosed` en `GET /today`** sale de un fichero que no importa la tabla
+    privada, y una prueba de arquitectura vigila que nadie más la nombre.
+  - **`RitualShell`**, el armazón de pasos, queda para los demás rituales.
+
+  Verificación:
+  - 5 pruebas de integración;
+  - la de arquitectura, que falla con un fichero de prueba que nombra la tabla
+    fuera del módulo;
+  - 4 unitarias del siguiente día laborable;
+  - 1 de extremo a extremo con el ritual completo;
+  - pasada visual.
+- **2.2 Planificar el día** ✔ · S. Pura composición, sin API: lo de ayer → lo urgente → Bandeja y
+  sin planificar → imprescindibles → carga frente a capacidad → anclar → «Empezar».
+  **Hecho (2026-10-02).** Sin ADR ni API propia.
+  - **Cada paso actúa al momento**, con las mismas mutaciones que Hoy y el
+    menú de fila, así que el siguiente paso ya ve el cambio.
+  - **«Sin planificar»** enseña las 15 primeras y remite al Planificador para
+    el resto.
+  - **Las horas se anclan** al salir del campo o con Intro. «Empezar» arranca
+    el cronómetro en la primera imprescindible, o en la primera del plan si
+    no hay ninguna.
+  - **Botón en la cabecera de Hoy**, junto a «Terminar el día».
+
+  Verificación: 1 prueba de extremo a extremo con los seis pasos y el
+  cronómetro en marcha; pasada visual.
+- **2.3 Revisión semanal** ✔ · M. Vaciar la Bandeja, vencidas, «Esperando a», la semana pasada
+  —horas, hechas y precisión de estimación— y planificar la siguiente.
+  **Hecho (2026-10-02).** Sin ADR propia: el cierre semanal es el periodo
+  `week` de la ADR 054.
+  - **`GET/PUT /review/week/:start`**: los siete días desde `start`. Las
+    cifras se recalculan en cada lectura y se congelan en el resumen al
+    guardar.
+  - **La precisión** solo cuenta lo terminado con estimación y tiempo
+    registrado. Una tarea sin medir no dice que se tardara menos: la primera
+    pasada visual enseñaba «100 % menos».
+  - **Qué semana se revisa:** la que está en curso, según la preferencia de
+    comienzo de semana. En sus dos primeros días, la anterior. Se puede
+    cambiar entre las dos.
+  - **Vaciar la Bandeja** mueve cada tarea a su proyecto sin salir del
+    ritual: `TaskMovePopover` gana `onMoved`, que sustituye la navegación.
+  - **Comparte con el cierre del día:**
+    - `saveReview` y `getReview`;
+    - el paso de bloqueos y valoración, extraído a `RatingStep`.
+  - **Botón en el Planificador**, y los tres rituales en la paleta.
+
+  Verificación:
+  - 3 pruebas de integración: cifras con lo de fuera de la semana, lo ajeno
+    y lo sin medir; guardar sin pisar el cierre del día; semana futura;
+  - 1 de extremo a extremo: vaciar la Bandeja moviendo a un proyecto,
+    planificar una vencida, ver las cifras y guardar;
+  - pasada visual.
+- **2.4 Stand-up** ✔ · S. Derivado, sin guardar: ayer, hoy y bloqueos. La persona copia el suyo
+  en Markdown; el del equipo solo lo ve el responsable (5.3). **Enviarlo a Slack o Telegram se
+  aplaza a la Fase 8**, como acción de automatización: las integraciones son por proyecto y
+  un departamento no es un proyecto.
+  **Hecho (2026-10-02).** Sin ADR.
+  - **`GET /review/standup`**, calculado en `review/standup.ts`:
+    - ayer es el último día laborable de la jornada personal;
+    - los bloqueos son los del cierre más reciente, de hoy o de ayer;
+    - nunca la valoración. El fichero no nombra la tabla privada, y la prueba
+      de arquitectura de la ADR 054 lo vigila;
+    - el responsable (5.3) reutilizará este mismo cálculo.
+  - **El Markdown lo monta el cliente**, en `lib/standup.ts` y con i18n: la
+    API devuelve datos.
+  - **Diálogo desde un botón en Hoy.** La cabecera de Hoy pasa a partir sus
+    tres botones en varias líneas: en móvil se salían de la pantalla.
+
+  Verificación:
+  - 2 pruebas de integración, que comprueban que la nota privada no sale;
+  - 2 unitarias del Markdown;
+  - 1 de extremo a extremo con el portapapeles;
+  - pasada visual en escritorio y móvil.
+
+  **Verificación del Bloque 2 completo (2026-10-02):**
+  - integración 713 de 716 en la batería completa. Fallaron dos pruebas por
+    tiempos y bloqueos con la máquina cargada:
+    - un *deadlock* del `TRUNCATE` que limpia la base entre pruebas;
+    - la importación grande, intermitente desde el Bloque 0.
+
+    Solas pasan: `task-assignees` a la primera, y la importación 3 de 3
+    seguidas;
+  - de extremo a extremo 53 de 53;
+  - unitarias 352 (web), 727 (API) y 33 (MCP);
+  - typecheck de todos los paquetes, `biome ci` e i18n.
+
+**Bloque 3 — Foco y avisos del navegador** (≈ 2,5 semanas)
+
+- **3.1 Avisos y recordatorio a la hora anclada** ✔ · M · [ADR 055](adr/055-avisos-del-navegador-sin-service-worker.md). Dispara una sola pestaña
+  (`navigator.locks`), sin repetir lo ya avisado. `GET /today` da el instante de cada hora
+  anclada, calculado en el servidor. Sin service worker la notificación no puede llevar
+  botones: al pulsarla se abre un diálogo con «Empezar», «Posponer 10 min» y «Mañana».
+  **Límites declarados**: sin pestaña abierta no avisa, en segundo plano puede retrasarse
+  alrededor de un minuto, y posponer vale para ese navegador.
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **Ventana de 15 minutos:** una hora anclada que pasó hace más no avisa al
+    abrir la pestaña.
+  - **«Mañana» es «Pasar al» siguiente día laborable**, conservando la hora.
+  - **Sin `BroadcastChannel`:** `localStorage` ya lo comparten las pestañas,
+    y el cerrojo de `navigator.locks` evita que dos avisen a la vez.
+  - **El interruptor está en Ajustes › Preferencias** y es por navegador.
+    Solo se lee Hoy en segundo plano si está activado.
+
+  Verificación:
+  - 7 pruebas unitarias;
+  - 3 de integración de `startsAt`, incluida la del 25 de octubre;
+  - 1 de extremo a extremo con el reloj adelantado y `Notification`
+    sustituida;
+  - pasada visual del ajuste y del diálogo.
+- **3.2 Modo foco** ✔ · M · [ADR 056](adr/056-modo-foco-sobre-entradas-reales.md). Máquina pura en el cliente —Pomodoro 25/5/15×4, Flowtime con
+  un descanso del 20 % de lo trabajado, cuenta atrás— sobre entradas de tiempo reales:
+  `time_entry.focus_mode`, que se filtra porque el cierre del día cuenta las sesiones. Los
+  descansos no registran tiempo, y el cronómetro del servidor manda.
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **Tras un descanso la sesión queda «lista»**: el siguiente bloque no
+    empieza solo.
+  - **El descanso de Flowtime** va de 1 a 30 minutos.
+  - **`POST /time-entry/start`** abre otra entrada si cambia el modo en la
+    misma tarea, y no hace nada si es el mismo.
+  - **`GET /today` cuenta las sesiones del día**, y el cierre las guarda.
+    `GET /time-entry/task/:taskId` devuelve el modo de cada entrada.
+  - **El cronómetro del servidor manda**, con 15 segundos de gracia para que
+    el arranque llegue a su consulta.
+  - **Pantalla completa** en `focus/$taskId`, la fase en el pie de la barra
+    lateral y «Modo foco» en el menú de fila. La primera pasada visual
+    enseñó la pantalla encogida en una columna: el contenedor padre es flex
+    y faltaba el ancho completo.
+
+  Verificación:
+  - 9 pruebas unitarias;
+  - 4 de integración;
+  - 1 de extremo a extremo con el reloj adelantado;
+  - pasada visual.
+- **3.3 Avisos de ritmo** ✔ · S. Descanso, «no estás registrando» en horario laboral (como mucho
+  uno por hora) y cronómetro en marcha pasada la jornada.
+  **Hecho (2026-10-02).** Sin ADR propia: van en la
+  [ADR 056](adr/056-modo-foco-sobre-entradas-reales.md), con el modo foco. Decisiones de detalle:
+  - **Descanso tras 90 minutos seguidos**, y otra vez cada 90. Las entradas
+    con huecos de menos de 5 minutos cuentan como seguidas: cambiar de tarea
+    no es descansar.
+  - **`GET /time-entry/running` da `workingSince` y `lastStoppedAt`**, de
+    todos los espacios, con el índice `(user_id, start_time)` que ya había.
+  - **«Sin registrar» espera 15 minutos** desde la entrada, la vuelta de la
+    comida o la última parada. No suena en los descansos del foco.
+  - **«Fuera de jornada» no avisa a quien empieza antes de su hora**, solo
+    pasada la salida, en un día no laborable o con un cronómetro de otro día.
+  - **Cada aviso se activa aparte**, por navegador, y vienen apagados.
+  - **Las ausencias, cuando lleguen (5.1), tendrán que callar «sin
+    registrar».**
+
+  Verificación:
+  - 8 pruebas unitarias de las reglas;
+  - 4 de integración, una con un hueco de 5 minutos justos, que destapó un
+    `<` que debía ser `<=`;
+  - 1 de extremo a extremo con `Notification` sustituida. Enseñó que el
+    primer aviso ya suena en la página de ajustes, porque el runtime vive en
+    todo el panel;
+  - pasada visual del ajuste en escritorio y a 375 px.
+
+  **Verificación del Bloque 3 completo (2026-10-02):**
+  - integración 726 de 726, con 1 omitida;
+  - de extremo a extremo 56 de 56;
+  - unitarias 376 (web), 727 (API) y 33 (MCP);
+  - typecheck de todos los paquetes, `biome ci` e i18n.
+
+**Bloque 4 — Calendario** (≈ 3 semanas) · *si falta tiempo, se recorta primero 4.2* · **cerrado con el 4.1; el 4.2, aplazado**
+
+- **4.1 Exportar ICS** ✔ · S-M · [ADR 057](adr/057-exportar-el-calendario-por-token.md). Feed por token: solo se guarda su sha256, se enseña una
+  vez, y se puede regenerar o revocar. Escritor propio: el plan con hora, los bloques (una
+  cadencia de intervalo 1 se escribe como RRULE con `TZID=Europe/Madrid`; las demás, ocurrencia
+  a ocurrencia) y los vencimientos como días enteros.
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **Uno por persona y espacio**, en Ajustes › Preferencias, con el nombre
+    del espacio activo. El enlace entero solo se ve al crearlo o regenerarlo.
+  - **Solo con sesión:** las claves de API no pueden crear, ver ni revocar
+    el enlace.
+  - **En cada petición se busca el hash y se comprueba que la persona sigue
+    en el espacio**, antes de la caché de cinco minutos: revocar, regenerar
+    o salir del espacio cortan el enlace al momento.
+  - **Las series empiezan el día en que se creó el bloque.** Los mensuales
+    después del 28 van ocurrencia a ocurrencia, porque «el 31» se recorta en
+    los meses cortos y `BYMONTHDAY` se los salta.
+  - **Las horas sueltas van en UTC**, válidas en cualquier zona. Las series
+    llevan su `VTIMEZONE` de Madrid, porque Outlook la necesita.
+  - **«✓» delante de lo terminado**, y «Vence:» o «Due:» según el idioma de
+    la persona.
+
+  Verificación:
+  - 8 pruebas unitarias del escritor y de la decisión entre serie y
+    ocurrencias;
+  - 6 de integración. Quitando la comprobación de pertenencia o el rechazo
+    de las claves de API, fallan las suyas;
+  - 1 de extremo a extremo, del ajuste al `.ics` sin cookies;
+  - lectura con `ical.js`, fuera del repositorio: la serie de los lunes da
+    las 10:00 de Madrid a ambos lados del cambio de hora;
+  - pasada visual del ajuste en escritorio y a 375 px.
+
+  **Verificación del Bloque 4 completo (2026-10-02):**
+  - integración 732 de 732, con 1 omitida;
+  - de extremo a extremo 56 de 57. Falló «crear una tarea desde un hueco»
+    del Cronograma, que también falla 1 de cada 3 veces sola. Es una carrera
+    de la prueba, ajena al 4.1: crear desde un hueco son dos peticiones, y la
+    prueba leía la API con la segunda en vuelo. Ahora espera a que la tarea
+    esté anclada, y pasa 8 de 8;
+  - unitarias 376 (web), 735 (API) y 33 (MCP);
+  - typecheck de todos los paquetes, `biome ci` e i18n.
+- **4.2 Importar iCal** · *aplazado* · L · ADR 058. `ical.js` (MPL-2.0, sin dependencias transitivas): expandir
+  a mano RRULE, EXDATE, RECURRENCE-ID y los TZID de Outlook es una trampa. La URL se guarda
+  cifrada, con guarda anti-SSRF en cada salto, y un trabajo cada quince minutos con
+  arrendamiento llena una caché de ocurrencias. Las reuniones entran como bloques fijos de solo
+  lectura: cuentan en la carga del Planificador y el Cronograma, y el responsable no las ve.
+  **Aplazado (2026-10-02).** El usuario lo decidió al cerrar el 4.1, antes de
+  añadir `ical.js`. La ADR 058 queda reservada para cuando se retome.
+
+**Bloque 5 — Equipo** (≈ 2,5 semanas)
+
+- **5.1 Ausencias y festivos** ✔ · S-M · [ADR 060](adr/060-ausencias-y-festivos.md). `user_time_off` —rangos de días, **sin motivo**,
+  con nota privada—, que gestiona la propia persona junto a su jornada, y `workspace_holiday`,
+  que gestiona quien administra el espacio. Un día no disponible vale 0, como uno no laborable
+  (ADR 045). Las recurrentes se siguen generando en festivo: declarado.
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **Una sola fuente:** `work-schedule/unavailable-days.ts` da el día y su
+    tipo, nunca la nota. `capacityForDay` lo recibe y devuelve 0 en el
+    Planificador, el Cronograma y Hoy, que pintan «Festivo · nombre» o
+    «Ausente».
+  - **La ausencia es de un espacio** (toda tabla nueva lleva
+    `workspace_id`), como mucho de un año, y se da en Ajustes › Preferencias
+    para el espacio activo, debajo de la jornada.
+  - **Los festivos van en Administración › Festivos.** Los lee cualquier
+    miembro; añadir y quitar piden `workspace:manage_settings`, y un día
+    repetido da 409.
+  - **Si un festivo cae dentro de una ausencia, se ve el festivo.**
+  - **El aviso de «sin registrar» calla en un día no disponible.** El de
+    cronómetro fuera de jornada, no.
+  - **Pendiente:** «Pasar al siguiente día laborable» aún no salta festivos
+    ni ausencias, y un festivo nuevo llega a los demás al volver a leer, no
+    por WebSocket.
+
+  Verificación:
+  - 5 pruebas de integración: capacidad 0 en las tres lecturas sin la nota,
+    rango y propiedad, permisos y duplicado, aislamiento entre espacios, y
+    festivo dentro de ausencia. Quitando el filtro por persona, el de espacio
+    o el permiso, falla la suya;
+  - 1 prueba unitaria más de los avisos de ritmo;
+  - 2 de extremo a extremo, una por ajuste;
+  - pasada visual en escritorio y a 375 px. Con un festivo, en la columna
+    estrecha del Cronograma, la fecha se encogía hasta «d…»: ahora se recorta
+    la marca.
+- **5.2 Responsable de departamento** ✔ · S · [ADR 059](adr/059-responsable-de-departamento.md). `team_member.is_lead`. **Un único punto
+  de visibilidad**, `lead/visibility.ts`, por el que pasa todo controlador del responsable:
+  las ADR 041, 046 y 047 ya pagaron tres fugas entre espacios por repetir un `WHERE`. Ningún
+  endpoint de `lead/` escribe.
+  **Hecho (2026-10-03).** Decisiones de detalle:
+  - **Dos módulos:** `team-lead/` marca al responsable con el permiso de
+    gestionar miembros (`member:update`), y `lead/` solo lee. Una prueba de
+    arquitectura falla si `lead/` registra una ruta que escriba, escribe en
+    la base o publica eventos.
+  - **Una sola consulta de pares** (responsable, miembro) para los dos
+    sentidos. Exige que el equipo sea de este espacio, que el responsable
+    lleve la marca, que los dos sigan en el espacio y que no sean la misma
+    persona.
+  - **El interruptor va en el diálogo de miembros del equipo**, y quien no
+    puede gestionarlo ve la etiqueta «Responsable».
+  - **El aviso** «Tu responsable, X, ve tu plan y tus cierres, nunca tu
+    valoración» sale en Hoy y en el Planificador, con
+    `GET /lead/my-leads`.
+  - **Better Auth no conoce la columna:** al añadir a alguien queda en
+    `false`, y sacarle del equipo se la lleva.
+
+  Verificación:
+  - 3 pruebas de integración de la regla, el interruptor y el aviso. La
+    primera versión no detectaba quitar el filtro de espacio del equipo,
+    porque la persona del otro espacio no estaba en este; ahora lo está y
+    lo detecta;
+  - la prueba de arquitectura de solo lectura, comprobada con una escritura
+    metida a propósito;
+  - 1 de extremo a extremo con dos personas: la segunda entra por una
+    invitación pendiente;
+  - pasada visual del diálogo y del aviso.
+- **5.3 «Mi equipo»** ✔ · M. Por persona: plan, capacidad con ausencias y festivos, carga, hechas,
+  horas, el cierre **público** y el stand-up, todo en lote —unas ocho consultas para el equipo
+  entero— y con sondeo de 60 s.
+  **Hecho (2026-10-03).** Sin ADR propia: va en la
+  [ADR 059](adr/059-responsable-de-departamento.md). Decisiones de detalle:
+  - **`GET /lead/day` y `GET /lead/standup`** pasan por `visibility.ts` y
+    cargan en lote: nueve consultas el día y siete el stand-up, sea cual sea
+    el tamaño del equipo.
+  - **Los bloques, las jornadas y los días no disponibles ganan versión de
+    varias personas**, y la de una sola delega en ella: la regla sigue en
+    un solo sitio.
+  - **El stand-up del responsable es el mismo que la persona ve en Hoy.**
+    Cada «ayer» sale de la jornada de cada uno, y una prueba compara los dos
+    campo a campo.
+  - **Ruta `team`, «Mi equipo»** en la navegación personal, solo para quien
+    lleva a alguien. Tiene una tarjeta por persona y una pestaña de stand-up
+    con «Copiar todo». Ningún botón sobre el plan ajeno.
+  - **Se relee cada minuto**: el tiempo real queda aplazado a sabiendas.
+
+  Verificación:
+  - 3 pruebas de integración: el día sin nada privado ni de fuera del
+    equipo, el stand-up idéntico al propio, y nada para quien no lleva a
+    nadie;
+  - **banco de 50.000 tareas con un equipo de 20 personas**: el día da p95
+    de 34 ms con 200 tareas terminadas hoy, y el stand-up de 21 ms;
+  - 1 prueba de extremo a extremo y la de la navegación;
+  - pasada visual en escritorio y a 375 px.
+
+  **Verificación del Bloque 5 completo (2026-10-03):**
+  - integración 742 de 743, con 1 omitida. Falló la importación grande,
+    intermitente desde el Bloque 0, que sola pasa 19 de 19;
+  - de extremo a extremo 60 de 61. Falló «una ausencia deja hoy sin
+    horas»: al quitar la ausencia, el `DELETE` salió del navegador y no tuvo
+    respuesta. Pasó 4 de 5, 8 de 8 y 20 de 20 al repetirla. En las 20 se
+    registraron en el servidor la llegada y el fin de cada `DELETE`, y todos
+    tardaron de 5 a 38 ms. **Queda sin explicar**; se vigila;
+  - unitarias 378 (web), 743 (API) y 33 (MCP);
+  - typecheck de todos los paquetes, `biome ci` e i18n.
+
+**Orden.** 0.1 → 0.2 → (0.3, 0.4, 0.5) · 1.1 → 1.2 · 0.3 → 1.3 → 2.1/2.2 · 1.4 → 2.3 ·
+2.1 → 2.4 · 3.1 → 3.2/3.3 · 4.1 → 4.2 · 0.5 → 5.1 · 5.1 + 5.2 + 2.4 → 5.3. **Unas 18
+semanas nominales, 4-5 meses reales.**
+
+**Riesgos.** (1) El cambio de zona horaria sobre datos existentes, con la igualdad exacta de
+`planned_date` y el cambio de hora del 25 de octubre. (2) La visibilidad del responsable:
+privacidad y fugas entre espacios. (3) Que alguien espere privacidad de la Bandeja. (4) Que
+alguien espere avisos sin tener la pestaña abierta. (5) La importación de iCal, aplazada:
+SSRF, secretos, una licencia nueva y la variedad de feeds.
+
+**Aplazado a sabiendas:** hábitos y contadores · push, PWA y service worker ·
+autoplanificar · bandeja de notificaciones completa · mapa de calor · zona horaria por
+persona · enviar el stand-up a Slack o Telegram (Fase 8) · matriz de Eisenhower · editar la
+recurrencia desde la propia tarea · tiempo real en la vista del responsable · CalDAV y
+sincronización bidireccional · avisos de los rituales (decidido: solo botón) · que el
+responsable edite el plan ajeno (decidido: solo lectura) · saltarse las recurrentes en festivo ·
+importar iCal (4.2, decidido al cerrar el 4.1).
+
+**Verificación**, en cada sub-bloque:
+
+- **Pruebas unitarias** de toda función pura nueva.
+- **Pruebas de integración** de cada invariante:
+  - la captura no toca `due_date`;
+  - nunca hay más de tres imprescindibles;
+  - el aviso de vencimiento llega a cada asignado;
+  - los campos privados no salen para nadie más;
+  - el responsable no ve otros espacios y no puede escribir;
+  - ausencias y festivos dejan la capacidad a cero.
+- **e2e** con `E2E_DATABASE_URL` → `riuna_e2e_test`.
+- **`EXPLAIN`** en el banco de 50.000 tareas para «Esperando a», la vista del responsable y el
+  calendario.
+
+**Hecho cuando:** capturas una tarea con una línea, cierras el día decidiendo qué pasa con lo
+pendiente, trabajas en foco con avisos del navegador, ves tu plan con hora en tu calendario, y
+tu responsable ve tu plan y tu carga —con ausencias y festivos— pero no tu valoración. Ver tus
+reuniones en el Cronograma se aplazó con el 4.2.
+
 ### Fase 8 — Automatizaciones e importadores externos (≈3 semanas)
 Motor disparador → condición → acción (`automation`, `automation_run`) sobre
 los eventos que Kaneo ya emite, ampliando su `workflowRule` en lugar de
@@ -1669,13 +2379,47 @@ destructiva.
 
 ## Siguiente paso
 
-El **interludio de espacio personal y administración** está **cerrado**: los
-nueve bloques (barra lateral en tres espacios, lectura de tareas del
-espacio, «Hoy», el Planificador, el Cronograma, «Mis tareas» y el Parte de
-horas) están hechos, commiteados y verificados. Sigue la **Fase 8**:
-automatizaciones e importadores externos. Motor disparador → condición →
-acción sobre los eventos que Kaneo ya emite, e importadores de Trello, Jira,
-Asana y Notion.
+El **interludio de espacio personal y administración** está **cerrado**: sus
+catorce bloques están hechos, commiteados y verificados. También lo está el
+**[interludio de productividad personal y equipo](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--cerrado)**:
+sus cinco bloques están hechos, con el **4.2**, importar iCal, aplazado a
+petición del usuario (la ADR 058 queda reservada). Cada bloque tiene su PR
+apilada sobre la anterior, de la #28 a la del Bloque 5. Antes de desplegar
+hay que ensayar la conversión de días del 0.2 sobre una copia de producción,
+como explica [actualizar.md](actualizar.md), y aplicar las migraciones
+0070-0076, que solo añaden.
+
+Lo siguiente es la **Fase 8**: automatizaciones e importadores externos.
+
+**Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
+seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.
+Los diez fallos están corregidos en la rama `fix/interludio-revision`, cada
+uno con una prueba que fallaba antes del arreglo:
+1. el cierre del día contaba un cronómetro en marcha solo hasta las 12:00;
+2. un bloque de foco que se comprobaba tarde registraba hasta la
+   comprobación, no hasta su hora;
+3. las ausencias y la vista del responsable ignoraban el alcance de la
+   clave de API;
+4. el aviso del responsable y «Mi equipo» no se refrescaban sin recargar;
+5. «Mi equipo» podía perder las hechas de quien tenía la tarea asignada y
+   planificada;
+6. una sesión de foco olvidada callaba el aviso de descanso;
+7. el día planificado del detalle no se actualizaba al mover la tarea;
+8. la Bandeja daba un 403 a quien ya la tenía y pasó a lector;
+9. la captura rápida confundía «@constructor» y similares con un día;
+10. el «ayer» del stand-up no saltaba festivos ni ausencias.
+
+**Queda como deuda declarada:**
+- los festivos, las ausencias y el interruptor de responsable no publican
+  eventos: los demás lo ven al volver a leer (ADR 060);
+- el stand-up propio hace unas 25 consultas, cuando podría reutilizar las
+  lecturas en lote de «Mi equipo»;
+- el normalizador de días del 0.2 recorre dos tablas enteras en cada
+  arranque;
+- el formateador de `yyyy-mm-dd` está repetido unas ocho veces en la web, y
+  el esquema de día en cinco routers de la API;
+- «Pasar al siguiente día laborable» del cierre aún no salta festivos ni
+  ausencias.
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la

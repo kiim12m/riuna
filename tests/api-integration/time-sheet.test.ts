@@ -222,6 +222,22 @@ describe("parte de horas", () => {
     );
   });
 
+  // ADR 049: con la API en Madrid el inicio del rango es la vispera a las
+  // 22:00 UTC, y recortar `toISOString()` ponia en el nombre un dia de menos.
+  it("names the export file with the requested days, not their UTC eve", async () => {
+    const { app, workspaceId } = await setup();
+
+    const response = await exportTimeSheet(app, workspaceId, {
+      start: "2026-10-05",
+      end: "2026-10-11",
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-disposition")).toContain(
+      "parte-de-horas-2026-10-05-2026-10-11.xlsx",
+    );
+  });
+
   it("lists each entry inside its group, for editing or deleting one at a time (ADR 044)", async () => {
     const { app, workspaceId, projectId, columnId, userId } = await setup();
     const task = await createTask(projectId, columnId, {

@@ -6,6 +6,7 @@ import {
   planEntrySchema,
   planTaskSchema,
 } from "../planner/schemas";
+import { unavailableDaySchema } from "../schemas";
 import { DUE_WINDOWS } from "../utils/due-window";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
@@ -31,7 +32,13 @@ const todayResponseSchema = v.object({
   /** Planificadas antes de hoy y todavia sin terminar -"De dias anteriores". */
   previous: v.array(planEntrySchema),
   /** El plan de hoy: sin terminar, con o sin hora. */
-  planned: v.array(planEntrySchema),
+  planned: v.array(
+    v.object({
+      ...planEntrySchema.entries,
+      /** El instante de la hora anclada, o `null` sin hora (ADR 055). */
+      startsAt: v.nullable(v.date()),
+    }),
+  ),
   /**
    * Vencido o vence hoy, sin planificar hoy ni antes. Si esta planificada
    * para un dia futuro sale igual, con su `plannedDate` (ADR 046).
@@ -46,9 +53,15 @@ const todayResponseSchema = v.object({
     workedToday: v.number(),
     /** La jornada personal de hoy, menos la comida y los bloques cerrados. */
     capacitySeconds: v.number(),
+    /** Sesiones del modo foco empezadas hoy (ADR 056). */
+    focusSessions: v.number(),
   }),
   /** El dia del servidor, `yyyy-mm-dd`. */
   serverToday: v.string(),
+  /** Si ya se paso por «Terminar el dia» (ADR 054). */
+  dayClosed: v.boolean(),
+  /** Festivo o ausencia hoy (ADR 060): la capacidad ya vale 0. */
+  unavailable: v.nullable(unavailableDaySchema),
 });
 
 /**

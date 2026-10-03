@@ -17,6 +17,24 @@ export async function getMyWorkCounts(workspaceId: string) {
   return response.json();
 }
 
+/**
+ * «Esperando a» (sub-bloque 1.4): lo que delegue y sigue abierto, y lo mio
+ * bloqueado por tareas ajenas. Cada lista, topada en 100.
+ */
+export async function getWaiting(workspaceId: string) {
+  const response = await client["my-work"].waiting.$get({
+    query: { workspaceId },
+  });
+
+  if (!response.ok) {
+    throw new HttpError(await response.text(), response.status);
+  }
+
+  return response.json();
+}
+
+export type WaitingResponse = Awaited<ReturnType<typeof getWaiting>>;
+
 // El mismo vocabulario que `SEARCH_SORT_FIELDS` en la API. Sin `number` ni
 // `position`: se numeran por proyecto, y ordenar por ellos entre proyectos no
 // significa nada (misma razon que ADR 038 los retira del registro).

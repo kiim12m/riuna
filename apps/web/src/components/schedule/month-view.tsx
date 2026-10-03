@@ -186,7 +186,7 @@ export function MonthView({
                 <button
                   type="button"
                   onClick={() => setEditingDay(dayKey)}
-                  className="mt-auto shrink-0 truncate rounded border border-brand/70 border-dashed px-1 text-brand text-meta opacity-0 focus-visible:opacity-100 group-hover/cell:opacity-100"
+                  className="mt-auto shrink-0 truncate rounded border border-brand/70 border-dashed px-1 text-brand text-meta opacity-0 focus-visible:opacity-100 group-hover/cell:opacity-100 touch:opacity-100"
                 >
                   + {t("schedule:placeholder.clickToCreate")}
                 </button>

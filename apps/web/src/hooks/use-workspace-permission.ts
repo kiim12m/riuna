@@ -107,6 +107,9 @@ export function useWorkspacePermission() {
       canDeleteLabels: () => can.deleteLabels,
       canManageWorkspace: () => can.manageWorkspace,
       canModerateShared: () => can.moderateShared,
+      // El mismo permiso, `workspace:manage_settings`, gobierna los festivos
+      // del espacio (ADR 060): sin otra consulta al servidor.
+      canManageSettings: () => can.moderateShared,
       canDeleteWorkspace: () => can.deleteWorkspace,
       canInviteUsers: () => can.inviteUsers,
       canManageTeam: () => can.manageTeam,

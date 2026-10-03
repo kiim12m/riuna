@@ -83,7 +83,12 @@ test.describe("Cronograma", () => {
     // de la rejilla; sin esto, si "manana" resulta ser "hoy" (media noche de
     // por medio), el reencuadre a la hora actual podria dejar el tramo fuera
     // del viewport y el arrastre no tocaria nada.
-    await segment.scrollIntoViewIfNeeded();
+    // Al centro y no al borde: la cabecera de los dias es fija y tapa lo
+    // que `scrollIntoViewIfNeeded` deja justo arriba, que es donde cae una
+    // tarea de primera hora cuando el Cronograma abre ya pasada esa hora.
+    await segment.evaluate((element) =>
+      element.scrollIntoView({ block: "center" }),
+    );
 
     const box = await segment.boundingBox();
     if (!box) throw new Error("No se pudo medir el tramo");
@@ -160,24 +165,29 @@ test.describe("Cronograma", () => {
       timeout: 10_000,
     });
 
-    const schedule = await riuna.api<{
-      days: Array<{
-        dayDate: string;
-        segments: Array<{
-          type: string;
-          startSecond: number;
-          task?: { title: string } | null;
+    // Crear desde un hueco son dos peticiones -la tarea y luego su hora-, y
+    // el titulo ya se ve con la segunda en vuelo: se espera a que la API la
+    // tenga anclada en vez de leerla una sola vez.
+    const pinnedSegment = async () => {
+      const schedule = await riuna.api<{
+        days: Array<{
+          dayDate: string;
+          segments: Array<{
+            type: string;
+            startSecond: number;
+            task?: { title: string } | null;
+          }>;
         }>;
-      }>;
-    }>(
-      "get",
-      `/api/schedule?workspaceId=${riuna.workspaceId}&from=${dayKey}&days=1`,
-    );
-
-    const created = schedule.days[0]?.segments.find(
-      (s) => s.type === "pinned" && s.task?.title === title,
-    );
-    expect(created).toBeTruthy();
+      }>(
+        "get",
+        `/api/schedule?workspaceId=${riuna.workspaceId}&from=${dayKey}&days=1`,
+      );
+      return schedule.days[0]?.segments.find(
+        (s) => s.type === "pinned" && s.task?.title === title,
+      );
+    };
+    await expect.poll(pinnedSegment).toBeTruthy();
+    const created = await pinnedSegment();
     // Redondeado a 15 min (`CREATE_SNAP_MINUTES`): 11:52:30-12:07:30.
     expect(created?.startSecond).toBeGreaterThan(11 * 3600 + 52 * 60);
     expect(created?.startSecond).toBeLessThan(12 * 3600 + 8 * 60);
@@ -206,7 +216,12 @@ test.describe("Cronograma", () => {
 
     const segment = page.getByTestId(`schedule-segment-${taskId}`);
     await expect(segment).toBeVisible({ timeout: 20_000 });
-    await segment.scrollIntoViewIfNeeded();
+    // Al centro y no al borde: la cabecera de los dias es fija y tapa lo
+    // que `scrollIntoViewIfNeeded` deja justo arriba, que es donde cae una
+    // tarea de primera hora cuando el Cronograma abre ya pasada esa hora.
+    await segment.evaluate((element) =>
+      element.scrollIntoView({ block: "center" }),
+    );
     const box = await segment.boundingBox();
     if (!box) throw new Error("No se pudo medir el tramo");
 
@@ -263,7 +278,12 @@ test.describe("Cronograma", () => {
     // que puede caer muy por debajo de las 09:00 donde esta anclada la
     // tarea. Sin desplazarla a la vista, `boundingBox()` devuelve una `y`
     // fuera del viewport y el arrastre no toca nada.
-    await segment.scrollIntoViewIfNeeded();
+    // Al centro y no al borde: la cabecera de los dias es fija y tapa lo
+    // que `scrollIntoViewIfNeeded` deja justo arriba, que es donde cae una
+    // tarea de primera hora cuando el Cronograma abre ya pasada esa hora.
+    await segment.evaluate((element) =>
+      element.scrollIntoView({ block: "center" }),
+    );
     const box = await segment.boundingBox();
     if (!box) throw new Error("No se pudo medir el tramo");
 

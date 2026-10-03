@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getMyWorkCounts } from "@/fetchers/my-work";
+import { personalQueryOptions } from "@/hooks/queries/personal-query-options";
 
 /**
  * Clave bajo "my-work": `MY_WORK_INVALIDATED`, `PLAN_INVALIDATED` y
@@ -11,5 +12,6 @@ export function useMyWorkCounts(workspaceId: string) {
     queryKey: ["my-work", "counts", workspaceId],
     queryFn: () => getMyWorkCounts(workspaceId),
     enabled: Boolean(workspaceId),
+    ...personalQueryOptions,
   });
 }

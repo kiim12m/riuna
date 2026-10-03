@@ -29,7 +29,9 @@ test.describe("Panel personal", () => {
     await expect(
       page.getByRole("heading", { name: "Tareas pendientes" }),
     ).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Bandeja" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Notificaciones", exact: true }),
+    ).toBeVisible();
 
     // Acotado a su widget: el titulo tambien sale en el texto de la
     // notificacion de la bandeja, que es correcto y no una duplicidad.
@@ -66,9 +68,9 @@ test.describe("Panel personal", () => {
     const bell = page.getByRole("button", { name: /Notificaciones/ });
     await expect(bell).toContainText("1");
 
-    // El de la bandeja, no el de la campana: los dos existen y hacen lo mismo.
+    // El del widget, no el de la campana: los dos existen y hacen lo mismo.
     await page
-      .getByRole("region", { name: "Bandeja" })
+      .getByRole("region", { name: "Notificaciones", exact: true })
       .getByRole("button", { name: "Marcar todos como leídos" })
       .click();
 

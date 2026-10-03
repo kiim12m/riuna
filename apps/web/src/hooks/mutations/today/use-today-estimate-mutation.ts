@@ -32,7 +32,7 @@ export function useTodayEstimateMutation(workspaceId: string) {
     (taskId: string, estimate: number | null) => {
       const previous = queryClient.getQueryData<TodayResponse>(queryKey);
       if (previous) {
-        const patch = (rows: TodayEntry[]) =>
+        const patch = <Row extends TodayEntry>(rows: Row[]) =>
           rows.map((row) => (row.id === taskId ? { ...row, estimate } : row));
         queryClient.setQueryData<TodayResponse>(queryKey, {
           ...previous,

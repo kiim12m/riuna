@@ -39,11 +39,14 @@ import {
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { useSetTeamLead } from "@/hooks/mutations/lead/use-set-team-lead";
 import { useAddTeamMember } from "@/hooks/mutations/team/use-add-team-member";
 import { useCreateTeam } from "@/hooks/mutations/team/use-create-team";
 import { useRemoveTeam } from "@/hooks/mutations/team/use-remove-team";
 import { useRemoveTeamMember } from "@/hooks/mutations/team/use-remove-team-member";
 import { useUpdateTeam } from "@/hooks/mutations/team/use-update-team";
+import { useTeamLeads } from "@/hooks/queries/lead/use-leads";
 import useGetTeamMembers from "@/hooks/queries/team/use-get-team-members";
 import useGetTeams from "@/hooks/queries/team/use-get-teams";
 import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
@@ -409,6 +412,15 @@ function TeamMembersDialog({
   const { data: workspaceUsers } = useGetWorkspaceUsers({ workspaceId });
   const addMember = useAddTeamMember();
   const removeMember = useRemoveTeamMember();
+  // El responsable de departamento (ADR 059): lee el plan y los cierres del
+  // resto del equipo, nunca su valoracion.
+  const { data: leads } = useTeamLeads(workspaceId);
+  const setLead = useSetTeamLead(workspaceId);
+  const leadIds = new Set(
+    (leads ?? [])
+      .filter((lead) => lead.teamId === team?.id)
+      .map((lead) => lead.userId),
+  );
 
   const memberUserIds = new Set((members ?? []).map((member) => member.userId));
   const candidates = (workspaceUsers ?? []).filter(
@@ -462,33 +474,67 @@ function TeamMembersDialog({
                   <span className="text-sm truncate">
                     {nameByUserId.get(member.userId) ?? member.userId}
                   </span>
-                  {canManage && team && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                      aria-label={t("settings:workspaceTeams.removeMember", {
-                        defaultValue: "Remove from team",
-                      })}
-                      onClick={() =>
-                        run(
-                          removeMember.mutateAsync({
-                            teamId: team.id,
-                            userId: member.userId,
-                          }),
-                          t("settings:workspaceTeams.removeMemberError", {
-                            defaultValue: "Failed to remove member",
-                          }),
-                        )
-                      }
-                    >
-                      <UserMinus className="size-3.5" />
-                    </Button>
-                  )}
+                  <div className="ml-auto flex items-center gap-2">
+                    {canManage && team ? (
+                      <span className="flex items-center gap-2 text-meta text-muted-foreground">
+                        {t("lead:teams.badge")}
+                        <Switch
+                          aria-label={t("lead:teams.toggle", {
+                            name:
+                              nameByUserId.get(member.userId) ?? member.userId,
+                          })}
+                          checked={leadIds.has(member.userId)}
+                          disabled={setLead.isPending}
+                          onCheckedChange={(checked) =>
+                            run(
+                              setLead.mutateAsync({
+                                teamId: team.id,
+                                userId: member.userId,
+                                isLead: checked,
+                              }),
+                              t("lead:teams.error"),
+                            )
+                          }
+                        />
+                      </span>
+                    ) : (
+                      leadIds.has(member.userId) && (
+                        <span className="rounded bg-muted px-1.5 text-meta text-muted-foreground">
+                          {t("lead:teams.badge")}
+                        </span>
+                      )
+                    )}
+                    {canManage && team && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        aria-label={t("settings:workspaceTeams.removeMember", {
+                          defaultValue: "Remove from team",
+                        })}
+                        onClick={() =>
+                          run(
+                            removeMember.mutateAsync({
+                              teamId: team.id,
+                              userId: member.userId,
+                            }),
+                            t("settings:workspaceTeams.removeMemberError", {
+                              defaultValue: "Failed to remove member",
+                            }),
+                          )
+                        }
+                      >
+                        <UserMinus className="size-3.5" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))
             )}
           </div>
+          <p className="text-meta text-muted-foreground">
+            {t("lead:teams.hint")}
+          </p>
 
           {canManage && candidates.length > 0 && team && (
             <div className="space-y-2">

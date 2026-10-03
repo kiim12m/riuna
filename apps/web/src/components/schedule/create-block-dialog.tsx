@@ -22,12 +22,16 @@ import type { CreateBlockInput, UpdateBlockInput } from "@/fetchers/schedule";
 import { cn } from "@/lib/cn";
 import { fromMinutes, toMinutes } from "@/lib/minutes";
 import { WEEKDAYS_MONDAY_FIRST, weekdayLabel } from "@/lib/weekdays";
+import { dayKey } from "./schedule-range";
 import type { EditableBlock } from "./time-grid";
 
 /** `yyyy-mm-dd` de un ISO que llega del servidor -Hono serializa los `Date`
- * a texto-, o cadena vacia si no hay fecha. */
+ * a texto-, o cadena vacia si no hay fecha. El dia sale de la hora **local**:
+ * la API guarda la medianoche de Madrid (ADR 049), que en UTC es la vispera a
+ * las 22:00, y cortar el ISO por los diez primeros caracteres daria el dia
+ * anterior -y guardar el dialogo moveria el bloque-. */
 function toDayInput(iso: string | null): string {
-  return iso ? iso.slice(0, 10) : "";
+  return iso ? dayKey(new Date(iso)) : "";
 }
 
 /**

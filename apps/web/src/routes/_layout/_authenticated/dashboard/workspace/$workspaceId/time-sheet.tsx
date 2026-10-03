@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { format } from "date-fns";
 import { saveAs } from "file-saver";
 import { ChevronRight, FileClock } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
@@ -42,8 +43,13 @@ import { toast } from "@/lib/toast";
 
 const DEFAULT_RANGE_DAYS = 7;
 
+/**
+ * `yyyy-mm-dd` del dia **local**. Antes recortaba `toISOString()`, que es UTC:
+ * entre las 00:00 y las 02:00 de Madrid el rango por defecto acababa ayer y el
+ * parte no ensenaba lo de hoy (ADR 049).
+ */
 function isoDay(date: Date) {
-  return date.toISOString().slice(0, 10);
+  return format(date, "yyyy-MM-dd");
 }
 
 function daysAgo(days: number) {
@@ -274,6 +280,8 @@ function RouteComponent() {
                                 <TimeSheetEntryRow
                                   key={entry.id}
                                   entry={entry}
+                                  showTask={groupBy !== "task"}
+                                  showDate={groupBy !== "day"}
                                 />
                               ))}
                             </div>

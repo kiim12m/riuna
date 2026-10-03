@@ -565,3 +565,62 @@ describe("personal planner", () => {
     expect(plan.ghosts).toHaveLength(0);
   });
 });
+
+describe("GET /planner/entry/:taskId", () => {
+  beforeEach(async () => {
+    await resetTestDatabase();
+  });
+
+  function getEntry(app: App, workspaceId: string, taskId: string) {
+    return app.request(
+      `/api/planner/entry/${taskId}?workspaceId=${workspaceId}`,
+    );
+  }
+
+  it("returns the planned day as a server day key, with its anchored minute", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+
+    expect(
+      (
+        await putEntry(app, workspaceId, task.id, {
+          plannedDate: "2026-10-26",
+          startMinute: 570,
+        })
+      ).status,
+    ).toBe(200);
+
+    const response = await getEntry(app, workspaceId, task.id);
+    expect(response.status).toBe(200);
+    // El 26 de octubre ya es horario de invierno en Madrid: la columna guarda
+    // el 25 a las 23:00 UTC, y la clave tiene que seguir diciendo 26.
+    expect(await response.json()).toEqual({
+      entry: { plannedDay: "2026-10-26", startMinute: 570, keyRank: null },
+    });
+  });
+
+  it("returns null for a task that is not on the plan", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+
+    const response = await getEntry(app, workspaceId, task.id);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ entry: null });
+  });
+
+  // La fuga que las ADR 041, 046 y 047 ya tuvieron que corregir: una entrada
+  // es unica por (usuario, tarea), no por espacio.
+  it("does not leak an entry planned from another workspace", async () => {
+    const { app, workspaceId, projectId, columnId, userId } = await setup();
+    const otherWorkspace = await addToAnotherWorkspace(userId);
+    const task = await createTask(projectId, columnId);
+    await assign(task.id, userId);
+    await putEntry(app, workspaceId, task.id, { plannedDate: "2026-10-26" });
+
+    const response = await getEntry(app, otherWorkspace.id, task.id);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ entry: null });
+  });
+});

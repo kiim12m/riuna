@@ -8,9 +8,17 @@ import {
 } from "../../database/schema";
 import { decorateTasks, getWorkspaceColumns } from "../../my-work/decorate";
 import { computeGhosts } from "../../planner/ghosts";
+import { loggedSecondsByTask } from "../../planner/queries";
 import { getRunningEntry } from "../../time-entry/running";
-import { dayKeysBetween, serverDayKey } from "../../utils/day-boundaries";
+import {
+  dayKeysBetween,
+  parseServerDay,
+  serverDayKey,
+} from "../../utils/day-boundaries";
+import { capacityForDay } from "../../work-schedule/day-capacity";
+import { dayLoad } from "../../work-schedule/day-load";
 import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
+import { loadUnavailableDays } from "../../work-schedule/unavailable-days";
 import { loadBlocksByDay } from "../blocks-by-day";
 import { buildDay } from "../build-day";
 import {
@@ -55,6 +63,7 @@ export default async function getSchedule({
     { blocksByDay, blocksById },
     runningEntry,
     ghosts,
+    unavailableDays,
   ] = await Promise.all([
     getWorkspaceColumns(workspaceId),
     getWorkSchedule(userId),
@@ -88,6 +97,12 @@ export default async function getSchedule({
     // el pie de la barra lateral, en vez de mantener aqui su propia copia.
     getRunningEntry(userId),
     computeGhosts(workspaceId, userId, windowStart, windowEnd),
+    loadUnavailableDays({
+      workspaceId,
+      userId,
+      start: windowStart,
+      end: windowEnd,
+    }),
   ]);
 
   const decoratedEntries = await decorateTasks(entryRows, projectColumns);
@@ -120,21 +135,47 @@ export default async function getSchedule({
         }
       : null;
 
-  const days = dayKeysBetween(windowStart, windowEnd).map((dayKey) =>
-    buildDay(dayKey, {
-      entriesByDay,
-      blocksByDay,
-      ghostsByDay,
-      taskById,
-      blockById: blocksById,
-      runningEntry,
-      now,
-      todayKey,
-      workStartMinute: schedule.workStartMinute,
-      workEndMinute: schedule.workEndMinute,
-      lunchInterval,
-    }),
+  const loggedByTask = await loggedSecondsByTask(
+    decoratedEntries.map((entry) => entry.id),
   );
+
+  const days = dayKeysBetween(windowStart, windowEnd).map((dayKey) => {
+    const dayBlocks = blocksByDay.get(dayKey) ?? [];
+    return {
+      ...buildDay(dayKey, {
+        entriesByDay,
+        blocksByDay,
+        ghostsByDay,
+        taskById,
+        blockById: blocksById,
+        runningEntry,
+        now,
+        todayKey,
+        workStartMinute: schedule.workStartMinute,
+        workEndMinute: schedule.workEndMinute,
+        lunchInterval,
+      }),
+      // La misma carga que el Planificador (ADR 050), no la suma de los
+      // tramos -que lleva el relleno de lo no estimado- frente a la jornada
+      // bruta.
+      load: dayLoad({
+        entries: (entriesByDay.get(dayKey) ?? []).map((entry) => ({
+          estimate: entry.estimate,
+          loggedSeconds: loggedByTask.get(entry.id) ?? 0,
+          isDone: entry.isDone,
+        })),
+        fixedBlocks: dayBlocks.filter((block) => block.kind === "fixed"),
+        capacitySeconds: capacityForDay(
+          schedule,
+          parseServerDay(dayKey, "day"),
+          dayBlocks,
+          unavailableDays.has(dayKey),
+        ),
+      }),
+      /** Festivo o ausencia (ADR 060): la columna lo dice. */
+      unavailable: unavailableDays.get(dayKey) ?? null,
+    };
+  });
 
   return {
     days,

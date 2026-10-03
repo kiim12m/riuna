@@ -83,7 +83,7 @@ RUN pnpm run build
 
 FROM node:24.19.0-alpine AS runtime
 
-RUN apk add --no-cache nginx=~1.30.4 && \
+RUN apk add --no-cache nginx=~1.30.4 tzdata && \
   addgroup -g 1001 appuser && \
   adduser -u 1001 -G appuser -D appuser && \
   mkdir -p /app /app/apps/api/data /var/cache/nginx /var/run/nginx /var/log/nginx /var/lib/nginx/logs /var/lib/nginx/tmp /usr/share/nginx/html /docker-entrypoint.d && \
@@ -108,6 +108,12 @@ COPY --chown=appuser:appuser deploy/riuna-entrypoint.sh /usr/local/bin/riuna-ent
 RUN chmod +x /docker-entrypoint.d/env.sh /usr/local/bin/riuna-entrypoint.sh
 
 ENV NODE_ENV=production
+# "Hoy" es el dia del proceso de la API (utils/day-boundaries.ts), y Riuna se
+# usa en la peninsula (ADR 049). Solo la API: PostgreSQL se queda en UTC, porque
+# `now()` en los disparadores y los `DEFAULT now()` escriben la hora de pared de
+# la sesion en columnas sin zona y drizzle las lee como UTC. Por eso va aqui y
+# no en el `.env`, que `compose.yml` comparte con el contenedor de Postgres.
+ENV TZ=Europe/Madrid
 
 USER appuser
 EXPOSE 5173

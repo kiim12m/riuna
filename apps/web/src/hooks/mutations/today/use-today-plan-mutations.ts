@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { setPlanEntry, setPlanOrder } from "@/fetchers/planner";
-import type { TodayEntry, TodayResponse } from "@/fetchers/today";
+import type { TodayPlanned, TodayResponse } from "@/fetchers/today";
 
 /**
  * "Añadir a hoy" (De dias anteriores, Vence hoy o vencida) y reordenar "Plan
@@ -46,7 +46,7 @@ export function useTodayPlanMutations(
           previous.urgent.find((row) => row.id === taskId);
 
         if (source) {
-          const entry: TodayEntry = {
+          const entry: TodayPlanned = {
             ...source,
             plannedDate: serverToday,
             position: previous.planned.length,
@@ -54,6 +54,10 @@ export function useTodayPlanMutations(
               (source as { startMinute?: number | null }).startMinute ?? null,
             loggedSeconds:
               (source as { loggedSeconds?: number }).loggedSeconds ?? 0,
+            // Viene de otro dia o de fuera del plan: nunca es imprescindible.
+            keyRank: null,
+            // La hora, si la tenia, era de otro dia: la API la recalcula.
+            startsAt: null,
           };
           queryClient.setQueryData<TodayResponse>(queryKey, {
             ...previous,

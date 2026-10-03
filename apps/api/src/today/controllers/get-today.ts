@@ -18,7 +18,9 @@ import {
   loggedSecondsByTask,
   taskColumns,
 } from "../../planner/queries";
+import { isDayClosed } from "../../review/day-closed";
 import { loadBlocksByDay } from "../../schedule/blocks-by-day";
+import { countFocusSessions } from "../../time-entry/focus-sessions";
 import getTimeSheet from "../../time-sheet/controllers/get-time-sheet";
 import {
   endOfServerDay,
@@ -27,7 +29,21 @@ import {
 } from "../../utils/day-boundaries";
 import { capacityForDay } from "../../work-schedule/day-capacity";
 import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
+import { loadUnavailableDays } from "../../work-schedule/unavailable-days";
 import { urgentTasksQuery } from "../queries";
+
+/**
+ * El instante de una hora anclada (ADR 055): la medianoche del dia mas sus
+ * minutos, en la zona del servidor. `setHours` cuenta la hora de pared, asi
+ * que el 25 de octubre las 10:00 siguen siendo las 10:00 aunque ese dia dure
+ * 25 horas. Lo calcula la API para que ningun navegador lo haga a su manera.
+ */
+function startsAtOf(entry: { plannedDate: Date; startMinute: number | null }) {
+  if (entry.startMinute === null) return null;
+  const at = new Date(entry.plannedDate);
+  at.setHours(0, entry.startMinute, 0, 0);
+  return at;
+}
 
 /**
  * Hoy: el plan del dia mas lo urgente (ADR 046), composicion pura sobre lo
@@ -47,16 +63,38 @@ export default async function getToday({
   const todayEnd = endOfServerDay(now);
   const todayKey = serverDayKey(now);
 
-  const [projectColumns, schedule, { blocksByDay }] = await Promise.all([
+  const [
+    projectColumns,
+    schedule,
+    { blocksByDay },
+    dayClosed,
+    focusSessions,
+    unavailableDays,
+  ] = await Promise.all([
     getWorkspaceColumns(workspaceId),
     getWorkSchedule(userId),
     loadBlocksByDay(workspaceId, userId, todayStart, todayEnd),
+    isDayClosed({ workspaceId, userId, day: todayStart }),
+    countFocusSessions({
+      workspaceId,
+      userId,
+      start: todayStart,
+      end: todayEnd,
+    }),
+    loadUnavailableDays({
+      workspaceId,
+      userId,
+      start: todayStart,
+      end: todayEnd,
+    }),
   ]);
+  const unavailable = unavailableDays.get(todayKey) ?? null;
 
   const capacitySeconds = capacityForDay(
     schedule,
     todayStart,
     blocksByDay.get(todayKey) ?? [],
+    unavailable !== null,
   );
 
   const notDone = notDoneCondition(projectColumns);
@@ -137,7 +175,12 @@ export default async function getToday({
       loggedSeconds: loggedByTask.get(row.id) ?? 0,
     }));
 
-  const plannedWithLogged = withLogged(planned);
+  // Las imprescindibles primero, por su puesto (ADR 053); el resto, en el
+  // orden del plan. `sort` es estable, asi que dentro de cada grupo se
+  // conserva el de `position`.
+  const plannedWithLogged = withLogged(planned)
+    .sort((a, b) => (a.keyRank ?? 4) - (b.keyRank ?? 4))
+    .map((row) => ({ ...row, startsAt: startsAtOf(row) }));
   const estimateRemaining = plannedWithLogged.reduce(
     (total, row) =>
       total + Math.max(0, (row.estimate ?? 0) - row.loggedSeconds),
@@ -153,7 +196,12 @@ export default async function getToday({
       estimateRemaining,
       workedToday: timeSheet.totalSeconds,
       capacitySeconds,
+      focusSessions,
     },
     serverToday: todayKey,
+    /** Si hoy es festivo o hay una ausencia (ADR 060). */
+    unavailable,
+    /** Si ya se paso por «Terminar el dia» (ADR 054). */
+    dayClosed,
   };
 }

@@ -10,7 +10,7 @@ function useUpdateTimeEntry(taskId: string) {
     mutationFn: (data: UpdateTimeEntryRequest) => updateTimeEntry(data),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["time-entries", taskId],
+        queryKey: ["time-entry", "task", taskId],
       });
     },
   });

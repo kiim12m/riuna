@@ -1,14 +1,36 @@
+import { type SQL, type SQLWrapper, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+
+/**
+ * La zona del proceso, la que decide que es "hoy" (`Europe/Madrid` en las
+ * imagenes, ADR 049).
+ */
+export function serverTimeZone(): string {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+/**
+ * Una columna `timestamp` sin zona -hora de pared UTC, el convenio de drizzle
+ * y de los `now()` de la base- llevada a la hora de pared de la zona del
+ * servidor, para cortar dias **en SQL** con el mismo criterio que
+ * `startOfServerDay`. Sin esto `date_trunc('day', col)` corta en UTC: con la
+ * API en Madrid, lo que pasa entre las 00:00 y las 02:00 caeria en la vispera
+ * (ADR 049).
+ */
+export function serverWallTime(value: SQLWrapper): SQL {
+  return sql`((${value} AT TIME ZONE 'UTC') AT TIME ZONE ${serverTimeZone()})`;
+}
 
 /**
  * El dia del servidor, que es el criterio que Riuna usa hoy para "vence hoy".
  *
  * `task.due_date` es un `timestamp` **sin zona**, asi que "hoy" depende de
- * donde se mire. Que zona horaria define un dia sigue sin decidirse —esta
- * anotado como deuda abierta de la Fase 4.5, junto con `dueDate eq <dia>`— y
- * mientras tanto lo importante es que todas las superficies apliquen **el
- * mismo** criterio: si "Mi trabajo" y un panel calcularan sus fronteras por
- * separado, la misma tarea saldria vencida en una pantalla y no en la otra.
+ * donde se mire. La zona la fija la imagen de la API: `Europe/Madrid`, con
+ * PostgreSQL en UTC (ADR 049). La zona por persona sigue siendo deuda. Lo
+ * importante es que todas las superficies apliquen **el mismo** criterio: si
+ * "Mi trabajo" y un panel calcularan sus fronteras por separado, la misma
+ * tarea saldria vencida en una pantalla y no en la otra. Para cortar dias
+ * dentro del SQL, `serverWallTime`.
  *
  * Y las fronteras se pasan como parametros y no se calculan con `now()` en la
  * SQL: `now()` usa la zona del servidor de base de datos mientras que un `Date`

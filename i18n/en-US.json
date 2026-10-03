@@ -1468,7 +1468,9 @@
 				"navigate": "Navigate",
 				"open": "Open",
 				"close": "Close"
-			}
+			},
+			"goTo": "Go to",
+			"timer": "Timer"
 		},
 		"notifications": "Notifications",
 		"sidebar": {
@@ -1476,6 +1478,7 @@
 			"admin": "Administration",
 			"projects": "Projects",
 			"today": "Today",
+			"inbox": "Personal",
 			"planner": "Planner",
 			"schedule": "Schedule",
 			"myTasks": "My tasks",
@@ -1487,7 +1490,8 @@
 			"workspaceAdmin": "Workspace",
 			"projectSettings": "Project settings",
 			"more": "More",
-			"backToBoard": "Back to board"
+			"backToBoard": "Back to board",
+			"team": "My team"
 		},
 		"projectList": {
 			"viewProject": "View Project",
@@ -1549,7 +1553,8 @@
 				"create": "Create",
 				"views": "Views",
 				"navigation": "Navigation",
-				"quickSelect": "Quick Select (in popovers)"
+				"quickSelect": "Quick Select (in popovers)",
+				"taskDetails": "Task details"
 			},
 			"items": {
 				"openCommandPalette": "Open command palette",
@@ -1557,6 +1562,7 @@
 				"toggleSidebar": "Toggle sidebar",
 				"showShortcuts": "Show keyboard shortcuts",
 				"closeModal": "Close modal/popover",
+				"quickAdd": "Quick capture",
 				"createTask": "Create task",
 				"createProject": "Create project",
 				"createWorkspace": "Create workspace",
@@ -1567,8 +1573,24 @@
 				"nextTask": "Next task",
 				"prevTask": "Previous task",
 				"openTask": "Open selected task",
-				"quickSelectNumber": "Select option by number"
+				"quickSelectNumber": "Select option by number",
+				"toggleTimer": "Start or stop the timer",
+				"openNotifications": "Open notifications",
+				"switchWorkspace": "Switch workspace",
+				"goToProject": "Go to a project",
+				"ganttView": "Switch to Gantt view",
+				"setStatus": "Change status",
+				"setPriority": "Change priority",
+				"setAssignee": "Change assignee",
+				"setLabels": "Change labels",
+				"setDueDate": "Change due date"
 			}
+		},
+		"inbox": {
+			"unavailableTitle": "Your Personal project couldn’t be opened",
+			"unavailableDescription": "Your role in this workspace may not allow creating tasks, and Personal only holds tasks you create.",
+			"visibilityLabel": "Who can see Personal",
+			"notPrivate": "Personal doesn’t appear in other people’s project lists, but it isn’t private: anyone who can see this workspace’s tasks can see its tasks too."
 		}
 	},
 	"notifications": {
@@ -2296,6 +2318,24 @@
 			"label": "Team",
 			"unknown": "Unknown team"
 		},
+		"time": {
+			"title": "Time",
+			"plan": "Your plan",
+			"unplanned": "Not planned",
+			"unplan": "Remove from plan",
+			"planError": "Couldn't update your plan",
+			"logged": "Logged",
+			"running": "running",
+			"noEntries": "No time logged yet.",
+			"add": "Log time",
+			"date": "Date",
+			"start": "Start",
+			"duration": "Duration",
+			"durationPlaceholder": "1h 30m",
+			"invalidDuration": "Write a duration like 1h 30m, 90m or 1:30.",
+			"added": "Time logged",
+			"addError": "Couldn't log the time"
+		},
 		"tree": {
 			"title": "Branch",
 			"expand": "Expand branch",
@@ -2610,7 +2650,9 @@
 			"columns_other": "{{count}} columns",
 			"rows_one": "{{count}} row",
 			"rows_other": "{{count}} rows",
-			"personalScope": "Whose work"
+			"personalScope": "Whose work",
+			"deleteConfirmTitle": "Delete “{{title}}”?",
+			"deleteConfirmDescription": "The widget is removed from this dashboard. Its tasks and data are not touched."
 		},
 		"type": {
 			"count": "Count",
@@ -2619,7 +2661,7 @@
 			"time": "Logged time",
 			"epic_progress": "Epic progress",
 			"table": "Task list",
-			"inbox": "Inbox",
+			"inbox": "Notifications",
 			"goal": "Goal",
 			"week": "This week"
 		},
@@ -2668,8 +2710,8 @@
 			"subtitle": "Everything you have going, in one place."
 		},
 		"inbox": {
-			"error": "Your inbox could not be loaded",
-			"empty": "Your inbox is empty"
+			"error": "Your notifications could not be loaded",
+			"empty": "You have no notifications"
 		},
 		"actions": {
 			"share": "Share with the workspace",
@@ -2744,7 +2786,9 @@
 		"shared": "Shared",
 		"errors": {
 			"saveFailed": "The change could not be saved"
-		}
+		},
+		"deleteConfirmTitle": "Delete “{{name}}”?",
+		"deleteConfirmDescription": "The goal and all its key results are deleted. This can't be undone."
 	},
 	"today": {
 		"pageTitle": "Today",
@@ -2756,7 +2800,8 @@
 		"previous": {
 			"title_one": "From previous days ({{count}})",
 			"title_other": "From previous days ({{count}})",
-			"addToToday": "Add to today"
+			"addToToday": "Add to today",
+			"addAllToToday": "Add all to today"
 		},
 		"planned": {
 			"title": "Today's plan",
@@ -2786,6 +2831,10 @@
 			"estimate": "Estimate",
 			"logged": "Logged",
 			"due": "Due"
+		},
+		"key": {
+			"title_one": "{{count}} key task of 3",
+			"title_other": "{{count}} key tasks of 3"
 		}
 	},
 	"myTasks": {
@@ -2794,7 +2843,8 @@
 			"list": "List",
 			"board": "Board",
 			"gantt": "Gantt",
-			"table": "Table"
+			"table": "Table",
+			"waiting": "Waiting on"
 		},
 		"table": {
 			"moreResults": "Showing {{shown}} of {{total}}. Narrow it down with a filter to see the rest."
@@ -2803,7 +2853,24 @@
 			"title": "Nothing here",
 			"description": "There are no tasks in this scope."
 		},
-		"description": "Your tasks across every project."
+		"description": "Your tasks across every project.",
+		"shownOf": "Showing {{shown}} of {{total}}",
+		"loadMore": "Load more",
+		"waiting": {
+			"title": "Waiting on",
+			"description": "What depends on someone else: tasks you created and assigned to another person, and your tasks blocked by someone else’s.",
+			"delegated_one": "Delegated · {{count}}",
+			"delegated_other": "Delegated · {{count}}",
+			"blocked_one": "Blocked · {{count}}",
+			"blocked_other": "Blocked · {{count}}",
+			"waitingOn": "Waiting on {{names}}",
+			"blockedBy": "Blocked by {{tasks}}",
+			"capped": "Showing the first {{limit}}.",
+			"empty": {
+				"title": "Not waiting on anyone",
+				"description": "Tasks you assign to others, and yours blocked by someone else’s, show up here."
+			}
+		}
 	},
 	"planner": {
 		"pageTitle": "Planner",
@@ -2820,7 +2887,14 @@
 			"description": "You have no assigned tasks to plan."
 		},
 		"description": "A {{days}}-day window. Drag tasks between days or from “Unplanned”.",
-		"dayLoadPct": "{{pct}}% of your workday"
+		"dayLoadPct": "{{pct}}% of your workday",
+		"dropToAnchor": "Drop here to set a time",
+		"window": {
+			"previous": "Previous week",
+			"today": "Today",
+			"next": "Next week",
+			"todayLabel": "Back to today"
+		}
 	},
 	"schedule": {
 		"pageTitle": "Schedule",
@@ -2934,5 +3008,361 @@
 			"endTime": "End time"
 		},
 		"start": "Start timer"
+	},
+	"quickAdd": {
+		"label": "Quick capture",
+		"dialogTitle": "Quick capture",
+		"dialogDescription": "Enter creates the task; Esc closes.",
+		"placeholder": "Capture a task… @mañana 10:00 1h #label",
+		"hint": "@day plans it · !day is the due date · #label · +KEY project · *priority · 1h30 estimate · \\ keeps a word as written",
+		"preview": "What will be captured",
+		"due": "Due {{day}}",
+		"captured": "{{key}} captured",
+		"capturedInInbox": "{{key}} captured in Personal",
+		"error": "The task couldn't be captured"
+	},
+	"taskActions": {
+		"menuLabel": "Task actions",
+		"markDone": "Mark as done",
+		"reopen": "Reopen",
+		"planToday": "Plan for today",
+		"planTomorrow": "Plan for tomorrow",
+		"pickDay": "Choose a day",
+		"setTime": "Set a time…",
+		"unplan": "Remove from plan",
+		"estimate": "Estimate…",
+		"key": "Key task",
+		"keyFull": "That day already has three key tasks",
+		"error": "The change couldn't be saved",
+		"timeDialog": {
+			"title": "Time for “{{title}}”",
+			"label": "Start time",
+			"remove": "Remove time"
+		},
+		"estimateDialog": {
+			"title": "Estimate for “{{title}}”",
+			"label": "Estimate",
+			"hint": "1h 30m, 1h30, 90m or 1,5 (hours). Empty means no estimate.",
+			"invalid": "That isn't a duration"
+		}
+	},
+	"rituals": {
+		"stepOf": "Step {{current}} of {{total}}",
+		"back": "Back",
+		"next": "Next",
+		"exit": "Leave",
+		"closeDay": {
+			"title": "Finish the day",
+			"button": "Finish the day",
+			"closed": "Day closed",
+			"summary": {
+				"title": "How the day went",
+				"done_one": "You finished {{count}} task.",
+				"done_other": "You finished {{count}} tasks.",
+				"nothingDone": "Nothing was finished today.",
+				"worked": "Logged: {{time}}.",
+				"focus_one": "{{count}} focus session.",
+				"focus_other": "{{count}} focus sessions."
+			},
+			"pending": {
+				"title": "What’s left",
+				"hint": "Decide for each one: another day or out of the plan. Nothing stays hanging.",
+				"none": "Nothing left. Well done.",
+				"allTo": "All to {{day}}",
+				"otherDay": "Another day",
+				"unplan": "Out of the plan",
+				"undecided_one": "{{count}} without a decision",
+				"undecided_other": "{{count}} without a decision"
+			},
+			"blockers": {
+				"title": "What’s holding you back",
+				"hint": "Your department lead will see this, if you have one.",
+				"placeholder": "Waiting on materials, on a reply…"
+			},
+			"rating": {
+				"title": "Your day",
+				"hint": "Only you see this.",
+				"impact": "Impact",
+				"impactLevels": {
+					"1": "Little",
+					"2": "Some",
+					"3": "Quite a lot",
+					"4": "A lot"
+				},
+				"energy": "Energy",
+				"energyLevels": {
+					"1": "Low",
+					"2": "Normal",
+					"3": "High"
+				},
+				"note": "Note"
+			},
+			"next": {
+				"title": "Next: {{day}}",
+				"hint": "What’s planned for your next work day.",
+				"empty": "Nothing planned yet."
+			},
+			"finish": "Close the day",
+			"done": "Day closed",
+			"error": "The day couldn’t be closed"
+		},
+		"planDay": {
+			"title": "Plan the day",
+			"button": "Plan the day",
+			"start": "Start",
+			"empty": "Nothing planned for today yet.",
+			"previous": {
+				"title": "From earlier days",
+				"hint": "What was left from earlier days and isn’t done.",
+				"none": "Nothing left from earlier days."
+			},
+			"urgent": {
+				"title": "What’s urgent",
+				"hint": "Due today or overdue, and not planned.",
+				"none": "Nothing urgent."
+			},
+			"unplanned": {
+				"title": "Personal and unplanned",
+				"hint": "What’s yours and has no day yet, Personal included.",
+				"none": "Everything has a day.",
+				"more_one": "And {{count}} more, in the Planner.",
+				"more_other": "And {{count}} more, in the Planner."
+			},
+			"key": {
+				"title": "Key tasks",
+				"hint": "Mark up to {{max}}: what has to happen today. {{count}} of {{max}} marked."
+			},
+			"load": {
+				"title": "Load against your day",
+				"hint": "Planned {{planned}} of {{available}} available.",
+				"over": "More than fits in your day: move something or adjust an estimate."
+			},
+			"anchor": {
+				"title": "Times",
+				"hint": "Anchor what has a fixed time. The rest flows around it.",
+				"label": "Time for “{{title}}”"
+			}
+		},
+		"weeklyReview": {
+			"title": "Weekly review",
+			"button": "Weekly review",
+			"finish": "Close the week",
+			"done": "Week reviewed",
+			"error": "The week couldn’t be saved",
+			"more_one": "And {{count}} more.",
+			"more_other": "And {{count}} more.",
+			"inbox": {
+				"title": "Go through Personal",
+				"hint": "Move each task to its project, give it a day, finish it or drop it.",
+				"none": "You have nothing in Personal."
+			},
+			"overdue": {
+				"title": "Overdue",
+				"hint": "Yours, past its due date and not done: plan it, finish it or change its date.",
+				"none": "Nothing overdue."
+			},
+			"waiting": {
+				"title": "Waiting on",
+				"hint": "What depends on someone else: a nudge may be due."
+			},
+			"week": {
+				"title": "The week: {{range}}",
+				"which": "Week to review",
+				"done": "Done",
+				"worked": "Logged",
+				"accuracy": "Against estimates",
+				"onTarget": "On target",
+				"over": "{{pct}} % over",
+				"under": "{{pct}} % under"
+			},
+			"next": {
+				"title": "Next week: {{range}}",
+				"hint": "Load per work day, and what still has no day.",
+				"unplanned_one": "{{count}} task without a day:",
+				"unplanned_other": "{{count}} tasks without a day:",
+				"openPlanner": "Open next week in the Planner"
+			},
+			"rating": {
+				"title": "Your week"
+			}
+		},
+		"standup": {
+			"button": "Stand-up",
+			"title": "Your stand-up",
+			"hint": "From your plan and your latest day close; nothing is stored. Copy it where your team shares it.",
+			"yesterday": "Yesterday",
+			"today": "Today",
+			"blockers": "Blockers",
+			"nothingDone": "Nothing finished",
+			"nothingPlanned": "Nothing planned",
+			"noBlockers": "None",
+			"copy": "Copy as Markdown",
+			"copied": "Stand-up copied",
+			"copyError": "It couldn’t be copied"
+		}
+	},
+	"reminders": {
+		"notification": {
+			"title": "Time for a task",
+			"body": "{{time}} · {{title}}"
+		},
+		"dialog": {
+			"description": "Anchored at {{time}}.",
+			"start": "Start",
+			"snooze": "Snooze 10 min",
+			"nextDay": "Move to {{day}}"
+		},
+		"settings": {
+			"title": "Browser notifications",
+			"subtitle": "At the anchored time of each task today and, if you choose them, to keep the pace of your workday.",
+			"toggle": "Notify me in this browser",
+			"limits": "Only with a Riuna tab open: with none, there is no notice. In the background it may arrive about a minute late, and snoozing applies to this browser only.",
+			"denied": "The browser blocks notifications for Riuna. Allow them in the site settings and come back here.",
+			"unsupported": "This browser cannot show notifications.",
+			"nudgesTitle": "Rhythm nudges",
+			"nudgesHint": "Each one is turned on separately, and only in this browser.",
+			"nudgesNeedToggle": "Turn on browser notifications above to choose them.",
+			"nudges": {
+				"break": "Break: after 90 minutes of tracking in a row",
+				"idle": "Not tracking: during your workday, after 15 minutes without a timer; at most once an hour",
+				"overtime": "After hours: the timer is still running when your workday ends"
+			}
+		},
+		"nudge": {
+			"breakTitle": "{{duration}} without a break",
+			"breakBody": "Step away for a few minutes: you will notice it when you come back.",
+			"idleTitle": "You're not tracking time",
+			"idleBody": "Start the timer on whatever you're working on.",
+			"overtimeTitle": "Your workday is over",
+			"overtimeBody": "The timer is still running on “{{title}}”."
+		}
+	},
+	"focus": {
+		"pageTitle": "Focus · {{title}}",
+		"menuItem": "Focus mode",
+		"leave": "Back",
+		"start": "Start",
+		"stop": "Stop focus",
+		"takeBreak": "Take a break",
+		"finishNow": "Finish now",
+		"skipBreak": "Skip the break",
+		"nextBlock": "Next block",
+		"again": "Again",
+		"cycle": "Block {{current}} of {{total}}",
+		"minutes": "Minutes",
+		"modeLabel": "Focus mode",
+		"mode": {
+			"pomodoro": "Pomodoro",
+			"flowtime": "Flowtime",
+			"countdown": "Countdown"
+		},
+		"modeHint": {
+			"pomodoro": "25 minutes of work and 5 of rest; a longer 15-minute break every fourth block.",
+			"flowtime": "Work until you decide to stop; the break is a fifth of what you worked.",
+			"countdown": "One block of the minutes you choose."
+		},
+		"phase": {
+			"idle": "Ready to focus",
+			"work": "Working",
+			"short-break": "Break",
+			"long-break": "Long break",
+			"ready": "Break over",
+			"done": "Done"
+		},
+		"otherTask": "A focus session is running on another task: starting here ends it.",
+		"stoppedOutside": "The timer stopped outside focus mode: the session has ended.",
+		"notify": {
+			"breakTitle": "Time for a break",
+			"breakBody": "{{minutes}} min of rest. The timer is stopped.",
+			"readyTitle": "Break over",
+			"readyBody": "Back to Riuna to start the next block.",
+			"doneTitle": "Time’s up"
+		}
+	},
+	"calendar": {
+		"feed": {
+			"title": "Calendar",
+			"subtitle": "Subscribe from Google Calendar, Outlook or your phone to your plan with times, your schedule blocks and your due dates in {{workspace}}.",
+			"inactive": "No calendar link yet.",
+			"activeSince": "Link active since {{date}}.",
+			"create": "Create link",
+			"regenerate": "Regenerate",
+			"revoke": "Revoke",
+			"onlyOnce": "Copy it now: it will not be shown again.",
+			"copy": "Copy link",
+			"copied": "Link copied",
+			"open": "Open in calendar",
+			"privacy": "Anyone with the link sees those titles. If it leaks, regenerate it: the old one stops working. Calendars refresh it on their own schedule, Google every few hours.",
+			"regenerateTitle": "Regenerate the calendar link?",
+			"revokeTitle": "Revoke the calendar link?",
+			"confirmDescription": "The current link stops working right away, and calendars subscribed to it stop updating.",
+			"error": "The calendar link could not be created."
+		}
+	},
+	"availability": {
+		"day": {
+			"holiday": "Holiday · {{name}}",
+			"timeOff": "Away",
+			"noCapacity": "No hours count as available today."
+		},
+		"timeOff": {
+			"title": "Absences",
+			"subtitle": "Days you will not be working in {{workspace}}: they count as zero hours in your planner and schedule.",
+			"empty": "No upcoming absences.",
+			"from": "From",
+			"to": "To",
+			"note": "Note",
+			"notePlaceholder": "Only you see it",
+			"add": "Add absence",
+			"remove": "Remove absence",
+			"privacy": "There is no reason field, on purpose. The note is yours alone: anyone else only sees “Away”.",
+			"error": "The absence could not be saved.",
+			"tooLong": "Check the dates: an absence goes from one day to another, a year at most."
+		},
+		"holidays": {
+			"title": "Holidays",
+			"subtitle": "Days off for the whole workspace.",
+			"cardDescription": "Every member sees them in their planner and schedule, with no hours available that day.",
+			"empty": "No holidays yet.",
+			"day": "Day",
+			"name": "Name",
+			"namePlaceholder": "Local holiday",
+			"add": "Add holiday",
+			"remove": "Remove {{name}}",
+			"duplicate": "That day already has a holiday.",
+			"error": "The holiday could not be saved."
+		}
+	},
+	"lead": {
+		"notice_one": "Your lead, {{names}}, sees your plan and your day closes, never your rating.",
+		"notice_other": "Your leads, {{names}}, see your plan and your day closes, never your rating.",
+		"teams": {
+			"badge": "Lead",
+			"toggle": "Lead of the team: {{name}}",
+			"hint": "The lead of a team reads the plan, the workload and the day closes of the rest of the team, never their rating. They cannot change anything.",
+			"error": "The team lead could not be changed."
+		},
+		"team": {
+			"title": "My team",
+			"description": "Your people’s day, read-only: their plan, workload and day closes, never their rating.",
+			"view": "View",
+			"tabs": {
+				"day": "Today",
+				"standup": "Stand-up"
+			},
+			"load": "{{planned}} planned / {{available}} available",
+			"nothingPlanned": "Nothing planned today.",
+			"figures_one": "{{count}} finished · {{worked}} logged",
+			"figures_other": "{{count}} finished · {{worked}} logged",
+			"closed": "Closed the day.",
+			"blockers": "Held back by: {{blockers}}",
+			"noBlockers": "Nothing holding them back.",
+			"notClosed": "Has not closed the day yet.",
+			"copyAll": "Copy all",
+			"empty": {
+				"title": "Nobody to lead",
+				"description": "When you lead a team, you will see your people’s day here."
+			}
+		}
 	}
 }

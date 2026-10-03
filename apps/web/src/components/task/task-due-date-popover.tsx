@@ -1,5 +1,4 @@
 import { X } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -9,6 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useUpdateTaskDueDate } from "@/hooks/mutations/task/use-update-task-due-date";
+import { useControllableOpen } from "@/hooks/use-controllable-open";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
@@ -16,14 +16,22 @@ import type Task from "@/types/task";
 type TaskDueDatePopoverProps = {
   task: Task;
   children: React.ReactNode;
+  /**
+   * Abierto desde fuera -los atajos del detalle-. Sin ellos, el desplegable
+   * lleva su propio estado, como siempre.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export default function TaskDueDatePopover({
   task,
   children,
+  open: openProp,
+  onOpenChange,
 }: TaskDueDatePopoverProps) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useControllableOpen(openProp, onOpenChange);
   const { mutateAsync: updateTaskDueDate } = useUpdateTaskDueDate();
   const { canUpdateTasks } = useWorkspacePermission();
   const canEdit = canUpdateTasks();

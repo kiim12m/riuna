@@ -14,6 +14,21 @@ const EMPTY_STATISTICS: ProjectStatistics = {
   dueDate: null,
 };
 
+/**
+ * Los proyectos que salen en las listas. Los Personal no (ADR 051): cada
+ * persona ve el suyo en lo alto de «Proyectos», que la barra pinta aparte, y
+ * esta lista es la que alimenta la barra lateral, los selectores, la
+ * administracion y `list_projects` de MCP. Ocultos, no privados: sus tareas
+ * siguen en las lecturas de tareas.
+ */
+function listedProjects(workspaceId: string, includeArchived: boolean) {
+  return and(
+    eq(projectTable.workspaceId, workspaceId),
+    isNull(projectTable.ownerUserId),
+    includeArchived ? undefined : isNull(projectTable.archivedAt),
+  );
+}
+
 async function getProjectStatistics(
   workspaceId: string,
   includeArchived: boolean,
@@ -48,14 +63,7 @@ async function getProjectStatistics(
     })
     .from(taskTable)
     .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-    .where(
-      includeArchived
-        ? eq(projectTable.workspaceId, workspaceId)
-        : and(
-            eq(projectTable.workspaceId, workspaceId),
-            isNull(projectTable.archivedAt),
-          ),
-    )
+    .where(listedProjects(workspaceId, includeArchived))
     .groupBy(taskTable.projectId);
 
   for (const row of rows) {
@@ -75,12 +83,7 @@ async function getProjectStatistics(
 
 async function getProjects(workspaceId: string, includeArchived = false) {
   const projects = await db.query.projectTable.findMany({
-    where: includeArchived
-      ? eq(projectTable.workspaceId, workspaceId)
-      : and(
-          eq(projectTable.workspaceId, workspaceId),
-          isNull(projectTable.archivedAt),
-        ),
+    where: listedProjects(workspaceId, includeArchived),
     // `id` is the deterministic tie-breaker: without it, rows sharing both a
     // position and a createdAt come back in an unspecified order.
     orderBy: (project, { asc }) => [

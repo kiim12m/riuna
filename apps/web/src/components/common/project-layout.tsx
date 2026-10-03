@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
   CalendarDays,
   CalendarRange,
+  Info,
   SquareKanban,
   SquircleDashed,
   Table2,
@@ -14,9 +15,17 @@ import { NewTaskButton } from "@/components/common/header/new-task-button";
 import ProjectCrumbSelect from "@/components/common/header/project-crumb-select";
 import WorkspaceCrumbSelect from "@/components/common/header/workspace-crumb-select";
 import Layout from "@/components/common/layout";
+import { MobileHeaderBell } from "@/components/notification/mobile-header-bell";
+import { useAuth } from "@/components/providers/auth-provider/hooks/use-auth";
+import { QuickAddInput } from "@/components/quick-add/quick-add-input";
 import CreateProjectModal from "@/components/shared/modals/create-project-modal";
 import { Button } from "@/components/ui/button";
 import { KbdSequence } from "@/components/ui/kbd";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   Tooltip,
@@ -27,6 +36,7 @@ import {
 import { shortcuts } from "@/constants/shortcuts";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import { useProjectWebSocket } from "@/hooks/use-project-websocket";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
 
 type ProjectLayoutProps = {
@@ -61,6 +71,11 @@ export default function ProjectLayout({
   const navigate = useNavigate();
   const location = useLocation();
   const { data: project } = useGetProject({ id: projectId, workspaceId });
+  const { user } = useAuth();
+  const { canCreateTasks } = useWorkspacePermission();
+  // En la Bandeja propia, la captura rapida a mano: es a lo que se viene.
+  const isOwnInbox =
+    Boolean(project?.ownerUserId) && project?.ownerUserId === user?.id;
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
     useState(false);
 
@@ -197,6 +212,28 @@ export default function ProjectLayout({
               />
             </div>
 
+            {/* Oculta, no privada (ADR 051): que nadie la tome por privada. Un
+                popover y no un tooltip, para que tambien se lea en tactil. */}
+            {project?.ownerUserId && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    className="h-7 w-7 shrink-0 px-0 text-muted-foreground"
+                    aria-label={t("navigation:inbox.visibilityLabel")}
+                  >
+                    <Info className="size-3.5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="max-w-xs" align="start">
+                  <p className="p-2 text-sm">
+                    {t("navigation:inbox.notPrivate")}
+                  </p>
+                </PopoverContent>
+              </Popover>
+            )}
+
             {showViewSwitcher && (
               <div className="hidden h-7 items-center gap-0.5 rounded-lg border border-border/80 bg-background p-0.5 sm:inline-flex">
                 <Button
@@ -260,9 +297,16 @@ export default function ProjectLayout({
           <div className="flex shrink-0 items-center gap-1.5">
             <NewTaskButton />
             {headerActions}
+            <MobileHeaderBell />
           </div>
         </div>
       </Layout.Header>
+
+      {isOwnInbox && canCreateTasks() && (
+        <div className="shrink-0 border-border/80 border-b px-3 py-2">
+          <QuickAddInput workspaceId={workspaceId} showHint={false} />
+        </div>
+      )}
 
       <Layout.Content>{children}</Layout.Content>
 

@@ -1,5 +1,10 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import type { ReactNode } from "react";
+import {
+  rowPlanOf,
+  TaskRowActions,
+} from "@/components/task-actions/task-row-actions";
 import { InlineEstimate } from "@/components/timer/inline-estimate";
 import type { PlanEntry, PlanTask } from "@/fetchers/planner";
 import { cn } from "@/lib/cn";
@@ -10,6 +15,8 @@ type PlannerTaskCardProps = {
   onOpen: () => void;
   /** Ausente en tarjetas de solo lectura (la de arrastre, "Vence este dia"). */
   onEstimateChange?: (seconds: number | null) => void;
+  /** Igual: la tarjeta que se arrastra no lleva casilla. */
+  onToggleDone?: (done: boolean) => void;
 };
 
 /**
@@ -25,6 +32,7 @@ export function PlannerTaskCard({
   task,
   onOpen,
   onEstimateChange,
+  onToggleDone,
 }: PlannerTaskCardProps) {
   const {
     attributes,
@@ -42,29 +50,56 @@ export function PlannerTaskCard({
 
   const loggedSeconds = "loggedSeconds" in task ? (task.loggedSeconds ?? 0) : 0;
 
+  const isEntry = "plannedDate" in task;
+
+  const row = (menu?: ReactNode) => (
+    <PlannerRow
+      title={task.title}
+      priority={task.priority}
+      isDone={task.isDone}
+      projectName={task.projectName}
+      projectIcon={task.projectIcon}
+      onOpen={onOpen}
+      timerTask={task}
+      onToggleDone={onToggleDone}
+      keyRank={isEntry ? task.keyRank : null}
+      menu={menu}
+      className={cn(
+        "cursor-grab active:cursor-grabbing",
+        isDragging && "border-ring/40 bg-card shadow-lg hover:border-ring/40",
+      )}
+      trailing={
+        onEstimateChange && (
+          <InlineEstimate
+            estimate={task.estimate}
+            loggedSeconds={loggedSeconds}
+            onSave={onEstimateChange}
+          />
+        )
+      }
+    />
+  );
+
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <PlannerRow
-        title={task.title}
-        priority={task.priority}
-        isDone={task.isDone}
-        projectName={task.projectName}
-        projectIcon={task.projectIcon}
-        onOpen={onOpen}
-        className={cn(
-          "cursor-grab active:cursor-grabbing",
-          isDragging && "border-ring/40 bg-card shadow-lg hover:border-ring/40",
-        )}
-        trailing={
-          onEstimateChange && (
-            <InlineEstimate
-              estimate={task.estimate}
-              loggedSeconds={loggedSeconds}
-              onSave={onEstimateChange}
-            />
-          )
-        }
-      />
+      {/* La tarjeta que se arrastra (sin casilla) no lleva menu. */}
+      {onToggleDone ? (
+        <TaskRowActions
+          task={{
+            id: task.id,
+            number: task.number,
+            title: task.title,
+            projectId: task.projectId,
+            estimate: task.estimate,
+            isDone: task.isDone,
+          }}
+          plan={isEntry ? rowPlanOf(task) : null}
+        >
+          {row}
+        </TaskRowActions>
+      ) : (
+        row()
+      )}
     </div>
   );
 }

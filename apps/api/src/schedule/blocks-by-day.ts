@@ -1,4 +1,4 @@
-import { and, between, eq, isNull } from "drizzle-orm";
+import { and, between, eq, inArray, isNull } from "drizzle-orm";
 import db from "../database";
 import { scheduleBlockTable } from "../database/schema";
 import { serverDayKey } from "../utils/day-boundaries";
@@ -30,6 +30,37 @@ export async function loadBlocksByDay(
   windowStart: Date,
   windowEnd: Date,
 ): Promise<BlocksByDay> {
+  const byUser = await loadBlocksByDayForUsers(
+    workspaceId,
+    [userId],
+    windowStart,
+    windowEnd,
+  );
+  return (
+    byUser.get(userId) ?? { blocksByDay: new Map(), blocksById: new Map() }
+  );
+}
+
+/**
+ * `loadBlocksByDay` para varias personas en dos consultas, para la vista del
+ * responsable de departamento (ADR 059). La version de una persona es este
+ * mismo camino con una sola: la regla de que bloques valen vive aqui una vez.
+ */
+export async function loadBlocksByDayForUsers(
+  workspaceId: string,
+  userIds: string[],
+  windowStart: Date,
+  windowEnd: Date,
+): Promise<Map<string, BlocksByDay>> {
+  const byUser = new Map<string, BlocksByDay>(
+    userIds.map((userId) => [
+      userId,
+      { blocksByDay: new Map(), blocksById: new Map() },
+    ]),
+  );
+  // Sin esta salida, `inArray(col, [])` compila a `in ()`.
+  if (userIds.length === 0) return byUser;
+
   const [singleBlocks, repeatingBlocks] = await Promise.all([
     db
       .select()
@@ -37,7 +68,7 @@ export async function loadBlocksByDay(
       .where(
         and(
           eq(scheduleBlockTable.workspaceId, workspaceId),
-          eq(scheduleBlockTable.userId, userId),
+          inArray(scheduleBlockTable.userId, userIds),
           between(scheduleBlockTable.plannedDate, windowStart, windowEnd),
         ),
       ),
@@ -47,26 +78,29 @@ export async function loadBlocksByDay(
       .where(
         and(
           eq(scheduleBlockTable.workspaceId, workspaceId),
-          eq(scheduleBlockTable.userId, userId),
+          inArray(scheduleBlockTable.userId, userIds),
           isNull(scheduleBlockTable.plannedDate),
         ),
       ),
   ]);
 
-  const blocksByDay = new Map<string, ScheduleBlockRow[]>();
   for (const block of singleBlocks) {
-    if (!block.plannedDate) continue;
+    const user = byUser.get(block.userId);
+    if (!user || !block.plannedDate) continue;
     const key = serverDayKey(block.plannedDate);
-    const list = blocksByDay.get(key) ?? [];
+    const list = user.blocksByDay.get(key) ?? [];
     list.push(block);
-    blocksByDay.set(key, list);
+    user.blocksByDay.set(key, list);
+    user.blocksById.set(block.id, block);
   }
 
-  projectRepeatingBlocks(repeatingBlocks, blocksByDay, windowStart, windowEnd);
+  for (const [userId, user] of byUser) {
+    const repeating = repeatingBlocks.filter(
+      (block) => block.userId === userId,
+    );
+    projectRepeatingBlocks(repeating, user.blocksByDay, windowStart, windowEnd);
+    for (const block of repeating) user.blocksById.set(block.id, block);
+  }
 
-  const blocksById = new Map(
-    [...singleBlocks, ...repeatingBlocks].map((block) => [block.id, block]),
-  );
-
-  return { blocksByDay, blocksById };
+  return byUser;
 }

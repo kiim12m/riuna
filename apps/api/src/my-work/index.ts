@@ -9,6 +9,7 @@ import { FilterError, type FilterNode } from "../view/filter-to-sql";
 import { getWorkspaceFieldRegistry } from "../view/workspace-registry";
 import getCounts from "./controllers/get-counts";
 import getMyWork from "./controllers/get-my-work";
+import getWaiting from "./controllers/get-waiting";
 import searchTasks, {
   SEARCH_SORT_FIELDS,
   type SearchSortField,
@@ -60,6 +61,26 @@ const countsResponseSchema = v.object({
   myTasks: v.number(),
   /** El dia del servidor, `yyyy-mm-dd`. */
   serverToday: v.string(),
+});
+
+const waitingResponseSchema = v.object({
+  /** Lo que creé y tiene a otra persona asignada, abierto. Topado en 100. */
+  delegated: v.array(myWorkTaskSchema),
+  /** Lo mio abierto con una tarea ajena abierta delante. Topado en 100. */
+  blocked: v.array(
+    v.object({
+      ...myWorkTaskSchema.entries,
+      blockedBy: v.array(
+        v.object({
+          id: v.string(),
+          number: v.nullable(v.number()),
+          title: v.string(),
+          projectId: v.string(),
+          projectSlug: v.string(),
+        }),
+      ),
+    }),
+  ),
 });
 
 const myWorkResponseSchema = v.object({
@@ -171,6 +192,33 @@ const myWork = new Hono<{
       const { workspaceId } = c.req.valid("query");
       const result = await getCounts({ workspaceId, userId: c.get("userId") });
       return c.json(result);
+    },
+  )
+  .get(
+    "/waiting",
+    describeRoute({
+      operationId: "listMyWorkWaiting",
+      tags: ["My work"],
+      description:
+        "What the current user is waiting on: open tasks they created and assigned to someone else, and their own open tasks blocked by an open task that isn't theirs. Each list is capped at 100",
+      responses: {
+        200: {
+          description: "The two lists",
+          content: {
+            "application/json": { schema: resolver(waitingResponseSchema) },
+          },
+        },
+      },
+    }),
+    validator(
+      "query",
+      v.object({ workspaceId: v.pipe(v.string(), v.minLength(1)) }),
+    ),
+    workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["read"] }),
+    async (c) => {
+      const { workspaceId } = c.req.valid("query");
+      return c.json(await getWaiting({ workspaceId, userId: c.get("userId") }));
     },
   )
   .get(

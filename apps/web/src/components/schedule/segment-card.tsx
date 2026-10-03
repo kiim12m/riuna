@@ -1,6 +1,8 @@
 import { Layout, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { TaskRowActions } from "@/components/task-actions/task-row-actions";
+import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import projectIcons from "@/constants/project-icons";
 import { cn } from "@/lib/cn";
 import { getPriorityIcon } from "@/lib/priority";
@@ -17,6 +19,8 @@ import { segmentToneClass } from "./segment-tone";
 
 type SegmentTask = {
   id: string;
+  number: number | null;
+  projectId: string;
   title: string;
   priority: string;
   projectIcon: string | null;
@@ -300,43 +304,71 @@ export function ScheduleSegmentCard({
       )}
       style={{ top, height }}
     >
-      {/** biome-ignore lint/a11y/useSemanticElements: sostiene el tramo entero y el arrastre de puntero */}
-      <div
-        role="button"
-        tabIndex={0}
-        aria-label={task.title}
-        onPointerDown={handlePointerDown}
-        onKeyDown={(event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            onOpen();
-          }
+      {/* El plan del tramo no trae el puesto de imprescindible: el menu lo
+          pregunta al abrirse (ADR 053). */}
+      <TaskRowActions
+        task={{
+          id: task.id,
+          number: task.number,
+          title: task.title,
+          projectId: task.projectId,
+          estimate: task.estimate,
+          isDone: task.isDone,
         }}
-        className="flex h-full w-full cursor-grab flex-col gap-0.5 p-1 text-left outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <div className="flex items-center gap-1">
-          <span className="shrink-0">{getPriorityIcon(task.priority)}</span>
-          <span
-            className={cn(
-              "min-w-0 flex-1 truncate text-meta",
-              (task.isDone || !isEstimated) && "text-muted-foreground",
-              task.isDone && "line-through",
-            )}
-            title={!isEstimated ? t("schedule:noEstimate") : undefined}
-          >
-            {task.title}
-          </span>
-        </div>
-        {height > 30 && (
-          <div className="flex items-center gap-1 text-meta text-muted-foreground">
-            <ProjectIcon className="size-3 shrink-0" />
-            <span className="truncate">{task.projectName}</span>
-            <span className="ml-auto shrink-0 font-mono tabular-nums">
-              {formatClock(displayMinute)}
-            </span>
-          </div>
+        {(menu) => (
+          <>
+            {/** biome-ignore lint/a11y/useSemanticElements: sostiene el tramo entero y el arrastre de puntero */}
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label={task.title}
+              onPointerDown={handlePointerDown}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onOpen();
+                }
+              }}
+              className="flex h-full w-full cursor-grab flex-col gap-0.5 p-1 text-left outline-none active:cursor-grabbing focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {/* Con la tarea anclada, la "X" de desanclar aparece en la esquina al
+               * pasar el puntero: el hueco a la derecha evita que tape el cronometro. */}
+              <div
+                className={cn(
+                  "flex items-center gap-1",
+                  isPinned && onUnpin && "pr-4",
+                )}
+              >
+                <span className="shrink-0">
+                  {getPriorityIcon(task.priority)}
+                </span>
+                <span
+                  className={cn(
+                    "min-w-0 flex-1 truncate text-meta",
+                    (task.isDone || !isEstimated) && "text-muted-foreground",
+                    task.isDone && "line-through",
+                  )}
+                  title={!isEstimated ? t("schedule:noEstimate") : undefined}
+                >
+                  {task.title}
+                </span>
+                <TaskTimerButton task={task} reveal="hover" />
+                {menu}
+              </div>
+              {height > 30 && (
+                <div className="flex items-center gap-1 text-meta text-muted-foreground">
+                  <ProjectIcon className="size-3 shrink-0" />
+                  <span className="truncate">{task.projectName}</span>
+                  <span className="ml-auto shrink-0 font-mono tabular-nums">
+                    {formatClock(displayMinute)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </>
         )}
-      </div>
+      </TaskRowActions>
       {resizeState && (
         <div className="-translate-x-1/2 absolute bottom-1 left-1/2 whitespace-nowrap rounded bg-foreground px-1.5 py-0.5 font-medium text-background text-meta shadow">
           {formatClock(displayMinute)} –{" "}

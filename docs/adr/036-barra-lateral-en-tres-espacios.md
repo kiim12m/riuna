@@ -22,3 +22,8 @@
 - **Esconder una entrada no es una comprobación de autorización.** La autoridad sigue siendo la API, que ya exige `requireWorkspacePermission` en todas estas rutas; quien entre por enlace directo se topa con ella. El grupo oculto es comodidad, no seguridad.
 - **El estado activo del menú pasa a `useRouterState`.** Se calculaba con `window.location.pathname`, que no es reactivo: no se repintaba al navegar dentro de la SPA salvo que algo más forzara el render.
 - **El grupo personal nace corto —panel y objetivos—** y se llena en los bloques siguientes del interludio: Hoy, planificador, cronograma, vistas personales y parte de horas.
+
+**Actualización (2026-10-03):** la administración salió de la barra lateral y
+está en el menú del avatar, debajo de «Ajustes»
+([ADR 061](061-la-administracion-en-el-menu-del-avatar.md)). Las puertas por
+capacidad y las rutas `…/admin/…` siguen como aquí.

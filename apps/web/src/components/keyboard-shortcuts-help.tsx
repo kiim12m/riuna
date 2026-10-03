@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { KbdSequence } from "@/components/ui/kbd";
 import { shortcuts } from "@/constants/shortcuts";
+import { useShortcutsHelpStore } from "@/store/shortcuts-help";
 
 type ShortcutItem = {
   keys: string[];
@@ -45,6 +46,26 @@ function useShortcutCategories(): ShortcutCategory[] {
             description: t("navigation:keyboardShortcuts.items.toggleSidebar"),
           },
           {
+            keys: [shortcuts.timer.prefix, shortcuts.timer.toggle],
+            description: t("navigation:keyboardShortcuts.items.toggleTimer"),
+          },
+          {
+            keys: [shortcuts.notification.prefix, shortcuts.notification.open],
+            description: t(
+              "navigation:keyboardShortcuts.items.openNotifications",
+            ),
+          },
+          {
+            keys: [shortcuts.workspace.prefix, shortcuts.workspace.switch],
+            description: t(
+              "navigation:keyboardShortcuts.items.switchWorkspace",
+            ),
+          },
+          {
+            keys: [shortcuts.project.prefix, shortcuts.project.list],
+            description: t("navigation:keyboardShortcuts.items.goToProject"),
+          },
+          {
             keys: ["?"],
             description: t("navigation:keyboardShortcuts.items.showShortcuts"),
           },
@@ -57,6 +78,10 @@ function useShortcutCategories(): ShortcutCategory[] {
       {
         title: t("navigation:keyboardShortcuts.categories.create"),
         shortcuts: [
+          {
+            keys: [shortcuts.quickAdd.key],
+            description: t("navigation:keyboardShortcuts.items.quickAdd"),
+          },
           {
             keys: [shortcuts.task.prefix, shortcuts.task.create],
             description: t("navigation:keyboardShortcuts.items.createTask"),
@@ -91,6 +116,35 @@ function useShortcutCategories(): ShortcutCategory[] {
           {
             keys: [shortcuts.view.prefix, shortcuts.view.calendar],
             description: t("navigation:keyboardShortcuts.items.calendarView"),
+          },
+          {
+            keys: [shortcuts.view.prefix, shortcuts.view.gantt],
+            description: t("navigation:keyboardShortcuts.items.ganttView"),
+          },
+        ],
+      },
+      {
+        title: t("navigation:keyboardShortcuts.categories.taskDetails"),
+        shortcuts: [
+          {
+            keys: [shortcuts.taskDetails.status],
+            description: t("navigation:keyboardShortcuts.items.setStatus"),
+          },
+          {
+            keys: [shortcuts.taskDetails.priority],
+            description: t("navigation:keyboardShortcuts.items.setPriority"),
+          },
+          {
+            keys: [shortcuts.taskDetails.assignee],
+            description: t("navigation:keyboardShortcuts.items.setAssignee"),
+          },
+          {
+            keys: [shortcuts.taskDetails.labels],
+            description: t("navigation:keyboardShortcuts.items.setLabels"),
+          },
+          {
+            keys: [shortcuts.taskDetails.dueDate],
+            description: t("navigation:keyboardShortcuts.items.setDueDate"),
           },
         ],
       },
@@ -130,7 +184,7 @@ function useShortcutCategories(): ShortcutCategory[] {
 export function KeyboardShortcutsHelp() {
   const { t } = useTranslation();
   const shortcutCategories = useShortcutCategories();
-  const [open, setOpen] = useState(false);
+  const { open, setOpen } = useShortcutsHelpStore();
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -149,7 +203,7 @@ export function KeyboardShortcutsHelp() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [setOpen]);
 
   const filteredCategories = shortcutCategories
     .map((category) => ({

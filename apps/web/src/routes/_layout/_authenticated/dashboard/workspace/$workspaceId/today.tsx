@@ -15,17 +15,34 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { createFileRoute } from "@tanstack/react-router";
-import { CalendarCheck, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import {
+  CalendarCheck,
+  ChevronRight,
+  CircleCheck,
+  MessageSquareText,
+  Moon,
+  Star,
+  Sunrise,
+} from "lucide-react";
+import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DayOffBadge } from "@/components/availability/day-off-badge";
 import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
+import { LeadNotice } from "@/components/lead/lead-notice";
 import PageTitle from "@/components/page-title";
+import { QuickAddInput } from "@/components/quick-add/quick-add-input";
+import { StandupDialog } from "@/components/rituals/standup-dialog";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
+import {
+  rowPlanOf,
+  TaskRowActions,
+} from "@/components/task-actions/task-row-actions";
 import { StopDialog } from "@/components/timer/stop-dialog";
 import { TodayPeek } from "@/components/today/today-peek";
 import { TodayTaskRow } from "@/components/today/today-task-row";
+import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsiblePanel,
@@ -40,6 +57,7 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { TodayEntry, TodayTask, TodayUrgent } from "@/fetchers/today";
+import { usePlanBulk } from "@/hooks/mutations/planner/use-plan-bulk";
 import { useCompleteTask } from "@/hooks/mutations/task/use-complete-task";
 import { useTimerMutations } from "@/hooks/mutations/time-entry/use-timer-mutations";
 import { useTodayEstimateMutation } from "@/hooks/mutations/today/use-today-estimate-mutation";
@@ -48,6 +66,7 @@ import { useRunningTimer } from "@/hooks/queries/time-entry/use-running-timer";
 import { useToday } from "@/hooks/queries/today/use-today";
 import { useElapsed } from "@/hooks/use-elapsed";
 import { useStopWithConfirm } from "@/hooks/use-stop-with-confirm";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { formatDuration } from "@/lib/duration";
 
 export const Route = createFileRoute(
@@ -101,9 +120,15 @@ function useIsWide() {
 }
 
 /** El unico bloque de "Plan de hoy" que se arrastra para reordenar. */
-function SortableTodayRow(props: React.ComponentProps<typeof TodayTaskRow>) {
+function SortableTodayRow({
+  id,
+  children,
+}: {
+  id: string;
+  children: ReactNode;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: props.id });
+    useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -112,9 +137,20 @@ function SortableTodayRow(props: React.ComponentProps<typeof TodayTaskRow>) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <TodayTaskRow {...props} />
+      {children}
     </div>
   );
+}
+
+function rowTask(task: TodayTask | TodayEntry | TodayUrgent, isDone: boolean) {
+  return {
+    id: task.id,
+    number: task.number,
+    title: task.title,
+    projectId: task.projectId,
+    estimate: task.estimate,
+    isDone,
+  };
 }
 
 /**
@@ -125,6 +161,7 @@ function SortableTodayRow(props: React.ComponentProps<typeof TodayTaskRow>) {
 function TodayComponent() {
   const { t, i18n } = useTranslation();
   const { workspaceId } = Route.useParams();
+  const navigate = useNavigate();
   const { data, isPending } = useToday(workspaceId);
   const { data: runningData } = useRunningTimer(workspaceId);
   const { start, stop, isStopping } = useTimerMutations(workspaceId);
@@ -134,7 +171,10 @@ function TodayComponent() {
     data?.serverToday ?? "",
   );
   const completeTask = useCompleteTask(workspaceId);
+  const planBulk = usePlanBulk(workspaceId);
+  const { canCreateTasks } = useWorkspacePermission();
 
+  const [standupOpen, setStandupOpen] = useState(false);
   const [openTask, setOpenTask] = useState<{
     taskId: string;
     projectId: string;
@@ -179,20 +219,28 @@ function TodayComponent() {
     completeTask.mutate({ taskId, done });
   }
 
+  // Solo se arrastra lo que no es imprescindible: el orden de las
+  // imprescindibles es su puesto (ADR 053). Van delante en lo que se manda,
+  // que es tambien como las devuelve la API.
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || !data || active.id === over.id) return;
 
-    const ids = data.planned.map((entry) => entry.id);
+    const ids = restPlanned.map((entry) => entry.id);
     const from = ids.indexOf(active.id.toString());
     const to = ids.indexOf(over.id.toString());
     if (from === -1 || to === -1) return;
 
-    reorderPlanned(arrayMove(ids, from, to));
+    reorderPlanned([
+      ...keyPlanned.map((entry) => entry.id),
+      ...arrayMove(ids, from, to),
+    ]);
   }
 
   const previous = data?.previous ?? [];
   const planned = data?.planned ?? [];
+  const keyPlanned = planned.filter((entry) => entry.keyRank !== null);
+  const restPlanned = planned.filter((entry) => entry.keyRank === null);
   const urgent = data?.urgent ?? [];
   const done = data?.done ?? [];
   const isEmpty =
@@ -214,6 +262,40 @@ function TodayComponent() {
     urgent[0] ??
     null;
   const peekId = isWide ? peekTask?.id : undefined;
+
+  function renderPlannedRow(task: TodayEntry, index: number) {
+    return (
+      <TaskRowActions
+        key={task.id}
+        workspaceId={workspaceId}
+        task={rowTask(task, false)}
+        plan={rowPlanOf(task)}
+      >
+        {(menu) => (
+          <TodayTaskRow
+            shaded={index % 2 === 0}
+            selected={task.id === peekId}
+            id={task.id}
+            title={task.title}
+            priority={task.priority}
+            isDone={false}
+            projectName={task.projectName}
+            projectIcon={task.projectIcon}
+            estimate={task.estimate}
+            startMinute={task.startMinute}
+            loggedSeconds={task.loggedSeconds}
+            keyRank={task.keyRank}
+            running={running?.task.id === task.id}
+            onToggleTimer={() => toggleTimer(task)}
+            onOpen={() => selectTask(task)}
+            onToggleDone={(done) => toggleDone(task.id, done)}
+            onEstimateChange={(seconds) => setEstimate(task.id, seconds)}
+            menu={menu}
+          />
+        )}
+      </TaskRowActions>
+    );
+  }
 
   function openDetails(task: { id: string; projectId: string }) {
     setOpenTask({ taskId: task.id, projectId: task.projectId });
@@ -245,7 +327,68 @@ function TodayComponent() {
                 worked: formatDuration(data.totals.workedToday, i18n.language),
               })
             }
+            actions={
+              // Los rituales solo se abren con un boton (ADR 054): ni avisos
+              // ni banners. Cerrado, el boton lo dice y permite repasarlo.
+              data && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      navigate({
+                        to: "/dashboard/workspace/$workspaceId/rituals/plan-day",
+                        params: { workspaceId },
+                      })
+                    }
+                  >
+                    <Sunrise />
+                    {t("rituals:planDay.button")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setStandupOpen(true)}
+                  >
+                    <MessageSquareText />
+                    {t("rituals:standup.button")}
+                  </Button>
+                  <Button
+                    variant={data.dayClosed ? "ghost" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      navigate({
+                        to: "/dashboard/workspace/$workspaceId/rituals/close-day",
+                        params: { workspaceId },
+                      })
+                    }
+                  >
+                    {data.dayClosed ? <CircleCheck /> : <Moon />}
+                    {t(
+                      data.dayClosed
+                        ? "rituals:closeDay.closed"
+                        : "rituals:closeDay.button",
+                    )}
+                  </Button>
+                </div>
+              )
+            }
           />
+          <LeadNotice workspaceId={workspaceId} />
+          {data?.unavailable && (
+            <p className="flex flex-wrap items-center gap-2 text-meta text-muted-foreground">
+              <DayOffBadge dayOff={data.unavailable} />
+              {t("availability:day.noCapacity")}
+            </p>
+          )}
+          {/* Lo que se captura desde Hoy es para hoy, salvo que diga otro dia. */}
+          {data && canCreateTasks() && (
+            <QuickAddInput
+              workspaceId={workspaceId}
+              defaultPlannedDate={data.serverToday}
+              className="max-w-2xl"
+            />
+          )}
           {isPending ? (
             <div className="space-y-2">
               {["a", "b", "c"].map((key) => (
@@ -275,41 +418,70 @@ function TodayComponent() {
                       writeCollapsed(PREVIOUS_COLLAPSED_KEY, !open);
                     }}
                   >
-                    <CollapsibleTrigger className="flex items-center gap-1 text-section">
-                      <ChevronRight
-                        className={`h-3.5 w-3.5 transition-transform duration-200 ${
-                          previousCollapsed ? "" : "rotate-90"
-                        }`}
-                      />
-                      {t("today:previous.title", { count: previous.length })}
-                    </CollapsibleTrigger>
+                    <div className="flex items-center justify-between gap-2">
+                      <CollapsibleTrigger className="flex items-center gap-1 text-section">
+                        <ChevronRight
+                          className={`h-3.5 w-3.5 transition-transform duration-200 ${
+                            previousCollapsed ? "" : "rotate-90"
+                          }`}
+                        />
+                        {t("today:previous.title", { count: previous.length })}
+                      </CollapsibleTrigger>
+                      {/* La deuda de la ADR 047: todo de una vez (ADR 053). */}
+                      {previous.length > 1 && data && (
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          disabled={planBulk.isPending}
+                          onClick={() =>
+                            planBulk.mutate({
+                              taskIds: previous.map((task) => task.id),
+                              plannedDate: data.serverToday,
+                            })
+                          }
+                        >
+                          {t("today:previous.addAllToToday")}
+                        </Button>
+                      )}
+                    </div>
                     <CollapsiblePanel>
                       <div className="mt-1 space-y-0.5">
                         {previous.map((task: TodayEntry, index) => (
-                          <TodayTaskRow
+                          <TaskRowActions
                             key={task.id}
-                            shaded={index % 2 === 0}
-                            selected={task.id === peekId}
-                            id={task.id}
-                            title={task.title}
-                            priority={task.priority}
-                            isDone={false}
-                            projectName={task.projectName}
-                            projectIcon={task.projectIcon}
-                            estimate={task.estimate}
-                            loggedSeconds={task.loggedSeconds}
-                            running={running?.task.id === task.id}
-                            onToggleTimer={() => toggleTimer(task)}
-                            onOpen={() => selectTask(task)}
-                            onToggleDone={(done) => toggleDone(task.id, done)}
-                            onEstimateChange={(seconds) =>
-                              setEstimate(task.id, seconds)
-                            }
-                            action={{
-                              label: t("today:previous.addToToday"),
-                              onClick: () => addToToday(task.id),
-                            }}
-                          />
+                            workspaceId={workspaceId}
+                            task={rowTask(task, false)}
+                            plan={rowPlanOf(task)}
+                          >
+                            {(menu) => (
+                              <TodayTaskRow
+                                shaded={index % 2 === 0}
+                                selected={task.id === peekId}
+                                id={task.id}
+                                title={task.title}
+                                priority={task.priority}
+                                isDone={false}
+                                projectName={task.projectName}
+                                projectIcon={task.projectIcon}
+                                estimate={task.estimate}
+                                loggedSeconds={task.loggedSeconds}
+                                running={running?.task.id === task.id}
+                                onToggleTimer={() => toggleTimer(task)}
+                                onOpen={() => selectTask(task)}
+                                onToggleDone={(done) =>
+                                  toggleDone(task.id, done)
+                                }
+                                onEstimateChange={(seconds) =>
+                                  setEstimate(task.id, seconds)
+                                }
+                                action={{
+                                  label: t("today:previous.addToToday"),
+                                  onClick: () => addToToday(task.id),
+                                }}
+                                menu={menu}
+                              />
+                            )}
+                          </TaskRowActions>
                         ))}
                       </div>
                     </CollapsiblePanel>
@@ -330,33 +502,31 @@ function TodayComponent() {
                       collisionDetection={closestCenter}
                       onDragEnd={handleDragEnd}
                     >
+                      {keyPlanned.length > 0 && (
+                        <div
+                          className="mb-2 space-y-0.5"
+                          data-testid="today-key-tasks"
+                        >
+                          <h3 className="flex items-center gap-1 px-2.5 text-meta text-muted-foreground">
+                            <Star className="size-3 fill-current text-warning" />
+                            {t("today:key.title", {
+                              count: keyPlanned.length,
+                            })}
+                          </h3>
+                          {keyPlanned.map((task: TodayEntry, index) =>
+                            renderPlannedRow(task, index),
+                          )}
+                        </div>
+                      )}
                       <SortableContext
-                        items={planned.map((task) => task.id)}
+                        items={restPlanned.map((task) => task.id)}
                         strategy={verticalListSortingStrategy}
                       >
                         <div className="space-y-0.5">
-                          {planned.map((task: TodayEntry, index) => (
-                            <SortableTodayRow
-                              key={task.id}
-                              shaded={index % 2 === 0}
-                              selected={task.id === peekId}
-                              id={task.id}
-                              title={task.title}
-                              priority={task.priority}
-                              isDone={false}
-                              projectName={task.projectName}
-                              projectIcon={task.projectIcon}
-                              estimate={task.estimate}
-                              startMinute={task.startMinute}
-                              loggedSeconds={task.loggedSeconds}
-                              running={running?.task.id === task.id}
-                              onToggleTimer={() => toggleTimer(task)}
-                              onOpen={() => selectTask(task)}
-                              onToggleDone={(done) => toggleDone(task.id, done)}
-                              onEstimateChange={(seconds) =>
-                                setEstimate(task.id, seconds)
-                              }
-                            />
+                          {restPlanned.map((task: TodayEntry, index) => (
+                            <SortableTodayRow key={task.id} id={task.id}>
+                              {renderPlannedRow(task, index)}
+                            </SortableTodayRow>
                           ))}
                         </div>
                       </SortableContext>
@@ -371,29 +541,40 @@ function TodayComponent() {
                     </h2>
                     <div className="space-y-0.5">
                       {urgent.map((task: TodayUrgent, index) => (
-                        <TodayTaskRow
+                        <TaskRowActions
                           key={task.id}
-                          shaded={index % 2 === 0}
-                          selected={task.id === peekId}
-                          id={task.id}
-                          title={task.title}
-                          priority={task.priority}
-                          isDone={false}
-                          projectName={task.projectName}
-                          projectIcon={task.projectIcon}
-                          estimate={task.estimate}
-                          running={running?.task.id === task.id}
-                          onToggleTimer={() => toggleTimer(task)}
-                          onOpen={() => selectTask(task)}
-                          onToggleDone={(done) => toggleDone(task.id, done)}
-                          dueBadge={
-                            task.dueWindow === "overdue" ? "overdue" : "today"
-                          }
-                          action={{
-                            label: t("today:urgent.planToday"),
-                            onClick: () => addToToday(task.id),
-                          }}
-                        />
+                          workspaceId={workspaceId}
+                          task={rowTask(task, false)}
+                          plan={null}
+                        >
+                          {(menu) => (
+                            <TodayTaskRow
+                              shaded={index % 2 === 0}
+                              selected={task.id === peekId}
+                              id={task.id}
+                              title={task.title}
+                              priority={task.priority}
+                              isDone={false}
+                              projectName={task.projectName}
+                              projectIcon={task.projectIcon}
+                              estimate={task.estimate}
+                              running={running?.task.id === task.id}
+                              onToggleTimer={() => toggleTimer(task)}
+                              onOpen={() => selectTask(task)}
+                              onToggleDone={(done) => toggleDone(task.id, done)}
+                              dueBadge={
+                                task.dueWindow === "overdue"
+                                  ? "overdue"
+                                  : "today"
+                              }
+                              action={{
+                                label: t("today:urgent.planToday"),
+                                onClick: () => addToToday(task.id),
+                              }}
+                              menu={menu}
+                            />
+                          )}
+                        </TaskRowActions>
                       ))}
                     </div>
                   </section>
@@ -418,23 +599,33 @@ function TodayComponent() {
                     <CollapsiblePanel>
                       <div className="mt-1 space-y-0.5">
                         {done.map((task: TodayTask, index) => (
-                          <TodayTaskRow
+                          <TaskRowActions
                             key={task.id}
-                            shaded={index % 2 === 0}
-                            selected={task.id === peekId}
-                            id={task.id}
-                            title={task.title}
-                            priority={task.priority}
-                            isDone={true}
-                            projectName={task.projectName}
-                            projectIcon={task.projectIcon}
-                            estimate={task.estimate}
-                            loggedSeconds={task.loggedSeconds}
-                            running={false}
-                            onToggleTimer={() => {}}
-                            onOpen={() => selectTask(task)}
-                            onToggleDone={(done) => toggleDone(task.id, done)}
-                          />
+                            workspaceId={workspaceId}
+                            task={rowTask(task, true)}
+                          >
+                            {(menu) => (
+                              <TodayTaskRow
+                                shaded={index % 2 === 0}
+                                selected={task.id === peekId}
+                                id={task.id}
+                                title={task.title}
+                                priority={task.priority}
+                                isDone={true}
+                                projectName={task.projectName}
+                                projectIcon={task.projectIcon}
+                                estimate={task.estimate}
+                                loggedSeconds={task.loggedSeconds}
+                                running={false}
+                                onToggleTimer={() => {}}
+                                onOpen={() => selectTask(task)}
+                                onToggleDone={(done) =>
+                                  toggleDone(task.id, done)
+                                }
+                                menu={menu}
+                              />
+                            )}
+                          </TaskRowActions>
                         ))}
                       </div>
                     </CollapsiblePanel>
@@ -460,6 +651,12 @@ function TodayComponent() {
         projectId={openTask?.projectId ?? ""}
         workspaceId={workspaceId}
         onClose={() => setOpenTask(null)}
+      />
+
+      <StandupDialog
+        workspaceId={workspaceId}
+        open={standupOpen}
+        onOpenChange={setStandupOpen}
       />
 
       <StopDialog

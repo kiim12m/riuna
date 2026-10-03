@@ -17,15 +17,23 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarClock } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+  CalendarClock,
+  CalendarRange,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { type ReactNode, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
+import { LeadNotice } from "@/components/lead/lead-notice";
 import PageTitle from "@/components/page-title";
 import { PlannerDay } from "@/components/planner/planner-day";
 import { PlannerTaskCard } from "@/components/planner/task-card";
+import { QuickAddInput } from "@/components/quick-add/quick-add-input";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
+import { Button } from "@/components/ui/button";
 import {
   Empty,
   EmptyDescription,
@@ -43,8 +51,10 @@ import type {
 } from "@/fetchers/planner";
 import { usePlannerEstimateMutation } from "@/hooks/mutations/planner/use-planner-estimate-mutation";
 import { usePlannerMutations } from "@/hooks/mutations/planner/use-planner-mutations";
+import { useCompleteTask } from "@/hooks/mutations/task/use-complete-task";
 import { usePlanner } from "@/hooks/queries/planner/use-planner";
 import { useWorkSchedule } from "@/hooks/queries/work-schedule/use-work-schedule";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
 import { formatDuration } from "@/lib/duration";
 import { formatDate } from "@/lib/format";
@@ -76,10 +86,25 @@ function addDays(date: Date, days: number) {
   return shifted;
 }
 
+const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/;
+/** Cuanto se mueve la ventana con las flechas: una semana. */
+const WINDOW_STEP_DAYS = 7;
+
+type PlannerSearch = {
+  /** Primer dia de la ventana, `yyyy-mm-dd`; sin el, hoy (ADR 053). */
+  from?: string;
+};
+
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/workspace/$workspaceId/planner",
 )({
   component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>): PlannerSearch => ({
+    from:
+      typeof search.from === "string" && DAY_KEY.test(search.from)
+        ? search.from
+        : undefined,
+  }),
 });
 
 /**
@@ -94,13 +119,36 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const { t, i18n } = useTranslation();
   const { workspaceId } = Route.useParams();
-  const { data, isPending } = usePlanner(workspaceId, WINDOW_DAYS);
+  const { from } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const { canCreateTasks } = useWorkspacePermission();
+  const { data, isPending } = usePlanner(workspaceId, WINDOW_DAYS, from);
   const { data: workSchedule } = useWorkSchedule();
   const { moveTask, reorderDay } = usePlannerMutations(
     workspaceId,
     WINDOW_DAYS,
+    from,
   );
-  const { setEstimate } = usePlannerEstimateMutation(workspaceId, WINDOW_DAYS);
+  const { setEstimate } = usePlannerEstimateMutation(
+    workspaceId,
+    WINDOW_DAYS,
+    from,
+  );
+
+  // Mas alla de quince dias (ADR 053): la ventana se mueve de semana en
+  // semana. Volver a hoy quita el parametro, para que la ventana por defecto
+  // siga siendo una sola entrada de cache.
+  const shiftWindow = (days: number | null) => {
+    const base = parseIsoDay(from ?? data?.serverToday ?? isoDay(new Date()));
+    const next = days === null ? undefined : isoDay(addDays(base, days));
+    navigate({
+      search: { from: next === data?.serverToday ? undefined : next },
+      replace: true,
+    });
+  };
+  const completeTask = useCompleteTask(workspaceId);
+  const toggleDone = (taskId: string, done: boolean) =>
+    completeTask.mutate({ taskId, done });
 
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [timePopoverTaskId, setTimePopoverTaskId] = useState<string | null>(
@@ -115,15 +163,17 @@ function RouteComponent() {
   // la columna "Hoy" para apuntar a un dia distinto del que usa la API para
   // decidir que fantasmas y ventanas de vencimiento tocan hoy.
   const days = useMemo(() => {
-    const today = data?.serverToday
-      ? parseIsoDay(data.serverToday)
-      : (() => {
-          const now = new Date();
-          now.setHours(0, 0, 0, 0);
-          return now;
-        })();
-    return Array.from({ length: WINDOW_DAYS }, (_, i) => addDays(today, i));
-  }, [data?.serverToday]);
+    const first = from
+      ? parseIsoDay(from)
+      : data?.serverToday
+        ? parseIsoDay(data.serverToday)
+        : (() => {
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            return now;
+          })();
+    return Array.from({ length: WINDOW_DAYS }, (_, i) => addDays(first, i));
+  }, [from, data?.serverToday]);
 
   const entriesByDay = useMemo(() => {
     const map = new Map<string, PlanEntry[]>();
@@ -199,6 +249,9 @@ function RouteComponent() {
       overId === UNPLANNED_ID ||
       (data?.unplanned.some((task) => task.id === overId) ?? false);
     if (isUnplanned) {
+      // Ya estaba sin planificar: soltarla dentro de su propia columna no
+      // cambia nada, y antes mandaba un DELETE que acababa en 404.
+      if (data?.unplanned.some((task) => task.id === taskId)) return;
       moveTask(taskId, null);
       return;
     }
@@ -224,15 +277,16 @@ function RouteComponent() {
     if (!destDayKey || !destZone) return;
 
     if (destZone === "timed") {
-      const existing = entriesByDay
-        .get(destDayKey)
-        ?.find((entry) => entry.id === taskId);
+      // La hora que ya tuviera, venga de este dia o de otro: una tarea
+      // anclada que cambia de dia conserva su hora. Solo si no tenia ninguna
+      // se ancla al inicio de la jornada y se abre el selector para ajustarla.
+      const current = data?.entries.find((entry) => entry.id === taskId);
       const minute =
-        existing?.startMinute ??
+        current?.startMinute ??
         workSchedule?.workStartMinute ??
         DEFAULT_WORK_START_MINUTE;
       moveTask(taskId, { plannedDate: destDayKey, startMinute: minute });
-      setTimePopoverTaskId(taskId);
+      if (current?.startMinute == null) setTimePopoverTaskId(taskId);
       return;
     }
 
@@ -300,7 +354,51 @@ function RouteComponent() {
             title={t("planner:pageTitle")}
             description={t("planner:description", { days: WINDOW_DAYS })}
             className="px-4 pt-4"
+            actions={
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mr-2"
+                  onClick={() =>
+                    navigate({
+                      to: "/dashboard/workspace/$workspaceId/rituals/weekly-review",
+                      params: { workspaceId },
+                    })
+                  }
+                >
+                  <CalendarRange className="size-4" />
+                  {t("rituals:weeklyReview.button")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label={t("planner:window.previous")}
+                  onClick={() => shiftWindow(-WINDOW_STEP_DAYS)}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!from}
+                  aria-label={t("planner:window.todayLabel")}
+                  onClick={() => shiftWindow(null)}
+                >
+                  {t("planner:window.today")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  aria-label={t("planner:window.next")}
+                  onClick={() => shiftWindow(WINDOW_STEP_DAYS)}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            }
           />
+          <LeadNotice workspaceId={workspaceId} className="px-4 pt-2" />
           {isPending ? (
             <div className="flex gap-3 p-4">
               {["a", "b", "c"].map((key) => (
@@ -330,11 +428,20 @@ function RouteComponent() {
                 <PlannerColumn
                   id={UNPLANNED_ID}
                   title={t("planner:unplanned")}
+                  header={
+                    canCreateTasks() && (
+                      <QuickAddInput
+                        workspaceId={workspaceId}
+                        showHint={false}
+                      />
+                    )
+                  }
                   tasks={data?.unplanned ?? []}
                   onOpen={(task) =>
                     setOpenTask({ taskId: task.id, projectId: task.projectId })
                   }
                   onEstimateChange={setEstimate}
+                  onToggleDone={toggleDone}
                 />
 
                 {(data?.previous.length ?? 0) > 0 && (
@@ -347,10 +454,11 @@ function RouteComponent() {
                       })
                     }
                     onEstimateChange={setEstimate}
+                    onToggleDone={toggleDone}
                   />
                 )}
 
-                {days.map((day, index) => {
+                {days.map((day) => {
                   const key = isoDay(day);
                   const dayEntries = entriesByDay.get(key) ?? [];
                   const untimedEntries = dayEntries.filter(
@@ -363,35 +471,19 @@ function RouteComponent() {
                   const ghosts = ghostsByDay.get(key) ?? [];
                   const deadlines = deadlinesByDay.get(key) ?? [];
 
-                  const loadSeconds =
-                    dayEntries.reduce(
-                      (total, entry) =>
-                        total +
-                        Math.max(
-                          0,
-                          (entry.estimate ?? 0) - entry.loggedSeconds,
-                        ),
-                      0,
-                    ) +
-                    fixedBlocks.reduce(
-                      (total, block) =>
-                        total + (block.endMinute - block.startMinute) * 60,
-                      0,
-                    );
-                  const capacitySeconds = data?.capacityByDay?.[key] ?? 0;
-                  const loadPct =
-                    capacitySeconds > 0
-                      ? Math.round((loadSeconds / capacitySeconds) * 100)
-                      : loadSeconds > 0
-                        ? 100
-                        : 0;
+                  // La carga la calcula la API con la misma `dayLoad` que
+                  // el Cronograma (ADR 050), en vez de una copia aqui.
+                  const load = data?.loadByDay?.[key];
+                  const loadSeconds = load?.loadSeconds ?? 0;
+                  const capacitySeconds = load?.capacitySeconds ?? 0;
+                  const loadPct = load?.pct ?? 0;
 
                   return (
                     <PlannerDay
                       key={key}
                       dayKey={key}
                       label={
-                        index === 0
+                        key === data?.serverToday
                           ? `${t("planner:today")} · ${formatDate(day, { weekday: "short", day: "numeric" })}`
                           : formatDate(day, {
                               weekday: "short",
@@ -406,6 +498,7 @@ function RouteComponent() {
                           i18n.language,
                         ),
                       })}
+                      dayOff={data?.unavailableByDay?.[key] ?? null}
                       untimedEntries={untimedEntries}
                       timedEntries={timedEntries}
                       fixedBlocks={fixedBlocks}
@@ -420,6 +513,7 @@ function RouteComponent() {
                       onEstimateChange={setEstimate}
                       onAnchor={handleAnchor}
                       onUnanchor={handleUnanchor}
+                      onToggleDone={toggleDone}
                       timePopoverTaskId={timePopoverTaskId}
                       onTimePopoverOpenChange={(taskId, open) =>
                         setTimePopoverTaskId(open ? taskId : null)
@@ -452,15 +546,20 @@ function RouteComponent() {
 function PlannerColumn({
   id,
   title,
+  header,
   tasks,
   onOpen,
   onEstimateChange,
+  onToggleDone,
 }: {
   id: string;
   title: string;
+  /** Bajo el titulo: la captura rapida en «Sin planificar». */
+  header?: ReactNode;
   tasks: PlanTask[];
   onOpen: (task: PlanTask) => void;
   onEstimateChange: (taskId: string, seconds: number | null) => void;
+  onToggleDone: (taskId: string, done: boolean) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
@@ -480,6 +579,7 @@ function PlannerColumn({
             {tasks.length}
           </span>
         </div>
+        {header}
       </div>
       <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-1.5 pb-2">
         <SortableContext items={tasks} strategy={verticalListSortingStrategy}>
@@ -489,6 +589,7 @@ function PlannerColumn({
               task={task}
               onOpen={() => onOpen(task)}
               onEstimateChange={(seconds) => onEstimateChange(task.id, seconds)}
+              onToggleDone={(done) => onToggleDone(task.id, done)}
             />
           ))}
         </SortableContext>
@@ -505,10 +606,12 @@ function PreviousColumn({
   tasks,
   onOpen,
   onEstimateChange,
+  onToggleDone,
 }: {
   tasks: PlanEntry[];
   onOpen: (task: PlanEntry) => void;
   onEstimateChange: (taskId: string, seconds: number | null) => void;
+  onToggleDone: (taskId: string, done: boolean) => void;
 }) {
   const { t } = useTranslation();
 
@@ -533,6 +636,7 @@ function PreviousColumn({
               task={task}
               onOpen={() => onOpen(task)}
               onEstimateChange={(seconds) => onEstimateChange(task.id, seconds)}
+              onToggleDone={(done) => onToggleDone(task.id, done)}
             />
           ))}
         </SortableContext>

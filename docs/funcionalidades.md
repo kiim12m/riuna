@@ -114,9 +114,12 @@ horas, etiquetas, épicas, ciclo, campos personalizados y número de ticket.
   eliminar.
 - **Menú contextual** con clic derecho sobre la tarjeta, con las acciones
   frecuentes.
-- **Atajos en el detalle**: `s` estado, `p` prioridad, `a` asignado,
-  `l` etiquetas, `d` fecha. `j` y `k` navegan entre tareas; `Tab` y
-  `Shift+Tab` sangran y promueven en el modo jerarquía.
+- **Atajos en el detalle**: `j` y `k` navegan entre tareas; `Tab` y
+  `Shift+Tab` sangran y promueven en el modo jerarquía. Con el detalle
+  abierto, `s` estado, `p` prioridad, `a` asignado, `l` etiquetas (en
+  pantallas anchas, donde se ven) y `d` vencimiento abren su selector. Solo
+  a quien puede editar tareas. Mientras el detalle está abierto, `p` es la
+  prioridad y no el prefijo de `p c`/`p l`.
 - Copiar el enlace de la tarea y **copiar el nombre de rama Git**.
 
 **Editor de descripción y comentarios** (TipTap): menú slash, encabezados,
@@ -182,6 +185,155 @@ la tarea y en la propia tabla.
 - **Plantillas**: guardar un proyecto entero —columnas, épicas y tareas— o un
   árbol de tareas como plantilla del espacio, y aplicarla en cualquier
   proyecto.
+- **Personal** ([ADR 051](adr/051-la-bandeja-es-un-proyecto-oculto.md), antes
+  «Bandeja»): un proyecto por persona y espacio para dejar lo que llega sin
+  decidir aún a qué proyecto va. Cada uno ve el suyo fijo en lo alto de
+  «Proyectos», en la barra, y se crea la primera vez que se abre; sus tareas
+  llevan la clave `PER`. Funciona como cualquier proyecto —tablero, lista,
+  detalle y «Mover a otro proyecto»— pero **no sale en las listas** de
+  proyectos de los demás: ni en su barra, ni en los selectores, ni en la
+  administración, ni en la búsqueda de proyectos, ni en `list_projects` de
+  MCP. **No es privado**: sus tareas salen en Mis tareas, Hoy, la búsqueda y
+  los paneles como las de cualquier otro proyecto, y la cabecera lo explica.
+  Si la persona sale del espacio o se borra su cuenta, pasa a ser un proyecto
+  normal, con sus tareas.
+- **Captura rápida** ([ADR 052](adr/052-captura-rapida.md)): una línea se
+  convierte en tarea al pulsar Intro, asignada a quien la escribe y en su
+  proyecto Personal salvo que diga otro. La sintaxis es cerrada y en castellano:
+  - `1h30`, `1,5h` o `30m` para la estimación;
+  - `@hoy`, `@mañana`, `@vie` o `@15/10`, con hora opcional detrás
+    (`@mañana 10:00`), para el día del plan, nunca para el vencimiento;
+  - `!vie` o `!15/10` para el vencimiento;
+  - `#etiqueta` para una etiqueta que ya existe;
+  - `+CLAVE` para el proyecto;
+  - `*alta` o `*urgente` para la prioridad;
+  - `\` delante, para dejar una palabra tal cual.
+
+  Lo que no se entiende se queda en el título, y unos chips debajo enseñan lo
+  que se va a crear. Se abre con la tecla `q` desde cualquier pantalla o desde
+  la paleta. Además hay una caja fija en Hoy, que planifica para hoy por
+  defecto, en «Sin planificar» del Planificador y en el proyecto Personal.
+- **Acciones de fila**
+  ([ADR 053](adr/053-acciones-de-fila-imprescindibles-y-plan-en-bloque.md)):
+  el mismo menú en Hoy, el Planificador, el Cronograma y Mis tareas. Sale con
+  el botón «⋯» o con el clic derecho, y sirve para:
+  - marcar como hecha y arrancar o parar el cronómetro;
+  - planificar hoy o mañana, o elegir día en un calendario;
+  - fijar la hora y quitar del plan;
+  - estimar;
+  - marcarla como imprescindible.
+- **Imprescindibles**: hasta tres por día, y lo impone la base. Salen
+  primero en Hoy, con una estrella, y dejan de serlo al cambiar de día.
+- **Añadir todo a hoy**: trae de una vez lo que quedó de días anteriores.
+- **Terminar el día**
+  ([ADR 054](adr/054-terminar-el-dia-y-la-valoracion-privada.md)): un ritual
+  en cinco pasos que se abre con un botón en la cabecera de Hoy:
+  1. el resumen: lo terminado y lo registrado;
+  2. una decisión obligatoria sobre cada pendiente: el siguiente día
+     laborable, otro día o fuera del plan;
+  3. qué te frena;
+  4. tu valoración del día (impacto, energía y una nota), **que solo ves tú**;
+  5. lo que tienes para el próximo día.
+
+  El botón pasa a decir «Día cerrado» cuando ya se ha hecho. Repetirlo
+  actualiza el cierre.
+- **Planificar el día**: el ritual de la mañana, también con un botón en Hoy.
+  Seis pasos que actúan al momento:
+  1. lo de días anteriores, con «Añadir a hoy» o todo de una vez;
+  2. lo urgente;
+  3. lo de Personal y lo que aún no tiene día;
+  4. hasta tres imprescindibles;
+  5. la carga frente a la jornada, con las estimaciones editables y aviso si
+     no cabe;
+  6. las horas ancladas.
+
+  «Empezar» arranca el cronómetro en la primera imprescindible.
+- **Revisión semanal**: se abre con un botón en el Planificador. Seis pasos:
+  1. repasar lo personal: mover cada tarea a su proyecto sin salir del
+     ritual, planificarla o terminarla;
+  2. lo vencido;
+  3. «Esperando a»;
+  4. la semana: lo terminado, lo registrado y la precisión frente a lo
+     estimado, solo en lo que se estimó y se midió;
+  5. la carga de cada día laborable de la siguiente semana, con lo que aún no
+     tiene día;
+  6. qué te frena y tu valoración, también privada.
+
+  Revisa la semana en curso; en sus dos primeros días, la anterior, y se
+  puede cambiar entre las dos. Los tres rituales están también en la paleta.
+- **Avisos del navegador**
+  ([ADR 055](adr/055-avisos-del-navegador-sin-service-worker.md)): se
+  activan en Ajustes › Preferencias para ese navegador, y avisan a la hora
+  anclada de cada tarea de hoy. Al pulsar el aviso se puede empezar,
+  posponerlo diez minutos o pasar la tarea al siguiente día laborable con la
+  misma hora. Solo con una pestaña de Riuna abierta, y una sola avisa: sin
+  push ni service worker.
+- **Modo foco** ([ADR 056](adr/056-modo-foco-sobre-entradas-reales.md)):
+  desde el menú de una tarea, a pantalla completa. Hay tres modos:
+  - Pomodoro: 25 minutos de trabajo y 5 de descanso, con uno de 15 cada
+    cuatro;
+  - Flowtime: el descanso es el 20 % de lo trabajado;
+  - cuenta atrás de los minutos que se elijan.
+
+  El trabajo se registra como entradas de tiempo normales, marcadas como
+  sesión de foco, y los descansos no registran nada. Al acabar cada fase
+  avisa. La fase y su reloj se ven en el pie de la barra lateral. Si el
+  cronómetro se para por otro lado, la sesión termina. El cierre del día
+  cuenta las sesiones.
+- **Avisos de ritmo** (también en la
+  [ADR 056](adr/056-modo-foco-sobre-entradas-reales.md)): bajo los avisos del
+  navegador, en Ajustes › Preferencias, cada uno por separado y apagados de
+  serie:
+  - descanso, tras 90 minutos seguidos registrando, aunque se cambie de
+    tarea;
+  - sin registrar: en la jornada, tras 15 minutos sin cronómetro, como mucho
+    uno por hora;
+  - fuera de jornada: el cronómetro sigue en marcha pasada la hora de
+    salida.
+- **Enlace del calendario**
+  ([ADR 057](adr/057-exportar-el-calendario-por-token.md)): en Ajustes ›
+  Preferencias, un enlace `.ics` por persona y espacio para suscribirse desde
+  Google Calendar, Outlook o el móvil. Lleva el plan con hora, los bloques
+  del Cronograma (los repetidos, como series) y los vencimientos de lo
+  asignado, como días enteros. La ventana va de un mes atrás a tres meses
+  adelante. El enlace se enseña una vez, y se puede regenerar o revocar.
+  Quien lo tenga ve esos títulos, y deja de valer si la persona sale del
+  espacio.
+- **Ausencias y festivos** ([ADR 060](adr/060-ausencias-y-festivos.md)):
+  - cada persona da sus ausencias en Ajustes › Preferencias, para el
+    espacio activo: un rango de días y una nota que solo ve ella, sin
+    motivo;
+  - los festivos del espacio se gestionan en Administración › Festivos, con
+    el permiso de gestionar los ajustes del espacio, y los ven todos.
+
+  Un día no disponible cuenta cero horas en el Planificador, el Cronograma y
+  Hoy, que lo marcan con «Festivo · nombre» o «Ausente», y ese día no suena
+  el aviso de «sin registrar».
+- **Responsable de departamento**
+  ([ADR 059](adr/059-responsable-de-departamento.md)): en el diálogo de
+  miembros de un equipo, quien gestiona miembros marca a su responsable.
+  Ese responsable puede leer el plan y los cierres del resto del equipo,
+  nunca su valoración ni cambiar nada. Cada miembro con responsable lo ve
+  avisado en Hoy y en el Planificador.
+- **Mi equipo** (también en la
+  [ADR 059](adr/059-responsable-de-departamento.md)): solo para quien lleva a
+  alguien, en la navegación personal. Tiene una tarjeta por persona con:
+  - su plan de hoy, las imprescindibles delante;
+  - la carga frente a su capacidad, con ausencias y festivos;
+  - lo terminado y lo registrado;
+  - y su cierre público, sin valoración.
+
+  En otra pestaña, el stand-up de cada uno, con «Copiar todo». Se relee
+  cada minuto y no permite cambiar nada.
+- **Stand-up**: un botón en Hoy lo enseña, derivado al momento y sin
+  guardarse:
+  - ayer, es decir, lo terminado el último día laborable;
+  - hoy: el plan, con las imprescindibles marcadas;
+  - los bloqueos del último cierre.
+
+  Nunca incluye la valoración privada. «Copiar en Markdown» lo deja listo para
+  pegarlo donde el equipo lo comparta; enviarlo solo a Slack o Telegram queda
+  para la Fase 8.
 - **Mi trabajo**: las tareas propias o de mi equipo de todos los proyectos, con
   filtros de vencimiento (todas, vencidas, hoy, esta semana).
 - **Nueva tarea en la cabecera**: un botón en la barra superior de cada
@@ -204,20 +356,35 @@ la tarea y en la propia tabla.
 - **Mis tareas**: Lista, Tablero, Gantt y Tabla personales sobre todos los
   proyectos del espacio ([ADR 039](adr/039-mis-tareas-vistas-personales.md)).
   El Tablero agrupa por ventana de vencimiento, no por estado; sin arrastre.
+  La Lista y el Tablero cargan de 100 en 100, con «Mostrando N de M» y
+  «Cargar más». La pestaña **«Esperando a»** reúne lo que depende de otra
+  persona:
+  - lo que creaste y asignaste a otra persona, y sigue abierto, con a quién
+    esperas;
+  - lo tuyo bloqueado por una tarea abierta que no es tuya, con cuál.
 - **Planificador** ([ADR 040](adr/040-planificador.md),
   [ADR 046](adr/046-planificador-en-tres-secciones.md)): ventana rodante de
   15 días para decidir qué día se piensa hacer cada tarea, sin tocar su
   fecha de vencimiento. Cada día se reparte en tres secciones: sin hora (se
   reordena arrastrando), con hora (tareas ancladas y citas fijas del
   Cronograma, ordenadas por minuto) y vence este día (lo que vence en la
-  ventana, planificado o no). Una columna aparte para lo planificado antes
-  de la ventana y todavía sin terminar, de la que solo se puede arrastrar.
+  ventana, planificado o no). La sección con hora está siempre, aunque el
+  día no tenga nada con hora: soltar ahí ancla la tarea al inicio de la
+  jornada y abre el selector de hora. Las tareas ancladas se arrastran a otro
+  día, conservando su hora, o a «sin hora», que la suelta. Cada tarjeta lleva
+  su casilla de «hecha» y su cronómetro. Una columna aparte para lo
+  planificado antes de la ventana y todavía sin terminar, de la que solo se
+  puede arrastrar.
+  Unas flechas mueven la ventana de semana en semana, más allá de los quince
+  días, y «Hoy» la devuelve.
   Incluye una proyección de las próximas ocurrencias de tareas recurrentes
   todavía no creadas. La estimación se edita directamente en la tarjeta. La
-  carga de cada día es lo que queda de cada tarea más los bloques fijos,
-  comparado con la jornada personal ([ADR 045](adr/045-jornada-personal.md)):
-  un día sin jornada laboral vale 0, y la comida y los bloques cerrados
-  restan de la capacidad del resto.
+  carga de cada día es lo que queda de cada tarea sin terminar más los bloques
+  fijos, comparado con la jornada personal
+  ([ADR 045](adr/045-jornada-personal.md)): un día sin jornada laboral vale 0,
+  y la comida y los bloques cerrados restan de la capacidad del resto. La
+  calcula la API, y el Cronograma enseña exactamente la misma
+  ([ADR 050](adr/050-recordatorios-por-asignado-y-una-sola-carga.md)).
 - **Cronograma** ([ADR 041](adr/041-cronograma.md)): calendario por horas,
   con vistas Día, Semana y Mes navegables, sobre lo ya decidido en el
   Planificador. La rejilla (24 h) se ve siempre, aunque el día esté vacío;
@@ -244,8 +411,9 @@ la tarea y en la propia tabla.
 - **Parte de horas** ([ADR 042](adr/042-parte-de-horas.md)): lo registrado
   por quien mira, cruzando proyectos, en un rango de fechas. Agrupable por
   día, tarea o proyecto; una entrada en marcha cuenta lo transcurrido hasta
-  ahora. Exportable a Excel. Cada grupo se despliega en sus entradas, que se
-  editan (inicio y fin) y se borran con confirmación.
+  ahora. Exportable a Excel. Cada grupo se despliega en sus entradas —con el
+  título de su tarea, y la fecha si no se agrupa por día—, que se editan
+  (inicio y fin) y se borran con confirmación.
 - **Cronómetro** ([ADR 044](adr/044-cronometro-en-el-pie.md)): un solo
   cronómetro por persona, en el pie de la barra lateral (punto con pulso,
   título y `HH:MM:SS`; en raíl solo el punto), con una pastilla flotante
@@ -254,6 +422,17 @@ la tarea y en la propia tabla.
   «Reanudar» sobre la última tarea sin terminar. Avisa una vez cuando lo
   registrado supera la estimación, y al parar una entrada de más de diez
   horas pregunta la hora real de fin. Atajo de teclado para arrancar o parar.
+  **Se arranca desde cualquier tarea**: Hoy, el detalle, las tarjetas del
+  Planificador, los tramos del Cronograma, la Lista de Mis tareas y el
+  tablero de proyecto. En escritorio aparece al pasar el ratón por la fila; en
+  marcha y en pantallas táctiles se ve siempre. Solo lo ofrece a quien puede
+  editar tareas. En móvil, sin nada en marcha, la pastilla ofrece «Reanudar».
+- **Tiempo en el detalle de la tarea**: el día en que la tiene quien mira en
+  su plan, con un calendario para cambiarlo o quitarla del plan; lo
+  registrado en la propia tarea frente a lo estimado (aunque no tenga hijas);
+  cada entrada, de quien sea, con su fecha y duración; y **registro manual**
+  (fecha, hora de inicio y duración en cualquier forma: `1h 30m`, `90m`,
+  `1:30`).
 
 ## 8. Paneles y objetivos
 
@@ -261,7 +440,9 @@ la tarea y en la propia tabla.
   uno por defecto creado automáticamente. Exportables a `.xlsx`, con una hoja
   por widget.
 - **Widgets**: contador, desglose, tendencia, tiempo registrado, progreso de
-  épica, lista de tareas, **semana en curso**, bandeja de entrada y objetivo.
+  épica, lista de tareas, **semana en curso**, notificaciones y objetivo. El de
+  notificaciones se llamaba «Bandeja» hasta que ese nombre pasó al proyecto de
+  captura, hoy «Personal».
   Las métricas son tareas, completadas, porcentaje completado, estimado y
   registrado; se agrupan por proyecto, asignado, prioridad, equipo, estado,
   hecho, vencimiento (sin fecha, vencida, hoy, esta semana, más adelante),
@@ -276,18 +457,26 @@ la tarea y en la propia tabla.
 - **Distribución de partida** en tres alturas: ocho cifras arriba —vencidas,
   vencen hoy, vencen esta semana, pendientes, cerradas en siete días, alta
   prioridad, sin fecha y horas registradas—, la semana en curso a ancho
-  completo, y debajo la lista de pendientes con la bandeja al lado. Restaurable
+  completo, y debajo la lista de pendientes con las notificaciones al lado. Restaurable
   en cualquier momento, sustituyendo los widgets que se hayan añadido o editado.
 - **Objetivos (OKR)**: objetivo con periodo de fechas y **resultados clave**
   medidos con el mismo motor de agregación que los widgets. Compartibles con el
-  espacio.
+  espacio. Borrar un objetivo, o un widget de un panel, pide confirmación. Por
+  ahora no tiene entrada en la barra lateral: se abre desde la paleta o en
+  `…/goals` ([ADR 061](adr/061-la-administracion-en-el-menu-del-avatar.md)).
 
 ## 9. Etiquetas, búsqueda y notificaciones
 
 - **Etiquetas** de espacio de trabajo con color, creables al vuelo desde la
   tarea.
-- **Paleta de comandos** con `Ctrl/Cmd+K`: navegar a proyectos, crear tarea,
-  proyecto o espacio, cambiar el tema y abrir la ayuda de atajos.
+- **Paleta de comandos** con `Ctrl/Cmd+K`:
+  - ir a las pantallas personales (Hoy, Planificador, Cronograma, Mis tareas,
+    Parte de horas, Mi panel, Objetivos) o a cualquier proyecto del espacio
+    (`p`+`l` abre la paleta en esa lista);
+  - parar el cronómetro o reanudar la última tarea;
+  - crear tarea, proyecto o espacio. Fuera de un proyecto, la tarea nace
+    asignada a quien la crea, igual que con el botón de la cabecera;
+  - cambiar el tema y abrir la ayuda de atajos.
 - **Búsqueda global** con `/`: tareas, proyectos, espacios, comentarios y
   actividad, más búsqueda por ID corto de tarea (`DEP-23`).
 - **Notificaciones in-app** con campana, contador de no leídas, marcar todas
@@ -299,6 +488,11 @@ la tarea y en la propia tabla.
   —qué canales y qué proyectos, todos o una selección— y **antelación
   configurable del recordatorio de vencimiento**, de una hora a treinta días.
   Los secretos se guardan cifrados.
+- **El recordatorio de vencimiento y el de «vencida» llegan a cada asignado**,
+  no solo al responsable principal, cada uno con su antelación. No avisan de
+  lo terminado ni de lo archivado, y se vuelven a armar en cuanto cambia el
+  vencimiento, se cambie desde donde se cambie
+  ([ADR 050](adr/050-recordatorios-por-asignado-y-una-sola-carga.md)).
 
 ## 10. Importación y exportación
 
@@ -339,7 +533,10 @@ la tarea y en la propia tabla.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 39 herramientas**:
+Dos caminos con **las mismas 46 herramientas**. Una prueba de paridad
+(`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
+antes el paquete stdio se había quedado sin las cinco del plan personal y el
+cronómetro.
 
 - **Servidor HTTP integrado** en la API, en `/api/mcp`, con OAuth 2.1 y PKCE
   S256, registro dinámico de clientes, página de consentimiento explícito y
@@ -350,7 +547,9 @@ Dos caminos con **las mismas 39 herramientas**:
 
 Las herramientas cubren identidad y espacios, proyectos, tareas, comentarios,
 etiquetas, épicas, relaciones, miembros, búsqueda, columnas, registro de
-tiempo, actividad y notificaciones.
+tiempo, actividad y notificaciones, además del plan personal, el cronómetro,
+Hoy (`get_today`) y la captura a Personal (`capture_task`). `list_projects`
+no lista los proyectos Personal.
 
 ## 13. Tiempo real
 
@@ -358,6 +557,12 @@ tiempo, actividad y notificaciones.
   deduplicación, que empujan creación, actualización, borrado y movimiento de
   tareas, además de relaciones, etiquetas, comentarios, ciclos, épicas, vistas,
   campos y notificaciones.
+- **El canal de usuario no depende de la barra lateral**
+  ([ADR 048](adr/048-frescura-de-las-pantallas-personales.md)): sigue conectado
+  al cambiar de pantalla, en los ajustes de cuenta y en móvil con la barra
+  cerrada, donde la campana va en la cabecera. Una tarea que te asignan aparece
+  sola en Hoy, en «Sin planificar» y en Mis tareas, y las pantallas personales
+  se releen al volver a ellas en vez de enseñar lo de antes.
 - **Fan-out opcional por Redis** para varias réplicas, en modo standalone,
   sentinel o cluster. Sin Redis todo funciona igual en instancia única.
 - Un bus de eventos interno alimenta también la actividad, las notificaciones,
@@ -373,7 +578,18 @@ tiempo, actividad y notificaciones.
   asignados, fechas, etiquetas y prioridad en las tarjetas.
 - **Atajos de teclado** con ayuda buscable (`?`): crear (`t`+`c`, `p`+`c`,
   `w`+`c`), cambiar de vista (`v`+`b`, `v`+`l`, `v`+`k`, `v`+`c`, `v`+`g`),
-  navegar (`j`/`k`), notificaciones (`n`+`o`) y barra lateral (`Ctrl/Cmd+B`).
+  navegar (`j`/`k`), notificaciones (`n`+`o`), cambiar de espacio (`w`+`s`),
+  cronómetro (`Ctrl/Cmd+E`), barra lateral (`Ctrl/Cmd+B`) y los del detalle
+  de la tarea (`s`, `p`, `a`, `l`, `d`). La ayuda los lista todos.
+- **En pantallas táctiles**, lo que en escritorio aparece al pasar el ratón
+  —el cronómetro de una fila, «Añadir a hoy», crear en la vista Mes— se ve
+  siempre, y en el Cronograma un toque sobre un hueco abre la casilla de
+  crear tarea a esa hora.
+- **Barra lateral en dos grupos**: el espacio personal —sin «Objetivos» por
+  ahora— y los proyectos, con «Personal» fijo arriba. La administración del espacio —Proyectos, Miembros y
+  equipos, Espacio y Ajustes de proyecto— está en el menú del avatar, debajo
+  de «Ajustes», y solo sale lo que el papel de cada uno permite
+  ([ADR 061](adr/061-la-administracion-en-el-menu-del-avatar.md)).
 - Navegación móvil propia para las vistas de proyecto.
 
 ## 15. Operación
@@ -391,6 +607,11 @@ tiempo, actividad y notificaciones.
 - **Cinco trabajos programados**: recordatorios de vencimiento, recordatorios
   de webhook de proyecto, reconciliación de asientos, recordatorios de prueba y
   generación de tareas recurrentes.
+- **«Hoy» es el día de Madrid** ([ADR 049](adr/049-la-api-vive-en-madrid.md)):
+  la API corre en `Europe/Madrid` (fijado en su imagen) y PostgreSQL en UTC.
+  Un vencimiento elegido en el calendario vence ese día, no el anterior. Los
+  días del plan guardados antes del cambio se convierten solos al arrancar.
+  Todo el mundo comparte la misma zona: no hay zona por persona.
 - **Migraciones automáticas al arranque** bajo cerrojo consultivo, con
   `startupProbe` en el chart para que Kubernetes no mate el pod a mitad.
 - **OpenAPI** generado en `/api/openapi` y congelado en `apps/api/openapi.json`.

@@ -44,8 +44,18 @@ export type NotificationDropdownRef = {
   toggle: () => void;
 };
 
-const NotificationDropdown = forwardRef<NotificationDropdownRef>(
-  (_props, ref) => {
+type Props = {
+  /**
+   * Registra el atajo `n o`. Solo debe hacerlo una instancia: el registro va
+   * por tecla, y desmontar una segunda campana borraria tambien el atajo de
+   * la primera. La campana de la cabecera movil (`MobileHeaderBell`) no lo
+   * registra.
+   */
+  registerShortcut?: boolean;
+};
+
+const NotificationDropdown = forwardRef<NotificationDropdownRef, Props>(
+  ({ registerShortcut = true }, ref) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { data: notifications } = useGetNotifications();
@@ -87,11 +97,13 @@ const NotificationDropdown = forwardRef<NotificationDropdownRef>(
     };
 
     useRegisterShortcuts({
-      sequentialShortcuts: {
-        [shortcuts.notification.prefix]: {
-          [shortcuts.notification.open]: () => setIsOpen(!isOpen),
-        },
-      },
+      sequentialShortcuts: registerShortcut
+        ? {
+            [shortcuts.notification.prefix]: {
+              [shortcuts.notification.open]: () => setIsOpen(!isOpen),
+            },
+          }
+        : {},
     });
 
     return (

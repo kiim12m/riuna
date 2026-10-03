@@ -1,6 +1,6 @@
 import { config } from "dotenv-mono";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import { defaults, Pool } from "pg";
 import {
   accountTableRelations,
   activityTableRelations,
@@ -55,6 +55,7 @@ import {
   assetTable,
   billingEventTable,
   billingReminderSentTable,
+  calendarFeedTable,
   columnTable,
   commentTable,
   cycleTable,
@@ -76,6 +77,8 @@ import {
   notificationTable,
   personalPlanEntryTable,
   projectTable,
+  reviewPrivateTable,
+  reviewTable,
   scheduleBlockTable,
   sessionTable,
   taskAssigneeTable,
@@ -94,10 +97,13 @@ import {
   userNotificationWorkspaceProjectTable,
   userNotificationWorkspaceRuleTable,
   userTable,
+  userTimeOffTable,
+  userWorkScheduleTable,
   verificationTable,
   viewTable,
   workflowRuleTable,
   workspaceBillingTable,
+  workspaceHolidayTable,
   workspaceRoleTable,
   workspaceTable,
   workspaceUserTable,
@@ -113,6 +119,8 @@ export const schema = {
   billingReminderSentTable,
   billingEventTable,
   workspaceBillingTable,
+  workspaceHolidayTable,
+  calendarFeedTable,
   columnTable,
   commentTable,
   dashboardTable,
@@ -134,6 +142,8 @@ export const schema = {
   notificationTable,
   personalPlanEntryTable,
   projectTable,
+  reviewTable,
+  reviewPrivateTable,
   scheduleBlockTable,
   sessionTable,
   taskAssigneeTable,
@@ -152,6 +162,12 @@ export const schema = {
   userNotificationPreferenceTable,
   userNotificationWorkspaceProjectTable,
   userNotificationWorkspaceRuleTable,
+  // Faltaba: sus relaciones estaban registradas y la tabla no, asi que
+  // `schema.userWorkScheduleTable` y `db.query` no la conocian. Los
+  // controladores la importan directamente y por eso nada fallaba en
+  // produccion -el mismo hueco que la Fase 1 encontro con `task_assignee`-.
+  userTimeOffTable,
+  userWorkScheduleTable,
   verificationTable,
   viewTable,
   workflowRuleTable,
@@ -208,6 +224,16 @@ type DatabaseInstance = ReturnType<typeof drizzle<typeof schema>>;
 
 let pool: Pool | undefined;
 let dbInstance: DatabaseInstance | undefined;
+
+// Un `Date` que viaja como parametro crudo dentro de un `sql` (las fronteras de
+// dia de `due-window.ts`, por ejemplo) lo serializa node-postgres, no drizzle,
+// y por defecto en hora **local** con desfase -`...T00:00:00+02:00`-. Contra
+// una columna `timestamp` sin zona PostgreSQL ignora el desfase, asi que con la
+// API en Madrid (ADR 049) la frontera se corria dos horas y el `CASE` de la
+// ventana de vencimiento contradecia a la condicion tipada, que si pasa por
+// drizzle y viaja en UTC. Asi los dos caminos guardan y comparan la hora de
+// pared UTC, que es el convenio de todas las columnas sin zona del esquema.
+defaults.parseInputDatesAsUTC = true;
 
 export function getDatabasePool(): Pool {
   if (!pool) {

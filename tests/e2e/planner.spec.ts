@@ -135,3 +135,147 @@ test.describe("Planificador", () => {
     ).toBeVisible({ timeout: 10_000 });
   });
 });
+
+/**
+ * Sub-bloque 0.4 del interludio de productividad: la zona "con hora" solo se
+ * pintaba con filas dentro, no habia casilla de hecha, y soltar en "Sin
+ * planificar" una tarjeta que ya estaba ahi mandaba un DELETE en balde.
+ */
+test.describe("Planificador: anclar, hecha y sin planificar", () => {
+  async function drag(
+    page: import("@playwright/test").Page,
+    from: import("@playwright/test").Locator,
+    to: import("@playwright/test").Locator,
+  ) {
+    const fromBox = await from.boundingBox();
+    const toBox = await to.boundingBox();
+    if (!fromBox || !toBox) throw new Error("No se pudo medir el arrastre");
+    await page.mouse.move(
+      fromBox.x + fromBox.width / 2,
+      fromBox.y + fromBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(
+      fromBox.x + fromBox.width / 2 + 30,
+      fromBox.y + fromBox.height / 2,
+      { steps: 5 },
+    );
+    await page.mouse.move(
+      toBox.x + toBox.width / 2,
+      toBox.y + toBox.height / 2,
+      { steps: 10 },
+    );
+    await page.mouse.up();
+  }
+
+  test("ancla una tarea en un día sin nada con hora", async ({
+    page,
+    riuna,
+  }) => {
+    const taskId = await createTask(riuna, "Llamar a la ingeniería");
+    await riuna.api("put", `/api/task/assignee/${taskId}`, {
+      userId: riuna.userId,
+    });
+
+    await page.goto(`/dashboard/workspace/${riuna.workspaceId}/planner`);
+    const card = page
+      .locator('[data-testid="planner-column-unplanned"]')
+      .getByText("Llamar a la ingeniería");
+    await expect(card).toBeVisible({ timeout: 20_000 });
+
+    await drag(
+      page,
+      card,
+      page.locator(`[data-testid="planner-timed-${todayColumnId()}"]`),
+    );
+
+    // Anclada al inicio de la jornada por defecto (09:00) y con el selector
+    // de hora abierto para ajustarla.
+    await expect
+      .poll(async () => {
+        const lookup = await riuna.api<{
+          entry: { plannedDay: string; startMinute: number | null } | null;
+        }>(
+          "get",
+          `/api/planner/entry/${taskId}?workspaceId=${riuna.workspaceId}`,
+        );
+        return lookup.entry;
+      })
+      .toEqual({
+        plannedDay: todayColumnId(),
+        startMinute: 540,
+        keyRank: null,
+      });
+  });
+
+  test("marca una tarea como hecha desde su tarjeta", async ({
+    page,
+    riuna,
+  }) => {
+    const taskId = await createTask(riuna, "Firmar el acta");
+    await riuna.api("put", `/api/task/assignee/${taskId}`, {
+      userId: riuna.userId,
+    });
+    await riuna.api(
+      "put",
+      `/api/planner/${taskId}?workspaceId=${riuna.workspaceId}`,
+      { plannedDate: todayColumnId() },
+    );
+
+    await page.goto(`/dashboard/workspace/${riuna.workspaceId}/planner`);
+    const todayColumn = page.locator(
+      `[data-testid="planner-column-${todayColumnId()}"]`,
+    );
+    await expect(todayColumn.getByText("Firmar el acta")).toBeVisible({
+      timeout: 20_000,
+    });
+    await todayColumn
+      .getByRole("checkbox", { name: "Marcar tarea como hecha" })
+      .click();
+
+    await expect
+      .poll(async () => {
+        const task = await riuna.api<{ completedAt: string | null }>(
+          "get",
+          `/api/task/${taskId}`,
+        );
+        return Boolean(task.completedAt);
+      })
+      .toBe(true);
+    // Abrir el detalle no ha pasado: la casilla no se come la fila.
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  });
+
+  test("soltar en «Sin planificar» lo que ya estaba ahí no manda nada", async ({
+    page,
+    riuna,
+  }) => {
+    const first = await createTask(riuna, "Primera sin planificar");
+    const second = await createTask(riuna, "Segunda sin planificar");
+    for (const id of [first, second]) {
+      await riuna.api("put", `/api/task/assignee/${id}`, {
+        userId: riuna.userId,
+      });
+    }
+
+    await page.goto(`/dashboard/workspace/${riuna.workspaceId}/planner`);
+    const column = page.locator('[data-testid="planner-column-unplanned"]');
+    await expect(column.getByText("Segunda sin planificar")).toBeVisible({
+      timeout: 20_000,
+    });
+
+    const plannerWrites: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("/api/planner/") && request.method() !== "GET")
+        plannerWrites.push(`${request.method()} ${request.url()}`);
+    });
+
+    await drag(
+      page,
+      column.getByText("Primera sin planificar"),
+      column.getByText("Segunda sin planificar"),
+    );
+    await page.waitForTimeout(500);
+    expect(plannerWrites).toEqual([]);
+  });
+});

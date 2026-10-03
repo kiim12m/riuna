@@ -8,13 +8,16 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/menu";
 import { Separator } from "@/components/ui/separator";
 import useSignOut from "@/hooks/mutations/use-sign-out";
 import useGetConfig from "@/hooks/queries/config/use-get-config";
+import { useAdminNavItems } from "@/hooks/use-admin-nav-items";
 import { getInitials } from "@/lib/get-initials";
 import { toast } from "@/lib/toast";
 import useProjectStore from "@/store/project";
@@ -29,6 +32,7 @@ export function UserAvatar() {
   const queryClient = useQueryClient();
   const { setProject } = useProjectStore();
   const navigate = useNavigate();
+  const adminItems = useAdminNavItems();
 
   if (!user) {
     return null;
@@ -104,6 +108,29 @@ export function UserAvatar() {
             {t("navigation:userMenu.settings")}
           </DropdownMenuItem>
         </div>
+
+        {/* La administracion del espacio, antes un grupo de la barra lateral:
+         * solo las entradas que permite el papel de quien mira. */}
+        {adminItems.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup className="p-0.5">
+              <DropdownMenuLabel className="px-2 py-1">
+                {t("navigation:sidebar.admin")}
+              </DropdownMenuLabel>
+              {adminItems.map((item) => (
+                <DropdownMenuItem
+                  key={item.url}
+                  onClick={() => navigate({ to: item.url })}
+                  className="h-7 gap-2 px-2 text-sm font-normal"
+                >
+                  <item.icon className="size-3.5" />
+                  {item.title}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
+          </>
+        )}
 
         <DropdownMenuSeparator />
 

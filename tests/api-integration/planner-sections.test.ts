@@ -202,7 +202,7 @@ describe("planner: previous (from days before the window, ADR 045)", () => {
     const plan = await (await getPlan(app, workspaceId)).json();
     const todayEntries = plan.entries.filter(
       (e: { plannedDate: string }) =>
-        e.plannedDate.slice(0, 10) === dayKey(today()),
+        dayKey(new Date(e.plannedDate)) === dayKey(today()),
     );
     expect(todayEntries).toHaveLength(0);
   });
@@ -430,7 +430,7 @@ describe("PUT /planner/order", () => {
     const ids = plan.entries
       .filter(
         (e: { plannedDate: string }) =>
-          e.plannedDate.slice(0, 10) === dayKey(day),
+          dayKey(new Date(e.plannedDate)) === dayKey(day),
       )
       .sort(
         (a: { position: number }, b: { position: number }) =>
@@ -477,5 +477,77 @@ describe("PUT /planner/order", () => {
       .from(schema.personalPlanEntryTable)
       .where(eq(schema.personalPlanEntryTable.taskId, task.id));
     expect(entry?.position).toBe(0);
+  });
+});
+
+// ADR 050: una sola formula de carga. Antes el Planificador la calculaba en el
+// navegador -contando lo ya hecho- y el Cronograma sumaba sus tramos frente a
+// la jornada bruta: el mismo dia salia con dos porcentajes.
+describe("day load", () => {
+  beforeEach(async () => {
+    await resetTestDatabase();
+  });
+
+  it("is the same in the Planner and the Schedule for the same day", async () => {
+    const { app, workspaceId, projectId, columnId, doneColumnId, userId } =
+      await setup();
+    // 09:00-17:00 con comida de 13:00 a 14:00, todos los dias: que la prueba
+    // no dependa de si hoy es laborable.
+    await db.insert(schema.userWorkScheduleTable).values({
+      userId,
+      workStartMinute: 9 * 60,
+      workEndMinute: 17 * 60,
+      lunchEnabled: true,
+      lunchStartMinute: 13 * 60,
+      lunchEndMinute: 14 * 60,
+      workDays: 0b1111111,
+    });
+
+    const halfDone = await createTask(projectId, columnId, {
+      title: "A medias",
+      number: 1,
+      estimate: 2 * 3600,
+    });
+    const finished = await createTask(projectId, doneColumnId, {
+      title: "Hecha",
+      number: 2,
+      status: "done",
+      completedAt: new Date(),
+      estimate: 3600,
+    });
+    const unestimated = await createTask(projectId, columnId, {
+      title: "Sin estimar",
+      number: 3,
+    });
+    for (const task of [halfDone, finished, unestimated]) {
+      await assign(task.id, userId);
+      await planTask(task.id, workspaceId, userId, today());
+    }
+    await logClosedTime(halfDone.id, userId, 30 * 60);
+    await createFixedBlock(workspaceId, userId, today());
+    await createFixedBlock(workspaceId, userId, today(), {
+      title: "Cierre",
+      kind: "break",
+      startMinute: 16 * 60,
+      endMinute: 17 * 60,
+    });
+
+    // Queda 1,5 h de "A medias" + 1 h del bloque fijo = 2,5 h. La capacidad
+    // es la jornada de 8 h menos la comida y el cierre = 6 h.
+    const expected = {
+      loadSeconds: 2.5 * 3600,
+      capacitySeconds: 6 * 3600,
+      pct: 42,
+    };
+
+    const plan = await (await getPlan(app, workspaceId)).json();
+    expect(plan.loadByDay[dayKey(today())]).toEqual(expected);
+
+    const schedule = await (
+      await app.request(
+        `/api/schedule?workspaceId=${workspaceId}&from=${dayKey(today())}&days=1`,
+      )
+    ).json();
+    expect(schedule.days[0].load).toEqual(expected);
   });
 });

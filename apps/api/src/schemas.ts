@@ -23,6 +23,8 @@ export const projectSchema = v.object({
   cascadeClose: v.boolean(),
   cascadeArchive: v.boolean(),
   maxTaskDepth: v.number(),
+  /** Con valor, es la Bandeja de esa persona (ADR 051). */
+  ownerUserId: v.nullable(v.string()),
 });
 
 export const taskSchema = v.object({
@@ -80,6 +82,8 @@ export const timeEntrySchema = v.object({
   startTime: v.date(),
   endTime: v.optional(v.date()),
   duration: v.nullable(v.number()),
+  /** Sesion de trabajo del modo foco, o `null` (ADR 056). */
+  focusMode: v.optional(v.nullable(v.string())),
   createdAt: v.date(),
   updatedAt: v.date(),
 });
@@ -284,4 +288,13 @@ export const configSchema = v.object({
   customOAuthLogoutUrl: v.nullable(v.string()),
   billingEnabled: v.boolean(),
   localAccountDomain: v.string(),
+});
+
+/**
+ * Por que un dia no esta disponible (ADR 060): festivo con su nombre, o
+ * ausencia. Nunca la nota de la ausencia.
+ */
+export const unavailableDaySchema = v.object({
+  kind: v.picklist(["holiday", "time-off"]),
+  name: v.nullable(v.string()),
 });

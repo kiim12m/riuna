@@ -4,9 +4,9 @@ import updateTimeEntry from "@/fetchers/time-entry/update-time-entry";
 
 /**
  * Editar o borrar una entrada desde el parte de horas invalida el propio
- * parte -clave `["time-sheet"]`, cualquier rango o agrupacion- y no
- * `["time-entries", taskId]`, que es a lo que ya sirve
- * `use-update-time-entry.ts` desde el detalle de una tarea.
+ * parte -clave `["time-sheet"]`, cualquier rango o agrupacion-. Las entradas
+ * del detalle de la tarea (`["time-entry", "task", taskId]`) las refresca
+ * `TIMER_CHANGED`, que la API emite al editar o borrar.
  */
 export function useTimeSheetEntryMutations() {
   const queryClient = useQueryClient();

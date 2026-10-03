@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getSchedule } from "@/fetchers/schedule";
+import { personalQueryOptions } from "@/hooks/queries/personal-query-options";
 
 /**
  * Clave propia bajo "schedule": `SCHEDULE_INVALIDATED` invalida este prefijo
@@ -12,5 +13,6 @@ export function useSchedule(workspaceId: string, days = 7, from?: string) {
     queryKey: ["schedule", workspaceId, from, days],
     queryFn: () => getSchedule(workspaceId, days, from),
     enabled: Boolean(workspaceId),
+    ...personalQueryOptions,
   });
 }

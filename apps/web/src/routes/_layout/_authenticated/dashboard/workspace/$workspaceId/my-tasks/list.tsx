@@ -6,8 +6,11 @@ import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import { WidgetTaskRow } from "@/components/dashboard/widget-task-row";
 import PageTitle from "@/components/page-title";
+import { LoadMore } from "@/components/personal-tasks/load-more";
 import { PersonalTasksTabs } from "@/components/personal-tasks/tabs";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
+import { TaskRowActions } from "@/components/task-actions/task-row-actions";
+import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import {
   Empty,
   EmptyDescription,
@@ -17,12 +20,15 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PersonalScope } from "@/fetchers/my-work";
-import { useMyTasksSearch } from "@/hooks/queries/my-work/use-search-my-work";
+import { useMyTasksPages } from "@/hooks/queries/my-work/use-search-my-work";
 import { DUE_WINDOW_ORDER, groupByDueWindow } from "@/lib/due-window";
 
 type ListSearchParams = {
   scope?: PersonalScope;
 };
+
+/** Lo mismo que pedia antes de una vez; ahora es una pagina. */
+const PAGE_SIZE = 100;
 
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/list",
@@ -45,18 +51,21 @@ function RouteComponent() {
   const { scope = "assigned" } = Route.useSearch();
   const navigate = useNavigate();
 
-  const { data, isPending } = useMyTasksSearch({
-    workspaceId,
-    scope,
-    sortBy: "smart",
-  });
+  const { data, isPending, fetchNextPage, isFetchingNextPage } =
+    useMyTasksPages({
+      workspaceId,
+      scope,
+      sortBy: "smart",
+      limit: PAGE_SIZE,
+    });
 
   const [openTask, setOpenTask] = useState<{
     taskId: string;
     projectId: string;
   } | null>(null);
 
-  const tasks = data?.tasks ?? [];
+  const tasks = data?.pages.flatMap((page) => page.tasks) ?? [];
+  const pagination = data?.pages.at(-1)?.pagination;
   const groups = groupByDueWindow(tasks, (task) => task.dueWindow);
   const windowsWithTasks = DUE_WINDOW_ORDER.filter(
     (window) => groups[window].length > 0,
@@ -117,23 +126,55 @@ function RouteComponent() {
                   </h2>
                   <div className="space-y-0.5">
                     {groups[window].map((task, index) => (
-                      <WidgetTaskRow
+                      // Mis tareas no lee el plan: el menu lo pregunta al
+                      // abrirse (ADR 053).
+                      <TaskRowActions
                         key={task.id}
-                        task={task}
-                        variant="list"
-                        shaded={index % 2 === 0}
-                        onOpen={() =>
-                          setOpenTask({
-                            taskId: task.id,
-                            projectId: task.projectId,
-                          })
-                        }
-                      />
+                        workspaceId={workspaceId}
+                        task={{
+                          id: task.id,
+                          number: task.number,
+                          title: task.title,
+                          projectId: task.projectId,
+                          estimate: task.estimate,
+                          isDone: Boolean(task.isDone),
+                        }}
+                      >
+                        {(menu) => (
+                          <WidgetTaskRow
+                            task={task}
+                            variant="list"
+                            shaded={index % 2 === 0}
+                            trailing={
+                              <>
+                                <TaskTimerButton task={task} reveal="hover" />
+                                {menu}
+                              </>
+                            }
+                            onOpen={() =>
+                              setOpenTask({
+                                taskId: task.id,
+                                projectId: task.projectId,
+                              })
+                            }
+                          />
+                        )}
+                      </TaskRowActions>
                     ))}
                   </div>
                 </section>
               ))}
             </div>
+          )}
+          {pagination && (
+            <LoadMore
+              shown={tasks.length}
+              total={pagination.total}
+              totalIsCapped={pagination.totalIsCapped}
+              hasMore={pagination.hasMore}
+              isLoading={isFetchingNextPage}
+              onLoadMore={() => fetchNextPage()}
+            />
           )}
         </div>
       </WorkspaceLayout>

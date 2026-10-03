@@ -4,7 +4,14 @@ import {
   Outlet,
   useLocation,
 } from "@tanstack/react-router";
-import { CreditCard, Settings, Shield, Tag, Users } from "lucide-react";
+import {
+  CalendarOff,
+  CreditCard,
+  Settings,
+  Shield,
+  Tag,
+  Users,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import PageTitle from "@/components/page-title";
@@ -68,6 +75,11 @@ function RouteComponent() {
       title: t("settings:workspaceLabels.title", { defaultValue: "Labels" }),
       url: `${base}/labels`,
       icon: Tag,
+    },
+    {
+      title: t("availability:holidays.title"),
+      url: `${base}/holidays`,
+      icon: CalendarOff,
     },
     ...(config?.billingEnabled
       ? [

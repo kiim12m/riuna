@@ -6,6 +6,7 @@ import { taskTable, timeEntryTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { isUniqueViolation } from "../../utils/is-unique-violation";
 import { resolveDuration } from "../duration";
+import type { FocusMode } from "../focus-mode";
 import { closeRunningEntry, getRunningEntry } from "../running";
 
 async function createTimeEntry({
@@ -14,12 +15,15 @@ async function createTimeEntry({
   description,
   startTime,
   endTime,
+  focusMode = null,
 }: {
   taskId: string;
   userId: string;
   description?: string;
   startTime: Date;
   endTime?: Date;
+  /** Sesion de trabajo del modo foco (ADR 056); `null`, cronometro normal. */
+  focusMode?: FocusMode | null;
 }) {
   const duration = resolveDuration(startTime, endTime);
 
@@ -70,6 +74,7 @@ async function createTimeEntry({
           startTime,
           endTime: endTime || null,
           duration,
+          focusMode,
         })
         .returning();
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DayOffBadge } from "@/components/availability/day-off-badge";
 import { DayLoadBar } from "@/components/planner/day-load-bar";
 import type { ScheduleDay, ScheduleSegment } from "@/fetchers/schedule";
 import { cn } from "@/lib/cn";
@@ -279,15 +280,11 @@ function TimeGridColumn({
     if (isSegmentInteracting) setHoverMinute(null);
   }, [isSegmentInteracting]);
 
-  const loadSeconds = day.segments
-    .filter((segment) => segment.type === "flow" || segment.type === "pinned")
-    .reduce(
-      (total, segment) => total + (segment.endSecond - segment.startSecond),
-      0,
-    );
-  const loadPct = Math.round(
-    (loadSeconds / ((workEndMinute - workStartMinute) * 60)) * 100,
-  );
+  // La carga la calcula la API con la misma `dayLoad` que el Planificador
+  // (ADR 050). Antes se sumaban aqui los tramos -con el relleno de 30 min de
+  // lo no estimado- frente a la jornada bruta, sin restar comida ni dias
+  // libres, y el mismo dia salia con otro porcentaje que en el Planificador.
+  const loadPct = day.load.pct;
 
   const stopCreating = () => {
     setIsCreating(false);
@@ -304,11 +301,21 @@ function TimeGridColumn({
     >
       <div className="sticky top-0 z-10 h-10 space-y-1 border-border border-b bg-background px-2 py-1">
         <div className="flex items-center justify-between">
-          <h2 className="truncate font-semibold text-meta">
+          {/* Con un festivo, en una columna estrecha, se recorta la marca y no
+           * la fecha: el nombre entero queda en su `title`. */}
+          <h2
+            className={cn(
+              "font-semibold text-meta",
+              day.unavailable ? "shrink-0" : "truncate",
+            )}
+          >
             {day.isToday
               ? `${t("schedule:today")} · ${formatDate(date, { weekday: "short", day: "numeric" })}`
               : formatDate(date, { weekday: "short", day: "numeric" })}
           </h2>
+          {day.unavailable && (
+            <DayOffBadge dayOff={day.unavailable} className="mx-1" />
+          )}
           <button
             type="button"
             onClick={onAddBlock}
@@ -356,7 +363,19 @@ function TimeGridColumn({
           onPointerLeave={() => {
             if (!isCreating) setHoverMinute(null);
           }}
-          onClick={() => setIsCreating(true)}
+          onClick={(event) => {
+            if (isSegmentInteracting) return;
+            // Con raton, el hueco ya lo marco `onPointerMove`. Con un toque no
+            // hay "pasar por encima" -y `pointerleave` llega antes que el
+            // clic y lo borra-, asi que el minuto sale del propio toque.
+            const rect = event.currentTarget.getBoundingClientRect();
+            setHoverMinute(
+              (current) =>
+                current ??
+                minuteAtOffset(event.clientY - rect.top, DAY_START_MINUTE),
+            );
+            setIsCreating(true);
+          }}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();

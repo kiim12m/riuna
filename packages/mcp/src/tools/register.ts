@@ -67,7 +67,8 @@ export function registerTools(
   server.registerTool(
     "list_projects",
     {
-      description: "List projects in a workspace.",
+      description:
+        "List projects in a workspace. Personal inboxes are hidden from this list; their tasks are not private.",
       inputSchema: z.object({
         workspaceId: nonEmptyString.describe("Workspace ID"),
         includeArchived: z
@@ -743,6 +744,143 @@ export function registerTools(
   );
 
   server.registerTool(
+    "get_plan",
+    {
+      description:
+        "The current user's personal plan: tasks placed on a day in a rolling window, tasks still unplanned, projected recurring occurrences, the capacity of each day, and the fixed appointments of each day. Never reflects the task's due date.",
+      inputSchema: z.object({
+        workspaceId: nonEmptyString.describe("Workspace ID"),
+        days: z
+          .number()
+          .int()
+          .min(1)
+          .max(60)
+          .optional()
+          .describe("Window size in days, default 15, max 60"),
+        from: optionalNonEmptyString.describe(
+          "First day of the window, yyyy-mm-dd; default today",
+        ),
+      }),
+    },
+    async (args) => {
+      const qs = new URLSearchParams({ workspaceId: args.workspaceId });
+      if (args.days !== undefined) qs.set("days", String(args.days));
+      if (args.from !== undefined) qs.set("from", args.from);
+      return run(() => client.json(`/api/planner?${qs.toString()}`));
+    },
+  );
+
+  server.registerTool(
+    "plan_task",
+    {
+      description:
+        "Place a task on a day of the current user's plan, or move it. Never changes the task's due date.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        workspaceId: nonEmptyString.describe("Workspace ID"),
+        plannedDate: nonEmptyString.describe("Day to plan for, yyyy-mm-dd"),
+        position: z
+          .number()
+          .int()
+          .optional()
+          .describe(
+            "Position within the day; omit to keep it (same day) or append (new day)",
+          ),
+        startMinute: z
+          .number()
+          .int()
+          .min(0)
+          .max(1439)
+          .nullable()
+          .optional()
+          .describe(
+            "Minutes since midnight to anchor a time, or null to unanchor",
+          ),
+      }),
+    },
+    async (args) => {
+      const qs = new URLSearchParams({ workspaceId: args.workspaceId });
+      return run(() =>
+        client.json(
+          `/api/planner/${encodeURIComponent(args.taskId)}?${qs.toString()}`,
+          {
+            method: "PUT",
+            body: JSON.stringify({
+              plannedDate: args.plannedDate,
+              ...(args.position !== undefined
+                ? { position: args.position }
+                : {}),
+              ...(args.startMinute !== undefined
+                ? { startMinute: args.startMinute }
+                : {}),
+            }),
+          },
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "get_today",
+    {
+      description:
+        "The current user's day: what is planned for today (anchored times first), what was planned earlier and is still open, what is overdue or due today and unplanned, and what was finished today.",
+      inputSchema: z.object({
+        workspaceId: nonEmptyString.describe("Workspace ID"),
+      }),
+    },
+    async (args) => {
+      const qs = new URLSearchParams({ workspaceId: args.workspaceId });
+      return run(() => client.json(`/api/today?${qs.toString()}`));
+    },
+  );
+
+  server.registerTool(
+    "capture_task",
+    {
+      description:
+        "Capture a task assigned to the current user, in their personal inbox unless a project is given. plannedDate places it on a day of the personal plan and never sets the due date; dueDate is the due date. Estimate is in seconds.",
+      inputSchema: z.object({
+        workspaceId: nonEmptyString.describe("Workspace ID"),
+        title: nonEmptyString,
+        projectId: optionalNonEmptyString.describe(
+          "Project ID; omit for the current user's inbox",
+        ),
+        priority: prioritySchema.optional(),
+        estimate: z
+          .number()
+          .int()
+          .min(0)
+          .optional()
+          .describe("Estimate in seconds"),
+        dueDate: optionalNonEmptyString.describe("Due day, yyyy-mm-dd"),
+        plannedDate: optionalNonEmptyString.describe(
+          "Day of the personal plan, yyyy-mm-dd",
+        ),
+        startMinute: z
+          .number()
+          .int()
+          .min(0)
+          .max(1439)
+          .optional()
+          .describe("Minutes since midnight to anchor; needs plannedDate"),
+        labelIds: z
+          .array(nonEmptyString)
+          .max(20)
+          .optional()
+          .describe("Workspace label IDs"),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json("/api/capture", {
+          method: "POST",
+          body: JSON.stringify(args),
+        }),
+      ),
+  );
+
+  server.registerTool(
     "list_task_time_entries",
     {
       description: "List the time entries logged against a task.",
@@ -811,6 +949,57 @@ export function registerTools(
             ...(args.endTime ? { endTime: args.endTime } : {}),
             ...(args.description ? { description: args.description } : {}),
           }),
+        }),
+      ),
+  );
+
+  server.registerTool(
+    "get_running_timer",
+    {
+      description:
+        "Get the current user's running time entry, if any, plus the last tracked task to resume when nothing is running.",
+      inputSchema: z.object({
+        workspaceId: nonEmptyString.describe("Workspace ID"),
+      }),
+    },
+    async (args) => {
+      const qs = new URLSearchParams({ workspaceId: args.workspaceId });
+      return run(() =>
+        client.json(`/api/time-entry/running?${qs.toString()}`, {
+          method: "GET",
+        }),
+      );
+    },
+  );
+
+  server.registerTool(
+    "start_timer",
+    {
+      description:
+        "Start tracking time on a task. Stops whatever the user was tracking before -one timer per person-.",
+      inputSchema: z.object({ taskId: nonEmptyString }),
+    },
+    async (args) =>
+      run(() =>
+        client.json("/api/time-entry/start", {
+          method: "POST",
+          body: JSON.stringify({ taskId: args.taskId }),
+        }),
+      ),
+  );
+
+  server.registerTool(
+    "stop_timer",
+    {
+      description:
+        "Stop the current user's running time entry. Omit endTime to stop now.",
+      inputSchema: z.object({ endTime: optionalIsoDateTimeSchema }),
+    },
+    async (args) =>
+      run(() =>
+        client.json("/api/time-entry/stop", {
+          method: "POST",
+          body: JSON.stringify(args.endTime ? { endTime: args.endTime } : {}),
         }),
       ),
   );

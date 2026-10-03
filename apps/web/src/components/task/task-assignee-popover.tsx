@@ -11,6 +11,7 @@ import {
 import { ShortcutNumber } from "@/components/ui/shortcut-number";
 import { useUpdateTaskAssignees } from "@/hooks/mutations/task/use-update-task-assignees";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
+import { useControllableOpen } from "@/hooks/use-controllable-open";
 import { useNumberedShortcuts } from "@/hooks/use-numbered-shortcuts";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { getInitials } from "@/lib/get-initials";
@@ -24,15 +25,23 @@ type TaskAssigneePopoverProps = {
   task: Task;
   workspaceId: string;
   children: React.ReactNode;
+  /**
+   * Abierto desde fuera -los atajos del detalle-. Sin ellos, el desplegable
+   * lleva su propio estado, como siempre.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export default function TaskAssigneePopover({
   task,
   workspaceId,
   children,
+  open: openProp,
+  onOpenChange,
 }: TaskAssigneePopoverProps) {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useControllableOpen(openProp, onOpenChange);
   const [visibleUsersCount, setVisibleUsersCount] = useState(
     INITIAL_VISIBLE_USERS,
   );
@@ -88,7 +97,7 @@ export default function TaskAssigneePopover({
   const handleClear = useCallback(() => {
     void applyAssignees([]);
     setOpen(false);
-  }, [applyAssignees]);
+  }, [applyAssignees, setOpen]);
 
   const shortcutOptions = useMemo(() => {
     const unassignedOption = { onSelect: handleClear };
@@ -102,12 +111,15 @@ export default function TaskAssigneePopover({
     return usersOptions?.slice(0, visibleUsersCount) ?? [];
   }, [usersOptions, visibleUsersCount]);
 
-  const handleOpenChange = useCallback((nextOpen: boolean) => {
-    setOpen(nextOpen);
-    if (nextOpen) {
-      setVisibleUsersCount(INITIAL_VISIBLE_USERS);
-    }
-  }, []);
+  const handleOpenChange = useCallback(
+    (nextOpen: boolean) => {
+      setOpen(nextOpen);
+      if (nextOpen) {
+        setVisibleUsersCount(INITIAL_VISIBLE_USERS);
+      }
+    },
+    [setOpen],
+  );
 
   const handleListScroll = useCallback(
     (event: React.UIEvent<HTMLDivElement>) => {

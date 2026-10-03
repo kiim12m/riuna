@@ -1,5 +1,5 @@
 import type * as React from "react";
-
+import { FocusIndicator } from "@/components/focus/focus-indicator";
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
 import { ThemeToggleDropdown } from "@/components/theme-toggle-dropdown";
@@ -46,6 +46,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavProjects />
       </SidebarContent>
       <SidebarFooter>
+        <FocusIndicator />
         <SidebarTimer />
         <TrialCard />
         <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">

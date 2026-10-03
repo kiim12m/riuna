@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
+import { serverDayKey } from "../../apps/api/src/utils/day-boundaries";
 import { mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
 import {
@@ -382,6 +383,51 @@ describe("API integration: cycles", () => {
   });
 
   // El criterio de aceptacion de la fase, entero.
+  // ADR 049: los dias del burndown son los de la zona del servidor -Madrid en
+  // las pruebas-. Cortados en UTC, lo cerrado a las 00:30 de Madrid caia en la
+  // vispera, a las 22:30 UTC.
+  it("counts a task closed just after local midnight on that day, not the eve", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const { project, columns } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const cycle = await createCycleRow({
+      projectId: project.id,
+      status: "active",
+      start: new Date(Date.now() - 4 * DAY),
+      end: new Date(Date.now() + 2 * DAY),
+    });
+    const task = await createTask({
+      projectId: project.id,
+      title: "Cerrada a medianoche",
+      status: columns.done.slug,
+      cycleId: cycle.id,
+    });
+    if (!task) throw new Error("Failed to seed task");
+
+    const yesterday = new Date();
+    yesterday.setHours(0, 0, 0, 0);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dayBefore = new Date(yesterday);
+    dayBefore.setDate(dayBefore.getDate() - 1);
+    await db
+      .update(schema.taskTable)
+      .set({ completedAt: new Date(yesterday.getTime() + 30 * 60_000) })
+      .where(eq(schema.taskTable.id, task.id));
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+    const response = await app.request(`/api/cycle/${cycle.id}/report`);
+    expect(response.status).toBe(200);
+    const report = (await response.json()) as Report;
+
+    const remainingOn = (date: Date) =>
+      report.burndown.find((point) => point.day === serverDayKey(date))
+        ?.remainingTasks;
+    expect(remainingOn(dayBefore)).toBe(1);
+    expect(remainingOn(yesterday)).toBe(0);
+  });
+
   it("reports velocity, a burndown and hours per person", async () => {
     const member = await createWorkspaceMember({ role: "admin" });
     const { project, columns } = await createProjectFixture({

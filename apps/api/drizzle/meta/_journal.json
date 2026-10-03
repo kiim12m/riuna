@@ -484,6 +484,69 @@
 			"when": 1790713847622,
 			"tag": "0068_panoramic_starjammers",
 			"breakpoints": true
+		},
+		{
+			"idx": 69,
+			"version": "7",
+			"when": 1790882233375,
+			"tag": "0069_rearm_due_reminders_per_assignee",
+			"breakpoints": true
+		},
+		{
+			"idx": 70,
+			"version": "7",
+			"when": 1790921221476,
+			"tag": "0070_project_inbox_owner",
+			"breakpoints": true
+		},
+		{
+			"idx": 71,
+			"version": "7",
+			"when": 1790923667640,
+			"tag": "0071_plan_entry_key_rank",
+			"breakpoints": true
+		},
+		{
+			"idx": 72,
+			"version": "7",
+			"when": 1790930663813,
+			"tag": "0072_day_review",
+			"breakpoints": true
+		},
+		{
+			"idx": 73,
+			"version": "7",
+			"when": 1790946281330,
+			"tag": "0073_time_entry_focus_mode",
+			"breakpoints": true
+		},
+		{
+			"idx": 74,
+			"version": "7",
+			"when": 1790952094835,
+			"tag": "0074_calendar_feed",
+			"breakpoints": true
+		},
+		{
+			"idx": 75,
+			"version": "7",
+			"when": 1790961375697,
+			"tag": "0075_time_off_and_holidays",
+			"breakpoints": true
+		},
+		{
+			"idx": 76,
+			"version": "7",
+			"when": 1790979189837,
+			"tag": "0076_team_member_is_lead",
+			"breakpoints": true
+		},
+		{
+			"idx": 77,
+			"version": "7",
+			"when": 1791029203217,
+			"tag": "0077_personal_project",
+			"breakpoints": true
 		}
 	]
 }

@@ -1,13 +1,21 @@
-import { useDroppable } from "@dnd-kit/core";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { AlarmClock, Flag } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import {
+  type DayOff,
+  DayOffBadge,
+} from "@/components/availability/day-off-badge";
 import { DayLoadBar } from "@/components/planner/day-load-bar";
 import { PlannerRow } from "@/components/planner/planner-row";
 import { TimePopover } from "@/components/planner/time-popover";
+import {
+  rowPlanOf,
+  TaskRowActions,
+} from "@/components/task-actions/task-row-actions";
 import { InlineEstimate } from "@/components/timer/inline-estimate";
 import type {
   PlanDeadline,
@@ -35,6 +43,7 @@ export function PlannerDay({
   label,
   loadPct,
   loadHint,
+  dayOff,
   untimedEntries,
   timedEntries,
   fixedBlocks,
@@ -44,6 +53,7 @@ export function PlannerDay({
   onEstimateChange,
   onAnchor,
   onUnanchor,
+  onToggleDone,
   timePopoverTaskId,
   onTimePopoverOpenChange,
 }: {
@@ -53,6 +63,8 @@ export function PlannerDay({
   /** La carga en horas («3 h planificadas de 8 h»): va en el tooltip, el
    * porcentaje es lo que se lee de un vistazo. */
   loadHint: string;
+  /** Festivo o ausencia (ADR 060): la capacidad ya es 0. */
+  dayOff: DayOff | null;
   untimedEntries: PlanEntry[];
   timedEntries: PlanEntry[];
   fixedBlocks: PlanFixedBlock[];
@@ -62,6 +74,7 @@ export function PlannerDay({
   onEstimateChange: (taskId: string, seconds: number | null) => void;
   onAnchor: (taskId: string, minute: number) => void;
   onUnanchor: (taskId: string) => void;
+  onToggleDone: (taskId: string, done: boolean) => void;
   timePopoverTaskId: string | null;
   onTimePopoverOpenChange: (taskId: string, open: boolean) => void;
 }) {
@@ -93,6 +106,7 @@ export function PlannerDay({
     >
       <div className="space-y-1 px-2 py-2" title={loadHint}>
         <h2 className="font-semibold text-meta">{label}</h2>
+        {dayOff && <DayOffBadge dayOff={dayOff} className="max-w-full" />}
         <p className="text-meta text-muted-foreground tabular-nums">
           {t("planner:dayLoadPct", { pct: loadPct })}
         </p>
@@ -100,39 +114,46 @@ export function PlannerDay({
       </div>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-1.5 pb-2">
-        {timedRows.length > 0 && (
-          <div
-            ref={timedDroppable.setNodeRef}
-            className={cn(
-              "space-y-1 rounded-md p-1",
-              timedDroppable.isOver && "bg-brand/10",
-            )}
-          >
-            <div className="flex items-center gap-1 px-1 text-meta text-muted-foreground">
-              <AlarmClock className="size-3" />
-            </div>
-            {timedRows.map((row) =>
-              row.kind === "entry" ? (
-                <TimedEntryRow
-                  key={row.entry.id}
-                  entry={row.entry}
-                  onOpen={() => onOpen(row.entry)}
-                  onEstimateChange={(seconds) =>
-                    onEstimateChange(row.entry.id, seconds)
-                  }
-                  onSaveTime={(minute) => onAnchor(row.entry.id, minute)}
-                  onRemoveTime={() => onUnanchor(row.entry.id)}
-                  open={timePopoverTaskId === row.entry.id}
-                  onOpenChange={(open) =>
-                    onTimePopoverOpenChange(row.entry.id, open)
-                  }
-                />
-              ) : (
-                <FixedBlockRow key={row.block.id} block={row.block} />
-              ),
+        {/* Siempre presente, aunque el dia no tenga nada con hora: antes solo
+         * se pintaba con filas dentro, y en un dia vacio no habia donde
+         * soltar una tarea para anclarla. Vacia, es una franja discreta. */}
+        <div
+          ref={timedDroppable.setNodeRef}
+          data-testid={`planner-timed-${dayKey}`}
+          className={cn(
+            "space-y-1 rounded-md p-1",
+            timedRows.length === 0 && "border border-dashed border-border/50",
+            timedDroppable.isOver && "bg-brand/10",
+          )}
+        >
+          <div className="flex items-center gap-1 px-1 text-meta text-muted-foreground">
+            <AlarmClock className="size-3" />
+            {timedRows.length === 0 && (
+              <span className="opacity-70">{t("planner:dropToAnchor")}</span>
             )}
           </div>
-        )}
+          {timedRows.map((row) =>
+            row.kind === "entry" ? (
+              <TimedEntryRow
+                key={row.entry.id}
+                entry={row.entry}
+                onOpen={() => onOpen(row.entry)}
+                onEstimateChange={(seconds) =>
+                  onEstimateChange(row.entry.id, seconds)
+                }
+                onSaveTime={(minute) => onAnchor(row.entry.id, minute)}
+                onRemoveTime={() => onUnanchor(row.entry.id)}
+                onToggleDone={(done) => onToggleDone(row.entry.id, done)}
+                open={timePopoverTaskId === row.entry.id}
+                onOpenChange={(open) =>
+                  onTimePopoverOpenChange(row.entry.id, open)
+                }
+              />
+            ) : (
+              <FixedBlockRow key={row.block.id} block={row.block} />
+            ),
+          )}
+        </div>
 
         {deadlines.length > 0 && (
           <div className="space-y-1 p-1">
@@ -168,6 +189,7 @@ export function PlannerDay({
                 onEstimateChange={(seconds) =>
                   onEstimateChange(entry.id, seconds)
                 }
+                onToggleDone={(done) => onToggleDone(entry.id, done)}
               />
             ))}
           </SortableContext>
@@ -190,12 +212,20 @@ export function PlannerDay({
   );
 }
 
+/**
+ * Una tarea anclada. Se arrastra -a otro dia, que conserva su hora, o a "sin
+ * hora", que la suelta-, pero no se reordena dentro de "Con hora": ahi el
+ * orden lo da la hora. `useDraggable` y no `useSortable` por eso mismo; lo
+ * que se mueve en pantalla es el `DragOverlay` del Planificador, y la fila de
+ * origen solo se atenua.
+ */
 function TimedEntryRow({
   entry,
   onOpen,
   onEstimateChange,
   onSaveTime,
   onRemoveTime,
+  onToggleDone,
   open,
   onOpenChange,
 }: {
@@ -204,34 +234,63 @@ function TimedEntryRow({
   onEstimateChange: (seconds: number | null) => void;
   onSaveTime: (minute: number) => void;
   onRemoveTime: () => void;
+  onToggleDone: (done: boolean) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: entry.id,
+  });
+
   return (
-    <PlannerRow
-      title={entry.title}
-      priority={entry.priority}
-      isDone={entry.isDone}
-      projectName={entry.projectName}
-      projectIcon={entry.projectIcon}
-      onOpen={onOpen}
-      leading={
-        <TimePopover
-          minute={entry.startMinute ?? 0}
-          onSave={onSaveTime}
-          onRemove={onRemoveTime}
-          open={open}
-          onOpenChange={onOpenChange}
-        />
-      }
-      trailing={
-        <InlineEstimate
-          estimate={entry.estimate}
-          loggedSeconds={entry.loggedSeconds}
-          onSave={onEstimateChange}
-        />
-      }
-    />
+    <div ref={setNodeRef} {...attributes} {...listeners}>
+      <TaskRowActions
+        task={{
+          id: entry.id,
+          number: entry.number,
+          title: entry.title,
+          projectId: entry.projectId,
+          estimate: entry.estimate,
+          isDone: entry.isDone,
+        }}
+        plan={rowPlanOf(entry)}
+      >
+        {(menu) => (
+          <PlannerRow
+            title={entry.title}
+            priority={entry.priority}
+            isDone={entry.isDone}
+            projectName={entry.projectName}
+            projectIcon={entry.projectIcon}
+            onOpen={onOpen}
+            timerTask={entry}
+            onToggleDone={onToggleDone}
+            keyRank={entry.keyRank}
+            menu={menu}
+            className={cn(
+              "cursor-grab active:cursor-grabbing",
+              isDragging && "opacity-40",
+            )}
+            leading={
+              <TimePopover
+                minute={entry.startMinute ?? 0}
+                onSave={onSaveTime}
+                onRemove={onRemoveTime}
+                open={open}
+                onOpenChange={onOpenChange}
+              />
+            }
+            trailing={
+              <InlineEstimate
+                estimate={entry.estimate}
+                loggedSeconds={entry.loggedSeconds}
+                onSave={onEstimateChange}
+              />
+            }
+          />
+        )}
+      </TaskRowActions>
+    </div>
   );
 }
 

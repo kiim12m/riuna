@@ -1,7 +1,12 @@
 import { and, eq } from "drizzle-orm";
 import db from "../../database";
 import { taskTable, timeEntryTable } from "../../database/schema";
-import { getLastEntry, getRunningEntry } from "../running";
+import {
+  getLastEntry,
+  getLastStoppedAt,
+  getRunningEntry,
+  getWorkingSince,
+} from "../running";
 
 /**
  * Lo que necesita el pie de la barra lateral: la entrada en marcha, si hay
@@ -9,6 +14,10 @@ import { getLastEntry, getRunningEntry } from "../running";
  * avisar cuando el total supere la estimacion-; y si no hay nada en marcha,
  * la ultima tarea sin terminar que se registro, para el "Reanudar" (el play
  * de la cabecera de super-productivity hace lo mismo).
+ *
+ * Los avisos de ritmo (ADR 056) leen aqui tambien desde cuando se trabaja
+ * sin descanso (`workingSince`) y, sin nada en marcha, cuando se paro por
+ * ultima vez (`lastStoppedAt`).
  */
 async function getRunningTimeEntry({
   userId,
@@ -20,11 +29,14 @@ async function getRunningTimeEntry({
   const running = await getRunningEntry(userId);
 
   if (!running) {
-    const last = await getLastEntry(userId, workspaceId);
-    return { running: null, last: last ?? null };
+    const [last, lastStoppedAt] = await Promise.all([
+      getLastEntry(userId, workspaceId),
+      getLastStoppedAt(userId),
+    ]);
+    return { running: null, last: last ?? null, lastStoppedAt };
   }
 
-  const [task, closedEntries] = await Promise.all([
+  const [task, closedEntries, workingSince] = await Promise.all([
     db
       .select({
         id: taskTable.id,
@@ -46,6 +58,7 @@ async function getRunningTimeEntry({
           eq(timeEntryTable.userId, userId),
         ),
       ),
+    getWorkingSince(userId, running),
   ]);
 
   // La entrada en marcha no tiene `duration` todavia -se calcula al
@@ -62,8 +75,10 @@ async function getRunningTimeEntry({
       startTime: running.startTime,
       task,
       loggedBeforeSeconds,
+      workingSince,
     },
     last: null,
+    lastStoppedAt: null,
   };
 }
 

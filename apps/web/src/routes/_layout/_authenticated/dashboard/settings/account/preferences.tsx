@@ -6,6 +6,9 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 import { RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { BrowserNotifySection } from "@/components/settings/browser-notify-section";
+import { CalendarFeedSection } from "@/components/settings/calendar-feed-section";
+import { TimeOffSection } from "@/components/settings/time-off-section";
 import { WorkScheduleSection } from "@/components/settings/work-schedule-section";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -292,6 +295,12 @@ function RouteComponent() {
       </div>
 
       <WorkScheduleSection />
+
+      <TimeOffSection />
+
+      <BrowserNotifySection />
+
+      <CalendarFeedSection />
 
       <div className="space-y-6">
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">

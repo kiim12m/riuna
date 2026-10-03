@@ -1,5 +1,8 @@
-import { Layout } from "lucide-react";
-import type { ReactNode } from "react";
+import { Layout, Star } from "lucide-react";
+import type { ComponentProps, ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import { TaskTimerButton } from "@/components/timer/task-timer-button";
+import { Checkbox } from "@/components/ui/checkbox";
 import projectIcons from "@/constants/project-icons";
 import { cn } from "@/lib/cn";
 import { getPriorityIcon } from "@/lib/priority";
@@ -15,8 +18,22 @@ type PlannerRowProps = {
   leading?: ReactNode;
   /** El hueco final: la estimacion editable, o una etiqueta de solo lectura. */
   trailing?: ReactNode;
+  /**
+   * La tarea, para el cronometro al final de la fila del titulo. Ausente en
+   * las filas de solo lectura ("Vence este dia").
+   */
+  timerTask?: ComponentProps<typeof TaskTimerButton>["task"];
+  /**
+   * La casilla de "hecha" -`POST /task/complete/:id`, la misma de Hoy-.
+   * Ausente en las filas de solo lectura y en la tarjeta que se arrastra.
+   */
+  onToggleDone?: (done: boolean) => void;
   /** Extiende o sustituye el borde/fondo -el arrastre trae los suyos. */
   className?: string;
+  /** Imprescindible del dia (ADR 053): una estrella delante del titulo. */
+  keyRank?: number | null;
+  /** El boton «⋯» de `TaskRowActions`, detras del cronometro. */
+  menu?: ReactNode;
 };
 
 /**
@@ -38,8 +55,13 @@ export function PlannerRow({
   onOpen,
   leading,
   trailing,
+  timerTask,
+  onToggleDone,
   className,
+  keyRank,
+  menu,
 }: PlannerRowProps) {
+  const { t } = useTranslation();
   const ProjectIcon =
     projectIcons[projectIcon as keyof typeof projectIcons] ?? Layout;
 
@@ -57,13 +79,34 @@ export function PlannerRow({
         }
       }}
       className={cn(
-        "space-y-1 rounded-md border bg-background p-1.5 text-left outline-none transition-[border-color,box-shadow] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-ring",
+        "group space-y-1 rounded-md border bg-background p-1.5 text-left outline-none transition-[border-color,box-shadow] duration-150 ease-out focus-visible:ring-2 focus-visible:ring-ring",
         "border-border/70 hover:border-brand/45 hover:shadow-xs",
         className,
       )}
     >
       <div className="flex items-center gap-1.5">
+        {onToggleDone && (
+          // biome-ignore lint/a11y/noStaticElementInteractions: solo corta la propagacion hacia la fila, que se abre y se arrastra; el control es la casilla
+          <span
+            className="flex shrink-0"
+            onClick={(event) => event.stopPropagation()}
+            onPointerDown={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
+            <Checkbox
+              checked={isDone}
+              onCheckedChange={(checked) => onToggleDone(checked === true)}
+              aria-label={t("today:row.toggleDone")}
+            />
+          </span>
+        )}
         {leading}
+        {keyRank != null && (
+          <Star
+            className="size-3 shrink-0 fill-current text-warning"
+            aria-label={t("taskActions:key")}
+          />
+        )}
         <span className="shrink-0">{getPriorityIcon(priority)}</span>
         <span
           className={cn(
@@ -73,6 +116,8 @@ export function PlannerRow({
         >
           {title}
         </span>
+        {timerTask && <TaskTimerButton task={timerTask} reveal="hover" />}
+        {menu}
       </div>
       <div className="flex items-center gap-1 text-meta text-muted-foreground">
         <ProjectIcon className="size-3 shrink-0" />

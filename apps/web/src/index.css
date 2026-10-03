@@ -13,6 +13,11 @@ input:-webkit-autofill:active {
 
 @custom-variant dark (&:is(.dark *));
 
+/* Pantallas sin raton (movil, tableta): lo que en escritorio aparece al pasar
+   el puntero -el cronometro de una fila, sus acciones- aqui se ve siempre,
+   porque no hay "pasar por encima" que lo descubra. */
+@custom-variant touch (@media (hover: none));
+
 /* Reduced motion: keep opacity feedback, drop movement (scale/translate) and
    container morphs. Tailwind v4 scale/translate utilities use the standalone
    CSS properties, so forcing them here neutralizes entrance/exit movement

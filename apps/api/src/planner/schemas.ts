@@ -49,6 +49,8 @@ export const planEntrySchema = v.object({
   startMinute: v.nullable(v.number()),
   /** Suma de `time_entry` cerradas de la tarea (ADR 045). */
   loggedSeconds: v.number(),
+  /** Imprescindible del dia, 1-3, o `null` (ADR 053). */
+  keyRank: v.nullable(v.number()),
 });
 
 /** Vence dentro de la ventana, planificada o no. */

@@ -258,6 +258,10 @@ export const teamMemberTable = pgTable(
       .notNull()
       .references(() => userTable.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at"),
+    // Responsable del departamento (ADR 059): ve en solo lectura el plan y
+    // los cierres de los demas del equipo, nunca su valoracion. Better Auth
+    // no la conoce: al añadir a alguien queda en `false`.
+    isLead: boolean("is_lead").notNull().default(false),
   },
   (table) => [
     index("teamMember_teamId_idx").on(table.teamId),
@@ -344,6 +348,13 @@ export const projectTable = pgTable(
     cascadeClose: boolean("cascade_close").notNull().default(false),
     cascadeArchive: boolean("cascade_archive").notNull().default(false),
     maxTaskDepth: integer("max_task_depth").notNull().default(5),
+    // Con valor, el proyecto es la Bandeja de esa persona (ADR 051): no sale
+    // en las listas de proyectos, pero sus tareas no son privadas. Al borrar
+    // a la persona, o al salir ella del espacio, vuelve a ser un proyecto
+    // normal y no se pierde nada.
+    ownerUserId: text("owner_user_id").references(() => userTable.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     unique("project_workspace_id_id_unique").on(table.workspaceId, table.id),
@@ -351,6 +362,9 @@ export const projectTable = pgTable(
       table.workspaceId,
       table.position,
     ),
+    uniqueIndex("project_one_inbox_per_member")
+      .on(table.workspaceId, table.ownerUserId)
+      .where(sql`owner_user_id IS NOT NULL`),
   ],
 );
 
@@ -807,6 +821,90 @@ export const taskRecurrenceTable = pgTable(
  * sola fila por persona -unica por `(user_id, task_id)`-, y cae en cascada con
  * el usuario o la tarea: un plan no sobrevive a lo que planifica.
  */
+/**
+ * El cierre de un periodo -dia o semana- de una persona en un espacio
+ * (ADR 054): lo que su responsable de departamento puede ver. La valoracion
+ * va aparte, en `review_private`, y **nunca** aqui: la separacion es
+ * estructural para que ninguna lectura del responsable pueda unirla.
+ */
+export const reviewTable = pgTable(
+  "review",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    /** `day` o `week`. */
+    period: text("period").notNull(),
+    /** Medianoche de Madrid del primer dia del periodo, como `planned_date`. */
+    periodStart: timestamp("period_start", { mode: "date" }).notNull(),
+    /** Lo que frena, en texto libre. */
+    blockers: text("blockers"),
+    /** Cifras del periodo al cerrarlo: hechas, registrado, movidas… */
+    summary: jsonb("summary").notNull().default({}),
+    closedAt: timestamp("closed_at", { mode: "date" }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("review_user_period_unique").on(
+      table.userId,
+      table.workspaceId,
+      table.period,
+      table.periodStart,
+    ),
+    check("review_period_valid", sql`${table.period} IN ('day', 'week')`),
+  ],
+);
+
+/**
+ * La valoracion de un cierre, 1:1 con `review` (ADR 054): impacto, energia y
+ * una nota. **Siempre privada**: solo la lee la propia persona, desde el
+ * modulo `review/`. Una prueba de arquitectura falla si otro modulo la nombra.
+ */
+export const reviewPrivateTable = pgTable(
+  "review_private",
+  {
+    reviewId: text("review_id")
+      .primaryKey()
+      .references(() => reviewTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    impact: smallint("impact"),
+    energy: smallint("energy"),
+    note: text("note"),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    check(
+      "review_private_impact_valid",
+      sql`${table.impact} IS NULL OR ${table.impact} BETWEEN 1 AND 4`,
+    ),
+    check(
+      "review_private_energy_valid",
+      sql`${table.energy} IS NULL OR ${table.energy} BETWEEN 1 AND 3`,
+    ),
+  ],
+);
+
 export const personalPlanEntryTable = pgTable(
   "personal_plan_entry",
   {
@@ -839,6 +937,14 @@ export const personalPlanEntryTable = pgTable(
      * fija, actua de bloqueador frente a las demas entradas de ese dia.
      */
     startMinute: smallint("start_minute"),
+    /**
+     * Imprescindible del dia, 1-3 (ADR 053): como mucho tres por persona,
+     * espacio y dia, y lo impone la base con el indice unico parcial de
+     * abajo. Se borra sola al cambiar de dia (disparador
+     * `personal_plan_entry_clear_key_rank`): ser imprescindible el lunes no
+     * dice nada del martes.
+     */
+    keyRank: smallint("key_rank"),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()
@@ -851,9 +957,16 @@ export const personalPlanEntryTable = pgTable(
       table.userId,
       table.plannedDate,
     ),
+    uniqueIndex("personal_plan_entry_key_rank_per_day")
+      .on(table.userId, table.workspaceId, table.plannedDate, table.keyRank)
+      .where(sql`key_rank IS NOT NULL`),
     check(
       "personal_plan_entry_start_minute_valid",
       sql`${table.startMinute} IS NULL OR ${table.startMinute} BETWEEN 0 AND 1439`,
+    ),
+    check(
+      "personal_plan_entry_key_rank_valid",
+      sql`${table.keyRank} IS NULL OR ${table.keyRank} BETWEEN 1 AND 3`,
     ),
   ],
 );
@@ -1449,6 +1562,12 @@ export const timeEntryTable = pgTable(
     startTime: timestamp("start_time", { mode: "date" }).notNull(),
     endTime: timestamp("end_time", { mode: "date" }),
     duration: integer("duration").default(0),
+    /**
+     * Con valor, la entrada es una sesion de trabajo del modo foco
+     * (ADR 056): `pomodoro`, `flowtime` o `countdown`. Se filtra: el cierre
+     * del dia cuenta las sesiones. Los descansos no registran tiempo.
+     */
+    focusMode: text("focus_mode"),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()
@@ -1460,6 +1579,10 @@ export const timeEntryTable = pgTable(
     // Sirve el filtro por usuario solo y el rango de fechas del parte de
     // horas (ADR 042); sustituye al indice de userId solo, que este cubre.
     index("time_entry_userId_startTime_idx").on(table.userId, table.startTime),
+    check(
+      "time_entry_focus_mode_valid",
+      sql`${table.focusMode} IS NULL OR ${table.focusMode} IN ('pomodoro', 'flowtime', 'countdown')`,
+    ),
     // Un cronometro por persona (ADR 044), vigilado por la base de datos y no
     // por la buena voluntad del controlador: mismo patron que
     // `cycle_one_active_per_project`. `end_time IS NULL` es "en marcha".
@@ -1719,6 +1842,102 @@ export const userWorkScheduleTable = pgTable(
     check(
       "user_work_schedule_work_days_valid",
       sql`${table.workDays} BETWEEN 0 AND 127`,
+    ),
+  ],
+);
+
+// Ausencias (ADR 060): rangos de dias en que alguien no esta. **Sin motivo**
+// -una baja medica es un dato sensible-, y la nota solo la ve su dueño. Los
+// dias van a la medianoche del servidor, como `planned_date` (ADR 049).
+export const userTimeOffTable = pgTable(
+  "user_time_off",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    startsOn: timestamp("starts_on", { mode: "date" }).notNull(),
+    endsOn: timestamp("ends_on", { mode: "date" }).notNull(),
+    note: text("note"),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("user_time_off_user_workspace_starts_idx").on(
+      table.userId,
+      table.workspaceId,
+      table.startsOn,
+    ),
+    check(
+      "user_time_off_range_valid",
+      sql`${table.endsOn} >= ${table.startsOn}`,
+    ),
+  ],
+);
+
+// Festivos del espacio (ADR 060): un dia con su nombre, uno por dia.
+export const workspaceHolidayTable = pgTable(
+  "workspace_holiday",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    day: timestamp("day", { mode: "date" }).notNull(),
+    name: text("name").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("workspace_holiday_workspace_day").on(
+      table.workspaceId,
+      table.day,
+    ),
+  ],
+);
+
+// El enlace del calendario de una persona en un espacio (ADR 057). Solo se
+// guarda el sha256 del token: el token se enseña una vez al crearlo, y
+// regenerar o revocar mata el anterior al momento.
+export const calendarFeedTable = pgTable(
+  "calendar_feed",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    tokenHash: text("token_hash").notNull().unique(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("calendar_feed_workspace_user").on(
+      table.workspaceId,
+      table.userId,
     ),
   ],
 );

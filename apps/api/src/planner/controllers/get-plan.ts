@@ -17,10 +17,13 @@ import {
   dayKeysBetween,
   parseServerDay,
   serverDayKey,
+  startOfServerDay,
 } from "../../utils/day-boundaries";
 import { workspaceTaskConditions } from "../../view/workspace-task-query";
 import { capacityForDay } from "../../work-schedule/day-capacity";
+import { type DayLoad, dayLoad } from "../../work-schedule/day-load";
 import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
+import { loadUnavailableDays } from "../../work-schedule/unavailable-days";
 import { computeGhosts } from "../ghosts";
 import {
   getEntriesInRange,
@@ -52,19 +55,31 @@ export default async function getPlan({
   now?: Date;
 }) {
   const serverToday = serverDayKey(now);
-  const [projectColumns, scopeConditions, schedule, { blocksByDay }] =
-    await Promise.all([
-      getWorkspaceColumns(workspaceId),
-      workspaceTaskConditions({
-        workspaceId,
-        userId,
-        scope: "assigned",
-        filter: null,
-        registry: {},
-      }),
-      getWorkSchedule(userId),
-      loadBlocksByDay(workspaceId, userId, windowStart, windowEnd),
-    ]);
+  const [
+    projectColumns,
+    scopeConditions,
+    schedule,
+    { blocksByDay },
+    unavailableDays,
+  ] = await Promise.all([
+    getWorkspaceColumns(workspaceId),
+    workspaceTaskConditions({
+      workspaceId,
+      userId,
+      scope: "assigned",
+      filter: null,
+      registry: {},
+    }),
+    getWorkSchedule(userId),
+    loadBlocksByDay(workspaceId, userId, windowStart, windowEnd),
+    loadUnavailableDays({
+      workspaceId,
+      userId,
+      start: windowStart,
+      end: windowEnd,
+    }),
+  ]);
+  const unavailableByDay = Object.fromEntries(unavailableDays);
 
   const capacityByDay: Record<string, number> = {};
   const fixedBlocksByDay: Record<
@@ -77,6 +92,7 @@ export default async function getPlan({
       schedule,
       parseServerDay(dayKey, "day"),
       dayBlocks,
+      unavailableDays.has(dayKey),
     );
     fixedBlocksByDay[dayKey] = dayBlocks
       .filter((block) => block.kind === "fixed")
@@ -87,6 +103,29 @@ export default async function getPlan({
         endMinute: block.endMinute,
       }));
   }
+
+  // La carga de cada dia sale de aqui y no del navegador (ADR 050): la misma
+  // `dayLoad` que usa el Cronograma.
+  const loadByDayOf = (
+    entries: {
+      plannedDate: Date;
+      estimate: number | null;
+      loggedSeconds: number;
+      isDone: boolean;
+    }[],
+  ) => {
+    const loadByDay: Record<string, DayLoad> = {};
+    for (const dayKey of Object.keys(capacityByDay)) {
+      loadByDay[dayKey] = dayLoad({
+        entries: entries.filter(
+          (entry) => serverDayKey(entry.plannedDate) === dayKey,
+        ),
+        fixedBlocks: fixedBlocksByDay[dayKey] ?? [],
+        capacitySeconds: capacityByDay[dayKey] ?? 0,
+      });
+    }
+    return loadByDay;
+  };
 
   // El ambito "assigned" siempre resuelve a un predicado -nunca depende de
   // equipos-, pero el tipo lo comparte con "team" y hay que descartar el
@@ -99,7 +138,9 @@ export default async function getPlan({
       deadlines: [],
       ghosts: [],
       capacityByDay,
+      loadByDay: loadByDayOf([]),
       fixedBlocksByDay,
+      unavailableByDay,
       serverToday,
     };
   }
@@ -127,10 +168,14 @@ export default async function getPlan({
   const [entryRows, previousRows, unplannedRows, deadlineRows, ghosts] =
     await Promise.all([
       getEntriesInRange(workspaceId, userId, windowStart, windowEnd),
+      // Antes de la ventana o de hoy, lo que llegue antes: con la ventana en
+      // la semana que viene, lo de esta semana no es "de dias anteriores".
       getPreviousEntries(
         workspaceId,
         userId,
-        windowStart,
+        windowStart < startOfServerDay(now)
+          ? windowStart
+          : startOfServerDay(now),
         notDone ? [notDone] : [],
       ),
       db
@@ -180,14 +225,18 @@ export default async function getPlan({
       loggedSeconds: loggedByTask.get(row.id) ?? 0,
     }));
 
+  const entriesWithLogged = withLogged(entries);
+
   return {
-    entries: withLogged(entries),
+    entries: entriesWithLogged,
     previous: withLogged(previous),
     unplanned,
     deadlines,
     ghosts,
     capacityByDay,
+    loadByDay: loadByDayOf(entriesWithLogged),
     fixedBlocksByDay,
+    unavailableByDay,
     serverToday,
   };
 }
