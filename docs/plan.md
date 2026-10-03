@@ -2427,6 +2427,10 @@ filtros.
    **Hecho (2026-10-03).** Sigue publicada, documentada y probada; la usan las claves de API y los
    scripts. Retirar una ruta pública no se hace por no tener consumidor propio.
 
+*Verificación de la tanda 1 (2026-10-03): integración 748 de 750 (1 omitida) —la que falla es la
+importación grande, intermitente, que sola pasó 19 de 19 en dos de tres vueltas—, humo 63 de 63,
+unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
+
 **Tanda 2 — arreglos pequeños** · S
 7. «Pasar al siguiente día laborable» salta festivos y ausencias.
 8. Un solo formateador `yyyy-mm-dd` en la web y un solo esquema de día en la API.
