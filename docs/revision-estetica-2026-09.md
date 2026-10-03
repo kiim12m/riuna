@@ -237,7 +237,9 @@ que hizo perder el arreglo.
 
 ### P2 bis · abierto por el arreglo de la paleta
 
-17. **Los tonos 4 y 5 quedan bajo 3:1 sobre fondo claro** (2,11 y 2,62). La regla
+17. ~~**Los tonos 4 y 5 quedan bajo 3:1 sobre fondo claro** (2,11 y 2,62).~~ **Cerrado
+    (2026-10-03):** ya estaba resuelto por las barras horizontales con `interval: 0`; todo cubo
+    de color lleva su rótulo. La regla
     los admite con relevo —rótulo visible o vista de tabla— pero el eje se salta
     etiquetas cuando la tarjeta es estrecha: en un reparto de seis proyectos, la
     barra ámbar se queda sin rotular. O el eje rota las etiquetas, o el widget

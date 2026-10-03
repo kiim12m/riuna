@@ -2479,7 +2479,12 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     Para que no vuelva a caducar en silencio, `tests/api/openapi-up-to-date.test.ts` compara el
     fichero con la especificación viva, salvo `servers`; falla con una ruta quitada y pasa sin
     `.env`, que es como corre la CI.
-14. Tonos 4 y 5 de la paleta de datos por debajo de 3:1: etiquetas del eje o vista de tabla.
+14. ✔ Tonos 4 y 5 de la paleta de datos por debajo de 3:1: etiquetas del eje o vista de tabla.
+    **Cerrado por verificación (2026-10-03), sin cambio de código.** La entrada «P2 bis 17» de la
+    revisión estética era anterior al arreglo que ya hizo el 17 de la segunda tanda (barras
+    horizontales con `interval: 0`). Se comprobó cada uso de la paleta: el reparto en barras y el
+    reparto en lista rotulan cada cubo con su nombre, y todo lo demás (burndown, velocidad,
+    tendencia) usa solo `--chart-1`. La condición de relevo de la regla —rótulo visible— se cumple.
 15. Las tarjetas de tablero y lista muestran todos los asignados.
 16. `dueDate eq <día>` compara un instante: comparar por rango del día de Madrid.
 17. Índice `task (completed_at)`: medir en el banco y construir solo si se cumple la condición de la ADR 030.
