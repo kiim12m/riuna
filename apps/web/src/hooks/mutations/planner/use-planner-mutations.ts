@@ -46,6 +46,13 @@ export function usePlannerMutations(
     [workspaceId, days, from],
   );
 
+  // Todo el Planificador del espacio, no solo esta ventana: tambien el dia
+  // planificado del detalle de la tarea (`planEntryQueryKey`).
+  const invalidatePlanner = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: ["planner", workspaceId] }),
+    [queryClient, workspaceId],
+  );
+
   const putMutation = useMutation({
     mutationFn: ({
       taskId,
@@ -59,19 +66,19 @@ export function usePlannerMutations(
       startMinute?: number | null;
     }) =>
       setPlanEntry(workspaceId, taskId, { plannedDate, position, startMinute }),
-    onSettled: () => queryClient.invalidateQueries({ queryKey }),
+    onSettled: invalidatePlanner,
   });
 
   const deleteMutation = useMutation({
     mutationFn: ({ taskId }: { taskId: string }) =>
       removePlanEntry(workspaceId, taskId),
-    onSettled: () => queryClient.invalidateQueries({ queryKey }),
+    onSettled: invalidatePlanner,
   });
 
   const orderMutation = useMutation({
     mutationFn: (input: { plannedDate: string; taskIds: string[] }) =>
       setPlanOrder(workspaceId, input),
-    onSettled: () => queryClient.invalidateQueries({ queryKey }),
+    onSettled: invalidatePlanner,
   });
 
   const moveTask = useCallback(
