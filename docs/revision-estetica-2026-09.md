@@ -232,7 +232,8 @@ que hizo perder el arreglo.
     quedan **medidas y acotadas** en vez de barridas a ciegas.
 21. La búsqueda pinta `result.status` crudo, como hacía la tabla. Resolverlo
     cruza proyectos, así que necesita una consulta que hoy no se hace.
-22. `<h2>` de «Rama» en la tarea sigue a 14 px.
+22. ~~`<h2>` de «Rama» en la tarea sigue a 14 px.~~ **Hecho (2026-10-03):** «Rama» y
+    «Tiempo» usan `text-section`, como «Actividad».
 
 ### P2 bis · abierto por el arreglo de la paleta
 

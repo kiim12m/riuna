@@ -134,7 +134,7 @@ export default function TaskTime({
 
   return (
     <section className="flex flex-col gap-2 rounded-md border border-border/60 p-3">
-      <h2 className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+      <h2 className="flex items-center gap-1.5 text-section">
         <Timer className="size-4" />
         {t("tasks:time.title")}
       </h2>

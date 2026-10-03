@@ -2414,7 +2414,9 @@ filtros.
    el cambio; las tres del RBAC que vigilaban la puerta `assign` pasan a un rol que edita pero no
    reparte. De paso, `task-team` leía la actividad sin esperar al suscriptor (carrera que fallaba
    dos de dos con la máquina cargada): ahora usa `vi.waitFor`, como `task-assignees`.
-4. El `<h2>` de «Rama» en la tarea, a 14 px.
+4. ✔ El `<h2>` de «Rama» en la tarea, a 14 px. **Hecho (2026-10-03).** «Rama» y «Tiempo» (que
+   copió su clase en el 0.3) pasan al papel «Título de sección» de §05, como «Actividad».
+   Visto a 1440 y 390 px.
 5. El calendario heredado nombra los días en inglés.
 6. `GET /api/my-work/tasks` sin consumidor web: se mantiene como API pública y se cierra la nota.
 
