@@ -1,18 +1,14 @@
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
-  Building2,
   CalendarCheck,
   CalendarClock,
   ChevronRight,
   Clock,
   FileClock,
   LayoutDashboard,
-  LayoutGrid,
   ListTodo,
   type LucideIcon,
-  SlidersHorizontal,
   Target,
-  Users,
   UsersRound,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -32,10 +28,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useTeamMembers } from "@/hooks/queries/lead/use-team";
 import { useMyWorkCounts } from "@/hooks/queries/my-work/use-my-work-counts";
-import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
-import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
-import { cn } from "@/lib/cn";
 
 type NavItem = {
   title: string;
@@ -56,17 +49,10 @@ function NavGroup({
   label,
   items,
   pathname,
-  separated,
 }: {
   label: string;
   items: NavItem[];
   pathname: string;
-  /**
-   * En rail los rotulos de grupo se ocultan y los tres bloques quedarian
-   * separados solo por aire. El filete devuelve la agrupacion, que es lo que
-   * este cambio venia a dar.
-   */
-  separated?: boolean;
 }) {
   const navigate = useNavigate();
 
@@ -74,13 +60,7 @@ function NavGroup({
 
   return (
     <Collapsible defaultOpen className="group/collapsible">
-      <SidebarGroup
-        className={cn(
-          "gap-1 p-2",
-          separated &&
-            "group-data-[collapsible=icon]:mt-1 group-data-[collapsible=icon]:border-sidebar-border group-data-[collapsible=icon]:border-t group-data-[collapsible=icon]:pt-2",
-        )}
-      >
+      <SidebarGroup className="gap-1 p-2">
         <CollapsibleTrigger
           className="data-panel-open:[&_svg]:rotate-90"
           render={
@@ -137,16 +117,6 @@ export function NavMain() {
     select: (state) => state.location.pathname,
   });
 
-  const {
-    canManageWorkspace,
-    canManageProjects,
-    canManageTeam,
-    canInviteUsers,
-  } = useWorkspacePermission();
-
-  const { data: projects } = useGetProjects({
-    workspaceId: workspace?.id ?? "",
-  });
   const { data: counts } = useMyWorkCounts(workspace?.id ?? "");
   // «Mi equipo» solo para quien lleva a alguien (ADR 059).
   const { data: ledMembers } = useTeamMembers(workspace?.id ?? "");
@@ -208,60 +178,13 @@ export function NavMain() {
     },
   ];
 
-  // Lo que configura el espacio. La puerta son **capacidades**, no el rol:
-  // `isAdmin` compara con las cadenas `owner` y `admin`, y dejaria fuera a un
-  // rol a medida que si tiene el permiso (ver `use-workspace-permission`).
-  const admin: NavItem[] = [];
-
-  if (canManageProjects()) {
-    admin.push({
-      title: t("navigation:sidebar.projects"),
-      url: `${base}/admin/projects`,
-      icon: LayoutGrid,
-    });
-  }
-
-  if (canManageTeam() || canInviteUsers()) {
-    admin.push({
-      title: t("navigation:sidebar.membersAndTeams"),
-      url: `${base}/admin/members`,
-      icon: Users,
-    });
-  }
-
-  if (canManageWorkspace()) {
-    admin.push({
-      title: t("navigation:sidebar.workspaceAdmin"),
-      url: `${base}/admin/workspace/general`,
-      icon: Building2,
-      activePrefix: `${base}/admin/workspace`,
-    });
-  }
-
-  // Sin ningun proyecto no hay ajustes de proyecto que ensenar, igual que la
-  // pestana de Ajustes se deshabilitaba sola.
-  if (canManageProjects() && (projects?.length ?? 0) > 0) {
-    admin.push({
-      title: t("navigation:sidebar.projectSettings"),
-      url: `${base}/admin/project-settings`,
-      icon: SlidersHorizontal,
-      activePrefix: `${base}/admin/project-settings`,
-    });
-  }
-
+  // La administracion del espacio ya no va aqui: esta en el menu del avatar,
+  // debajo de «Ajustes» (`useAdminNavItems`), para limpiar la barra.
   return (
-    <>
-      <NavGroup
-        label={t("navigation:sidebar.personal")}
-        items={personal}
-        pathname={pathname}
-      />
-      <NavGroup
-        label={t("navigation:sidebar.admin")}
-        items={admin}
-        pathname={pathname}
-        separated
-      />
-    </>
+    <NavGroup
+      label={t("navigation:sidebar.personal")}
+      items={personal}
+      pathname={pathname}
+    />
   );
 }

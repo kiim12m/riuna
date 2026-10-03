@@ -583,6 +583,11 @@ no lista los proyectos Personal.
   —el cronómetro de una fila, «Añadir a hoy», crear en la vista Mes— se ve
   siempre, y en el Cronograma un toque sobre un hueco abre la casilla de
   crear tarea a esa hora.
+- **Barra lateral en dos grupos**: el espacio personal y los proyectos, con
+  «Personal» fijo arriba. La administración del espacio —Proyectos, Miembros y
+  equipos, Espacio y Ajustes de proyecto— está en el menú del avatar, debajo
+  de «Ajustes», y solo sale lo que el papel de cada uno permite
+  ([ADR 061](adr/061-la-administracion-en-el-menu-del-avatar.md)).
 - Navegación móvil propia para las vistas de proyecto.
 
 ## 15. Operación
