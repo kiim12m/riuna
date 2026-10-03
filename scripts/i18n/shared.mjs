@@ -153,3 +153,62 @@ function pruneNamespace(value, prefix, allowedKeys) {
 export function formatKeyList(keys) {
   return [...keys].sort((a, b) => a.localeCompare(b));
 }
+
+// Los identificadores de permiso (`workspace:read`) tienen la forma de una
+// clave y `workspace` es tambien un espacio de nombres: no se confunden con una.
+const PERMISSION_STATEMENT =
+  /^(?:project|task|label|workspace):(?:create|read|update|delete|assign|share|manage_settings)$/u;
+const PLURAL_SUFFIXES = ["_zero", "_one", "_two", "_few", "_many", "_other"];
+
+async function sourceFiles(dir) {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const nested = await Promise.all(
+    entries.map(async (entry) => {
+      const entryPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        return entry.name === "node_modules" ? [] : sourceFiles(entryPath);
+      }
+      return /\.tsx?$/u.test(entry.name) && !/\.test\./u.test(entry.name)
+        ? [entryPath]
+        : [];
+    }),
+  );
+  return nested.flat();
+}
+
+/**
+ * Las claves que el codigo de la web nombra como literal (`"tasks:tree.title"`)
+ * y que no existen en la locale de referencia. `check` compara locales entre
+ * si, asi que una clave ausente de **todas** pasaba por «en sync»: las tres de
+ * ciclos de la Fase 7.5 estuvieron asi. Las claves construidas en tiempo de
+ * ejecucion (`${...}`) no se pueden ver y quedan fuera.
+ */
+export async function findUsedKeysMissingFrom(referenceData) {
+  const known = flattenLocale(referenceData);
+  const namespaces = new Set(Object.keys(referenceData));
+  const missing = [];
+  const literal = /(["'`])([A-Za-z]+):([A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)*)\1/gu;
+
+  for (const file of await sourceFiles(path.join(repoRoot, "apps/web/src"))) {
+    const code = (await fs.readFile(file, "utf8"))
+      .replace(/\/\*[\s\S]*?\*\//gu, "")
+      .replace(/(^|[^:])\/\/.*$/gmu, "$1");
+
+    for (const match of code.matchAll(literal)) {
+      const [, , namespace, keyPath] = match;
+      if (!namespaces.has(namespace)) continue;
+      const key = `${namespace}:${keyPath}`;
+      if (PERMISSION_STATEMENT.test(key) || known.has(key)) continue;
+      if (PLURAL_SUFFIXES.some((suffix) => known.has(`${key}${suffix}`))) {
+        continue;
+      }
+      // Un prefijo de objeto (`t("ns:a", { returnObjects: true })`) tambien vale.
+      if ([...known].some((candidate) => candidate.startsWith(`${key}.`))) {
+        continue;
+      }
+      missing.push({ file: path.relative(repoRoot, file), key });
+    }
+  }
+
+  return missing;
+}

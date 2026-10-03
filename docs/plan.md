@@ -1244,7 +1244,7 @@ tarea, que no tenía tope alguno y crecía con la ventana.
   revisión no recorrió.
 - **La escala del editor TipTap va aparte**: 28 `font-size` en CSS con valores
   propios. Es prosa, no interfaz densa, y se deja como excepción **declarada**.
-- **`i18n:check` no detecta claves usadas que no existen** en ningún idioma:
+- ~~**`i18n:check` no detecta claves usadas que no existen**~~ (cerrado, punto 12 del cierre de la deuda) en ningún idioma:
   comprueba paridad, no existencia. Las tres de ciclos estaban igual de ausentes
   en los tres, así que pasaban por «en sync». La puerta de CI tiene ese hueco.
 - **Las leyendas que cada página de ajustes escribe en línea** siguen sin acotar;
@@ -2468,7 +2468,11 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     onboarding, el logotipo y el `Empty`), `text-3xl` (error público) y `text-7xl` (reloj del
     modo foco). Los diálogos van a 20 px y el manual pide 16 px para modales: cambiarlo es una
     decisión visual de toda la aplicación, y no se toma de paso.
-12. `i18n:check` detecta claves usadas que no existen.
+12. ✔ `i18n:check` detecta claves usadas que no existen. **Hecho (2026-10-03).** Busca los literales
+    `"ns:ruta"` de `apps/web/src` y falla si alguno no está en `en-US.json` (con plurales y prefijos
+    de objeto). Hoy no hay ninguno: el hueco que dejó la Fase 7.5 estaba cerrado, ahora además
+    vigilado. Se descartan los identificadores de permiso (`workspace:read`), que parecen claves;
+    las claves construidas con `${…}` no se pueden ver. Comprobado con una clave inventada.
 13. Regenerar `apps/api/openapi.json` (sin tocar desde 2026-08-27), con la URL saneada.
 14. Tonos 4 y 5 de la paleta de datos por debajo de 3:1: etiquetas del eje o vista de tabla.
 15. Las tarjetas de tablero y lista muestran todos los asignados.
