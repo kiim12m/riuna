@@ -77,6 +77,20 @@ describe("workdayNudges", () => {
     ).toEqual(["break"]);
   });
 
+  // Revision de codigo del interludio, hallazgo 6: una sesion de foco
+  // olvidada en «lista» o «terminada» callaba el descanso para siempre.
+  it("does not let a focus session that is not working silence the break", () => {
+    const running = { startTime: friday(9), workingSince: friday(9) };
+    const now = friday(11);
+    for (const phase of ["ready", "done"] as const) {
+      expect(
+        nudges({ now, running, focus: { mode: "pomodoro", phase } }).map(
+          (n) => n.kind,
+        ),
+      ).toEqual(["break"]);
+    }
+  });
+
   it("warns once a day when the timer runs past the end of the workday", () => {
     const running = { startTime: friday(16, 30), workingSince: friday(16, 30) };
     expect(nudges({ now: friday(16, 59), running })).toEqual([]);

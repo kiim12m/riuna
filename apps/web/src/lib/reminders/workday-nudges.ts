@@ -6,8 +6,8 @@ import { type FocusSession, isBreak } from "@/lib/focus/machine";
  * solo se decide que toca, con una clave para no repetirlo.
  *
  * - **Descanso**: tras `BREAK_EVERY_MS` de trabajo seguido -en cadena de
- *   entradas, aunque se cambie de tarea-, y otra vez cada tanto. Un modo foco
- *   con fin propio (Pomodoro, cuenta atras) ya marca sus descansos.
+ *   entradas, aunque se cambie de tarea-, y otra vez cada tanto. Un bloque
+ *   de foco con fin propio (Pomodoro, cuenta atras) ya marca sus descansos.
  * - **Sin registrar**: en horario laboral, sin cronometro desde hace
  *   `IDLE_AFTER_MS`, como mucho una vez cada `IDLE_REPEAT_MS`. Ni en la
  *   comida ni en un descanso del modo foco, que para el cronometro a
@@ -93,8 +93,11 @@ export function workdayNudges({
 
   const nudges: Nudge[] = [];
 
+  // Solo mientras se trabaja en un bloque que acaba solo: una sesion
+  // olvidada en «lista» o «terminada» no marca ningun descanso.
   const focusEndsOnItsOwn =
-    focus?.mode === "pomodoro" || focus?.mode === "countdown";
+    focus?.phase === "work" &&
+    (focus.mode === "pomodoro" || focus.mode === "countdown");
   if (running && preferences.break && !focusEndsOnItsOwn) {
     const workedMs = now - running.workingSince;
     const round = Math.floor(workedMs / BREAK_EVERY_MS);
