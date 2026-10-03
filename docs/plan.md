@@ -1145,8 +1145,8 @@ sin predicado selectivo.
 - ~~**`GET /api/my-work/tasks` se queda sin consumidor web.**~~ Sigue publicada,
   documentada y probada; retirarla es una decisión sobre la superficie pública
   que no se toma de paso. **Cerrado (2026-10-03):** se mantiene como API pública.
-- **El índice `task (completed_at)` está declarado y no construido**, con la
-  condición que lo justificaría escrita en la ADR 030.
+- ~~**El índice `task (completed_at)` está declarado y no construido**, con la
+  condición que lo justificaría escrita en la ADR 030.~~ Construido (punto 17 del cierre de la deuda).
 - **Una tarea que vence hoy a las 00:00 se clasifica como vencida**, y por las
   mismas una que vence mañana a las 00:00 cuenta como de hoy. Lo destapó la
   prueba de equivalencia de ventanas de la ADR 043 al poner fixtures justo en
@@ -2502,7 +2502,12 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     de integración con fechas reales de Madrid lo demuestra: falla sin el cambio). «Vence hoy a las
     00:00 sale vencida», la segunda mitad del hallazgo, ya la cerraba la ADR 049 y la vigila
     `day-columns-timezone.test.ts`.
-17. Índice `task (completed_at)`: medir en el banco y construir solo si se cumple la condición de la ADR 030.
+17. ✔ Índice `task (completed_at)`: medir en el banco y construir solo si se cumple la condición de la ADR 030.
+    **Hecho (2026-10-03): se construye** (migración 0079). La condición era «ventana estrecha
+    sobre años de historia», que el banco no tenía (su historia cabía entera en la ventana). Con
+    las cerradas repartidas en tres años, «hechas esta semana» en un espacio de 50.000 tareas pasa
+    de **20 ms a 0,5 ms** y el planificador lo usa. Parcial (`WHERE completed_at IS NOT NULL`),
+    así que solo pesa lo cerrado. Ver nota en la ADR 030.
 
 **Tanda 3 — pruebas y estabilidad** · S–M
 18. Las tres pruebas intermitentes: la importación grande, el *deadlock* del `TRUNCATE` y el

@@ -89,3 +89,11 @@ informa no puede contradecir a la pantalla de al lado.
 - **Sin herramienta MCP y sin paneles compartidos**, por los mismos motivos que
   ciclos y «Mi trabajo»: un agente ya combina las lecturas que hay, y compartir
   es una columna más el día que haga falta, no otra tabla.
+
+**Índice construido (2026-10-03, migración 0079).** La condición de arriba —una
+ventana estrecha sobre años de historia— se simuló repartiendo las tareas
+cerradas del banco en tres años: «hechas esta semana» pasó de 20 ms a 0,5 ms y
+el planificador usa `task_completedAt_idx`, parcial sobre las cerradas. Con la
+historia entera dentro de la ventana, que era el banco original, seguiría
+rechazándolo.
+
