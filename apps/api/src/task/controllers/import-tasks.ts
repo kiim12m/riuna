@@ -6,7 +6,7 @@ import {
   projectTable,
   taskTable,
 } from "../../database/schema";
-import { publishEvent } from "../../events";
+import { publishEventsPaced } from "../../events";
 import { upsertExternalRefs } from "../../external-ref";
 import { parseFieldConfig, slugifyFieldKey } from "../../field/field-types";
 import {
@@ -148,16 +148,24 @@ async function importTasks(input: ImportInput): Promise<ImportReport> {
   // Los eventos van **despues** del commit: emitirlos dentro haria que un
   // consumidor leyera una tarea que todavia no existe para el, y un fallo
   // posterior dejaria avisos de algo que se deshizo.
-  for (const task of outcome.created) {
-    await publishEvent("task.created", {
-      ...task,
-      taskId: task.id,
-      userId: task.userId ?? "",
-      currentUserId: input.currentUserId,
-      type: "create",
-      content: "imported the task",
-    });
-  }
+  //
+  // Y por tandas y sin esperar la respuesta: miles de `task.created` de golpe
+  // dejaban a los gestores sin conexion y perdian su actividad (ver
+  // `publishEventsPaced`). Quien importa ya tiene su informe; los avisos y la
+  // actividad llegan en cuanto la base va dando de si.
+  void publishEventsPaced(
+    outcome.created.map((task) => ({
+      type: "task.created",
+      data: {
+        ...task,
+        taskId: task.id,
+        userId: task.userId ?? "",
+        currentUserId: input.currentUserId,
+        type: "create",
+        content: "imported the task",
+      },
+    })),
+  ).catch((error) => console.error("Failed to publish import events:", error));
 
   return outcome.report;
 }

@@ -1,7 +1,8 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   eventContext,
   publishEvent,
+  publishEventsPaced,
   shutdownEventBus,
   subscribeToEvent,
 } from "../../../apps/api/src/events/index";
@@ -98,5 +99,59 @@ describe("publishEvent / subscribeToEvent", () => {
     await publishEvent("test.shutdown", { after: true });
 
     expect(received).toHaveLength(0);
+  });
+});
+
+describe("publishEventsPaced", () => {
+  afterEach(async () => {
+    await shutdownEventBus();
+  });
+
+  it("never runs more than a batch of handlers at once, and runs them all", async () => {
+    let running = 0;
+    let peak = 0;
+    let done = 0;
+    await subscribeToEvent("paced.test", async () => {
+      running++;
+      peak = Math.max(peak, running);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      running--;
+      done++;
+    });
+
+    await publishEventsPaced(
+      Array.from({ length: 45 }, (_, index) => ({
+        type: "paced.test",
+        data: { index },
+      })),
+      10,
+    );
+
+    expect(done).toBe(45);
+    expect(peak).toBeLessThanOrEqual(10);
+  });
+
+  it("settles when a handler fails: the others still finish", async () => {
+    const { publishEventsPaced, subscribeToEvent } = await import(
+      "../../../apps/api/src/events"
+    );
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    let ok = 0;
+    await subscribeToEvent<{ fail: boolean }>("paced.fail", async (data) => {
+      if (data.fail) throw new Error("boom");
+      ok++;
+    });
+
+    await publishEventsPaced(
+      [
+        { type: "paced.fail", data: { fail: true } },
+        { type: "paced.fail", data: { fail: false } },
+      ],
+      5,
+    );
+
+    expect(ok).toBe(1);
+    expect(errors).toHaveBeenCalled();
+    errors.mockRestore();
   });
 });

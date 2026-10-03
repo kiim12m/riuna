@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Client } from "pg";
 import db from "../../../apps/api/src/database";
+import { settleEvents } from "../../../apps/api/src/events";
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const migrationsFolder = resolve(currentDir, "../../../apps/api/drizzle");
@@ -95,8 +96,21 @@ async function listPublicTableNames(): Promise<string[]> {
   return result.rows.map((row) => row.table_name);
 }
 
+function isDeadlock(error: unknown) {
+  // Drizzle envuelve el error de Postgres y deja el codigo en `cause`.
+  const code = (error as { code?: string; cause?: { code?: string } })?.cause
+    ?.code;
+  return code === "40P01" || (error as { code?: string })?.code === "40P01";
+}
+
 export async function resetTestDatabase() {
   await ensureTestDatabaseMigrated();
+
+  // Los gestores de eventos de la prueba anterior corren por su cuenta despues
+  // de responder, y siguen escribiendo (actividad, avisos) cuando esta pide
+  // `ACCESS EXCLUSIVE` sobre todas las tablas: dos transacciones que bloquean
+  // en orden distinto son un deadlock. Se espera a que acaben.
+  await settleEvents();
 
   const tableNames = await listPublicTableNames();
 
@@ -107,8 +121,20 @@ export async function resetTestDatabase() {
   }
 
   const formattedTableNames = tableNames.map(quoteIdentifier).join(", ");
-
-  await db.execute(
-    sql.raw(`TRUNCATE TABLE ${formattedTableNames} RESTART IDENTITY CASCADE`),
+  const truncate = sql.raw(
+    `TRUNCATE TABLE ${formattedTableNames} RESTART IDENTITY CASCADE`,
   );
+
+  // Lo que no es de eventos (un trabajo programado, un WebSocket) no se puede
+  // esperar: si aun asi hay un deadlock, Postgres ya ha abortado la otra
+  // transaccion o esta, y repetir basta.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await db.execute(truncate);
+      return;
+    } catch (error) {
+      if (!isDeadlock(error) || attempt >= 3) throw error;
+      await settleEvents();
+    }
+  }
 }
