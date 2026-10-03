@@ -25,6 +25,7 @@
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
 | Interludio — Productividad personal y equipo | 18 | **Cerrado** — Bloques 0 a 5; el 4.2 (importar iCal), aplazado · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--cerrado) |
+| Cierre de la deuda de las fases cerradas | 18 | **En curso** — cinco tandas · [inventario](#cierre-de-la-deuda-de-las-fases-cerradas) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -66,8 +67,9 @@ gestor de tareas básico y nada propio.
   documentos lo dicen en vez de fingir que existen, y los enlaces a
   `kaneo.app/docs` se han sustituido por `.env.sample` y `docs/`.
 - Código de facturación heredado: apagado por configuración, no eliminado.
-- Catalán: 238 de 1.760 claves traducidas de verdad (13,5%); el resto es relleno
-  en español. Lo gordo está en `settings`, `tasks` y `auth`.
+- ~~Catalán: 238 de 1.760 claves traducidas de verdad (13,5%); el resto es relleno
+  en español.~~ **Cerrado por decisión (2026-10-03):** retirado en la Fase 4.5 y
+  así se queda.
 - ~~`tests/api/mcp-internal-api-url.test.ts` vuelve a fallar.~~ Cerrado, y esta
   vez con la causa demostrada en vez de deducida. No era un doble de `fetch`
   que se perdiera: el primer caso importa la ruta MCP entera —el SDK, Hono, la
@@ -200,10 +202,13 @@ gestor de tareas básico y nada propio.
   la semántica de botón. Las tres arregladas.
 
 **Fase 3**:
-- **El tipo `relación` no está conectado a nada.** Existe en el vocabulario y
+- ~~**El tipo `relación` no está conectado a nada.**~~ Existe en el vocabulario y
   la validación lo mantiene fuera del JSONB —su valor son filas de
   `task_relation`, que sí tiene integridad referencial—, pero nadie lo enlaza.
   El criterio de aceptación pedía «Cliente (relación)» y esa mitad no está.
+  **Cerrado por decisión (2026-10-03), y trasladado a la Fase 10:** un «Cliente»
+  tiene que apuntar a una empresa, no a una tarea, y las dependencias entre
+  tareas ya existen como `blocks`.
 - **Definir campos es cosa de `admin` y `owner`.** El rol `member` heredado
   tiene `project: ["create", "read"]` y no `update`, así que un miembro puede
   rellenar valores (`task:update`) pero no crear el campo. No es decisión de
@@ -261,7 +266,8 @@ al tablero.
 - **No hay agrupación por épica** ni forma de elegir qué columnas se ven. Por
   eso una vista guardada solo recuerda el filtro y el modo de jerarquía.
 - **Faltan los agregados del árbol como columnas** ordenables.
-- **La paginación sigue siendo por desplazamiento**, no por cursor.
+- ~~**La paginación sigue siendo por desplazamiento**, no por cursor.~~
+  **Cerrado por decisión (2026-10-03):** ver «Cierre de la deuda».
 - **GIN no acelera los rangos**, que es el ejemplo estrella del plan. Y la
   consulta de «con subtareas» es un bucle anidado sobre `path`: es la primera
   candidata a mirar con `EXPLAIN`.
@@ -2376,6 +2382,100 @@ pnpm typecheck && pnpm lint && pnpm test
 **Antes de cada despliegue:** generar la migración con drizzle-kit y **revisar
 el SQL a mano**, y restauración de backup probada tras cualquier migración
 destructiva.
+
+---
+
+## Cierre de la deuda de las fases cerradas
+
+*Decidido el 2026-10-03, antes de empezar la Fase 8: dejar a cero lo que las fases
+anteriores declararon pendiente, o cerrarlo por escrito con su razón. El inventario
+sale de las secciones «Deuda» de cada fase, de la
+[revisión estética](revision-estetica-2026-09.md) y de «Lo que no está» en
+[funcionalidades](funcionalidades.md); las más importantes se comprobaron contra el
+código el mismo día. Cinco tandas, de más fácil a más difícil; una rama y una PR por
+tanda (`chore/deutes-tanda-N`), un commit por punto. Mismas tallas que arriba.*
+
+**Decisiones del usuario:** la instancia de producción ya tiene el interludio
+desplegado; los miembros pueden asignar tareas y definir campos sigue siendo de
+`admin`/`owner`; el catalán se queda retirado; la facturación heredada **queda
+abierta** porque quiere estudiarla; Tablero, Lista y Backlog se migran al motor de
+filtros.
+
+**Tanda 1 — decisiones y retoques** · XS
+1. Este inventario. ✔
+2. Retirar el normalizador de días del 0.2 (producción ya está convertida), conservando
+   el aviso de que PostgreSQL no está en UTC.
+3. `task:assign` para el rol `member` (migración de los `workspace_role` existentes).
+4. El `<h2>` de «Rama» en la tarea, a 14 px.
+5. El calendario heredado nombra los días en inglés.
+6. `GET /api/my-work/tasks` sin consumidor web: se mantiene como API pública y se cierra la nota.
+
+**Tanda 2 — arreglos pequeños** · S
+7. «Pasar al siguiente día laborable» salta festivos y ausencias.
+8. Un solo formateador `yyyy-mm-dd` en la web y un solo esquema de día en la API.
+9. Festivos, ausencias y el interruptor de responsable publican eventos.
+10. El stand-up propio reutiliza las lecturas en lote de `lead/` (hoy, unas 25 consultas).
+11. Las 48 clases `text-lg`/`2xl`/`4xl` pasan a los siete papeles tipográficos.
+12. `i18n:check` detecta claves usadas que no existen.
+13. Regenerar `apps/api/openapi.json` (sin tocar desde 2026-08-27), con la URL saneada.
+14. Tonos 4 y 5 de la paleta de datos por debajo de 3:1: etiquetas del eje o vista de tabla.
+15. Las tarjetas de tablero y lista muestran todos los asignados.
+16. `dueDate eq <día>` compara un instante: comparar por rango del día de Madrid.
+17. Índice `task (completed_at)`: medir en el banco y construir solo si se cumple la condición de la ADR 030.
+
+**Tanda 3 — pruebas y estabilidad** · S–M
+18. Las tres pruebas intermitentes: la importación grande, el *deadlock* del `TRUNCATE` y el
+    e2e «una ausencia deja hoy sin horas».
+19. Las pruebas de componente del web no arrancan en el devcontainer (jsdom).
+20. Los dos casos de humo que faltan (el de la Fase 0 y el asistente de importación), los tres
+    gestos de la Fase 4 sin probar, y Playwright en CI.
+
+**Tanda 4 — funcionalidad mediana** · M
+21. Notificaciones paginadas y con filtro de no leídas (hoy, tope de 50).
+22. La búsqueda enseña el nombre de la columna, no `status` en crudo.
+23. Las preferencias pasan de `localStorage` a la API (incluido el inicio de semana).
+24. Cambiar un campo personalizado deja rastro en la actividad.
+25. Editor de definiciones de campos: renombrar, archivar, borrar, reordenar y campos de espacio.
+26. Los campos de espacio llegan a los widgets y a «Mis tareas».
+27. MCP conoce campos personalizados, asignados múltiples y equipos (y el paquete stdio igual).
+28. Crear un proyecto entero desde una plantilla de proyecto.
+29. La plantilla de las recurrentes lleva etiquetas, épicas y campos.
+30. Los agregados del árbol suman campos numéricos.
+31. Compositor de tarea en línea al pie de cada columna del tablero.
+
+**Tanda 5 — las grandes** · L
+32. Vista Tabla: agrupar por épica, elegir columnas (que la vista guardada las recuerde) y
+    agregados del árbol como columnas ordenables.
+33. Tablero, Lista y Backlog pasan al motor de filtros del servidor: cierra el criterio de
+    aceptación de la Fase 4. Con ADR.
+
+**Sigue abierta, sin tanda:** el código de facturación heredado (apagado por configuración).
+El usuario quiere estudiarlo antes de decidir.
+
+**Cerrado por decisión, no es deuda:**
+- **Paginar las vistas.** Con los tamaños reales no se notaría: cargar un proyecto entero cuesta
+  41 ms con 500 tareas, 89 ms con 2.000 y 215 ms con 5.000. Además empeoraría el tablero, que
+  tendría que cargar por columnas. El punto 33 ya recorta lo que viaja en una vista filtrada. Se
+  reabre si un proyecto se acerca a las 5.000 tareas, y `ProjectSizeWarning` ya avisa.
+- **Índices de rango y GIN sobre `custom_fields`:** 12 ms medidos sobre 10.000 tareas.
+- **El tipo de campo «relación»:** pasa a la Fase 10, donde apuntará a `company`.
+- **El catalán:** retirado.
+- **Razonadas en su ADR y por tanto intencionadas:** el orden entre hermanas comparte columna con
+  el tablero (011); la profundidad heredada puede superar el límite (011); `Tab`/`Shift+Tab` solo
+  en modo jerarquía; el burndown se dibuja sobre el alcance actual (025); solo se reordenan grupos
+  de hermanas completos (017); la escala de TipTap va aparte (018); la tabla embebida no pagina y no
+  hay `widget.view_id` (030).
+- **Menores de la revisión estética:** `#5FD3C0` como texto activo en oscuro y las leyendas de ajustes
+  escritas en línea.
+- **Sin protocolo nuevo:** el resalte en tiempo real en «Mi panel» exigiría cambiar `MY_WORK_INVALIDATED`.
+- **Si el perfilado lo pide:** encajar el arrastre del Gantt a la unidad del zoom y virtualizar filas.
+- **El cubo «otros» sin ver en pantalla:** lo cubren las pruebas.
+- **A otras fases:** importar la hoja de SERVITEC y enviar el stand-up a Slack o Telegram → Fase 8;
+  Sentry y las copias fuera de la máquina → Fase 9.
+
+**Riesgo fuera de alcance:** las copias viven en el mismo disco que la base
+([copias de seguridad](copias-de-seguridad.md)). Si hubiera una sola excepción a «solo deuda»,
+sería `deploy/copia-externa.sh` del [plan de despliegue](plan-despliegue.md).
 
 ---
 
