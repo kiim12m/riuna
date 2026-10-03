@@ -3,7 +3,7 @@ import type { User } from "better-auth/types";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
-import { mockAuthenticatedSession } from "./helpers/auth";
+import { createApiKey, mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
 import { createWorkspaceMember } from "./helpers/fixtures";
 
@@ -249,6 +249,33 @@ describe("availability", () => {
       await call(member, "GET", `/api/planner?workspaceId=${ws}`)
     ).json();
     expect(after.capacityByDay[dayFromNow(4)]).toBe(8 * 3600);
+  });
+
+  // Revision de codigo del interludio, hallazgo 3: las ausencias no miraban
+  // el alcance de la clave de API.
+  it("respects the API key scope for absences", async () => {
+    const { user, workspace } = await createWorkspaceMember({ role: "member" });
+    const url = `/api/availability/time-off?workspaceId=${workspace.id}`;
+    const body = JSON.stringify({
+      startsOn: dayFromNow(1),
+      endsOn: dayFromNow(1),
+    });
+    const { app } = createApp();
+    const request = (key: string, method: string) =>
+      app.request(url, {
+        method,
+        headers: { "content-type": "application/json", "x-api-key": key },
+        ...(method === "POST" ? { body } : {}),
+      });
+
+    const labelsOnly = await createApiKey(user.id, { label: ["read"] });
+    expect((await request(labelsOnly, "GET")).status).toBe(403);
+    expect((await request(labelsOnly, "POST")).status).toBe(403);
+    const readOnly = await createApiKey(user.id, { task: ["read"] });
+    expect((await request(readOnly, "GET")).status).toBe(200);
+    expect((await request(readOnly, "POST")).status).toBe(403);
+    const writer = await createApiKey(user.id, { task: ["read", "update"] });
+    expect((await request(writer, "POST")).status).toBe(200);
   });
 
   it("keeps a workspace's holidays and absences out of another workspace", async () => {

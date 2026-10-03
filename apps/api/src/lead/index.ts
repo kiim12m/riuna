@@ -3,6 +3,7 @@ import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import { unavailableDaySchema } from "../schemas";
 import { parseServerDay } from "../utils/day-boundaries";
+import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import getMyLeads from "./controllers/get-my-leads";
 import getTeamDay from "./controllers/get-team-day";
@@ -125,6 +126,7 @@ const lead = new Hono<{
     }),
     validator("query", workspaceQuery),
     workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["read"] }),
     async (c) =>
       c.json(
         await getMyLeads({
@@ -144,6 +146,7 @@ const lead = new Hono<{
     }),
     validator("query", workspaceQuery),
     workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["read"] }),
     async (c) =>
       c.json(
         await getTeamMembers({
@@ -174,6 +177,7 @@ const lead = new Hono<{
       }),
     ),
     workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["read"] }),
     async (c) => {
       const { date } = c.req.valid("query");
       return c.json(
@@ -196,6 +200,7 @@ const lead = new Hono<{
     }),
     validator("query", workspaceQuery),
     workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["read"] }),
     async (c) =>
       c.json(
         await getTeamStandup({

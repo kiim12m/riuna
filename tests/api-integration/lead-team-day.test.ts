@@ -3,7 +3,7 @@ import type { User } from "better-auth/types";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
-import { mockAuthenticatedSession } from "./helpers/auth";
+import { createApiKey, mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
 import {
   createProjectFixture,
@@ -236,6 +236,26 @@ describe("lead team day", () => {
     expect(anaStandup.today.planned[0].title).toBe("Llamar al proveedor");
     expect(anaStandup.blockers).toBe("Falta el permiso de obra");
     expect(JSON.stringify(team)).not.toContain("Estoy agotada");
+  });
+
+  // Revision de codigo del interludio, hallazgo 3: la vista del responsable
+  // no miraba el alcance de la clave de API.
+  it("respects the API key scope for the lead's reads", async () => {
+    const { ws, lead } = await setup();
+    const { app } = createApp();
+    const labelsOnly = await createApiKey(lead.id, { label: ["read"] });
+    const taskReader = await createApiKey(lead.id, { task: ["read"] });
+    for (const path of ["day", "standup", "members", "my-leads"]) {
+      const url = `/api/lead/${path}?workspaceId=${ws}`;
+      expect(
+        (await app.request(url, { headers: { "x-api-key": labelsOnly } }))
+          .status,
+      ).toBe(403);
+      expect(
+        (await app.request(url, { headers: { "x-api-key": taskReader } }))
+          .status,
+      ).toBe(200);
+    }
   });
 
   it("shows nothing to someone who leads nobody", async () => {

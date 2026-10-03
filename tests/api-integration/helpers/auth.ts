@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import type { Session, User } from "better-auth/types";
 import { eq } from "drizzle-orm";
 import { expect, vi } from "vitest";
@@ -62,4 +62,34 @@ export async function signUpWithCookie() {
     .join("; ");
 
   return { user, cookie };
+}
+
+/**
+ * Una clave de API de verdad para `userId`, con el alcance dado (o sin
+ * alcance, que pasa por todo). Devuelve la clave en claro, para mandarla en
+ * `x-api-key`; la base guarda su hash, como hace Better Auth.
+ */
+export async function createApiKey(
+  userId: string,
+  permissions?: Record<string, string[]>,
+) {
+  const plainKey = `riuna_${randomUUID()}`;
+  const hashed = createHash("sha256")
+    .update(plainKey)
+    .digest("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+  await db.insert(schema.apikeyTable).values({
+    id: `apikey-${randomUUID()}`,
+    name: "Prueba",
+    key: hashed,
+    userId,
+    referenceId: userId,
+    enabled: true,
+    ...(permissions ? { permissions: JSON.stringify(permissions) } : {}),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+  return plainKey;
 }

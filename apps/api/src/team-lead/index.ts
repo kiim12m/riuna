@@ -1,7 +1,10 @@
 import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
-import { requireWorkspacePermission } from "../utils/require-workspace-permission";
+import {
+  requireApiKeyScope,
+  requireWorkspacePermission,
+} from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import { listTeamLeads, setTeamLead } from "./controllers/team-leads";
 
@@ -39,6 +42,7 @@ const teamLead = new Hono<{
     }),
     workspaceQuery,
     workspaceAccess.fromQuery(),
+    requireApiKeyScope({ workspace: ["read"] }),
     async (c) => c.json(await listTeamLeads(c.get("workspaceId"))),
   )
   .put(

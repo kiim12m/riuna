@@ -73,6 +73,7 @@ const availability = new Hono<{
     }),
     workspaceQuery,
     workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["read"] }),
     async (c) =>
       c.json(
         await listTimeOff({
@@ -100,6 +101,7 @@ const availability = new Hono<{
       }),
     ),
     workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["update"] }),
     async (c) => {
       const body = c.req.valid("json");
       return c.json(
@@ -124,6 +126,7 @@ const availability = new Hono<{
     validator("param", v.object({ id: v.string() })),
     workspaceQuery,
     workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["update"] }),
     async (c) =>
       c.json(
         await deleteTimeOff({
