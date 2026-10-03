@@ -2385,6 +2385,36 @@ como explica [actualizar.md](actualizar.md), y aplicar las migraciones
 
 Lo siguiente es la **Fase 8**: automatizaciones e importadores externos.
 
+**Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
+seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.
+Los diez fallos están corregidos en la rama `fix/interludio-revision`, cada
+uno con una prueba que fallaba antes del arreglo:
+1. el cierre del día contaba un cronómetro en marcha solo hasta las 12:00;
+2. un bloque de foco que se comprobaba tarde registraba hasta la
+   comprobación, no hasta su hora;
+3. las ausencias y la vista del responsable ignoraban el alcance de la
+   clave de API;
+4. el aviso del responsable y «Mi equipo» no se refrescaban sin recargar;
+5. «Mi equipo» podía perder las hechas de quien tenía la tarea asignada y
+   planificada;
+6. una sesión de foco olvidada callaba el aviso de descanso;
+7. el día planificado del detalle no se actualizaba al mover la tarea;
+8. la Bandeja daba un 403 a quien ya la tenía y pasó a lector;
+9. la captura rápida confundía «@constructor» y similares con un día;
+10. el «ayer» del stand-up no saltaba festivos ni ausencias.
+
+**Queda como deuda declarada:**
+- los festivos, las ausencias y el interruptor de responsable no publican
+  eventos: los demás lo ven al volver a leer (ADR 060);
+- el stand-up propio hace unas 25 consultas, cuando podría reutilizar las
+  lecturas en lote de «Mi equipo»;
+- el normalizador de días del 0.2 recorre dos tablas enteras en cada
+  arranque;
+- el formateador de `yyyy-mm-dd` está repetido unas ocho veces en la web, y
+  el esquema de día en cinco routers de la API;
+- «Pasar al siguiente día laborable» del cierre aún no salta festivos ni
+  ausencias.
+
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la
 prueba de extremo a extremo necesita la PostgreSQL de `compose.local.yml`.~~

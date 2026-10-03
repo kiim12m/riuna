@@ -19,6 +19,9 @@ daría dos verdades sobre el tiempo trabajado.
   mismo modo no hace nada. Si cambia el modo, abre otra entrada: la sesión
   empieza ahí.
 - **Los descansos no registran tiempo**: acabar un bloque para el cronómetro.
+  Si el final se comprueba más de un minuto tarde —el portátil suspendido—,
+  la entrada se cierra a la hora del final del bloque, no al comprobarlo
+  (revisión de código del 2026-10-03).
 - **Las fases son una máquina pura en el cliente** (`lib/focus/machine.ts`):
   - Pomodoro: 25 minutos de trabajo y 5 de descanso, con uno de 15 cada
     cuatro bloques;

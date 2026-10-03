@@ -32,7 +32,8 @@ guarde el motivo**: una baja médica es un dato sensible.
 
 - **Las recurrentes se siguen generando en festivo**, y nada impide planificar
   en un día no disponible: se ve en el día, con capacidad 0. «Pasar al
-  siguiente día laborable» todavía no salta festivos ni ausencias.
+  siguiente día laborable» todavía no salta festivos ni ausencias; el
+  «ayer» del stand-up sí, desde la revisión de código del 2026-10-03.
 - **Un festivo nuevo llega a los demás al volver a leer** (al enfocar la
   ventana o al entrar en la pantalla), no por WebSocket.
 - **Una ausencia es de un espacio.** Con dos espacios, hay que darla en los

@@ -20,7 +20,8 @@ Auth.
     gestionar los miembros (`member:update`);
   - `lead/` es lo que lee el responsable, y **ningún endpoint suyo escribe**.
     Una prueba de arquitectura lo comprueba, y la de la ADR 054 ya impide
-    que nombre `review_private`.
+    que nombre `review_private`. Con clave de API, sus lecturas piden
+    `task:read`, como las del Planificador.
 - **Un único punto de visibilidad**, `lead/visibility.ts`: una sola consulta
   de pares (responsable, miembro) que sirve en los dos sentidos, a quién ve
   un responsable y quién ve a una persona. Exige a la vez:
