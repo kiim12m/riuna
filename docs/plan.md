@@ -2449,7 +2449,12 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
    `availability.changed` con los destinatarios resueltos al publicar y un mensaje
    `AVAILABILITY_INVALIDATED`. Tres pruebas de integración de los destinatarios (fallan sin el
    cambio) y una unitaria del mapa de invalidaciones.
-10. El stand-up propio reutiliza las lecturas en lote de `lead/` (hoy, unas 25 consultas).
+10. ✔ El stand-up propio reutiliza las lecturas en lote de `lead/` (hoy, unas 25 consultas).
+    **Hecho (2026-10-03).** Medido: de **30 a 7 consultas**. `review/standup-batch.ts`
+    (`loadStandups`) es la única implementación y el stand-up propio es esa función con una sola
+    persona, así que ya no pueden diferenciarse; `previousWorkDay` se mueve a su propio fichero
+    para no hacer un ciclo `review` ↔ `lead`. Las pruebas que comparan el propio con el del
+    responsable campo a campo siguen en verde.
 11. Las 48 clases `text-lg`/`2xl`/`4xl` pasan a los siete papeles tipográficos.
 12. `i18n:check` detecta claves usadas que no existen.
 13. Regenerar `apps/api/openapi.json` (sin tocar desde 2026-08-27), con la URL saneada.
@@ -2560,8 +2565,8 @@ fallaba antes del arreglo:
 **Queda como deuda declarada:**
 - ~~los festivos, las ausencias y el interruptor de responsable no publican
   eventos: los demás lo ven al volver a leer (ADR 060);~~ publican (punto 9 del cierre de la deuda);
-- el stand-up propio hace unas 25 consultas, cuando podría reutilizar las
-  lecturas en lote de «Mi equipo»;
+- ~~el stand-up propio hace unas 25 consultas, cuando podría reutilizar las
+  lecturas en lote de «Mi equipo»;~~ ahora son 7 (punto 10 del cierre de la deuda);
 - ~~el normalizador de días del 0.2 recorre dos tablas enteras en cada
   arranque;~~ retirado (punto 2 del cierre de la deuda);
 - ~~el formateador de `yyyy-mm-dd` está repetido unas ocho veces en la web, y
