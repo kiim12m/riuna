@@ -131,12 +131,42 @@ export async function loadDone(
       ),
     );
 
+  return doneByPerson(rows);
+}
+
+type DoneRow = {
+  assigneeId: string | null;
+  plannerId: string | null;
+  plannedDate: Date | null;
+  completedAt: Date | null;
+  id: string;
+  number: number | null;
+  title: string;
+  projectSlug: string;
+};
+
+/**
+ * Reparte lo terminado por persona: una fila por tarea y persona, asignada
+ * o que la planifico. El cruce de la consulta repite la tarea por cada
+ * asignado del equipo, asi que **ser asignado se decide mirando todas sus
+ * filas**, no la primera: si no, quien la planifico y tambien la tenia
+ * asignada podia salir como «solo la planifico» y caerse del dia (revision
+ * de codigo del interludio, hallazgo 5).
+ */
+export function doneByPerson(rows: DoneRow[]) {
+  const assigneesOf = new Map<string, Set<string>>();
+  for (const row of rows) {
+    if (!row.assigneeId) continue;
+    const assignees = assigneesOf.get(row.id) ?? new Set<string>();
+    assignees.add(row.assigneeId);
+    assigneesOf.set(row.id, assignees);
+  }
+
   const seen = new Set<string>();
   return rows.flatMap((row) =>
     [row.assigneeId, row.plannerId]
-      .filter((userId, index, all): userId is string => {
-        if (!userId || all.indexOf(userId) !== index) return false;
-        // Con varios asignados del equipo, el cruce repite la tarea.
+      .filter((userId): userId is string => {
+        if (!userId) return false;
         const key = `${userId}:${row.id}`;
         if (seen.has(key)) return false;
         seen.add(key);
@@ -144,7 +174,7 @@ export async function loadDone(
       })
       .map((userId) => ({
         userId,
-        viaPlan: userId === row.plannerId && userId !== row.assigneeId,
+        viaPlan: !assigneesOf.get(row.id)?.has(userId),
         plannedDate: row.plannedDate,
         completedAt: row.completedAt as Date,
         id: row.id,
