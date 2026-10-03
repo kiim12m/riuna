@@ -2444,7 +2444,11 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
    dejó de cortar en UTC —el fallo de la víspera entre las 00:00 y las 02:00 que la ADR 049
    dejó anotado—. Verificación: typecheck, 383 unitarias del web (con `day-key.test.ts`),
    95 de integración de los routers tocados y 44 e2e de las pantallas que usan días.
-9. Festivos, ausencias y el interruptor de responsable publican eventos.
+9. ✔ Festivos, ausencias y el interruptor de responsable publican eventos. **Hecho (2026-10-03)**,
+   [ADR 063](adr/063-festivos-ausencias-y-responsable-por-websocket.md). Un evento
+   `availability.changed` con los destinatarios resueltos al publicar y un mensaje
+   `AVAILABILITY_INVALIDATED`. Tres pruebas de integración de los destinatarios (fallan sin el
+   cambio) y una unitaria del mapa de invalidaciones.
 10. El stand-up propio reutiliza las lecturas en lote de `lead/` (hoy, unas 25 consultas).
 11. Las 48 clases `text-lg`/`2xl`/`4xl` pasan a los siete papeles tipográficos.
 12. `i18n:check` detecta claves usadas que no existen.
@@ -2554,8 +2558,8 @@ fallaba antes del arreglo:
 10. el «ayer» del stand-up no saltaba festivos ni ausencias.
 
 **Queda como deuda declarada:**
-- los festivos, las ausencias y el interruptor de responsable no publican
-  eventos: los demás lo ven al volver a leer (ADR 060);
+- ~~los festivos, las ausencias y el interruptor de responsable no publican
+  eventos: los demás lo ven al volver a leer (ADR 060);~~ publican (punto 9 del cierre de la deuda);
 - el stand-up propio hace unas 25 consultas, cuando podría reutilizar las
   lecturas en lote de «Mi equipo»;
 - ~~el normalizador de días del 0.2 recorre dos tablas enteras en cada

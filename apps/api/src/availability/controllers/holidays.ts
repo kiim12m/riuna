@@ -8,6 +8,7 @@ import {
   startOfServerDay,
 } from "../../utils/day-boundaries";
 import { isUniqueViolation } from "../../utils/is-unique-violation";
+import { notifyHolidayChanged } from "../changed";
 
 const columns = {
   id: workspaceHolidayTable.id,
@@ -53,6 +54,7 @@ export async function createHoliday({
         name: name.trim(),
       })
       .returning(columns);
+    await notifyHolidayChanged(workspaceId);
     return row;
   } catch (error) {
     if (isUniqueViolation(error)) {
@@ -83,5 +85,6 @@ export async function deleteHoliday({
   if (!row) {
     throw new HTTPException(404, { message: "Holiday not found" });
   }
+  await notifyHolidayChanged(workspaceId);
   return row;
 }

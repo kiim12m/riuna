@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+import { notifyTeamLeadChanged } from "../../availability/changed";
 import db from "../../database";
 import { teamMemberTable, teamTable } from "../../database/schema";
 
@@ -58,5 +59,6 @@ export async function setTeamLead({
     throw new HTTPException(404, { message: "Team member not found" });
   }
 
+  await notifyTeamLeadChanged(workspaceId, teamId);
   return { teamId, userId, isLead };
 }
