@@ -175,6 +175,31 @@ describe("API integration: close the day (ADR 054)", () => {
     expect((await as.today()).dayClosed).toBe(true);
   });
 
+  // Revision de codigo del interludio, hallazgo 1: las cifras se calculaban
+  // con la hora fijada a las 12:00, asi que un cronometro en marcha solo
+  // contaba hasta mediodia, o nada si empezo por la tarde.
+  it("counts a running timer up to now when closing today", async () => {
+    const now = new Date();
+    // Cerca de medianoche la entrada caeria en la vispera.
+    if (now.getHours() * 60 + now.getMinutes() < 25) return;
+    const { member, project, ws } = await setup();
+    const task = await myTask(project.id, member.user.id, "En marcha");
+    await db.insert(schema.timeEntryTable).values({
+      taskId: task.id,
+      userId: member.user.id,
+      description: "",
+      startTime: new Date(now.getTime() - 20 * 60 * 1000),
+      // En marcha: `startTimer` la guarda sin duracion.
+      duration: null,
+    });
+    const as = api(member.user, ws);
+
+    expect((await as.close(dayKey(), { decisions: [] })).status).toBe(200);
+    const worked = (await as.get(dayKey())).review?.summary.workedSeconds;
+    expect(worked).toBeGreaterThanOrEqual(20 * 60 - 5);
+    expect(worked).toBeLessThan(20 * 60 + 120);
+  });
+
   it("keeps the counts when the day is closed again", async () => {
     const { member, project, ws } = await setup();
     const move = await myTask(project.id, member.user.id, "A mañana");

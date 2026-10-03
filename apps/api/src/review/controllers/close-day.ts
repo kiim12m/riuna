@@ -2,6 +2,7 @@ import { HTTPException } from "hono/http-exception";
 import planBulk from "../../planner/controllers/plan-bulk";
 import getToday from "../../today/controllers/get-today";
 import {
+  endOfServerDay,
   parseServerDay,
   serverDayKey,
   startOfServerDay,
@@ -49,13 +50,16 @@ export default async function closeDay({
   note: string | null;
 }) {
   const day = parseServerDay(date, "date");
-  if (day > startOfServerDay(new Date())) {
+  const startOfToday = startOfServerDay(new Date());
+  if (day > startOfToday) {
     throw new HTTPException(400, { message: "A future day cannot be closed" });
   }
 
-  const midday = new Date(day);
-  midday.setHours(12, 0, 0, 0);
-  const view = await getToday({ workspaceId, userId, now: midday });
+  // Las cifras de ese dia con su "ahora": hoy, la hora real -un cronometro
+  // en marcha cuenta hasta este momento-; un dia pasado, su ultimo instante.
+  // Con las 12:00 fijas, lo que seguia corriendo por la tarde contaba 0.
+  const now = day < startOfToday ? endOfServerDay(day) : new Date();
+  const view = await getToday({ workspaceId, userId, now });
 
   const pending = new Set(
     [...view.previous, ...view.planned].map((entry) => entry.id),
