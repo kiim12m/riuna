@@ -23,11 +23,11 @@ async function myTask(riuna: RiunaContext, title: string, extra = {}) {
 
 /**
  * La revision semanal (sub-bloque 2.3 del interludio de productividad): se
- * vacia la Bandeja sin salir del ritual, se repasa lo vencido, y se guarda
+ * repasa lo de Personal sin salir del ritual, se repasa lo vencido, y se guarda
  * con bloqueos y valoracion.
  */
 test.describe("Revisión semanal", () => {
-  test("vacía la Bandeja, repasa lo vencido y guarda la semana", async ({
+  test("repasa lo personal y lo vencido, y guarda la semana", async ({
     page,
     riuna,
   }) => {
@@ -58,7 +58,7 @@ test.describe("Revisión semanal", () => {
       .getByRole("dialog")
       .getByRole("button", { name: "Mover tarea" })
       .click();
-    await expect(page.getByText("Tu Bandeja está vacía.")).toBeVisible();
+    await expect(page.getByText("No tienes nada en Personal.")).toBeVisible();
     await expect(page).toHaveURL(/rituals\/weekly-review/);
 
     const next = page.getByRole("button", { name: "Siguiente" });

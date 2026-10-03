@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Clock,
   FileClock,
-  Inbox,
   LayoutDashboard,
   LayoutGrid,
   ListTodo,
@@ -31,7 +30,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useInbox } from "@/hooks/queries/capture/use-inbox";
 import { useTeamMembers } from "@/hooks/queries/lead/use-team";
 import { useMyWorkCounts } from "@/hooks/queries/my-work/use-my-work-counts";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
@@ -144,14 +142,12 @@ export function NavMain() {
     canManageProjects,
     canManageTeam,
     canInviteUsers,
-    canCreateTasks,
   } = useWorkspacePermission();
 
   const { data: projects } = useGetProjects({
     workspaceId: workspace?.id ?? "",
   });
   const { data: counts } = useMyWorkCounts(workspace?.id ?? "");
-  const { data: inbox } = useInbox(workspace?.id ?? "");
   // «Mi equipo» solo para quien lleva a alguien (ADR 059).
   const { data: ledMembers } = useTeamMembers(workspace?.id ?? "");
 
@@ -174,21 +170,6 @@ export function NavMain() {
       icon: CalendarCheck,
       count: counts?.today,
     },
-    // La Bandeja es un proyecto oculto en las listas (ADR 051): se llega a
-    // ella por aqui. `/inbox` la crea al primer uso y lleva a su lista, asi
-    // que la entrada se marca estando en el proyecto, no en esa puerta. Ya
-    // creada, va directa: `/inbox` pide crearla, y eso exige crear tareas
-    // -a quien paso a lector le daba un 403-.
-    ...(inbox || canCreateTasks()
-      ? [
-          {
-            title: t("navigation:sidebar.inbox"),
-            url: inbox ? `${base}/project/${inbox.id}/board` : `${base}/inbox`,
-            icon: Inbox,
-            activePrefix: inbox ? `${base}/project/${inbox.id}` : undefined,
-          },
-        ]
-      : []),
     {
       title: t("navigation:sidebar.planner"),
       url: `${base}/planner`,

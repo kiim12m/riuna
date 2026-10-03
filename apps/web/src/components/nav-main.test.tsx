@@ -35,15 +35,10 @@ vi.mock("@/hooks/queries/my-work/use-my-work-counts", () => ({
   useMyWorkCounts: () => ({ data: counts }),
 }));
 
-let inbox: { id: string } | null = null;
 let ledMembers: Array<{ id: string; name: string }> = [];
 
 vi.mock("@/hooks/queries/lead/use-team", () => ({
   useTeamMembers: () => ({ data: ledMembers }),
-}));
-
-vi.mock("@/hooks/queries/capture/use-inbox", () => ({
-  useInbox: () => ({ data: inbox }),
 }));
 
 const capabilities = {
@@ -92,7 +87,6 @@ beforeEach(() => {
   navigate.mockReset();
   projects = [{ id: "project-1", name: "Obra Norte" }];
   counts = { today: 7, myTasks: 34 };
-  inbox = null;
   ledMembers = [];
   for (const key of Object.keys(capabilities) as Array<
     keyof typeof capabilities
@@ -182,37 +176,6 @@ describe("NavMain", () => {
 
     expect(screen.queryByText("0")).toBeNull();
     expect(screen.getByText("5")).toBeInTheDocument();
-  });
-
-  // La Bandeja se crea al primer uso, y solo puede usarla quien crea tareas.
-  // Si ya existe -le quitaron el permiso despues-, se sigue ensenando: sus
-  // tareas no desaparecen por eso.
-  it("ensena la Bandeja a quien puede crear tareas o ya la tiene", () => {
-    renderNav();
-    expect(screen.queryByText("navigation:sidebar.inbox")).toBeNull();
-    cleanup();
-
-    capabilities.canCreateTasks = true;
-    renderNav();
-    expect(screen.getByText("navigation:sidebar.inbox")).toBeInTheDocument();
-    cleanup();
-
-    capabilities.canCreateTasks = false;
-    inbox = { id: "inbox-1" };
-    renderNav();
-    expect(screen.getByText("navigation:sidebar.inbox")).toBeInTheDocument();
-  });
-
-  // Revision de codigo del interludio, hallazgo 8: con la Bandeja ya creada,
-  // la entrada lleva directa a su proyecto. Pasar por `/inbox` pide crearla,
-  // y eso exige crear tareas: a quien paso a lector le daba un 403.
-  it("lleva directa a la Bandeja que ya existe, sin pedir crearla", () => {
-    inbox = { id: "inbox-1" };
-    renderNav();
-    screen.getByText("navigation:sidebar.inbox").click();
-    expect(navigate).toHaveBeenCalledWith({
-      to: "/dashboard/workspace/ws-1/project/inbox-1/board",
-    });
   });
 
   // «Mi equipo» es la vista del responsable de departamento (ADR 059): quien

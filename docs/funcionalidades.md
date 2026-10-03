@@ -185,19 +185,21 @@ la tarea y en la propia tabla.
 - **Plantillas**: guardar un proyecto entero —columnas, épicas y tareas— o un
   árbol de tareas como plantilla del espacio, y aplicarla en cualquier
   proyecto.
-- **Bandeja** ([ADR 051](adr/051-la-bandeja-es-un-proyecto-oculto.md)): un
-  proyecto por persona y espacio para dejar lo que llega sin decidir aún a qué
-  proyecto va. Se entra desde el espacio personal y se crea la primera vez.
-  Funciona como cualquier proyecto —tablero, lista, detalle y «Mover a otro
-  proyecto»— pero **no sale en las listas** de proyectos: ni en la barra
-  lateral, ni en los selectores, ni en la administración, ni en la búsqueda de
-  proyectos, ni en `list_projects` de MCP. **No es privada**: sus tareas salen
-  en Mis tareas, Hoy, la búsqueda y los paneles como las de cualquier otro
-  proyecto, y la cabecera lo explica. Si la persona sale del espacio o se
-  borra su cuenta, pasa a ser un proyecto normal, con sus tareas.
+- **Personal** ([ADR 051](adr/051-la-bandeja-es-un-proyecto-oculto.md), antes
+  «Bandeja»): un proyecto por persona y espacio para dejar lo que llega sin
+  decidir aún a qué proyecto va. Cada uno ve el suyo fijo en lo alto de
+  «Proyectos», en la barra, y se crea la primera vez que se abre; sus tareas
+  llevan la clave `PER`. Funciona como cualquier proyecto —tablero, lista,
+  detalle y «Mover a otro proyecto»— pero **no sale en las listas** de
+  proyectos de los demás: ni en su barra, ni en los selectores, ni en la
+  administración, ni en la búsqueda de proyectos, ni en `list_projects` de
+  MCP. **No es privado**: sus tareas salen en Mis tareas, Hoy, la búsqueda y
+  los paneles como las de cualquier otro proyecto, y la cabecera lo explica.
+  Si la persona sale del espacio o se borra su cuenta, pasa a ser un proyecto
+  normal, con sus tareas.
 - **Captura rápida** ([ADR 052](adr/052-captura-rapida.md)): una línea se
   convierte en tarea al pulsar Intro, asignada a quien la escribe y en su
-  Bandeja salvo que diga otro proyecto. La sintaxis es cerrada y en castellano:
+  proyecto Personal salvo que diga otro. La sintaxis es cerrada y en castellano:
   - `1h30`, `1,5h` o `30m` para la estimación;
   - `@hoy`, `@mañana`, `@vie` o `@15/10`, con hora opcional detrás
     (`@mañana 10:00`), para el día del plan, nunca para el vencimiento;
@@ -210,7 +212,7 @@ la tarea y en la propia tabla.
   Lo que no se entiende se queda en el título, y unos chips debajo enseñan lo
   que se va a crear. Se abre con la tecla `q` desde cualquier pantalla o desde
   la paleta. Además hay una caja fija en Hoy, que planifica para hoy por
-  defecto, en «Sin planificar» del Planificador y en la Bandeja propia.
+  defecto, en «Sin planificar» del Planificador y en el proyecto Personal.
 - **Acciones de fila**
   ([ADR 053](adr/053-acciones-de-fila-imprescindibles-y-plan-en-bloque.md)):
   el mismo menú en Hoy, el Planificador, el Cronograma y Mis tareas. Sale con
@@ -239,7 +241,7 @@ la tarea y en la propia tabla.
   Seis pasos que actúan al momento:
   1. lo de días anteriores, con «Añadir a hoy» o todo de una vez;
   2. lo urgente;
-  3. la Bandeja y lo que aún no tiene día;
+  3. lo de Personal y lo que aún no tiene día;
   4. hasta tres imprescindibles;
   5. la carga frente a la jornada, con las estimaciones editables y aviso si
      no cabe;
@@ -247,8 +249,8 @@ la tarea y en la propia tabla.
 
   «Empezar» arranca el cronómetro en la primera imprescindible.
 - **Revisión semanal**: se abre con un botón en el Planificador. Seis pasos:
-  1. vaciar la Bandeja: mover cada tarea a su proyecto sin salir del ritual,
-     planificarla o terminarla;
+  1. repasar lo personal: mover cada tarea a su proyecto sin salir del
+     ritual, planificarla o terminarla;
   2. lo vencido;
   3. «Esperando a»;
   4. la semana: lo terminado, lo registrado y la precisión frente a lo
@@ -440,7 +442,7 @@ la tarea y en la propia tabla.
 - **Widgets**: contador, desglose, tendencia, tiempo registrado, progreso de
   épica, lista de tareas, **semana en curso**, notificaciones y objetivo. El de
   notificaciones se llamaba «Bandeja» hasta que ese nombre pasó al proyecto de
-  captura.
+  captura, hoy «Personal».
   Las métricas son tareas, completadas, porcentaje completado, estimado y
   registrado; se agrupan por proyecto, asignado, prioridad, equipo, estado,
   hecho, vencimiento (sin fecha, vencida, hoy, esta semana, más adelante),
@@ -544,8 +546,8 @@ cronómetro.
 Las herramientas cubren identidad y espacios, proyectos, tareas, comentarios,
 etiquetas, épicas, relaciones, miembros, búsqueda, columnas, registro de
 tiempo, actividad y notificaciones, además del plan personal, el cronómetro,
-Hoy (`get_today`) y la captura a la Bandeja (`capture_task`). `list_projects`
-no lista las Bandejas.
+Hoy (`get_today`) y la captura a Personal (`capture_task`). `list_projects`
+no lista los proyectos Personal.
 
 ## 13. Tiempo real
 

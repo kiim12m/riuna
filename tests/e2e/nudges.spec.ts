@@ -77,7 +77,7 @@ test.describe("Avisos de ritmo", () => {
 
     // Como mucho uno por hora, tambien tras recargar.
     await page.goto(`/dashboard/workspace/${riuna.workspaceId}/today`);
-    await page.getByRole("button", { name: "Bandeja" }).waitFor();
+    await page.getByRole("button", { name: "Personal", exact: true }).waitFor();
     await page.clock.fastForward("10:00");
     expect(await titles()).toEqual(["No estás registrando"]);
 

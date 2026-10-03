@@ -96,9 +96,9 @@ describe("API integration: inbox (ADR 051)", () => {
     expect(created.status).toBe(200);
     const { inbox } = (await created.json()) as { inbox: Project };
     expect(inbox).toMatchObject({
-      name: "Bandeja de Ana",
-      slug: "BAN",
-      icon: "Inbox",
+      name: "Personal de Ana",
+      slug: "PER",
+      icon: "UserRound",
       ownerUserId: member.user.id,
       workspaceId: member.workspace.id,
     });
@@ -152,7 +152,7 @@ describe("API integration: inbox (ADR 051)", () => {
     const anaThere = await ensureInbox(other.workspace.id, ana.user.id);
 
     expect(new Set([anaHere?.id, luisHere?.id, anaThere?.id]).size).toBe(3);
-    expect(luisHere?.name).toBe("Bandeja de Luis");
+    expect(luisHere?.name).toBe("Personal de Luis");
     expect(anaThere?.workspaceId).toBe(other.workspace.id);
 
     // La base impone el maximo aunque alguien escriba sin `ensureInbox`.
@@ -171,7 +171,7 @@ describe("API integration: inbox (ADR 051)", () => {
     const luis = await addMember(ana.workspace.id, "Luis");
     const { project } = await createProjectFixture({
       workspaceId: ana.workspace.id,
-      name: "Bandeja de entrada de clientes",
+      name: "Personal de obra",
     });
     await ensureInbox(ana.workspace.id, ana.user.id);
     await ensureInbox(ana.workspace.id, luis.id);
@@ -188,7 +188,7 @@ describe("API integration: inbox (ADR 051)", () => {
 
       const { app } = createApp();
       const search = await app.request(
-        `/api/search?q=bandeja&type=projects&workspaceId=${ana.workspace.id}`,
+        `/api/search?q=personal&type=projects&workspaceId=${ana.workspace.id}`,
       );
       expect(search.status).toBe(200);
       const { results } = (await search.json()) as {
@@ -322,7 +322,7 @@ describe("API integration: inbox (ADR 051)", () => {
 
     const released = await readProject(inbox.id);
     expect(released.ownerUserId).toBeNull();
-    expect(released.name).toBe("Bandeja de Ana");
+    expect(released.name).toBe("Personal de Ana");
 
     mockAuthenticatedSession(luis);
     expect((await listProjects(ana.workspace.id)).map((p) => p.id)).toContain(

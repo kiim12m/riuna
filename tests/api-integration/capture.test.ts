@@ -70,7 +70,7 @@ describe("API integration: quick capture (ADR 052)", () => {
     expect(response.status).toBe(200);
     const captured = (await response.json()) as Captured;
     expect(captured.inInbox).toBe(true);
-    expect(captured.projectSlug).toBe("BAN");
+    expect(captured.projectSlug).toBe("PER");
 
     const task = await readTask(captured.task.id);
     expect(task.title).toBe("Llamar al proveedor");

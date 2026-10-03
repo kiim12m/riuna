@@ -9,13 +9,17 @@ import {
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 /**
- * La clave de las tareas de toda Bandeja: `BAN-12`. Se repite entre personas
- * del mismo espacio, como ya podian repetirse las de dos proyectos: las claves
- * nunca fueron unicas, y la busqueda por clave devuelve todas las que casan.
+ * La clave de las tareas de todo proyecto Personal: `PER-12`. Se repite entre
+ * personas del mismo espacio, como ya podian repetirse las de dos proyectos:
+ * las claves nunca fueron unicas, y la busqueda por clave devuelve todas las
+ * que casan.
  */
-const INBOX_SLUG = "BAN";
+const INBOX_SLUG = "PER";
 
-/** La Bandeja de una persona en un espacio, o `null` si aun no la ha usado. */
+/**
+ * El proyecto Personal -antes «Bandeja», ADR 051- de una persona en un
+ * espacio, o `null` si aun no lo ha usado.
+ */
 export async function findInbox(
   workspaceId: string,
   userId: string,
@@ -36,7 +40,8 @@ export async function findInbox(
 }
 
 /**
- * La Bandeja de una persona, creandola la primera vez que se usa (ADR 051).
+ * El proyecto Personal de una persona, creandolo la primera vez que se usa
+ * (ADR 051).
  *
  * Dos capturas simultaneas no pueden crear dos: la segunda espera el mismo
  * candado que ordena los proyectos del espacio, y al tenerlo ya ve la Bandeja
@@ -58,14 +63,15 @@ export async function ensureInbox(workspaceId: string, userId: string) {
       .from(userTable)
       .where(eq(userTable.id, userId));
 
-    // Con el nombre de la persona, y no solo «Bandeja»: sus tareas salen en
+    // Con el nombre de la persona, y no solo «Personal»: sus tareas salen en
     // las pantallas de los demas, y si la persona se va, el proyecto que
-    // queda tiene que decir de quien era.
+    // queda tiene que decir de quien era. A su dueño la barra lo llama
+    // «Personal», sin mas.
     return insertProject(tx, {
       workspaceId,
       ownerUserId: userId,
-      name: owner?.name ? `Bandeja de ${owner.name}` : "Bandeja",
-      icon: "Inbox",
+      name: owner?.name ? `Personal de ${owner.name}` : "Personal",
+      icon: "UserRound",
       slug: INBOX_SLUG,
     });
   });

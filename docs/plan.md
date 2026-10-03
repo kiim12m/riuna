@@ -1773,6 +1773,12 @@ verificación.
     el widget renombrado;
   - 1 unitaria de la barra lateral; typecheck; pasada visual en escritorio y
     móvil.
+
+  **Cambio posterior (2026-10-03): se llama «Personal».** Tras verla en la
+  copia de producción, el usuario pidió llevarla a «Proyectos». Cada persona
+  ve la suya fija en lo alto de su grupo «Proyectos», con clave `PER`; la
+  migración 0077 renombra las ya creadas. Sigue oculta para los demás y no es
+  privada, así que no se llama «privado». Detalle en la ADR 051.
 - **1.2 Captura rápida** ✔ · M · [ADR 052](adr/052-captura-rapida.md). Parser puro sin dependencia —el vocabulario es cerrado—:
   estimación `1h 30m 1h30 1,5h` · día del plan `@hoy @mañana @lun @15/10 [10:00]` —plan y hora,
   **nunca** vencimiento— · vencimiento `!mañana !15/10` · `#etiqueta` (solo las que existen) ·

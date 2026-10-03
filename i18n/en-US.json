@@ -1478,7 +1478,7 @@
 			"admin": "Administration",
 			"projects": "Projects",
 			"today": "Today",
-			"inbox": "Inbox",
+			"inbox": "Personal",
 			"planner": "Planner",
 			"schedule": "Schedule",
 			"myTasks": "My tasks",
@@ -1587,10 +1587,10 @@
 			}
 		},
 		"inbox": {
-			"unavailableTitle": "Your inbox couldn't be opened",
-			"unavailableDescription": "Your role in this workspace may not allow creating tasks, and an inbox only holds tasks you create.",
-			"visibilityLabel": "Who can see this inbox",
-			"notPrivate": "An inbox doesn't appear in project lists, but it isn't private: anyone who can see this workspace's tasks can see its tasks too."
+			"unavailableTitle": "Your Personal project couldn’t be opened",
+			"unavailableDescription": "Your role in this workspace may not allow creating tasks, and Personal only holds tasks you create.",
+			"visibilityLabel": "Who can see Personal",
+			"notPrivate": "Personal doesn’t appear in other people’s project lists, but it isn’t private: anyone who can see this workspace’s tasks can see its tasks too."
 		}
 	},
 	"notifications": {
@@ -3018,7 +3018,7 @@
 		"preview": "What will be captured",
 		"due": "Due {{day}}",
 		"captured": "{{key}} captured",
-		"capturedInInbox": "{{key}} captured in your inbox",
+		"capturedInInbox": "{{key}} captured in Personal",
 		"error": "The task couldn't be captured"
 	},
 	"taskActions": {
@@ -3122,8 +3122,8 @@
 				"none": "Nothing urgent."
 			},
 			"unplanned": {
-				"title": "Inbox and unplanned",
-				"hint": "What’s yours and has no day yet, your inbox included.",
+				"title": "Personal and unplanned",
+				"hint": "What’s yours and has no day yet, Personal included.",
 				"none": "Everything has a day.",
 				"more_one": "And {{count}} more, in the Planner.",
 				"more_other": "And {{count}} more, in the Planner."
@@ -3152,9 +3152,9 @@
 			"more_one": "And {{count}} more.",
 			"more_other": "And {{count}} more.",
 			"inbox": {
-				"title": "Empty the inbox",
+				"title": "Go through Personal",
 				"hint": "Move each task to its project, give it a day, finish it or drop it.",
-				"none": "Your inbox is empty."
+				"none": "You have nothing in Personal."
 			},
 			"overdue": {
 				"title": "Overdue",

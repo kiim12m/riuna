@@ -32,7 +32,7 @@ test.describe("Ausencias y festivos", () => {
   }) => {
     await assignSomething(riuna);
     await page.goto(`/dashboard/workspace/${riuna.workspaceId}/today`);
-    await page.getByRole("button", { name: "Bandeja" }).waitFor({
+    await page.getByRole("button", { name: "Personal", exact: true }).waitFor({
       timeout: 30_000,
     });
     await page.goto("/dashboard/settings/account/preferences");

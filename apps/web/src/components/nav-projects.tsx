@@ -34,6 +34,7 @@ import {
 import { type CSSProperties, type ReactNode, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { PersonalProjectItem } from "@/components/personal-project-item";
 import {
   Collapsible,
   CollapsiblePanel,
@@ -241,6 +242,7 @@ export function NavProjects() {
                 onDragCancel={endDrag}
               >
                 <SidebarMenu className="gap-0.5">
+                  <PersonalProjectItem workspaceId={workspace.id} />
                   <SortableContext
                     items={projects?.map((project) => project.id) ?? []}
                     strategy={verticalListSortingStrategy}

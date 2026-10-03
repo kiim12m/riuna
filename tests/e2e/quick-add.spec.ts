@@ -23,7 +23,7 @@ type PlanEntry = {
  * tecla `q` en cualquier pantalla.
  */
 test.describe("Captura rápida", () => {
-  test("desde Hoy, la tarea va a la Bandeja y al plan de hoy", async ({
+  test("desde Hoy, la tarea va a Personal y al plan de hoy", async ({
     page,
     riuna,
   }) => {
@@ -40,13 +40,13 @@ test.describe("Captura rápida", () => {
     });
 
     const preview = page.getByTestId("quick-add-preview");
-    await expect(preview).toContainText("Bandeja");
+    await expect(preview).toContainText("Personal");
     await expect(preview).toContainText("1,5 h");
     await expect(preview).toContainText("Cliente");
     await expect(preview).toContainText("Alta");
 
     await input.press("Enter");
-    await expect(page.getByText(/BAN-1 capturada en tu Bandeja/)).toBeVisible();
+    await expect(page.getByText(/PER-1 capturada en Personal/)).toBeVisible();
     await expect(input).toHaveValue("");
 
     const today = await riuna.api<{ planned: PlanEntry[] }>(
@@ -67,10 +67,10 @@ test.describe("Captura rápida", () => {
     riuna,
   }) => {
     await page.goto(`/dashboard/workspace/${riuna.workspaceId}/time-sheet`);
-    // La Bandeja sale en la barra cuando ya se sabe que se pueden crear
+    // «Personal» sale en la barra cuando ya se sabe que se pueden crear
     // tareas, que es lo mismo que espera `q`.
     await page
-      .getByRole("button", { name: "Bandeja", exact: true })
+      .getByRole("button", { name: "Personal", exact: true })
       .waitFor({ timeout: 30_000 });
 
     // Fuera de cualquier caja de texto.

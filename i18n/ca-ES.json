@@ -1478,7 +1478,7 @@
 			"admin": "Administració",
 			"projects": "Projectes",
 			"today": "Avui",
-			"inbox": "Bandeja",
+			"inbox": "Personal",
 			"planner": "Planificador",
 			"schedule": "Cronograma",
 			"myTasks": "Les meves tasques",
@@ -1587,10 +1587,10 @@
 			}
 		},
 		"inbox": {
-			"unavailableTitle": "No se ha podido abrir tu Bandeja",
-			"unavailableDescription": "Puede que tu papel en este espacio no permita crear tareas, y una Bandeja solo guarda tareas que creas tú.",
-			"visibilityLabel": "Quién ve esta Bandeja",
-			"notPrivate": "Una Bandeja no sale en las listas de proyectos, pero no es privada: quien ve las tareas del espacio ve también las suyas."
+			"unavailableTitle": "No se ha podido abrir tu proyecto Personal",
+			"unavailableDescription": "Puede que tu papel en este espacio no permita crear tareas, y Personal solo guarda tareas que creas tú.",
+			"visibilityLabel": "Quién ve Personal",
+			"notPrivate": "Personal no sale en las listas de proyectos de los demás, pero no es privado: quien ve las tareas del espacio ve también las suyas."
 		}
 	},
 	"notifications": {
@@ -3018,7 +3018,7 @@
 		"preview": "Lo que se va a capturar",
 		"due": "Vence {{day}}",
 		"captured": "{{key}} capturada",
-		"capturedInInbox": "{{key}} capturada en tu Bandeja",
+		"capturedInInbox": "{{key}} capturada en Personal",
 		"error": "No se ha podido capturar la tarea"
 	},
 	"taskActions": {
@@ -3122,8 +3122,8 @@
 				"none": "Nada urgente."
 			},
 			"unplanned": {
-				"title": "Bandeja y sin planificar",
-				"hint": "Lo tuyo que aún no tiene día, Bandeja incluida.",
+				"title": "Personal y sin planificar",
+				"hint": "Lo tuyo que aún no tiene día, lo de Personal incluido.",
 				"none": "Todo tiene día.",
 				"more_one": "Y {{count}} más, en el Planificador.",
 				"more_other": "Y {{count}} más, en el Planificador."
@@ -3152,9 +3152,9 @@
 			"more_one": "Y {{count}} más.",
 			"more_other": "Y {{count}} más.",
 			"inbox": {
-				"title": "Vaciar la Bandeja",
+				"title": "Repasar lo personal",
 				"hint": "Lleva cada tarea a su proyecto, dale un día, termínala o descártala.",
-				"none": "Tu Bandeja está vacía."
+				"none": "No tienes nada en Personal."
 			},
 			"overdue": {
 				"title": "Vencidas",

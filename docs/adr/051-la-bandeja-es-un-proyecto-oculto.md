@@ -52,3 +52,21 @@ listas pero no privado**.
     de la persona y borrado del espacio. Las de ocultar y la de salir del
     espacio fallan sin el cambio;
   - una prueba de extremo a extremo desde la barra lateral.
+
+**Actualización (2026-10-03): ahora se llama «Personal».** Al verla en una
+copia de producción, al usuario no le convencía el nombre «Bandeja». Pidió
+llevarla a «Proyectos» y llamarla «Proyecto personal» o «privado».
+
+- **«Personal», no «privado»:** no lo es, por lo decidido arriba, y el
+  nombre no puede prometer lo contrario.
+- **Cada persona la ve fija en lo alto de su grupo «Proyectos»**, sin
+  arrastre, en vez de en el espacio personal de la barra. La API la sigue
+  dejando fuera de la lista de proyectos, y con ello de los selectores, la
+  administración y MCP.
+- **Se crea igual, al primer uso**, y su clave pasa de `BAN` a `PER`. La
+  migración 0077 renombra las que ya existían con el nombre que les dio la
+  API: «Bandeja de Ana» pasa a «Personal de Ana».
+- **En el código sigue llamándose `inbox`.** Rutas, claves de traducción y
+  funciones como `ensureInbox` no se renombran, para no tocar medio
+  repositorio por un nombre visible.
+
