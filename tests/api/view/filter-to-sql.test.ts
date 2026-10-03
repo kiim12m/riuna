@@ -156,6 +156,59 @@ describe("filterToSql", () => {
     });
   });
 
+  // «Vence el 5 de octubre» es un dia, no un instante: la columna guarda la
+  // medianoche de Madrid, y compararla con la UTC de ese dia no casaba con lo
+  // elegido en el navegador. El dia es el de la zona de la API (ADR 049).
+  describe("fecha suelta sobre una columna timestamp", () => {
+    const day = new Date(2026, 9, 5);
+    const next = new Date(2026, 9, 6);
+
+    it("eq matches the whole day: from its start to the start of the next", () => {
+      const { sql: text, params } = compile(
+        condition("dueDate", "eq", "2026-10-05"),
+      );
+      expect(text).toContain(">=");
+      expect(text).toContain("<");
+      expect(params.slice(-2)).toEqual([day, next]);
+    });
+
+    it("neq keeps the empty ones and everything outside the day", () => {
+      const { sql: text } = compile(condition("dueDate", "neq", "2026-10-05"));
+      expect(text).toContain("IS NULL");
+    });
+
+    it.each([
+      ["gt", ">=", next],
+      ["gte", ">=", day],
+      ["lt", "<", day],
+      ["lte", "<", next],
+    ] as const)(
+      "%s is relative to the day, not to its first instant",
+      (operator, comparison, bound) => {
+        const { sql: text, params } = compile(
+          condition("dueDate", operator, "2026-10-05"),
+        );
+        expect(text).toContain(` ${comparison} `);
+        expect(params.at(-1)).toEqual(bound);
+      },
+    );
+
+    it("keeps comparing a full instant as an instant", () => {
+      const instant = "2026-10-04T22:00:00.000Z";
+      const { sql: text, params } = compile(
+        condition("dueDate", "eq", instant),
+      );
+      expect(text).not.toContain(">=");
+      expect(params.at(-1)).toEqual(new Date(instant));
+    });
+
+    it("rejects a day that does not exist instead of rolling it over", () => {
+      expect(() => compile(condition("dueDate", "eq", "2026-13-45"))).toThrow(
+        FilterError,
+      );
+    });
+  });
+
   // El fallo que esto arregla: un multi_select guarda un array, y compararlo
   // extrayendo texto nunca casa —un array no es una cadena—, asi que el
   // filtro no devolvia nada en silencio.

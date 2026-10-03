@@ -80,3 +80,14 @@ medirse.
 La paginación sigue siendo por desplazamiento. El cursor que pide el plan llega
 con la tabla `view`, que tampoco existe todavía: no se pueden guardar ni
 compartir vistas.
+
+**Una fecha suelta sobre una columna `timestamp` es un día (2026-10-03).**
+`dueDate eq 2026-10-05` comparaba el instante `2026-10-05T00:00Z`, y el
+vencimiento que elige el navegador es la medianoche de Madrid, así que no casaba
+con nada. Si el valor es un `yyyy-mm-dd` —lo que manda `<input type="date">`— el
+traductor lo lee como el día de la zona de la API ([ADR 049](049-la-api-vive-en-madrid.md)):
+`eq` es `[inicio, fin)` de ese día, `gt` es desde el día siguiente, `lte` hasta el
+final del día, y así el resto. Un instante completo (`…T22:00:00Z`) sigue siendo un
+instante, y un día inexistente (`2026-13-45`) es un 400 y no se desborda al año
+siguiente. Las fechas de campos personalizados ya eran un día (texto `YYYY-MM-DD`).
+

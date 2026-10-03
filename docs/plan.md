@@ -604,10 +604,10 @@ datos.
   cuyo criterio de aceptación —importar 5.000 filas— deja un proyecto justo en
   el borde. La Fase 9 lo retoma si hace falta.
 
-- **`dueDate eq <día>` sobre columnas `timestamp` sigue comparando un
-  instante.** El caso grave —los campos personalizados— está arreglado. Este
-  exige decidir en qué zona horaria vive «un día», que es otra decisión de
-  producto.
+- ~~**`dueDate eq <día>` sobre columnas `timestamp` sigue comparando un
+  instante.**~~ El caso grave —los campos personalizados— está arreglado. Este
+  exigía decidir en qué zona horaria vive «un día»: la de la API (ADR 049), y
+  **cerrado el 2026-10-03** (punto 16 del cierre de la deuda).
 
 - **Los índices de rango sobre `custom_fields`.** El envoltorio `CASE` que
   protege del tipo equivocado impide que un índice de expresión llegue a usarse
@@ -2494,7 +2494,14 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     repetidos (tablero, lista y backlog) y de paso elimina una búsqueda en los miembros del
     espacio por cada tarjeta. Prueba de integración del contrato y e2e del tablero, que falla sin
     el cambio. Quedan fuera los asignados por equipo, que ya tienen su propia etiqueta.
-16. `dueDate eq <día>` compara un instante: comparar por rango del día de Madrid.
+16. ✔ `dueDate eq <día>` compara un instante: comparar por rango del día de Madrid. **Hecho
+    (2026-10-03)**, nota en la [ADR 014](adr/014-motor-de-filtros.md). Un `yyyy-mm-dd` sobre una
+    columna `timestamp` es el día de la zona de la API: `eq` es `[inicio, fin)`, `gt` desde el
+    día siguiente, etc.; un instante completo sigue siendo un instante, y un día inexistente es
+    un 400. Antes `eq` devolvía lista vacía con un vencimiento elegido en el navegador (la prueba
+    de integración con fechas reales de Madrid lo demuestra: falla sin el cambio). «Vence hoy a las
+    00:00 sale vencida», la segunda mitad del hallazgo, ya la cerraba la ADR 049 y la vigila
+    `day-columns-timezone.test.ts`.
 17. Índice `task (completed_at)`: medir en el banco y construir solo si se cumple la condición de la ADR 030.
 
 **Tanda 3 — pruebas y estabilidad** · S–M

@@ -652,6 +652,56 @@ describe("filter engine against Postgres", () => {
   // Los cuatro defectos del motor que encontro la auditoria de la Fase 4.5.
   // Los cuatro devolvian una respuesta, no un error: el filtro contestaba, y
   // contestaba mal, que es la forma mas cara de fallar.
+  describe("fecha suelta sobre una columna timestamp", () => {
+    // El vencimiento que elige el navegador es la medianoche de Madrid -en
+    // octubre, 22:00 UTC del dia anterior-; el filtro por ese dia tiene que
+    // encontrarla, y tambien lo que vence ese dia a otra hora.
+    it("finds what is due on a day, whatever the hour, and not the neighbours", async () => {
+      const { app, projectId, columnId } = await setup();
+      const madrid = (day: number, hour: number) =>
+        new Date(2026, 9, day, hour, 0, 0);
+
+      await insertTask(projectId, columnId, {
+        title: "Ayer",
+        dueDate: madrid(4, 23),
+      });
+      await insertTask(projectId, columnId, {
+        title: "Medianoche",
+        dueDate: madrid(5, 0),
+      });
+      await insertTask(projectId, columnId, {
+        title: "Tarde",
+        dueDate: madrid(5, 18),
+      });
+      await insertTask(projectId, columnId, {
+        title: "Manana",
+        dueDate: madrid(6, 0),
+      });
+      await insertTask(projectId, columnId, { title: "Sin fecha" });
+
+      const on = (
+        operator: FilterNode extends { operator: infer O } ? O : never,
+      ) =>
+        listTitles(app, projectId, {
+          type: "condition",
+          field: "dueDate",
+          operator,
+          value: "2026-10-05",
+        });
+
+      expect((await on("eq")).titles).toEqual(["Medianoche", "Tarde"]);
+      expect((await on("gt")).titles).toEqual(["Manana"]);
+      expect((await on("gte")).titles).toEqual([
+        "Manana",
+        "Medianoche",
+        "Tarde",
+      ]);
+      expect((await on("lt")).titles).toEqual(["Ayer"]);
+      expect((await on("lte")).titles).toEqual(["Ayer", "Medianoche", "Tarde"]);
+      expect((await on("neq")).titles).toEqual(["Ayer", "Manana", "Sin fecha"]);
+    });
+  });
+
   describe("saneamiento de la Fase 4.5", () => {
     it("matches a date custom field on the exact day", async () => {
       const { app, projectId, columnId, workspaceId } = await setup();
