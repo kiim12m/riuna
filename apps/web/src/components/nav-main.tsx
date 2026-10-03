@@ -176,12 +176,14 @@ export function NavMain() {
     },
     // La Bandeja es un proyecto oculto en las listas (ADR 051): se llega a
     // ella por aqui. `/inbox` la crea al primer uso y lleva a su lista, asi
-    // que la entrada se marca estando en el proyecto, no en esa puerta.
+    // que la entrada se marca estando en el proyecto, no en esa puerta. Ya
+    // creada, va directa: `/inbox` pide crearla, y eso exige crear tareas
+    // -a quien paso a lector le daba un 403-.
     ...(inbox || canCreateTasks()
       ? [
           {
             title: t("navigation:sidebar.inbox"),
-            url: `${base}/inbox`,
+            url: inbox ? `${base}/project/${inbox.id}/board` : `${base}/inbox`,
             icon: Inbox,
             activePrefix: inbox ? `${base}/project/${inbox.id}` : undefined,
           },

@@ -203,6 +203,18 @@ describe("NavMain", () => {
     expect(screen.getByText("navigation:sidebar.inbox")).toBeInTheDocument();
   });
 
+  // Revision de codigo del interludio, hallazgo 8: con la Bandeja ya creada,
+  // la entrada lleva directa a su proyecto. Pasar por `/inbox` pide crearla,
+  // y eso exige crear tareas: a quien paso a lector le daba un 403.
+  it("lleva directa a la Bandeja que ya existe, sin pedir crearla", () => {
+    inbox = { id: "inbox-1" };
+    renderNav();
+    screen.getByText("navigation:sidebar.inbox").click();
+    expect(navigate).toHaveBeenCalledWith({
+      to: "/dashboard/workspace/ws-1/project/inbox-1/board",
+    });
+  });
+
   // «Mi equipo» es la vista del responsable de departamento (ADR 059): quien
   // no lleva a nadie no la ve.
   it("ensena «Mi equipo» solo a quien lleva a alguien", () => {
