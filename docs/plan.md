@@ -2403,8 +2403,10 @@ filtros.
 
 **Tanda 1 — decisiones y retoques** · XS
 1. Este inventario. ✔
-2. Retirar el normalizador de días del 0.2 (producción ya está convertida), conservando
-   el aviso de que PostgreSQL no está en UTC.
+2. ✔ Retirar el normalizador de días del 0.2 (producción ya está convertida), conservando
+   el aviso de que PostgreSQL no está en UTC. **Hecho (2026-10-03).** El aviso vive ahora en
+   `utils/warn-if-database-not-utc.ts`; de las seis pruebas de `day-columns-timezone` quedan las
+   dos que no dependían de la conversión. Detalle en la ADR 049.
 3. `task:assign` para el rol `member` (migración de los `workspace_role` existentes).
 4. El `<h2>` de «Rama» en la tarea, a 14 px.
 5. El calendario heredado nombra los días en inglés.
@@ -2527,8 +2529,8 @@ fallaba antes del arreglo:
   eventos: los demás lo ven al volver a leer (ADR 060);
 - el stand-up propio hace unas 25 consultas, cuando podría reutilizar las
   lecturas en lote de «Mi equipo»;
-- el normalizador de días del 0.2 recorre dos tablas enteras en cada
-  arranque;
+- ~~el normalizador de días del 0.2 recorre dos tablas enteras en cada
+  arranque;~~ retirado (punto 2 del cierre de la deuda);
 - el formateador de `yyyy-mm-dd` está repetido unas ocho veces en la web, y
   el esquema de día en cinco routers de la API;
 - «Pasar al siguiente día laborable» del cierre aún no salta festivos ni

@@ -82,7 +82,6 @@ import { authorizeAssetAccess } from "./utils/authorize-asset-access";
 import { getInvitationDetails } from "./utils/check-registration-allowed";
 import { buildContentDisposition } from "./utils/content-disposition";
 import { migrateApiKeyReferenceId } from "./utils/migrate-apikey-reference-id";
-import { migrateDayColumnsToLocalMidnight } from "./utils/migrate-day-columns-to-local-midnight";
 import { migrateNotificationPreferencesSchema } from "./utils/migrate-notification-preferences-schema";
 import { migrateSessionColumn } from "./utils/migrate-session-column";
 import { migrateWorkspaceUserEmail } from "./utils/migrate-workspace-user-email";
@@ -100,6 +99,7 @@ import {
 } from "./utils/openapi-spec";
 import { seedDefaultWorkspaceRoles } from "./utils/seed-default-workspace-roles";
 import { validateWorkspaceAccess } from "./utils/validate-workspace-access";
+import { warnIfDatabaseIsNotUtc } from "./utils/warn-if-database-not-utc";
 import view from "./view";
 import workSchedule from "./work-schedule";
 import workflowRule from "./workflow-rule";
@@ -948,9 +948,7 @@ export async function runStartupTasks() {
   await migrateNotificationPreferencesSchema();
   await migrateGitHubIntegration();
   await migrateColumns();
-  // Despues de las migraciones (las tablas tienen que existir) y antes del
-  // planificador de trabajos, que ya lee dias (ADR 049).
-  await migrateDayColumnsToLocalMidnight();
+  await warnIfDatabaseIsNotUtc();
   await seedDefaultWorkspaceRoles();
 
   initializePlugins();

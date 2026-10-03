@@ -1,6 +1,6 @@
 # ADR 049 — La API vive en Europe/Madrid; PostgreSQL, en UTC
 
-**Fecha:** 2026-10-01 · **Estado:** aceptada
+**Fecha:** 2026-10-01 · **Estado:** aceptada · normalizador retirado el 2026-10-03
 
 **Contexto.** «Hoy» es el día del proceso de la API (`utils/day-boundaries.ts`),
 y ninguna imagen fijaba `TZ`: la API corría en UTC. Los navegadores de quienes
@@ -34,8 +34,8 @@ así que basta una zona por instancia.
   una instalación nueva inicializaría la base en Madrid y `completed_at` saldría
   dos horas corrido. `.env.sample` lo advierte. Al arrancar, la API avisa si la
   base no está en UTC.
-- **Un normalizador de arranque** (`utils/migrate-day-columns-to-local-midnight.ts`)
-  lleva los días guardados con la medianoche UTC a la medianoche de la zona del
+- **Un normalizador de arranque** (retirado el 2026-10-03, ver abajo)
+  llevó los días guardados con la medianoche UTC a la medianoche de la zona del
   proceso: `personal_plan_entry.planned_date`, `schedule_block.planned_date` y
   `schedule_block.ends_at`.
   - Solo toca filas a las 00:00 exactas.
@@ -92,3 +92,15 @@ local del proceso y la UTC eran la misma, y eso escondía tres cosas.
 
   `docs/actualizar.md` explica cómo repetir el ensayo sobre una copia de
   producción antes de desplegar.
+
+**Normalizador retirado (2026-10-03).** La instancia de producción ya está
+desplegada con la conversión hecha, y el normalizador recorría dos tablas
+enteras en cada arranque para no encontrar nada. Se borran
+`utils/migrate-day-columns-to-local-midnight.ts` y sus cuatro pruebas de
+integración; quedan las que fijan que la API corre en Madrid y que un
+vencimiento elegido en el navegador vence hoy. **Se conserva el aviso de que
+PostgreSQL no está en UTC**, que no dependía de la conversión: vive ahora en
+`utils/warn-if-database-not-utc.ts`. Una instalación que aún tenga días
+guardados a medianoche UTC (una copia antigua restaurada, por ejemplo) debe
+pasar por una versión anterior a este commit, o aplicar a mano el SQL que
+documentaba `docs/actualizar.md` en su historial.

@@ -609,8 +609,7 @@ no lista los proyectos Personal.
   generación de tareas recurrentes.
 - **«Hoy» es el día de Madrid** ([ADR 049](adr/049-la-api-vive-en-madrid.md)):
   la API corre en `Europe/Madrid` (fijado en su imagen) y PostgreSQL en UTC.
-  Un vencimiento elegido en el calendario vence ese día, no el anterior. Los
-  días del plan guardados antes del cambio se convierten solos al arrancar.
+  Un vencimiento elegido en el calendario vence ese día, no el anterior.
   Todo el mundo comparte la misma zona: no hay zona por persona.
 - **Migraciones automáticas al arranque** bajo cerrojo consultivo, con
   `startupProbe` en el chart para que Kubernetes no mate el pod a mitad.
