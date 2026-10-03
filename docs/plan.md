@@ -614,9 +614,9 @@ datos.
   ([ADR 013](adr/013-campos-personalizados.md)). Medido: `Presupuesto > 1000` es
   un barrido de 12 ms sobre 10.000 tareas, así que no corre prisa.
 
-- **Las pruebas de componente del web** no arrancan en el contenedor de
+- ~~**Las pruebas de componente del web** no arrancan en el contenedor de
   desarrollo: los workers de jsdom caducan al iniciarse. Todo lo que sí arranca
-  pasa, y CI las ejecuta enteras.
+  pasa, y CI las ejecuta enteras.~~ Ya arrancan (punto 19 del cierre de la deuda).
 
 ### Fase 5 — Importación y exportación (≈2 semanas) · **cerrada**
 Generalizar los controladores existentes a **CSV y Excel** con mapeo de
@@ -2532,7 +2532,10 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
       espera explícitamente la respuesta del `DELETE`, para que el próximo fallo diga si hubo
       respuesta.
     - **`task-team`** (punto 3) ya esperaba la actividad con `vi.waitFor`.
-19. Las pruebas de componente del web no arrancan en el devcontainer (jsdom).
+19. ✔ Las pruebas de componente del web no arrancan en el devcontainer (jsdom). **Cerrado por
+    verificación (2026-10-04).** Ya arrancan: las 30 de componente corren entre las 74 del web
+    (390 pruebas), también con `pnpm test --force`, que lanza los diez paquetes a la vez —el
+    escenario donde caducaban los workers—. La nota era de la Fase 4.5 y se quedó vieja.
 20. Los dos casos de humo que faltan (el de la Fase 0 y el asistente de importación), los tres
     gestos de la Fase 4 sin probar, y Playwright en CI.
 
