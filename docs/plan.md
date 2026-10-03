@@ -1681,7 +1681,8 @@ verificación.
   - `apps/api/openapi.json` no se regenera desde la Fase 5. Regenerarlo mete
     unas 9.000 líneas ajenas y la URL de la API del `.env`; pide su propio
     cambio, con la URL saneada.
-  - El calendario heredado nombra los días en inglés.
+  - ~~El calendario heredado nombra los días en inglés.~~ Era el selector de fecha;
+    cerrado (punto 5 del cierre de la deuda).
 - **0.4 Planificador, atajos y paleta** ✔ · M. La zona «con hora» siempre presente, las ancladas
   arrastrables, casilla de hecha (`POST /task/complete/:id`, que ya existe). `s/p/a/l/d`
   registrados; «t c» se asigna a quien crea fuera de un proyecto. La paleta lleva a las
@@ -2417,7 +2418,11 @@ filtros.
 4. ✔ El `<h2>` de «Rama» en la tarea, a 14 px. **Hecho (2026-10-03).** «Rama» y «Tiempo» (que
    copió su clase en el 0.3) pasan al papel «Título de sección» de §05, como «Actividad».
    Visto a 1440 y 390 px.
-5. El calendario heredado nombra los días en inglés.
+5. ✔ El calendario heredado nombra los días en inglés. **Hecho (2026-10-03).** No era el calendario
+   del proyecto, que ya formatea con la lengua de la aplicación, sino el **selector de fecha**:
+   `DayPicker` no recibía `locale` y pintaba «October 2026» y los días en inglés. Ahora recibe
+   `es` o `enUS` según la lengua activa, y el desplegable de mes usa la misma. Lo vigila
+   `date-picker.spec.ts`, que falla sin el cambio.
 6. `GET /api/my-work/tasks` sin consumidor web: se mantiene como API pública y se cierra la nota.
 
 **Tanda 2 — arreglos pequeños** · S
