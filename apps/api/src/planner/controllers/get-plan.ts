@@ -23,6 +23,7 @@ import { workspaceTaskConditions } from "../../view/workspace-task-query";
 import { capacityForDay } from "../../work-schedule/day-capacity";
 import { type DayLoad, dayLoad } from "../../work-schedule/day-load";
 import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
+import { loadUnavailableDays } from "../../work-schedule/unavailable-days";
 import { computeGhosts } from "../ghosts";
 import {
   getEntriesInRange,
@@ -54,19 +55,31 @@ export default async function getPlan({
   now?: Date;
 }) {
   const serverToday = serverDayKey(now);
-  const [projectColumns, scopeConditions, schedule, { blocksByDay }] =
-    await Promise.all([
-      getWorkspaceColumns(workspaceId),
-      workspaceTaskConditions({
-        workspaceId,
-        userId,
-        scope: "assigned",
-        filter: null,
-        registry: {},
-      }),
-      getWorkSchedule(userId),
-      loadBlocksByDay(workspaceId, userId, windowStart, windowEnd),
-    ]);
+  const [
+    projectColumns,
+    scopeConditions,
+    schedule,
+    { blocksByDay },
+    unavailableDays,
+  ] = await Promise.all([
+    getWorkspaceColumns(workspaceId),
+    workspaceTaskConditions({
+      workspaceId,
+      userId,
+      scope: "assigned",
+      filter: null,
+      registry: {},
+    }),
+    getWorkSchedule(userId),
+    loadBlocksByDay(workspaceId, userId, windowStart, windowEnd),
+    loadUnavailableDays({
+      workspaceId,
+      userId,
+      start: windowStart,
+      end: windowEnd,
+    }),
+  ]);
+  const unavailableByDay = Object.fromEntries(unavailableDays);
 
   const capacityByDay: Record<string, number> = {};
   const fixedBlocksByDay: Record<
@@ -79,6 +92,7 @@ export default async function getPlan({
       schedule,
       parseServerDay(dayKey, "day"),
       dayBlocks,
+      unavailableDays.has(dayKey),
     );
     fixedBlocksByDay[dayKey] = dayBlocks
       .filter((block) => block.kind === "fixed")
@@ -126,6 +140,7 @@ export default async function getPlan({
       capacityByDay,
       loadByDay: loadByDayOf([]),
       fixedBlocksByDay,
+      unavailableByDay,
       serverToday,
     };
   }
@@ -221,6 +236,7 @@ export default async function getPlan({
     capacityByDay,
     loadByDay: loadByDayOf(entriesWithLogged),
     fixedBlocksByDay,
+    unavailableByDay,
     serverToday,
   };
 }

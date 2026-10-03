@@ -18,6 +18,7 @@ import {
 import { capacityForDay } from "../../work-schedule/day-capacity";
 import { dayLoad } from "../../work-schedule/day-load";
 import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
+import { loadUnavailableDays } from "../../work-schedule/unavailable-days";
 import { loadBlocksByDay } from "../blocks-by-day";
 import { buildDay } from "../build-day";
 import {
@@ -62,6 +63,7 @@ export default async function getSchedule({
     { blocksByDay, blocksById },
     runningEntry,
     ghosts,
+    unavailableDays,
   ] = await Promise.all([
     getWorkspaceColumns(workspaceId),
     getWorkSchedule(userId),
@@ -95,6 +97,12 @@ export default async function getSchedule({
     // el pie de la barra lateral, en vez de mantener aqui su propia copia.
     getRunningEntry(userId),
     computeGhosts(workspaceId, userId, windowStart, windowEnd),
+    loadUnavailableDays({
+      workspaceId,
+      userId,
+      start: windowStart,
+      end: windowEnd,
+    }),
   ]);
 
   const decoratedEntries = await decorateTasks(entryRows, projectColumns);
@@ -161,8 +169,11 @@ export default async function getSchedule({
           schedule,
           parseServerDay(dayKey, "day"),
           dayBlocks,
+          unavailableDays.has(dayKey),
         ),
       }),
+      /** Festivo o ausencia (ADR 060): la columna lo dice. */
+      unavailable: unavailableDays.get(dayKey) ?? null,
     };
   });
 

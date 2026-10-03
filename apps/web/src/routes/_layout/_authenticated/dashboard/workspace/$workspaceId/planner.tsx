@@ -496,6 +496,7 @@ function RouteComponent() {
                           i18n.language,
                         ),
                       })}
+                      dayOff={data?.unavailableByDay?.[key] ?? null}
                       untimedEntries={untimedEntries}
                       timedEntries={timedEntries}
                       fixedBlocks={fixedBlocks}

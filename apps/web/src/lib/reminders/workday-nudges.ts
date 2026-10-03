@@ -11,7 +11,7 @@ import { type FocusSession, isBreak } from "@/lib/focus/machine";
  * - **Sin registrar**: en horario laboral, sin cronometro desde hace
  *   `IDLE_AFTER_MS`, como mucho una vez cada `IDLE_REPEAT_MS`. Ni en la
  *   comida ni en un descanso del modo foco, que para el cronometro a
- *   proposito.
+ *   proposito, ni en un festivo o una ausencia (ADR 060).
  * - **Fuera de jornada**: el cronometro sigue en marcha pasada la hora de
  *   salida, en un dia no laborable o desde un dia anterior. Una vez al dia.
  */
@@ -57,6 +57,7 @@ export function workdayNudges({
   running,
   lastStoppedAt,
   focus,
+  dayOff = false,
   preferences,
   fired,
 }: {
@@ -67,6 +68,8 @@ export function workdayNudges({
   lastStoppedAt: number | null;
   /** La sesion de foco abierta, si hay alguna. */
   focus: Pick<FocusSession, "mode" | "phase"> | null;
+  /** Hoy es festivo o hay una ausencia: no es dia de trabajo. */
+  dayOff?: boolean;
   preferences: NudgePreferences;
   /** Lo ya avisado, con cuando, como lo guarda `readFiredTimes()`. */
   fired: Record<string, number>;
@@ -74,7 +77,7 @@ export function workdayNudges({
   const today = new Date(now);
   const dayKey = dayKeyOf(today);
   const minute = today.getHours() * 60 + today.getMinutes();
-  const workDay = ((schedule.workDays >> today.getDay()) & 1) === 1;
+  const workDay = !dayOff && ((schedule.workDays >> today.getDay()) & 1) === 1;
   const lunch =
     schedule.lunchEnabled &&
     schedule.lunchStartMinute !== null &&

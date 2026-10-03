@@ -154,6 +154,17 @@ describe("workdayNudges", () => {
     ).toEqual(["idle"]);
   });
 
+  it("does not nudge to track on a holiday or an absence, but still warns about a timer left running", () => {
+    expect(nudges({ now: friday(11), dayOff: true })).toEqual([]);
+    expect(
+      nudges({
+        now: friday(11),
+        dayOff: true,
+        running: { startTime: friday(10, 30), workingSince: friday(10, 30) },
+      }).map((n) => n.kind),
+    ).toEqual(["overtime"]);
+  });
+
   it("respects each preference on its own", () => {
     const running = { startTime: friday(15), workingSince: friday(15) };
     const now = friday(17, 30);

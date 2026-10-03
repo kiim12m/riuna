@@ -12936,6 +12936,137 @@
 				}
 			},
 			"required": ["feed"]
+		},
+		"availability": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"day": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"holiday": {
+							"type": "string"
+						},
+						"timeOff": {
+							"type": "string"
+						},
+						"noCapacity": {
+							"type": "string"
+						}
+					},
+					"required": ["holiday", "timeOff", "noCapacity"]
+				},
+				"timeOff": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"subtitle": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"from": {
+							"type": "string"
+						},
+						"to": {
+							"type": "string"
+						},
+						"note": {
+							"type": "string"
+						},
+						"notePlaceholder": {
+							"type": "string"
+						},
+						"add": {
+							"type": "string"
+						},
+						"remove": {
+							"type": "string"
+						},
+						"privacy": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						},
+						"tooLong": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"subtitle",
+						"empty",
+						"from",
+						"to",
+						"note",
+						"notePlaceholder",
+						"add",
+						"remove",
+						"privacy",
+						"error",
+						"tooLong"
+					]
+				},
+				"holidays": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"subtitle": {
+							"type": "string"
+						},
+						"cardDescription": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"day": {
+							"type": "string"
+						},
+						"name": {
+							"type": "string"
+						},
+						"namePlaceholder": {
+							"type": "string"
+						},
+						"add": {
+							"type": "string"
+						},
+						"remove": {
+							"type": "string"
+						},
+						"duplicate": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"subtitle",
+						"cardDescription",
+						"empty",
+						"day",
+						"name",
+						"namePlaceholder",
+						"add",
+						"remove",
+						"duplicate",
+						"error"
+					]
+				}
+			},
+			"required": ["day", "timeOff", "holidays"]
 		}
 	},
 	"required": [
@@ -12964,6 +13095,7 @@
 		"rituals",
 		"reminders",
 		"focus",
-		"calendar"
+		"calendar",
+		"availability"
 	]
 }

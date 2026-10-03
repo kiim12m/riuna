@@ -29,6 +29,7 @@ import {
 } from "../../utils/day-boundaries";
 import { capacityForDay } from "../../work-schedule/day-capacity";
 import { getWorkSchedule } from "../../work-schedule/get-work-schedule";
+import { loadUnavailableDays } from "../../work-schedule/unavailable-days";
 import { urgentTasksQuery } from "../queries";
 
 /**
@@ -62,24 +63,38 @@ export default async function getToday({
   const todayEnd = endOfServerDay(now);
   const todayKey = serverDayKey(now);
 
-  const [projectColumns, schedule, { blocksByDay }, dayClosed, focusSessions] =
-    await Promise.all([
-      getWorkspaceColumns(workspaceId),
-      getWorkSchedule(userId),
-      loadBlocksByDay(workspaceId, userId, todayStart, todayEnd),
-      isDayClosed({ workspaceId, userId, day: todayStart }),
-      countFocusSessions({
-        workspaceId,
-        userId,
-        start: todayStart,
-        end: todayEnd,
-      }),
-    ]);
+  const [
+    projectColumns,
+    schedule,
+    { blocksByDay },
+    dayClosed,
+    focusSessions,
+    unavailableDays,
+  ] = await Promise.all([
+    getWorkspaceColumns(workspaceId),
+    getWorkSchedule(userId),
+    loadBlocksByDay(workspaceId, userId, todayStart, todayEnd),
+    isDayClosed({ workspaceId, userId, day: todayStart }),
+    countFocusSessions({
+      workspaceId,
+      userId,
+      start: todayStart,
+      end: todayEnd,
+    }),
+    loadUnavailableDays({
+      workspaceId,
+      userId,
+      start: todayStart,
+      end: todayEnd,
+    }),
+  ]);
+  const unavailable = unavailableDays.get(todayKey) ?? null;
 
   const capacitySeconds = capacityForDay(
     schedule,
     todayStart,
     blocksByDay.get(todayKey) ?? [],
+    unavailable !== null,
   );
 
   const notDone = notDoneCondition(projectColumns);
@@ -184,6 +199,8 @@ export default async function getToday({
       focusSessions,
     },
     serverToday: todayKey,
+    /** Si hoy es festivo o hay una ausencia (ADR 060). */
+    unavailable,
     /** Si ya se paso por «Terminar el dia» (ADR 054). */
     dayClosed,
   };

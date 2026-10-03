@@ -21,6 +21,7 @@ import {
 import * as v from "valibot";
 import activity from "./activity";
 import { auth } from "./auth";
+import availability from "./availability";
 import billing from "./billing";
 import calendar from "./calendar";
 import serveFeed from "./calendar/controllers/serve-feed";
@@ -670,6 +671,7 @@ export function createApp() {
   const plannerApi = api.route("/planner", planner);
   const captureApi = api.route("/capture", capture);
   const calendarApi = api.route("/calendar", calendar);
+  const availabilityApi = api.route("/availability", availability);
   const reviewApi = api.route("/review", review);
   const scheduleApi = api.route("/schedule", schedule);
   const workScheduleApi = api.route("/work-schedule", workSchedule);
@@ -862,6 +864,7 @@ export function createApp() {
     plannerApi,
     captureApi,
     calendarApi,
+    availabilityApi,
     reviewApi,
     scheduleApi,
     workScheduleApi,
@@ -1025,6 +1028,7 @@ const {
   plannerApi,
   captureApi,
   calendarApi,
+  availabilityApi,
   reviewApi,
   scheduleApi,
   workScheduleApi,
@@ -1087,6 +1091,7 @@ export type AppType =
   | typeof plannerApi
   | typeof captureApi
   | typeof calendarApi
+  | typeof availabilityApi
   | typeof reviewApi
   | typeof scheduleApi
   | typeof workScheduleApi

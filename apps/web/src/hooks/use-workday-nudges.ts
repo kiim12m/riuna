@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useRunningTimer } from "@/hooks/queries/time-entry/use-running-timer";
+import { useToday } from "@/hooks/queries/today/use-today";
 import { useWorkSchedule } from "@/hooks/queries/work-schedule/use-work-schedule";
 import {
   markFired,
@@ -32,6 +33,10 @@ export function useWorkdayNudges(workspaceId: string) {
     enabled && (preferences.break || preferences.idle || preferences.overtime);
   const { data: schedule } = useWorkSchedule({ enabled: active });
   const { data: timer } = useRunningTimer(workspaceId);
+  // Hoy dice si el dia es festivo o hay una ausencia (ADR 060). La misma
+  // consulta que ya leen los avisos de la hora anclada.
+  const { data: today } = useToday(active ? workspaceId : "");
+  const dayOff = Boolean(today?.unavailable);
   const focusMode = useFocusStore((state) => state.session?.mode ?? null);
   const focusPhase = useFocusStore((state) => state.session?.phase ?? null);
 
@@ -93,6 +98,7 @@ export function useWorkdayNudges(workspaceId: string) {
           focusMode && focusPhase
             ? { mode: focusMode, phase: focusPhase }
             : null,
+        dayOff,
         preferences,
         fired: readFiredTimes(now),
       });
@@ -118,6 +124,7 @@ export function useWorkdayNudges(workspaceId: string) {
     timer,
     focusMode,
     focusPhase,
+    dayOff,
     preferences,
     navigate,
     t,

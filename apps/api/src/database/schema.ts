@@ -1842,6 +1842,70 @@ export const userWorkScheduleTable = pgTable(
   ],
 );
 
+// Ausencias (ADR 060): rangos de dias en que alguien no esta. **Sin motivo**
+// -una baja medica es un dato sensible-, y la nota solo la ve su dueño. Los
+// dias van a la medianoche del servidor, como `planned_date` (ADR 049).
+export const userTimeOffTable = pgTable(
+  "user_time_off",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    startsOn: timestamp("starts_on", { mode: "date" }).notNull(),
+    endsOn: timestamp("ends_on", { mode: "date" }).notNull(),
+    note: text("note"),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("user_time_off_user_workspace_starts_idx").on(
+      table.userId,
+      table.workspaceId,
+      table.startsOn,
+    ),
+    check(
+      "user_time_off_range_valid",
+      sql`${table.endsOn} >= ${table.startsOn}`,
+    ),
+  ],
+);
+
+// Festivos del espacio (ADR 060): un dia con su nombre, uno por dia.
+export const workspaceHolidayTable = pgTable(
+  "workspace_holiday",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    day: timestamp("day", { mode: "date" }).notNull(),
+    name: text("name").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("workspace_holiday_workspace_day").on(
+      table.workspaceId,
+      table.day,
+    ),
+  ],
+);
+
 // El enlace del calendario de una persona en un espacio (ADR 057). Solo se
 // guarda el sha256 del token: el token se enseña una vez al crearlo, y
 // regenerar o revocar mata el anterior al momento.

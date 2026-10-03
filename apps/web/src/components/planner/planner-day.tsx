@@ -5,6 +5,10 @@ import {
 } from "@dnd-kit/sortable";
 import { AlarmClock, Flag } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import {
+  type DayOff,
+  DayOffBadge,
+} from "@/components/availability/day-off-badge";
 import { DayLoadBar } from "@/components/planner/day-load-bar";
 import { PlannerRow } from "@/components/planner/planner-row";
 import { TimePopover } from "@/components/planner/time-popover";
@@ -39,6 +43,7 @@ export function PlannerDay({
   label,
   loadPct,
   loadHint,
+  dayOff,
   untimedEntries,
   timedEntries,
   fixedBlocks,
@@ -58,6 +63,8 @@ export function PlannerDay({
   /** La carga en horas («3 h planificadas de 8 h»): va en el tooltip, el
    * porcentaje es lo que se lee de un vistazo. */
   loadHint: string;
+  /** Festivo o ausencia (ADR 060): la capacidad ya es 0. */
+  dayOff: DayOff | null;
   untimedEntries: PlanEntry[];
   timedEntries: PlanEntry[];
   fixedBlocks: PlanFixedBlock[];
@@ -99,6 +106,7 @@ export function PlannerDay({
     >
       <div className="space-y-1 px-2 py-2" title={loadHint}>
         <h2 className="font-semibold text-meta">{label}</h2>
+        {dayOff && <DayOffBadge dayOff={dayOff} className="max-w-full" />}
         <p className="text-meta text-muted-foreground tabular-nums">
           {t("planner:dayLoadPct", { pct: loadPct })}
         </p>

@@ -6,6 +6,7 @@ import {
   planEntrySchema,
   planTaskSchema,
 } from "../planner/schemas";
+import { unavailableDaySchema } from "../schemas";
 import { DUE_WINDOWS } from "../utils/due-window";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
@@ -59,6 +60,8 @@ const todayResponseSchema = v.object({
   serverToday: v.string(),
   /** Si ya se paso por «Terminar el dia» (ADR 054). */
   dayClosed: v.boolean(),
+  /** Festivo o ausencia hoy (ADR 060): la capacidad ya vale 0. */
+  unavailable: v.nullable(unavailableDaySchema),
 });
 
 /**

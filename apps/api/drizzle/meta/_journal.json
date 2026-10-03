@@ -526,6 +526,13 @@
 			"when": 1790952094835,
 			"tag": "0074_calendar_feed",
 			"breakpoints": true
+		},
+		{
+			"idx": 75,
+			"version": "7",
+			"when": 1790961375697,
+			"tag": "0075_time_off_and_holidays",
+			"breakpoints": true
 		}
 	]
 }

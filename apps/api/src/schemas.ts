@@ -289,3 +289,12 @@ export const configSchema = v.object({
   billingEnabled: v.boolean(),
   localAccountDomain: v.string(),
 });
+
+/**
+ * Por que un dia no esta disponible (ADR 060): festivo con su nombre, o
+ * ausencia. Nunca la nota de la ausencia.
+ */
+export const unavailableDaySchema = v.object({
+  kind: v.picklist(["holiday", "time-off"]),
+  name: v.nullable(v.string()),
+});

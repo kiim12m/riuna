@@ -3297,5 +3297,39 @@
 			"confirmDescription": "The current link stops working right away, and calendars subscribed to it stop updating.",
 			"error": "The calendar link could not be created."
 		}
+	},
+	"availability": {
+		"day": {
+			"holiday": "Holiday · {{name}}",
+			"timeOff": "Away",
+			"noCapacity": "No hours count as available today."
+		},
+		"timeOff": {
+			"title": "Absences",
+			"subtitle": "Days you will not be working in {{workspace}}: they count as zero hours in your planner and schedule.",
+			"empty": "No upcoming absences.",
+			"from": "From",
+			"to": "To",
+			"note": "Note",
+			"notePlaceholder": "Only you see it",
+			"add": "Add absence",
+			"remove": "Remove absence",
+			"privacy": "There is no reason field, on purpose. The note is yours alone: anyone else only sees “Away”.",
+			"error": "The absence could not be saved.",
+			"tooLong": "Check the dates: an absence goes from one day to another, a year at most."
+		},
+		"holidays": {
+			"title": "Holidays",
+			"subtitle": "Days off for the whole workspace.",
+			"cardDescription": "Every member sees them in their planner and schedule, with no hours available that day.",
+			"empty": "No holidays yet.",
+			"day": "Day",
+			"name": "Name",
+			"namePlaceholder": "Local holiday",
+			"add": "Add holiday",
+			"remove": "Remove {{name}}",
+			"duplicate": "That day already has a holiday.",
+			"error": "The holiday could not be saved."
+		}
 	}
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DayOffBadge } from "@/components/availability/day-off-badge";
 import { DayLoadBar } from "@/components/planner/day-load-bar";
 import type { ScheduleDay, ScheduleSegment } from "@/fetchers/schedule";
 import { cn } from "@/lib/cn";
@@ -300,11 +301,21 @@ function TimeGridColumn({
     >
       <div className="sticky top-0 z-10 h-10 space-y-1 border-border border-b bg-background px-2 py-1">
         <div className="flex items-center justify-between">
-          <h2 className="truncate font-semibold text-meta">
+          {/* Con un festivo, en una columna estrecha, se recorta la marca y no
+           * la fecha: el nombre entero queda en su `title`. */}
+          <h2
+            className={cn(
+              "font-semibold text-meta",
+              day.unavailable ? "shrink-0" : "truncate",
+            )}
+          >
             {day.isToday
               ? `${t("schedule:today")} · ${formatDate(date, { weekday: "short", day: "numeric" })}`
               : formatDate(date, { weekday: "short", day: "numeric" })}
           </h2>
+          {day.unavailable && (
+            <DayOffBadge dayOff={day.unavailable} className="mx-1" />
+          )}
           <button
             type="button"
             onClick={onAddBlock}

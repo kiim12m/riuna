@@ -76,7 +76,7 @@ const schedule = new Hono<{
       operationId: "getSchedule",
       tags: ["Schedule"],
       description:
-        "The current user's hourly layout for a window of days starting at `from` (default: the server's today): planned entries placed in time, fixed blocks, and the running timer",
+        "The current user's hourly layout for a window of days starting at `from` (default: the server's today): planned entries placed in time, fixed blocks, the running timer, and which days are holidays or absences",
       responses: {
         200: {
           description: "The schedule for the requested window",

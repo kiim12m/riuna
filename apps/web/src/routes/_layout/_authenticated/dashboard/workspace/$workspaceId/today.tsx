@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { DayOffBadge } from "@/components/availability/day-off-badge";
 import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import PageTitle from "@/components/page-title";
@@ -372,6 +373,12 @@ function TodayComponent() {
               )
             }
           />
+          {data?.unavailable && (
+            <p className="flex flex-wrap items-center gap-2 text-meta text-muted-foreground">
+              <DayOffBadge dayOff={data.unavailable} />
+              {t("availability:day.noCapacity")}
+            </p>
+          )}
           {/* Lo que se captura desde Hoy es para hoy, salvo que diga otro dia. */}
           {data && canCreateTasks() && (
             <QuickAddInput

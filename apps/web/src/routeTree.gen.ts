@@ -73,6 +73,7 @@ import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRitualsWeeklyR
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/billing'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/general'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceHolidaysRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/holidays'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceLabelsRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/labels'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRolesRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/roles'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceTeamsRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/teams'
@@ -508,6 +509,15 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute
         LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRoute,
     } as any,
   )
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceHolidaysRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceHolidaysRouteImport.update(
+    {
+      id: '/holidays',
+      path: '/holidays',
+      getParentRoute: () =>
+        LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRoute,
+    } as any,
+  )
 const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceLabelsRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceLabelsRouteImport.update(
     {
@@ -706,6 +716,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/workspace/$workspaceId/my-tasks/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/billing': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/general': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute
+  '/dashboard/workspace/$workspaceId/admin/workspace/holidays': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceHolidaysRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/labels': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceLabelsRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/roles': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRolesRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/teams': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceTeamsRoute
@@ -778,6 +789,7 @@ export interface FileRoutesByTo {
   '/dashboard/workspace/$workspaceId/my-tasks': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/billing': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/general': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute
+  '/dashboard/workspace/$workspaceId/admin/workspace/holidays': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceHolidaysRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/labels': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceLabelsRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/roles': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRolesRoute
   '/dashboard/workspace/$workspaceId/admin/workspace/teams': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceTeamsRoute
@@ -860,6 +872,7 @@ export interface FileRoutesById {
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMyTasksIndexRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/billing': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/general': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/holidays': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceHolidaysRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/labels': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceLabelsRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/roles': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRolesRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/teams': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceTeamsRoute
@@ -941,6 +954,7 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/my-tasks/'
     | '/dashboard/workspace/$workspaceId/admin/workspace/billing'
     | '/dashboard/workspace/$workspaceId/admin/workspace/general'
+    | '/dashboard/workspace/$workspaceId/admin/workspace/holidays'
     | '/dashboard/workspace/$workspaceId/admin/workspace/labels'
     | '/dashboard/workspace/$workspaceId/admin/workspace/roles'
     | '/dashboard/workspace/$workspaceId/admin/workspace/teams'
@@ -1013,6 +1027,7 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/my-tasks'
     | '/dashboard/workspace/$workspaceId/admin/workspace/billing'
     | '/dashboard/workspace/$workspaceId/admin/workspace/general'
+    | '/dashboard/workspace/$workspaceId/admin/workspace/holidays'
     | '/dashboard/workspace/$workspaceId/admin/workspace/labels'
     | '/dashboard/workspace/$workspaceId/admin/workspace/roles'
     | '/dashboard/workspace/$workspaceId/admin/workspace/teams'
@@ -1094,6 +1109,7 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/my-tasks/'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/billing'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/general'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/holidays'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/labels'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/roles'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/teams'
@@ -1573,6 +1589,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRoute
     }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/holidays': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/holidays'
+      path: '/holidays'
+      fullPath: '/dashboard/workspace/$workspaceId/admin/workspace/holidays'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceHolidaysRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRoute
+    }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/labels': {
       id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/labels'
       path: '/labels'
@@ -1792,6 +1815,7 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsRouteW
 interface LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRouteChildren {
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceHolidaysRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceHolidaysRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceLabelsRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceLabelsRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRolesRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRolesRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceTeamsRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceTeamsRoute
@@ -1804,6 +1828,8 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRouteChildre
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceBillingRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceGeneralRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceHolidaysRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceHolidaysRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceLabelsRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceLabelsRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminWorkspaceRolesRoute:

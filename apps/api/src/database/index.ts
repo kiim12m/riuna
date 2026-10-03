@@ -97,11 +97,13 @@ import {
   userNotificationWorkspaceProjectTable,
   userNotificationWorkspaceRuleTable,
   userTable,
+  userTimeOffTable,
   userWorkScheduleTable,
   verificationTable,
   viewTable,
   workflowRuleTable,
   workspaceBillingTable,
+  workspaceHolidayTable,
   workspaceRoleTable,
   workspaceTable,
   workspaceUserTable,
@@ -117,6 +119,7 @@ export const schema = {
   billingReminderSentTable,
   billingEventTable,
   workspaceBillingTable,
+  workspaceHolidayTable,
   calendarFeedTable,
   columnTable,
   commentTable,
@@ -163,6 +166,7 @@ export const schema = {
   // `schema.userWorkScheduleTable` y `db.query` no la conocian. Los
   // controladores la importan directamente y por eso nada fallaba en
   // produccion -el mismo hueco que la Fase 1 encontro con `task_assignee`-.
+  userTimeOffTable,
   userWorkScheduleTable,
   verificationTable,
   viewTable,

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
+import { unavailableDaySchema } from "../schemas";
 import {
   addDays,
   endOfServerDay,
@@ -81,6 +82,8 @@ const planResponseSchema = v.object({
   ),
   /** Las citas fijas de cada dia, para "Con hora" y para sumar a la carga. */
   fixedBlocksByDay: v.record(v.string(), v.array(fixedBlockSchema)),
+  /** Los dias no disponibles de la ventana -festivos y ausencias, ADR 060-. */
+  unavailableByDay: v.record(v.string(), unavailableDaySchema),
   /** El dia del servidor, `yyyy-mm-dd`: de ahi arranca la rejilla de 15 dias. */
   serverToday: v.string(),
 });

@@ -24,7 +24,7 @@
 | 6 — Ejecución y productividad personal | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
-| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 a 4 hechos (el 4.2, aplazado); sigue el 5 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
+| Interludio — Productividad personal y equipo | 18 | **En curso** — Bloques 0 a 4 hechos (el 4.2, aplazado), y 5.1; sigue el 5.2 · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--pendiente) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -2100,10 +2100,38 @@ verificación.
 
 **Bloque 5 — Equipo** (≈ 2,5 semanas)
 
-- **5.1 Ausencias y festivos** · S-M · ADR 060. `user_time_off` —rangos de días, **sin motivo**,
+- **5.1 Ausencias y festivos** ✔ · S-M · [ADR 060](adr/060-ausencias-y-festivos.md). `user_time_off` —rangos de días, **sin motivo**,
   con nota privada—, que gestiona la propia persona junto a su jornada, y `workspace_holiday`,
   que gestiona quien administra el espacio. Un día no disponible vale 0, como uno no laborable
   (ADR 045). Las recurrentes se siguen generando en festivo: declarado.
+  **Hecho (2026-10-02).** Decisiones de detalle:
+  - **Una sola fuente:** `work-schedule/unavailable-days.ts` da el día y su
+    tipo, nunca la nota. `capacityForDay` lo recibe y devuelve 0 en el
+    Planificador, el Cronograma y Hoy, que pintan «Festivo · nombre» o
+    «Ausente».
+  - **La ausencia es de un espacio** (toda tabla nueva lleva
+    `workspace_id`), como mucho de un año, y se da en Ajustes › Preferencias
+    para el espacio activo, debajo de la jornada.
+  - **Los festivos van en Administración › Festivos.** Los lee cualquier
+    miembro; añadir y quitar piden `workspace:manage_settings`, y un día
+    repetido da 409.
+  - **Si un festivo cae dentro de una ausencia, se ve el festivo.**
+  - **El aviso de «sin registrar» calla en un día no disponible.** El de
+    cronómetro fuera de jornada, no.
+  - **Pendiente:** «Pasar al siguiente día laborable» aún no salta festivos
+    ni ausencias, y un festivo nuevo llega a los demás al volver a leer, no
+    por WebSocket.
+
+  Verificación:
+  - 5 pruebas de integración: capacidad 0 en las tres lecturas sin la nota,
+    rango y propiedad, permisos y duplicado, aislamiento entre espacios, y
+    festivo dentro de ausencia. Quitando el filtro por persona, el de espacio
+    o el permiso, falla la suya;
+  - 1 prueba unitaria más de los avisos de ritmo;
+  - 2 de extremo a extremo, una por ajuste;
+  - pasada visual en escritorio y a 375 px. Con un festivo, en la columna
+    estrecha del Cronograma, la fecha se encogía hasta «d…»: ahora se recorta
+    la marca.
 - **5.2 Responsable de departamento** · S · ADR 059. `team_member.is_lead`. **Un único punto
   de visibilidad**, `lead/visibility.ts`, por el que pasa todo controlador del responsable:
   las ADR 041, 046 y 047 ya pagaron tres fugas entre espacios por repetir un `WHERE`. Ningún
@@ -2308,11 +2336,12 @@ planificar el día, el **2.3**, la revisión semanal, y el **2.4**, el stand-up:
 del navegador: el **3.1**, los avisos a la hora anclada
 ([ADR 055](adr/055-avisos-del-navegador-sin-service-worker.md)), el **3.2**,
 el modo foco, y el **3.3**, los avisos de ritmo
-([ADR 056](adr/056-modo-foco-sobre-entradas-reales.md)). Sigue el
-**Bloque 4**, el calendario, se cerró con el **4.1**, exportar ICS
+([ADR 056](adr/056-modo-foco-sobre-entradas-reales.md)). El **Bloque 4**, el
+calendario, se cerró con el **4.1**, exportar ICS
 ([ADR 057](adr/057-exportar-el-calendario-por-token.md)): el **4.2**, importar
-iCal, quedó aplazado. Sigue el **Bloque 5**, equipo, empezando por el **5.1**,
-ausencias y festivos.
+iCal, quedó aplazado. Del **Bloque 5**, equipo, está hecho el **5.1**,
+ausencias y festivos ([ADR 060](adr/060-ausencias-y-festivos.md)); sigue el
+**5.2**, el responsable de departamento.
 Después del interludio viene la **Fase 8**: automatizaciones e
 importadores externos.
 

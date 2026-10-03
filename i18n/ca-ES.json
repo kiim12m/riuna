@@ -3297,5 +3297,39 @@
 			"confirmDescription": "El enlace actual deja de funcionar al momento, y los calendarios suscritos dejan de actualizarse.",
 			"error": "No se pudo crear el enlace del calendario."
 		}
+	},
+	"availability": {
+		"day": {
+			"holiday": "Festivo · {{name}}",
+			"timeOff": "Ausente",
+			"noCapacity": "Hoy no cuenta horas disponibles."
+		},
+		"timeOff": {
+			"title": "Ausencias",
+			"subtitle": "Los días que no trabajarás en {{workspace}}: cuentan cero horas en tu Planificador y tu Cronograma.",
+			"empty": "No hay ausencias próximas.",
+			"from": "Desde",
+			"to": "Hasta",
+			"note": "Nota",
+			"notePlaceholder": "Solo la ves tú",
+			"add": "Añadir ausencia",
+			"remove": "Quitar la ausencia",
+			"privacy": "No hay motivo, a propósito. La nota es solo tuya: los demás solo ven «Ausente».",
+			"error": "No se pudo guardar la ausencia.",
+			"tooLong": "Revisa las fechas: una ausencia va de un día a otro, como mucho un año."
+		},
+		"holidays": {
+			"title": "Festivos",
+			"subtitle": "Días libres para todo el espacio.",
+			"cardDescription": "Todos los miembros los ven en su Planificador y su Cronograma, sin horas disponibles ese día.",
+			"empty": "Aún no hay festivos.",
+			"day": "Día",
+			"name": "Nombre",
+			"namePlaceholder": "Fiesta local",
+			"add": "Añadir festivo",
+			"remove": "Quitar {{name}}",
+			"duplicate": "Ese día ya tiene un festivo.",
+			"error": "No se pudo guardar el festivo."
+		}
 	}
 }

@@ -94,12 +94,17 @@ export function dayCapacitySeconds(
  * `MinuteInterval`. El Planificador y Hoy repetian este emparejamiento cada
  * uno por su cuenta (ADR 045, ADR 047); un cambio en como se derivan los
  * `break` -por ejemplo un nuevo `kind`- solo hacia falta tocarlo aqui.
+ *
+ * Un festivo o una ausencia (`unavailable`, ADR 060) valen 0, como un dia
+ * no laborable.
  */
 export function capacityForDay(
   schedule: WorkSchedule,
   dayDate: Date,
   dayBlocks: { kind: string; startMinute: number; endMinute: number }[],
+  unavailable = false,
 ): number {
+  if (unavailable) return 0;
   const breakIntervals = dayBlocks
     .filter((block) => block.kind === "break")
     .map((block) => ({

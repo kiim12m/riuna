@@ -297,6 +297,16 @@ la tarea y en la propia tabla.
   adelante. El enlace se enseña una vez, y se puede regenerar o revocar.
   Quien lo tenga ve esos títulos, y deja de valer si la persona sale del
   espacio.
+- **Ausencias y festivos** ([ADR 060](adr/060-ausencias-y-festivos.md)):
+  - cada persona da sus ausencias en Ajustes › Preferencias, para el
+    espacio activo: un rango de días y una nota que solo ve ella, sin
+    motivo;
+  - los festivos del espacio se gestionan en Administración › Festivos, con
+    el permiso de gestionar los ajustes del espacio, y los ven todos.
+
+  Un día no disponible cuenta cero horas en el Planificador, el Cronograma y
+  Hoy, que lo marcan con «Festivo · nombre» o «Ausente», y ese día no suena
+  el aviso de «sin registrar».
 - **Stand-up**: un botón en Hoy lo enseña, derivado al momento y sin
   guardarse:
   - ayer, es decir, lo terminado el último día laborable;
