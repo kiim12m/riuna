@@ -129,6 +129,43 @@ describe("API integration: stand-up (sub-bloque 2.4)", () => {
     expect(standup.blockers).toBe("Esperando al proveedor");
   });
 
+  // Revision de codigo del interludio, hallazgo 10: «ayer» no saltaba
+  // festivos ni ausencias, y tras un lunes festivo el martes decia «Ayer
+  // (lun): nada terminado».
+  it("skips holidays and absences when looking for yesterday", async () => {
+    const member = await createWorkspaceMember();
+    const ws = member.workspace.id;
+    await db.insert(schema.userWorkScheduleTable).values({
+      userId: member.user.id,
+      workDays: 0b1_111_111,
+    });
+    const daysAgo = (n: number) => {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() - n);
+      return date;
+    };
+    await db.insert(schema.workspaceHolidayTable).values({
+      workspaceId: ws,
+      day: daysAgo(1),
+      name: "Fiesta local",
+    });
+    await db.insert(schema.userTimeOffTable).values({
+      workspaceId: ws,
+      userId: member.user.id,
+      startsOn: daysAgo(2),
+      endsOn: daysAgo(2),
+    });
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const standup = (await (
+      await app.request(`/api/review/standup?workspaceId=${ws}`)
+    ).json()) as Standup;
+
+    expect(standup.yesterday.day).toBe(keyOf(daysAgo(3)));
+  });
+
   it("works with nothing to say", async () => {
     const member = await createWorkspaceMember();
     mockAuthenticatedSession(member.user);

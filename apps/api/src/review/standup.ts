@@ -4,11 +4,13 @@ import { reviewTable } from "../database/schema";
 import getToday from "../today/controllers/get-today";
 import {
   addDays,
+  endOfServerDay,
   serverDayKey,
   startOfServerDay,
 } from "../utils/day-boundaries";
 import { isWorkDay } from "../work-schedule/day-capacity";
 import { getWorkSchedule } from "../work-schedule/get-work-schedule";
+import { loadUnavailableDays } from "../work-schedule/unavailable-days";
 
 type StandupTask = {
   id: string;
@@ -19,16 +21,30 @@ type StandupTask = {
 };
 
 /**
+ * Hasta donde se mira atras buscando «ayer»: cubre unas vacaciones largas.
+ * Mas alla, el dia anterior.
+ */
+export const STANDUP_LOOKBACK_DAYS = 31;
+
+/**
  * El ultimo dia laborable antes de `day` segun la jornada personal
- * (ADR 045): un lunes, el viernes. Sin ningun dia laborable, el dia anterior.
+ * (ADR 045), saltando festivos y ausencias (`unavailable`, por
+ * `yyyy-mm-dd`, ADR 060): un lunes, el viernes; tras un lunes festivo, el
+ * viernes tambien. Sin ninguno, el dia anterior.
  */
 export function previousWorkDay(
   day: Date,
   schedule: Awaited<ReturnType<typeof getWorkSchedule>>,
+  unavailable: ReadonlySet<string> = new Set(),
 ) {
-  for (let back = 1; back <= 7; back++) {
+  for (let back = 1; back <= STANDUP_LOOKBACK_DAYS; back++) {
     const candidate = addDays(day, -back);
-    if (isWorkDay(schedule, candidate)) return candidate;
+    if (
+      isWorkDay(schedule, candidate) &&
+      !unavailable.has(serverDayKey(candidate))
+    ) {
+      return candidate;
+    }
   }
   return addDays(day, -1);
 }
@@ -59,7 +75,20 @@ export async function getStandup({
   now?: Date;
 }) {
   const today = startOfServerDay(now);
-  const yesterday = previousWorkDay(today, await getWorkSchedule(userId));
+  const [schedule, unavailable] = await Promise.all([
+    getWorkSchedule(userId),
+    loadUnavailableDays({
+      workspaceId,
+      userId,
+      start: addDays(today, -STANDUP_LOOKBACK_DAYS),
+      end: endOfServerDay(addDays(today, -1)),
+    }),
+  ]);
+  const yesterday = previousWorkDay(
+    today,
+    schedule,
+    new Set(unavailable.keys()),
+  );
 
   const [todayView, yesterdayView, closes] = await Promise.all([
     getToday({ workspaceId, userId, now }),

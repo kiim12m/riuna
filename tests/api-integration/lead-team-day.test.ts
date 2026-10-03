@@ -258,6 +258,51 @@ describe("lead team day", () => {
     }
   });
 
+  // Revision de codigo del interludio, hallazgo 10: el «ayer» del equipo
+  // tambien salta festivos y ausencias, y sigue siendo el de cada uno.
+  it("skips holidays and absences for each person's yesterday, like their own", async () => {
+    const { ws, lead, ana } = await setup();
+    const daysAgo = (n: number) => {
+      const date = startOfToday();
+      date.setDate(date.getDate() - n);
+      return date;
+    };
+    await db.insert(schema.workspaceHolidayTable).values({
+      workspaceId: ws,
+      day: daysAgo(1),
+      name: "Fiesta local",
+    });
+    await db.insert(schema.userTimeOffTable).values({
+      workspaceId: ws,
+      userId: ana.id,
+      startsOn: daysAgo(2),
+      endsOn: daysAgo(2),
+    });
+
+    const team = await (
+      await as(lead).request(`/api/lead/standup?workspaceId=${ws}`)
+    ).json();
+    const own = await (
+      await as(ana).request(`/api/review/standup?workspaceId=${ws}`)
+    ).json();
+    const anaStandup = team.members.find(
+      (member: { id: string }) => member.id === ana.id,
+    ).standup;
+    const blas = team.members.find(
+      (member: { name: string }) => member.name === "Blas",
+    ).standup;
+
+    const key = (date: Date) => {
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${date.getFullYear()}-${month}-${day}`;
+    };
+    expect(anaStandup.yesterday.day).toBe(key(daysAgo(3)));
+    expect(anaStandup).toEqual(own);
+    // Blas no tuvo ausencia: su «ayer» es el anterior al festivo.
+    expect(blas.yesterday.day).toBe(key(daysAgo(2)));
+  });
+
   it("shows nothing to someone who leads nobody", async () => {
     const { ws, ana } = await setup();
     for (const path of ["day", "standup"]) {

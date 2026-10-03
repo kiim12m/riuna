@@ -2,13 +2,15 @@ import {
   getWorkspaceColumns,
   LEGACY_FINAL_STATUS,
 } from "../../my-work/decorate";
-import { previousWorkDay } from "../../review/standup";
+import { previousWorkDay, STANDUP_LOOKBACK_DAYS } from "../../review/standup";
 import {
+  addDays,
   endOfServerDay,
   serverDayKey,
   startOfServerDay,
 } from "../../utils/day-boundaries";
 import { getWorkSchedules } from "../../work-schedule/get-work-schedule";
+import { loadUnavailableDaysForUsers } from "../../work-schedule/unavailable-days";
 import { loadCloses, loadDone, loadPeople, loadPlanned } from "../team-data";
 import { visibleMemberIds } from "../visibility";
 
@@ -46,11 +48,20 @@ export default async function getTeamStandup({
   const ids = await visibleMemberIds({ workspaceId, leadUserId });
   if (ids.length === 0) return { members: [] };
 
-  const schedules = await getWorkSchedules(ids);
+  const [schedules, unavailable] = await Promise.all([
+    getWorkSchedules(ids),
+    loadUnavailableDaysForUsers({
+      workspaceId,
+      userIds: ids,
+      start: addDays(today, -STANDUP_LOOKBACK_DAYS),
+      end: endOfServerDay(addDays(today, -1)),
+    }),
+  ]);
   const yesterdayOf = new Map(
     ids.map((id) => {
       const schedule = schedules.get(id);
-      return [id, schedule ? previousWorkDay(today, schedule) : today];
+      const daysOff = new Set(unavailable.get(id)?.keys() ?? []);
+      return [id, schedule ? previousWorkDay(today, schedule, daysOff) : today];
     }),
   );
   const yesterdays = [...yesterdayOf.values()];
