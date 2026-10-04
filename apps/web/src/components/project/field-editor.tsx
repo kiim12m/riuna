@@ -131,14 +131,19 @@ export default function FieldEditor({
     }
   };
 
-  // Se renumeran todos con su indice: si varios compartian posicion (todos a 0
-  // al crearlos) intercambiar solo dos no fijaria un orden.
-  const move = async (definition: Definition, direction: -1 | 1) => {
-    const index = ordered.findIndex((entry) => entry.id === definition.id);
-    const target = index + direction;
-    if (target < 0 || target >= ordered.length) return;
+  // Solo se reordenan los que se pueden editar: en el editor de un proyecto, los
+  // del espacio llevan su propia numeracion y no se tocan, asi que contar con
+  // ellos al intercambiar dejaba la flecha sin efecto. Se renumeran todos los
+  // editables (desde 1, como al crearlos): si varios compartian posicion,
+  // intercambiar solo dos no fijaria un orden.
+  const movable = ordered.filter(editable);
 
-    const next = [...ordered];
+  const move = async (definition: Definition, direction: -1 | 1) => {
+    const index = movable.findIndex((entry) => entry.id === definition.id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= movable.length) return;
+
+    const next = [...movable];
     [next[index], next[target]] = [
       next[target] as Definition,
       next[index] as Definition,
@@ -147,9 +152,9 @@ export default function FieldEditor({
     try {
       await Promise.all(
         next.flatMap((entry, position) =>
-          entry.position === position || !editable(entry)
+          entry.position === position + 1
             ? []
-            : [update({ id: entry.id, position })],
+            : [update({ id: entry.id, position: position + 1 })],
         ),
       );
     } catch (error) {
@@ -186,7 +191,7 @@ export default function FieldEditor({
       )}
 
       <ul className="divide-y divide-border/60" data-testid="field-list">
-        {ordered.map((definition, index) => {
+        {ordered.map((definition) => {
           const archived = Boolean(definition.archivedAt);
           const mine = editable(definition);
 
@@ -265,7 +270,7 @@ export default function FieldEditor({
                     variant="ghost"
                     size="xs"
                     aria-label={t("settings:projectFields.moveUp")}
-                    disabled={index === 0}
+                    disabled={movable[0]?.id === definition.id}
                     onClick={() => move(definition, -1)}
                   >
                     <ArrowUp className="size-3.5" />
@@ -274,7 +279,7 @@ export default function FieldEditor({
                     variant="ghost"
                     size="xs"
                     aria-label={t("settings:projectFields.moveDown")}
-                    disabled={index === ordered.length - 1}
+                    disabled={movable.at(-1)?.id === definition.id}
                     onClick={() => move(definition, 1)}
                   >
                     <ArrowDown className="size-3.5" />

@@ -79,6 +79,53 @@ test.describe("Editor de campos personalizados", () => {
     expect((await listed()).map((field) => field.name)).toEqual(["Comprador"]);
   });
 
+  test("en un proyecto, las flechas ordenan sus campos y saltan los del espacio", async ({
+    page,
+    riuna,
+  }) => {
+    const create = (path: string, name: string) =>
+      riuna.api<{ id: string }>("post", path, { name, type: "text" });
+    const alfa = await create(
+      `/api/field/workspace/${riuna.workspaceId}`,
+      "Alfa",
+    );
+    const beta = await create(`/api/field/project/${riuna.projectId}`, "Beta");
+    await create(`/api/field/project/${riuna.projectId}`, "Gamma");
+    // Un campo del espacio y uno del proyecto con la misma posicion: cada uno
+    // cuenta en su propia numeracion.
+    for (const id of [alfa.id, beta.id]) {
+      await riuna.api("patch", `/api/field/${id}`, { position: 0 });
+    }
+
+    await page.goto(
+      `/dashboard/workspace/${riuna.workspaceId}/admin/project-settings/${riuna.projectId}/workflow`,
+    );
+    const list = page.getByTestId("field-list");
+    const row = (name: string) =>
+      list.getByRole("listitem").filter({ hasText: name });
+    await expect(row("Gamma")).toBeVisible({ timeout: 30_000 });
+
+    // Beta es el primero de los del proyecto: no tiene a quien adelantar.
+    await expect(
+      row("Beta").getByRole("button", { name: "Subir" }),
+    ).toBeDisabled();
+
+    await row("Gamma").getByRole("button", { name: "Subir" }).click();
+    await expect
+      .poll(async () =>
+        (
+          await riuna.api<Listed[]>(
+            "get",
+            `/api/field/project/${riuna.projectId}`,
+          )
+        )
+          .filter((field) => field.name !== "Alfa")
+          .sort((a, b) => a.position - b.position)
+          .map((field) => field.name),
+      )
+      .toEqual(["Gamma", "Beta"]);
+  });
+
   test("crea un campo del espacio desde sus ajustes", async ({
     page,
     riuna,
