@@ -2679,6 +2679,8 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
       por identificador, etiqueta por nombre, Backlog por prioridad y etiqueta). Medido en un
       proyecto de 10.000 tareas: 13 ms.
 
+*Verificación de la tanda 5 (2026-10-04): integración 784 de 785 (1 omitida, ninguna fallada), humo **84 de 84**, unitarias de los paquetes (API 762, web 422, MCP 34, permisos 10, libs 6, planka-import 54, email 11), typecheck, Biome e i18n. Sin migraciones nuevas.*
+
 **Sigue abierta, sin tanda:** el código de facturación heredado (apagado por configuración).
 El usuario quiere estudiarlo antes de decidir.
 
