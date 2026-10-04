@@ -15,6 +15,11 @@ export type EventPayload<T = unknown> = {
 // cuenta, asi que sin esto nadie puede saber cuando han acabado.
 const RUNNING = new Set<Promise<void>>();
 
+// Los gestores que lanza la tanda que se esta publicando. `EVENTS.emit` llama a
+// los oyentes de forma sincrona, asi que basta con tenerla puesta mientras dura
+// el `emit`.
+let collecting: Promise<void>[] | null = null;
+
 /** Espera a que acaben los gestores que hay en marcha, y los que estos lancen. */
 export async function settleEvents(): Promise<void> {
   while (RUNNING.size > 0) {
@@ -37,10 +42,23 @@ export async function publishEventsPaced(
   batchSize = 20,
 ): Promise<void> {
   for (let start = 0; start < events.length; start += batchSize) {
+    const batch: Promise<void>[] = [];
     for (const { type, data } of events.slice(start, start + batchSize)) {
-      await publishEvent(type, data);
+      // `publishEvent` emite antes de su primer `await`: se recoge solo durante
+      // esa parte sincrona, para no apuntar gestores de otra peticion que se
+      // cuele mientras se espera.
+      collecting = batch;
+      let published: Promise<void>;
+      try {
+        published = publishEvent(type, data);
+      } finally {
+        collecting = null;
+      }
+      await published;
     }
-    await settleEvents();
+    // Solo los gestores de **esta** tanda: esperar a todos los del proceso
+    // (`settleEvents`) ataria la importacion a un webhook lento de otra peticion.
+    await Promise.allSettled(batch);
   }
 }
 
@@ -86,6 +104,7 @@ export async function subscribeToEvent<T>(
         }
       })();
       RUNNING.add(running);
+      collecting?.push(running);
       void running.finally(() => RUNNING.delete(running));
     });
   } catch (error) {

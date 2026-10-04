@@ -154,4 +154,28 @@ describe("publishEventsPaced", () => {
     expect(errors).toHaveBeenCalled();
     errors.mockRestore();
   });
+
+  it("waits only for its own handlers, not for a slow one from another request", async () => {
+    let done = 0;
+    await subscribeToEvent("paced.own", async () => {
+      done++;
+    });
+    await subscribeToEvent("other.slow", async () => {
+      // Un webhook que no contesta nunca.
+      await new Promise(() => {});
+    });
+
+    await publishEvent("other.slow", {});
+
+    const finished = await Promise.race([
+      publishEventsPaced(
+        Array.from({ length: 30 }, () => ({ type: "paced.own", data: {} })),
+        10,
+      ).then(() => "finished"),
+      new Promise((resolve) => setTimeout(() => resolve("stuck"), 500)),
+    ]);
+
+    expect(finished).toBe("finished");
+    expect(done).toBe(30);
+  });
 });
