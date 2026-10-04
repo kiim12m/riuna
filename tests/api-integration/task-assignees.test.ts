@@ -770,4 +770,42 @@ describe("API integration: assignees in the task list", () => {
     ]);
     expect(byId.get(none.id)).toEqual([]);
   });
+
+  it("lists the primary assignee first even when it was not assigned first", async () => {
+    const admin = await createWorkspaceMember({ role: "admin" });
+    const { project, columns } = await createProjectFixture({
+      workspaceId: admin.workspace.id,
+    });
+    const ana = await addWorkspaceMember(admin.workspace.id, "Ana");
+    const luis = await addWorkspaceMember(admin.workspace.id, "Luis");
+    const task = await createTask(project.id, columns.todo.id);
+
+    mockAuthenticatedSession(admin.user);
+    const { app } = createApp();
+    const assign = (userIds: string[]) =>
+      app.request(`/api/task/assignees/${task.id}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ userIds }),
+      });
+    // Las dos filas se quedan (mismo `created_at`), pero ahora manda Luis.
+    expect((await assign([ana.id, luis.id])).status).toBe(200);
+    expect((await assign([luis.id, ana.id])).status).toBe(200);
+    await expect(readPrimaryAssignee(task.id)).resolves.toBe(luis.id);
+
+    const response = await app.request(`/api/task/tasks/${project.id}`);
+    const body = (await response.json()) as {
+      data: {
+        columns: { tasks: { id: string; assignees: { id: string }[] }[] }[];
+      };
+    };
+    const assignees = body.data.columns
+      .flatMap((column) => column.tasks)
+      .find((entry) => entry.id === task.id)?.assignees;
+
+    expect(assignees?.map((assignee) => assignee.id)).toEqual([
+      luis.id,
+      ana.id,
+    ]);
+  });
 });
