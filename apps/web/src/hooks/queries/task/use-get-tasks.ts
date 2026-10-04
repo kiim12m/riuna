@@ -19,6 +19,11 @@ export function useGetTasks(
       options?.treeScope ?? "matching",
     ],
     queryFn: () => getTasks(projectId, filter, options),
+    // Al teclear en el buscador o marcar un menu la clave cambia en cada paso:
+    // sin esto el tablero parpadearia a esqueleto en cada uno. Solo se
+    // reaprovecha lo del mismo proyecto.
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[1] === projectId ? previous : undefined,
     refetchInterval: 30000,
     enabled: !!projectId,
   });

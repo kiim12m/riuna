@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { produce } from "immer";
 import {
@@ -40,17 +39,19 @@ import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
 import useGetTeams from "@/hooks/queries/team/use-get-teams";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
-import { DUE_DATE_FILTER_VALUES } from "@/hooks/use-task-filters";
 import { useTaskGrouping } from "@/hooks/use-task-grouping";
 import { getInitials } from "@/lib/get-initials";
 import { getPriorityLabel } from "@/lib/i18n/domain";
 import { getPriorityIcon } from "@/lib/priority";
 import type { SortConfig } from "@/lib/sort-tasks";
 import { sortTasks } from "@/lib/sort-tasks";
+import {
+  buildTaskViewFilter,
+  DUE_DATE_FILTER_VALUES,
+} from "@/lib/task-view-filter";
 import { toast } from "@/lib/toast";
 import useProjectStore from "@/store/project";
 import { useUserPreferencesStore } from "@/store/user-preferences";
-import type Task from "@/types/task";
 
 type BacklogSearchParams = {
   taskId?: string;
@@ -70,7 +71,6 @@ function RouteComponent() {
   const { projectId, workspaceId } = Route.useParams();
   const { taskId } = Route.useSearch();
   const navigate = useNavigate();
-  const { data } = useGetTasks(projectId);
   const { project, setProject } = useProjectStore();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const { mutate: updateTask } = useUpdateTask();
@@ -84,7 +84,6 @@ function RouteComponent() {
   const { data: users } = useGetActiveWorkspaceUsers(workspaceId);
   const { data: teams = [] } = useGetTeams({ workspaceId });
   const { data: workspaceLabels = [] } = useGetLabelsByWorkspace(workspaceId);
-  const queryClient = useQueryClient();
 
   const handleCloseTaskSheet = useCallback(() => {
     navigate({
@@ -94,7 +93,7 @@ function RouteComponent() {
     });
   }, [navigate]);
 
-  const { setViewMode } = useUserPreferencesStore();
+  const { setViewMode, weekStartsOn } = useUserPreferencesStore();
 
   useRegisterShortcuts({
     sequentialShortcuts: {
@@ -165,6 +164,28 @@ function RouteComponent() {
     Array.isArray(filter) ? filter.length > 0 : filter !== null,
   );
 
+  // El Backlog elige un valor por menu; el servidor recibe el mismo filtro que
+  // en el resto de vistas (ADR 065).
+  const labelNames = useMemo(
+    () => new Map(workspaceLabels.map((l) => [l.id, l.name])),
+    [workspaceLabels],
+  );
+  const filter = useMemo(
+    () =>
+      buildTaskViewFilter(
+        {
+          priority: filters.priority ? [filters.priority] : null,
+          assignee: filters.assignee ? [filters.assignee] : null,
+          team: filters.team ? [filters.team] : null,
+          dueDate: filters.dueDate ? [filters.dueDate] : null,
+          labels: filters.labels,
+        },
+        { weekStartsOn, labelNames },
+      ),
+    [filters, weekStartsOn, labelNames],
+  );
+  const { data } = useGetTasks(projectId, filter);
+
   useEffect(() => {
     if (data) {
       setProject(data);
@@ -180,102 +201,6 @@ function RouteComponent() {
     const member = users?.members?.find((m) => m.userId === userId);
     return member?.user?.name || t("common:people.unknown");
   };
-
-  const getTaskLabels = useCallback(
-    (taskId: string) => {
-      const queryKey = ["labels", taskId];
-      const cachedData = queryClient.getQueryData(queryKey) as
-        | Array<{ id: string; name: string; color: string }>
-        | undefined;
-      return cachedData || [];
-    },
-    [queryClient],
-  );
-
-  const filteredProject = useMemo(() => {
-    if (!project) return null;
-
-    const filterTasks = (tasks: Task[]) => {
-      return tasks.filter((task) => {
-        if (filters.priority && task.priority !== filters.priority) {
-          return false;
-        }
-
-        if (filters.assignee && task.userId !== filters.assignee) {
-          return false;
-        }
-
-        if (filters.team && task.teamId !== filters.team) {
-          return false;
-        }
-
-        if (filters.dueDate && task.dueDate) {
-          const today = new Date();
-          const taskDate = new Date(task.dueDate);
-
-          switch (filters.dueDate) {
-            case DUE_DATE_FILTER_VALUES.dueThisWeek: {
-              const weekStart = new Date(
-                today.getFullYear(),
-                today.getMonth(),
-                today.getDate() - today.getDay(),
-              );
-              const weekEnd = new Date(
-                weekStart.getTime() + 6 * 24 * 60 * 60 * 1000,
-              );
-              if (taskDate < weekStart || taskDate > weekEnd) {
-                return false;
-              }
-              break;
-            }
-            case DUE_DATE_FILTER_VALUES.dueNextWeek: {
-              const nextWeekStart = new Date(
-                today.getFullYear(),
-                today.getMonth(),
-                today.getDate() - today.getDay() + 7,
-              );
-              const nextWeekEnd = new Date(
-                nextWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000,
-              );
-              if (taskDate < nextWeekStart || taskDate > nextWeekEnd) {
-                return false;
-              }
-              break;
-            }
-            case DUE_DATE_FILTER_VALUES.noDueDate: {
-              return false;
-            }
-          }
-        }
-
-        if (
-          filters.dueDate === DUE_DATE_FILTER_VALUES.noDueDate &&
-          task.dueDate
-        ) {
-          return false;
-        }
-
-        if (filters.labels.length > 0) {
-          const taskLabels = getTaskLabels(task.id);
-          const taskLabelIds = taskLabels.map((label) => label.id);
-          const hasMatchingLabel = filters.labels.some((filterLabelId) =>
-            taskLabelIds.includes(filterLabelId),
-          );
-          if (!hasMatchingLabel) {
-            return false;
-          }
-        }
-
-        return true;
-      });
-    };
-
-    return {
-      ...project,
-      plannedTasks: filterTasks(project.plannedTasks || []),
-      archivedTasks: filterTasks(project.archivedTasks || []),
-    };
-  }, [project, filters, getTaskLabels]);
 
   const uniqueLabels = workspaceLabels.reduce(
     (
@@ -327,14 +252,18 @@ function RouteComponent() {
     }
   };
 
+  // El almacen conserva el ultimo proyecto de cualquier vista: hasta que llegue
+  // el de esta consulta, se muestra el esqueleto y no el de otro filtro.
+  const shownProject = data ? project : null;
+
   const sortedProject = useMemo(() => {
-    if (!filteredProject || sort.field === "position") return filteredProject;
+    if (!shownProject || sort.field === "position") return shownProject;
     return {
-      ...filteredProject,
-      plannedTasks: sortTasks(filteredProject.plannedTasks || [], sort),
-      archivedTasks: sortTasks(filteredProject.archivedTasks || [], sort),
+      ...shownProject,
+      plannedTasks: sortTasks(shownProject.plannedTasks || [], sort),
+      archivedTasks: sortTasks(shownProject.archivedTasks || [], sort),
     };
-  }, [filteredProject, sort]);
+  }, [shownProject, sort]);
 
   const handleMoveAllPlannedToTodo = () => {
     if (!project) return;

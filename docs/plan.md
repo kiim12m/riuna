@@ -244,26 +244,17 @@ vistas guardadas y compartidas, y el filtrado del Calendario y el Gantt
 ([ADR 014](adr/014-motor-de-filtros.md),
 [ADR 015](adr/015-vistas-guardadas.md)).
 
-**El criterio de aceptación no se cumple entero**, y se cierra igual a
+**El criterio de aceptación no se cumplió entero**, y se cerró igual a
 sabiendas. De lo que pedía —«filtras `Presupuesto > 1000 AND estado != Hecho`,
 agrupas por épica, guardas la vista, la compartes, y el mismo filtro funciona
-en tablero, calendario y gantt»— falta agrupar por épica y que el filtro llegue
-al tablero.
+en tablero, calendario y gantt»— faltaban agrupar por épica y que el filtro
+llegara al tablero. **Las dos cosas están hechas desde el 2026-10-04** (puntos 32
+y 33 del cierre de la deuda).
 
-- **Tablero, Lista y Backlog siguen filtrando en el cliente.** No es que no
-  filtren: filtran, con sus menús de prioridad, responsable, equipo, fecha y
-  etiqueta, en memoria. Migrarlas **sustituye código que funciona** en las tres
-  vistas de uso diario, y por eso se aplaza en vez de hacerse a última hora de
-  una fase. Calendario y Gantt se hicieron primero justamente porque no
-  filtraban: no había nada que romper.
-
-  Cuando se haga, dos notas que ya están investigadas. El filtro de etiquetas
-  actual **ya filtra por nombre**, implementado como un abanico de ids —
-  `getLabelsByWorkspaceId` devuelve también las filas por tarea, y el menú
-  selecciona todas las que comparten nombre y color—, así que moverlo al motor
-  no cambia los resultados; solo deja de distinguir el color. Y los filtros de
-  fecha relativos («esta semana») se preservan si el navegador traduce el rango
-  a fechas absolutas antes de mandarlo, que es donde ya se calculan hoy.
+- ~~**Tablero, Lista y Backlog siguen filtrando en el cliente.**~~ Migradas el 2026-10-04
+  (punto 33 del cierre de la deuda, [ADR 065](adr/065-tablero-lista-y-backlog-filtran-en-el-servidor.md)).
+  Las dos notas de abajo se cumplieron tal cual: etiquetas por nombre y fechas relativas
+  traducidas a absolutas en el navegador.
 
 - ~~**No hay agrupación por épica** ni forma de elegir qué columnas se ven. Por
   eso una vista guardada solo recuerda el filtro y el modo de jerarquía.~~
@@ -2671,8 +2662,22 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
       API como el filtro, y en la URL como el resto del estado de la tabla.
     - Lógica en módulos puros con prueba (`rows.ts`, `columns.ts`: 11 casos), tres e2e y dos pruebas de
       integración de la vista. No toca el modelo de datos.
-33. Tablero, Lista y Backlog pasan al motor de filtros del servidor: cierra el criterio de
-    aceptación de la Fase 4. Con ADR.
+33. ✔ Tablero, Lista y Backlog pasan al motor de filtros del servidor: cierra el criterio de
+    aceptación de la Fase 4. **Hecho (2026-10-04)**, [ADR 065](adr/065-tablero-lista-y-backlog-filtran-en-el-servidor.md).
+    - **Un solo constructor** (`lib/task-view-filter.ts`, 12 casos) traduce los menús y el
+      buscador al árbol del motor; las tres vistas piden `useGetTasks(projectId, filter)` y no
+      queda filtrado en memoria. El Backlog usa por fin la semana de la persona y filtra por
+      etiqueta (leía una caché que casi siempre estaba vacía).
+    - El buscador espera 250 ms y conserva la respuesta anterior mientras llega la nueva.
+    - **Encontrado de paso:** el filtro del tablero se perdía al recargar en desarrollo (un
+      efecto de lectura y otro de escritura en el mismo montaje; el segundo borraba lo guardado).
+      Ahora se lee al crear el estado.
+    - **Cambios de comportamiento, razonados en el ADR:** un número en el buscador casa con el
+      número exacto (`2` ya no trae la 12); las etiquetas se filtran por nombre, sin distinguir
+      el color; «mover todo» del Backlog mueve lo que el Backlog muestra.
+    - Cuatro e2e (`view-filters.spec.ts`: prioridad con recarga y Lista, buscador por título y
+      por identificador, etiqueta por nombre, Backlog por prioridad y etiqueta). Medido en un
+      proyecto de 10.000 tareas: 13 ms.
 
 **Sigue abierta, sin tanda:** el código de facturación heredado (apagado por configuración).
 El usuario quiere estudiarlo antes de decidir.
@@ -2812,8 +2817,8 @@ Lo que arrastra la Fase 6, y que sigue abierto:
   personalizado → dos subtareas → mover en tablero → filtrar y guardar vista →
   exportar— y el del asistente de importación de la Fase 5.~~ Escritos y en CI
   (punto 20 del cierre de la deuda).
-- **Sigue sin decidirse cuándo migrar Tablero, Lista y Backlog al motor de
-  filtros.** Arrastra desde la Fase 4.
+- ~~**Sigue sin decidirse cuándo migrar Tablero, Lista y Backlog al motor de
+  filtros.** Arrastra desde la Fase 4.~~ Migradas (punto 33 del cierre de la deuda).
 - **Repaso de diseño de «Mi trabajo» (2026-09-07).** La pantalla se construyó al
   final de la Fase 6, después de que las ADR 018-021 fijaran la escala, la
   densidad, la elevación y el movimiento en tokens, y la capa visual se escribió

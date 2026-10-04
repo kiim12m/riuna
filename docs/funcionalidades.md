@@ -143,9 +143,9 @@ prioridad, título, fechas, asignaciones de persona y de equipo, anidado,
 
 | Vista | Qué ofrece |
 |---|---|
-| **Tablero (Kanban)** | Arrastrar entre columnas y dentro de una columna, filtros, orden, búsqueda rápida y añadir tarea por columna |
+| **Tablero (Kanban)** | Arrastrar entre columnas y dentro de una columna, filtros y búsqueda rápida resueltos en el servidor (el mismo motor que la Tabla), orden y añadir tarea por columna |
 | **Lista** | Agrupación por estado, equipo o **jerarquía**; secciones plegables; arrastrar para reparentar; archivar todas las completadas |
-| **Backlog** | Secciones *planificadas* y *archivadas*, filtros, agrupación, orden y «mover todo» al tablero |
+| **Backlog** | Secciones *planificadas* y *archivadas*, filtros del servidor, agrupación, orden y «mover todo» al tablero |
 | **Tabla** | Hoja de cálculo con edición en línea, **campos personalizados como columnas**, filtros compuestos, cuatro modos de jerarquía y **vistas guardadas** |
 | **Calendario** | Rejilla mensual, barras multi-día por fecha de inicio y de vencimiento, desbordamiento por día y filtros |
 | **Gantt** | Zoom día/semana/mes/trimestre, arrastrar y redimensionar barras para cambiar fechas, **capa de dependencias**, rango de rama y filtros |

@@ -17,9 +17,9 @@ import useGetLabelsByWorkspace from "@/hooks/queries/label/use-get-labels-by-wor
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
 import useGetTeams from "@/hooks/queries/team/use-get-teams";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
+import { useBoardFilters } from "@/hooks/use-board-filters";
 import { useBoardSort } from "@/hooks/use-board-sort";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
-import { useTaskFiltersWithLabelsSupport } from "@/hooks/use-task-filters-with-labels-support";
 import { useTaskGrouping } from "@/hooks/use-task-grouping";
 import { sortTasks } from "@/lib/sort-tasks";
 import useProjectStore from "@/store/project";
@@ -83,7 +83,6 @@ function RouteComponent() {
   const { projectId, workspaceId } = Route.useParams();
   const { taskId } = Route.useSearch();
   const navigate = useNavigate();
-  const { data } = useGetTasks(projectId);
   const { project, setProject } = useProjectStore();
   const { viewMode, setViewMode } = useUserPreferencesStore();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -98,6 +97,21 @@ function RouteComponent() {
   const { data: users } = useGetActiveWorkspaceUsers(workspaceId);
   const { data: workspaceLabels = [] } = useGetLabelsByWorkspace(workspaceId);
   const { data: teams = [] } = useGetTeams({ workspaceId });
+
+  const {
+    filters,
+    filter,
+    updateFilter,
+    updateLabelFilter,
+    hasActiveFilters,
+    clearFilters,
+  } = useBoardFilters({
+    projectId,
+    projectSlug: project?.slug,
+    textQuery: boardSearchQuery,
+    workspaceLabels,
+  });
+  const { data } = useGetTasks(projectId, filter);
 
   const handleCloseTaskSheet = useCallback(() => {
     navigate({
@@ -167,25 +181,20 @@ function RouteComponent() {
     window.requestAnimationFrame(() => boardSearchInput?.focus());
   }, [isBoardSearchMounted, boardSearchInput]);
 
-  const {
-    filters,
-    updateFilter,
-    updateLabelFilter,
-    filteredProject,
-    hasActiveFilters,
-    clearFilters,
-  } = useTaskFiltersWithLabelsSupport(project, projectId, boardSearchQuery);
+  // El almacen conserva el ultimo proyecto de cualquier vista: hasta que llegue
+  // el de esta consulta, se muestra el esqueleto y no el de otro filtro.
+  const shownProject = data ? project : null;
 
   const sortedProject = useMemo(() => {
-    if (!filteredProject || sort.field === "position") return filteredProject;
+    if (!shownProject || sort.field === "position") return shownProject;
     return {
-      ...filteredProject,
-      columns: filteredProject.columns.map((column) => ({
+      ...shownProject,
+      columns: shownProject.columns.map((column) => ({
         ...column,
         tasks: sortTasks(column.tasks, sort),
       })),
     };
-  }, [filteredProject, sort]);
+  }, [shownProject, sort]);
 
   const boardHeaderSearch = isBoardSearchMounted ? (
     <div
