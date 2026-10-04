@@ -5166,7 +5166,7 @@
         "tags": [
           "Fields"
         ],
-        "description": "List the workspace-wide custom fields",
+        "description": "List the workspace-wide custom fields. `filterable` says whether a view across projects can filter by the field: it is false when some project redefines the key with another way of comparing it",
         "responses": {
           "200": {
             "description": "Field definitions ordered by position",

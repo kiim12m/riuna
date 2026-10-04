@@ -1127,9 +1127,10 @@ sin predicado selectivo.
 
   Lo que sigue sin mirarse: el **cubo «otros»**, que solo aparece con más de
   cincuenta grupos.
-- **Un widget de espacio todavía no ofrece los campos personalizados del
+- ~~**Un widget de espacio todavía no ofrece los campos personalizados del
   espacio**, que la API sí acepta: falta el fetcher que los lea sin pasar por un
-  proyecto. Se dijo que iba en la rebanada 2 y **no entró**; sigue abierto.
+  proyecto. Se dijo que iba en la rebanada 2 y **no entró**; sigue abierto.~~
+  **Cerrado (2026-10-04)**, punto 26 del cierre de la deuda.
 - **El resellado de `completed_at` destapó que la ADR 025 prescribía una
   reparación inservible** —`SET status = status`, que el propio disparador se
   salta por su atajo de "si `status` no cambia, no recalcules"—. Lo encontró una
@@ -2596,7 +2597,14 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     o relación dicen que cambiaron, no a qué identificador. Cuatro pruebas de integración que
     fallan sin el cambio.
 25. Editor de definiciones de campos: renombrar, archivar, borrar, reordenar y campos de espacio.
-26. Los campos de espacio llegan a los widgets y a «Mis tareas».
+26. ✔ Los campos de espacio llegan a los widgets y a «Mis tareas». **Hecho (2026-10-04).** El endpoint
+    ya existía (`GET /field/workspace/:id`); faltaban el fetcher y los consumidores. Cada campo lleva
+    ahora `filterable`, con el mismo criterio que el registro del servidor: **falso si algún proyecto
+    redefine la clave con otra forma de comparación**, porque ofrecerlo acabaría en un 400. Un ayudante
+    compartido (`customFieldsToFilterable`) convierte definiciones en campos filtrables para el
+    proyecto, «Mis tareas» y los widgets de espacio, que antes tenían cada uno lo suyo. Dos pruebas de
+    integración, cuatro unitarias del ayudante y un e2e que falla sin el cambio. No añade columnas
+    personalizadas a «Mis tareas» (solo filtro), que sigue siendo de lectura.
 27. MCP conoce campos personalizados, asignados múltiples y equipos (y el paquete stdio igual).
 28. ✔ Crear un proyecto entero desde una plantilla de proyecto. **Hecho (2026-10-04).** `POST /project`
     acepta un `templateId` opcional: el proyecto nace con **las columnas de la plantilla** (las cuatro

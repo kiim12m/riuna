@@ -1,0 +1,21 @@
+import { client } from "@riuna/libs";
+
+/**
+ * Los campos personalizados del espacio entero. Cada uno lleva `filterable`:
+ * si una vista que cruza proyectos puede filtrar por el (el servidor retira los
+ * que algun proyecto redefine con otra forma de comparacion).
+ */
+async function getWorkspaceFieldDefinitions(workspaceId: string) {
+  const response = await client.field.workspace[":workspaceId"].$get({
+    param: { workspaceId },
+    query: {},
+  });
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  return response.json();
+}
+
+export default getWorkspaceFieldDefinitions;
