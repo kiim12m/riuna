@@ -25,6 +25,7 @@ async function insertTask({
   estimate,
   startDate,
   dueDate,
+  customFields,
 }: {
   projectId: string;
   columnId?: string | null;
@@ -34,6 +35,7 @@ async function insertTask({
   estimate?: number;
   startDate?: Date;
   dueDate?: Date;
+  customFields?: Record<string, unknown>;
 }): Promise<TaskRow> {
   taskNumber += 1;
 
@@ -60,6 +62,7 @@ async function insertTask({
       estimate: estimate ?? null,
       startDate: startDate ?? null,
       dueDate: dueDate ?? null,
+      customFields: customFields ?? {},
     })
     .returning();
 
@@ -489,6 +492,106 @@ describe("API integration: task tree", () => {
   });
 
   describe("subtree aggregates", () => {
+    // Un "Presupuesto" de la obra entera: la suma de un campo numerico o de
+    // moneda sobre la rama, incluida la propia tarea y sin lo archivado.
+    it("sums a numeric custom field over the branch, in the list and in the detail", async () => {
+      const { project, columns, app, member } = await setup();
+      await db.insert(schema.fieldDefinitionTable).values([
+        {
+          workspaceId: member.workspace.id,
+          projectId: project.id,
+          key: "presupuesto",
+          name: "Presupuesto",
+          type: "currency",
+          config: { currency: "EUR" },
+        },
+        {
+          workspaceId: member.workspace.id,
+          projectId: project.id,
+          key: "cliente",
+          name: "Cliente",
+          type: "text",
+          config: {},
+        },
+      ]);
+
+      const root = await insertTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+        title: "Obra",
+        customFields: { presupuesto: 1000, cliente: "Acme" },
+      });
+      const branch = await insertTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+        parent: root,
+        customFields: { presupuesto: 250.5 },
+      });
+      await insertTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+        parent: branch,
+        customFields: { presupuesto: 100 },
+      });
+      // Sin valor: no suma, y no rompe la suma de las demas.
+      await insertTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+        parent: root,
+      });
+      // Archivada: no cuenta para nada.
+      await insertTask({
+        projectId: project.id,
+        columnId: null,
+        status: "archived",
+        parent: root,
+        customFields: { presupuesto: 99999 },
+      });
+
+      type Subtree = { fieldSums: Record<string, number> } | null;
+
+      const detail = (await (
+        await app.request(`/api/task/${root.id}`)
+      ).json()) as { subtree: Subtree };
+      // El texto no se suma: solo numericos y de moneda.
+      expect(detail.subtree?.fieldSums).toEqual({ presupuesto: 1350.5 });
+
+      const list = (await (
+        await app.request(`/api/task/tasks/${project.id}`)
+      ).json()) as {
+        data: {
+          columns: { tasks: { id: string; subtree: Subtree }[] }[];
+        };
+      };
+      const byId = new Map(
+        list.data.columns.flatMap((column) =>
+          column.tasks.map((task) => [task.id, task.subtree] as const),
+        ),
+      );
+      expect(byId.get(root.id)?.fieldSums).toEqual({ presupuesto: 1350.5 });
+      // La rama intermedia suma la suya y la de su hija.
+      expect(byId.get(branch.id)?.fieldSums).toEqual({ presupuesto: 350.5 });
+    });
+
+    it("has no sums in a project without numeric fields", async () => {
+      const { project, columns, app } = await setup();
+      const root = await insertTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+      });
+      await insertTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+        parent: root,
+      });
+
+      const detail = (await (
+        await app.request(`/api/task/${root.id}`)
+      ).json()) as { subtree: { fieldSums: Record<string, number> } };
+
+      expect(detail.subtree.fieldSums).toEqual({});
+    });
+
     it("counts uneven branches and ignores archived tasks", async () => {
       const { project, columns, app } = await setup();
 

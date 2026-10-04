@@ -1,6 +1,8 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import db from "../database";
 import { columnTable, taskTable } from "../database/schema";
+import { getFieldDefinitionsForProject } from "../field/controllers/get-field-definitions";
+import { getProjectWorkspaceId } from "../utils/assert-assignable-user";
 import { subtreePattern } from "./tree";
 
 // Agregados del subarbol: lo que un padre resume de su rama. Se calculan al
@@ -27,6 +29,12 @@ export type TaskSubtreeAggregate = {
   estimateSeconds: number;
   /** Tiempo registrado sumado de la rama en segundos, incluida la propia. */
   loggedSeconds: number;
+  /**
+   * La suma de cada campo personalizado numerico o de moneda sobre la rama,
+   * incluida la propia tarea, por clave del campo. Una clave sin ningun valor
+   * en la rama no aparece. Un "Presupuesto" de la obra entera.
+   */
+  fieldSums: Record<string, number>;
 };
 
 export type TaskSubtreeAggregates = Map<string, TaskSubtreeAggregate>;
@@ -57,6 +65,37 @@ function toDate(value: Date | string | null): Date | null {
   if (value == null) return null;
   if (value instanceof Date) return value;
   return new Date(`${value.replace(" ", "T")}Z`);
+}
+
+/**
+ * Las claves de los campos que se pueden sumar: numericos y de moneda, vigentes
+ * (los archivados se esconden de los formularios y tambien de las sumas). El
+ * valor vive en el JSONB, asi que la clave es lo que se suma.
+ */
+async function getSummableFieldKeys(projectId: string): Promise<string[]> {
+  const workspaceId = await getProjectWorkspaceId(projectId);
+  const definitions = await getFieldDefinitionsForProject(
+    workspaceId,
+    projectId,
+  );
+  return definitions
+    .filter(
+      (definition) =>
+        definition.type === "number" || definition.type === "currency",
+    )
+    .map((definition) => definition.key);
+}
+
+type FieldSumRow = { task_id: string; key: string; total: number | string };
+
+function toFieldSums(rows: FieldSumRow[]) {
+  const byTask = new Map<string, Record<string, number>>();
+  for (const row of rows) {
+    const sums = byTask.get(row.task_id) ?? {};
+    sums[row.key] = toNumber(row.total);
+    byTask.set(row.task_id, sums);
+  }
+  return byTask;
 }
 
 async function getFinalStatuses(projectId: string): Promise<string[]> {
@@ -138,6 +177,37 @@ export async function getProjectSubtreeAggregates(
     HAVING COUNT(*) FILTER (WHERE d."parent_id" = ancestor.id) > 0
   `);
 
+  // Las sumas de campos van en una segunda consulta, solo si el proyecto tiene
+  // algun campo sumable: meterlas en la primera multiplicaria sus filas por el
+  // numero de campos y falsearia los recuentos. Mismo truco de los segmentos de
+  // `path` para encontrar a los ancestros.
+  const summable = await getSummableFieldKeys(projectId);
+  const fieldSums =
+    summable.length > 0
+      ? toFieldSums(
+          (
+            await db.execute<FieldSumRow>(sql`
+              SELECT ancestor.id AS task_id, k.key AS key,
+                SUM((d."custom_fields" ->> k.key)::numeric) AS total
+              FROM "task" d
+              CROSS JOIN LATERAL unnest(
+                string_to_array(trim(both '/' from d."path"), '/')
+              ) AS ancestor(id)
+              CROSS JOIN unnest(${sql.param(summable)}::text[]) AS k(key)
+              WHERE d."project_id" = ${projectId}
+                AND (d."id" = ancestor.id OR d."status" <> 'archived')
+                AND jsonb_typeof(d."custom_fields" -> k.key) = 'number'
+                ${
+                  onlyFor
+                    ? sql`AND ancestor.id = ANY(${sql.param(onlyFor)}::text[])`
+                    : sql``
+                }
+              GROUP BY ancestor.id, k.key
+            `)
+          ).rows,
+        )
+      : new Map<string, Record<string, number>>();
+
   const aggregates: TaskSubtreeAggregates = new Map();
 
   for (const row of result.rows) {
@@ -149,6 +219,7 @@ export async function getProjectSubtreeAggregates(
       dueDate: toDate(row.subtree_due_date),
       estimateSeconds: toNumber(row.estimate_sum),
       loggedSeconds: toNumber(row.logged_sum),
+      fieldSums: fieldSums.get(row.task_id) ?? {},
     });
   }
 
@@ -210,6 +281,26 @@ export async function getTaskSubtreeAggregate(
   // Sin hijas no hay nada que resumir, igual que en la version de proyecto.
   if (!row || toNumber(row.child_count) === 0) return null;
 
+  const summable = await getSummableFieldKeys(projectId);
+  const sums =
+    summable.length > 0
+      ? toFieldSums(
+          (
+            await db.execute<FieldSumRow>(sql`
+              SELECT ${taskId} AS task_id, k.key AS key,
+                SUM((d."custom_fields" ->> k.key)::numeric) AS total
+              FROM "task" d
+              CROSS JOIN unnest(${sql.param(summable)}::text[]) AS k(key)
+              WHERE d."project_id" = ${projectId}
+                AND d."path" LIKE ${subtreePattern(task.path)}
+                AND (d."id" = ${taskId} OR d."status" <> 'archived')
+                AND jsonb_typeof(d."custom_fields" -> k.key) = 'number'
+              GROUP BY k.key
+            `)
+          ).rows,
+        ).get(taskId)
+      : undefined;
+
   return {
     childCount: toNumber(row.child_count),
     descendantCount: toNumber(row.descendant_count),
@@ -218,6 +309,7 @@ export async function getTaskSubtreeAggregate(
     dueDate: toDate(row.subtree_due_date),
     estimateSeconds: toNumber(row.estimate_sum),
     loggedSeconds: toNumber(row.logged_sum),
+    fieldSums: sums ?? {},
   };
 }
 
@@ -253,6 +345,7 @@ export function serializeAggregate(
       (own.dueDate == null || aggregate.dueDate > own.dueDate),
     estimateSeconds: aggregate.estimateSeconds,
     loggedSeconds: aggregate.loggedSeconds,
+    fieldSums: aggregate.fieldSums,
   };
 }
 

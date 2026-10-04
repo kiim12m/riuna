@@ -2357,7 +2357,8 @@
 			"estimateError": "Failed to save the estimate",
 			"reparentError": "Failed to move the task",
 			"cycleError": "A task cannot be nested inside its own branch",
-			"progressTooltip": "{{done}} of {{total}} subtasks closed"
+			"progressTooltip": "{{done}} of {{total}} subtasks closed",
+			"branchSum": "{{name}} of the branch"
 		},
 		"update": {
 			"success": "Task updated successfully",

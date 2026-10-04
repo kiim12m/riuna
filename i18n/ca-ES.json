@@ -2357,7 +2357,8 @@
 			"estimateError": "No se ha podido guardar la estimación",
 			"reparentError": "No se ha podido mover la tarea",
 			"cycleError": "Una tarea no puede colgar de su propia rama",
-			"progressTooltip": "{{done}} de {{total}} subtareas cerradas"
+			"progressTooltip": "{{done}} de {{total}} subtareas cerradas",
+			"branchSum": "{{name}} of the branch"
 		},
 		"update": {
 			"success": "Tarea actualizada correctamente",

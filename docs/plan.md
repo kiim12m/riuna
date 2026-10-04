@@ -225,8 +225,9 @@ gestor de tareas básico y nada propio.
   presupuesto.
 - **MCP no sabe de campos personalizados**: `create_task`, `update_task` y
   `list_tasks` los ignoran.
-- **Los agregados del árbol no suben los campos numéricos.** Sumar un
-  «Presupuesto» de toda la rama es previsible y no está.
+- ~~**Los agregados del árbol no suben los campos numéricos.** Sumar un
+  «Presupuesto» de toda la rama es previsible y no está.~~ Cerrado el 2026-10-04
+  (punto 30 del cierre de la deuda).
 - **Lo que las pruebas y el navegador encontraron:**
   - `state.expanded` de TanStack Table v9 **no siembra** el átomo que lee
     `getIsExpanded`. El árbol de la vista Tabla no se desplegaba nunca —el
@@ -2602,7 +2603,15 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     `decorateTask`/`resolveEpics` salen del desplegador de plantillas de tarea y los usan las dos.
     Dos pruebas de integración que fallan sin el cambio, y las de plantillas siguen en verde. El
     editor web sigue escribiendo solo título y prioridad: el cambio es del modelo y de la API.
-30. Los agregados del árbol suman campos numéricos.
+30. ✔ Los agregados del árbol suman campos numéricos. **Hecho (2026-10-04).** `subtree.fieldSums` en
+    el listado y en el detalle: la suma de cada campo numérico o de moneda sobre la rama, la propia
+    tarea incluida y sin lo archivado, como la estimación. Va en una **segunda consulta** y solo si el
+    proyecto tiene algún campo sumable (meterla en la primera multiplicaría sus filas por el número de
+    campos y falsearía los recuentos); sigue el truco de los segmentos de `path`. **Medido** en el
+    banco, un proyecto de 10.000 tareas con valores en el 70 %: **25 ms** para una página y 50 ms
+    para el proyecto entero. La tarjeta «Rama» del detalle enseña una fila por campo («Presupuesto de
+    la rama: 1350,50 €»). Esto es la mitad de datos del punto 32 (agregados como columnas de la tabla).
+    Dos pruebas de integración y un e2e que falla sin el cambio.
 31. Compositor de tarea en línea al pie de cada columna del tablero.
 
 **Tanda 5 — las grandes** · L

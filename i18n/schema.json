@@ -9285,6 +9285,9 @@
 						},
 						"progressTooltip": {
 							"type": "string"
+						},
+						"branchSum": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -9300,7 +9303,8 @@
 						"estimateError",
 						"reparentError",
 						"cycleError",
-						"progressTooltip"
+						"progressTooltip",
+						"branchSum"
 					]
 				},
 				"update": {

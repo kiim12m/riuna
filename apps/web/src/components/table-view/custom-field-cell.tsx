@@ -55,7 +55,7 @@ function optionsOf(definition: FieldDefinition) {
   );
 }
 
-function formatForDisplay(definition: FieldDefinition, value: unknown) {
+export function formatForDisplay(definition: FieldDefinition, value: unknown) {
   if (value === null || value === undefined || value === "") return "";
 
   if (definition.type === "currency" && typeof value === "number") {
