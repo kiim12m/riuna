@@ -335,7 +335,8 @@ function TableView({
       // Los agregados del arbol, ordenables como cualquier columna. Resumen de
       // la **rama**: una hoja se resume a si misma cuando tiene dato propio, y
       // si no, queda vacia.
-      helper.accessor((row) => row.subtree?.progress ?? -1, {
+      helper.accessor((row) => row.subtree?.progress, {
+        sortUndefined: "last",
         id: "agg.progress",
         header: t("tasks:table.aggregates.progress"),
         cell: ({ row }) =>
@@ -351,7 +352,8 @@ function TableView({
             </span>
           ) : null,
       }),
-      helper.accessor((row) => row.subtree?.descendantCount ?? -1, {
+      helper.accessor((row) => row.subtree?.descendantCount, {
+        sortUndefined: "last",
         id: "agg.descendants",
         header: t("tasks:table.aggregates.descendants"),
         cell: ({ row }) =>
@@ -363,8 +365,9 @@ function TableView({
           ) : null,
       }),
       helper.accessor(
-        (row) => row.subtree?.estimateSeconds ?? row.estimate ?? -1,
+        (row) => row.subtree?.estimateSeconds ?? row.estimate ?? undefined,
         {
+          sortUndefined: "last",
           id: "agg.estimate",
           header: t("tasks:table.aggregates.estimate"),
           cell: ({ row }) => {
@@ -391,7 +394,10 @@ function TableView({
             return typeof own === "number" ? own : undefined;
           };
 
-          return helper.accessor((row) => sumOf(row) ?? -1, {
+          // Sin valor va al final en los dos sentidos: un -1 de relleno se
+          // mezclaba con las sumas negativas de un campo de moneda.
+          return helper.accessor((row) => sumOf(row), {
+            sortUndefined: "last",
             id: `agg.sum.${definition.key}`,
             header: t("tasks:table.aggregates.sum", {
               name: definition.name,

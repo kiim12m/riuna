@@ -35,6 +35,8 @@ test.describe("Vista Tabla: grupos y columnas", () => {
     for (const [id, presupuesto] of [
       [obra, 1000],
       [cimientos, 250],
+      // Una suma negativa: con un -1 de relleno se mezclaba con las vacias.
+      [acopio, -500],
     ] as const) {
       await riuna.api("put", `/api/task/custom-fields/${id}`, {
         values: { presupuesto },
@@ -107,11 +109,15 @@ test.describe("Vista Tabla: grupos y columnas", () => {
     await expect(obra).toContainText(/1\.?250/);
 
     // Una columna numerica ordena primero de mayor a menor: «Obra», con 1250,
-    // sube a la cabeza; la segunda pulsacion la lleva al final.
+    // sube a la cabeza; la segunda pulsacion invierte el orden. Las que no
+    // tienen valor van al final en los dos sentidos.
     await header.getByRole("button").click();
     await expect(page.getByRole("row").nth(1)).toContainText("Obra");
+    await expect(page.getByRole("row").last()).toContainText("Suelta");
     await header.getByRole("button").click();
-    await expect(page.getByRole("row").nth(1)).not.toContainText("Obra");
+    await expect(page.getByRole("row").nth(1)).toContainText("Acopio");
+    await expect(page.getByRole("row").nth(2)).toContainText("Obra");
+    await expect(page.getByRole("row").last()).toContainText("Suelta");
   });
 
   test("la vista guardada recuerda el grupo y las columnas", async ({
