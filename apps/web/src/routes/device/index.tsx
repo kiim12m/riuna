@@ -4,6 +4,7 @@ import {
   useSearch,
 } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 import { AuthLayout } from "@/components/auth/layout";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/device/")({
 });
 
 function DevicePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const search = useSearch({ from: "/device/" });
   const [code, setCode] = useState(search.user_code ?? "");
@@ -30,7 +32,7 @@ function DevicePage() {
     e.preventDefault();
     const formatted = code.trim().replace(/-/g, "").toUpperCase();
     if (formatted.length < 4) {
-      toast.error("Enter the code shown on your device.");
+      toast.error(t("auth:device.codeRequired"));
       return;
     }
     setLoading(true);
@@ -42,7 +44,7 @@ function DevicePage() {
         toast.error(
           "error_description" in res.error
             ? String(res.error.error_description)
-            : "Invalid or expired code",
+            : t("auth:device.invalidCode"),
         );
         return;
       }
@@ -51,7 +53,7 @@ function DevicePage() {
         search: { user_code: formatted },
       });
     } catch {
-      toast.error("Invalid or expired code");
+      toast.error(t("auth:device.invalidCode"));
     } finally {
       setLoading(false);
     }
@@ -59,19 +61,19 @@ function DevicePage() {
 
   return (
     <AuthLayout
-      title="Connect a device"
-      subtitle="Enter the code from your CLI or app to continue."
+      title={t("auth:device.connectTitle")}
+      subtitle={t("auth:device.connectSubtitle")}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          placeholder="e.g. ABCD-1234"
+          placeholder={t("auth:device.codePlaceholder")}
           autoCapitalize="characters"
           autoComplete="one-time-code"
         />
         <Button type="submit" className="w-full" disabled={loading}>
-          Continue
+          {t("auth:device.continue")}
         </Button>
       </form>
     </AuthLayout>

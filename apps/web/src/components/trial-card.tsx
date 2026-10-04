@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Sparkles, TriangleAlert, X } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useGetBilling } from "@/hooks/queries/billing/use-get-billing";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { cn } from "@/lib/cn";
@@ -14,6 +15,7 @@ function daysLeft(value: string | null | undefined) {
 const DISMISS_KEY = "riuna:trial-card-dismissed";
 
 export function TrialCard() {
+  const { t } = useTranslation();
   const { data: workspace } = useActiveWorkspace();
   const { data: billing } = useGetBilling(workspace?.id);
   const [dismissed, setDismissed] = useState<string[]>(() => {
@@ -63,7 +65,7 @@ export function TrialCard() {
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Dismiss"
+          aria-label={t("common:a11y.dismiss")}
           className="absolute top-1.5 right-1.5 rounded p-0.5 opacity-60 transition-opacity hover:opacity-100"
         >
           <X className="size-3" />

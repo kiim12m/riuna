@@ -61,8 +61,8 @@ function SettingsLayout() {
                 variant="ghost"
                 size="icon-sm"
                 className="shrink-0 md:hidden"
-                aria-label="Open settings menu"
-                title="Open settings menu"
+                aria-label={t("common:a11y.openSettingsMenu")}
+                title={t("common:a11y.openSettingsMenu")}
                 onClick={() => setSettingsMenuOpen(true)}
               >
                 <PanelLeftIcon className="size-4" />

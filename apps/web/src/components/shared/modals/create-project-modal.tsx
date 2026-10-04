@@ -89,7 +89,7 @@ function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
 
     try {
       const { id } = await mutateAsync();
-      toast.success("Project created successfully");
+      toast.success(t("common:modals.createProject.successToast"));
       await queryClient.invalidateQueries({ queryKey: ["projects"] });
 
       navigate({

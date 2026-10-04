@@ -15,14 +15,19 @@
 			"clearAllFilters": "Clear all filters",
 			"previous": "Previous",
 			"next": "Next",
-			"edit": "Edit"
+			"edit": "Edit",
+			"confirm": "Confirm"
 		},
 		"boolean": {
 			"yes": "Yes",
 			"no": "No"
 		},
 		"a11y": {
-			"toggleSidebar": "Toggle sidebar"
+			"toggleSidebar": "Toggle sidebar",
+			"toggleTheme": "Toggle theme",
+			"openSettingsMenu": "Open settings menu",
+			"dismiss": "Dismiss",
+			"loading": "Loading"
 		},
 		"sidebar": {
 			"title": "Sidebar",
@@ -342,6 +347,47 @@
 				"nameRequired": "Name is required",
 				"nameShort": "Name must be at least 2 characters"
 			}
+		},
+		"device": {
+			"connectTitle": "Connect a device",
+			"connectSubtitle": "Enter the code from your CLI or app to continue.",
+			"codePlaceholder": "e.g. ABCD-1234",
+			"continue": "Continue",
+			"codeRequired": "Enter the code shown on your device.",
+			"invalidCode": "Invalid or expired code",
+			"approveTitle": "Approve device",
+			"loadingSubtitle": "Loading…",
+			"checkingSession": "Checking session…",
+			"noCode": "No device code was provided.",
+			"enterCode": "Enter a code",
+			"signInTitle": "Sign in to continue",
+			"signInSubtitle": "Sign in to approve or deny this device request.",
+			"signIn": "Sign in",
+			"requestSubtitle": "A device is requesting access to your Riuna account.",
+			"approve": "Approve",
+			"deny": "Deny",
+			"connected": "Device connected",
+			"couldNotApprove": "Could not approve",
+			"couldNotDeny": "Could not deny",
+			"cancelled": "Request cancelled"
+		},
+		"mcp": {
+			"failedTitle": "Authorization failed",
+			"failedSubtitle": "This authorization request is invalid or has expired.",
+			"failedHint": "Return to your MCP client and start the connection again.",
+			"title": "Authorize MCP client",
+			"loadingSubtitle": "Loading request…",
+			"loadingBody": "Checking the authorization request.",
+			"signInTitle": "Sign in to continue",
+			"signInSubtitle": "Sign in before approving this MCP client.",
+			"signIn": "Sign in",
+			"reviewSubtitle": "Review this request before granting access to your Riuna account.",
+			"warning": "This client will be able to act as you and access your workspaces. Only continue if you initiated this connection.",
+			"clientName": "Client name (self-reported)",
+			"defaultClient": "MCP client",
+			"redirectUri": "Redirect URI",
+			"approve": "Approve",
+			"deny": "Deny"
 		}
 	},
 	"settings": {
@@ -1617,6 +1663,9 @@
 			"unavailableDescription": "Your role in this workspace may not allow creating tasks, and Personal only holds tasks you create.",
 			"visibilityLabel": "Who can see Personal",
 			"notPrivate": "Personal doesn’t appear in other people’s project lists, but it isn’t private: anyone who can see this workspace’s tasks can see its tasks too."
+		},
+		"mobileProjectNav": {
+			"view": "View"
 		}
 	},
 	"notifications": {
@@ -2416,6 +2465,11 @@
 			"placeholder": "Task title…",
 			"hint": "Enter to create · Esc to close",
 			"error": "The task could not be created"
+		},
+		"archiveModal": {
+			"title": "Archive Tasks",
+			"description_one": "Are you sure you want to archive the completed task? It will move from the active board to your archive.",
+			"description_other": "Are you sure you want to archive all {{count}} completed tasks? They will move from the active board to your archive."
 		}
 	},
 	"invitations": {
@@ -2610,7 +2664,8 @@
 		},
 		"branding": {
 			"poweredBy": "Powered by"
-		}
+		},
+		"emptyColumn": "No tasks in {{column}}"
 	},
 	"cycles": {
 		"actions": {

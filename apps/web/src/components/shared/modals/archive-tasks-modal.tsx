@@ -1,4 +1,5 @@
 import { Archive } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,9 +23,7 @@ export function ArchiveTasksModal({
   onConfirm,
   taskCount,
 }: ArchiveTasksModalProps) {
-  const isSingular = taskCount === 1;
-  const taskLabel = isSingular ? "completed task" : "completed tasks";
-  const allLabel = isSingular ? "" : "all ";
+  const { t } = useTranslation();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -39,17 +38,12 @@ export function ArchiveTasksModal({
                 <Archive className="h-6 w-6 text-primary" />
               </div>
               <DialogTitle className="text-page text-foreground">
-                Archive Tasks
+                {t("tasks:archiveModal.title")}
               </DialogTitle>
             </DialogHeader>
 
             <DialogDescription className="text-base text-muted-foreground leading-relaxed">
-              Are you sure you want to archive {allLabel}
-              <span className="font-bold text-foreground mx-1">
-                {taskCount}
-              </span>
-              {taskLabel}? This will move them from the active board to your
-              archive.
+              {t("tasks:archiveModal.description", { count: taskCount })}
             </DialogDescription>
           </div>
         </div>
@@ -61,7 +55,7 @@ export function ArchiveTasksModal({
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground hover:bg-accent min-w-[80px]"
           >
-            Cancel
+            {t("common:actions.cancel")}
           </Button>
           <Button
             type="button"
@@ -69,7 +63,7 @@ export function ArchiveTasksModal({
             onClick={onConfirm}
             className="shadow-sm min-w-[100px] font-medium"
           >
-            Confirm
+            {t("common:actions.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

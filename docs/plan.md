@@ -2690,16 +2690,23 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
   que ningún papel cubre.
 - ✔ **«Workspace Name»** en la pantalla de crear espacio: la clave `workspace:create.nameLabel` ya
   existía y traducida; el literal simplemente no la usaba.
-- **Deuda nueva, sin tanda — textos en inglés escritos a mano en pantallas heredadas.** El rastreo
-  que se hizo al cerrar lo anterior encontró que «Workspace Name» no era un caso aislado. Son
-  pantallas que `i18n:check` no ve (no hay clave que falte: no hay clave). Alcanzables hoy:
-  la autorización de clientes MCP (`routes/mcp.authorize.tsx`), la aprobación de dispositivos
-  (`routes/device/approve.tsx` e `index.tsx`), la navegación móvil del proyecto
-  (`mobile-project-nav.tsx`), el modal de archivar tareas, el texto accesible de «Toggle sidebar»
-  / «Toggle theme» / «Open settings menu» / «Dismiss», y el lema de `main.tsx`. Fuera de esta lista
-  a propósito: la facturación (deuda abierta, apagada) y `delete-team-member-modal.tsx`, que no
-  importa nadie. Un rastreo por texto suelto no es exhaustivo; el cierre natural es una prueba como
-  la de `type-scale.test.ts` que vigile los literales en JSX.
+- ✔ **Textos en inglés escritos a mano en pantallas heredadas.** «Workspace Name» no era un caso
+  aislado, y `i18n:check` no lo ve: sin clave no hay clave que falte. Un rastreo sobre el árbol
+  sintáctico (JSX, atributos de texto y `toast.*`) encontró y se tradujo: la autorización de clientes
+  MCP y la aprobación de dispositivos (`auth.mcp.*`, `auth.device.*`), la navegación móvil del
+  proyecto, el modal de archivar tareas (con plural), el aviso de columna vacía de la vista
+  pública, los textos accesibles («Cambiar tema», «Abrir el menú de ajustes», «Descartar»,
+  «Cargando») y el aviso de proyecto creado. Los iconos de marca de los menús dejan de llevar un
+  `<title>Check</title>` que un lector de pantalla leía en inglés. Se borró
+  `delete-team-member-modal.tsx`, que no importaba nadie.
+  - **Lo vigila `hardcoded-copy.test.ts`**: lee todos los `.tsx` con el analizador de Babel
+    (TypeScript 7 ya no trae API de JavaScript) y falla si queda texto de JSX, un `aria-label`,
+    `title`, `placeholder`… o un `toast.*` con texto escrito a mano. Se exceptúan nombres propios,
+    teclas y ejemplos de `placeholder`. Probado que falla con un literal puesto a propósito; al
+    escribirlo ya cazó un import duplicado en `kanban-view.tsx`.
+  - **Quedan exentos, con su razón en el propio test**: la facturación heredada (deuda abierta) y
+    la página de prueba de errores (solo desarrollo).
+  - Tres e2e (`translated-screens.spec.ts`).
 
 **Sigue abierta, sin tanda:** el código de facturación heredado (apagado por configuración).
 El usuario quiere estudiarlo antes de decidir.

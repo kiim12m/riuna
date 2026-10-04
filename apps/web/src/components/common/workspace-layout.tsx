@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { NewTaskButton } from "@/components/common/header/new-task-button";
 import Layout from "@/components/common/layout";
 import { MobileHeaderBell } from "@/components/notification/mobile-header-bell";
@@ -35,6 +36,7 @@ export default function WorkspaceLayout({
   children,
   className,
 }: WorkspaceLayoutProps) {
+  const { t } = useTranslation();
   const { data: workspace } = useActiveWorkspace();
 
   return (
@@ -49,7 +51,7 @@ export default function WorkspaceLayout({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p className="flex items-center gap-2 text-meta">
-                    Toggle sidebar
+                    {t("common:a11y.toggleSidebar")}
                     <KbdSequence
                       keys={[
                         shortcuts.sidebar.prefix,
