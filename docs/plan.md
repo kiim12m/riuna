@@ -2459,10 +2459,9 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     ajustes, búsqueda y crear espacio; en la búsqueda hizo falta `font-normal`, porque el papel
     pone 600 y un campo de texto no lo quiere.
 
-    **Hallazgo, fuera del inventario:** quedan `text-xl` (títulos de todos los diálogos, el
+    ~~**Hallazgo, fuera del inventario:** quedan `text-xl` (títulos de todos los diálogos, el
     onboarding, el logotipo y el `Empty`), `text-3xl` (error público) y `text-7xl` (reloj del
-    modo foco). Los diálogos van a 20 px y el manual pide 16 px para modales: cambiarlo es una
-    decisión visual de toda la aplicación, y no se toma de paso.
+    modo foco).~~ Cerrado el 2026-10-04 (ver «Remates tras la tanda 5»).
 12. ✔ `i18n:check` detecta claves usadas que no existen. **Hecho (2026-10-03).** Busca los literales
     `"ns:ruta"` de `apps/web/src` y falla si alguno no está en `en-US.json` (con plurales y prefijos
     de objeto). Hoy no hay ninguno: el hueco que dejó la Fase 7.5 estaba cerrado, ahora además
@@ -2680,6 +2679,27 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
       proyecto de 10.000 tareas: 13 ms.
 
 *Verificación de la tanda 5 (2026-10-04): integración 784 de 785 (1 omitida, ninguna fallada), humo **84 de 84**, unitarias de los paquetes (API 762, web 422, MCP 34, permisos 10, libs 6, planka-import 54, email 11), typecheck, Biome e i18n. Sin migraciones nuevas.*
+
+**Remates tras la tanda 5 (2026-10-04)** — los dos hallazgos que dejó la verificación.
+- ✔ **Tamaños fuera de escala.** `text-xl` y `text-3xl` pasan a los papeles de la marca: los títulos
+  de diálogo, hoja (`Sheet`), diálogo de alerta y `Empty` a `text-section` (16 px, que es lo que
+  pide el manual para modales; llevaban 20), el onboarding, el alta de perfil, la búsqueda y el
+  logotipo a `text-page` (20 px, igual que antes) y el error público a `text-display` (30 px,
+  igual). La prueba de escala vigila ahora también `xl` y `3xl` (falla con una clase puesta a
+  propósito). Se queda `text-7xl` a propósito: el reloj del modo foco es un numeral de portada
+  que ningún papel cubre.
+- ✔ **«Workspace Name»** en la pantalla de crear espacio: la clave `workspace:create.nameLabel` ya
+  existía y traducida; el literal simplemente no la usaba.
+- **Deuda nueva, sin tanda — textos en inglés escritos a mano en pantallas heredadas.** El rastreo
+  que se hizo al cerrar lo anterior encontró que «Workspace Name» no era un caso aislado. Son
+  pantallas que `i18n:check` no ve (no hay clave que falte: no hay clave). Alcanzables hoy:
+  la autorización de clientes MCP (`routes/mcp.authorize.tsx`), la aprobación de dispositivos
+  (`routes/device/approve.tsx` e `index.tsx`), la navegación móvil del proyecto
+  (`mobile-project-nav.tsx`), el modal de archivar tareas, el texto accesible de «Toggle sidebar»
+  / «Toggle theme» / «Open settings menu» / «Dismiss», y el lema de `main.tsx`. Fuera de esta lista
+  a propósito: la facturación (deuda abierta, apagada) y `delete-team-member-modal.tsx`, que no
+  importa nadie. Un rastreo por texto suelto no es exhaustivo; el cierre natural es una prueba como
+  la de `type-scale.test.ts` que vigile los literales en JSX.
 
 **Sigue abierta, sin tanda:** el código de facturación heredado (apagado por configuración).
 El usuario quiere estudiarlo antes de decidir.

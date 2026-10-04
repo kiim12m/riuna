@@ -15,26 +15,28 @@ function sourceFiles(dir: string): string[] {
 }
 
 /**
- * `text-lg` (18 px), `text-2xl` (24) y `text-4xl` (36) no son ninguno de los
+ * `text-lg` (18 px), `text-xl` (20), `text-2xl` (24), `text-3xl` (30) y
+ * `text-4xl` (36) no son ninguno de los
  * siete papeles de `marca.md` §05: la pantalla pide `text-section`,
  * `text-page` o `text-display`. La revision estetica de la Fase 7.5 devolvio a
  * la escala los tamanos arbitrarios, pero sin vigilancia 48 clases mas se
- * colaron despues.
+ * colaron despues. Los titulos de los dialogos van a `text-section`, como pide
+ * el manual para los modales.
  *
- * **Quedan fuera a proposito** `text-xl`, `text-3xl` y `text-7xl`: los titulos
- * de los dialogos, el onboarding, el logotipo, el error publico y el reloj del
- * modo foco. Son otra decision visual (los modales piden 16 px y hoy llevan 20)
- * y estan apuntados en el plan.
+ * **Queda fuera a proposito** `text-7xl`: el reloj del modo foco es un numeral
+ * de portada que ningun papel de la escala cubre.
  */
 describe("type scale", () => {
-  it("uses no text-lg, text-2xl or text-4xl: pick page, section or display", () => {
+  it("uses no text-lg, xl, 2xl, 3xl or 4xl: pick page, section or display", () => {
     const offenders: string[] = [];
 
     for (const file of sourceFiles(SRC)) {
       const code = readFileSync(file, "utf8")
         .replace(/\/\*[\s\S]*?\*\//g, "")
         .replace(/\/\/.*$/gm, "");
-      const found = code.match(/(?<![\w-])text-(?:lg|2xl|4xl)(?![\w-])/g);
+      const found = code.match(
+        /(?<![\w-])text-(?:lg|xl|2xl|3xl|4xl)(?![\w-])/g,
+      );
       if (found) offenders.push(`${file.replace(SRC, "src")}: ${found[0]}`);
     }
 

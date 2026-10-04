@@ -116,7 +116,7 @@ export function OnboardingFlow() {
 
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <div className="text-center mb-6">
-          <h1 className="text-xl font-semibold text-foreground mb-2">
+          <h1 className="text-page text-foreground mb-2">
             {t("auth:onboarding.createWorkspaceTitle")}
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -201,7 +201,7 @@ export function OnboardingFlow() {
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-xl font-semibold text-foreground">
+            <h1 className="text-page text-foreground">
               {t("auth:onboarding.workspaceCreatedTitle")}
             </h1>
             <p className="text-muted-foreground text-sm">
