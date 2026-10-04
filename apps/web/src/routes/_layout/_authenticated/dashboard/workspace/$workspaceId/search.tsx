@@ -160,7 +160,7 @@ function SearchComponent() {
 
                       {result.status && (
                         <span className="text-label font-medium px-2 py-0.5 rounded border border-border bg-muted/55 text-muted-foreground flex-shrink-0">
-                          {result.status}
+                          {result.statusName ?? result.status}
                         </span>
                       )}
                     </button>

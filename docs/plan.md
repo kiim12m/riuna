@@ -2572,7 +2572,12 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     paso, el título de la campana en castellano decía «Notificationes». Seis pruebas de
     integración (recorrer 120 sin repetir ni saltar ninguna, filtro, total, aislamiento entre
     personas, 400 por parámetros absurdos) y un e2e.
-22. La búsqueda enseña el nombre de la columna, no `status` en crudo.
+22. ✔ La búsqueda enseña el nombre de la columna, no `status` en crudo. **Hecho (2026-10-04).**
+    `GET /search` devuelve `statusName` junto a `status`, con una subconsulta escalar sobre las
+    columnas del proyecto de cada tarea (no un `JOIN`: `column` no es única por `(proyecto, slug)` y
+    repetiría el resultado; hay una prueba con dos columnas del mismo slug). Un estado que no es
+    columna —`planned`, `archived`— queda sin nombre y la pantalla cae al estado. Dos pruebas de
+    integración.
 23. Las preferencias pasan de `localStorage` a la API (incluido el inicio de semana).
 24. ✔ Cambiar un campo personalizado deja rastro en la actividad. **Hecho (2026-10-04).** Una fila
     `custom_field_changed` por campo, con el valor anterior y el nuevo («cambiado “Presupuesto” de
