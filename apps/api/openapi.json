@@ -5522,6 +5522,20 @@
                           "withDescendants"
                         ],
                         "type": "string"
+                      },
+                      "columns": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "maxLength": 120
+                        },
+                        "maxItems": 100
+                      },
+                      "groupBy": {
+                        "enum": [
+                          "epic"
+                        ],
+                        "type": "string"
                       }
                     }
                   },
@@ -5692,6 +5706,20 @@
                           "withDescendants"
                         ],
                         "type": "string"
+                      },
+                      "columns": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "maxLength": 120
+                        },
+                        "maxItems": 100
+                      },
+                      "groupBy": {
+                        "enum": [
+                          "epic"
+                        ],
+                        "type": "string"
                       }
                     }
                   },
@@ -5804,6 +5832,20 @@
                           "flat",
                           "roots",
                           "withDescendants"
+                        ],
+                        "type": "string"
+                      },
+                      "columns": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "maxLength": 120
+                        },
+                        "maxItems": 100
+                      },
+                      "groupBy": {
+                        "enum": [
+                          "epic"
                         ],
                         "type": "string"
                       }

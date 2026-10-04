@@ -637,7 +637,7 @@ Para que nadie busque lo que no existe:
   Solo existe `workflowRule`, que mapea eventos de integración a columnas.
 - **Importadores de Trello, Jira, Asana y Notion** — fase 8.
 - **Importar** la hoja de SERVITEC: se exporta, no se importa.
-- **Agrupar por épica** y elegir qué columnas se ven en la vista Tabla.
+- ~~**Agrupar por épica** y elegir qué columnas se ven en la vista Tabla.~~ Ya se puede, y la vista guardada lo recuerda.
 - ~~**Editor de definiciones de campos personalizados**: renombrar, archivar,
   borrar y reordenar existen en la API y no en la interfaz.~~ Ya existe, en los
   ajustes del proyecto y en los del espacio.

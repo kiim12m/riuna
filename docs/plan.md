@@ -265,9 +265,10 @@ al tablero.
   fecha relativos («esta semana») se preservan si el navegador traduce el rango
   a fechas absolutas antes de mandarlo, que es donde ya se calculan hoy.
 
-- **No hay agrupación por épica** ni forma de elegir qué columnas se ven. Por
-  eso una vista guardada solo recuerda el filtro y el modo de jerarquía.
-- **Faltan los agregados del árbol como columnas** ordenables.
+- ~~**No hay agrupación por épica** ni forma de elegir qué columnas se ven. Por
+  eso una vista guardada solo recuerda el filtro y el modo de jerarquía.~~
+- ~~**Faltan los agregados del árbol como columnas** ordenables.~~ Los tres
+  cerrados el 2026-10-04 (punto 32 del cierre de la deuda).
 - ~~**La paginación sigue siendo por desplazamiento**, no por cursor.~~
   **Cerrado por decisión (2026-10-03):** ver «Cierre de la deuda».
 - **GIN no acelera los rangos**, que es el ejemplo estrella del plan. Y la
@@ -2654,8 +2655,22 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
 *Verificación de la tanda 4 (2026-10-04): integración 782 de 783 (1 omitida, ninguna fallada), humo **77 de 77**, unitarias de los diez paquetes (API 762, web 400, MCP 34), typecheck, Biome e i18n. Migración nueva: 0080 (`user_preference`, solo una tabla).*
 
 **Tanda 5 — las grandes** · L
-32. Vista Tabla: agrupar por épica, elegir columnas (que la vista guardada las recuerde) y
-    agregados del árbol como columnas ordenables.
+32. ✔ Vista Tabla: agrupar por épica, elegir columnas (que la vista guardada las recuerde) y
+    agregados del árbol como columnas ordenables. **Hecho (2026-10-04).**
+    - **Agrupar por épica.** Una tarea con varias sale en cada una de ellas (una épica es
+      transversal, no un cajón) y lo que no tiene ninguna va al final; las hijas van con su madre
+      sea cual sea su épica, porque la rama no se parte. Cada grupo es una tabla hermana con las
+      mismas columnas y el mismo orden, para que ordenar no mezcle los grupos; cada copia lleva su
+      propio identificador de fila, y los grupos se pliegan.
+    - **Elegir columnas.** Un selector con las fijas, los campos y los **totales de la rama**
+      (progreso, subtareas hechas/total, estimación y la suma de cada campo numérico o de moneda),
+      ordenables como cualquier otra. Los totales vienen apagados: la tabla de siempre no cambia.
+      `title` no se puede ocultar, y una columna que ya no existe —un campo archivado después de
+      guardar la vista— se ignora en vez de fallar.
+    - **La vista guardada lo recuerda**: `config.columns` y `config.groupBy`, validados y acotados en la
+      API como el filtro, y en la URL como el resto del estado de la tabla.
+    - Lógica en módulos puros con prueba (`rows.ts`, `columns.ts`: 11 casos), tres e2e y dos pruebas de
+      integración de la vista. No toca el modelo de datos.
 33. Tablero, Lista y Backlog pasan al motor de filtros del servidor: cierra el criterio de
     aceptación de la Fase 4. Con ADR.
 

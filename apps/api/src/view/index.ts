@@ -38,6 +38,14 @@ const configSchema = v.object({
   treeMode: v.optional(
     v.picklist(["tree", "flat", "roots", "withDescendants"]),
   ),
+  // Que columnas se ven, por su id (`title`, `custom.presupuesto`,
+  // `agg.progress`…). Sin ella, las de siempre. Acotada como el filtro: es lo
+  // que se devuelve a cada miembro del espacio.
+  columns: v.optional(
+    v.pipe(v.array(v.pipe(v.string(), v.maxLength(120))), v.maxLength(100)),
+  ),
+  // Agrupar por: hoy solo por epica.
+  groupBy: v.optional(v.picklist(["epic"])),
 });
 
 const view = new Hono<{

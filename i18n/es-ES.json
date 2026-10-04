@@ -2343,7 +2343,27 @@
 				"saveFailed": "No se ha podido guardar la vista",
 				"delete": "Borrar esta vista"
 			},
-			"fieldOptionsDuplicate": "Hay dos opciones que son la misma si se ignoran acentos y mayúsculas"
+			"fieldOptionsDuplicate": "Hay dos opciones que son la misma si se ignoran acentos y mayúsculas",
+			"aggregates": {
+				"progress": "Progreso de la rama",
+				"descendants": "Subtareas (hechas/total)",
+				"estimate": "Estimación de la rama",
+				"sum": "{{name}} de la rama"
+			},
+			"noEpic": "Sin épica",
+			"columnsPicker": {
+				"label": "Columnas",
+				"group": {
+					"base": "Campos",
+					"custom": "Campos personalizados",
+					"aggregate": "Totales de la rama"
+				}
+			},
+			"groupBy": {
+				"label": "Agrupar por",
+				"none": "Sin agrupar",
+				"epic": "Épica"
+			}
 		},
 		"team": {
 			"label": "Equipo",

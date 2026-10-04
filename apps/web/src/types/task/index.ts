@@ -34,6 +34,8 @@ export type TaskSubtree = {
   inheritsDueDate: boolean;
   estimateSeconds: number;
   loggedSeconds: number;
+  // La suma de cada campo numerico o de moneda sobre la rama, por clave.
+  fieldSums?: Record<string, number>;
 };
 
 type Task = {

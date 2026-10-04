@@ -9215,6 +9215,70 @@
 						},
 						"fieldOptionsDuplicate": {
 							"type": "string"
+						},
+						"aggregates": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"progress": {
+									"type": "string"
+								},
+								"descendants": {
+									"type": "string"
+								},
+								"estimate": {
+									"type": "string"
+								},
+								"sum": {
+									"type": "string"
+								}
+							},
+							"required": ["progress", "descendants", "estimate", "sum"]
+						},
+						"noEpic": {
+							"type": "string"
+						},
+						"columnsPicker": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"group": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"base": {
+											"type": "string"
+										},
+										"custom": {
+											"type": "string"
+										},
+										"aggregate": {
+											"type": "string"
+										}
+									},
+									"required": ["base", "custom", "aggregate"]
+								}
+							},
+							"required": ["label", "group"]
+						},
+						"groupBy": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"none": {
+									"type": "string"
+								},
+								"epic": {
+									"type": "string"
+								}
+							},
+							"required": ["label", "none", "epic"]
 						}
 					},
 					"required": [
@@ -9245,7 +9309,11 @@
 						"operators",
 						"treeModes",
 						"views",
-						"fieldOptionsDuplicate"
+						"fieldOptionsDuplicate",
+						"aggregates",
+						"noEpic",
+						"columnsPicker",
+						"groupBy"
 					]
 				},
 				"team": {

@@ -2343,7 +2343,27 @@
 				"saveFailed": "No se ha podido guardar la vista",
 				"delete": "Borrar esta vista"
 			},
-			"fieldOptionsDuplicate": "Hay dos opciones que son la misma si se ignoran acentos y mayúsculas"
+			"fieldOptionsDuplicate": "Hay dos opciones que son la misma si se ignoran acentos y mayúsculas",
+			"aggregates": {
+				"progress": "Branch progress",
+				"descendants": "Subtasks (done/total)",
+				"estimate": "Branch estimate",
+				"sum": "{{name}} of the branch"
+			},
+			"noEpic": "No epic",
+			"columnsPicker": {
+				"label": "Columns",
+				"group": {
+					"base": "Fields",
+					"custom": "Custom fields",
+					"aggregate": "Branch totals"
+				}
+			},
+			"groupBy": {
+				"label": "Group by",
+				"none": "No grouping",
+				"epic": "Epic"
+			}
 		},
 		"team": {
 			"label": "Equip",

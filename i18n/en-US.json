@@ -2343,7 +2343,27 @@
 				"saveFailed": "The view could not be saved",
 				"delete": "Delete this view"
 			},
-			"fieldOptionsDuplicate": "Two options are the same once accents and capitals are ignored"
+			"fieldOptionsDuplicate": "Two options are the same once accents and capitals are ignored",
+			"aggregates": {
+				"progress": "Branch progress",
+				"descendants": "Subtasks (done/total)",
+				"estimate": "Branch estimate",
+				"sum": "{{name}} of the branch"
+			},
+			"noEpic": "No epic",
+			"columnsPicker": {
+				"label": "Columns",
+				"group": {
+					"base": "Fields",
+					"custom": "Custom fields",
+					"aggregate": "Branch totals"
+				}
+			},
+			"groupBy": {
+				"label": "Group by",
+				"none": "No grouping",
+				"epic": "Epic"
+			}
 		},
 		"team": {
 			"label": "Team",
