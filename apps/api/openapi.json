@@ -8970,7 +8970,7 @@
         "tags": [
           "Notifications"
         ],
-        "description": "Get all notifications for the current user",
+        "description": "The current user's notifications, newest first: 50 by default. `limit` (1-100) sizes the page, `before` (an ISO instant, the `createdAt` of the last one received) asks for the next, and `unread` keeps only the unread",
         "responses": {
           "200": {
             "description": "List of notifications",
@@ -9054,6 +9054,36 @@
             }
           }
         },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "before",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "in": "query",
+            "name": "unread",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          }
+        ],
         "summary": "List Notifications"
       },
       "post": {
@@ -9180,6 +9210,36 @@
           }
         },
         "summary": "Create Notification"
+      }
+    },
+    "/notification/unread-count": {
+      "get": {
+        "operationId": "countUnreadNotifications",
+        "tags": [
+          "Notifications"
+        ],
+        "description": "How many unread notifications the current user has, all of them and not just the first page",
+        "responses": {
+          "200": {
+            "description": "The unread count",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "count"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Count Unread Notifications"
       }
     },
     "/notification/{id}/read": {
