@@ -220,7 +220,7 @@ gestor de tareas básico y nada propio.
   renombrar, archivar, borrar y reordenar existen en la API y no en la
   interfaz. Tampoco hay forma de crear un campo de alcance espacio de trabajo
   sin llamar a la API.
-- **Cambiar un campo no deja rastro en la actividad**, mientras que cambiar el
+- ~~**Cambiar un campo no deja rastro en la actividad**~~ (cerrado, punto 24 del cierre de la deuda), mientras que cambiar el
   título sí. Se notará la primera vez que alguien pregunte quién tocó el
   presupuesto.
 - **MCP no sabe de campos personalizados**: `create_task`, `update_task` y
@@ -2566,7 +2566,13 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
 21. Notificaciones paginadas y con filtro de no leídas (hoy, tope de 50).
 22. La búsqueda enseña el nombre de la columna, no `status` en crudo.
 23. Las preferencias pasan de `localStorage` a la API (incluido el inicio de semana).
-24. Cambiar un campo personalizado deja rastro en la actividad.
+24. ✔ Cambiar un campo personalizado deja rastro en la actividad. **Hecho (2026-10-04).** Una fila
+    `custom_field_changed` por campo, con el valor anterior y el nuevo («cambiado “Presupuesto” de
+    1000 a 2500»). El controlador lee el valor previo en la misma transacción, con la fila
+    bloqueada, para que el «de» sea el de verdad sin reintroducir la pérdida de actualizaciones
+    que su fusión en SQL evita. Guardar el mismo valor no deja nada, y los campos de tipo usuario
+    o relación dicen que cambiaron, no a qué identificador. Cuatro pruebas de integración que
+    fallan sin el cambio.
 25. Editor de definiciones de campos: renombrar, archivar, borrar, reordenar y campos de espacio.
 26. Los campos de espacio llegan a los widgets y a «Mis tareas».
 27. MCP conoce campos personalizados, asignados múltiples y equipos (y el paquete stdio igual).

@@ -7017,6 +7017,15 @@
 						"submitShortcut",
 						"editor"
 					]
+				},
+				"customFieldChanged": {
+					"type": "string"
+				},
+				"customFieldChangedPlain": {
+					"type": "string"
+				},
+				"emptyValue": {
+					"type": "string"
 				}
 			},
 			"required": [
@@ -7038,7 +7047,10 @@
 				"moved",
 				"created",
 				"githubUser",
-				"comment"
+				"comment",
+				"customFieldChanged",
+				"customFieldChangedPlain",
+				"emptyValue"
 			]
 		},
 		"tasks": {

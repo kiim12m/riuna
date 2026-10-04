@@ -644,7 +644,7 @@ Para que nadie busque lo que no existe:
   plantillas, recurrencias, «Mi trabajo», asignados múltiples ni equipos.
 - **Las vistas no paginan.** El presupuesto de 300 ms se cruza en torno a las
   6.500 tareas en un mismo proyecto.
-- **Cambiar un campo personalizado no deja rastro en la actividad.**
+- ~~**Cambiar un campo personalizado no deja rastro en la actividad.**~~ Ya lo deja (con el valor anterior y el nuevo).
 - **Límite de tasa general de la API.** Solo lo tienen las API keys y, en modo
   cloud, el registro.
 - **Copias fuera de la máquina** y guía de actualización propia — fase 9.

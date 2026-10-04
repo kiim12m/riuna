@@ -1774,7 +1774,10 @@
 					"renderFailed": "No se pudo renderizar el diagrama de Mermaid"
 				}
 			}
-		}
+		},
+		"customFieldChanged": "cambiado «{{name}}» de {{from}} a {{to}}",
+		"customFieldChangedPlain": "cambiado «{{name}}»",
+		"emptyValue": "vacío"
 	},
 	"tasks": {
 		"actions": {

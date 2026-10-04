@@ -291,6 +291,35 @@ subscribeToEvent<{
   });
 });
 
+// Un campo personalizado que cambia deja una fila por campo, con su valor
+// anterior y el nuevo (ADR 013): "quien toco el presupuesto" se contesta aqui.
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  changes: {
+    key: string;
+    name: string;
+    from?: unknown;
+    to?: unknown;
+  }[];
+}>("task.custom_fields_changed", async (data) => {
+  for (const change of data.changes) {
+    await createActivity(
+      data.taskId,
+      "custom_field_changed",
+      data.userId,
+      null,
+      {
+        key: change.key,
+        name: change.name,
+        from: change.from ?? null,
+        to: change.to ?? null,
+        hasValues: "from" in change || "to" in change,
+      },
+    );
+  }
+});
+
 // Los tres cambios de estado que las Fases 1 y 2 dejaron sin historial.
 //
 // El de asignados es ademas una **regresion**: la via heredada de un solo

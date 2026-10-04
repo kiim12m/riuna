@@ -66,6 +66,7 @@ function getActivityTypeIcon(type: string) {
       return <Users className={iconClass} />;
     case "parent_changed":
     case "epics_changed":
+    case "custom_field_changed":
       return <History className={iconClass} />;
     default:
       return <History className={iconClass} />;
@@ -84,6 +85,13 @@ function formatActivityDateText(value: string) {
   const fromSlashDate = new Date(`${year}-${month}-${day}T00:00:00`);
   if (Number.isNaN(fromSlashDate.getTime())) return value;
   return formatDateMedium(fromSlashDate);
+}
+
+/** El valor de un campo personalizado tal como se lee en una frase. */
+function formatFieldValue(value: unknown, empty: string) {
+  if (value === null || value === undefined || value === "") return empty;
+  if (Array.isArray(value)) return value.map(String).join(", ");
+  return String(value);
 }
 
 function toDisplayCase(value: string) {
@@ -364,6 +372,27 @@ function renderActivityContent({
 
   // Tipos nuevos de Riuna: no existen filas historicas, asi que no necesitan
   // los reanalisis de `content` que arrastran los tipos heredados.
+  if (activity.type === "custom_field_changed" && eventData) {
+    const name = String(eventData.name ?? "");
+    if (!eventData.hasValues) {
+      return (
+        <span className="text-sm text-muted-foreground">
+          {t("activity:customFieldChangedPlain", { name })}
+        </span>
+      );
+    }
+
+    return (
+      <span className="text-sm text-muted-foreground">
+        {t("activity:customFieldChanged", {
+          name,
+          from: formatFieldValue(eventData.from, t("activity:emptyValue")),
+          to: formatFieldValue(eventData.to, t("activity:emptyValue")),
+        })}
+      </span>
+    );
+  }
+
   if (activity.type === "team_unassigned") {
     return (
       <span className="text-sm text-muted-foreground">
