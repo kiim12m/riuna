@@ -1,14 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
-import {
-  epicTable,
-  labelTable,
-  projectTable,
-  taskEpicTable,
-  taskTable,
-  templateTable,
-} from "../../database/schema";
+import { projectTable, taskTable, templateTable } from "../../database/schema";
 import createTask from "../../task/controllers/create-task";
 import { getMaxTaskDepth } from "../../task/controllers/update-task-parent";
 import { checkTemplateFits } from "../check-template";
@@ -18,6 +11,7 @@ import {
   type TemplateNode,
   templateDepth,
 } from "../content";
+import { decorateTask, resolveEpics } from "../decorate-task";
 
 /**
  * Despliega el arbol de la plantilla dentro de un proyecto.
@@ -61,37 +55,14 @@ async function createBranch({
 
     created += 1;
 
-    const customFields = fieldsByNode.get(node);
-    if (customFields) {
-      await db
-        .update(taskTable)
-        .set({ customFields })
-        .where(eq(taskTable.id, task.id));
-    }
-
-    if (node.labels?.length) {
-      await db.insert(labelTable).values(
-        node.labels.map((label) => ({
-          workspaceId,
-          taskId: task.id,
-          name: label.name,
-          color: label.color,
-        })),
-      );
-    }
-
-    if (node.epics?.length) {
-      const epicIds = node.epics
-        .map((name) => epicIdsByName.get(name))
-        .filter((id): id is string => Boolean(id));
-
-      if (epicIds.length > 0) {
-        await db
-          .insert(taskEpicTable)
-          .values(epicIds.map((epicId) => ({ taskId: task.id, epicId })))
-          .onConflictDoNothing();
-      }
-    }
+    await decorateTask({
+      taskId: task.id,
+      workspaceId,
+      customFields: fieldsByNode.get(node),
+      labels: node.labels,
+      epics: node.epics,
+      epicIdsByName,
+    });
 
     if (node.children?.length) {
       created += await createBranch({
@@ -107,43 +78,6 @@ async function createBranch({
   }
 
   return created;
-}
-
-/** Las epicas que la plantilla nombra, creando las que falten en el proyecto. */
-async function resolveEpics(
-  projectId: string,
-  names: string[],
-): Promise<Map<string, string>> {
-  const unique = [...new Set(names)].filter(Boolean);
-  const byName = new Map<string, string>();
-
-  if (unique.length === 0) return byName;
-
-  const existing = await db
-    .select({ id: epicTable.id, name: epicTable.name })
-    .from(epicTable)
-    .where(eq(epicTable.projectId, projectId));
-
-  for (const epic of existing) byName.set(epic.name, epic.id);
-
-  const missing = unique.filter((name) => !byName.has(name));
-
-  if (missing.length > 0) {
-    const inserted = await db
-      .insert(epicTable)
-      .values(
-        missing.map((name, index) => ({
-          projectId,
-          name,
-          position: existing.length + index + 1,
-        })),
-      )
-      .returning({ id: epicTable.id, name: epicTable.name });
-
-    for (const epic of inserted) byName.set(epic.name, epic.id);
-  }
-
-  return byName;
 }
 
 function collectEpicNames(nodes: TemplateNode[]): string[] {

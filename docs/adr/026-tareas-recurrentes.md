@@ -61,3 +61,12 @@ de una cadena RRULE.
   responsable y equipo—. Las plantillas de árbol son la rebanada 4 de esta fase,
   y ahí es donde ese modelo se generaliza; duplicarlo aquí antes sería construir
   dos veces lo mismo.
+- **Actualización (2026-10-04): lleva etiquetas, épicas y campos personalizados**
+  (las subtareas siguen fuera). Se leen con el mismo código que una plantilla de
+  tarea (`template/content.ts`, `parseTaskExtras`), se validan con
+  `checkTemplateFits` al guardar y antes de cada ocurrencia, y se ponen con
+  `decorateTask` —el mismo que usa el desplegador—. Una clave de campo que el
+  proyecto ya no define se descarta; un valor que no casa con su tipo es un 400
+  y apaga la recurrencia antes de reclamar la fecha. Las épicas se crean por
+  nombre si faltan. El editor web solo escribe título y prioridad: esto es del
+  modelo y de la API.

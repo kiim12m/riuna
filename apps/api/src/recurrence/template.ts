@@ -2,6 +2,8 @@ import {
   assertValidTaskStatus,
   VALID_PRIORITIES,
 } from "../task/validate-task-fields";
+import { checkTemplateFits } from "../template/check-template";
+import { parseTaskExtras } from "../template/content";
 import { assertAssignableTeam } from "../utils/assert-assignable-team";
 import {
   assertAssignableUser,
@@ -16,6 +18,10 @@ export type RecurrenceTemplate = {
   assigneeId?: string | null;
   teamId?: string | null;
   status?: string;
+  /** Etiquetas, epicas por nombre y campos personalizados (ADR 026, ADR 027). */
+  labels?: Array<{ name: string; color: string }>;
+  epics?: string[];
+  customFields?: Record<string, unknown>;
 };
 
 /**
@@ -69,6 +75,7 @@ export function parseTemplate(value: unknown): RecurrenceTemplate {
     assigneeId: typeof raw.assigneeId === "string" ? raw.assigneeId : null,
     teamId: typeof raw.teamId === "string" ? raw.teamId : null,
     status: typeof raw.status === "string" ? raw.status : undefined,
+    ...parseTaskExtras(raw),
   };
 }
 
@@ -85,10 +92,8 @@ export function parseTemplate(value: unknown): RecurrenceTemplate {
 export async function assertTemplateUsable(
   template: RecurrenceTemplate,
   projectId: string,
-): Promise<void> {
+): Promise<{ customFields?: Record<string, unknown> }> {
   await assertValidTaskStatus(template.status ?? "to-do", projectId);
-
-  if (!template.assigneeId && !template.teamId) return;
 
   const workspaceId = await getProjectWorkspaceId(projectId);
   if (template.assigneeId) {
@@ -97,4 +102,12 @@ export async function assertTemplateUsable(
   if (template.teamId) {
     await assertAssignableTeam(template.teamId, workspaceId);
   }
+
+  // Los campos personalizados, como en una plantilla de tarea: una clave que el
+  // proyecto ya no define se descarta, y un valor que no casa con su tipo es un
+  // 400 -que aqui apaga la recurrencia antes de reclamar la fecha-.
+  if (!template.customFields) return {};
+  const node = { title: template.title, customFields: template.customFields };
+  const fields = await checkTemplateFits([node], projectId, workspaceId);
+  return { customFields: fields.get(node) };
 }

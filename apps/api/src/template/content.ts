@@ -31,6 +31,50 @@ export type TemplateContent = {
 export const MAX_TEMPLATE_TASKS = 500;
 export const MAX_TEMPLATE_DEPTH = 10;
 
+/**
+ * Lo que una plantilla de tarea o de recurrencia puede llevar ademas de los
+ * campos de base: etiquetas, epicas (por nombre) y campos personalizados. Un
+ * solo sitio que lo lee, para que las dos plantillas no se diferencien.
+ */
+export function parseTaskExtras(raw: Record<string, unknown>): {
+  labels?: Array<{ name: string; color: string }>;
+  epics?: string[];
+  customFields?: Record<string, unknown>;
+} {
+  const labels = Array.isArray(raw.labels)
+    ? raw.labels.flatMap((label) => {
+        if (typeof label !== "object" || label === null) return [];
+        const entry = label as Record<string, unknown>;
+        const name = typeof entry.name === "string" ? entry.name.trim() : "";
+        if (!name) return [];
+        return [
+          {
+            name,
+            color: typeof entry.color === "string" ? entry.color : "#6b7280",
+          },
+        ];
+      })
+    : undefined;
+
+  const epics = Array.isArray(raw.epics)
+    ? raw.epics.filter(
+        (epic): epic is string =>
+          typeof epic === "string" && epic.trim() !== "",
+      )
+    : undefined;
+
+  return {
+    labels,
+    epics,
+    customFields:
+      typeof raw.customFields === "object" &&
+      raw.customFields !== null &&
+      !Array.isArray(raw.customFields)
+        ? (raw.customFields as Record<string, unknown>)
+        : undefined,
+  };
+}
+
 function parseNode(
   value: unknown,
   depth: number,
@@ -78,27 +122,7 @@ function parseNode(
     );
   }
 
-  const labels = Array.isArray(raw.labels)
-    ? raw.labels.flatMap((label) => {
-        if (typeof label !== "object" || label === null) return [];
-        const entry = label as Record<string, unknown>;
-        const name = typeof entry.name === "string" ? entry.name.trim() : "";
-        if (!name) return [];
-        return [
-          {
-            name,
-            color: typeof entry.color === "string" ? entry.color : "#6b7280",
-          },
-        ];
-      })
-    : undefined;
-
-  const epics = Array.isArray(raw.epics)
-    ? raw.epics.filter(
-        (epic): epic is string =>
-          typeof epic === "string" && epic.trim() !== "",
-      )
-    : undefined;
+  const extras = parseTaskExtras(raw);
 
   const children = Array.isArray(raw.children)
     ? raw.children.map((child) => parseNode(child, depth + 1, counter))
@@ -111,12 +135,7 @@ function parseNode(
     priority,
     estimate,
     status: typeof raw.status === "string" ? raw.status : undefined,
-    labels,
-    epics,
-    customFields:
-      typeof raw.customFields === "object" && raw.customFields !== null
-        ? (raw.customFields as Record<string, unknown>)
-        : undefined,
+    ...extras,
     children,
   };
 }

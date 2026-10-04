@@ -140,6 +140,97 @@ describe("API integration: recurring tasks", () => {
     expect(after.nextRunAt.getTime()).toBeGreaterThan(Date.now());
   });
 
+  // La plantilla lleva lo mismo que una plantilla de tarea (ADR 027): etiquetas,
+  // epicas por nombre —se crean si faltan— y campos personalizados. Una clave
+  // que el proyecto no define se descarta, como al desplegar una plantilla.
+  it("gives the generated task its labels, epics and custom fields", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    await db.insert(schema.fieldDefinitionTable).values({
+      workspaceId: member.workspace.id,
+      projectId: project.id,
+      key: "cliente",
+      name: "Cliente",
+      type: "text",
+      config: {},
+    });
+    await seedRecurrence({
+      projectId: project.id,
+      createdBy: member.user.id,
+      nextRunAt: new Date(Date.now() - DAY),
+      template: {
+        title: "Parte con todo",
+        labels: [{ name: "Obra", color: "#16a34a" }],
+        epics: ["Fase 1"],
+        customFields: { cliente: "Acme", inventado: "se descarta" },
+      },
+    });
+
+    expect((await generateRecurringTasks()).degraded).toBe(false);
+
+    const [task] = await db
+      .select({
+        id: schema.taskTable.id,
+        customFields: schema.taskTable.customFields,
+      })
+      .from(schema.taskTable)
+      .where(eq(schema.taskTable.projectId, project.id));
+    expect(task?.customFields).toEqual({ cliente: "Acme" });
+
+    const labels = await db
+      .select({
+        name: schema.labelTable.name,
+        color: schema.labelTable.color,
+      })
+      .from(schema.labelTable)
+      .where(eq(schema.labelTable.taskId, task?.id ?? ""));
+    expect(labels).toEqual([{ name: "Obra", color: "#16a34a" }]);
+
+    const epics = await db
+      .select({ name: schema.epicTable.name })
+      .from(schema.taskEpicTable)
+      .innerJoin(
+        schema.epicTable,
+        eq(schema.taskEpicTable.epicId, schema.epicTable.id),
+      )
+      .where(eq(schema.taskEpicTable.taskId, task?.id ?? ""));
+    expect(epics).toEqual([{ name: "Fase 1" }]);
+  });
+
+  it("refuses to save a template with a custom field value of the wrong type", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const { project } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    await db.insert(schema.fieldDefinitionTable).values({
+      workspaceId: member.workspace.id,
+      projectId: project.id,
+      key: "presupuesto",
+      name: "Presupuesto",
+      type: "number",
+      config: {},
+    });
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const response = await app.request(
+      `/api/recurrence/project/${project.id}`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          template: { title: "X", customFields: { presupuesto: "mucho" } },
+          cadence: { frequency: "daily", interval: 1 },
+          startsAt: new Date().toISOString(),
+        }),
+      },
+    );
+
+    expect(response.status).toBe(400);
+  });
+
   // Lo que hace que el trabajo programado sea seguro: correr dos veces seguidas
   // no puede duplicar la tarea, porque la primera vuelta ya movio la fecha.
   it("does not generate twice when it runs again straight away", async () => {

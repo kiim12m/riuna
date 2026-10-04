@@ -881,10 +881,10 @@ aplicación, no solo con las filas que la prueba mira.
 existe**. Crear el proyecto entero desde la plantilla toca `create-project`, que
 hoy siembra siempre las cuatro columnas por defecto.
 
-**Deuda declarada de la rebanada 3:** la plantilla lleva título, descripción,
+~~**Deuda declarada de la rebanada 3:** la plantilla lleva título, descripción,
 prioridad, estimación, responsable y equipo, pero **no** etiquetas, épicas,
-campos personalizados ni subtareas. Ese modelo se generaliza en la rebanada 4
-con las plantillas de árbol; construirlo dos veces sería el error.
+campos personalizados ni subtareas.~~ Etiquetas, épicas y campos, cerrado el
+2026-10-04 (punto 29 del cierre de la deuda); las subtareas siguen fuera.
 
 **Deuda declarada de la rebanada 2:**
 - **El burndown se dibuja sobre el alcance actual del ciclo.** No se guarda
@@ -2590,7 +2590,11 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
 26. Los campos de espacio llegan a los widgets y a «Mis tareas».
 27. MCP conoce campos personalizados, asignados múltiples y equipos (y el paquete stdio igual).
 28. Crear un proyecto entero desde una plantilla de proyecto.
-29. La plantilla de las recurrentes lleva etiquetas, épicas y campos.
+29. ✔ La plantilla de las recurrentes lleva etiquetas, épicas y campos. **Hecho (2026-10-04).** Nota en
+    la [ADR 026](adr/026-tareas-recurrentes.md). Se reutiliza, no se duplica: `parseTaskExtras` y
+    `decorateTask`/`resolveEpics` salen del desplegador de plantillas de tarea y los usan las dos.
+    Dos pruebas de integración que fallan sin el cambio, y las de plantillas siguen en verde. El
+    editor web sigue escribiendo solo título y prioridad: el cambio es del modelo y de la API.
 30. Los agregados del árbol suman campos numéricos.
 31. Compositor de tarea en línea al pie de cada columna del tablero.
 
