@@ -2,9 +2,14 @@ import { Calendar, CircleAlert, History, UserRound, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
+import { parseDayKey } from "@/lib/day-key";
 import { formatDateMedium, formatRelativeTime } from "@/lib/format";
 import { getInitials } from "@/lib/get-initials";
 import { getPriorityLabel, getStatusLabel } from "@/lib/i18n/domain";
+import {
+  type FieldDefinition,
+  formatForDisplay,
+} from "../table-view/custom-field-cell";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
   HoverCard,
@@ -87,9 +92,33 @@ function formatActivityDateText(value: string) {
   return formatDateMedium(fromSlashDate);
 }
 
-/** El valor de un campo personalizado tal como se lee en una frase. */
-function formatFieldValue(value: unknown, empty: string) {
+/**
+ * El valor de un campo personalizado tal como se lee en una frase: la etiqueta
+ * de la opcion y no su clave, la fecha como fecha y la persona por su nombre.
+ * Si el campo ya no existe, el valor guardado tal cual.
+ */
+function formatFieldValue(
+  value: unknown,
+  empty: string,
+  definition: FieldDefinition | undefined,
+  users: WorkspaceUser[] | undefined,
+) {
   if (value === null || value === undefined || value === "") return empty;
+
+  if (definition?.type === "date" && typeof value === "string") {
+    // Un dia suelto es medianoche local, no UTC (ADR 049).
+    return /^\d{4}-\d{2}-\d{2}$/.test(value)
+      ? formatDateMedium(parseDayKey(value))
+      : formatActivityDateText(value);
+  }
+
+  if (definition?.type === "user") {
+    const nameOf = (id: unknown) =>
+      users?.find((member) => member.user?.id === id)?.user?.name ?? String(id);
+    return Array.isArray(value) ? value.map(nameOf).join(", ") : nameOf(value);
+  }
+
+  if (definition) return formatForDisplay(definition, value) || empty;
   if (Array.isArray(value)) return value.map(String).join(", ");
   return String(value);
 }
@@ -177,10 +206,12 @@ function ActorAvatar({
 function renderActivityContent({
   activity,
   workspaceUsers,
+  fieldDefinitions,
   t,
 }: {
   activity: ActivityItem;
   workspaceUsers: WorkspaceUser[] | undefined;
+  fieldDefinitions: readonly FieldDefinition[] | undefined;
   t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   const content = activity.content || "";
@@ -374,6 +405,9 @@ function renderActivityContent({
   // los reanalisis de `content` que arrastran los tipos heredados.
   if (activity.type === "custom_field_changed" && eventData) {
     const name = String(eventData.name ?? "");
+    const definition = fieldDefinitions?.find(
+      (entry) => entry.key === eventData.key,
+    );
     if (!eventData.hasValues) {
       return (
         <span className="text-sm text-muted-foreground">
@@ -386,8 +420,18 @@ function renderActivityContent({
       <span className="text-sm text-muted-foreground">
         {t("activity:customFieldChanged", {
           name,
-          from: formatFieldValue(eventData.from, t("activity:emptyValue")),
-          to: formatFieldValue(eventData.to, t("activity:emptyValue")),
+          from: formatFieldValue(
+            eventData.from,
+            t("activity:emptyValue"),
+            definition,
+            workspaceUsers,
+          ),
+          to: formatFieldValue(
+            eventData.to,
+            t("activity:emptyValue"),
+            definition,
+            workspaceUsers,
+          ),
         })}
       </span>
     );
@@ -509,10 +553,13 @@ function Activity({
   activity,
   step,
   showConnector = false,
+  fieldDefinitions,
 }: {
   activity: ActivityItem;
   step: number;
   showConnector?: boolean;
+  /** Los campos del proyecto, para leer los cambios de campo con sus etiquetas. */
+  fieldDefinitions?: readonly FieldDefinition[];
 }) {
   const { t } = useTranslation();
   const { data: workspace } = useActiveWorkspace();
@@ -580,6 +627,7 @@ function Activity({
         {renderActivityContent({
           activity,
           workspaceUsers: workspaceUsers as WorkspaceUser[] | undefined,
+          fieldDefinitions,
           t,
         })}{" "}
         <span className="whitespace-nowrap text-muted-foreground/70 text-xs">
