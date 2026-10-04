@@ -461,7 +461,7 @@ export function registerMcpTools(
           .string()
           .optional()
           .describe(
-            'A filter as JSON, the same the views use: {"type":"condition","field":"custom.presupuesto","operator":"gt","value":1000}, or {"type":"group","combinator":"and","conditions":[…]}. Fields: title, status, priority, dueDate, assignee, done, completedAt and custom.<key>.',
+            'A filter as JSON, the same the views use: {"type":"condition","field":"custom.presupuesto","operator":"gt","value":1000}, or several combined with {"type":"and","children":[…]} or {"type":"or","children":[…]}, and negated with {"type":"not","child":…}. Fields: title, description, status, priority, number, dueDate, assignee, team, done, completedAt, epic and assignees (by id), label (by name) and custom.<key>.',
           ),
         treeScope: z
           .enum(["matching", "roots", "withDescendants"])
