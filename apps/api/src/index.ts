@@ -77,6 +77,7 @@ import timeSheet from "./time-sheet";
 import today from "./today";
 import user from "./user";
 import getAvatar from "./user/controllers/get-avatar";
+import userPreferences from "./user-preferences";
 import { authenticateApiRequest } from "./utils/authenticate-api-request";
 import { authorizeAssetAccess } from "./utils/authorize-asset-access";
 import { getInvitationDetails } from "./utils/check-registration-allowed";
@@ -679,6 +680,7 @@ export function createApp() {
   const reviewApi = api.route("/review", review);
   const scheduleApi = api.route("/schedule", schedule);
   const workScheduleApi = api.route("/work-schedule", workSchedule);
+  const userPreferencesApi = api.route("/user-preferences", userPreferences);
   const searchApi = api.route("/search", search);
   const githubIntegrationApi = api.route(
     "/github-integration",
@@ -874,6 +876,7 @@ export function createApp() {
     reviewApi,
     scheduleApi,
     workScheduleApi,
+    userPreferencesApi,
     notificationApi,
     notificationPreferencesApi,
     projectApi,
@@ -1038,6 +1041,7 @@ const {
   reviewApi,
   scheduleApi,
   workScheduleApi,
+  userPreferencesApi,
   notificationApi,
   notificationPreferencesApi,
   projectApi,
@@ -1103,6 +1107,7 @@ export type AppType =
   | typeof reviewApi
   | typeof scheduleApi
   | typeof workScheduleApi
+  | typeof userPreferencesApi
   | typeof searchApi
   | typeof githubIntegrationApi
   | typeof giteaIntegrationApi

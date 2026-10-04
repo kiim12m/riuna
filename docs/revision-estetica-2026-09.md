@@ -248,9 +248,9 @@ que hizo perder el arreglo.
 
 ### P3 · anotado, decide quien manda
 
-15. Las preferencias viven solo en `localStorage` y se pierden al cambiar de
+15. ~~Las preferencias viven solo en `localStorage` y se pierden al cambiar de
     navegador, aunque la pantalla cuelgue de «Ajustes › **Cuenta**». De ahí sale
-    también que el calendario empiece en domingo.
+    también que el calendario empiece en domingo.~~ **Hecho (2026-10-04):** ADR 064.
 16. `#5FD3C0` como texto de estado activo en oscuro es el uso más brillante del
     sistema.
 

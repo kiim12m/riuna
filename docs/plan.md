@@ -1254,10 +1254,10 @@ tarea, que no tenía tope alguno y crecía con la ventana.
   las primitivas compartidas sí. Son leyendas de escaneo, no prosa de lectura.
 - ~~**La búsqueda pinta `result.status` crudo**, como hacía la tabla. Resolverlo
   cruza proyectos y necesita una consulta que hoy no se hace.~~ Cerrado (punto 22 del cierre de la deuda).
-- **Las preferencias viven solo en `localStorage`** y se pierden al cambiar de
+- ~~**Las preferencias viven solo en `localStorage`** y se pierden al cambiar de
   navegador, aunque la pantalla cuelgue de «Ajustes › Cuenta». De ahí sale también
-  que el calendario empiece en domingo. Es una decisión de producto con el rótulo
-  desalineado, no un fallo.
+  que el calendario empiece en domingo.~~ **Cerrado (2026-10-04)**, ADR 064: viajan
+  con la cuenta (punto 23 del cierre de la deuda).
 
 ### Interludio — Espacio personal y administración (antes de la Fase 8) · **cerrado**
 
@@ -2579,7 +2579,15 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     repetiría el resultado; hay una prueba con dos columnas del mismo slug). Un estado que no es
     columna —`planned`, `archived`— queda sin nombre y la pantalla cae al estado. Dos pruebas de
     integración.
-23. Las preferencias pasan de `localStorage` a la API (incluido el inicio de semana).
+23. ✔ Las preferencias pasan de `localStorage` a la API (incluido el inicio de semana). **Hecho
+    (2026-10-04)**, [ADR 064](adr/064-las-preferencias-viajan-con-la-cuenta.md). Tabla `user_preference`
+    (un `jsonb` por persona, migración 0080 solo de tabla nueva) con `GET`/`PUT /api/user-preferences`,
+    lista cerrada de claves y fusión en SQL. En la web el almacén sigue siendo la memoria inmediata y
+    `usePreferencesSync` lo sincroniza: aplica lo del servidor salvo lo que la persona tocó mientras
+    tanto, sube lo personalizado la primera vez, y manda cada cambio con espera. **El tema y los avisos
+    del navegador no viajan** (son del dispositivo). Seis pruebas de integración, seis unitarias de la
+    lógica de fusión (una vigila que los valores por defecto del almacén y de la sincronización no se
+    separen) y dos e2e que fallan sin el cambio.
 24. ✔ Cambiar un campo personalizado deja rastro en la actividad. **Hecho (2026-10-04).** Una fila
     `custom_field_changed` por campo, con el valor anterior y el nuevo («cambiado “Presupuesto” de
     1000 a 2500»). El controlador lee el valor previo en la misma transacción, con la fila

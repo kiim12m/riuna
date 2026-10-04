@@ -96,6 +96,7 @@ import {
   userNotificationPreferenceTable,
   userNotificationWorkspaceProjectTable,
   userNotificationWorkspaceRuleTable,
+  userPreferenceTable,
   userTable,
   userTimeOffTable,
   userWorkScheduleTable,
@@ -167,6 +168,7 @@ export const schema = {
   // controladores la importan directamente y por eso nada fallaba en
   // produccion -el mismo hueco que la Fase 1 encontro con `task_assignee`-.
   userTimeOffTable,
+  userPreferenceTable,
   userWorkScheduleTable,
   verificationTable,
   viewTable,

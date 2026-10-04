@@ -17587,6 +17587,188 @@
         "summary": "Update Work Schedule"
       }
     },
+    "/user-preferences": {
+      "get": {
+        "operationId": "getUserPreferences",
+        "tags": [
+          "User Preferences"
+        ],
+        "description": "The current user's saved display preferences; an empty object if they never saved any",
+        "responses": {
+          "200": {
+            "description": "The preferences",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "preferences": {
+                      "type": "object",
+                      "properties": {
+                        "viewMode": {
+                          "enum": [
+                            "board",
+                            "list"
+                          ],
+                          "type": "string"
+                        },
+                        "compactMode": {
+                          "type": "boolean"
+                        },
+                        "showTaskNumbers": {
+                          "type": "boolean"
+                        },
+                        "showAssignees": {
+                          "type": "boolean"
+                        },
+                        "showDueDates": {
+                          "type": "boolean"
+                        },
+                        "showLabels": {
+                          "type": "boolean"
+                        },
+                        "showPriority": {
+                          "type": "boolean"
+                        },
+                        "sidebarDefaultOpen": {
+                          "type": "boolean"
+                        },
+                        "weekStartsOn": {
+                          "enum": [
+                            0,
+                            1,
+                            6
+                          ],
+                          "type": "number"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "preferences"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get User Preferences"
+      },
+      "put": {
+        "operationId": "updateUserPreferences",
+        "tags": [
+          "User Preferences"
+        ],
+        "description": "Merge the given preferences into the current user's: only the keys sent change, the rest are kept",
+        "responses": {
+          "200": {
+            "description": "The preferences after the merge",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "preferences": {
+                      "type": "object",
+                      "properties": {
+                        "viewMode": {
+                          "enum": [
+                            "board",
+                            "list"
+                          ],
+                          "type": "string"
+                        },
+                        "compactMode": {
+                          "type": "boolean"
+                        },
+                        "showTaskNumbers": {
+                          "type": "boolean"
+                        },
+                        "showAssignees": {
+                          "type": "boolean"
+                        },
+                        "showDueDates": {
+                          "type": "boolean"
+                        },
+                        "showLabels": {
+                          "type": "boolean"
+                        },
+                        "showPriority": {
+                          "type": "boolean"
+                        },
+                        "sidebarDefaultOpen": {
+                          "type": "boolean"
+                        },
+                        "weekStartsOn": {
+                          "enum": [
+                            0,
+                            1,
+                            6
+                          ],
+                          "type": "number"
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "preferences"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "viewMode": {
+                    "enum": [
+                      "board",
+                      "list"
+                    ],
+                    "type": "string"
+                  },
+                  "compactMode": {
+                    "type": "boolean"
+                  },
+                  "showTaskNumbers": {
+                    "type": "boolean"
+                  },
+                  "showAssignees": {
+                    "type": "boolean"
+                  },
+                  "showDueDates": {
+                    "type": "boolean"
+                  },
+                  "showLabels": {
+                    "type": "boolean"
+                  },
+                  "showPriority": {
+                    "type": "boolean"
+                  },
+                  "sidebarDefaultOpen": {
+                    "type": "boolean"
+                  },
+                  "weekStartsOn": {
+                    "enum": [
+                      0,
+                      1,
+                      6
+                    ],
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update User Preferences"
+      }
+    },
     "/search": {
       "get": {
         "operationId": "globalSearch",

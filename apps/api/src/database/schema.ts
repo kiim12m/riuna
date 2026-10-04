@@ -1794,6 +1794,29 @@ export const userNotificationPreferenceTable = pgTable(
   },
 );
 
+// Las preferencias de presentacion de una persona -vista por defecto, densidad,
+// que enseñan las tarjetas, inicio de semana…- viajan con su cuenta y no se
+// quedan en el navegador. Un solo documento por persona: son leidas siempre
+// enteras y nunca se filtran ni se ordenan por ellas (AGENTS.md: una columna
+// solo si se filtra, se ordena, se agrupa o es clave ajena). El tema no esta
+// aqui a proposito: es del dispositivo (portatil oscuro, movil «sistema»).
+export const userPreferenceTable = pgTable("user_preference", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => userTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  preferences: jsonb("preferences")
+    .$type<Record<string, unknown>>()
+    .notNull()
+    .default({}),
+  updatedAt: timestamp("updated_at", { mode: "date" })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
 // La jornada personal (ADR 045): fuente unica de horario y capacidad para el
 // Planificador, el Cronograma y Hoy. Sin fila, se aplican los valores por
 // defecto de super-productivity -09:00 a 17:00, sin comida, lunes a viernes-,
