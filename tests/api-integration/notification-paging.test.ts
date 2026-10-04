@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
@@ -63,6 +64,40 @@ describe("notification paging", () => {
 
     expect(seen).toHaveLength(120);
     expect(new Set(seen).size).toBe(120);
+  });
+
+  it("does not lose the ones that share a millisecond with the page edge", async () => {
+    const member = await createWorkspaceMember();
+    // Cinco avisos dentro del mismo milisegundo, separados por microsegundos:
+    // lo que deja una rafaga. El cursor viaja en milisegundos.
+    for (const micro of [100, 200, 300, 400, 500]) {
+      await db.execute(sql`
+        INSERT INTO notification (id, user_id, title, type, created_at)
+        VALUES (${`burst-${micro}`}, ${member.user.id}, ${`Rafaga ${micro}`},
+          'info', ${`2026-10-04 10:00:00.123${micro}+00`}::timestamptz)
+      `);
+    }
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const seen: string[] = [];
+    let cursor: Item | undefined;
+    for (let page = 0; page < 10; page++) {
+      const { items } = await list(
+        app,
+        `?limit=2${
+          cursor
+            ? `&before=${encodeURIComponent(cursor.createdAt)}&beforeId=${cursor.id}`
+            : ""
+        }`,
+      );
+      if (items.length === 0) break;
+      seen.push(...items.map((item) => item.id));
+      cursor = items.at(-1);
+    }
+
+    expect(seen).toHaveLength(5);
+    expect(new Set(seen).size).toBe(5);
   });
 
   it("filters the unread ones, in pages as well", async () => {

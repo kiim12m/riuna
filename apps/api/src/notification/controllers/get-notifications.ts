@@ -1,4 +1,4 @@
-import { and, count, desc, eq, lt } from "drizzle-orm";
+import { and, count, desc, eq, sql } from "drizzle-orm";
 import db from "../../database";
 import {
   notificationTable,
@@ -15,6 +15,8 @@ type NotificationQuery = {
   limit?: number;
   /** Solo las anteriores a este instante: la pagina siguiente empieza donde acabo la actual. */
   before?: Date;
+  /** El id de la ultima recibida, para desempatar las del mismo milisegundo. */
+  beforeId?: string;
   /** Solo las no leidas. */
   unread?: boolean;
 };
@@ -24,16 +26,28 @@ type NotificationQuery = {
  *
  * Sin parametros devuelve las 50 de siempre. La paginacion es por cursor de
  * fecha (`before`) y no por desplazamiento: se crean y se borran sin parar, y
- * un `OFFSET` saltaria o repetiria filas entre una pagina y la siguiente. Dos
- * notificaciones del mismo milisegundo para la misma persona podrian caer a
- * ambos lados del corte; en la practica solo ocurre con avisos en rafaga.
+ * un `OFFSET` saltaria o repetiria filas entre una pagina y la siguiente.
+ *
+ * `created_at` guarda microsegundos y el cursor viaja en JSON con milisegundos:
+ * comparado tal cual, las del mismo milisegundo que la ultima mostrada que no
+ * cupieron en la pagina se perderian para siempre. Por eso se ordena y se corta
+ * por el **milisegundo y el id** (`before` + `beforeId`): ni se salta ni se
+ * repite ninguna. Sin `beforeId`, el corte es el de antes, estricto.
  */
 async function getNotifications(
   userId: string,
-  { limit, before, unread }: NotificationQuery = {},
+  { limit, before, beforeId, unread }: NotificationQuery = {},
 ) {
+  const createdMs = sql`date_trunc('milliseconds', ${notificationTable.createdAt})`;
   const conditions = [eq(notificationTable.userId, userId)];
-  if (before) conditions.push(lt(notificationTable.createdAt, before));
+  if (before) {
+    const cursor = sql`${before.toISOString()}::timestamptz`;
+    conditions.push(
+      beforeId
+        ? sql`(${createdMs}, ${notificationTable.id}) < (${cursor}, ${beforeId})`
+        : sql`${createdMs} < ${cursor}`,
+    );
+  }
   if (unread) conditions.push(eq(notificationTable.isRead, false));
 
   const rows = await db
@@ -53,7 +67,7 @@ async function getNotifications(
     .leftJoin(projectTable, eq(taskTable.projectId, projectTable.id))
     .leftJoin(workspaceTable, eq(projectTable.workspaceId, workspaceTable.id))
     .where(and(...conditions))
-    .orderBy(desc(notificationTable.createdAt))
+    .orderBy(desc(createdMs), desc(notificationTable.id))
     .limit(
       Math.min(
         Math.max(limit ?? DEFAULT_NOTIFICATIONS_PAGE, 1),

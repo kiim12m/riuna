@@ -5,6 +5,8 @@ type NotificationPage = {
   limit?: number;
   /** El `createdAt` de la ultima recibida: pide la pagina siguiente. */
   before?: string;
+  /** El `id` de esa misma ultima: desempata las del mismo milisegundo. */
+  beforeId?: string;
   unread?: boolean;
 };
 
@@ -13,6 +15,7 @@ async function getNotifications(page: NotificationPage = {}) {
     query: {
       ...(page.limit ? { limit: String(page.limit) } : {}),
       ...(page.before ? { before: page.before } : {}),
+      ...(page.beforeId ? { beforeId: page.beforeId } : {}),
       ...(page.unread ? { unread: "true" as const } : {}),
     },
   });

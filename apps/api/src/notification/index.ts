@@ -31,7 +31,7 @@ const notification = new Hono<{
       operationId: "listNotifications",
       tags: ["Notifications"],
       description:
-        "The current user's notifications, newest first: 50 by default. `limit` (1-100) sizes the page, `before` (an ISO instant, the `createdAt` of the last one received) asks for the next, and `unread` keeps only the unread",
+        "The current user's notifications, newest first: 50 by default. `limit` (1-100) sizes the page, `before` (an ISO instant, the `createdAt` of the last one received) with `beforeId` (its `id`) asks for the next without skipping or repeating any, and `unread` keeps only the unread",
       responses: {
         200: {
           description: "List of notifications",
@@ -62,15 +62,19 @@ const notification = new Hono<{
             v.transform((value) => new Date(value)),
           ),
         ),
+        beforeId: v.optional(
+          v.pipe(v.string(), v.minLength(1), v.maxLength(255)),
+        ),
         unread: v.optional(v.picklist(["true", "false"])),
       }),
     ),
     async (c) => {
       const userId = c.get("userId");
-      const { limit, before, unread } = c.req.valid("query");
+      const { limit, before, beforeId, unread } = c.req.valid("query");
       const notifications = await getNotifications(userId, {
         limit,
         before,
+        beforeId,
         unread: unread === "true",
       });
       return c.json(notifications);

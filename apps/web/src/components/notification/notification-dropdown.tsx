@@ -101,6 +101,7 @@ const NotificationDropdown = forwardRef<NotificationDropdownRef, Props>(
         const next = await getNotifications({
           limit: PAGE_SIZE,
           before: String(last.createdAt),
+          beforeId: last.id,
         });
         setOlderPages((current) => [
           ...current,

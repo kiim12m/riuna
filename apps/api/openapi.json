@@ -9015,7 +9015,7 @@
         "tags": [
           "Notifications"
         ],
-        "description": "The current user's notifications, newest first: 50 by default. `limit` (1-100) sizes the page, `before` (an ISO instant, the `createdAt` of the last one received) asks for the next, and `unread` keeps only the unread",
+        "description": "The current user's notifications, newest first: 50 by default. `limit` (1-100) sizes the page, `before` (an ISO instant, the `createdAt` of the last one received) with `beforeId` (its `id`) asks for the next without skipping or repeating any, and `unread` keeps only the unread",
         "responses": {
           "200": {
             "description": "List of notifications",
@@ -9115,6 +9115,15 @@
             "schema": {
               "type": "string",
               "format": "date-time"
+            }
+          },
+          {
+            "in": "query",
+            "name": "beforeId",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
             }
           },
           {
