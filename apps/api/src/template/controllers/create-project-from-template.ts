@@ -14,7 +14,9 @@ import { applyTaskTemplate } from "./apply-template";
  * (ADR 027); esto cierra el hueco de empezar de cero. El arbol se despliega con
  * `applyTaskTemplate`, que comprueba la profundidad y los campos antes de crear
  * nada. Si aun asi falla, el proyecto recien creado se borra: no queda un
- * proyecto vacio que nadie pidio a medias.
+ * proyecto vacio que nadie pidio a medias. Lo que no se deshace son los
+ * `task.created` de las tareas que si llegaron a crearse (actividad, avisos,
+ * webhooks): solo pasa si la base falla a mitad, y se acepta a sabiendas.
  */
 export async function createProjectFromTemplate({
   workspaceId,
@@ -39,6 +41,12 @@ export async function createProjectFromTemplate({
   // exista en uno ajeno.
   if (!template || template.workspaceId !== workspaceId) {
     throw new HTTPException(404, { message: "Template not found" });
+  }
+
+  // Una plantilla de tarea se aplica dentro de un proyecto que ya existe; no
+  // trae columnas ni epicas de proyecto.
+  if (template.kind !== "project") {
+    throw new HTTPException(400, { message: "Not a project template" });
   }
 
   let content: ReturnType<typeof parseTemplateContent>;

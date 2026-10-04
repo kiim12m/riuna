@@ -770,4 +770,33 @@ describe("API integration: a whole project from a project template", () => {
       .where(eq(schema.projectTable.slug, "OBR"));
     expect(projects).toHaveLength(0);
   });
+
+  it("refuses a task template: it brings no columns and is applied inside a project", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const [taskTemplate] = await db
+      .insert(schema.templateTable)
+      .values({
+        workspaceId: member.workspace.id,
+        createdBy: member.user.id,
+        name: "Revision tipo",
+        kind: "task",
+        content: { tasks: [{ title: "Revisar" }] },
+      })
+      .returning();
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const response = await createFrom(
+      app,
+      member.workspace.id,
+      taskTemplate.id,
+    );
+
+    expect(response.status).toBe(400);
+    const projects = await db
+      .select({ id: schema.projectTable.id })
+      .from(schema.projectTable)
+      .where(eq(schema.projectTable.slug, "OBR"));
+    expect(projects).toHaveLength(0);
+  });
 });
