@@ -5715,6 +5715,94 @@
 						"taskCount_one",
 						"taskCount_other"
 					]
+				},
+				"projectFields": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"renameAction": {
+							"type": "string"
+						},
+						"saveName": {
+							"type": "string"
+						},
+						"moveUp": {
+							"type": "string"
+						},
+						"moveDown": {
+							"type": "string"
+						},
+						"archiveAction": {
+							"type": "string"
+						},
+						"unarchiveAction": {
+							"type": "string"
+						},
+						"deleteAction": {
+							"type": "string"
+						},
+						"archivedBadge": {
+							"type": "string"
+						},
+						"workspaceBadge": {
+							"type": "string"
+						},
+						"deleteTitle": {
+							"type": "string"
+						},
+						"deleteDescription": {
+							"type": "string"
+						},
+						"updateError": {
+							"type": "string"
+						},
+						"deleteError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"empty",
+						"renameAction",
+						"saveName",
+						"moveUp",
+						"moveDown",
+						"archiveAction",
+						"unarchiveAction",
+						"deleteAction",
+						"archivedBadge",
+						"workspaceBadge",
+						"deleteTitle",
+						"deleteDescription",
+						"updateError",
+						"deleteError"
+					]
+				},
+				"workspaceFields": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"pageTitle": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						}
+					},
+					"required": ["title", "pageTitle", "description"]
 				}
 			},
 			"required": [
@@ -5753,7 +5841,9 @@
 				"projectTree",
 				"projectEpics",
 				"projectRecurrences",
-				"projectTemplates"
+				"projectTemplates",
+				"projectFields",
+				"workspaceFields"
 			]
 		},
 		"navigation": {

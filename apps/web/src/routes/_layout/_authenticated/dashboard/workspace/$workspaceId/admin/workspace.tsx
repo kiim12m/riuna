@@ -9,6 +9,7 @@ import {
   CreditCard,
   Settings,
   Shield,
+  SlidersHorizontal,
   Tag,
   Users,
 } from "lucide-react";
@@ -75,6 +76,11 @@ function RouteComponent() {
       title: t("settings:workspaceLabels.title", { defaultValue: "Labels" }),
       url: `${base}/labels`,
       icon: Tag,
+    },
+    {
+      title: t("settings:workspaceFields.title"),
+      url: `${base}/fields`,
+      icon: SlidersHorizontal,
     },
     {
       title: t("availability:holidays.title"),

@@ -1449,6 +1449,29 @@
 			"taskCount_one": "{{count}} tarea",
 			"taskCount_other": "{{count}} tareas",
 			"title": "Plantillas"
+		},
+		"projectFields": {
+			"title": "Campos personalizados",
+			"description": "Los campos que puede rellenar cada tarea del proyecto. Su tipo y su clave no cambian nunca; archiva uno para ocultarlo sin perder sus valores.",
+			"empty": "Aún no hay campos personalizados.",
+			"renameAction": "Renombrar",
+			"saveName": "Guardar el nombre",
+			"moveUp": "Subir",
+			"moveDown": "Bajar",
+			"archiveAction": "Archivar",
+			"unarchiveAction": "Restaurar",
+			"deleteAction": "Borrar",
+			"archivedBadge": "Archivado",
+			"workspaceBadge": "Del espacio",
+			"deleteTitle": "¿Borrar «{{name}}»?",
+			"deleteDescription": "Se borran el campo y los valores que cada tarea tiene guardados. No se puede deshacer. Si solo quieres ocultarlo, archívalo.",
+			"updateError": "No se ha podido actualizar el campo",
+			"deleteError": "No se ha podido borrar el campo"
+		},
+		"workspaceFields": {
+			"title": "Campos personalizados",
+			"pageTitle": "Campos personalizados",
+			"description": "Los campos que valen para todos los proyectos del espacio. Cada proyecto puede definir los suyos además de estos."
 		}
 	},
 	"navigation": {

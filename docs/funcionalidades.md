@@ -638,8 +638,9 @@ Para que nadie busque lo que no existe:
 - **Importadores de Trello, Jira, Asana y Notion** — fase 8.
 - **Importar** la hoja de SERVITEC: se exporta, no se importa.
 - **Agrupar por épica** y elegir qué columnas se ven en la vista Tabla.
-- **Editor de definiciones de campos personalizados**: renombrar, archivar,
-  borrar y reordenar existen en la API y no en la interfaz.
+- ~~**Editor de definiciones de campos personalizados**: renombrar, archivar,
+  borrar y reordenar existen en la API y no en la interfaz.~~ Ya existe, en los
+  ajustes del proyecto y en los del espacio.
 - **MCP no sabe de campos personalizados**, vistas, paneles, objetivos, ciclos,
   plantillas, recurrencias, «Mi trabajo», asignados múltiples ni equipos.
 - **Las vistas no paginan.** El presupuesto de 300 ms se cruza en torno a las

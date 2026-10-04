@@ -2,18 +2,30 @@ import { useQuery } from "@tanstack/react-query";
 import getProjectFieldDefinitions from "@/fetchers/field/get-project-field-definitions";
 import getWorkspaceFieldDefinitions from "@/fetchers/field/get-workspace-field-definitions";
 
-export function useGetFieldDefinitions(projectId: string) {
+// Todas cuelgan de ["field-definitions"]: una mutacion que invalide ese prefijo
+// refresca a la vez el editor, la tabla y los filtros.
+export function useGetFieldDefinitions(
+  projectId: string,
+  { includeArchived = false }: { includeArchived?: boolean } = {},
+) {
   return useQuery({
-    queryKey: ["field-definitions", projectId],
-    queryFn: () => getProjectFieldDefinitions(projectId),
+    queryKey: includeArchived
+      ? ["field-definitions", projectId, "all"]
+      : ["field-definitions", projectId],
+    queryFn: () => getProjectFieldDefinitions(projectId, includeArchived),
     enabled: Boolean(projectId),
   });
 }
 
-export function useGetWorkspaceFieldDefinitions(workspaceId: string) {
+export function useGetWorkspaceFieldDefinitions(
+  workspaceId: string,
+  { includeArchived = false }: { includeArchived?: boolean } = {},
+) {
   return useQuery({
-    queryKey: ["field-definitions", "workspace", workspaceId],
-    queryFn: () => getWorkspaceFieldDefinitions(workspaceId),
+    queryKey: includeArchived
+      ? ["field-definitions", "workspace", workspaceId, "all"]
+      : ["field-definitions", "workspace", workspaceId],
+    queryFn: () => getWorkspaceFieldDefinitions(workspaceId, includeArchived),
     enabled: Boolean(workspaceId),
   });
 }

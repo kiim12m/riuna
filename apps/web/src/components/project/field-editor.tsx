@@ -1,0 +1,359 @@
+import {
+  Archive,
+  ArchiveRestore,
+  ArrowDown,
+  ArrowUp,
+  Check,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import AddFieldDialog, {
+  type AddFieldPayload,
+} from "@/components/table-view/add-field-dialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  useCreateFieldDefinition,
+  useDeleteFieldDefinition,
+  useUpdateFieldDefinition,
+} from "@/hooks/mutations/field/use-field-definition-mutations";
+import {
+  useGetFieldDefinitions,
+  useGetWorkspaceFieldDefinitions,
+} from "@/hooks/queries/field/use-get-field-definitions";
+import { cn } from "@/lib/cn";
+import { toast } from "@/lib/toast";
+
+type Definition = {
+  id: string;
+  key: string;
+  name: string;
+  type: string;
+  projectId: string | null;
+  position: number;
+  required: boolean;
+  archivedAt: string | Date | null;
+};
+
+/**
+ * El editor de campos personalizados: crear, renombrar, ordenar, archivar y
+ * borrar. Hasta ahora solo se creaban desde el «+» de la tabla, y lo demas
+ * existia en la API y no en la interfaz.
+ *
+ * Con `projectId` edita los campos de **ese proyecto** (y enseña, sin tocarlos,
+ * los del espacio, que se editan en los ajustes del espacio). Sin el, edita los
+ * del espacio. Su tipo y su clave no cambian nunca (ADR 013): la clave es con la
+ * que cada tarea guarda su valor.
+ */
+export default function FieldEditor({
+  projectId,
+  workspaceId,
+  canEdit = true,
+}: {
+  projectId?: string;
+  workspaceId: string;
+  canEdit?: boolean;
+}) {
+  const { t } = useTranslation();
+  const projectQuery = useGetFieldDefinitions(projectId ?? "", {
+    includeArchived: true,
+  });
+  const workspaceQuery = useGetWorkspaceFieldDefinitions(
+    projectId ? "" : workspaceId,
+    { includeArchived: true },
+  );
+  const definitions = (
+    (projectId ? projectQuery.data : workspaceQuery.data) ?? []
+  ).map((definition) => definition as unknown as Definition);
+  const isLoading = projectId
+    ? projectQuery.isLoading
+    : workspaceQuery.isLoading;
+
+  const { mutateAsync: create, isPending: isCreating } =
+    useCreateFieldDefinition({ projectId, workspaceId });
+  const { mutateAsync: update } = useUpdateFieldDefinition();
+  const { mutateAsync: remove } = useDeleteFieldDefinition();
+
+  const [adding, setAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState("");
+  const [deleting, setDeleting] = useState<Definition | null>(null);
+
+  // Los del espacio, en el editor de un proyecto, se ven y no se tocan.
+  const editable = (definition: Definition) =>
+    canEdit && (projectId ? definition.projectId === projectId : true);
+
+  const ordered = [...definitions].sort(
+    (a, b) => a.position - b.position || a.name.localeCompare(b.name),
+  );
+
+  const fail = (error: unknown, fallbackKey: string) =>
+    toast.error(error instanceof Error ? error.message : t(fallbackKey));
+
+  const handleCreate = async (field: AddFieldPayload) => {
+    try {
+      await create(field);
+      setAdding(false);
+      toast.success(t("tasks:table.fieldCreated"));
+    } catch (error) {
+      fail(error, "tasks:table.fieldCreateFailed");
+    }
+  };
+
+  const rename = async (definition: Definition) => {
+    const name = draftName.trim();
+    setEditingId(null);
+    if (!name || name === definition.name) return;
+    try {
+      await update({ id: definition.id, name });
+    } catch (error) {
+      fail(error, "settings:projectFields.updateError");
+    }
+  };
+
+  const setArchived = async (definition: Definition, archived: boolean) => {
+    try {
+      await update({ id: definition.id, archived });
+    } catch (error) {
+      fail(error, "settings:projectFields.updateError");
+    }
+  };
+
+  // Se renumeran todos con su indice: si varios compartian posicion (todos a 0
+  // al crearlos) intercambiar solo dos no fijaria un orden.
+  const move = async (definition: Definition, direction: -1 | 1) => {
+    const index = ordered.findIndex((entry) => entry.id === definition.id);
+    const target = index + direction;
+    if (target < 0 || target >= ordered.length) return;
+
+    const next = [...ordered];
+    [next[index], next[target]] = [
+      next[target] as Definition,
+      next[index] as Definition,
+    ];
+
+    try {
+      await Promise.all(
+        next.flatMap((entry, position) =>
+          entry.position === position || !editable(entry)
+            ? []
+            : [update({ id: entry.id, position })],
+        ),
+      );
+    } catch (error) {
+      fail(error, "settings:projectFields.updateError");
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    const target = deleting;
+    setDeleting(null);
+    try {
+      await remove(target.id);
+    } catch (error) {
+      fail(error, "settings:projectFields.deleteError");
+    }
+  };
+
+  return (
+    <div className="space-y-3 rounded-lg border border-border p-4">
+      {canEdit && (
+        <div className="flex justify-end">
+          <Button size="sm" onClick={() => setAdding(true)}>
+            <Plus className="size-3.5" />
+            {t("tasks:table.addField")}
+          </Button>
+        </div>
+      )}
+
+      {!isLoading && ordered.length === 0 && (
+        <p className="py-4 text-center text-muted-foreground text-xs">
+          {t("settings:projectFields.empty")}
+        </p>
+      )}
+
+      <ul className="divide-y divide-border/60" data-testid="field-list">
+        {ordered.map((definition, index) => {
+          const archived = Boolean(definition.archivedAt);
+          const mine = editable(definition);
+
+          return (
+            <li
+              key={definition.id}
+              className={cn(
+                "flex items-center gap-2 py-2",
+                archived && "opacity-60",
+              )}
+            >
+              <div className="min-w-0 flex-1">
+                {editingId === definition.id ? (
+                  <Input
+                    size="sm"
+                    autoFocus
+                    value={draftName}
+                    aria-label={t("settings:projectFields.renameAction")}
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                      setDraftName(event.target.value)
+                    }
+                    onKeyDown={(
+                      event: React.KeyboardEvent<HTMLInputElement>,
+                    ) => {
+                      if (event.key === "Enter") rename(definition);
+                      if (event.key === "Escape") setEditingId(null);
+                    }}
+                  />
+                ) : (
+                  <span className="block truncate text-sm">
+                    {definition.name}
+                  </span>
+                )}
+              </div>
+
+              <span className="shrink-0 text-muted-foreground text-xs">
+                {t(`tasks:table.fieldTypes.${definition.type}`, {
+                  defaultValue: definition.type,
+                })}
+              </span>
+              {projectId && !definition.projectId && (
+                <span className="shrink-0 rounded border border-border px-1.5 text-label text-muted-foreground">
+                  {t("settings:projectFields.workspaceBadge")}
+                </span>
+              )}
+              {archived && (
+                <span className="shrink-0 rounded border border-border px-1.5 text-label text-muted-foreground">
+                  {t("settings:projectFields.archivedBadge")}
+                </span>
+              )}
+
+              {mine && editingId === definition.id && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    aria-label={t("settings:projectFields.saveName")}
+                    onClick={() => rename(definition)}
+                  >
+                    <Check className="size-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    aria-label={t("common:actions.cancel")}
+                    onClick={() => setEditingId(null)}
+                  >
+                    <X className="size-3.5" />
+                  </Button>
+                </>
+              )}
+
+              {mine && editingId !== definition.id && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    aria-label={t("settings:projectFields.moveUp")}
+                    disabled={index === 0}
+                    onClick={() => move(definition, -1)}
+                  >
+                    <ArrowUp className="size-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    aria-label={t("settings:projectFields.moveDown")}
+                    disabled={index === ordered.length - 1}
+                    onClick={() => move(definition, 1)}
+                  >
+                    <ArrowDown className="size-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    aria-label={t("settings:projectFields.renameAction")}
+                    onClick={() => {
+                      setEditingId(definition.id);
+                      setDraftName(definition.name);
+                    }}
+                  >
+                    <Pencil className="size-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    aria-label={
+                      archived
+                        ? t("settings:projectFields.unarchiveAction")
+                        : t("settings:projectFields.archiveAction")
+                    }
+                    onClick={() => setArchived(definition, !archived)}
+                  >
+                    {archived ? (
+                      <ArchiveRestore className="size-3.5" />
+                    ) : (
+                      <Archive className="size-3.5" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    className="text-destructive"
+                    aria-label={t("settings:projectFields.deleteAction")}
+                    onClick={() => setDeleting(definition)}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                </>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      <AddFieldDialog
+        open={adding}
+        pending={isCreating}
+        onClose={() => setAdding(false)}
+        onCreate={handleCreate}
+      />
+
+      <AlertDialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && setDeleting(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {t("settings:projectFields.deleteTitle", {
+                name: deleting?.name ?? "",
+              })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("settings:projectFields.deleteDescription")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={() => setDeleting(null)}>
+              {t("common:actions.cancel")}
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              {t("settings:projectFields.deleteAction")}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

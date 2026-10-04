@@ -5,10 +5,13 @@ import { client } from "@riuna/libs";
  * si una vista que cruza proyectos puede filtrar por el (el servidor retira los
  * que algun proyecto redefine con otra forma de comparacion).
  */
-async function getWorkspaceFieldDefinitions(workspaceId: string) {
+async function getWorkspaceFieldDefinitions(
+  workspaceId: string,
+  includeArchived = false,
+) {
   const response = await client.field.workspace[":workspaceId"].$get({
     param: { workspaceId },
-    query: {},
+    query: includeArchived ? { includeArchived: "true" } : {},
   });
 
   if (!response.ok) {

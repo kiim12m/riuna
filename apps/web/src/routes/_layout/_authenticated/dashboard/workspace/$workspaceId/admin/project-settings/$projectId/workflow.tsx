@@ -3,10 +3,12 @@ import { useTranslation } from "react-i18next";
 import PageTitle from "@/components/page-title";
 import ColumnEditor from "@/components/project/column-editor";
 import EpicEditor from "@/components/project/epic-editor";
+import FieldEditor from "@/components/project/field-editor";
 import RecurrenceEditor from "@/components/project/recurrence-editor";
 import TemplatePanel from "@/components/project/template-panel";
 import TreeSettings from "@/components/project/tree-settings";
 import WorkflowEditor from "@/components/project/workflow-editor";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/workflow",
@@ -16,7 +18,8 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const { t } = useTranslation();
-  const { projectId } = Route.useParams();
+  const { projectId, workspaceId } = Route.useParams();
+  const { canUpdateProjects } = useWorkspacePermission();
 
   return (
     <>
@@ -63,6 +66,22 @@ function RouteComponent() {
             </p>
           </div>
           <EpicEditor projectId={projectId} />
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-1">
+            <h2 className="text-md font-medium">
+              {t("settings:projectFields.title")}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {t("settings:projectFields.description")}
+            </p>
+          </div>
+          <FieldEditor
+            projectId={projectId}
+            workspaceId={workspaceId}
+            canEdit={canUpdateProjects()}
+          />
         </div>
 
         <div className="space-y-6">

@@ -216,10 +216,10 @@ gestor de tareas básico y nada propio.
   esta fase sino el vocabulario heredado, y es el mismo hallazgo que la Fase 1
   hizo con `task:assign`. Queda documentado en las pruebas y en la
   [ADR 013](adr/013-campos-personalizados.md).
-- **No hay editor de definiciones.** Se crean desde el «+» de la vista Tabla;
+- ~~**No hay editor de definiciones.** Se crean desde el «+» de la vista Tabla;
   renombrar, archivar, borrar y reordenar existen en la API y no en la
   interfaz. Tampoco hay forma de crear un campo de alcance espacio de trabajo
-  sin llamar a la API.
+  sin llamar a la API.~~ **Cerrado (2026-10-04)**, punto 25 del cierre de la deuda.
 - ~~**Cambiar un campo no deja rastro en la actividad**~~ (cerrado, punto 24 del cierre de la deuda), mientras que cambiar el
   título sí. Se notará la primera vez que alguien pregunte quién tocó el
   presupuesto.
@@ -2596,7 +2596,15 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     que su fusión en SQL evita. Guardar el mismo valor no deja nada, y los campos de tipo usuario
     o relación dicen que cambiaron, no a qué identificador. Cuatro pruebas de integración que
     fallan sin el cambio.
-25. Editor de definiciones de campos: renombrar, archivar, borrar, reordenar y campos de espacio.
+25. ✔ Editor de definiciones de campos: renombrar, archivar, borrar, reordenar y campos de espacio.
+    **Hecho (2026-10-04).** Un componente (`FieldEditor`) en dos sitios: una sección «Campos
+    personalizados» en *Ajustes del proyecto › Flujo de trabajo*, y una página nueva *Administración
+    del espacio › Campos personalizados*. Sin cambios de API: ya hacía todo. Crear reutiliza el diálogo
+    de la tabla; ordenar renumera todos con su índice (si varios compartían posición, intercambiar solo
+    dos no habría fijado un orden); borrar pide confirmación y dice que se pierden **los valores** de
+    todas las tareas. En el editor de un proyecto, los campos del espacio se ven con su etiqueta y no se
+    tocan: se editan donde tienen el permiso (`workspace:manage_settings`). Dos e2e, el primero cae sin
+    la sección de la página.
 26. ✔ Los campos de espacio llegan a los widgets y a «Mis tareas». **Hecho (2026-10-04).** El endpoint
     ya existía (`GET /field/workspace/:id`); faltaban el fetcher y los consumidores. Cada campo lleva
     ahora `filterable`, con el mismo criterio que el registro del servidor: **falso si algún proyecto

@@ -1449,6 +1449,29 @@
 			"applied_other": "{{count}} tasks created",
 			"taskCount_one": "{{count}} task",
 			"taskCount_other": "{{count}} tasks"
+		},
+		"projectFields": {
+			"title": "Custom fields",
+			"description": "The fields every task of the project can fill in. Their type and key never change; archive one to hide it without losing its values.",
+			"empty": "There are no custom fields yet.",
+			"renameAction": "Rename",
+			"saveName": "Save the name",
+			"moveUp": "Move up",
+			"moveDown": "Move down",
+			"archiveAction": "Archive",
+			"unarchiveAction": "Restore",
+			"deleteAction": "Delete",
+			"archivedBadge": "Archived",
+			"workspaceBadge": "Workspace",
+			"deleteTitle": "Delete “{{name}}”?",
+			"deleteDescription": "The field and the values every task has stored for it are deleted. This cannot be undone. To just hide it, archive it instead.",
+			"updateError": "The field could not be updated",
+			"deleteError": "The field could not be deleted"
+		},
+		"workspaceFields": {
+			"title": "Custom fields",
+			"pageTitle": "Custom fields",
+			"description": "Fields that apply to every project of the workspace. A project can define its own on top of these."
 		}
 	},
 	"navigation": {
