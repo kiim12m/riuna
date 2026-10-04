@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
+import { startOfServerDay } from "../../apps/api/src/utils/day-boundaries";
 import { mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
 import {
@@ -319,25 +320,25 @@ describe("GET /today (ADR 046)", () => {
     await assign(other.id, userId);
     await planTask(planned.id, workspaceId, userId, today());
 
+    // Una entrada cuenta en el dia en que empieza: «hace diez minutos» cae en
+    // la vispera si la prueba corre justo despues de medianoche. Se empieza,
+    // como pronto, en el primer segundo del dia del servidor.
     const now = new Date();
-    await db.insert(schema.timeEntryTable).values([
-      {
-        taskId: planned.id,
+    const dayStart = startOfServerDay(now).getTime();
+    const entry = (taskId: string, seconds: number) => {
+      const start = Math.max(now.getTime() - seconds * 1000, dayStart);
+      return {
+        taskId,
         userId,
         description: "",
-        startTime: new Date(now.getTime() - 600 * 1000),
-        endTime: now,
-        duration: 600,
-      },
-      {
-        taskId: other.id,
-        userId,
-        description: "",
-        startTime: new Date(now.getTime() - 300 * 1000),
-        endTime: now,
-        duration: 300,
-      },
-    ]);
+        startTime: new Date(start),
+        endTime: new Date(start + seconds * 1000),
+        duration: seconds,
+      };
+    };
+    await db
+      .insert(schema.timeEntryTable)
+      .values([entry(planned.id, 600), entry(other.id, 300)]);
 
     const body = await (await getToday(app, workspaceId)).json();
     expect(body.totals.workedToday).toBe(900);
