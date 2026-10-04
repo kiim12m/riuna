@@ -2651,6 +2651,8 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     mientras se crea y no `disabled`, porque un campo desactivado pierde el foco (lo encontró el e2e).
     Un e2e que crea dos seguidas y comprueba su estado en la API.
 
+*Verificación de la tanda 4 (2026-10-04): integración 782 de 783 (1 omitida, ninguna fallada), humo **77 de 77**, unitarias de los diez paquetes (API 762, web 400, MCP 34), typecheck, Biome e i18n. Migración nueva: 0080 (`user_preference`, solo una tabla).*
+
 **Tanda 5 — las grandes** · L
 32. Vista Tabla: agrupar por épica, elegir columnas (que la vista guardada las recuerde) y
     agregados del árbol como columnas ordenables.
