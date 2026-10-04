@@ -274,7 +274,7 @@ al tablero.
   candidata a mirar con `EXPLAIN`.
 - **El presupuesto de rendimiento sigue sin medirse**: 50.000 tareas y
   < 300 ms p95. Se arrastra a la Fase 9, que es la otra que lo pedía.
-- **Tres gestos sin probar en vivo**: elegir el tipo de un campo, editar un
+- ~~**Tres gestos sin probar en vivo**~~ (probados, punto 20 del cierre de la deuda): elegir el tipo de un campo, editar un
   `multi_select` y cargar una vista del menú. Los tres son desplegables de Base
   UI, que no abren en un navegador headless porque no compone frames y sus
   transiciones no terminan. Lo que hay a cada lado del clic sí está verificado.
@@ -708,7 +708,9 @@ también esa columna del tablero; no hay una segunda que gastar.
 
 **Deuda abierta de la Fase 5**, declarada a sabiendas:
 
-- **El asistente de importación no se ha pasado por el navegador.** La API está
+- ~~**El asistente de importación no se ha pasado por el navegador.**~~ **Cerrado
+  (2026-10-04), y era peor que una deuda: el asistente no funcionaba.** Ver el punto 20.
+  La API está
   probada de punta a punta —19 casos de integración, más el banco de 5.000
   filas—, pero los cuatro pasos del asistente web (elegir fichero, mapear
   columnas, confirmar tipos, ver el informe) solo tienen el typecheck. Se
@@ -2347,11 +2349,10 @@ en un **esqueleto eterno** cuando el espacio activo no estaba resuelto —la
 consulta queda desactivada y `isPending` no baja nunca—. Ninguna prueba de API lo
 habría visto, porque la API estaba bien.
 
-**Lo que sigue fuera:** el humo de la Fase 0 —«login → crear proyecto → campo
-personalizado → dos subtareas → mover en tablero → filtrar y guardar vista →
-exportar»— y el asistente de importación de la Fase 5. La infraestructura ya
-está; falta escribir esos casos. Y engancharlo a CI, que pide un servicio de
-Postgres y `playwright install`.
+**Cerrado el 2026-10-04** (punto 20 del cierre de la deuda): el humo de la Fase 0
+(`phase0-flow.spec.ts`), el asistente de importación (`import-wizard.spec.ts`) y los
+tres gestos de la tabla (`table-gestures.spec.ts`) están escritos, y el humo corre en
+CI (job `e2e`, con servicio de PostgreSQL y `playwright install`).
 
 ## Verificación
 
@@ -2536,8 +2537,28 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     verificación (2026-10-04).** Ya arrancan: las 30 de componente corren entre las 74 del web
     (390 pruebas), también con `pnpm test --force`, que lanza los diez paquetes a la vez —el
     escenario donde caducaban los workers—. La nota era de la Fase 4.5 y se quedó vieja.
-20. Los dos casos de humo que faltan (el de la Fase 0 y el asistente de importación), los tres
-    gestos de la Fase 4 sin probar, y Playwright en CI.
+20. ✔ Los dos casos de humo que faltan (el de la Fase 0 y el asistente de importación), los tres
+    gestos de la Fase 4 sin probar, y Playwright en CI. **Hecho (2026-10-04).**
+    - **El asistente de importación de la Fase 5 no funcionaba en ningún navegador.** El cliente
+      compartido (`packages/libs/src/hono.ts`) ponía `Content-Type: application/json` a toda
+      petición, también a un `FormData`; el navegador no podía poner su
+      `multipart/form-data; boundary=…` y el servidor no veía ningún campo
+      (`Expected "file" but received undefined`). Los 19 casos de integración pasaban porque
+      llaman a la API sin ese cliente. Lo encontró el primer intento de escribir el caso de humo.
+      Corregido en origen (`apiHeaders`), con prueba unitaria.
+    - **`import-wizard.spec.ts`**: fichero con jerarquía → mapeo → «Comprobar» (no crea nada) →
+      importar (la hija cuelga de su madre) → reimportar el mismo fichero: actualiza y no duplica,
+      que es el criterio de aceptación de la Fase 5.
+    - **`phase0-flow.spec.ts`**: inicio de sesión por el formulario (el resto de pruebas lo
+      saltan), crear proyecto, dos subtareas, mover una tarea en el tablero **arrastrando** y
+      exportar a Excel.
+    - **`table-gestures.spec.ts`**: elegir el tipo «Selección múltiple» al crear un campo, editar
+      esa selección, y guardar y **cargar** una vista del menú. De paso se vio que el menú de
+      selección múltiple se cierra tras cada elección: hay que reabrirlo para marcar la segunda.
+    - **CI**: job `e2e` con servicio de PostgreSQL, `pnpm build` (la API y la web consumen el
+      `dist` de los paquetes), Chromium y trazas como artefacto si falla. No se puede ejecutar
+      Actions desde aquí: el YAML se validó y el camino se simuló en local con `CI=true`.
+    - Las tres especificaciones nuevas, 3 vueltas seguidas: 9 de 9.
 
 **Tanda 4 — funcionalidad mediana** · M
 21. Notificaciones paginadas y con filtro de no leídas (hoy, tope de 50).
@@ -2692,10 +2713,10 @@ Lo que arrastra la Fase 6, y que sigue abierto:
 - ~~Ninguna de las cuatro rebanadas se ha pasado por el navegador.~~ **Cerrada,
   y con ella la deuda que arrastraban las Fases 4 y 5.** Ver «Humo de punta a
   punta» más arriba.
-- **Faltan dos casos de humo:** el de la Fase 0 —login → proyecto → campo
+- ~~**Faltan dos casos de humo:** el de la Fase 0 —login → proyecto → campo
   personalizado → dos subtareas → mover en tablero → filtrar y guardar vista →
-  exportar— y el del asistente de importación de la Fase 5. La infraestructura
-  está; falta escribirlos y engancharlos a CI.
+  exportar— y el del asistente de importación de la Fase 5.~~ Escritos y en CI
+  (punto 20 del cierre de la deuda).
 - **Sigue sin decidirse cuándo migrar Tablero, Lista y Backlog al motor de
   filtros.** Arrastra desde la Fase 4.
 - **Repaso de diseño de «Mi trabajo» (2026-09-07).** La pantalla se construyó al
