@@ -9,17 +9,34 @@ const apiUrl = resolveApiBaseUrl(import.meta.env.VITE_API_URL);
 // Generate once per tab load
 export const windowId = Math.random().toString(36).substring(2, 11);
 
+/**
+ * Las cabeceras de cada peticion al API.
+ *
+ * `Content-Type: application/json` solo va cuando el cuerpo no es un
+ * `FormData`. Con un formulario el navegador tiene que poner el suyo,
+ * `multipart/form-data; boundary=…`: forzar JSON dejaba al servidor sin ver un
+ * solo campo (`Expected "file" but received undefined`), y el asistente de
+ * importacion de la Fase 5 no funciono nunca en un navegador, aunque su API
+ * tuviera 19 casos de integracion en verde.
+ */
+export function apiHeaders(init?: RequestInit): HeadersInit {
+  const isForm =
+    typeof FormData !== "undefined" && init?.body instanceof FormData;
+
+  return {
+    ...init?.headers,
+    ...(isForm ? {} : { "Content-Type": "application/json" }),
+    "X-Riuna-Window-Id": windowId,
+  };
+}
+
 // Sin anotar, la declaracion emitida tendria que nombrar tipos internos de la
 // API que `libs` no puede alcanzar (TS2883); `AppType` si es publico.
 export const client: ReturnType<typeof hc<AppType>> = hc<AppType>(apiUrl, {
   fetch: (input: RequestInfo | URL, init?: RequestInit) => {
     return fetch(input, {
       ...init,
-      headers: {
-        ...init?.headers,
-        "Content-Type": "application/json",
-        "X-Riuna-Window-Id": windowId,
-      },
+      headers: apiHeaders(init),
       credentials: "include",
     }).catch((error) => {
       if (error instanceof TypeError && error.message.includes("fetch")) {
