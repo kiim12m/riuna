@@ -2390,6 +2390,12 @@
 		"view": {
 			"board": "Tablero",
 			"list": "Lista"
+		},
+		"composer": {
+			"add": "Añadir tarea",
+			"placeholder": "Título de la tarea…",
+			"hint": "Intro para crear · Esc para cerrar",
+			"error": "No se ha podido crear la tarea"
 		}
 	},
 	"invitations": {

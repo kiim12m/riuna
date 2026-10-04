@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ProjectWithTasks } from "@/types/project";
+import { ColumnComposer } from "./column-composer";
 import { ColumnDropzone } from "./column-dropzone";
 import { ColumnHeader } from "./column-header";
 
@@ -28,6 +29,9 @@ function Column({ column, disableDragDrop = false }: ColumnProps) {
           disableDragDrop={disableDragDrop}
           onIsOverChange={setIsDropzoneOver}
         />
+      </div>
+      <div className="shrink-0 border-t border-border/60 px-2 py-1">
+        <ColumnComposer column={column} />
       </div>
     </div>
   );

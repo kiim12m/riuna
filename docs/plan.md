@@ -764,8 +764,8 @@ sigue siendo Fase 6.
 **Deuda declarada:** la adopción de los tokens de elevación (`shadow-e1..e4`) y
 de la escala tipográfica es **incremental** —lo dicen las ADR 018 y 020, «no hay
 un corte único»—; hoy los tokens existen y solo el tablero y el Gantt consumen
-densidad. El **compositor de tarea en línea** al pie de columna queda para una
-pasada propia: es función nueva, no pulido. En el Gantt, encajar el arrastre a la
+densidad. ~~El **compositor de tarea en línea** al pie de columna queda para una
+pasada propia: es función nueva, no pulido.~~ Hecho el 2026-10-04 (punto 31 del cierre de la deuda). En el Gantt, encajar el arrastre a la
 unidad del zoom (semana/mes) y virtualizar filas quedan pendientes si el
 perfilado lo pide.
 
@@ -2644,7 +2644,12 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     para el proyecto entero. La tarjeta «Rama» del detalle enseña una fila por campo («Presupuesto de
     la rama: 1350,50 €»). Esto es la mitad de datos del punto 32 (agregados como columnas de la tabla).
     Dos pruebas de integración y un e2e que falla sin el cambio.
-31. Compositor de tarea en línea al pie de cada columna del tablero.
+31. ✔ Compositor de tarea en línea al pie de cada columna del tablero. **Hecho (2026-10-04).** «Añadir
+    tarea» al pie de la columna se vuelve un campo de título: Intro crea la tarea en esa columna y el
+    campo se queda abierto, vacío y con el foco, para encadenar una lista; Esc lo cierra sin crear.
+    Solo título: el «+» de la cabecera sigue abriendo el formulario entero. El campo está en `readOnly`
+    mientras se crea y no `disabled`, porque un campo desactivado pierde el foco (lo encontró el e2e).
+    Un e2e que crea dos seguidas y comprueba su estado en la API.
 
 **Tanda 5 — las grandes** · L
 32. Vista Tabla: agrupar por épica, elegir columnas (que la vista guardada las recuerde) y

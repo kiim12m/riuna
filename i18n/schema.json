@@ -9422,6 +9422,25 @@
 						}
 					},
 					"required": ["board", "list"]
+				},
+				"composer": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"add": {
+							"type": "string"
+						},
+						"placeholder": {
+							"type": "string"
+						},
+						"hint": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						}
+					},
+					"required": ["add", "placeholder", "hint", "error"]
 				}
 			},
 			"required": [
@@ -9462,7 +9481,8 @@
 				"time",
 				"tree",
 				"update",
-				"view"
+				"view",
+				"composer"
 			]
 		},
 		"invitations": {
