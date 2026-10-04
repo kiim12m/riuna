@@ -641,8 +641,9 @@ Para que nadie busque lo que no existe:
 - ~~**Editor de definiciones de campos personalizados**: renombrar, archivar,
   borrar y reordenar existen en la API y no en la interfaz.~~ Ya existe, en los
   ajustes del proyecto y en los del espacio.
-- **MCP no sabe de campos personalizados**, vistas, paneles, objetivos, ciclos,
-  plantillas, recurrencias, «Mi trabajo», asignados múltiples ni equipos.
+- **MCP no sabe de vistas, paneles, objetivos, ciclos, plantillas, recurrencias
+  ni «Mi trabajo»**. Crear y editar tareas sí admite campos personalizados,
+  varios asignados y equipo.
 - **Las vistas no paginan.** El presupuesto de 300 ms se cruza en torno a las
   6.500 tareas en un mismo proyecto.
 - ~~**Cambiar un campo personalizado no deja rastro en la actividad.**~~ Ya lo deja (con el valor anterior y el nuevo).

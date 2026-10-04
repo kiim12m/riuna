@@ -223,8 +223,8 @@ gestor de tareas básico y nada propio.
 - ~~**Cambiar un campo no deja rastro en la actividad**~~ (cerrado, punto 24 del cierre de la deuda), mientras que cambiar el
   título sí. Se notará la primera vez que alguien pregunte quién tocó el
   presupuesto.
-- **MCP no sabe de campos personalizados**: `create_task`, `update_task` y
-  `list_tasks` los ignoran.
+- ~~**MCP no sabe de campos personalizados**: `create_task`, `update_task` y
+  `list_tasks` los ignoran.~~ Cerrado el 2026-10-04 (punto 27 del cierre de la deuda).
 - ~~**Los agregados del árbol no suben los campos numéricos.** Sumar un
   «Presupuesto» de toda la rama es previsible y no está.~~ Cerrado el 2026-10-04
   (punto 30 del cierre de la deuda).
@@ -2613,7 +2613,15 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
     proyecto, «Mis tareas» y los widgets de espacio, que antes tenían cada uno lo suyo. Dos pruebas de
     integración, cuatro unitarias del ayudante y un e2e que falla sin el cambio. No añade columnas
     personalizadas a «Mis tareas» (solo filtro), que sigue siendo de lectura.
-27. MCP conoce campos personalizados, asignados múltiples y equipos (y el paquete stdio igual).
+27. ✔ MCP conoce campos personalizados, asignados múltiples y equipos (y el paquete stdio igual).
+    **Hecho (2026-10-04).** `create_task` y `update_task` aceptan `customFields`, `assigneeIds` y
+    `teamId`; `list_tasks` acepta `filter` (el JSON del motor de filtros, con `custom.<clave>`) y
+    `treeScope`. Cada cosa vive en su ruta y con su permiso, así que se guardan **después** de la
+    tarea; si una falla, el error dice que la tarea ya está guardada (con su id) en vez de dejar creer
+    que no se creó, y lo que se devuelve es la tarea como quedó. Los dos registros siguen siendo dos
+    copias: la prueba de paridad ahora compara también **los parámetros de cada herramienta**, no solo
+    los nombres (cae si el *stdio* se queda atrás, comprobado). Cinco pruebas del HTTP y una del
+    *stdio*. Siguen sin herramienta: vistas, paneles, objetivos, ciclos, plantillas y recurrencias.
 28. ✔ Crear un proyecto entero desde una plantilla de proyecto. **Hecho (2026-10-04).** `POST /project`
     acepta un `templateId` opcional: el proyecto nace con **las columnas de la plantilla** (las cuatro
     de siempre si no trae), sus épicas y su árbol de tareas, que se despliega con el mismo código

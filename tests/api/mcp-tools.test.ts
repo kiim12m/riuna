@@ -207,3 +207,148 @@ describe("MCP tool catalog", () => {
     expect(result.content[0].text).toContain("Task not found");
   });
 });
+
+describe("MCP tasks with assignees, team and custom fields", () => {
+  /** Cada peticion al API, en orden: metodo, ruta y cuerpo. */
+  function calls() {
+    return apiFetch.mock.calls.map(([input, init]) => {
+      const request = init as RequestInit | undefined;
+      return [
+        request?.method ?? "GET",
+        new URL(String(input)).pathname,
+        request?.body ? JSON.parse(String(request.body)) : undefined,
+      ] as const;
+    });
+  }
+
+  beforeEach(() => {
+    apiFetch.mockImplementation(async (input, init) => {
+      const method = (init as RequestInit | undefined)?.method ?? "GET";
+      const path = new URL(String(input)).pathname;
+      if (method === "POST" && path === "/api/task/p1") {
+        return Response.json({ id: "t9", title: "Nueva" });
+      }
+      // Una tarea completa: `update_task` la lee y la reescribe entera.
+      return Response.json({
+        id: "t9",
+        title: "Nueva",
+        description: "",
+        status: "to-do",
+        priority: "medium",
+        projectId: "p1",
+        position: 1,
+        customFields: {},
+      });
+    });
+  });
+
+  it("creates the task and then saves what has its own route, answering the task as it ended up", async () => {
+    const result = await call("create_task", {
+      projectId: "p1",
+      title: "Nueva",
+      description: "",
+      priority: "medium",
+      status: "to-do",
+      assigneeIds: ["u1", "u2"],
+      teamId: "team-1",
+      customFields: { presupuesto: 1500 },
+    });
+
+    expect(calls().map(([method, path]) => `${method} ${path}`)).toEqual([
+      "POST /api/task/p1",
+      "PUT /api/task/assignees/t9",
+      "PUT /api/task/team/t9",
+      "PUT /api/task/custom-fields/t9",
+      "GET /api/task/t9",
+    ]);
+    const byPath = new Map(calls().map(([, path, body]) => [path, body]));
+    expect(byPath.get("/api/task/assignees/t9")).toEqual({
+      userIds: ["u1", "u2"],
+    });
+    expect(byPath.get("/api/task/team/t9")).toEqual({ teamId: "team-1" });
+    expect(byPath.get("/api/task/custom-fields/t9")).toEqual({
+      values: { presupuesto: 1500 },
+    });
+    // Los extras no viajan en el POST de la tarea.
+    expect(byPath.get("/api/task/p1")).not.toHaveProperty("customFields");
+    expect(result.isError).toBeFalsy();
+  });
+
+  it("makes one request, as before, when none of them is asked", async () => {
+    await call("create_task", {
+      projectId: "p1",
+      title: "Sola",
+      description: "",
+      priority: "low",
+      status: "to-do",
+    });
+
+    expect(calls()).toHaveLength(1);
+  });
+
+  it("says the task was saved when the assignees are refused", async () => {
+    apiFetch.mockImplementation(async (input, init) => {
+      const method = (init as RequestInit | undefined)?.method ?? "GET";
+      const path = new URL(String(input)).pathname;
+      if (method === "POST" && path === "/api/task/p1") {
+        return Response.json({ id: "t9" });
+      }
+      return new Response("Insufficient permissions", { status: 403 });
+    });
+
+    const result = await call("create_task", {
+      projectId: "p1",
+      title: "Nueva",
+      description: "",
+      priority: "medium",
+      status: "to-do",
+      assigneeIds: ["u1"],
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toContain("Task t9 was saved");
+  });
+
+  it("updates a task and its extras, keeping the extras out of the full update", async () => {
+    await call("update_task", {
+      taskId: "t1",
+      title: "Renombrada",
+      teamId: null,
+      customFields: { cliente: "Acme" },
+    });
+
+    const sent = calls();
+    expect(sent.map(([method, path]) => `${method} ${path}`)).toEqual([
+      "GET /api/task/t1",
+      "PUT /api/task/t1",
+      "PUT /api/task/team/t1",
+      "PUT /api/task/custom-fields/t1",
+      "GET /api/task/t1",
+    ]);
+    const full = sent[1]?.[2] as Record<string, unknown>;
+    expect(full.title).toBe("Renombrada");
+    expect(full).not.toHaveProperty("customFields");
+    expect(full).not.toHaveProperty("teamId");
+    expect(sent[2]?.[2]).toEqual({ teamId: null });
+  });
+
+  it("lists tasks by a filter on a custom field", async () => {
+    const filter = JSON.stringify({
+      type: "condition",
+      field: "custom.presupuesto",
+      operator: "gt",
+      value: 1000,
+    });
+
+    await call("list_tasks", {
+      projectId: "p1",
+      filter,
+      treeScope: "withDescendants",
+    });
+
+    const url = new URL(lastRequest().url);
+    expect(url.pathname).toBe("/api/task/tasks/p1");
+    expect(url.searchParams.get("filter")).toBe(filter);
+    expect(url.searchParams.get("treeScope")).toBe("withDescendants");
+  });
+});
