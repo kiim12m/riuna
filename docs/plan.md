@@ -1021,9 +1021,9 @@ por proyecto mientras los widgets cruzan proyectos.
   humo de Playwright, incluido el gesto que peor cubría la automatización de API
   —asignar y **desasignar** desde una segunda sesión y ver la fila aparecer y
   desaparecer sola—.
-- **`getNotifications` sigue topada en 50 filas sin paginar ni filtrar por no
-  leídas.** Invisible en un desplegable, visible a página completa: la bandeja lo
-  avisa en vez de fingir que eso es todo.
+- ~~**`getNotifications` sigue topada en 50 filas sin paginar ni filtrar por no
+  leídas.**~~ Invisible en un desplegable, visible a página completa: la bandeja lo
+  avisa en vez de fingir que eso es todo. **Cerrado (2026-10-04)**, punto 21 del cierre de la deuda.
 - **El motor de filtros de la Fase 4 no llega aquí.** El registro de campos
   eclipsa definiciones entre proyecto y espacio y admite tipos distintos por
   proyecto, así que un `custom.*` filtraría a cero en silencio en unos proyectos
@@ -2563,7 +2563,15 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
 *Verificación de la tanda 3 (2026-10-04): integración 754 de 755 (1 omitida, ninguna fallada), humo **68 de 68**, unitarias de los diez paquetes, typecheck, Biome e i18n.*
 
 **Tanda 4 — funcionalidad mediana** · M
-21. Notificaciones paginadas y con filtro de no leídas (hoy, tope de 50).
+21. ✔ Notificaciones paginadas y con filtro de no leídas (hoy, tope de 50). **Hecho (2026-10-04).**
+    `GET /notification` acepta `limit` (1-100), `before` (cursor por fecha, no `OFFSET`: se crean y
+    borran sin parar) y `unread`; sin parámetros devuelve las 50 de siempre, así que el contrato
+    público no cambia. `GET /notification/unread-count` da el total exacto: **la insignia de la
+    campana contaba las no leídas entre las 50 que traía**, y con más decía «50» (el e2e lo
+    demuestra: falla sin el cambio). El desplegable gana «Cargar notificaciones anteriores». De
+    paso, el título de la campana en castellano decía «Notificationes». Seis pruebas de
+    integración (recorrer 120 sin repetir ni saltar ninguna, filtro, total, aislamiento entre
+    personas, 400 por parámetros absurdos) y un e2e.
 22. La búsqueda enseña el nombre de la columna, no `status` en crudo.
 23. Las preferencias pasan de `localStorage` a la API (incluido el inicio de semana).
 24. ✔ Cambiar un campo personalizado deja rastro en la actividad. **Hecho (2026-10-04).** Una fila

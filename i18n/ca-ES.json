@@ -1655,7 +1655,9 @@
 			"hours_other": "{{count}} horas",
 			"days_one": "{{count}} día",
 			"days_other": "{{count}} días"
-		}
+		},
+		"loadMore": "Load older notifications",
+		"loadMoreFailed": "Could not load more. Try again"
 	},
 	"activity": {
 		"assignedToSelf": "se ha asignado la tarea a sí mismo",

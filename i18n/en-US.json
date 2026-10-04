@@ -1655,7 +1655,9 @@
 				"contentWithTask": "Time tracking started on task: {{taskTitle}}",
 				"contentWithoutTask": "Time tracking started on a task"
 			}
-		}
+		},
+		"loadMore": "Load older notifications",
+		"loadMoreFailed": "Could not load more. Try again"
 	},
 	"activity": {
 		"assignedToSelf": "assigned the task to themselves",

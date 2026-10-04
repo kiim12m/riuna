@@ -1594,7 +1594,7 @@
 		}
 	},
 	"notifications": {
-		"title": "Notificationes",
+		"title": "Notificaciones",
 		"newCount_one": "{{count}} nueva",
 		"newCount_other": "{{count}} nuevas",
 		"emptyTitle": "Ninguna notificación todavía",
@@ -1655,7 +1655,9 @@
 			"hours_other": "{{count}} horas",
 			"days_one": "{{count}} día",
 			"days_other": "{{count}} días"
-		}
+		},
+		"loadMore": "Cargar notificaciones anteriores",
+		"loadMoreFailed": "No se han podido cargar. Reintentar"
 	},
 	"activity": {
 		"assignedToSelf": "se ha asignado la tarea a sí mismo",

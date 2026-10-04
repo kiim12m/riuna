@@ -6546,6 +6546,12 @@
 						"task_overdue",
 						"time_entry_created"
 					]
+				},
+				"loadMore": {
+					"type": "string"
+				},
+				"loadMoreFailed": {
+					"type": "string"
 				}
 			},
 			"required": [
@@ -6559,7 +6565,9 @@
 				"clearDialogDescription",
 				"shortcuts",
 				"reminderLeadTime",
-				"events"
+				"events",
+				"loadMore",
+				"loadMoreFailed"
 			]
 		},
 		"activity": {

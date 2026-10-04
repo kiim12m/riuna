@@ -4,7 +4,9 @@ import getNotifications from "@/fetchers/notification/get-notifications";
 function useGetNotifications() {
   return useQuery({
     queryKey: ["notifications"],
-    queryFn: getNotifications,
+    // `getNotifications` recibe una pagina: sin envolverla, TanStack le pasaria
+    // su contexto de consulta como si fuera una.
+    queryFn: () => getNotifications(),
   });
 }
 
