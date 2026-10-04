@@ -2560,6 +2560,8 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
       Actions desde aquí: el YAML se validó y el camino se simuló en local con `CI=true`.
     - Las tres especificaciones nuevas, 3 vueltas seguidas: 9 de 9.
 
+*Verificación de la tanda 3 (2026-10-04): integración 754 de 755 (1 omitida, ninguna fallada), humo **68 de 68**, unitarias de los diez paquetes, typecheck, Biome e i18n.*
+
 **Tanda 4 — funcionalidad mediana** · M
 21. Notificaciones paginadas y con filtro de no leídas (hoy, tope de 50).
 22. La búsqueda enseña el nombre de la columna, no `status` en crudo.
