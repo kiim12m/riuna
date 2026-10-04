@@ -230,8 +230,8 @@ que hizo perder el arreglo.
     (23), `text-2xl` (24) y `text-4xl` (1). Están en pantallas que esta revisión
     no recorrió —acceso, alta, invitaciones, proyecto público—, así que se
     quedan **medidas y acotadas** en vez de barridas a ciegas.
-21. La búsqueda pinta `result.status` crudo, como hacía la tabla. Resolverlo
-    cruza proyectos, así que necesita una consulta que hoy no se hace.
+21. ~~La búsqueda pinta `result.status` crudo, como hacía la tabla. Resolverlo
+    cruza proyectos, así que necesita una consulta que hoy no se hace.~~ **Hecho (2026-10-04):** `statusName`.
 22. ~~`<h2>` de «Rama» en la tarea sigue a 14 px.~~ **Hecho (2026-10-03):** «Rama» y
     «Tiempo» usan `text-section`, como «Actividad».
 

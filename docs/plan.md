@@ -1251,8 +1251,8 @@ tarea, que no tenía tope alguno y crecía con la ventana.
   en los tres, así que pasaban por «en sync». La puerta de CI tiene ese hueco.
 - **Las leyendas que cada página de ajustes escribe en línea** siguen sin acotar;
   las primitivas compartidas sí. Son leyendas de escaneo, no prosa de lectura.
-- **La búsqueda pinta `result.status` crudo**, como hacía la tabla. Resolverlo
-  cruza proyectos y necesita una consulta que hoy no se hace.
+- ~~**La búsqueda pinta `result.status` crudo**, como hacía la tabla. Resolverlo
+  cruza proyectos y necesita una consulta que hoy no se hace.~~ Cerrado (punto 22 del cierre de la deuda).
 - **Las preferencias viven solo en `localStorage`** y se pierden al cambiar de
   navegador, aunque la pantalla cuelgue de «Ajustes › Cuenta». De ahí sale también
   que el calendario empiece en domingo. Es una decisión de producto con el rótulo
