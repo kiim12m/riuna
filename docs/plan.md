@@ -876,10 +876,10 @@ repartía el número 1 otra vez y chocaba con `task_project_number_unique`. Es u
 recordatorio de que un fixture tiene que dejar la base como la dejaría la
 aplicación, no solo con las filas que la prueba mira.
 
-**Deuda declarada de la rebanada 4:** una plantilla de proyecto guarda columnas y
+~~**Deuda declarada de la rebanada 4:** una plantilla de proyecto guarda columnas y
 épicas, pero aplicarla solo despliega el árbol dentro de un proyecto **que ya
-existe**. Crear el proyecto entero desde la plantilla toca `create-project`, que
-hoy siembra siempre las cuatro columnas por defecto.
+existe**.~~ Cerrado el 2026-10-04 (punto 28 del cierre de la deuda): `POST /project`
+acepta `templateId`.
 
 ~~**Deuda declarada de la rebanada 3:** la plantilla lleva título, descripción,
 prioridad, estimación, responsable y equipo, pero **no** etiquetas, épicas,
@@ -2589,7 +2589,14 @@ unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
 25. Editor de definiciones de campos: renombrar, archivar, borrar, reordenar y campos de espacio.
 26. Los campos de espacio llegan a los widgets y a «Mis tareas».
 27. MCP conoce campos personalizados, asignados múltiples y equipos (y el paquete stdio igual).
-28. Crear un proyecto entero desde una plantilla de proyecto.
+28. ✔ Crear un proyecto entero desde una plantilla de proyecto. **Hecho (2026-10-04).** `POST /project`
+    acepta un `templateId` opcional: el proyecto nace con **las columnas de la plantilla** (las cuatro
+    de siempre si no trae), sus épicas y su árbol de tareas, que se despliega con el mismo código
+    que aplicar una plantilla (comprueba profundidad y campos antes de crear nada). Si el despliegue
+    falla igualmente, el proyecto recién creado se borra: no queda uno vacío a medias. Una
+    plantilla de otro espacio es un 404, como si no existiera. `insertProject` acepta columnas. En
+    la web, el modal de «Añadir proyecto» ofrece «Plantilla» cuando el espacio tiene alguna de
+    proyecto. Cuatro pruebas de integración y un e2e.
 29. ✔ La plantilla de las recurrentes lleva etiquetas, épicas y campos. **Hecho (2026-10-04).** Nota en
     la [ADR 026](adr/026-tareas-recurrentes.md). Se reutiliza, no se duplica: `parseTaskExtras` y
     `decorateTask`/`resolveEpics` salen del desplegador de plantillas de tarea y los usan las dos.

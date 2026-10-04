@@ -3,6 +3,7 @@ import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import { requireEntitlement } from "../billing/require-entitlement-middleware";
 import { projectSchema } from "../schemas";
+import { createProjectFromTemplate } from "../template/controllers/create-project-from-template";
 import { requireWorkspacePermission } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import archiveProjectCtrl from "./controllers/archive-project";
@@ -76,15 +77,27 @@ const project = new Hono<{
         workspaceId: v.string(),
         icon: v.string(),
         slug: v.string(),
+        // Una plantilla de proyecto del mismo espacio: el proyecto nace con
+        // sus columnas, sus epicas y su arbol de tareas (ADR 027).
+        templateId: v.optional(v.string()),
       }),
     ),
     workspaceAccess.fromBody(),
     requireWorkspacePermission({ project: ["create"] }),
     requireEntitlement,
     async (c) => {
-      const { name, icon, slug } = c.req.valid("json");
+      const { name, icon, slug, templateId } = c.req.valid("json");
       const workspaceId = c.get("workspaceId");
-      const newProject = await createProjectCtrl(workspaceId, name, icon, slug);
+      const newProject = templateId
+        ? await createProjectFromTemplate({
+            workspaceId,
+            name,
+            icon,
+            slug,
+            templateId,
+            currentUserId: c.get("userId"),
+          })
+        : await createProjectCtrl(workspaceId, name, icon, slug);
       return c.json(newProject);
     },
   )

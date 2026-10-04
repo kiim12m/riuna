@@ -105,7 +105,10 @@
 				"keyHint": "Used for ticket IDs (e.g., {{example}}-123)",
 				"createButton": "Create Project",
 				"successToast": "Project created successfully",
-				"errorToast": "Failed to create project"
+				"errorToast": "Failed to create project",
+				"templateLabel": "Template",
+				"noTemplate": "No template",
+				"templateHint": "The project starts with the template's columns, epics and tasks."
 			},
 			"createWorkspace": {
 				"breadcrumbAppName": "RIUNA",

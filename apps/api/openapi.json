@@ -1173,6 +1173,9 @@
                   },
                   "slug": {
                     "type": "string"
+                  },
+                  "templateId": {
+                    "type": "string"
                   }
                 },
                 "required": [

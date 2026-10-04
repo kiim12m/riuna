@@ -105,7 +105,10 @@
 				"keyHint": "S'utilitza per als ID dels tiquets (p. ex., {{example}}-123)",
 				"createButton": "Crea el projecte",
 				"successToast": "Projecte creat correctament",
-				"errorToast": "Hi ha hagut un error en crear el projecte"
+				"errorToast": "Hi ha hagut un error en crear el projecte",
+				"templateLabel": "Template",
+				"noTemplate": "No template",
+				"templateHint": "The project starts with the template's columns, epics and tasks."
 			},
 			"createWorkspace": {
 				"breadcrumbAppName": "RIUNA",
