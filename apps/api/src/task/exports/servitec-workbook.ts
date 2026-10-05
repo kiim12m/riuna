@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import { toSheetDate } from "../exchange/sheet-dates";
+import { formatSheetDate, toSheetDate } from "../exchange/sheet-dates";
 
 // The SERVITEC daily task board, reproduced from the hand-maintained
 // `Tareas- SERVITEC 2026.xlsx`: same sheet name, headers, legend row, column
@@ -17,13 +17,20 @@ export type ServitecEstado =
   | "Realizado"
   | ".Realizado";
 
+export type ServitecComment = {
+  fecha: Date;
+  /** Texto plano: los saltos de linea se conservan, las lineas en blanco no. */
+  texto: string;
+};
+
 export type ServitecRow = {
   fecha: Date | null;
   fechaActualizacion: Date | null;
   concepto: string;
   proyecto: string;
   estado: ServitecEstado;
-  comentario: string;
+  /** En orden de escritura, el mas antiguo primero. */
+  comentarios: ServitecComment[];
 };
 
 const SHEET_NAME = "Full1";
@@ -278,7 +285,36 @@ function writeDataRow(
   estado.alignment = { horizontal: "center" };
 
   const comentario = sheet.getCell(rowNumber, 6);
-  comentario.value = row.comentario;
+  comentario.value = commentCellValue(row.comentarios);
   comentario.font = FONT;
   comentario.alignment = { wrapText: true, vertical: "top" };
+}
+
+/**
+ * Los comentarios de una tarea, seguidos: uno por linea y sin lineas en blanco
+ * ni entre ellos ni dentro de uno, con la fecha en negrita.
+ *
+ * Texto enriquecido de Excel, porque la negrita es solo de un trozo de la
+ * celda. Una linea que no empieza por fecha sigue al comentario de arriba: es
+ * lo que tendra que entender quien vuelva a leer la hoja.
+ */
+function commentCellValue(
+  comentarios: readonly ServitecComment[],
+): ExcelJS.CellValue {
+  if (comentarios.length === 0) return "";
+
+  return {
+    richText: comentarios.flatMap((comment, index) => [
+      {
+        text: formatSheetDate(comment.fecha),
+        font: { ...FONT, bold: true },
+      },
+      {
+        text: ` — ${comment.texto.replace(/\n{2,}/g, "\n")}${
+          index < comentarios.length - 1 ? "\n" : ""
+        }`,
+        font: FONT,
+      },
+    ]),
+  };
 }

@@ -2360,10 +2360,20 @@ ADR siguen en la 066 (la 058 sigue reservada).
 - **3.4** El responsable programa el stand-up desde «Mi equipo».
 
 **Bloque 4 — La hoja de SERVITEC vuelve** · M · ADR 069
+- **Adelantado (2026-10-05), a petición del usuario:** en la celda «Comentario» los
+  comentarios van **seguidos**, uno por línea, sin líneas en blanco ni entre ellos ni
+  dentro de uno —un párrafo vacío del editor dejaba una—, y **la fecha va en negrita**.
+  La celda pasa a ser texto enriquecido de Excel, así que el libro recibe los comentarios
+  como lista (fecha y texto) y no como una cadena ya montada. Pruebas:
+  `servitec-workbook.test.ts` y `task-export-xlsx.test.ts`, que miran el texto y qué
+  trozos van en negrita después de releer el fichero.
 - **4.1** La exportación gana una columna **oculta** con el id de la tarea; la captura
   diaria no cambia.
 - **4.2** Lector de la hoja que busca la fila de cabeceras —el cuadro histórico se hizo a
   mano—, salta la leyenda y los relevos, y parte «Comentario» en comentarios fechados.
+  Sin líneas en blanco entre ellos, **una línea que empieza por `dd/mm/yyyy —` abre un
+  comentario y las demás siguen al de arriba**; y la celda puede venir como texto
+  enriquecido, no solo como texto.
 - **4.3** Importar con el núcleo del importador de Excel abierto a una transacción externa
   (segundo consumidor, que es lo que justifica separarlo). Identidad por la columna de
   id o, sin ella, por `external_ref` con una huella de proyecto + concepto + fecha. El
