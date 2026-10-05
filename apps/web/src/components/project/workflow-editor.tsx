@@ -6,29 +6,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useDeleteWorkflowRule } from "@/hooks/mutations/workflow-rule/use-delete-workflow-rule";
 import { useUpsertWorkflowRule } from "@/hooks/mutations/workflow-rule/use-upsert-workflow-rule";
 import { useGetColumns } from "@/hooks/queries/column/use-get-columns";
 import { useGetWorkflowRules } from "@/hooks/queries/workflow-rule/use-get-workflow-rules";
 import { toast } from "@/lib/toast";
 
-const GITHUB_EVENT_TYPES = [
+// Los eventos que GitHub y Gitea resuelven con una regla (`resolveTargetStatus`).
+const INTEGRATION_EVENT_TYPES = [
   "branch_push",
   "pr_opened",
   "pr_merged",
   "issue_opened",
   "issue_closed",
+  "issue_reopened",
 ] as const;
+
+// Sin regla, la integracion cae a la columna de su evento o a la primera.
+// Ningun id de columna (cuid2) puede valer esto.
+const DEFAULT_VALUE = "default";
 
 type WorkflowEditorProps = {
   projectId: string;
+  /** Sin `project:update` se ven las reglas pero no se tocan, como en los campos. */
+  canEdit?: boolean;
 };
 
-export default function WorkflowEditor({ projectId }: WorkflowEditorProps) {
+export default function WorkflowEditor({
+  projectId,
+  canEdit = true,
+}: WorkflowEditorProps) {
   const { t } = useTranslation();
   const { data: columns, isLoading: columnsLoading } = useGetColumns(projectId);
   const { data: rules, isLoading: rulesLoading } =
     useGetWorkflowRules(projectId);
   const { mutateAsync: upsertRule } = useUpsertWorkflowRule();
+  const { mutateAsync: deleteRule } = useDeleteWorkflowRule();
 
   if (columnsLoading || rulesLoading) {
     return (
@@ -62,7 +75,7 @@ export default function WorkflowEditor({ projectId }: WorkflowEditorProps) {
       </div>
 
       <div className="space-y-2">
-        {GITHUB_EVENT_TYPES.map((eventType) => {
+        {INTEGRATION_EVENT_TYPES.map((eventType) => {
           const currentRule = rules?.find(
             (r) =>
               r.integrationType === integrationType &&
@@ -72,16 +85,24 @@ export default function WorkflowEditor({ projectId }: WorkflowEditorProps) {
           return (
             <div
               key={`${integrationType}-${eventType}`}
+              data-testid={`workflow-rule-${integrationType}-${eventType}`}
               className="flex items-center justify-between gap-4 p-3 border border-border rounded-md bg-sidebar"
             >
               <span className="text-sm">
                 {t(`settings:workflowEditor.events.${eventType}`)}
               </span>
               <Select
-                value={currentRule?.columnId ?? ""}
+                value={currentRule?.columnId ?? DEFAULT_VALUE}
+                disabled={!canEdit}
                 onValueChange={async (value) => {
                   if (!value) return;
                   try {
+                    if (value === DEFAULT_VALUE) {
+                      if (!currentRule) return;
+                      await deleteRule({ id: currentRule.id, projectId });
+                      toast.success(t("settings:workflowEditor.toastRemoved"));
+                      return;
+                    }
                     await upsertRule({
                       projectId,
                       data: {
@@ -107,11 +128,13 @@ export default function WorkflowEditor({ projectId }: WorkflowEditorProps) {
                     )}
                   >
                     {columns.find((c) => c.id === currentRule?.columnId)
-                      ?.name ??
-                      t("settings:workflowEditor.selectColumnPlaceholder")}
+                      ?.name ?? t("settings:workflowEditor.defaultColumn")}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value={DEFAULT_VALUE}>
+                    {t("settings:workflowEditor.defaultColumn")}
+                  </SelectItem>
                   {columns.map((col) => (
                     <SelectItem key={col.id} value={col.id}>
                       {col.name}
@@ -128,6 +151,9 @@ export default function WorkflowEditor({ projectId }: WorkflowEditorProps) {
 
   return (
     <div className="space-y-10">
+      <p className="text-xs text-muted-foreground">
+        {t("settings:workflowEditor.defaultHint")}
+      </p>
       {renderRuleSection("github", "githubHeading", "githubHint")}
       {renderRuleSection("gitea", "giteaHeading", "giteaHint")}
     </div>

@@ -5552,6 +5552,9 @@
 								},
 								"issue_closed": {
 									"type": "string"
+								},
+								"issue_reopened": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -5559,8 +5562,18 @@
 								"pr_opened",
 								"pr_merged",
 								"issue_opened",
-								"issue_closed"
+								"issue_closed",
+								"issue_reopened"
 							]
+						},
+						"defaultColumn": {
+							"type": "string"
+						},
+						"defaultHint": {
+							"type": "string"
+						},
+						"toastRemoved": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -5573,7 +5586,10 @@
 						"selectColumnPlaceholder",
 						"toastUpdated",
 						"toastError",
-						"events"
+						"events",
+						"defaultColumn",
+						"defaultHint",
+						"toastRemoved"
 					]
 				},
 				"externalLinks": {

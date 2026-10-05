@@ -117,7 +117,7 @@ function RouteComponent() {
               {t("settings:projectWorkflow.automationDescription")}
             </p>
           </div>
-          <WorkflowEditor projectId={projectId} />
+          <WorkflowEditor projectId={projectId} canEdit={canUpdateProjects()} />
         </div>
       </div>
     </>
