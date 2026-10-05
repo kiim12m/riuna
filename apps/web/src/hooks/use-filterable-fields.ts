@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { FieldDefinition } from "@/components/table-view/custom-field-cell";
@@ -20,6 +21,47 @@ const CUSTOM_FIELD_VALUE_TYPES: Record<string, FilterValueType | undefined> = {
   user: "id",
   url: "text",
 };
+
+/**
+ * Los campos personalizados como campos filtrables. Los de tipo relacion se
+ * quedan fuera: su valor no vive en el JSONB y el registro del motor no los
+ * incluye. Lo comparten el proyecto, «Mis tareas» y los widgets de espacio.
+ */
+export function customFieldsToFilterable(
+  definitions: FieldDefinition[],
+  t: TFunction,
+): FilterableField[] {
+  return definitions.flatMap((definition) => {
+    const valueType = CUSTOM_FIELD_VALUE_TYPES[definition.type];
+    if (!valueType) return [];
+
+    // Una casilla no declara opciones —su configuracion esta vacia— pero sin
+    // ellas la barra caia al campo de texto libre, mandaba la cadena "true" y
+    // el motor la rechazaba con un 400: no habia ningun valor tecleable que
+    // funcionase. Se las damos aqui.
+    const options =
+      valueType === "boolean"
+        ? [
+            { value: "true", label: t("common:boolean.yes") },
+            { value: "false", label: t("common:boolean.no") },
+          ]
+        : Array.isArray(definition.config?.options)
+          ? (definition.config.options as Array<{
+              value: string;
+              label: string;
+            }>)
+          : undefined;
+
+    return [
+      {
+        key: `custom.${definition.key}`,
+        label: definition.name,
+        valueType,
+        options,
+      },
+    ];
+  });
+}
 
 /**
  * Los campos por los que se puede filtrar en un proyecto: los fijos que el
@@ -91,38 +133,10 @@ export function useFilterableFields(projectId: string, workspaceId: string) {
       },
     ];
 
-    // Los de tipo relacion se quedan fuera: su valor no vive en el JSONB y el
-    // registro del motor no los incluye.
-    const custom = (definitions as FieldDefinition[]).flatMap((definition) => {
-      const valueType = CUSTOM_FIELD_VALUE_TYPES[definition.type];
-      if (!valueType) return [];
-
-      // Una casilla no declara opciones —su configuracion esta vacia— pero sin
-      // ellas la barra caia al campo de texto libre, mandaba la cadena "true" y
-      // el motor la rechazaba con un 400: no habia ningun valor tecleable que
-      // funcionase. Se las damos aqui.
-      const options =
-        valueType === "boolean"
-          ? [
-              { value: "true", label: t("common:boolean.yes") },
-              { value: "false", label: t("common:boolean.no") },
-            ]
-          : Array.isArray(definition.config?.options)
-            ? (definition.config.options as Array<{
-                value: string;
-                label: string;
-              }>)
-            : undefined;
-
-      return [
-        {
-          key: `custom.${definition.key}`,
-          label: definition.name,
-          valueType,
-          options,
-        },
-      ];
-    });
+    const custom = customFieldsToFilterable(
+      definitions as FieldDefinition[],
+      t,
+    );
 
     return [...builtIn, ...custom];
   }, [definitions, workspaceUsers, t]);

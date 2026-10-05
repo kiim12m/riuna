@@ -1,6 +1,5 @@
 import { Copy } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { parseDayKey } from "@/components/schedule/schedule-range";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStandup } from "@/hooks/queries/review/use-standup";
+import { parseDayKey } from "@/lib/day-key";
 import { formatDate } from "@/lib/format";
 import { type StandupLabels, standupMarkdown } from "@/lib/standup";
 import { toast } from "@/lib/toast";

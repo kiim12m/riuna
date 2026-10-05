@@ -75,52 +75,15 @@ ls -lh backups/ | tail -3
 El servicio `backup` ya hace copias periódicas, pero antes de migrar interesa una
 recién hecha, no la de hace veinte horas.
 
-### Una sola vez: el paso de la API a `Europe/Madrid` (ADR 049)
+### La zona horaria (ADR 049)
 
-La primera imagen que lleva `ENV TZ=Europe/Madrid` cambia qué es «hoy» para la
-API, y al arrancar convierte los días del plan que se guardaron con la
-medianoche UTC (`personal_plan_entry.planned_date`,
-`schedule_block.planned_date` y `ends_at`). PostgreSQL **no** cambia: sigue en
-UTC.
-
-Antes de desplegarla, ensaya la conversión sobre una copia y no sobre la base
-real. Primero, restaura la última copia en una base aparte:
-
-```bash
-docker compose -f compose.local.yml exec backup sh -c 'sh /scripts/restore.sh $(ls /backups/riuna_*.sql.gz | tail -1) riuna_tz_test'
-```
-
-Después, aplica la misma conversión que hará la API y comprueba que ningún día
-cambia de fecha. La conversión es SQL puro, la misma que hay en
-`apps/api/src/utils/migrate-day-columns-to-local-midnight.ts`:
-
-```bash
-docker exec riuna-postgres-1 psql -U riuna -d riuna_tz_test -c "
-CREATE TEMP TABLE antes AS
-  SELECT id, CASE WHEN planned_date::time = '00:00' THEN planned_date::date
-                  ELSE ((planned_date AT TIME ZONE 'UTC') AT TIME ZONE 'Europe/Madrid')::date END AS dia
-  FROM personal_plan_entry;
-UPDATE personal_plan_entry
-  SET planned_date = (planned_date::date::timestamp AT TIME ZONE 'Europe/Madrid') AT TIME ZONE 'UTC'
-  WHERE planned_date::time = '00:00';
-SELECT count(*) AS dias_movidos FROM antes a JOIN personal_plan_entry p USING (id)
-  WHERE ((p.planned_date AT TIME ZONE 'UTC') AT TIME ZONE 'Europe/Madrid')::date <> a.dia;"
-```
-
-`dias_movidos` tiene que ser **0**: cada fila conserva su día, solo cambia la
-hora a la que se guarda. Borra después la base de prueba, igual que en
-[copias de seguridad](copias-de-seguridad.md):
-
-```bash
-docker exec riuna-postgres-1 psql -U riuna -d postgres -c "DROP DATABASE riuna_tz_test WITH (FORCE);"
-```
-
-Al desplegar de verdad, el log de la API dice cuántos días ha convertido
-(`🕛 N dia(s) guardados en medianoche UTC…`). En los arranques siguientes ya no
-dice nada, porque no queda nada que convertir.
-
+La API corre en `Europe/Madrid` (`ENV TZ` en su imagen) y PostgreSQL en UTC.
 **No pongas `TZ` en el `.env`.** `compose.local.yml` también se lo pasa al
-contenedor de Postgres, que tiene que seguir en UTC.
+contenedor de Postgres, que tiene que seguir en UTC; si no lo está, la API lo
+avisa al arrancar.
+
+La conversión de los días del plan que se guardaron antes del cambio ya está
+aplicada en producción y su código se retiró. Está contada en la ADR 049.
 
 ## Comprobar que fue bien
 

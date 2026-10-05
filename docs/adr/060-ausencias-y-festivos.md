@@ -34,8 +34,9 @@ guarde el motivo**: una baja médica es un dato sensible.
   en un día no disponible: se ve en el día, con capacidad 0. «Pasar al
   siguiente día laborable» todavía no salta festivos ni ausencias; el
   «ayer» del stand-up sí, desde la revisión de código del 2026-10-03.
-- **Un festivo nuevo llega a los demás al volver a leer** (al enfocar la
-  ventana o al entrar en la pantalla), no por WebSocket.
+- ~~**Un festivo nuevo llega a los demás al volver a leer** (al enfocar la
+  ventana o al entrar en la pantalla), no por WebSocket.~~ Llega por WebSocket
+  desde el 2026-10-03: [ADR 063](063-festivos-ausencias-y-responsable-por-websocket.md).
 - **Una ausencia es de un espacio.** Con dos espacios, hay que darla en los
   dos.
 - **Verificado:**

@@ -61,8 +61,8 @@ function SettingsLayout() {
                 variant="ghost"
                 size="icon-sm"
                 className="shrink-0 md:hidden"
-                aria-label="Open settings menu"
-                title="Open settings menu"
+                aria-label={t("common:a11y.openSettingsMenu")}
+                title={t("common:a11y.openSettingsMenu")}
                 onClick={() => setSettingsMenuOpen(true)}
               >
                 <PanelLeftIcon className="size-4" />
@@ -70,7 +70,7 @@ function SettingsLayout() {
 
               <div className="flex items-center gap-1 md:hidden">
                 <ChevronLeft className="size-4 text-muted-foreground" />
-                <span className="text-lg font-semibold">
+                <span className="text-section">
                   {t("navigation:page.settingsTitle")}
                 </span>
               </div>
@@ -95,7 +95,7 @@ function SettingsLayout() {
               </Button>
             </div>
 
-            <h1 className="mt-4 hidden pl-1 text-2xl font-semibold md:block">
+            <h1 className="mt-4 hidden pl-1 text-page md:block">
               {t("navigation:page.settingsTitle")}
             </h1>
           </div>

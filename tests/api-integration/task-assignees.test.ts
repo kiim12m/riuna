@@ -77,11 +77,10 @@ describe("API integration: multiple task assignees", () => {
     await resetTestDatabase();
   });
 
-  // Asignar exige `task:assign`, que en los roles heredados solo tienen
-  // `admin` y `owner`: un miembro puede crear y editar tareas, pero no
-  // repartirlas. Por eso los casos que esperan un 200 usan `admin`.
-  it("refuses a plain member, who has no assign permission", async () => {
-    const member = await createWorkspaceMember({ role: "member" });
+  // Asignar exige `task:assign`. Lo tienen `member`, `admin` y `owner`;
+  // `viewer` no.
+  it("refuses a viewer, who has no assign permission", async () => {
+    const member = await createWorkspaceMember({ role: "viewer" });
     const { project, columns } = await createProjectFixture({
       workspaceId: member.workspace.id,
     });
@@ -98,6 +97,26 @@ describe("API integration: multiple task assignees", () => {
 
     expect(response.status).toBe(403);
     await expect(readAssignees(task.id)).resolves.toEqual([]);
+  });
+
+  it("lets a plain member replace the assignees of a task", async () => {
+    const member = await createWorkspaceMember({ role: "member" });
+    const { project, columns } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const task = await createTask(project.id, columns.todo.id);
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const response = await app.request(`/api/task/assignees/${task.id}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ userIds: [member.user.id] }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(readAssignees(task.id)).resolves.toEqual([member.user.id]);
   });
 
   it("rejects unauthenticated assignee replacement", async () => {
@@ -665,5 +684,128 @@ describe("API integration: multiple task assignees", () => {
         );
       });
     });
+  });
+});
+
+describe("API integration: assignees in the task list", () => {
+  beforeEach(async () => {
+    await resetTestDatabase();
+  });
+
+  // Tablero y lista pintan la pila de asignados con lo que trae el listado,
+  // sin pedir cada tarea por separado.
+  it("lists every assignee of a shared task, the single one of a plain task, and none of an unassigned one", async () => {
+    const admin = await createWorkspaceMember({ role: "admin" });
+    const { project, columns } = await createProjectFixture({
+      workspaceId: admin.workspace.id,
+    });
+    const ana = await addWorkspaceMember(admin.workspace.id, "Ana");
+    const luis = await addWorkspaceMember(admin.workspace.id, "Luis");
+    const shared = await createTask(project.id, columns.todo.id);
+    const single = await db
+      .insert(schema.taskTable)
+      .values({
+        ...taskTreeValues(),
+        projectId: project.id,
+        title: "Una sola persona",
+        status: "to-do",
+        columnId: columns.todo.id,
+        priority: "medium",
+        number: 2,
+        position: 1,
+      })
+      .returning()
+      .then((rows) => rows[0]);
+    const none = await db
+      .insert(schema.taskTable)
+      .values({
+        ...taskTreeValues(),
+        projectId: project.id,
+        title: "Sin nadie",
+        status: "to-do",
+        columnId: columns.todo.id,
+        priority: "medium",
+        number: 3,
+        position: 2,
+      })
+      .returning()
+      .then((rows) => rows[0]);
+    if (!single || !none) throw new Error("Failed to seed tasks");
+
+    mockAuthenticatedSession(admin.user);
+    const { app } = createApp();
+    const assign = (taskId: string, userIds: string[]) =>
+      app.request(`/api/task/assignees/${taskId}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ userIds }),
+      });
+    expect((await assign(shared.id, [ana.id, luis.id])).status).toBe(200);
+    expect((await assign(single.id, [luis.id])).status).toBe(200);
+
+    const response = await app.request(`/api/task/tasks/${project.id}`);
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      data: {
+        columns: {
+          tasks: {
+            id: string;
+            assignees: { id: string; name: string; image: string | null }[];
+          }[];
+        }[];
+      };
+    };
+    const byId = new Map(
+      body.data.columns.flatMap((column) =>
+        column.tasks.map((task) => [task.id, task.assignees] as const),
+      ),
+    );
+
+    expect(byId.get(shared.id)).toEqual([
+      { id: ana.id, name: "Ana", image: null },
+      { id: luis.id, name: "Luis", image: null },
+    ]);
+    expect(byId.get(single.id)).toEqual([
+      { id: luis.id, name: "Luis", image: null },
+    ]);
+    expect(byId.get(none.id)).toEqual([]);
+  });
+
+  it("lists the primary assignee first even when it was not assigned first", async () => {
+    const admin = await createWorkspaceMember({ role: "admin" });
+    const { project, columns } = await createProjectFixture({
+      workspaceId: admin.workspace.id,
+    });
+    const ana = await addWorkspaceMember(admin.workspace.id, "Ana");
+    const luis = await addWorkspaceMember(admin.workspace.id, "Luis");
+    const task = await createTask(project.id, columns.todo.id);
+
+    mockAuthenticatedSession(admin.user);
+    const { app } = createApp();
+    const assign = (userIds: string[]) =>
+      app.request(`/api/task/assignees/${task.id}`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ userIds }),
+      });
+    // Las dos filas se quedan (mismo `created_at`), pero ahora manda Luis.
+    expect((await assign([ana.id, luis.id])).status).toBe(200);
+    expect((await assign([luis.id, ana.id])).status).toBe(200);
+    await expect(readPrimaryAssignee(task.id)).resolves.toBe(luis.id);
+
+    const response = await app.request(`/api/task/tasks/${project.id}`);
+    const body = (await response.json()) as {
+      data: {
+        columns: { tasks: { id: string; assignees: { id: string }[] }[] }[];
+      };
+    };
+    const assignees = body.data.columns
+      .flatMap((column) => column.tasks)
+      .find((entry) => entry.id === task.id)?.assignees;
+
+    expect(assignees?.map((assignee) => assignee.id)).toEqual([
+      luis.id,
+      ana.id,
+    ]);
   });
 });

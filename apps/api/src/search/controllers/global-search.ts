@@ -2,6 +2,7 @@ import { and, desc, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
 import db from "../../database";
 import {
   activityTable,
+  columnTable,
   projectTable,
   taskTable,
   userTable,
@@ -45,7 +46,24 @@ type SearchResult = {
   projectSlug?: string;
   priority?: string;
   status?: string;
+  /** El nombre de la columna del proyecto que tiene ese estado, si lo hay. */
+  statusName?: string;
 };
+
+/**
+ * El nombre de la columna que tiene el estado de la tarea. El estado es el
+ * `slug` de la columna de su proyecto (`to-do`), y lo que se lee es el nombre
+ * (`Por hacer`). Subconsulta y no `JOIN`: `column` no tiene unicidad por
+ * `(proyecto, slug)`, y un duplicado repetiria el resultado. Un estado que no
+ * es columna —`planned`, `archived`— queda sin nombre.
+ */
+const statusNameOf = sql<string | null>`(
+  SELECT ${columnTable.name} FROM ${columnTable}
+  WHERE ${columnTable.projectId} = ${taskTable.projectId}
+    AND ${columnTable.slug} = ${taskTable.status}
+  ORDER BY ${columnTable.position}
+  LIMIT 1
+)`.as("statusName");
 
 function toDisplayCase(value: string) {
   return value
@@ -178,6 +196,7 @@ async function globalSearch(params: SearchParams): Promise<{
           taskNumber: taskTable.number,
           priority: taskTable.priority,
           status: taskTable.status,
+          statusName: statusNameOf,
         })
         .from(taskTable)
         .leftJoin(projectTable, eq(taskTable.projectId, projectTable.id))
@@ -219,6 +238,7 @@ async function globalSearch(params: SearchParams): Promise<{
           taskNumber: task.taskNumber || undefined,
           priority: task.priority || undefined,
           status: task.status,
+          statusName: task.statusName ?? undefined,
         });
       }
     }
@@ -248,6 +268,7 @@ async function globalSearch(params: SearchParams): Promise<{
         taskNumber: taskTable.number,
         priority: taskTable.priority,
         status: taskTable.status,
+        statusName: statusNameOf,
         relevanceScore: taskRelevanceScore.as("relevanceScore"),
       })
       .from(taskTable)
@@ -288,6 +309,7 @@ async function globalSearch(params: SearchParams): Promise<{
         taskNumber: task.taskNumber || undefined,
         priority: task.priority || undefined,
         status: task.status,
+        statusName: task.statusName ?? undefined,
       });
     }
   }

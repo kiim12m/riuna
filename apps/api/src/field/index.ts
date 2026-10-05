@@ -3,6 +3,7 @@ import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import { requireWorkspacePermission } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
+import { getWorkspaceFieldRegistry } from "../view/workspace-registry";
 import createFieldDefinition from "./controllers/create-field-definition";
 import deleteFieldDefinition from "./controllers/delete-field-definition";
 import {
@@ -73,7 +74,8 @@ const field = new Hono<{
     describeRoute({
       operationId: "listWorkspaceFieldDefinitions",
       tags: ["Fields"],
-      description: "List the workspace-wide custom fields",
+      description:
+        "List the workspace-wide custom fields. `filterable` says whether a view across projects can filter by the field: it is false when some project redefines the key with another way of comparing it",
       responses: {
         200: {
           description: "Field definitions ordered by position",
@@ -90,11 +92,20 @@ const field = new Hono<{
     async (c) => {
       const includeArchived = c.req.query("includeArchived") === "true";
 
+      const workspaceId = c.get("workspaceId");
+      const [definitions, registry] = await Promise.all([
+        getWorkspaceFieldDefinitions(workspaceId, includeArchived),
+        getWorkspaceFieldRegistry(workspaceId),
+      ]);
+
+      // Lo que ofrece la interfaz para filtrar y lo que acepta el servidor tiene
+      // que ser lo mismo: un campo que un proyecto redefine con otra forma de
+      // comparacion el registro lo retira, y ofrecerlo acabaria en un 400.
       return c.json(
-        await getWorkspaceFieldDefinitions(
-          c.get("workspaceId"),
-          includeArchived,
-        ),
+        definitions.map((definition) => ({
+          ...definition,
+          filterable: `custom.${definition.key}` in registry,
+        })),
       );
     },
   )

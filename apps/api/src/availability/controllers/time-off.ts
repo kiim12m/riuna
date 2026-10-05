@@ -7,6 +7,7 @@ import {
   parseServerDay,
   startOfServerDay,
 } from "../../utils/day-boundaries";
+import { notifyTimeOffChanged } from "../changed";
 
 /** Una ausencia no pasa de un año: acota lo que se expande dia a dia. */
 const MAX_DAYS = 366;
@@ -72,6 +73,7 @@ export async function createTimeOff({
       note: note?.trim() || null,
     })
     .returning(columns);
+  await notifyTimeOffChanged(workspaceId, userId);
   return row;
 }
 
@@ -94,5 +96,6 @@ export async function deleteTimeOff({
   if (!row) {
     throw new HTTPException(404, { message: "Absence not found" });
   }
+  await notifyTimeOffChanged(workspaceId, userId);
   return row;
 }

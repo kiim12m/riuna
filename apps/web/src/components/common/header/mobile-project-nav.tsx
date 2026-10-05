@@ -66,7 +66,7 @@ export default function MobileProjectNav({
         <div className="space-y-3">
           <div className="space-y-1">
             <p className="px-1 text-label font-medium tracking-wide text-muted-foreground uppercase">
-              View
+              {t("navigation:mobileProjectNav.view")}
             </p>
             <div className="grid grid-cols-4 gap-1">
               <button
@@ -79,7 +79,7 @@ export default function MobileProjectNav({
                     : "border-transparent text-muted-foreground hover:bg-accent",
                 )}
               >
-                Backlog
+                {t("tasks:backlog.title")}
               </button>
               <button
                 type="button"
@@ -92,7 +92,7 @@ export default function MobileProjectNav({
                 )}
               >
                 <SquareKanban className="size-3.5" />
-                Board
+                {t("tasks:board.title")}
               </button>
               <button
                 type="button"
@@ -151,7 +151,7 @@ export default function MobileProjectNav({
 
           <div className="space-y-1">
             <p className="px-1 text-label font-medium tracking-wide text-muted-foreground uppercase">
-              Projects
+              {t("navigation:sidebar.projects")}
             </p>
             <div className="max-h-56 space-y-0.5 overflow-y-auto">
               {(projects ?? []).map((project) => {
@@ -186,7 +186,7 @@ export default function MobileProjectNav({
             className="flex w-full items-center gap-2 rounded-md border border-border px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-accent"
           >
             <Plus className="size-3.5" />
-            Add project
+            {t("navigation:projectList.addProject")}
           </button>
         </div>
       </PopoverContent>

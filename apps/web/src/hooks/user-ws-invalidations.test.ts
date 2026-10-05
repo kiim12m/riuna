@@ -50,6 +50,26 @@ describe("userMessageInvalidations", () => {
     expect(covers(keys, ["my-work", "search", {}])).toBe(false);
   });
 
+  it("refreshes what days off and the team lead change for everyone it reaches", () => {
+    const keys = userMessageInvalidations({
+      type: "AVAILABILITY_INVALIDATED",
+      workspaceId: "ws-1",
+    });
+
+    for (const screen of [
+      "holidays",
+      "time-off",
+      "planner",
+      "schedule",
+      "today",
+      "lead",
+      "my-leads",
+      "team-leads",
+    ]) {
+      expect(covers(keys, [screen, "ws-1"])).toBe(true);
+    }
+  });
+
   it("refreshes capacity readers when a block or the workday changes", () => {
     const keys = userMessageInvalidations({ type: "SCHEDULE_INVALIDATED" });
 

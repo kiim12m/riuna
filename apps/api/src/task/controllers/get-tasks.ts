@@ -27,6 +27,7 @@ import { getEpicsByTask } from "../../epic/controllers/get-epics";
 import { getFieldDefinitionsForProject } from "../../field/controllers/get-field-definitions";
 import { buildFieldRegistry } from "../../view/field-registry";
 import { type FilterNode, filterToSql } from "../../view/filter-to-sql";
+import { getMultiAssigneesByTask } from "../multi-assignees";
 import {
   getProjectSubtreeAggregates,
   serializeAggregate,
@@ -349,7 +350,7 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     });
   }
 
-  const [aggregates, epicsByTask] = await Promise.all([
+  const [aggregates, epicsByTask, multiAssignees] = await Promise.all([
     // Solo las tareas que se van a devolver: el agregado de las demas no lo
     // pinta nadie, y calcularlo era el coste fijo mas grande de la peticion.
     getProjectSubtreeAggregates(
@@ -357,10 +358,27 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
       paginatedTasks.map((task) => task.id),
     ),
     getEpicsByTask(projectId),
+    getMultiAssigneesByTask(projectId),
   ]);
+
+  // El conjunto completo, en orden de asignacion y con el principal el primero
+  // (ADR 010): el de varias personas sale de `task_assignee`; el de una sola
+  // es el responsable principal, que ya se leyo con la tarea.
+  const assigneesOf = (task: (typeof paginatedTasks)[number]) =>
+    multiAssignees.get(task.id) ??
+    (task.userId
+      ? [
+          {
+            id: task.userId,
+            name: task.assigneeName ?? "",
+            image: task.assigneeImage ?? null,
+          },
+        ]
+      : []);
 
   const decorate = (task: (typeof paginatedTasks)[number]) => ({
     ...task,
+    assignees: assigneesOf(task),
     labels: taskLabelsMap.get(task.id) || [],
     externalLinks: taskExternalLinksMap.get(task.id) || [],
     epics: epicsByTask.get(task.id) || [],

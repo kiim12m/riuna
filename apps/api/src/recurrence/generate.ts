@@ -3,6 +3,8 @@ import { HTTPException } from "hono/http-exception";
 import db from "../database";
 import { taskRecurrenceTable, taskTable } from "../database/schema";
 import createTask from "../task/controllers/create-task";
+import { decorateTask, resolveEpics } from "../template/decorate-task";
+import { getProjectWorkspaceId } from "../utils/assert-assignable-user";
 import { advancePast, parseCadence } from "./cadence";
 import { assertTemplateUsable, parseTemplate } from "./template";
 
@@ -68,8 +70,13 @@ async function runOne(
     return "failed";
   }
 
+  let customFields: Record<string, unknown> | undefined;
+
   try {
-    await assertTemplateUsable(template, recurrence.projectId);
+    ({ customFields } = await assertTemplateUsable(
+      template,
+      recurrence.projectId,
+    ));
   } catch (error) {
     // Un estado, responsable o equipo que el proyecto ya no admite haria
     // fallar cada ocurrencia despues de reclamarla, y se perderian todas sin
@@ -135,6 +142,23 @@ async function runOne(
       teamId: template.teamId ?? null,
     })
     .where(eq(taskTable.id, created.id));
+
+  // Etiquetas, epicas y campos, con el mismo codigo que el desplegador de
+  // plantillas de tarea.
+  if (template.labels?.length || template.epics?.length || customFields) {
+    const workspaceId = await getProjectWorkspaceId(recurrence.projectId);
+    await decorateTask({
+      taskId: created.id,
+      workspaceId,
+      customFields,
+      labels: template.labels,
+      epics: template.epics,
+      epicIdsByName: await resolveEpics(
+        recurrence.projectId,
+        template.epics ?? [],
+      ),
+    });
+  }
 
   return exhausted ? "finished" : "created";
 }

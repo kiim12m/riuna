@@ -7,7 +7,7 @@ export function ErrorTest() {
 
   return (
     <div className="p-4">
-      <h2 className="text-lg font-semibold mb-4">Error Handling Test</h2>
+      <h2 className="text-section mb-4">Error Handling Test</h2>
       <ErrorDisplay
         error={testError}
         title="Test Error"

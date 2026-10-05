@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { type ReactNode, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { parseDayKey } from "@/components/schedule/schedule-range";
 import { StopDialog } from "@/components/timer/stop-dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -57,6 +56,7 @@ import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useElapsed } from "@/hooks/use-elapsed";
 import { useStopWithConfirm } from "@/hooks/use-stop-with-confirm";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { dayKey, parseDayKey } from "@/lib/day-key";
 import { parseDurationInput, secondsToHours } from "@/lib/duration";
 import { HttpError } from "@/lib/http-error";
 import { fromMinutes, toMinutes } from "@/lib/minutes";
@@ -94,9 +94,7 @@ type TaskRowActionsProps = {
 function localDayKey(offset: number) {
   const date = new Date();
   date.setDate(date.getDate() + offset);
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
+  return dayKey(date);
 }
 
 function stopPropagation(event: { stopPropagation: () => void }) {
@@ -264,7 +262,7 @@ export function TaskRowActions({
                 if (!date) return;
                 setDropdownOpen(false);
                 setContextOpen(false);
-                planOn(localDayKeyOf(date));
+                planOn(dayKey(date));
               }}
             />
           </div>
@@ -387,12 +385,6 @@ export function TaskRowActions({
       </span>
     </>
   );
-}
-
-function localDayKeyOf(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
 }
 
 /** La hora a la que se ancla en su dia, o quitarla. */
@@ -530,7 +522,7 @@ export function rowPlanOf(entry: {
   keyRank: number | null;
 }): RowActionPlan {
   return {
-    plannedDay: localDayKeyOf(new Date(entry.plannedDate)),
+    plannedDay: dayKey(new Date(entry.plannedDate)),
     startMinute: entry.startMinute,
     keyRank: entry.keyRank,
   };

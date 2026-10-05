@@ -12,7 +12,7 @@ export function ErrorView() {
             <ExternalLink className="h-10 w-10 text-destructive-foreground" />
           </div>
           <div className="space-y-2">
-            <h1 className="text-3xl font-semibold text-foreground">
+            <h1 className="text-display text-foreground">
               {t("publicProject:error.title")}
             </h1>
             <p className="text-muted-foreground max-w-md mx-auto">

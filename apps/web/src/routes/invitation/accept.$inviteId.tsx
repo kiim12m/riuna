@@ -180,7 +180,7 @@ function AcceptInvitation() {
             </div>
 
             <div className="space-y-3 text-center">
-              <h2 className="text-lg font-semibold text-foreground">
+              <h2 className="text-section text-foreground">
                 {invitationData.invitation?.expired
                   ? t("auth:invitation.invitationExpired")
                   : t("auth:invitation.invalidTitle")}
@@ -253,7 +253,7 @@ function AcceptInvitation() {
               </>
             ) : (
               <div className="space-y-3 text-center">
-                <h2 className="text-lg font-semibold text-foreground">
+                <h2 className="text-section text-foreground">
                   {t("auth:invitation.joinWorkspace", {
                     workspaceName: invitation.workspaceName,
                   })}
@@ -290,7 +290,7 @@ function AcceptInvitation() {
           </div>
 
           <div className="space-y-3 text-center">
-            <h2 className="text-lg font-semibold text-foreground">
+            <h2 className="text-section text-foreground">
               {t("auth:invitation.joinWorkspace", {
                 workspaceName: invitation.workspaceName,
               })}

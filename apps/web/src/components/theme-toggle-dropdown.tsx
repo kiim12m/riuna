@@ -1,10 +1,12 @@
 import { MoonIcon, SunIcon } from "lucide-react";
 import { useId } from "react";
+import { useTranslation } from "react-i18next";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 
 export function ThemeToggleDropdown() {
+  const { t } = useTranslation();
   const { theme, setTheme } = useUserPreferencesStore();
   const id = useId();
   const checked = theme === "light";
@@ -30,7 +32,7 @@ export function ThemeToggleDropdown() {
         </span>
       </div>
       <Label className="sr-only" htmlFor={id}>
-        Toggle theme
+        {t("common:a11y.toggleTheme")}
       </Label>
     </div>
   );

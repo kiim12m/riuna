@@ -95,9 +95,7 @@ function RouteComponent() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold">
-          {t("settings:preferencesPage.title")}
-        </h1>
+        <h1 className="text-page">{t("settings:preferencesPage.title")}</h1>
         <p className="text-muted-foreground">
           {t("settings:preferencesPage.subtitle")}
         </p>

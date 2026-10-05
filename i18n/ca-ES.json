@@ -15,14 +15,19 @@
 			"clearAllFilters": "Elimina tots els filtres",
 			"next": "Next",
 			"previous": "Previous",
-			"edit": "Editar"
+			"edit": "Editar",
+			"confirm": "Confirmar"
 		},
 		"boolean": {
 			"yes": "Sí",
 			"no": "No"
 		},
 		"a11y": {
-			"toggleSidebar": "Mostra la barra lateral"
+			"toggleSidebar": "Mostra la barra lateral",
+			"toggleTheme": "Cambiar tema",
+			"openSettingsMenu": "Abrir el menú de ajustes",
+			"dismiss": "Descartar",
+			"loading": "Cargando"
 		},
 		"sidebar": {
 			"title": "Barra lateral",
@@ -105,7 +110,10 @@
 				"keyHint": "S'utilitza per als ID dels tiquets (p. ex., {{example}}-123)",
 				"createButton": "Crea el projecte",
 				"successToast": "Projecte creat correctament",
-				"errorToast": "Hi ha hagut un error en crear el projecte"
+				"errorToast": "Hi ha hagut un error en crear el projecte",
+				"templateLabel": "Template",
+				"noTemplate": "No template",
+				"templateHint": "The project starts with the template's columns, epics and tasks."
 			},
 			"createWorkspace": {
 				"breadcrumbAppName": "RIUNA",
@@ -339,6 +347,47 @@
 				"nameRequired": "El nombre es obligatorio",
 				"nameShort": "Tu nombre debe tener al menos 2 caracteres"
 			}
+		},
+		"device": {
+			"connectTitle": "Conectar un dispositivo",
+			"connectSubtitle": "Introduce el código de tu CLI o app para continuar.",
+			"codePlaceholder": "p. ej. ABCD-1234",
+			"continue": "Continuar",
+			"codeRequired": "Introduce el código que muestra tu dispositivo.",
+			"invalidCode": "Código no válido o caducado",
+			"approveTitle": "Aprobar dispositivo",
+			"loadingSubtitle": "Cargando…",
+			"checkingSession": "Comprobando la sesión…",
+			"noCode": "No se ha indicado ningún código de dispositivo.",
+			"enterCode": "Introducir un código",
+			"signInTitle": "Inicia sesión para continuar",
+			"signInSubtitle": "Inicia sesión para aprobar o rechazar esta solicitud.",
+			"signIn": "Iniciar sesión",
+			"requestSubtitle": "Un dispositivo solicita acceso a tu cuenta de Riuna.",
+			"approve": "Aprobar",
+			"deny": "Rechazar",
+			"connected": "Dispositivo conectado",
+			"couldNotApprove": "No se ha podido aprobar",
+			"couldNotDeny": "No se ha podido rechazar",
+			"cancelled": "Solicitud cancelada"
+		},
+		"mcp": {
+			"failedTitle": "Autorización fallida",
+			"failedSubtitle": "Esta solicitud de autorización no es válida o ha caducado.",
+			"failedHint": "Vuelve a tu cliente MCP e inicia la conexión de nuevo.",
+			"title": "Autorizar cliente MCP",
+			"loadingSubtitle": "Cargando la solicitud…",
+			"loadingBody": "Comprobando la solicitud de autorización.",
+			"signInTitle": "Inicia sesión para continuar",
+			"signInSubtitle": "Inicia sesión antes de aprobar este cliente MCP.",
+			"signIn": "Iniciar sesión",
+			"reviewSubtitle": "Revisa esta solicitud antes de dar acceso a tu cuenta de Riuna.",
+			"warning": "Este cliente podrá actuar en tu nombre y acceder a tus espacios. Continúa solo si has iniciado tú esta conexión.",
+			"clientName": "Nombre del cliente (indicado por él mismo)",
+			"defaultClient": "Cliente MCP",
+			"redirectUri": "URI de redirección",
+			"approve": "Aprobar",
+			"deny": "Rechazar"
 		}
 	},
 	"settings": {
@@ -1446,6 +1495,29 @@
 			"taskCount_one": "{{count}} task",
 			"taskCount_other": "{{count}} tasks",
 			"title": "Templates"
+		},
+		"projectFields": {
+			"title": "Custom fields",
+			"description": "The fields every task of the project can fill in. Their type and key never change; archive one to hide it without losing its values.",
+			"empty": "There are no custom fields yet.",
+			"renameAction": "Rename",
+			"saveName": "Save the name",
+			"moveUp": "Move up",
+			"moveDown": "Move down",
+			"archiveAction": "Archive",
+			"unarchiveAction": "Restore",
+			"deleteAction": "Delete",
+			"archivedBadge": "Archived",
+			"workspaceBadge": "Workspace",
+			"deleteTitle": "Delete “{{name}}”?",
+			"deleteDescription": "The field and the values every task has stored for it are deleted. This cannot be undone. To just hide it, archive it instead.",
+			"updateError": "The field could not be updated",
+			"deleteError": "The field could not be deleted"
+		},
+		"workspaceFields": {
+			"title": "Custom fields",
+			"pageTitle": "Custom fields",
+			"description": "Fields that apply to every project of the workspace. A project can define its own on top of these."
 		}
 	},
 	"navigation": {
@@ -1591,6 +1663,9 @@
 			"unavailableDescription": "Puede que tu papel en este espacio no permita crear tareas, y Personal solo guarda tareas que creas tú.",
 			"visibilityLabel": "Quién ve Personal",
 			"notPrivate": "Personal no sale en las listas de proyectos de los demás, pero no es privado: quien ve las tareas del espacio ve también las suyas."
+		},
+		"mobileProjectNav": {
+			"view": "Vista"
 		}
 	},
 	"notifications": {
@@ -1655,7 +1730,9 @@
 			"hours_other": "{{count}} horas",
 			"days_one": "{{count}} día",
 			"days_other": "{{count}} días"
-		}
+		},
+		"loadMore": "Load older notifications",
+		"loadMoreFailed": "Could not load more. Try again"
 	},
 	"activity": {
 		"assignedToSelf": "se ha asignado la tarea a sí mismo",
@@ -1774,7 +1851,10 @@
 					"renderFailed": "No se pudo renderizar el diagrama de Mermaid"
 				}
 			}
-		}
+		},
+		"customFieldChanged": "changed “{{name}}” from {{from}} to {{to}}",
+		"customFieldChangedPlain": "changed “{{name}}”",
+		"emptyValue": "empty"
 	},
 	"tasks": {
 		"actions": {
@@ -2312,7 +2392,27 @@
 				"saveFailed": "No se ha podido guardar la vista",
 				"delete": "Borrar esta vista"
 			},
-			"fieldOptionsDuplicate": "Hay dos opciones que son la misma si se ignoran acentos y mayúsculas"
+			"fieldOptionsDuplicate": "Hay dos opciones que son la misma si se ignoran acentos y mayúsculas",
+			"aggregates": {
+				"progress": "Branch progress",
+				"descendants": "Subtasks (done/total)",
+				"estimate": "Branch estimate",
+				"sum": "{{name}} of the branch"
+			},
+			"noEpic": "No epic",
+			"columnsPicker": {
+				"label": "Columns",
+				"group": {
+					"base": "Fields",
+					"custom": "Custom fields",
+					"aggregate": "Branch totals"
+				}
+			},
+			"groupBy": {
+				"label": "Group by",
+				"none": "No grouping",
+				"epic": "Epic"
+			}
 		},
 		"team": {
 			"label": "Equip",
@@ -2349,7 +2449,8 @@
 			"estimateError": "No se ha podido guardar la estimación",
 			"reparentError": "No se ha podido mover la tarea",
 			"cycleError": "Una tarea no puede colgar de su propia rama",
-			"progressTooltip": "{{done}} de {{total}} subtareas cerradas"
+			"progressTooltip": "{{done}} de {{total}} subtareas cerradas",
+			"branchSum": "{{name}} of the branch"
 		},
 		"update": {
 			"success": "Tarea actualizada correctamente",
@@ -2358,6 +2459,17 @@
 		"view": {
 			"board": "Tablero",
 			"list": "Lista"
+		},
+		"composer": {
+			"add": "Add task",
+			"placeholder": "Task title…",
+			"hint": "Enter to create · Esc to close",
+			"error": "The task could not be created"
+		},
+		"archiveModal": {
+			"title": "Archivar tareas",
+			"description_one": "¿Seguro que quieres archivar la tarea completada? Saldrá del tablero activo y pasará al archivo.",
+			"description_other": "¿Seguro que quieres archivar las {{count}} tareas completadas? Saldrán del tablero activo y pasarán al archivo."
 		}
 	},
 	"invitations": {
@@ -2552,7 +2664,8 @@
 		},
 		"branding": {
 			"poweredBy": "Powered by"
-		}
+		},
+		"emptyColumn": "No hay tareas en {{column}}"
 	},
 	"cycles": {
 		"actions": {

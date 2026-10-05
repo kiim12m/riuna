@@ -226,17 +226,20 @@ que hizo perder el arreglo.
     propios (0,68 · 0,72 · 0,79 · 0,965 · 1,24 rem). Es una superficie de prosa
     con necesidades tipográficas distintas de la interfaz densa, así que se deja
     como excepción **acotada y declarada**, no como deriva.
-20. **48 clases de tamaño de Tailwind fuera de los siete papeles**: `text-lg`
+20. ~~**48 clases de tamaño de Tailwind fuera de los siete papeles**~~ **Hecho (2026-10-03):** `text-lg`
     (23), `text-2xl` (24) y `text-4xl` (1). Están en pantallas que esta revisión
     no recorrió —acceso, alta, invitaciones, proyecto público—, así que se
     quedan **medidas y acotadas** en vez de barridas a ciegas.
-21. La búsqueda pinta `result.status` crudo, como hacía la tabla. Resolverlo
-    cruza proyectos, así que necesita una consulta que hoy no se hace.
-22. `<h2>` de «Rama» en la tarea sigue a 14 px.
+21. ~~La búsqueda pinta `result.status` crudo, como hacía la tabla. Resolverlo
+    cruza proyectos, así que necesita una consulta que hoy no se hace.~~ **Hecho (2026-10-04):** `statusName`.
+22. ~~`<h2>` de «Rama» en la tarea sigue a 14 px.~~ **Hecho (2026-10-03):** «Rama» y
+    «Tiempo» usan `text-section`, como «Actividad».
 
 ### P2 bis · abierto por el arreglo de la paleta
 
-17. **Los tonos 4 y 5 quedan bajo 3:1 sobre fondo claro** (2,11 y 2,62). La regla
+17. ~~**Los tonos 4 y 5 quedan bajo 3:1 sobre fondo claro** (2,11 y 2,62).~~ **Cerrado
+    (2026-10-03):** ya estaba resuelto por las barras horizontales con `interval: 0`; todo cubo
+    de color lleva su rótulo. La regla
     los admite con relevo —rótulo visible o vista de tabla— pero el eje se salta
     etiquetas cuando la tarjeta es estrecha: en un reparto de seis proyectos, la
     barra ámbar se queda sin rotular. O el eje rota las etiquetas, o el widget
@@ -245,9 +248,9 @@ que hizo perder el arreglo.
 
 ### P3 · anotado, decide quien manda
 
-15. Las preferencias viven solo en `localStorage` y se pierden al cambiar de
+15. ~~Las preferencias viven solo en `localStorage` y se pierden al cambiar de
     navegador, aunque la pantalla cuelgue de «Ajustes › **Cuenta**». De ahí sale
-    también que el calendario empiece en domingo.
+    también que el calendario empiece en domingo.~~ **Hecho (2026-10-04):** ADR 064.
 16. `#5FD3C0` como texto de estado activo en oscuro es el uso más brillante del
     sistema.
 

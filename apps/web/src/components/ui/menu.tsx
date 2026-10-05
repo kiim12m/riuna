@@ -141,6 +141,7 @@ function MenuCheckboxItem({
         <>
           <MenuPrimitive.CheckboxItemIndicator className="col-start-1">
             <svg
+              aria-hidden="true"
               fill="none"
               height="24"
               stroke="currentColor"
@@ -151,7 +152,6 @@ function MenuCheckboxItem({
               width="24"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <title>Check</title>
               <path d="M5.252 12.7 10.2 18.63 18.748 5.37" />
             </svg>
           </MenuPrimitive.CheckboxItemIndicator>
@@ -182,6 +182,7 @@ function MenuRadioItem({
     >
       <MenuPrimitive.RadioItemIndicator className="col-start-1">
         <svg
+          aria-hidden="true"
           fill="none"
           height="24"
           stroke="currentColor"
@@ -192,7 +193,6 @@ function MenuRadioItem({
           width="24"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <title>Check</title>
           <path d="M5.252 12.7 10.2 18.63 18.748 5.37" />
         </svg>
       </MenuPrimitive.RadioItemIndicator>

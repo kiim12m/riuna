@@ -522,6 +522,12 @@ export const taskTable = pgTable(
     index("task_projectId_idx").on(table.projectId),
     index("task_cycleId_idx").on(table.cycleId),
     index("task_dueDate_idx").on(table.dueDate),
+    // Parcial y solo para las cerradas: las ventanas estrechas de «hechas esta
+    // semana» sobre anos de historia (ADR 030). Medido con 50.000 tareas
+    // repartidas en tres anos: de 20 ms a 0,5 ms, y el planificador lo usa.
+    index("task_completedAt_idx")
+      .on(table.completedAt)
+      .where(sql`completed_at IS NOT NULL`),
     index("task_assigneeId_idx").on(table.userId),
     index("task_teamId_idx").on(table.teamId),
     index("task_columnId_idx").on(table.columnId),
@@ -1787,6 +1793,29 @@ export const userNotificationPreferenceTable = pgTable(
       .notNull(),
   },
 );
+
+// Las preferencias de presentacion de una persona -vista por defecto, densidad,
+// que enseñan las tarjetas, inicio de semana…- viajan con su cuenta y no se
+// quedan en el navegador. Un solo documento por persona: son leidas siempre
+// enteras y nunca se filtran ni se ordenan por ellas (AGENTS.md: una columna
+// solo si se filtra, se ordena, se agrupa o es clave ajena). El tema no esta
+// aqui a proposito: es del dispositivo (portatil oscuro, movil «sistema»).
+export const userPreferenceTable = pgTable("user_preference", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => userTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+  preferences: jsonb("preferences")
+    .$type<Record<string, unknown>>()
+    .notNull()
+    .default({}),
+  updatedAt: timestamp("updated_at", { mode: "date" })
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
 
 // La jornada personal (ADR 045): fuente unica de horario y capacidad para el
 // Planificador, el Cronograma y Hoy. Sin fila, se aplican los valores por

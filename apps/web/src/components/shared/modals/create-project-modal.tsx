@@ -18,13 +18,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import icons from "@/constants/project-icons";
 import useCreateProject from "@/hooks/mutations/project/use-create-project";
+import { useGetTemplates } from "@/hooks/queries/template/use-templates";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { cn } from "@/lib/cn";
 import generateProjectSlug from "@/lib/generate-project-id";
@@ -42,13 +51,20 @@ function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
   const [selectedIcon, setSelectedIcon] = useState("Layout");
   const [iconPopoverOpen, setIconPopoverOpen] = useState(false);
   const [iconSearch, setIconSearch] = useState("");
+  // "" es «sin plantilla»: el proyecto nace con las cuatro columnas de siempre.
+  const [templateId, setTemplateId] = useState("");
   const queryClient = useQueryClient();
   const { data: workspace } = useActiveWorkspace();
+  const { data: templates } = useGetTemplates(workspace?.id ?? "");
+  const projectTemplates = (templates ?? []).filter(
+    (template) => template.kind === "project",
+  );
   const { mutateAsync } = useCreateProject({
     name,
     slug,
     workspaceId: workspace?.id ?? "",
     icon: selectedIcon,
+    templateId: templateId || undefined,
   });
   const SelectedIcon =
     icons[selectedIcon as keyof typeof icons] || icons.Layout;
@@ -63,6 +79,7 @@ function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
     setSelectedIcon("Layout");
     setIconPopoverOpen(false);
     setIconSearch("");
+    setTemplateId("");
     onClose();
   };
 
@@ -72,7 +89,7 @@ function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
 
     try {
       const { id } = await mutateAsync();
-      toast.success("Project created successfully");
+      toast.success(t("common:modals.createProject.successToast"));
       await queryClient.invalidateQueries({ queryKey: ["projects"] });
 
       navigate({
@@ -190,7 +207,7 @@ function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
               onChange={handleNameChange}
               autoFocus
               placeholder={t("common:modals.createProject.projectName")}
-              className="w-full [&_[data-slot=input]]:h-auto [&_[data-slot=input]]:px-0 [&_[data-slot=input]]:py-2 [&_[data-slot=input]]:text-2xl [&_[data-slot=input]]:leading-tight [&_[data-slot=input]]:font-semibold [&_[data-slot=input]]:tracking-tight [&_[data-slot=input]]:text-foreground [&_[data-slot=input]]:placeholder:text-muted-foreground [&_[data-slot=input]]:outline-none"
+              className="w-full [&_[data-slot=input]]:h-auto [&_[data-slot=input]]:px-0 [&_[data-slot=input]]:py-2 [&_[data-slot=input]]:text-page [&_[data-slot=input]]:text-foreground [&_[data-slot=input]]:placeholder:text-muted-foreground [&_[data-slot=input]]:outline-none"
               required
             />
           </div>
@@ -218,6 +235,39 @@ function CreateProjectModal({ open, onClose }: CreateProjectModalProps) {
               </div>
             </div>
           </div>
+
+          {projectTemplates.length > 0 && (
+            <div className="space-y-1.5 px-3">
+              <Label htmlFor="project-template">
+                {t("common:modals.createProject.templateLabel")}
+              </Label>
+              <Select
+                value={templateId}
+                onValueChange={(next) => setTemplateId(next ?? "")}
+              >
+                <SelectTrigger id="project-template">
+                  <SelectValue>
+                    {projectTemplates.find(
+                      (template) => template.id === templateId,
+                    )?.name ?? t("common:modals.createProject.noTemplate")}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">
+                    {t("common:modals.createProject.noTemplate")}
+                  </SelectItem>
+                  {projectTemplates.map((template) => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-muted-foreground text-xs">
+                {t("common:modals.createProject.templateHint")}
+              </p>
+            </div>
+          )}
 
           <DialogFooter>
             <Button

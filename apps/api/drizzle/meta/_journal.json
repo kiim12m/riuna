@@ -547,6 +547,27 @@
 			"when": 1791029203217,
 			"tag": "0077_personal_project",
 			"breakpoints": true
+		},
+		{
+			"idx": 78,
+			"version": "7",
+			"when": 1791051348462,
+			"tag": "0078_member_can_assign_tasks",
+			"breakpoints": true
+		},
+		{
+			"idx": 79,
+			"version": "7",
+			"when": 1791065622496,
+			"tag": "0079_task_completed_at_index",
+			"breakpoints": true
+		},
+		{
+			"idx": 80,
+			"version": "7",
+			"when": 1791106044455,
+			"tag": "0080_user_preference",
+			"breakpoints": true
 		}
 	]
 }

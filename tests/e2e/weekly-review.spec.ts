@@ -15,6 +15,16 @@ function reviewedWeekStart() {
   return keyOf(today);
 }
 
+/**
+ * Lo cerrado hoy cuenta en la semana que se revisa solo a partir del tercer dia
+ * de la semana: los dos primeros se revisa la anterior (ADR 054), que no lo
+ * incluye. La prueba tiene que esperar lo que la pantalla enseña ese dia, no
+ * suponer que siempre es miercoles.
+ */
+function doneTodayCounts() {
+  return new Date().getDay() >= 2;
+}
+
 async function myTask(riuna: RiunaContext, title: string, extra = {}) {
   const id = await createTask(riuna, title, extra);
   await riuna.api("put", `/api/task/assignee/${id}`, { userId: riuna.userId });
@@ -81,7 +91,9 @@ test.describe("Revisión semanal", () => {
 
     await next.click();
     await next.click();
-    await expect(page.getByTestId("weekly-stats")).toContainText("Hechas1");
+    await expect(page.getByTestId("weekly-stats")).toContainText(
+      doneTodayCounts() ? "Hechas1" : "Hechas0",
+    );
 
     await next.click();
     await expect(page.getByTestId("weekly-next-load")).toBeVisible();
@@ -100,7 +112,9 @@ test.describe("Revisión semanal", () => {
       `/api/review/week/${reviewedWeekStart()}?workspaceId=${riuna.workspaceId}`,
     );
     expect(review.review.blockers).toBe("Pendiente del cliente");
-    expect(review.review.summary.done).toBeGreaterThanOrEqual(1);
+    expect(review.review.summary.done).toBeGreaterThanOrEqual(
+      doneTodayCounts() ? 1 : 0,
+    );
     expect(review.private.impact).toBe(4);
   });
 });

@@ -126,6 +126,43 @@ describe("saved views", () => {
     expect(body.isShared).toBe(false);
   });
 
+  // Que columnas se ven y por que se agrupa viajan con la vista (punto 32 del
+  // cierre de la deuda): la vista Tabla de la Fase 4 solo recordaba el filtro.
+  it("remembers the visible columns and the grouping", async () => {
+    const { app, projectId } = await setup();
+    const config = {
+      columns: ["title", "status", "custom.presupuesto", "agg.progress"],
+      groupBy: "epic",
+    };
+
+    const response = await saveView(app, projectId, {
+      name: "Por epica",
+      type: "table",
+      config,
+    });
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).config).toEqual(config);
+  });
+
+  it("refuses a grouping the table does not offer, or an absurd column list", async () => {
+    const { app, projectId } = await setup();
+
+    const byAssignee = await saveView(app, projectId, {
+      name: "Mal",
+      type: "table",
+      config: { groupBy: "assignee" },
+    });
+    const tooMany = await saveView(app, projectId, {
+      name: "Demasiadas",
+      type: "table",
+      config: { columns: Array.from({ length: 101 }, (_, i) => `c${i}`) },
+    });
+
+    expect(byAssignee.status).toBe(400);
+    expect(tooMany.status).toBe(400);
+  });
+
   // La mitad de la fase que sigue al alcance de todo el mundo: un `member` no
   // puede definir un campo, pero si guardarse una vista.
   it("lets a plain member save one", async () => {

@@ -3,6 +3,7 @@ import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import { unavailableDaySchema } from "../schemas";
 import { parseServerDay } from "../utils/day-boundaries";
+import { dayKeySchema } from "../utils/day-key-schema";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import getMyLeads from "./controllers/get-my-leads";
@@ -168,12 +169,7 @@ const lead = new Hono<{
       "query",
       v.object({
         ...workspaceQuery.entries,
-        date: v.optional(
-          v.pipe(
-            v.string(),
-            v.regex(/^\d{4}-\d{2}-\d{2}$/, "Expected a yyyy-mm-dd day"),
-          ),
-        ),
+        date: v.optional(dayKeySchema),
       }),
     ),
     workspaceAccess.fromQuery(),

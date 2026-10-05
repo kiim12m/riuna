@@ -56,29 +56,13 @@ import { usePlanner } from "@/hooks/queries/planner/use-planner";
 import { useWorkSchedule } from "@/hooks/queries/work-schedule/use-work-schedule";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
+import { dayKey, parseDayKey } from "@/lib/day-key";
 import { formatDuration } from "@/lib/duration";
 import { formatDate } from "@/lib/format";
 
 const WINDOW_DAYS = 15;
 const UNPLANNED_ID = "unplanned";
 const DEFAULT_WORK_START_MINUTE = 9 * 60;
-
-/**
- * `yyyy-mm-dd`, no un instante: sirve igual como id de columna que como carga
- * util de la mutacion (`PUT /planner/:taskId`), que es justo lo que pide un
- * dia sin zona.
- */
-function isoDay(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function parseIsoDay(key: string): Date {
-  const [year, month, day] = key.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
 
 function addDays(date: Date, days: number) {
   const shifted = new Date(date);
@@ -139,8 +123,8 @@ function RouteComponent() {
   // semana. Volver a hoy quita el parametro, para que la ventana por defecto
   // siga siendo una sola entrada de cache.
   const shiftWindow = (days: number | null) => {
-    const base = parseIsoDay(from ?? data?.serverToday ?? isoDay(new Date()));
-    const next = days === null ? undefined : isoDay(addDays(base, days));
+    const base = parseDayKey(from ?? data?.serverToday ?? dayKey(new Date()));
+    const next = days === null ? undefined : dayKey(addDays(base, days));
     navigate({
       search: { from: next === data?.serverToday ? undefined : next },
       replace: true,
@@ -164,9 +148,9 @@ function RouteComponent() {
   // decidir que fantasmas y ventanas de vencimiento tocan hoy.
   const days = useMemo(() => {
     const first = from
-      ? parseIsoDay(from)
+      ? parseDayKey(from)
       : data?.serverToday
-        ? parseIsoDay(data.serverToday)
+        ? parseDayKey(data.serverToday)
         : (() => {
             const now = new Date();
             now.setHours(0, 0, 0, 0);
@@ -178,7 +162,7 @@ function RouteComponent() {
   const entriesByDay = useMemo(() => {
     const map = new Map<string, PlanEntry[]>();
     for (const entry of data?.entries ?? []) {
-      const key = isoDay(new Date(entry.plannedDate));
+      const key = dayKey(new Date(entry.plannedDate));
       const list = map.get(key) ?? [];
       list.push(entry);
       map.set(key, list);
@@ -192,7 +176,7 @@ function RouteComponent() {
   const ghostsByDay = useMemo(() => {
     const map = new Map<string, PlanGhost[]>();
     for (const ghost of data?.ghosts ?? []) {
-      const key = isoDay(new Date(ghost.plannedDate));
+      const key = dayKey(new Date(ghost.plannedDate));
       const list = map.get(key) ?? [];
       list.push(ghost);
       map.set(key, list);
@@ -204,7 +188,7 @@ function RouteComponent() {
     const map = new Map<string, PlanDeadline[]>();
     for (const deadline of data?.deadlines ?? []) {
       if (!deadline.dueDate) continue;
-      const key = isoDay(new Date(deadline.dueDate));
+      const key = dayKey(new Date(deadline.dueDate));
       const list = map.get(key) ?? [];
       list.push(deadline);
       map.set(key, list);
@@ -459,7 +443,7 @@ function RouteComponent() {
                 )}
 
                 {days.map((day) => {
-                  const key = isoDay(day);
+                  const key = dayKey(day);
                   const dayEntries = entriesByDay.get(key) ?? [];
                   const untimedEntries = dayEntries.filter(
                     (entry) => entry.startMinute == null,

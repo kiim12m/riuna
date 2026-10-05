@@ -4,6 +4,7 @@ import {
   useSearch,
 } from "@tanstack/react-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 import { AuthLayout } from "@/components/auth/layout";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/device/approve")({
 });
 
 function DeviceApprovePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const search = useSearch({ from: "/device/approve" });
   const { data: session, isPending } = authClient.useSession();
@@ -30,8 +32,13 @@ function DeviceApprovePage() {
 
   if (isPending) {
     return (
-      <AuthLayout title="Approve device" subtitle="Loading…">
-        <div className="text-sm text-muted-foreground">Checking session…</div>
+      <AuthLayout
+        title={t("auth:device.approveTitle")}
+        subtitle={t("auth:device.loadingSubtitle")}
+      >
+        <div className="text-sm text-muted-foreground">
+          {t("auth:device.checkingSession")}
+        </div>
       </AuthLayout>
     );
   }
@@ -40,15 +47,15 @@ function DeviceApprovePage() {
     if (!normalizedCode) {
       return (
         <AuthLayout
-          title="Approve device"
-          subtitle="No device code was provided."
+          title={t("auth:device.approveTitle")}
+          subtitle={t("auth:device.noCode")}
         >
           <Button
             className="w-full"
             variant="secondary"
             onClick={() => void navigate({ to: "/device" })}
           >
-            Enter a code
+            {t("auth:device.enterCode")}
           </Button>
         </AuthLayout>
       );
@@ -56,8 +63,8 @@ function DeviceApprovePage() {
     const redirectTarget = `/device/approve?user_code=${encodeURIComponent(normalizedCode)}`;
     return (
       <AuthLayout
-        title="Sign in to continue"
-        subtitle="Sign in to approve or deny this device request."
+        title={t("auth:device.signInTitle")}
+        subtitle={t("auth:device.signInSubtitle")}
       >
         <Button
           className="w-full"
@@ -68,7 +75,7 @@ function DeviceApprovePage() {
             })
           }
         >
-          Sign in
+          {t("auth:device.signIn")}
         </Button>
       </AuthLayout>
     );
@@ -77,15 +84,15 @@ function DeviceApprovePage() {
   if (!normalizedCode) {
     return (
       <AuthLayout
-        title="Approve device"
-        subtitle="No device code was provided."
+        title={t("auth:device.approveTitle")}
+        subtitle={t("auth:device.noCode")}
       >
         <Button
           className="w-full"
           variant="secondary"
           onClick={() => void navigate({ to: "/device" })}
         >
-          Enter a code
+          {t("auth:device.enterCode")}
         </Button>
       </AuthLayout>
     );
@@ -101,13 +108,15 @@ function DeviceApprovePage() {
         userCode: normalizedCode,
       });
       if (res.error) {
-        toast.error(res.error.error_description ?? "Could not approve");
+        toast.error(
+          res.error.error_description ?? t("auth:device.couldNotApprove"),
+        );
         return;
       }
-      toast.success("Device connected");
+      toast.success(t("auth:device.connected"));
       void navigate({ to: "/dashboard" });
     } catch {
-      toast.error("Could not approve");
+      toast.error(t("auth:device.couldNotApprove"));
     } finally {
       setProcessing(false);
     }
@@ -123,13 +132,15 @@ function DeviceApprovePage() {
         userCode: normalizedCode,
       });
       if (res.error) {
-        toast.error(res.error.error_description ?? "Could not deny");
+        toast.error(
+          res.error.error_description ?? t("auth:device.couldNotDeny"),
+        );
         return;
       }
-      toast.message("Request cancelled");
+      toast.message(t("auth:device.cancelled"));
       void navigate({ to: "/dashboard" });
     } catch {
-      toast.error("Could not deny");
+      toast.error(t("auth:device.couldNotDeny"));
     } finally {
       setProcessing(false);
     }
@@ -137,8 +148,8 @@ function DeviceApprovePage() {
 
   return (
     <AuthLayout
-      title="Approve device"
-      subtitle="A device is requesting access to your Riuna account."
+      title={t("auth:device.approveTitle")}
+      subtitle={t("auth:device.requestSubtitle")}
     >
       <div className="space-y-4">
         <p className="text-center font-mono text-sm tracking-wide">
@@ -150,14 +161,14 @@ function DeviceApprovePage() {
             disabled={processing}
             onClick={() => void handleApprove()}
           >
-            Approve
+            {t("auth:device.approve")}
           </Button>
           <Button
             variant="outline"
             disabled={processing}
             onClick={() => void handleDeny()}
           >
-            Deny
+            {t("auth:device.deny")}
           </Button>
         </div>
       </div>

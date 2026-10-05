@@ -65,7 +65,21 @@ test.describe("Ausencias y festivos", () => {
     await expect(tomorrow).toContainText("0 %");
 
     await page.goto("/dashboard/settings/account/preferences");
-    await section.getByRole("button", { name: "Quitar la ausencia" }).click();
+    // Se espera la respuesta del DELETE a proposito: una vez, con la bateria
+    // entera, el borrado salio del navegador y no volvio (el servidor lo
+    // registro en 5-38 ms), y no se pudo reproducir en 30 vueltas. Asi, si
+    // vuelve a pasar, el fallo dice si hubo respuesta o no en lugar de
+    // quedarse en «no desaparece la ausencia».
+    const [deleted] = await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.request().method() === "DELETE" &&
+          response.url().includes("/availability/time-off/"),
+        { timeout: 15_000 },
+      ),
+      section.getByRole("button", { name: "Quitar la ausencia" }).click(),
+    ]);
+    expect(deleted.status()).toBe(200);
     await expect(section).toContainText("No hay ausencias próximas.");
   });
 

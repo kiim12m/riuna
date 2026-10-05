@@ -54,9 +54,7 @@ export function Logo({ className }: LogoProps) {
         <circle cx="8.93" cy="23.07" r="2.1" className="fill-brand" />
         <circle cx="23.07" cy="8.93" r="2.1" fill="currentColor" />
       </svg>
-      <span className="font-semibold text-xl leading-none tracking-[-0.03em]">
-        riuna
-      </span>
+      <span className="text-page leading-none tracking-[-0.03em]">riuna</span>
     </Link>
   );
 }

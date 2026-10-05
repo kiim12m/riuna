@@ -162,7 +162,7 @@ function RouteComponent() {
       />
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="space-y-2">
-          <h1 className="text-2xl font-semibold">
+          <h1 className="text-page">
             {t("settings:workspaceTeams.title", { defaultValue: "Teams" })}
           </h1>
           <p className="text-muted-foreground">

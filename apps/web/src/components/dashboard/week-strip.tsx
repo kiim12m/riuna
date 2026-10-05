@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/cn";
+import { dayKey, parseDayKey } from "@/lib/day-key";
 import { getPriorityLabel } from "@/lib/i18n/domain";
 
 type WeekTask = {
@@ -43,7 +44,7 @@ export function WeekStrip({
   // idioma, no copia del producto, y una traduccion a mano seria una segunda
   // fuente que mantener.
   const weekday = new Intl.DateTimeFormat(i18n.language, { weekday: "short" });
-  const todayKey = serverDayKey(new Date());
+  const todayKey = dayKey(new Date());
 
   return (
     <ol className="grid grid-cols-1 gap-(--density-gap) sm:grid-cols-7">
@@ -115,21 +116,4 @@ export function WeekStrip({
       })}
     </ol>
   );
-}
-
-/**
- * `yyyy-mm-dd` a fecha **local**. `new Date("2026-09-21")` la leeria como
- * medianoche UTC, que en un navegador con desfase negativo cae en el dia
- * anterior y desplazaria la columna entera.
- */
-function parseDayKey(key: string): Date {
-  const [year, month, day] = key.split("-").map(Number);
-  return new Date(year ?? 1970, (month ?? 1) - 1, day ?? 1);
-}
-
-function serverDayKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }

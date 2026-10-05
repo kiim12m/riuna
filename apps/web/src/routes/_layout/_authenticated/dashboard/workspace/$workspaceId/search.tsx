@@ -88,7 +88,7 @@ function SearchComponent() {
                 placeholder={t("workspace:search.placeholder")}
                 value={searchInput}
                 onChange={(e) => handleInputChange(e.target.value)}
-                className="pl-10 h-12 text-lg"
+                className="pl-10 h-12 text-section font-normal"
                 autoFocus
               />
               {showLoading && (
@@ -160,7 +160,7 @@ function SearchComponent() {
 
                       {result.status && (
                         <span className="text-label font-medium px-2 py-0.5 rounded border border-border bg-muted/55 text-muted-foreground flex-shrink-0">
-                          {result.status}
+                          {result.statusName ?? result.status}
                         </span>
                       )}
                     </button>
@@ -169,7 +169,7 @@ function SearchComponent() {
               ) : (
                 <div className="text-center py-12">
                   <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-lg font-medium mb-2">
+                  <p className="text-section mb-2">
                     {t("workspace:search.noResultsTitle")}
                   </p>
                   <p className="text-muted-foreground">
@@ -181,7 +181,7 @@ function SearchComponent() {
           ) : (
             <div className="text-center py-12">
               <Search className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h2 className="text-xl font-semibold mb-2">
+              <h2 className="text-page mb-2">
                 {t("workspace:search.startTitle")}
               </h2>
               <p className="text-muted-foreground mb-6">

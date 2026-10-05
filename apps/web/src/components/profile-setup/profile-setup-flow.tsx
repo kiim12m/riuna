@@ -110,7 +110,7 @@ export function ProfileSetupFlow() {
           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <User className="h-6 w-6 text-primary" />
           </div>
-          <h1 className="text-xl font-semibold text-foreground mb-2">
+          <h1 className="text-page text-foreground mb-2">
             {t("auth:profileSetup.completeTitle")}
           </h1>
           <p className="text-muted-foreground text-sm">
@@ -170,7 +170,7 @@ export function ProfileSetupFlow() {
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-xl font-semibold text-foreground">
+            <h1 className="text-page text-foreground">
               {t("auth:profileSetup.welcome", { name: userName })}
             </h1>
             <p className="text-muted-foreground text-sm">

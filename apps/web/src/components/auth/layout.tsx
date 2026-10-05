@@ -21,7 +21,7 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">{title}</CardTitle>
+            <CardTitle className="text-page">{title}</CardTitle>
             {subtitle ? <CardDescription>{subtitle}</CardDescription> : null}
           </CardHeader>
           <CardContent className="pt-0">{children}</CardContent>

@@ -28,6 +28,36 @@ const hexColorSchema = z
     "Expected a hex color like #FF6600",
   );
 
+/**
+ * Lo que una tarea tiene ademas de sus campos de base y que Riuna guarda en
+ * otras rutas: varios asignados, un departamento y los campos personalizados.
+ * Sin esto un agente podia crear la tarea y no repartirla ni rellenar su
+ * presupuesto (ADR 010, ADR 013).
+ */
+const taskExtrasShape = {
+  customFields: z
+    .record(z.string(), z.unknown())
+    .optional()
+    .describe(
+      'Custom field values by field key, e.g. {"presupuesto": 1500}. Only the keys sent change; null clears one.',
+    ),
+  assigneeIds: z
+    .array(nonEmptyString)
+    .optional()
+    .describe(
+      "Replaces the whole set of assignees; the first one becomes the primary assignee. Needs the permission to assign tasks.",
+    ),
+  teamId: nullableOptionalNonEmptyString.describe(
+    "Assign the task to a team (department); null takes it off its team.",
+  ),
+};
+
+type TaskExtras = {
+  customFields?: Record<string, unknown>;
+  assigneeIds?: string[];
+  teamId?: string | null;
+};
+
 function run(fn: () => Promise<unknown>): Promise<CallToolResult> {
   return fn()
     .then((data) => textResult(data))
@@ -41,6 +71,47 @@ export function registerTools(
   ctx: { client: RiunaClient },
 ): void {
   const { client } = ctx;
+
+  /**
+   * Guarda los asignados, el equipo y los campos personalizados de una tarea que
+   * ya existe. Cada uno tiene su ruta y su permiso, asi que si uno falla la tarea
+   * ya esta guardada: el error lo dice con su id en vez de dejar creer que no se
+   * creo.
+   */
+  async function applyTaskExtras(taskId: string, extras: TaskExtras) {
+    const at = (segment: string) =>
+      `/api/task/${segment}/${encodeURIComponent(taskId)}`;
+    try {
+      if (extras.assigneeIds !== undefined) {
+        await client.json(at("assignees"), {
+          method: "PUT",
+          body: JSON.stringify({ userIds: extras.assigneeIds }),
+        });
+      }
+      if (extras.teamId !== undefined) {
+        await client.json(at("team"), {
+          method: "PUT",
+          body: JSON.stringify({ teamId: extras.teamId }),
+        });
+      }
+      if (extras.customFields !== undefined) {
+        await client.json(at("custom-fields"), {
+          method: "PUT",
+          body: JSON.stringify({ values: extras.customFields }),
+        });
+      }
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      throw new Error(
+        `Task ${taskId} was saved, but its assignees, team or custom fields were not: ${reason}`,
+      );
+    }
+  }
+
+  const hasExtras = (extras: TaskExtras) =>
+    extras.customFields !== undefined ||
+    extras.assigneeIds !== undefined ||
+    extras.teamId !== undefined;
 
   server.registerTool(
     "whoami",
@@ -199,6 +270,18 @@ export function registerTools(
     sortOrder: z.enum(["asc", "desc"]).optional(),
     dueBefore: optionalIsoDateTimeSchema,
     dueAfter: optionalIsoDateTimeSchema,
+    filter: z
+      .string()
+      .optional()
+      .describe(
+        'A filter as JSON, the same the views use: {"type":"condition","field":"custom.presupuesto","operator":"gt","value":1000}, or several combined with {"type":"and","children":[…]} or {"type":"or","children":[…]}, and negated with {"type":"not","child":…}. Fields: title, description, status, priority, number, dueDate, assignee, team, done, completedAt, epic and assignees (by id), label (by name) and custom.<key>.',
+      ),
+    treeScope: z
+      .enum(["matching", "roots", "withDescendants"])
+      .optional()
+      .describe(
+        "With a filter: only the tasks that match, only the top-level ones, or the matches with their whole branch.",
+      ),
   });
 
   server.registerTool(
@@ -249,9 +332,12 @@ export function registerTools(
         startDate: optionalIsoDateTimeSchema,
         dueDate: optionalIsoDateTimeSchema,
         userId: optionalNonEmptyString,
+        ...taskExtrasShape,
       }),
     },
     async (args) => {
+      const { customFields, assigneeIds, teamId } = args;
+      const extras: TaskExtras = { customFields, assigneeIds, teamId };
       const body: Record<string, string | undefined> = {
         title: args.title,
         description: args.description,
@@ -267,12 +353,18 @@ export function registerTools(
       if (args.userId !== undefined) {
         body.userId = args.userId;
       }
-      return run(() =>
-        client.json(`/api/task/${encodeURIComponent(args.projectId)}`, {
-          method: "POST",
-          body: JSON.stringify(body),
-        }),
-      );
+      return run(async () => {
+        const created = (await client.json(
+          `/api/task/${encodeURIComponent(args.projectId)}`,
+          { method: "POST", body: JSON.stringify(body) },
+        )) as { id: string };
+        if (!hasExtras(extras)) return created;
+        await applyTaskExtras(created.id, extras);
+        // Lo que se devuelve es la tarea como quedo, no como nacio.
+        return client.json(`/api/task/${encodeURIComponent(created.id)}`, {
+          method: "GET",
+        });
+      });
     },
   );
 
@@ -287,6 +379,7 @@ export function registerTools(
     startDate: nullableOptionalIsoDateTimeSchema,
     dueDate: nullableOptionalIsoDateTimeSchema,
     userId: nullableOptionalNonEmptyString,
+    ...taskExtrasShape,
   });
 
   server.registerTool(
@@ -297,16 +390,22 @@ export function registerTools(
       inputSchema: updateTaskSchema,
     },
     async (args) => {
-      const { taskId, ...patch } = args;
+      const { taskId, customFields, assigneeIds, teamId, ...patch } = args;
+      const extras: TaskExtras = { customFields, assigneeIds, teamId };
       return run(async () => {
         const existing = (await client.json(
           `/api/task/${encodeURIComponent(taskId)}`,
           { method: "GET" },
         )) as Record<string, unknown>;
         const body = buildFullTaskUpdateBody(existing, patch);
+        const updated = await client.json(
+          `/api/task/${encodeURIComponent(taskId)}`,
+          { method: "PUT", body: JSON.stringify(body) },
+        );
+        if (!hasExtras(extras)) return updated;
+        await applyTaskExtras(taskId, extras);
         return client.json(`/api/task/${encodeURIComponent(taskId)}`, {
-          method: "PUT",
-          body: JSON.stringify(body),
+          method: "GET",
         });
       });
     },

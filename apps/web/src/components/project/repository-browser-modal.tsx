@@ -182,7 +182,7 @@ export function RepositoryBrowserModal({
               {data.repositories.length === 0 && (
                 <div className="text-center py-12 px-6">
                   <GitBranch className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">
+                  <h3 className="text-section mb-2">
                     {t("settings:repositoryBrowser.emptyTitle")}
                   </h3>
                   <p className="text-muted-foreground text-sm mb-6 max-w-md mx-auto">
@@ -287,7 +287,7 @@ export function RepositoryBrowserModal({
                 data.repositories.length > 0 && (
                   <div className="text-center py-12 px-6">
                     <Search className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium mb-2">
+                    <h3 className="text-section mb-2">
                       {t("settings:repositoryBrowser.noSearchMatchTitle")}
                     </h3>
                     <p className="text-muted-foreground text-sm">

@@ -1,3 +1,4 @@
+import { dayKey } from "@/lib/day-key";
 import { parseDurationInput } from "@/lib/duration";
 
 /**
@@ -98,12 +99,6 @@ function addDays(date: Date, days: number) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
 }
 
-export function quickAddDayKey(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-}
-
 /** El dia que nombra `word` (sin `@` ni `!`), o `null` si no nombra ninguno. */
 function resolveDay(word: string, today: Date): Date | null {
   const folded = fold(word);
@@ -181,13 +176,13 @@ export function parseQuickAdd(
     if (sigil === "@" && rest) {
       const time = parseTime(rest);
       if (time !== null) {
-        result.plannedDate = quickAddDayKey(context.today);
+        result.plannedDate = dayKey(context.today);
         result.startMinute = time;
         continue;
       }
       const day = resolveDay(rest, context.today);
       if (day) {
-        result.plannedDate = quickAddDayKey(day);
+        result.plannedDate = dayKey(day);
         const next = words[index + 1];
         const anchored = next ? parseTime(next) : null;
         result.startMinute = anchored;
@@ -199,7 +194,7 @@ export function parseQuickAdd(
     if (sigil === "!" && rest) {
       const day = resolveDay(rest, context.today);
       if (day) {
-        result.dueDate = quickAddDayKey(day);
+        result.dueDate = dayKey(day);
         continue;
       }
     }

@@ -77,12 +77,12 @@ import timeSheet from "./time-sheet";
 import today from "./today";
 import user from "./user";
 import getAvatar from "./user/controllers/get-avatar";
+import userPreferences from "./user-preferences";
 import { authenticateApiRequest } from "./utils/authenticate-api-request";
 import { authorizeAssetAccess } from "./utils/authorize-asset-access";
 import { getInvitationDetails } from "./utils/check-registration-allowed";
 import { buildContentDisposition } from "./utils/content-disposition";
 import { migrateApiKeyReferenceId } from "./utils/migrate-apikey-reference-id";
-import { migrateDayColumnsToLocalMidnight } from "./utils/migrate-day-columns-to-local-midnight";
 import { migrateNotificationPreferencesSchema } from "./utils/migrate-notification-preferences-schema";
 import { migrateSessionColumn } from "./utils/migrate-session-column";
 import { migrateWorkspaceUserEmail } from "./utils/migrate-workspace-user-email";
@@ -100,6 +100,7 @@ import {
 } from "./utils/openapi-spec";
 import { seedDefaultWorkspaceRoles } from "./utils/seed-default-workspace-roles";
 import { validateWorkspaceAccess } from "./utils/validate-workspace-access";
+import { warnIfDatabaseIsNotUtc } from "./utils/warn-if-database-not-utc";
 import view from "./view";
 import workSchedule from "./work-schedule";
 import workflowRule from "./workflow-rule";
@@ -679,6 +680,7 @@ export function createApp() {
   const reviewApi = api.route("/review", review);
   const scheduleApi = api.route("/schedule", schedule);
   const workScheduleApi = api.route("/work-schedule", workSchedule);
+  const userPreferencesApi = api.route("/user-preferences", userPreferences);
   const searchApi = api.route("/search", search);
   const githubIntegrationApi = api.route(
     "/github-integration",
@@ -874,6 +876,7 @@ export function createApp() {
     reviewApi,
     scheduleApi,
     workScheduleApi,
+    userPreferencesApi,
     notificationApi,
     notificationPreferencesApi,
     projectApi,
@@ -948,9 +951,7 @@ export async function runStartupTasks() {
   await migrateNotificationPreferencesSchema();
   await migrateGitHubIntegration();
   await migrateColumns();
-  // Despues de las migraciones (las tablas tienen que existir) y antes del
-  // planificador de trabajos, que ya lee dias (ADR 049).
-  await migrateDayColumnsToLocalMidnight();
+  await warnIfDatabaseIsNotUtc();
   await seedDefaultWorkspaceRoles();
 
   initializePlugins();
@@ -1040,6 +1041,7 @@ const {
   reviewApi,
   scheduleApi,
   workScheduleApi,
+  userPreferencesApi,
   notificationApi,
   notificationPreferencesApi,
   projectApi,
@@ -1105,6 +1107,7 @@ export type AppType =
   | typeof reviewApi
   | typeof scheduleApi
   | typeof workScheduleApi
+  | typeof userPreferencesApi
   | typeof searchApi
   | typeof githubIntegrationApi
   | typeof giteaIntegrationApi

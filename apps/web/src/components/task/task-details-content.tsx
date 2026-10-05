@@ -10,9 +10,11 @@ import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import { Timeline } from "@/components/ui/timeline";
 import useGetActivitiesByTaskId from "@/hooks/queries/activity/use-get-activities-by-task-id";
 import useExternalLinks from "@/hooks/queries/external-link/use-external-links";
+import { useGetFieldDefinitions } from "@/hooks/queries/field/use-get-field-definitions";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTask from "@/hooks/queries/task/use-get-task";
 import type { ExternalLink } from "@/types/external-link";
+import type { FieldDefinition } from "../table-view/custom-field-cell";
 import TaskDescription from "./task-description";
 import TaskRelations from "./task-relations";
 import TaskSubtasks from "./task-subtasks";
@@ -38,6 +40,10 @@ export default function TaskDetailsContent({
   const { data: task } = useGetTask(taskId ?? "");
   const { data: project } = useGetProject({ id: projectId, workspaceId });
   const { data: activities = [] } = useGetActivitiesByTaskId(taskId ?? "");
+  // Con los archivados: un cambio antiguo puede ser de un campo que ya no se usa.
+  const { data: fieldDefinitions } = useGetFieldDefinitions(projectId, {
+    includeArchived: true,
+  });
   const { data: externalLinks = [], isLoading: isLoadingExternalLinks } =
     useExternalLinks(taskId ?? "");
   const { user } = useAuth();
@@ -154,6 +160,9 @@ export default function TaskDetailsContent({
                   activity={activity}
                   step={activities.length - index}
                   showConnector={showConnector}
+                  fieldDefinitions={
+                    fieldDefinitions as FieldDefinition[] | undefined
+                  }
                 />
               );
             })}

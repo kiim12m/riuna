@@ -9,12 +9,12 @@ import {
 } from "lucide-react";
 import { type ReactNode, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { parseDayKey } from "@/components/schedule/schedule-range";
 import { Badge } from "@/components/ui/badge";
 import { useCaptureTask } from "@/hooks/mutations/capture/use-capture-task";
 import useGetLabelsByWorkspace from "@/hooks/queries/label/use-get-labels-by-workspace";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import { cn } from "@/lib/cn";
+import { parseDayKey } from "@/lib/day-key";
 import { formatDuration } from "@/lib/duration";
 import { formatDate } from "@/lib/format";
 import { getPriorityLabel } from "@/lib/i18n/domain";

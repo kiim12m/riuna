@@ -8,7 +8,10 @@ import { subscribeToEvent } from "../events";
 import { notificationSchema } from "../schemas";
 import clearNotifications from "./controllers/clear-notifications";
 import createNotification from "./controllers/create-notification";
-import getNotifications from "./controllers/get-notifications";
+import getNotifications, {
+  getUnreadNotificationCount,
+  MAX_NOTIFICATIONS_PAGE,
+} from "./controllers/get-notifications";
 import markAllNotificationsAsRead from "./controllers/mark-all-notifications-as-read";
 import markAsRead from "./controllers/mark-notification-as-read";
 
@@ -27,7 +30,8 @@ const notification = new Hono<{
     describeRoute({
       operationId: "listNotifications",
       tags: ["Notifications"],
-      description: "Get all notifications for the current user",
+      description:
+        "The current user's notifications, newest first: 50 by default. `limit` (1-100) sizes the page, `before` (an ISO instant, the `createdAt` of the last one received) with `beforeId` (its `id`) asks for the next without skipping or repeating any, and `unread` keeps only the unread",
       responses: {
         200: {
           description: "List of notifications",
@@ -39,11 +43,63 @@ const notification = new Hono<{
         },
       },
     }),
+    validator(
+      "query",
+      v.object({
+        limit: v.optional(
+          v.pipe(
+            v.string(),
+            v.transform(Number),
+            v.integer(),
+            v.minValue(1),
+            v.maxValue(MAX_NOTIFICATIONS_PAGE),
+          ),
+        ),
+        before: v.optional(
+          v.pipe(
+            v.string(),
+            v.isoTimestamp(),
+            v.transform((value) => new Date(value)),
+          ),
+        ),
+        beforeId: v.optional(
+          v.pipe(v.string(), v.minLength(1), v.maxLength(255)),
+        ),
+        unread: v.optional(v.picklist(["true", "false"])),
+      }),
+    ),
     async (c) => {
       const userId = c.get("userId");
-      const notifications = await getNotifications(userId);
+      const { limit, before, beforeId, unread } = c.req.valid("query");
+      const notifications = await getNotifications(userId, {
+        limit,
+        before,
+        beforeId,
+        unread: unread === "true",
+      });
       return c.json(notifications);
     },
+  )
+  .get(
+    "/unread-count",
+    describeRoute({
+      operationId: "countUnreadNotifications",
+      tags: ["Notifications"],
+      description:
+        "How many unread notifications the current user has, all of them and not just the first page",
+      responses: {
+        200: {
+          description: "The unread count",
+          content: {
+            "application/json": {
+              schema: resolver(v.object({ count: v.number() })),
+            },
+          },
+        },
+      },
+    }),
+    async (c) =>
+      c.json({ count: await getUnreadNotificationCount(c.get("userId")) }),
   )
   .post(
     "/",

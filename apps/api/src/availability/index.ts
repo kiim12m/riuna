@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
+import { dayKeySchema } from "../utils/day-key-schema";
 import {
   requireApiKeyScope,
   requireWorkspacePermission,
@@ -16,11 +17,6 @@ import {
   deleteTimeOff,
   listTimeOff,
 } from "./controllers/time-off";
-
-const dayKeySchema = v.pipe(
-  v.string(),
-  v.regex(/^\d{4}-\d{2}-\d{2}$/, "Expected a yyyy-mm-dd day"),
-);
 
 const workspaceQuery = validator(
   "query",

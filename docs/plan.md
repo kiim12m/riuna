@@ -25,6 +25,7 @@
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
 | Interludio — Productividad personal y equipo | 18 | **Cerrado** — Bloques 0 a 5; el 4.2 (importar iCal), aplazado · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--cerrado) |
+| Cierre de la deuda de las fases cerradas | 18 | **En curso** — cinco tandas · [inventario](#cierre-de-la-deuda-de-las-fases-cerradas) |
 | 8 — Automatizaciones e importadores externos | 3 | Pendiente |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **35** + 18 del interludio | |
@@ -66,8 +67,9 @@ gestor de tareas básico y nada propio.
   documentos lo dicen en vez de fingir que existen, y los enlaces a
   `kaneo.app/docs` se han sustituido por `.env.sample` y `docs/`.
 - Código de facturación heredado: apagado por configuración, no eliminado.
-- Catalán: 238 de 1.760 claves traducidas de verdad (13,5%); el resto es relleno
-  en español. Lo gordo está en `settings`, `tasks` y `auth`.
+- ~~Catalán: 238 de 1.760 claves traducidas de verdad (13,5%); el resto es relleno
+  en español.~~ **Cerrado por decisión (2026-10-03):** retirado en la Fase 4.5 y
+  así se queda.
 - ~~`tests/api/mcp-internal-api-url.test.ts` vuelve a fallar.~~ Cerrado, y esta
   vez con la causa demostrada en vez de deducida. No era un doble de `fetch`
   que se perdiera: el primer caso importa la ruta MCP entera —el SDK, Hono, la
@@ -120,7 +122,8 @@ gestor de tareas básico y nada propio.
     y por eso nada fallaba en producción, pero `db.query.taskAssigneeTable` no
     existía y la relación `task → assignees` no se podía recorrer. Arreglado
     registrando tabla y relaciones.
-  - **Asignar exige `task:assign`, que solo tienen `admin` y `owner`.** Un
+  - ~~**Asignar exige `task:assign`, que solo tienen `admin` y `owner`.**~~ **Cerrado
+    (2026-10-03, [ADR 062](adr/062-los-miembros-asignan-tareas.md)).** Un
     miembro puede crear y editar tareas, pero no repartirlas: ni a una persona
     ni a un departamento. Viene de los roles heredados, no es de esta fase, y
     hoy queda documentado en las pruebas. Si el reparto por departamento tiene
@@ -142,8 +145,8 @@ gestor de tareas básico y nada propio.
   correcto, en vez de comprobar que lo guardado sobrevive; y montaban sin
   `StrictMode`, sin el cual el fallo no se reproduce. Las guardas nuevas de los
   dos hooks fallan contra el código anterior, comprobado revirtiéndolo.
-- Las tarjetas de tablero y lista muestran solo al responsable principal; la
-  lista completa de asignados solo se ve en el detalle.
+- ~~Las tarjetas de tablero y lista muestran solo al responsable principal; la
+  lista completa de asignados solo se ve en el detalle.~~ Cerrado (punto 15 del cierre de la deuda).
 - ~~Falta la ADR de la asignación a equipos y los múltiples asignados.~~
   Escrita: [ADR 010](adr/010-asignacion-a-equipos-y-multiples-asignados.md).
   Conservar `assignee_id` como responsable principal y repetirlo dentro de
@@ -200,27 +203,31 @@ gestor de tareas básico y nada propio.
   la semántica de botón. Las tres arregladas.
 
 **Fase 3**:
-- **El tipo `relación` no está conectado a nada.** Existe en el vocabulario y
+- ~~**El tipo `relación` no está conectado a nada.**~~ Existe en el vocabulario y
   la validación lo mantiene fuera del JSONB —su valor son filas de
   `task_relation`, que sí tiene integridad referencial—, pero nadie lo enlaza.
   El criterio de aceptación pedía «Cliente (relación)» y esa mitad no está.
+  **Cerrado por decisión (2026-10-03), y trasladado a la Fase 10:** un «Cliente»
+  tiene que apuntar a una empresa, no a una tarea, y las dependencias entre
+  tareas ya existen como `blocks`.
 - **Definir campos es cosa de `admin` y `owner`.** El rol `member` heredado
   tiene `project: ["create", "read"]` y no `update`, así que un miembro puede
   rellenar valores (`task:update`) pero no crear el campo. No es decisión de
   esta fase sino el vocabulario heredado, y es el mismo hallazgo que la Fase 1
   hizo con `task:assign`. Queda documentado en las pruebas y en la
   [ADR 013](adr/013-campos-personalizados.md).
-- **No hay editor de definiciones.** Se crean desde el «+» de la vista Tabla;
+- ~~**No hay editor de definiciones.** Se crean desde el «+» de la vista Tabla;
   renombrar, archivar, borrar y reordenar existen en la API y no en la
   interfaz. Tampoco hay forma de crear un campo de alcance espacio de trabajo
-  sin llamar a la API.
-- **Cambiar un campo no deja rastro en la actividad**, mientras que cambiar el
+  sin llamar a la API.~~ **Cerrado (2026-10-04)**, punto 25 del cierre de la deuda.
+- ~~**Cambiar un campo no deja rastro en la actividad**~~ (cerrado, punto 24 del cierre de la deuda), mientras que cambiar el
   título sí. Se notará la primera vez que alguien pregunte quién tocó el
   presupuesto.
-- **MCP no sabe de campos personalizados**: `create_task`, `update_task` y
-  `list_tasks` los ignoran.
-- **Los agregados del árbol no suben los campos numéricos.** Sumar un
-  «Presupuesto» de toda la rama es previsible y no está.
+- ~~**MCP no sabe de campos personalizados**: `create_task`, `update_task` y
+  `list_tasks` los ignoran.~~ Cerrado el 2026-10-04 (punto 27 del cierre de la deuda).
+- ~~**Los agregados del árbol no suben los campos numéricos.** Sumar un
+  «Presupuesto» de toda la rama es previsible y no está.~~ Cerrado el 2026-10-04
+  (punto 30 del cierre de la deuda).
 - **Lo que las pruebas y el navegador encontraron:**
   - `state.expanded` de TanStack Table v9 **no siembra** el átomo que lee
     `getIsExpanded`. El árbol de la vista Tabla no se desplegaba nunca —el
@@ -237,37 +244,30 @@ vistas guardadas y compartidas, y el filtrado del Calendario y el Gantt
 ([ADR 014](adr/014-motor-de-filtros.md),
 [ADR 015](adr/015-vistas-guardadas.md)).
 
-**El criterio de aceptación no se cumple entero**, y se cierra igual a
+**El criterio de aceptación no se cumplió entero**, y se cerró igual a
 sabiendas. De lo que pedía —«filtras `Presupuesto > 1000 AND estado != Hecho`,
 agrupas por épica, guardas la vista, la compartes, y el mismo filtro funciona
-en tablero, calendario y gantt»— falta agrupar por épica y que el filtro llegue
-al tablero.
+en tablero, calendario y gantt»— faltaban agrupar por épica y que el filtro
+llegara al tablero. **Las dos cosas están hechas desde el 2026-10-04** (puntos 32
+y 33 del cierre de la deuda).
 
-- **Tablero, Lista y Backlog siguen filtrando en el cliente.** No es que no
-  filtren: filtran, con sus menús de prioridad, responsable, equipo, fecha y
-  etiqueta, en memoria. Migrarlas **sustituye código que funciona** en las tres
-  vistas de uso diario, y por eso se aplaza en vez de hacerse a última hora de
-  una fase. Calendario y Gantt se hicieron primero justamente porque no
-  filtraban: no había nada que romper.
+- ~~**Tablero, Lista y Backlog siguen filtrando en el cliente.**~~ Migradas el 2026-10-04
+  (punto 33 del cierre de la deuda, [ADR 065](adr/065-tablero-lista-y-backlog-filtran-en-el-servidor.md)).
+  Las dos notas de abajo se cumplieron tal cual: etiquetas por nombre y fechas relativas
+  traducidas a absolutas en el navegador.
 
-  Cuando se haga, dos notas que ya están investigadas. El filtro de etiquetas
-  actual **ya filtra por nombre**, implementado como un abanico de ids —
-  `getLabelsByWorkspaceId` devuelve también las filas por tarea, y el menú
-  selecciona todas las que comparten nombre y color—, así que moverlo al motor
-  no cambia los resultados; solo deja de distinguir el color. Y los filtros de
-  fecha relativos («esta semana») se preservan si el navegador traduce el rango
-  a fechas absolutas antes de mandarlo, que es donde ya se calculan hoy.
-
-- **No hay agrupación por épica** ni forma de elegir qué columnas se ven. Por
-  eso una vista guardada solo recuerda el filtro y el modo de jerarquía.
-- **Faltan los agregados del árbol como columnas** ordenables.
-- **La paginación sigue siendo por desplazamiento**, no por cursor.
+- ~~**No hay agrupación por épica** ni forma de elegir qué columnas se ven. Por
+  eso una vista guardada solo recuerda el filtro y el modo de jerarquía.~~
+- ~~**Faltan los agregados del árbol como columnas** ordenables.~~ Los tres
+  cerrados el 2026-10-04 (punto 32 del cierre de la deuda).
+- ~~**La paginación sigue siendo por desplazamiento**, no por cursor.~~
+  **Cerrado por decisión (2026-10-03):** ver «Cierre de la deuda».
 - **GIN no acelera los rangos**, que es el ejemplo estrella del plan. Y la
   consulta de «con subtareas» es un bucle anidado sobre `path`: es la primera
   candidata a mirar con `EXPLAIN`.
 - **El presupuesto de rendimiento sigue sin medirse**: 50.000 tareas y
   < 300 ms p95. Se arrastra a la Fase 9, que es la otra que lo pedía.
-- **Tres gestos sin probar en vivo**: elegir el tipo de un campo, editar un
+- ~~**Tres gestos sin probar en vivo**~~ (probados, punto 20 del cierre de la deuda): elegir el tipo de un campo, editar un
   `multi_select` y cargar una vista del menú. Los tres son desplegables de Base
   UI, que no abren en un navegador headless porque no compone frames y sus
   transiciones no terminan. Lo que hay a cada lado del clic sí está verificado.
@@ -597,19 +597,19 @@ datos.
   cuyo criterio de aceptación —importar 5.000 filas— deja un proyecto justo en
   el borde. La Fase 9 lo retoma si hace falta.
 
-- **`dueDate eq <día>` sobre columnas `timestamp` sigue comparando un
-  instante.** El caso grave —los campos personalizados— está arreglado. Este
-  exige decidir en qué zona horaria vive «un día», que es otra decisión de
-  producto.
+- ~~**`dueDate eq <día>` sobre columnas `timestamp` sigue comparando un
+  instante.**~~ El caso grave —los campos personalizados— está arreglado. Este
+  exigía decidir en qué zona horaria vive «un día»: la de la API (ADR 049), y
+  **cerrado el 2026-10-03** (punto 16 del cierre de la deuda).
 
 - **Los índices de rango sobre `custom_fields`.** El envoltorio `CASE` que
   protege del tipo equivocado impide que un índice de expresión llegue a usarse
   ([ADR 013](adr/013-campos-personalizados.md)). Medido: `Presupuesto > 1000` es
   un barrido de 12 ms sobre 10.000 tareas, así que no corre prisa.
 
-- **Las pruebas de componente del web** no arrancan en el contenedor de
+- ~~**Las pruebas de componente del web** no arrancan en el contenedor de
   desarrollo: los workers de jsdom caducan al iniciarse. Todo lo que sí arranca
-  pasa, y CI las ejecuta enteras.
+  pasa, y CI las ejecuta enteras.~~ Ya arrancan (punto 19 del cierre de la deuda).
 
 ### Fase 5 — Importación y exportación (≈2 semanas) · **cerrada**
 Generalizar los controladores existentes a **CSV y Excel** con mapeo de
@@ -701,7 +701,9 @@ también esa columna del tablero; no hay una segunda que gastar.
 
 **Deuda abierta de la Fase 5**, declarada a sabiendas:
 
-- **El asistente de importación no se ha pasado por el navegador.** La API está
+- ~~**El asistente de importación no se ha pasado por el navegador.**~~ **Cerrado
+  (2026-10-04), y era peor que una deuda: el asistente no funcionaba.** Ver el punto 20.
+  La API está
   probada de punta a punta —19 casos de integración, más el banco de 5.000
   filas—, pero los cuatro pasos del asistente web (elegir fichero, mapear
   columnas, confirmar tipos, ver el informe) solo tienen el typecheck. Se
@@ -754,8 +756,8 @@ sigue siendo Fase 6.
 **Deuda declarada:** la adopción de los tokens de elevación (`shadow-e1..e4`) y
 de la escala tipográfica es **incremental** —lo dicen las ADR 018 y 020, «no hay
 un corte único»—; hoy los tokens existen y solo el tablero y el Gantt consumen
-densidad. El **compositor de tarea en línea** al pie de columna queda para una
-pasada propia: es función nueva, no pulido. En el Gantt, encajar el arrastre a la
+densidad. ~~El **compositor de tarea en línea** al pie de columna queda para una
+pasada propia: es función nueva, no pulido.~~ Hecho el 2026-10-04 (punto 31 del cierre de la deuda). En el Gantt, encajar el arrastre a la
 unidad del zoom (semana/mes) y virtualizar filas quedan pendientes si el
 perfilado lo pide.
 
@@ -867,15 +869,15 @@ repartía el número 1 otra vez y chocaba con `task_project_number_unique`. Es u
 recordatorio de que un fixture tiene que dejar la base como la dejaría la
 aplicación, no solo con las filas que la prueba mira.
 
-**Deuda declarada de la rebanada 4:** una plantilla de proyecto guarda columnas y
+~~**Deuda declarada de la rebanada 4:** una plantilla de proyecto guarda columnas y
 épicas, pero aplicarla solo despliega el árbol dentro de un proyecto **que ya
-existe**. Crear el proyecto entero desde la plantilla toca `create-project`, que
-hoy siembra siempre las cuatro columnas por defecto.
+existe**.~~ Cerrado el 2026-10-04 (punto 28 del cierre de la deuda): `POST /project`
+acepta `templateId`.
 
-**Deuda declarada de la rebanada 3:** la plantilla lleva título, descripción,
+~~**Deuda declarada de la rebanada 3:** la plantilla lleva título, descripción,
 prioridad, estimación, responsable y equipo, pero **no** etiquetas, épicas,
-campos personalizados ni subtareas. Ese modelo se generaliza en la rebanada 4
-con las plantillas de árbol; construirlo dos veces sería el error.
+campos personalizados ni subtareas.~~ Etiquetas, épicas y campos, cerrado el
+2026-10-04 (punto 29 del cierre de la deuda); las subtareas siguen fuera.
 
 **Deuda declarada de la rebanada 2:**
 - **El burndown se dibuja sobre el alcance actual del ciclo.** No se guarda
@@ -1012,9 +1014,9 @@ por proyecto mientras los widgets cruzan proyectos.
   humo de Playwright, incluido el gesto que peor cubría la automatización de API
   —asignar y **desasignar** desde una segunda sesión y ver la fila aparecer y
   desaparecer sola—.
-- **`getNotifications` sigue topada en 50 filas sin paginar ni filtrar por no
-  leídas.** Invisible en un desplegable, visible a página completa: la bandeja lo
-  avisa en vez de fingir que eso es todo.
+- ~~**`getNotifications` sigue topada en 50 filas sin paginar ni filtrar por no
+  leídas.**~~ Invisible en un desplegable, visible a página completa: la bandeja lo
+  avisa en vez de fingir que eso es todo. **Cerrado (2026-10-04)**, punto 21 del cierre de la deuda.
 - **El motor de filtros de la Fase 4 no llega aquí.** El registro de campos
   eclipsa definiciones entre proyecto y espacio y admite tipos distintos por
   proyecto, así que un `custom.*` filtraría a cero en silencio en unos proyectos
@@ -1117,9 +1119,10 @@ sin predicado selectivo.
 
   Lo que sigue sin mirarse: el **cubo «otros»**, que solo aparece con más de
   cincuenta grupos.
-- **Un widget de espacio todavía no ofrece los campos personalizados del
+- ~~**Un widget de espacio todavía no ofrece los campos personalizados del
   espacio**, que la API sí acepta: falta el fetcher que los lea sin pasar por un
-  proyecto. Se dijo que iba en la rebanada 2 y **no entró**; sigue abierto.
+  proyecto. Se dijo que iba en la rebanada 2 y **no entró**; sigue abierto.~~
+  **Cerrado (2026-10-04)**, punto 26 del cierre de la deuda.
 - **El resellado de `completed_at` destapó que la ADR 025 prescribía una
   reparación inservible** —`SET status = status`, que el propio disparador se
   salta por su atajo de "si `status` no cambia, no recalcules"—. Lo encontró una
@@ -1135,11 +1138,11 @@ sin predicado selectivo.
 - **Se pierden los filtros de página de «Mi trabajo»** —vencimiento, proyecto,
   completadas— que valían para toda la pantalla. Cada widget lleva ahora el suyo,
   que es más flexible y menos inmediato.
-- **`GET /api/my-work/tasks` se queda sin consumidor web.** Sigue publicada,
+- ~~**`GET /api/my-work/tasks` se queda sin consumidor web.**~~ Sigue publicada,
   documentada y probada; retirarla es una decisión sobre la superficie pública
-  que no se toma de paso.
-- **El índice `task (completed_at)` está declarado y no construido**, con la
-  condición que lo justificaría escrita en la ADR 030.
+  que no se toma de paso. **Cerrado (2026-10-03):** se mantiene como API pública.
+- ~~**El índice `task (completed_at)` está declarado y no construido**, con la
+  condición que lo justificaría escrita en la ADR 030.~~ Construido (punto 17 del cierre de la deuda).
 - **Una tarea que vence hoy a las 00:00 se clasifica como vencida**, y por las
   mismas una que vence mañana a las 00:00 cuenta como de hoy. Lo destapó la
   prueba de equivalencia de ventanas de la ADR 043 al poner fixtures justo en
@@ -1231,23 +1234,23 @@ tarea, que no tenía tope alguno y crecía con la ventana.
 
 **Deuda declarada:**
 
-- **48 clases de tamaño de Tailwind fuera de los siete papeles** —`text-lg` (23),
+- ~~**48 clases de tamaño de Tailwind fuera de los siete papeles**~~ (cerrado, punto 11 del cierre de la deuda) —`text-lg` (23),
   `text-2xl` (24), `text-4xl` (1)— en acceso, alta, invitaciones y proyecto
   público. Medidas y acotadas, no barridas a ciegas: son pantallas que esta
   revisión no recorrió.
 - **La escala del editor TipTap va aparte**: 28 `font-size` en CSS con valores
   propios. Es prosa, no interfaz densa, y se deja como excepción **declarada**.
-- **`i18n:check` no detecta claves usadas que no existen** en ningún idioma:
+- ~~**`i18n:check` no detecta claves usadas que no existen**~~ (cerrado, punto 12 del cierre de la deuda) en ningún idioma:
   comprueba paridad, no existencia. Las tres de ciclos estaban igual de ausentes
   en los tres, así que pasaban por «en sync». La puerta de CI tiene ese hueco.
 - **Las leyendas que cada página de ajustes escribe en línea** siguen sin acotar;
   las primitivas compartidas sí. Son leyendas de escaneo, no prosa de lectura.
-- **La búsqueda pinta `result.status` crudo**, como hacía la tabla. Resolverlo
-  cruza proyectos y necesita una consulta que hoy no se hace.
-- **Las preferencias viven solo en `localStorage`** y se pierden al cambiar de
+- ~~**La búsqueda pinta `result.status` crudo**, como hacía la tabla. Resolverlo
+  cruza proyectos y necesita una consulta que hoy no se hace.~~ Cerrado (punto 22 del cierre de la deuda).
+- ~~**Las preferencias viven solo en `localStorage`** y se pierden al cambiar de
   navegador, aunque la pantalla cuelgue de «Ajustes › Cuenta». De ahí sale también
-  que el calendario empiece en domingo. Es una decisión de producto con el rótulo
-  desalineado, no un fallo.
+  que el calendario empiece en domingo.~~ **Cerrado (2026-10-04)**, ADR 064: viajan
+  con la cuenta (punto 23 del cierre de la deuda).
 
 ### Interludio — Espacio personal y administración (antes de la Fase 8) · **cerrado**
 
@@ -1671,10 +1674,11 @@ verificación.
     Planificador, el Cronograma, Mis tareas, el tablero, el parte y el móvil.
 
   Queda anotado:
-  - `apps/api/openapi.json` no se regenera desde la Fase 5. Regenerarlo mete
+  - ~~`apps/api/openapi.json` no se regenera desde la Fase 5. Regenerarlo mete
     unas 9.000 líneas ajenas y la URL de la API del `.env`; pide su propio
-    cambio, con la URL saneada.
-  - El calendario heredado nombra los días en inglés.
+    cambio, con la URL saneada.~~ Regenerado (punto 13 del cierre de la deuda).
+  - ~~El calendario heredado nombra los días en inglés.~~ Era el selector de fecha;
+    cerrado (punto 5 del cierre de la deuda).
 - **0.4 Planificador, atajos y paleta** ✔ · M. La zona «con hora» siempre presente, las ancladas
   arrastrables, casilla de hecha (`POST /task/complete/:id`, que ya existe). `s/p/a/l/d`
   registrados; «t c» se asigna a quien crea fuera de un proyecto. La paleta lleva a las
@@ -2126,8 +2130,8 @@ verificación.
   - **Si un festivo cae dentro de una ausencia, se ve el festivo.**
   - **El aviso de «sin registrar» calla en un día no disponible.** El de
     cronómetro fuera de jornada, no.
-  - **Pendiente:** «Pasar al siguiente día laborable» aún no salta festivos
-    ni ausencias, y un festivo nuevo llega a los demás al volver a leer, no
+  - **Pendiente:** ~~«Pasar al siguiente día laborable» aún no salta festivos
+    ni ausencias~~ (cerrado, punto 7 del cierre de la deuda), y un festivo nuevo llega a los demás al volver a leer, no
     por WebSocket.
 
   Verificación:
@@ -2339,11 +2343,10 @@ en un **esqueleto eterno** cuando el espacio activo no estaba resuelto —la
 consulta queda desactivada y `isPending` no baja nunca—. Ninguna prueba de API lo
 habría visto, porque la API estaba bien.
 
-**Lo que sigue fuera:** el humo de la Fase 0 —«login → crear proyecto → campo
-personalizado → dos subtareas → mover en tablero → filtrar y guardar vista →
-exportar»— y el asistente de importación de la Fase 5. La infraestructura ya
-está; falta escribir esos casos. Y engancharlo a CI, que pide un servicio de
-Postgres y `playwright install`.
+**Cerrado el 2026-10-04** (punto 20 del cierre de la deuda): el humo de la Fase 0
+(`phase0-flow.spec.ts`), el asistente de importación (`import-wizard.spec.ts`) y los
+tres gestos de la tabla (`table-gestures.spec.ts`) están escritos, y el humo corre en
+CI (job `e2e`, con servicio de PostgreSQL y `playwright install`).
 
 ## Verificación
 
@@ -2376,6 +2379,362 @@ pnpm typecheck && pnpm lint && pnpm test
 **Antes de cada despliegue:** generar la migración con drizzle-kit y **revisar
 el SQL a mano**, y restauración de backup probada tras cualquier migración
 destructiva.
+
+---
+
+## Cierre de la deuda de las fases cerradas
+
+*Decidido el 2026-10-03, antes de empezar la Fase 8: dejar a cero lo que las fases
+anteriores declararon pendiente, o cerrarlo por escrito con su razón. El inventario
+sale de las secciones «Deuda» de cada fase, de la
+[revisión estética](revision-estetica-2026-09.md) y de «Lo que no está» en
+[funcionalidades](funcionalidades.md); las más importantes se comprobaron contra el
+código el mismo día. Cinco tandas, de más fácil a más difícil; una rama y una PR por
+tanda (`chore/deutes-tanda-N`), un commit por punto. Mismas tallas que arriba.*
+
+**Decisiones del usuario:** la instancia de producción ya tiene el interludio
+desplegado; los miembros pueden asignar tareas y definir campos sigue siendo de
+`admin`/`owner`; el catalán se queda retirado; la facturación heredada **queda
+abierta** porque quiere estudiarla; Tablero, Lista y Backlog se migran al motor de
+filtros.
+
+**Tanda 1 — decisiones y retoques** · XS
+1. Este inventario. ✔
+2. ✔ Retirar el normalizador de días del 0.2 (producción ya está convertida), conservando
+   el aviso de que PostgreSQL no está en UTC. **Hecho (2026-10-03).** El aviso vive ahora en
+   `utils/warn-if-database-not-utc.ts`; de las seis pruebas de `day-columns-timezone` quedan las
+   dos que no dependían de la conversión. Detalle en la ADR 049.
+3. ✔ `task:assign` para el rol `member` (migración de los `workspace_role` existentes).
+   **Hecho (2026-10-03)**, [ADR 062](adr/062-los-miembros-asignan-tareas.md). La migración 0078
+   solo toca las filas que conservan el reparto sembrado. Cuatro pruebas nuevas, que fallan sin
+   el cambio; las tres del RBAC que vigilaban la puerta `assign` pasan a un rol que edita pero no
+   reparte. De paso, `task-team` leía la actividad sin esperar al suscriptor (carrera que fallaba
+   dos de dos con la máquina cargada): ahora usa `vi.waitFor`, como `task-assignees`.
+4. ✔ El `<h2>` de «Rama» en la tarea, a 14 px. **Hecho (2026-10-03).** «Rama» y «Tiempo» (que
+   copió su clase en el 0.3) pasan al papel «Título de sección» de §05, como «Actividad».
+   Visto a 1440 y 390 px.
+5. ✔ El calendario heredado nombra los días en inglés. **Hecho (2026-10-03).** No era el calendario
+   del proyecto, que ya formatea con la lengua de la aplicación, sino el **selector de fecha**:
+   `DayPicker` no recibía `locale` y pintaba «October 2026» y los días en inglés. Ahora recibe
+   `es` o `enUS` según la lengua activa, y el desplegable de mes usa la misma. Lo vigila
+   `date-picker.spec.ts`, que falla sin el cambio.
+6. ✔ `GET /api/my-work/tasks` sin consumidor web: se mantiene como API pública y se cierra la nota.
+   **Hecho (2026-10-03).** Sigue publicada, documentada y probada; la usan las claves de API y los
+   scripts. Retirar una ruta pública no se hace por no tener consumidor propio.
+
+*Verificación de la tanda 1 (2026-10-03): integración 748 de 750 (1 omitida) —la que falla es la
+importación grande, intermitente, que sola pasó 19 de 19 en dos de tres vueltas—, humo 63 de 63,
+unitarias 745 (API) y 10 (permisos), typecheck de API y web, Biome e i18n.*
+
+**Tanda 2 — arreglos pequeños** · S
+7. ✔ «Pasar al siguiente día laborable» salta festivos y ausencias. **Hecho (2026-10-03).**
+   `nextWorkDayKey` recibe el conjunto de días no disponibles (`unavailableDayKeys`, a partir de
+   `GET /availability/holidays` y `/time-off`, que la web ya leía) y lo usan «Terminar el día» y
+   el diálogo de aviso («Mañana»). El conjunto va vacío mientras carga. Prueba e2e en
+   `close-day.spec.ts` que falla sin el cambio, más 5 unitarias.
+8. ✔ Un solo formateador `yyyy-mm-dd` en la web y un solo esquema de día en la API.
+   **Hecho (2026-10-03).** Sin ADR: es un ayudante, no una decisión estructural. Web:
+   `lib/day-key.ts` (`dayKey`, `parseDayKey`) sustituye a 13 copias; API:
+   `utils/day-key-schema.ts` sustituye a 5. De paso, el rango por defecto de «Crear ciclo»
+   dejó de cortar en UTC —el fallo de la víspera entre las 00:00 y las 02:00 que la ADR 049
+   dejó anotado—. Verificación: typecheck, 383 unitarias del web (con `day-key.test.ts`),
+   95 de integración de los routers tocados y 44 e2e de las pantallas que usan días.
+9. ✔ Festivos, ausencias y el interruptor de responsable publican eventos. **Hecho (2026-10-03)**,
+   [ADR 063](adr/063-festivos-ausencias-y-responsable-por-websocket.md). Un evento
+   `availability.changed` con los destinatarios resueltos al publicar y un mensaje
+   `AVAILABILITY_INVALIDATED`. Tres pruebas de integración de los destinatarios (fallan sin el
+   cambio) y una unitaria del mapa de invalidaciones.
+10. ✔ El stand-up propio reutiliza las lecturas en lote de `lead/` (hoy, unas 25 consultas).
+    **Hecho (2026-10-03).** Medido: de **30 a 7 consultas**. `review/standup-batch.ts`
+    (`loadStandups`) es la única implementación y el stand-up propio es esa función con una sola
+    persona, así que ya no pueden diferenciarse; `previousWorkDay` se mueve a su propio fichero
+    para no hacer un ciclo `review` ↔ `lead`. Las pruebas que comparan el propio con el del
+    responsable campo a campo siguen en verde.
+11. ✔ Las 48 clases `text-lg`/`2xl`/`4xl` pasan a los siete papeles tipográficos. **Hecho
+    (2026-10-03).** Eran 47 en 38 ficheros (el inventario se había quedado corto: los ajustes
+    del espacio y del proyecto añadieron más). Los `h1` de página → `text-page`; los títulos de
+    tarjeta, diálogo y sección → `text-section`; el importe de facturación → `text-display`.
+    Se quitan de paso los pesos e interlineados sueltos que el papel ya lleva. `type-scale.test.ts`
+    vigila que no vuelvan (falla con una clase puesta a propósito). Visto en inicio de sesión,
+    ajustes, búsqueda y crear espacio; en la búsqueda hizo falta `font-normal`, porque el papel
+    pone 600 y un campo de texto no lo quiere.
+
+    ~~**Hallazgo, fuera del inventario:** quedan `text-xl` (títulos de todos los diálogos, el
+    onboarding, el logotipo y el `Empty`), `text-3xl` (error público) y `text-7xl` (reloj del
+    modo foco).~~ Cerrado el 2026-10-04 (ver «Remates tras la tanda 5»).
+12. ✔ `i18n:check` detecta claves usadas que no existen. **Hecho (2026-10-03).** Busca los literales
+    `"ns:ruta"` de `apps/web/src` y falla si alguno no está en `en-US.json` (con plurales y prefijos
+    de objeto). Hoy no hay ninguno: el hueco que dejó la Fase 7.5 estaba cerrado, ahora además
+    vigilado. Se descartan los identificadores de permiso (`workspace:read`), que parecen claves;
+    las claves construidas con `${…}` no se pueden ver. Comprobado con una clave inventada.
+13. ✔ Regenerar `apps/api/openapi.json` (sin tocar desde 2026-08-27), con la URL saneada.
+    **Hecho (2026-10-03).** 197 rutas. La URL del servidor salía del `.env` (una IP de Tailscale):
+    se regenera con `RIUNA_API_URL=http://localhost:1337 pnpm --filter @riuna/api openapi:export`.
+    Para que no vuelva a caducar en silencio, `tests/api/openapi-up-to-date.test.ts` compara el
+    fichero con la especificación viva, salvo `servers`; falla con una ruta quitada y pasa sin
+    `.env`, que es como corre la CI.
+14. ✔ Tonos 4 y 5 de la paleta de datos por debajo de 3:1: etiquetas del eje o vista de tabla.
+    **Cerrado por verificación (2026-10-03), sin cambio de código.** La entrada «P2 bis 17» de la
+    revisión estética era anterior al arreglo que ya hizo el 17 de la segunda tanda (barras
+    horizontales con `interval: 0`). Se comprobó cada uso de la paleta: el reparto en barras y el
+    reparto en lista rotulan cada cubo con su nombre, y todo lo demás (burndown, velocidad,
+    tendencia) usa solo `--chart-1`. La condición de relevo de la regla —rótulo visible— se cumple.
+15. ✔ Las tarjetas de tablero y lista muestran todos los asignados. **Hecho (2026-10-03).**
+    `GET /task/tasks/:projectId` devuelve `assignees` en cada tarea: el conjunto completo, en orden
+    de asignación; para las de varias personas, desde `task_assignee` (`task/multi-assignees.ts`,
+    solo las que tienen más de un asignado); para las de una, el responsable principal que ya se leía.
+    **Medido** en el banco de 50.000 tareas (proyecto de 10.000, 261 con varios asignados):
+    **26 ms**, todo por índices. En la web, `AssigneeStack` sustituye a tres bloques de avatar
+    repetidos (tablero, lista y backlog) y de paso elimina una búsqueda en los miembros del
+    espacio por cada tarjeta. Prueba de integración del contrato y e2e del tablero, que falla sin
+    el cambio. Quedan fuera los asignados por equipo, que ya tienen su propia etiqueta.
+16. ✔ `dueDate eq <día>` compara un instante: comparar por rango del día de Madrid. **Hecho
+    (2026-10-03)**, nota en la [ADR 014](adr/014-motor-de-filtros.md). Un `yyyy-mm-dd` sobre una
+    columna `timestamp` es el día de la zona de la API: `eq` es `[inicio, fin)`, `gt` desde el
+    día siguiente, etc.; un instante completo sigue siendo un instante, y un día inexistente es
+    un 400. Antes `eq` devolvía lista vacía con un vencimiento elegido en el navegador (la prueba
+    de integración con fechas reales de Madrid lo demuestra: falla sin el cambio). «Vence hoy a las
+    00:00 sale vencida», la segunda mitad del hallazgo, ya la cerraba la ADR 049 y la vigila
+    `day-columns-timezone.test.ts`.
+17. ✔ Índice `task (completed_at)`: medir en el banco y construir solo si se cumple la condición de la ADR 030.
+    **Hecho (2026-10-03): se construye** (migración 0079). La condición era «ventana estrecha
+    sobre años de historia», que el banco no tenía (su historia cabía entera en la ventana). Con
+    las cerradas repartidas en tres años, «hechas esta semana» en un espacio de 50.000 tareas pasa
+    de **20 ms a 0,5 ms** y el planificador lo usa. Parcial (`WHERE completed_at IS NOT NULL`),
+    así que solo pesa lo cerrado. Ver nota en la ADR 030.
+
+*Verificación de la tanda 2 (2026-10-03/04): integración 754 de 755 (1 omitida, ninguna fallada), humo 64 de 65, unitarias 754 (API), 390 (web) y 33 (MCP), typecheck de los seis paquetes, Biome e i18n. La que falla, `weekly-review.spec.ts`, **falla igual en `main`**: depende del día de la semana (los dos primeros días de la semana la revisión es la de la semana anterior y lo cerrado hoy no cuenta), y se vio al cruzar la medianoche del sábado al domingo. Va al punto 18.*
+
+**Tanda 3 — pruebas y estabilidad** · S–M
+18. ✔ Las pruebas intermitentes. **Hecho (2026-10-04).** Sin ADR: el bus gana dos funciones, no una decisión.
+    - **La importación grande no era un fallo de la prueba, era un defecto de producción.** La
+      importación emitía todos sus `task.created` de golpe; cada uno despierta a varios gestores
+      que consultan la base, y miles de consultas contra un pool de 10 con cinco segundos de espera
+      dejaban sin conexión a los que no llegaban: **con el código antiguo, en una de cada tres
+      vueltas se perdían 500 de las 600 actividades**, en silencio ("Error processing event
+      task.created: timeout exceeded when trying to connect"). Ahora el bus sabe qué gestores están
+      en marcha (`settleEvents`) y la importación publica por tandas de 20 esperando a que cada una
+      drene (`publishEventsPaced`), **después de responder**. La prueba comprueba que llegan las 600
+      actividades; con el cambio, 3 de 3 limpias.
+    - **El *deadlock* del `TRUNCATE`** venía del mismo trabajo asíncrono de la prueba anterior:
+      `resetTestDatabase` espera ahora a los gestores en marcha y reintenta (hasta 3) solo ante un
+      `40P01`. Es lo único que no se ha podido demostrar con una vuelta corta; lo juzgará la
+      batería completa.
+    - **`weekly-review.spec.ts`** esperaba "Hechas1" sin mirar el día: los dos primeros días de la
+      semana la pantalla revisa la anterior. Ahora espera lo que toca ese día.
+    - **El e2e de la ausencia** no se reprodujo en 30 vueltas seguidas. No se inventa una causa: se
+      espera explícitamente la respuesta del `DELETE`, para que el próximo fallo diga si hubo
+      respuesta.
+    - **`task-team`** (punto 3) ya esperaba la actividad con `vi.waitFor`.
+19. ✔ Las pruebas de componente del web no arrancan en el devcontainer (jsdom). **Cerrado por
+    verificación (2026-10-04).** Ya arrancan: las 30 de componente corren entre las 74 del web
+    (390 pruebas), también con `pnpm test --force`, que lanza los diez paquetes a la vez —el
+    escenario donde caducaban los workers—. La nota era de la Fase 4.5 y se quedó vieja.
+20. ✔ Los dos casos de humo que faltan (el de la Fase 0 y el asistente de importación), los tres
+    gestos de la Fase 4 sin probar, y Playwright en CI. **Hecho (2026-10-04).**
+    - **El asistente de importación de la Fase 5 no funcionaba en ningún navegador.** El cliente
+      compartido (`packages/libs/src/hono.ts`) ponía `Content-Type: application/json` a toda
+      petición, también a un `FormData`; el navegador no podía poner su
+      `multipart/form-data; boundary=…` y el servidor no veía ningún campo
+      (`Expected "file" but received undefined`). Los 19 casos de integración pasaban porque
+      llaman a la API sin ese cliente. Lo encontró el primer intento de escribir el caso de humo.
+      Corregido en origen (`apiHeaders`), con prueba unitaria.
+    - **`import-wizard.spec.ts`**: fichero con jerarquía → mapeo → «Comprobar» (no crea nada) →
+      importar (la hija cuelga de su madre) → reimportar el mismo fichero: actualiza y no duplica,
+      que es el criterio de aceptación de la Fase 5.
+    - **`phase0-flow.spec.ts`**: inicio de sesión por el formulario (el resto de pruebas lo
+      saltan), crear proyecto, dos subtareas, mover una tarea en el tablero **arrastrando** y
+      exportar a Excel.
+    - **`table-gestures.spec.ts`**: elegir el tipo «Selección múltiple» al crear un campo, editar
+      esa selección, y guardar y **cargar** una vista del menú. De paso se vio que el menú de
+      selección múltiple se cierra tras cada elección: hay que reabrirlo para marcar la segunda.
+    - **CI**: job `e2e` con servicio de PostgreSQL, `pnpm build` (la API y la web consumen el
+      `dist` de los paquetes), Chromium y trazas como artefacto si falla. No se puede ejecutar
+      Actions desde aquí: el YAML se validó y el camino se simuló en local con `CI=true`.
+    - Las tres especificaciones nuevas, 3 vueltas seguidas: 9 de 9.
+
+*Verificación de la tanda 3 (2026-10-04): integración 754 de 755 (1 omitida, ninguna fallada), humo **68 de 68**, unitarias de los diez paquetes, typecheck, Biome e i18n.*
+
+**Tanda 4 — funcionalidad mediana** · M
+21. ✔ Notificaciones paginadas y con filtro de no leídas (hoy, tope de 50). **Hecho (2026-10-04).**
+    `GET /notification` acepta `limit` (1-100), `before` (cursor por fecha, no `OFFSET`: se crean y
+    borran sin parar) y `unread`; sin parámetros devuelve las 50 de siempre, así que el contrato
+    público no cambia. `GET /notification/unread-count` da el total exacto: **la insignia de la
+    campana contaba las no leídas entre las 50 que traía**, y con más decía «50» (el e2e lo
+    demuestra: falla sin el cambio). El desplegable gana «Cargar notificaciones anteriores». De
+    paso, el título de la campana en castellano decía «Notificationes». Seis pruebas de
+    integración (recorrer 120 sin repetir ni saltar ninguna, filtro, total, aislamiento entre
+    personas, 400 por parámetros absurdos) y un e2e.
+22. ✔ La búsqueda enseña el nombre de la columna, no `status` en crudo. **Hecho (2026-10-04).**
+    `GET /search` devuelve `statusName` junto a `status`, con una subconsulta escalar sobre las
+    columnas del proyecto de cada tarea (no un `JOIN`: `column` no es única por `(proyecto, slug)` y
+    repetiría el resultado; hay una prueba con dos columnas del mismo slug). Un estado que no es
+    columna —`planned`, `archived`— queda sin nombre y la pantalla cae al estado. Dos pruebas de
+    integración.
+23. ✔ Las preferencias pasan de `localStorage` a la API (incluido el inicio de semana). **Hecho
+    (2026-10-04)**, [ADR 064](adr/064-las-preferencias-viajan-con-la-cuenta.md). Tabla `user_preference`
+    (un `jsonb` por persona, migración 0080 solo de tabla nueva) con `GET`/`PUT /api/user-preferences`,
+    lista cerrada de claves y fusión en SQL. En la web el almacén sigue siendo la memoria inmediata y
+    `usePreferencesSync` lo sincroniza: aplica lo del servidor salvo lo que la persona tocó mientras
+    tanto, sube lo personalizado la primera vez, y manda cada cambio con espera. **El tema y los avisos
+    del navegador no viajan** (son del dispositivo). Seis pruebas de integración, seis unitarias de la
+    lógica de fusión (una vigila que los valores por defecto del almacén y de la sincronización no se
+    separen) y dos e2e que fallan sin el cambio.
+24. ✔ Cambiar un campo personalizado deja rastro en la actividad. **Hecho (2026-10-04).** Una fila
+    `custom_field_changed` por campo, con el valor anterior y el nuevo («cambiado “Presupuesto” de
+    1000 a 2500»). El controlador lee el valor previo en la misma transacción, con la fila
+    bloqueada, para que el «de» sea el de verdad sin reintroducir la pérdida de actualizaciones
+    que su fusión en SQL evita. Guardar el mismo valor no deja nada, y los campos de tipo usuario
+    o relación dicen que cambiaron, no a qué identificador. Cuatro pruebas de integración que
+    fallan sin el cambio.
+25. ✔ Editor de definiciones de campos: renombrar, archivar, borrar, reordenar y campos de espacio.
+    **Hecho (2026-10-04).** Un componente (`FieldEditor`) en dos sitios: una sección «Campos
+    personalizados» en *Ajustes del proyecto › Flujo de trabajo*, y una página nueva *Administración
+    del espacio › Campos personalizados*. Sin cambios de API: ya hacía todo. Crear reutiliza el diálogo
+    de la tabla; ordenar renumera todos con su índice (si varios compartían posición, intercambiar solo
+    dos no habría fijado un orden); borrar pide confirmación y dice que se pierden **los valores** de
+    todas las tareas. En el editor de un proyecto, los campos del espacio se ven con su etiqueta y no se
+    tocan: se editan donde tienen el permiso (`workspace:manage_settings`). Dos e2e, el primero cae sin
+    la sección de la página.
+26. ✔ Los campos de espacio llegan a los widgets y a «Mis tareas». **Hecho (2026-10-04).** El endpoint
+    ya existía (`GET /field/workspace/:id`); faltaban el fetcher y los consumidores. Cada campo lleva
+    ahora `filterable`, con el mismo criterio que el registro del servidor: **falso si algún proyecto
+    redefine la clave con otra forma de comparación**, porque ofrecerlo acabaría en un 400. Un ayudante
+    compartido (`customFieldsToFilterable`) convierte definiciones en campos filtrables para el
+    proyecto, «Mis tareas» y los widgets de espacio, que antes tenían cada uno lo suyo. Dos pruebas de
+    integración, cuatro unitarias del ayudante y un e2e que falla sin el cambio. No añade columnas
+    personalizadas a «Mis tareas» (solo filtro), que sigue siendo de lectura.
+27. ✔ MCP conoce campos personalizados, asignados múltiples y equipos (y el paquete stdio igual).
+    **Hecho (2026-10-04).** `create_task` y `update_task` aceptan `customFields`, `assigneeIds` y
+    `teamId`; `list_tasks` acepta `filter` (el JSON del motor de filtros, con `custom.<clave>`) y
+    `treeScope`. Cada cosa vive en su ruta y con su permiso, así que se guardan **después** de la
+    tarea; si una falla, el error dice que la tarea ya está guardada (con su id) en vez de dejar creer
+    que no se creó, y lo que se devuelve es la tarea como quedó. Los dos registros siguen siendo dos
+    copias: la prueba de paridad ahora compara también **los parámetros de cada herramienta**, no solo
+    los nombres (cae si el *stdio* se queda atrás, comprobado). Cinco pruebas del HTTP y una del
+    *stdio*. Siguen sin herramienta: vistas, paneles, objetivos, ciclos, plantillas y recurrencias.
+28. ✔ Crear un proyecto entero desde una plantilla de proyecto. **Hecho (2026-10-04).** `POST /project`
+    acepta un `templateId` opcional: el proyecto nace con **las columnas de la plantilla** (las cuatro
+    de siempre si no trae), sus épicas y su árbol de tareas, que se despliega con el mismo código
+    que aplicar una plantilla (comprueba profundidad y campos antes de crear nada). Si el despliegue
+    falla igualmente, el proyecto recién creado se borra: no queda uno vacío a medias. Una
+    plantilla de otro espacio es un 404, como si no existiera. `insertProject` acepta columnas. En
+    la web, el modal de «Añadir proyecto» ofrece «Plantilla» cuando el espacio tiene alguna de
+    proyecto. Cuatro pruebas de integración y un e2e.
+29. ✔ La plantilla de las recurrentes lleva etiquetas, épicas y campos. **Hecho (2026-10-04).** Nota en
+    la [ADR 026](adr/026-tareas-recurrentes.md). Se reutiliza, no se duplica: `parseTaskExtras` y
+    `decorateTask`/`resolveEpics` salen del desplegador de plantillas de tarea y los usan las dos.
+    Dos pruebas de integración que fallan sin el cambio, y las de plantillas siguen en verde. El
+    editor web sigue escribiendo solo título y prioridad: el cambio es del modelo y de la API.
+30. ✔ Los agregados del árbol suman campos numéricos. **Hecho (2026-10-04).** `subtree.fieldSums` en
+    el listado y en el detalle: la suma de cada campo numérico o de moneda sobre la rama, la propia
+    tarea incluida y sin lo archivado, como la estimación. Va en una **segunda consulta** y solo si el
+    proyecto tiene algún campo sumable (meterla en la primera multiplicaría sus filas por el número de
+    campos y falsearía los recuentos); sigue el truco de los segmentos de `path`. **Medido** en el
+    banco, un proyecto de 10.000 tareas con valores en el 70 %: **25 ms** para una página y 50 ms
+    para el proyecto entero. La tarjeta «Rama» del detalle enseña una fila por campo («Presupuesto de
+    la rama: 1350,50 €»). Esto es la mitad de datos del punto 32 (agregados como columnas de la tabla).
+    Dos pruebas de integración y un e2e que falla sin el cambio.
+31. ✔ Compositor de tarea en línea al pie de cada columna del tablero. **Hecho (2026-10-04).** «Añadir
+    tarea» al pie de la columna se vuelve un campo de título: Intro crea la tarea en esa columna y el
+    campo se queda abierto, vacío y con el foco, para encadenar una lista; Esc lo cierra sin crear.
+    Solo título: el «+» de la cabecera sigue abriendo el formulario entero. El campo está en `readOnly`
+    mientras se crea y no `disabled`, porque un campo desactivado pierde el foco (lo encontró el e2e).
+    Un e2e que crea dos seguidas y comprueba su estado en la API.
+
+*Verificación de la tanda 4 (2026-10-04): integración 782 de 783 (1 omitida, ninguna fallada), humo **77 de 77**, unitarias de los diez paquetes (API 762, web 400, MCP 34), typecheck, Biome e i18n. Migración nueva: 0080 (`user_preference`, solo una tabla).*
+
+**Tanda 5 — las grandes** · L
+32. ✔ Vista Tabla: agrupar por épica, elegir columnas (que la vista guardada las recuerde) y
+    agregados del árbol como columnas ordenables. **Hecho (2026-10-04).**
+    - **Agrupar por épica.** Una tarea con varias sale en cada una de ellas (una épica es
+      transversal, no un cajón) y lo que no tiene ninguna va al final; las hijas van con su madre
+      sea cual sea su épica, porque la rama no se parte. Cada grupo es una tabla hermana con las
+      mismas columnas y el mismo orden, para que ordenar no mezcle los grupos; cada copia lleva su
+      propio identificador de fila, y los grupos se pliegan.
+    - **Elegir columnas.** Un selector con las fijas, los campos y los **totales de la rama**
+      (progreso, subtareas hechas/total, estimación y la suma de cada campo numérico o de moneda),
+      ordenables como cualquier otra. Los totales vienen apagados: la tabla de siempre no cambia.
+      `title` no se puede ocultar, y una columna que ya no existe —un campo archivado después de
+      guardar la vista— se ignora en vez de fallar.
+    - **La vista guardada lo recuerda**: `config.columns` y `config.groupBy`, validados y acotados en la
+      API como el filtro, y en la URL como el resto del estado de la tabla.
+    - Lógica en módulos puros con prueba (`rows.ts`, `columns.ts`: 11 casos), tres e2e y dos pruebas de
+      integración de la vista. No toca el modelo de datos.
+33. ✔ Tablero, Lista y Backlog pasan al motor de filtros del servidor: cierra el criterio de
+    aceptación de la Fase 4. **Hecho (2026-10-04)**, [ADR 065](adr/065-tablero-lista-y-backlog-filtran-en-el-servidor.md).
+    - **Un solo constructor** (`lib/task-view-filter.ts`, 12 casos) traduce los menús y el
+      buscador al árbol del motor; las tres vistas piden `useGetTasks(projectId, filter)` y no
+      queda filtrado en memoria. El Backlog usa por fin la semana de la persona y filtra por
+      etiqueta (leía una caché que casi siempre estaba vacía).
+    - El buscador espera 250 ms y conserva la respuesta anterior mientras llega la nueva.
+    - **Encontrado de paso:** el filtro del tablero se perdía al recargar en desarrollo (un
+      efecto de lectura y otro de escritura en el mismo montaje; el segundo borraba lo guardado).
+      Ahora se lee al crear el estado.
+    - **Cambios de comportamiento, razonados en el ADR:** un número en el buscador casa con el
+      número exacto (`2` ya no trae la 12); las etiquetas se filtran por nombre, sin distinguir
+      el color; «mover todo» del Backlog mueve lo que el Backlog muestra.
+    - Cuatro e2e (`view-filters.spec.ts`: prioridad con recarga y Lista, buscador por título y
+      por identificador, etiqueta por nombre, Backlog por prioridad y etiqueta). Medido en un
+      proyecto de 10.000 tareas: 13 ms.
+
+*Verificación de la tanda 5 (2026-10-04): integración 784 de 785 (1 omitida, ninguna fallada), humo **84 de 84**, unitarias de los paquetes (API 762, web 422, MCP 34, permisos 10, libs 6, planka-import 54, email 11), typecheck, Biome e i18n. Sin migraciones nuevas.*
+
+**Remates tras la tanda 5 (2026-10-04)** — los dos hallazgos que dejó la verificación.
+- ✔ **Tamaños fuera de escala.** `text-xl` y `text-3xl` pasan a los papeles de la marca: los títulos
+  de diálogo, hoja (`Sheet`), diálogo de alerta y `Empty` a `text-section` (16 px, que es lo que
+  pide el manual para modales; llevaban 20), el onboarding, el alta de perfil, la búsqueda y el
+  logotipo a `text-page` (20 px, igual que antes) y el error público a `text-display` (30 px,
+  igual). La prueba de escala vigila ahora también `xl` y `3xl` (falla con una clase puesta a
+  propósito). Se queda `text-7xl` a propósito: el reloj del modo foco es un numeral de portada
+  que ningún papel cubre.
+- ✔ **«Workspace Name»** en la pantalla de crear espacio: la clave `workspace:create.nameLabel` ya
+  existía y traducida; el literal simplemente no la usaba.
+- ✔ **Textos en inglés escritos a mano en pantallas heredadas.** «Workspace Name» no era un caso
+  aislado, y `i18n:check` no lo ve: sin clave no hay clave que falte. Un rastreo sobre el árbol
+  sintáctico (JSX, atributos de texto y `toast.*`) encontró y se tradujo: la autorización de clientes
+  MCP y la aprobación de dispositivos (`auth.mcp.*`, `auth.device.*`), la navegación móvil del
+  proyecto, el modal de archivar tareas (con plural), el aviso de columna vacía de la vista
+  pública, los textos accesibles («Cambiar tema», «Abrir el menú de ajustes», «Descartar»,
+  «Cargando») y el aviso de proyecto creado. Los iconos de marca de los menús dejan de llevar un
+  `<title>Check</title>` que un lector de pantalla leía en inglés. Se borró
+  `delete-team-member-modal.tsx`, que no importaba nadie.
+  - **Lo vigila `hardcoded-copy.test.ts`**: lee todos los `.tsx` con el analizador de Babel
+    (TypeScript 7 ya no trae API de JavaScript) y falla si queda texto de JSX, un `aria-label`,
+    `title`, `placeholder`… o un `toast.*` con texto escrito a mano. Se exceptúan nombres propios,
+    teclas y ejemplos de `placeholder`. Probado que falla con un literal puesto a propósito; al
+    escribirlo ya cazó un import duplicado en `kanban-view.tsx`.
+  - **Quedan exentos, con su razón en el propio test**: la facturación heredada (deuda abierta) y
+    la página de prueba de errores (solo desarrollo).
+  - Tres e2e (`translated-screens.spec.ts`).
+
+**Sigue abierta, sin tanda:** el código de facturación heredado (apagado por configuración).
+El usuario quiere estudiarlo antes de decidir.
+
+**Cerrado por decisión, no es deuda:**
+- **Paginar las vistas.** Con los tamaños reales no se notaría: cargar un proyecto entero cuesta
+  41 ms con 500 tareas, 89 ms con 2.000 y 215 ms con 5.000. Además empeoraría el tablero, que
+  tendría que cargar por columnas. El punto 33 ya recorta lo que viaja en una vista filtrada. Se
+  reabre si un proyecto se acerca a las 5.000 tareas, y `ProjectSizeWarning` ya avisa.
+- **Índices de rango y GIN sobre `custom_fields`:** 12 ms medidos sobre 10.000 tareas.
+- **El tipo de campo «relación»:** pasa a la Fase 10, donde apuntará a `company`.
+- **El catalán:** retirado.
+- **Razonadas en su ADR y por tanto intencionadas:** el orden entre hermanas comparte columna con
+  el tablero (011); la profundidad heredada puede superar el límite (011); `Tab`/`Shift+Tab` solo
+  en modo jerarquía; el burndown se dibuja sobre el alcance actual (025); solo se reordenan grupos
+  de hermanas completos (017); la escala de TipTap va aparte (018); la tabla embebida no pagina y no
+  hay `widget.view_id` (030).
+- **Menores de la revisión estética:** `#5FD3C0` como texto activo en oscuro y las leyendas de ajustes
+  escritas en línea.
+- **Sin protocolo nuevo:** el resalte en tiempo real en «Mi panel» exigiría cambiar `MY_WORK_INVALIDATED`.
+- **Si el perfilado lo pide:** encajar el arrastre del Gantt a la unidad del zoom y virtualizar filas.
+- **El cubo «otros» sin ver en pantalla:** lo cubren las pruebas.
+- **A otras fases:** importar la hoja de SERVITEC y enviar el stand-up a Slack o Telegram → Fase 8;
+  Sentry y las copias fuera de la máquina → Fase 9.
+
+**Riesgo fuera de alcance:** las copias viven en el mismo disco que la base
+([copias de seguridad](copias-de-seguridad.md)). Si hubiera una sola excepción a «solo deuda»,
+sería `deploy/copia-externa.sh` del [plan de despliegue](plan-despliegue.md).
 
 ---
 
@@ -2423,16 +2782,16 @@ fallaba antes del arreglo:
 10. el «ayer» del stand-up no saltaba festivos ni ausencias.
 
 **Queda como deuda declarada:**
-- los festivos, las ausencias y el interruptor de responsable no publican
-  eventos: los demás lo ven al volver a leer (ADR 060);
-- el stand-up propio hace unas 25 consultas, cuando podría reutilizar las
-  lecturas en lote de «Mi equipo»;
-- el normalizador de días del 0.2 recorre dos tablas enteras en cada
-  arranque;
-- el formateador de `yyyy-mm-dd` está repetido unas ocho veces en la web, y
-  el esquema de día en cinco routers de la API;
-- «Pasar al siguiente día laborable» del cierre aún no salta festivos ni
-  ausencias.
+- ~~los festivos, las ausencias y el interruptor de responsable no publican
+  eventos: los demás lo ven al volver a leer (ADR 060);~~ publican (punto 9 del cierre de la deuda);
+- ~~el stand-up propio hace unas 25 consultas, cuando podría reutilizar las
+  lecturas en lote de «Mi equipo»;~~ ahora son 7 (punto 10 del cierre de la deuda);
+- ~~el normalizador de días del 0.2 recorre dos tablas enteras en cada
+  arranque;~~ retirado (punto 2 del cierre de la deuda);
+- ~~el formateador de `yyyy-mm-dd` está repetido unas ocho veces en la web, y
+  el esquema de día en cinco routers de la API;~~ unificados (punto 8 del cierre de la deuda);
+- ~~«Pasar al siguiente día laborable» del cierre aún no salta festivos ni
+  ausencias.~~ Cerrado (punto 7 del cierre de la deuda).
 
 ~~Pendiente suelto del bloque del Cronograma: `tests/e2e/schedule.spec.ts`
 está escrito pero sin ejecutar — este devcontainer no tiene Docker, y la
@@ -2483,12 +2842,12 @@ Lo que arrastra la Fase 6, y que sigue abierto:
 - ~~Ninguna de las cuatro rebanadas se ha pasado por el navegador.~~ **Cerrada,
   y con ella la deuda que arrastraban las Fases 4 y 5.** Ver «Humo de punta a
   punta» más arriba.
-- **Faltan dos casos de humo:** el de la Fase 0 —login → proyecto → campo
+- ~~**Faltan dos casos de humo:** el de la Fase 0 —login → proyecto → campo
   personalizado → dos subtareas → mover en tablero → filtrar y guardar vista →
-  exportar— y el del asistente de importación de la Fase 5. La infraestructura
-  está; falta escribirlos y engancharlos a CI.
-- **Sigue sin decidirse cuándo migrar Tablero, Lista y Backlog al motor de
-  filtros.** Arrastra desde la Fase 4.
+  exportar— y el del asistente de importación de la Fase 5.~~ Escritos y en CI
+  (punto 20 del cierre de la deuda).
+- ~~**Sigue sin decidirse cuándo migrar Tablero, Lista y Backlog al motor de
+  filtros.** Arrastra desde la Fase 4.~~ Migradas (punto 33 del cierre de la deuda).
 - **Repaso de diseño de «Mi trabajo» (2026-09-07).** La pantalla se construyó al
   final de la Fase 6, después de que las ADR 018-021 fijaran la escala, la
   densidad, la elevación y el movimiento en tokens, y la capa visual se escribió

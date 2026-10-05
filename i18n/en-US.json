@@ -15,14 +15,19 @@
 			"clearAllFilters": "Clear all filters",
 			"previous": "Previous",
 			"next": "Next",
-			"edit": "Edit"
+			"edit": "Edit",
+			"confirm": "Confirm"
 		},
 		"boolean": {
 			"yes": "Yes",
 			"no": "No"
 		},
 		"a11y": {
-			"toggleSidebar": "Toggle sidebar"
+			"toggleSidebar": "Toggle sidebar",
+			"toggleTheme": "Toggle theme",
+			"openSettingsMenu": "Open settings menu",
+			"dismiss": "Dismiss",
+			"loading": "Loading"
 		},
 		"sidebar": {
 			"title": "Sidebar",
@@ -105,7 +110,10 @@
 				"keyHint": "Used for ticket IDs (e.g., {{example}}-123)",
 				"createButton": "Create Project",
 				"successToast": "Project created successfully",
-				"errorToast": "Failed to create project"
+				"errorToast": "Failed to create project",
+				"templateLabel": "Template",
+				"noTemplate": "No template",
+				"templateHint": "The project starts with the template's columns, epics and tasks."
 			},
 			"createWorkspace": {
 				"breadcrumbAppName": "RIUNA",
@@ -339,6 +347,47 @@
 				"nameRequired": "Name is required",
 				"nameShort": "Name must be at least 2 characters"
 			}
+		},
+		"device": {
+			"connectTitle": "Connect a device",
+			"connectSubtitle": "Enter the code from your CLI or app to continue.",
+			"codePlaceholder": "e.g. ABCD-1234",
+			"continue": "Continue",
+			"codeRequired": "Enter the code shown on your device.",
+			"invalidCode": "Invalid or expired code",
+			"approveTitle": "Approve device",
+			"loadingSubtitle": "Loading…",
+			"checkingSession": "Checking session…",
+			"noCode": "No device code was provided.",
+			"enterCode": "Enter a code",
+			"signInTitle": "Sign in to continue",
+			"signInSubtitle": "Sign in to approve or deny this device request.",
+			"signIn": "Sign in",
+			"requestSubtitle": "A device is requesting access to your Riuna account.",
+			"approve": "Approve",
+			"deny": "Deny",
+			"connected": "Device connected",
+			"couldNotApprove": "Could not approve",
+			"couldNotDeny": "Could not deny",
+			"cancelled": "Request cancelled"
+		},
+		"mcp": {
+			"failedTitle": "Authorization failed",
+			"failedSubtitle": "This authorization request is invalid or has expired.",
+			"failedHint": "Return to your MCP client and start the connection again.",
+			"title": "Authorize MCP client",
+			"loadingSubtitle": "Loading request…",
+			"loadingBody": "Checking the authorization request.",
+			"signInTitle": "Sign in to continue",
+			"signInSubtitle": "Sign in before approving this MCP client.",
+			"signIn": "Sign in",
+			"reviewSubtitle": "Review this request before granting access to your Riuna account.",
+			"warning": "This client will be able to act as you and access your workspaces. Only continue if you initiated this connection.",
+			"clientName": "Client name (self-reported)",
+			"defaultClient": "MCP client",
+			"redirectUri": "Redirect URI",
+			"approve": "Approve",
+			"deny": "Deny"
 		}
 	},
 	"settings": {
@@ -1446,6 +1495,29 @@
 			"applied_other": "{{count}} tasks created",
 			"taskCount_one": "{{count}} task",
 			"taskCount_other": "{{count}} tasks"
+		},
+		"projectFields": {
+			"title": "Custom fields",
+			"description": "The fields every task of the project can fill in. Their type and key never change; archive one to hide it without losing its values.",
+			"empty": "There are no custom fields yet.",
+			"renameAction": "Rename",
+			"saveName": "Save the name",
+			"moveUp": "Move up",
+			"moveDown": "Move down",
+			"archiveAction": "Archive",
+			"unarchiveAction": "Restore",
+			"deleteAction": "Delete",
+			"archivedBadge": "Archived",
+			"workspaceBadge": "Workspace",
+			"deleteTitle": "Delete “{{name}}”?",
+			"deleteDescription": "The field and the values every task has stored for it are deleted. This cannot be undone. To just hide it, archive it instead.",
+			"updateError": "The field could not be updated",
+			"deleteError": "The field could not be deleted"
+		},
+		"workspaceFields": {
+			"title": "Custom fields",
+			"pageTitle": "Custom fields",
+			"description": "Fields that apply to every project of the workspace. A project can define its own on top of these."
 		}
 	},
 	"navigation": {
@@ -1591,6 +1663,9 @@
 			"unavailableDescription": "Your role in this workspace may not allow creating tasks, and Personal only holds tasks you create.",
 			"visibilityLabel": "Who can see Personal",
 			"notPrivate": "Personal doesn’t appear in other people’s project lists, but it isn’t private: anyone who can see this workspace’s tasks can see its tasks too."
+		},
+		"mobileProjectNav": {
+			"view": "View"
 		}
 	},
 	"notifications": {
@@ -1655,7 +1730,9 @@
 				"contentWithTask": "Time tracking started on task: {{taskTitle}}",
 				"contentWithoutTask": "Time tracking started on a task"
 			}
-		}
+		},
+		"loadMore": "Load older notifications",
+		"loadMoreFailed": "Could not load more. Try again"
 	},
 	"activity": {
 		"assignedToSelf": "assigned the task to themselves",
@@ -1774,7 +1851,10 @@
 					"renderFailed": "Mermaid diagram couldn't be rendered"
 				}
 			}
-		}
+		},
+		"customFieldChanged": "changed “{{name}}” from {{from}} to {{to}}",
+		"customFieldChangedPlain": "changed “{{name}}”",
+		"emptyValue": "empty"
 	},
 	"tasks": {
 		"actions": {
@@ -2312,7 +2392,27 @@
 				"saveFailed": "The view could not be saved",
 				"delete": "Delete this view"
 			},
-			"fieldOptionsDuplicate": "Two options are the same once accents and capitals are ignored"
+			"fieldOptionsDuplicate": "Two options are the same once accents and capitals are ignored",
+			"aggregates": {
+				"progress": "Branch progress",
+				"descendants": "Subtasks (done/total)",
+				"estimate": "Branch estimate",
+				"sum": "{{name}} of the branch"
+			},
+			"noEpic": "No epic",
+			"columnsPicker": {
+				"label": "Columns",
+				"group": {
+					"base": "Fields",
+					"custom": "Custom fields",
+					"aggregate": "Branch totals"
+				}
+			},
+			"groupBy": {
+				"label": "Group by",
+				"none": "No grouping",
+				"epic": "Epic"
+			}
 		},
 		"team": {
 			"label": "Team",
@@ -2349,7 +2449,8 @@
 			"estimateError": "Failed to save the estimate",
 			"reparentError": "Failed to move the task",
 			"cycleError": "A task cannot be nested inside its own branch",
-			"progressTooltip": "{{done}} of {{total}} subtasks closed"
+			"progressTooltip": "{{done}} of {{total}} subtasks closed",
+			"branchSum": "{{name}} of the branch"
 		},
 		"update": {
 			"success": "Task updated successfully",
@@ -2358,6 +2459,17 @@
 		"view": {
 			"board": "Board",
 			"list": "List"
+		},
+		"composer": {
+			"add": "Add task",
+			"placeholder": "Task title…",
+			"hint": "Enter to create · Esc to close",
+			"error": "The task could not be created"
+		},
+		"archiveModal": {
+			"title": "Archive Tasks",
+			"description_one": "Are you sure you want to archive the completed task? It will move from the active board to your archive.",
+			"description_other": "Are you sure you want to archive all {{count}} completed tasks? They will move from the active board to your archive."
 		}
 	},
 	"invitations": {
@@ -2552,7 +2664,8 @@
 		},
 		"branding": {
 			"poweredBy": "Powered by"
-		}
+		},
+		"emptyColumn": "No tasks in {{column}}"
 	},
 	"cycles": {
 		"actions": {

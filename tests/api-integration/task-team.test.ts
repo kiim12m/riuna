@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
 import { mockAnonymousSession, mockAuthenticatedSession } from "./helpers/auth";
@@ -48,11 +48,10 @@ describe("API integration: task team assignment", () => {
     await resetTestDatabase();
   });
 
-  // Repartir trabajo entre departamentos exige `task:assign`, que en los roles
-  // heredados solo tienen `admin` y `owner`. De ahi que los casos que esperan
-  // un 200 creen a la persona como `admin`.
-  it("refuses a plain member, who has no assign permission", async () => {
-    const member = await createWorkspaceMember({ role: "member" });
+  // Repartir trabajo entre departamentos exige `task:assign`. Lo tienen
+  // `member`, `admin` y `owner`; `viewer` no.
+  it("refuses a viewer, who has no assign permission", async () => {
+    const member = await createWorkspaceMember({ role: "viewer" });
     const { project, columns } = await createProjectFixture({
       workspaceId: member.workspace.id,
     });
@@ -76,6 +75,33 @@ describe("API integration: task team assignment", () => {
       .where(eq(schema.taskTable.id, task.id));
 
     expect(stored.teamId).toBeNull();
+  });
+
+  it("lets a plain member assign a task to a team", async () => {
+    const member = await createWorkspaceMember({ role: "member" });
+    const { project, columns } = await createProjectFixture({
+      workspaceId: member.workspace.id,
+    });
+    const team = await createTeam(member.workspace.id);
+    const task = await createTask(project.id, columns.todo.id);
+
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const response = await app.request(`/api/task/team/${task.id}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ teamId: team.id }),
+    });
+
+    expect(response.status).toBe(200);
+
+    const [stored] = await db
+      .select({ teamId: schema.taskTable.teamId })
+      .from(schema.taskTable)
+      .where(eq(schema.taskTable.id, task.id));
+
+    expect(stored.teamId).toBe(team.id);
   });
 
   it("rejects unauthenticated team assignment", async () => {
@@ -134,12 +160,15 @@ describe("API integration: task team assignment", () => {
 
     expect(stored.teamId).toBe(team.id);
 
-    const activity = await db
-      .select({ type: schema.activityTable.type })
-      .from(schema.activityTable)
-      .where(eq(schema.activityTable.taskId, task.id));
+    // La actividad la escribe un suscriptor del evento, despues de responder.
+    await vi.waitFor(async () => {
+      const activity = await db
+        .select({ type: schema.activityTable.type })
+        .from(schema.activityTable)
+        .where(eq(schema.activityTable.taskId, task.id));
 
-    expect(activity.map((entry) => entry.type)).toContain("team_changed");
+      expect(activity.map((entry) => entry.type)).toContain("team_changed");
+    });
   });
 
   it("unassigns the team when the body carries null", async () => {

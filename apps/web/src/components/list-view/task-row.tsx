@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { AssigneeStack } from "@/components/task/assignee-stack";
 import {
   AlertDialog,
   AlertDialogClose,
@@ -22,7 +23,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   HoverCard,
@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/preview-card";
 import { useDeleteTask } from "@/hooks/mutations/task/use-delete-task";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
-import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { cn } from "@/lib/cn";
 import { getColumnIcon } from "@/lib/column";
 import {
@@ -39,7 +38,6 @@ import {
   getDueDateStatus,
   isTaskCompleted,
 } from "@/lib/due-date-status";
-import { getInitials } from "@/lib/get-initials";
 import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
 import queryClient from "@/query-client";
@@ -123,16 +121,6 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
   if (isFlashing) {
     flashClass = reduceMotion ? "riuna-flash-static" : "animate-flux";
   }
-
-  const { data: workspaceUsers } = useGetActiveWorkspaceUsers(
-    workspace?.id ?? "",
-  );
-
-  const assignee = useMemo(() => {
-    return workspaceUsers?.members?.find(
-      (member) => member.userId === task.userId,
-    );
-  }, [workspaceUsers, task.userId]);
 
   const pullRequests = useMemo(() => {
     return (task.externalLinks ?? []).filter(
@@ -445,26 +433,7 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
 
             {showAssignees && (
               <div className="flex-shrink-0">
-                {task.userId ? (
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage
-                      src={assignee?.user?.image ?? ""}
-                      alt={assignee?.user?.name || ""}
-                    />
-                    <AvatarFallback className="text-xs font-medium border border-border/30">
-                      {getInitials(assignee?.user?.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                ) : (
-                  <div
-                    className="w-6 h-6 rounded-full bg-muted border border-border flex items-center justify-center"
-                    title={t("tasks:assignee.unassigned")}
-                  >
-                    <span className="text-label font-medium text-muted-foreground">
-                      ?
-                    </span>
-                  </div>
-                )}
+                <AssigneeStack assignees={task.assignees ?? []} size="md" />
               </div>
             )}
           </div>

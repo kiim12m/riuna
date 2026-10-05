@@ -16,6 +16,45 @@ import {
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
 
+// Los tipos cuyo valor es un identificador y no algo que se pueda leer: el
+// historial dice que el campo cambio, no a que id apunta.
+const OPAQUE_TYPES = new Set(["user", "relation"]);
+
+type FieldChange = {
+  key: string;
+  name: string;
+  from?: unknown;
+  to?: unknown;
+};
+
+function describeFieldChanges(
+  definitions: { key: string; name: string; type: string }[],
+  before: Record<string, unknown>,
+  after: Record<string, unknown>,
+  keys: string[],
+): FieldChange[] {
+  const byKey = new Map(
+    definitions.map((definition) => [definition.key, definition]),
+  );
+  const changes: FieldChange[] = [];
+
+  for (const key of new Set(keys)) {
+    const definition = byKey.get(key);
+    if (!definition) continue;
+    const from = before[key] ?? null;
+    const to = after[key] ?? null;
+    if (JSON.stringify(from) === JSON.stringify(to)) continue;
+
+    changes.push(
+      OPAQUE_TYPES.has(definition.type)
+        ? { key, name: definition.name }
+        : { key, name: definition.name, from, to },
+    );
+  }
+
+  return changes;
+}
+
 /**
  * Escribe valores de campos personalizados en una tarea.
  *
@@ -97,19 +136,51 @@ async function updateTaskCustomFields({
 
   // La fusion va en SQL, sobre el valor que la fila tenga en ese momento, en
   // vez de reescribir el documento leido antes. Ver `resolveFieldValueChanges`.
-  const [updatedTask] = await db
-    .update(taskTable)
-    .set({
-      // `sql.param` en la lista de claves es obligatorio: en una plantilla
-      // `sql`, drizzle expande un array a `($1, $2, ...)` en vez de pasarlo
-      // como un solo parametro, y `- ()::text[]` no compila.
-      customFields: sql`(${taskTable.customFields} || ${JSON.stringify(changes.set)}::jsonb) - ${sql.param(changes.clear)}::text[]`,
-    })
-    .where(eq(taskTable.id, id))
-    .returning();
+  //
+  // En una transaccion y con la fila bloqueada para saber **que valor habia
+  // justo antes**, que es lo que cuenta el historial: leerlo fuera dejaria una
+  // ventana en la que otra edicion cambia el "de" que se anota.
+  const { updatedTask, previous } = await db.transaction(async (tx) => {
+    const [before] = await tx
+      .select({ customFields: taskTable.customFields })
+      .from(taskTable)
+      .where(eq(taskTable.id, id))
+      .for("update");
+
+    const [after] = await tx
+      .update(taskTable)
+      .set({
+        // `sql.param` en la lista de claves es obligatorio: en una plantilla
+        // `sql`, drizzle expande un array a `($1, $2, ...)` en vez de pasarlo
+        // como un solo parametro, y `- ()::text[]` no compila.
+        customFields: sql`(${taskTable.customFields} || ${JSON.stringify(changes.set)}::jsonb) - ${sql.param(changes.clear)}::text[]`,
+      })
+      .where(eq(taskTable.id, id))
+      .returning();
+
+    return { updatedTask: after, previous: before?.customFields ?? {} };
+  });
 
   if (!updatedTask) {
     throw new HTTPException(404, { message: "Task not found" });
+  }
+
+  // Lo que de verdad cambio: guardar el mismo valor no deja rastro.
+  const fieldChanges = describeFieldChanges(
+    definitions,
+    (previous ?? {}) as Record<string, unknown>,
+    (updatedTask.customFields ?? {}) as Record<string, unknown>,
+    [...Object.keys(changes.set), ...changes.clear],
+  );
+
+  if (fieldChanges.length > 0) {
+    await publishEvent("task.custom_fields_changed", {
+      taskId: updatedTask.id,
+      projectId: updatedTask.projectId,
+      title: updatedTask.title,
+      userId: currentUserId,
+      changes: fieldChanges,
+    });
   }
 
   await publishEvent("task.updated", {

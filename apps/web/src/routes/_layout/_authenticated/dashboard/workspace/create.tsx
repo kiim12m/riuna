@@ -75,7 +75,7 @@ function RouteComponent() {
                   </div>
                 </div>
 
-                <h1 className="text-2xl font-semibold text-foreground mb-2">
+                <h1 className="text-page text-foreground mb-2">
                   {t("workspace:create.heading")}
                 </h1>
                 <p className="text-muted-foreground text-sm">
@@ -90,7 +90,7 @@ function RouteComponent() {
                       htmlFor="workspace-name"
                       className="block text-sm font-medium text-foreground mb-2"
                     >
-                      Workspace Name
+                      {t("workspace:create.nameLabel")}
                     </label>
                     <Input
                       ref={inputRef}
@@ -98,7 +98,7 @@ function RouteComponent() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder={t("workspace:create.namePlaceholder")}
-                      className="h-12 text-lg font-medium"
+                      className="h-12 text-section font-medium"
                       required
                     />
                     {!name.trim() && (

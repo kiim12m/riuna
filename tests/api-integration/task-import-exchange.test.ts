@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import ExcelJS from "exceljs";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
 import { proposeMapping } from "../../apps/api/src/task/exchange/map-rows";
@@ -550,6 +550,25 @@ describe("API integration: the exchange format", () => {
     expect(numbers).toHaveLength(600);
     expect(numbers[0]).toBe(1);
     expect(numbers[599]).toBe(600);
+
+    // Los eventos salen por tandas despues de responder: ninguna tarea se queda
+    // sin su actividad aunque la base este ocupada (antes los gestores se
+    // quedaban sin conexion y la perdian en silencio).
+    await vi.waitFor(
+      async () => {
+        const [row] = await db
+          .select({ total: sql<number>`count(*)` })
+          .from(schema.activityTable)
+          .where(
+            inArray(
+              schema.activityTable.taskId,
+              tasks.map((task) => task.id),
+            ),
+          );
+        expect(Number(row?.total)).toBe(600);
+      },
+      { timeout: 60_000, interval: 250 },
+    );
   });
 
   it("reorders siblings to match the file when it lists the whole group", async () => {

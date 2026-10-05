@@ -4,6 +4,7 @@ import * as v from "valibot";
 import { requireEntitlement } from "../billing/require-entitlement-middleware";
 import { projectSchema, taskSchema } from "../schemas";
 import { VALID_PRIORITIES } from "../task/validate-task-fields";
+import { dayKeySchema } from "../utils/day-key-schema";
 import {
   requireApiKeyScope,
   requireWorkspacePermission,
@@ -17,11 +18,6 @@ const inboxResponseSchema = v.object({ inbox: v.nullable(projectSchema) });
 const workspaceIdSchema = v.object({
   workspaceId: v.pipe(v.string(), v.minLength(1)),
 });
-
-const dayKeySchema = v.pipe(
-  v.string(),
-  v.regex(/^\d{4}-\d{2}-\d{2}$/, "Expected a yyyy-mm-dd day"),
-);
 
 const captureSchema = v.object({
   workspaceId: v.pipe(v.string(), v.minLength(1)),

@@ -92,9 +92,7 @@ function RouteComponent() {
         <TaskDetailsSkeleton />
       ) : isTaskError || !task ? (
         <div className="flex h-full flex-col items-center justify-center gap-4 px-4 py-12 text-center">
-          <h1 className="text-2xl font-bold">
-            {t("tasks:common.taskNotFound")}
-          </h1>
+          <h1 className="text-page">{t("tasks:common.taskNotFound")}</h1>
           <p className="text-muted-foreground max-w-md">
             {t("tasks:common.taskNotFoundDescription", {
               defaultValue:

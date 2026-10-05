@@ -10,6 +10,7 @@ import {
   buildMonthWeeks,
   type WeekStartsOn,
 } from "@/components/calendar/month-grid-model";
+import { dayKey, parseDayKey } from "@/lib/day-key";
 import { formatDate } from "@/lib/format";
 
 export type ScheduleView = "day" | "week" | "month";
@@ -24,24 +25,6 @@ export type ScheduleRange = {
   /** Solo para la vista Mes: las mismas claves agrupadas por fila de semana. */
   weeks?: string[][];
 };
-
-/**
- * Un dia como `yyyy-mm-dd` **local**, nunca `toISOString()`: coincide con
- * `serverDayKey` (`apps/api/src/utils/day-boundaries.ts`) y con la clave que
- * ya usa `planner.tsx` (`isoDay`), que este modulo sustituye para el
- * Cronograma.
- */
-export function dayKey(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-export function parseDayKey(key: string): Date {
-  const [year, month, day] = key.split("-").map(Number);
-  return new Date(year, month - 1, day);
-}
 
 /**
  * El rango de dias que una vista necesita, alineado a como cada una navega:

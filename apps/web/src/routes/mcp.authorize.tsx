@@ -3,6 +3,7 @@ import {
   useNavigate,
   useSearch,
 } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { z } from "zod/v4";
 import { AuthLayout } from "@/components/auth/layout";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/mcp/authorize")({
 });
 
 function McpAuthorizePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const search = useSearch({ from: "/mcp/authorize" });
   const requestId = search.request_id ?? "";
@@ -31,11 +33,11 @@ function McpAuthorizePage() {
   if (!requestId || request.isError) {
     return (
       <AuthLayout
-        title="Authorization failed"
-        subtitle="This authorization request is invalid or has expired."
+        title={t("auth:mcp.failedTitle")}
+        subtitle={t("auth:mcp.failedSubtitle")}
       >
         <p className="text-sm text-muted-foreground">
-          Return to your MCP client and start the connection again.
+          {t("auth:mcp.failedHint")}
         </p>
       </AuthLayout>
     );
@@ -43,9 +45,12 @@ function McpAuthorizePage() {
 
   if (request.isLoading || isSessionPending) {
     return (
-      <AuthLayout title="Authorize MCP client" subtitle="Loading request…">
+      <AuthLayout
+        title={t("auth:mcp.title")}
+        subtitle={t("auth:mcp.loadingSubtitle")}
+      >
         <p className="text-sm text-muted-foreground">
-          Checking the authorization request.
+          {t("auth:mcp.loadingBody")}
         </p>
       </AuthLayout>
     );
@@ -55,8 +60,8 @@ function McpAuthorizePage() {
     const redirectTarget = `/mcp/authorize?request_id=${encodeURIComponent(requestId)}`;
     return (
       <AuthLayout
-        title="Sign in to continue"
-        subtitle="Sign in before approving this MCP client."
+        title={t("auth:mcp.signInTitle")}
+        subtitle={t("auth:mcp.signInSubtitle")}
       >
         <Button
           type="button"
@@ -68,7 +73,7 @@ function McpAuthorizePage() {
             })
           }
         >
-          Sign in
+          {t("auth:mcp.signIn")}
         </Button>
       </AuthLayout>
     );
@@ -85,26 +90,23 @@ function McpAuthorizePage() {
 
   return (
     <AuthLayout
-      title="Authorize MCP client"
-      subtitle="Review this request before granting access to your Riuna account."
+      title={t("auth:mcp.title")}
+      subtitle={t("auth:mcp.reviewSubtitle")}
     >
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          This client will be able to act as you and access your workspaces.
-          Only continue if you initiated this connection.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("auth:mcp.warning")}</p>
         <div className="space-y-3 rounded-md border bg-muted/40 p-3">
           <div>
             <p className="text-xs font-medium text-muted-foreground">
-              Client name (self-reported)
+              {t("auth:mcp.clientName")}
             </p>
             <p className="mt-1 text-sm">
-              {request.data?.clientName ?? "MCP client"}
+              {request.data?.clientName ?? t("auth:mcp.defaultClient")}
             </p>
           </div>
           <div>
             <p className="text-xs font-medium text-muted-foreground">
-              Redirect URI
+              {t("auth:mcp.redirectUri")}
             </p>
             <p className="mt-1 break-all font-mono text-xs">
               {request.data?.redirectUri}
@@ -119,7 +121,7 @@ function McpAuthorizePage() {
             disabled={decision.isPending}
             onClick={() => submitDecision(true)}
           >
-            Approve
+            {t("auth:mcp.approve")}
           </Button>
           <Button
             type="button"
@@ -128,7 +130,7 @@ function McpAuthorizePage() {
             disabled={decision.isPending}
             onClick={() => submitDecision(false)}
           >
-            Deny
+            {t("auth:mcp.deny")}
           </Button>
         </div>
       </div>

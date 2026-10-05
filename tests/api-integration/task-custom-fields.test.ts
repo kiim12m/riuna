@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
 import { mockAuthenticatedSession } from "./helpers/auth";
@@ -264,5 +264,116 @@ describe("task custom field values", () => {
     });
 
     expect(response.status).toBe(200);
+  });
+});
+
+describe("custom field changes in the activity", () => {
+  beforeEach(async () => {
+    await resetTestDatabase();
+  });
+
+  async function fieldActivity(taskId: string) {
+    const rows = await db
+      .select({ eventData: schema.activityTable.eventData })
+      .from(schema.activityTable)
+      .where(eq(schema.activityTable.taskId, taskId))
+      .orderBy(schema.activityTable.createdAt);
+    return rows
+      .filter(
+        (row) => (row.eventData as { key?: string } | null)?.key !== undefined,
+      )
+      .map((row) => row.eventData);
+  }
+
+  it("records who changed a field, from what to what", async () => {
+    const { app, projectId, columnId } = await setup();
+    await defineField(app, projectId, {
+      name: "Presupuesto",
+      type: "currency",
+      config: { currency: "EUR" },
+    });
+    const task = await insertTask(projectId, columnId, { presupuesto: 1000 });
+
+    expect((await setValues(app, task.id, { presupuesto: 2500 })).status).toBe(
+      200,
+    );
+
+    await vi.waitFor(async () => {
+      expect(await fieldActivity(task.id)).toEqual([
+        {
+          key: "presupuesto",
+          name: "Presupuesto",
+          from: 1000,
+          to: 2500,
+          hasValues: true,
+        },
+      ]);
+    });
+  });
+
+  it("leaves no trace when the value does not change", async () => {
+    const { app, projectId, columnId } = await setup();
+    await defineField(app, projectId, { name: "Cliente", type: "text" });
+    const task = await insertTask(projectId, columnId, { cliente: "Acme" });
+
+    expect((await setValues(app, task.id, { cliente: "Acme" })).status).toBe(
+      200,
+    );
+    // Un cambio real a continuacion, para saber que el listado ya esta al dia.
+    expect((await setValues(app, task.id, { cliente: "Otro" })).status).toBe(
+      200,
+    );
+
+    await vi.waitFor(async () => {
+      const trace = await fieldActivity(task.id);
+      expect(trace).toHaveLength(1);
+      expect(trace[0]).toMatchObject({ from: "Acme", to: "Otro" });
+    });
+  });
+
+  it("records clearing a value as a change to empty", async () => {
+    const { app, projectId, columnId } = await setup();
+    await defineField(app, projectId, { name: "Cliente", type: "text" });
+    const task = await insertTask(projectId, columnId, { cliente: "Acme" });
+
+    expect((await setValues(app, task.id, { cliente: null })).status).toBe(200);
+
+    await vi.waitFor(async () => {
+      expect(await fieldActivity(task.id)).toEqual([
+        {
+          key: "cliente",
+          name: "Cliente",
+          from: "Acme",
+          to: null,
+          hasValues: true,
+        },
+      ]);
+    });
+  });
+
+  // Un campo "usuario" guarda un identificador: el historial dice que cambio,
+  // no a quien apunta.
+  it("does not put a user id in the history", async () => {
+    const { app, projectId, columnId, user } = await setup();
+    await defineField(app, projectId, { name: "Revisor", type: "user" });
+    const task = await insertTask(projectId, columnId);
+
+    expect((await setValues(app, task.id, { revisor: user.id })).status).toBe(
+      200,
+    );
+
+    await vi.waitFor(async () => {
+      const trace = await fieldActivity(task.id);
+      expect(trace).toEqual([
+        {
+          key: "revisor",
+          name: "Revisor",
+          from: null,
+          to: null,
+          hasValues: false,
+        },
+      ]);
+    });
+    expect(JSON.stringify(await fieldActivity(task.id))).not.toContain(user.id);
   });
 });

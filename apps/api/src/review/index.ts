@@ -2,17 +2,13 @@ import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import { parseServerDay } from "../utils/day-boundaries";
+import { dayKeySchema } from "../utils/day-key-schema";
 import { requireApiKeyScope } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import closeDay from "./controllers/close-day";
 import getReview from "./controllers/get-review";
 import { closeWeek, getWeekReview } from "./controllers/week-review";
 import { getStandup } from "./standup";
-
-const dayKeySchema = v.pipe(
-  v.string(),
-  v.regex(/^\d{4}-\d{2}-\d{2}$/, "Expected a yyyy-mm-dd day"),
-);
 
 const optionalText = (max: number) =>
   v.optional(v.nullable(v.pipe(v.string(), v.trim(), v.maxLength(max))), null);

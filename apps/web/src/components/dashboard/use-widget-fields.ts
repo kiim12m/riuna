@@ -1,6 +1,11 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useFilterableFields } from "@/hooks/use-filterable-fields";
+import type { FieldDefinition } from "@/components/table-view/custom-field-cell";
+import { useGetWorkspaceFieldDefinitions } from "@/hooks/queries/field/use-get-field-definitions";
+import {
+  customFieldsToFilterable,
+  useFilterableFields,
+} from "@/hooks/use-filterable-fields";
 import type { FilterableField } from "@/types/task-filter";
 
 /**
@@ -11,9 +16,8 @@ import type { FilterableField } from "@/types/task-filter";
  * de las columnas de **un** proyecto, y su sustituto entre proyectos es `done`.
  * Si divergieran, el servidor devolveria un 400 en vez de producir SQL rara.
  *
- * **Deuda declarada:** un widget de espacio todavia no ofrece los campos
- * personalizados **del espacio**, que la API si acepta. Falta el fetcher que los
- * lea sin pasar por un proyecto; va en la rebanada 2.
+ * Un widget de espacio ofrece ademas los campos personalizados **del espacio**
+ * por los que el servidor deja filtrar entre proyectos (`filterable`).
  */
 export function useWidgetFields(
   projectId: string | null,
@@ -21,9 +25,19 @@ export function useWidgetFields(
 ): FilterableField[] {
   const { t } = useTranslation();
   const projectFields = useFilterableFields(projectId ?? "", workspaceId);
+  const { data: workspaceFields = [] } = useGetWorkspaceFieldDefinitions(
+    projectId ? "" : workspaceId,
+  );
 
   return useMemo(() => {
     if (projectId) return projectFields;
+
+    const custom = customFieldsToFilterable(
+      (
+        workspaceFields as Array<FieldDefinition & { filterable?: boolean }>
+      ).filter((field) => field.filterable),
+      t,
+    );
 
     return [
       ...projectFields.filter((field) => field.key !== "status"),
@@ -32,6 +46,7 @@ export function useWidgetFields(
         label: t("panels:groupBy.project"),
         valueType: "id" as const,
       },
+      ...custom,
     ];
-  }, [projectFields, projectId, t]);
+  }, [projectFields, workspaceFields, projectId, t]);
 }

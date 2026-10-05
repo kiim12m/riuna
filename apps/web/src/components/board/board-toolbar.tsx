@@ -18,10 +18,6 @@ import {
 } from "@/components/ui/menu";
 import labelColors from "@/constants/label-colors";
 import useGetEpics from "@/hooks/queries/epic/use-get-epics";
-import {
-  type BoardFilters,
-  DUE_DATE_FILTER_VALUES,
-} from "@/hooks/use-task-filters";
 import { getColumnIcon } from "@/lib/column";
 import { resolveEpicColor } from "@/lib/epic-color";
 import { getInitials } from "@/lib/get-initials";
@@ -29,6 +25,10 @@ import type { GroupByField } from "@/lib/group-tasks";
 import { getPriorityLabel } from "@/lib/i18n/domain";
 import { getPriorityIcon } from "@/lib/priority";
 import type { SortConfig } from "@/lib/sort-tasks";
+import {
+  type BoardFilters,
+  DUE_DATE_FILTER_VALUES,
+} from "@/lib/task-view-filter";
 import type { ProjectWithTasks } from "@/types/project";
 
 type WorkspaceLabel = {

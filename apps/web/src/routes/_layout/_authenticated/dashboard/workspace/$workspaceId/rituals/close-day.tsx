@@ -8,7 +8,6 @@ import {
   RitualShell,
   type RitualStep,
 } from "@/components/rituals/ritual-shell";
-import { parseDayKey } from "@/components/schedule/schedule-range";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -20,11 +19,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import type { TodayEntry } from "@/fetchers/today";
 import { useCloseDay } from "@/hooks/mutations/review/use-close-day";
+import { useUnavailableDays } from "@/hooks/queries/availability/use-availability";
 import { usePlanner } from "@/hooks/queries/planner/use-planner";
 import { useDayReview } from "@/hooks/queries/review/use-day-review";
 import { useToday } from "@/hooks/queries/today/use-today";
 import { useWorkSchedule } from "@/hooks/queries/work-schedule/use-work-schedule";
 import { cn } from "@/lib/cn";
+import { dayKey, parseDayKey } from "@/lib/day-key";
 import { formatDuration } from "@/lib/duration";
 import { formatDate } from "@/lib/format";
 import { toast } from "@/lib/toast";
@@ -38,12 +39,6 @@ export const Route = createFileRoute(
 
 /** Lunes a viernes, los valores por defecto de la jornada (ADR 045). */
 const DEFAULT_WORK_DAYS = 0b0_111_110;
-
-function dayKeyOf(date: Date) {
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}`;
-}
 
 function dayLabel(key: string) {
   return formatDate(parseDayKey(key), {
@@ -93,8 +88,9 @@ function CloseDayRoute() {
     () => [...(today?.previous ?? []), ...(today?.planned ?? [])],
     [today],
   );
+  const unavailable = useUnavailableDays(workspaceId);
   const nextDay = date
-    ? nextWorkDayKey(date, schedule?.workDays ?? DEFAULT_WORK_DAYS)
+    ? nextWorkDayKey(date, schedule?.workDays ?? DEFAULT_WORK_DAYS, unavailable)
     : "";
   const undecided = pending.filter((task) => !(task.id in decisions));
 
@@ -128,7 +124,7 @@ function CloseDayRoute() {
   const next = useMemo(() => {
     if (!nextDay) return [];
     const already = (plan?.entries ?? []).filter(
-      (entry) => dayKeyOf(new Date(entry.plannedDate)) === nextDay,
+      (entry) => dayKey(new Date(entry.plannedDate)) === nextDay,
     );
     const ids = new Set(already.map((entry) => entry.id));
     const moving = pending.filter(
@@ -351,10 +347,10 @@ function PendingRow({
             <Calendar
               mode="single"
               selected={otherDay ? parseDayKey(otherDay) : undefined}
-              disabled={(date) => dayKeyOf(date) <= today}
+              disabled={(date) => dayKey(date) <= today}
               onSelect={(date) => {
                 if (!date) return;
-                onChange(dayKeyOf(date));
+                onChange(dayKey(date));
                 setPickerOpen(false);
               }}
             />

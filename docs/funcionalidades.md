@@ -68,6 +68,10 @@ siguen pendientes.
   | `label` | create, read, update, delete |
   | `workspace` | read, update, delete, manage_settings |
 
+- **Quién puede qué por defecto**: `member` crea y edita tareas, **las asigna**
+  ([ADR 062](adr/062-los-miembros-asignan-tareas.md)) y crea proyectos; definir
+  campos personalizados, borrar y administrar el espacio quedan para `admin` y
+  `owner`.
 - La autorización es **siempre** de la API (`requireWorkspacePermission`).
   Ocultar una acción en la interfaz no es una comprobación de permisos. El
   alcance de una API key se intersecta con el rol de su dueño.
@@ -139,9 +143,9 @@ prioridad, título, fechas, asignaciones de persona y de equipo, anidado,
 
 | Vista | Qué ofrece |
 |---|---|
-| **Tablero (Kanban)** | Arrastrar entre columnas y dentro de una columna, filtros, orden, búsqueda rápida y añadir tarea por columna |
+| **Tablero (Kanban)** | Arrastrar entre columnas y dentro de una columna, filtros y búsqueda rápida resueltos en el servidor (el mismo motor que la Tabla), orden y añadir tarea por columna |
 | **Lista** | Agrupación por estado, equipo o **jerarquía**; secciones plegables; arrastrar para reparentar; archivar todas las completadas |
-| **Backlog** | Secciones *planificadas* y *archivadas*, filtros, agrupación, orden y «mover todo» al tablero |
+| **Backlog** | Secciones *planificadas* y *archivadas*, filtros del servidor, agrupación, orden y «mover todo» al tablero |
 | **Tabla** | Hoja de cálculo con edición en línea, **campos personalizados como columnas**, filtros compuestos, cuatro modos de jerarquía y **vistas guardadas** |
 | **Calendario** | Rejilla mensual, barras multi-día por fecha de inicio y de vencimiento, desbordamiento por día y filtros |
 | **Gantt** | Zoom día/semana/mes/trimestre, arrastrar y redimensionar barras para cambiar fechas, **capa de dependencias**, rango de rama y filtros |
@@ -609,8 +613,7 @@ no lista los proyectos Personal.
   generación de tareas recurrentes.
 - **«Hoy» es el día de Madrid** ([ADR 049](adr/049-la-api-vive-en-madrid.md)):
   la API corre en `Europe/Madrid` (fijado en su imagen) y PostgreSQL en UTC.
-  Un vencimiento elegido en el calendario vence ese día, no el anterior. Los
-  días del plan guardados antes del cambio se convierten solos al arrancar.
+  Un vencimiento elegido en el calendario vence ese día, no el anterior.
   Todo el mundo comparte la misma zona: no hay zona por persona.
 - **Migraciones automáticas al arranque** bajo cerrojo consultivo, con
   `startupProbe` en el chart para que Kubernetes no mate el pod a mitad.
@@ -634,14 +637,16 @@ Para que nadie busque lo que no existe:
   Solo existe `workflowRule`, que mapea eventos de integración a columnas.
 - **Importadores de Trello, Jira, Asana y Notion** — fase 8.
 - **Importar** la hoja de SERVITEC: se exporta, no se importa.
-- **Agrupar por épica** y elegir qué columnas se ven en la vista Tabla.
-- **Editor de definiciones de campos personalizados**: renombrar, archivar,
-  borrar y reordenar existen en la API y no en la interfaz.
-- **MCP no sabe de campos personalizados**, vistas, paneles, objetivos, ciclos,
-  plantillas, recurrencias, «Mi trabajo», asignados múltiples ni equipos.
+- ~~**Agrupar por épica** y elegir qué columnas se ven en la vista Tabla.~~ Ya se puede, y la vista guardada lo recuerda.
+- ~~**Editor de definiciones de campos personalizados**: renombrar, archivar,
+  borrar y reordenar existen en la API y no en la interfaz.~~ Ya existe, en los
+  ajustes del proyecto y en los del espacio.
+- **MCP no sabe de vistas, paneles, objetivos, ciclos, plantillas, recurrencias
+  ni «Mi trabajo»**. Crear y editar tareas sí admite campos personalizados,
+  varios asignados y equipo.
 - **Las vistas no paginan.** El presupuesto de 300 ms se cruza en torno a las
   6.500 tareas en un mismo proyecto.
-- **Cambiar un campo personalizado no deja rastro en la actividad.**
+- ~~**Cambiar un campo personalizado no deja rastro en la actividad.**~~ Ya lo deja (con el valor anterior y el nuevo).
 - **Límite de tasa general de la API.** Solo lo tienen las API keys y, en modo
   cloud, el registro.
 - **Copias fuera de la máquina** y guía de actualización propia — fase 9.

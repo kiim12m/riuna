@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { AssigneeStack } from "@/components/task/assignee-stack";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import {
   AlertDialog,
@@ -22,7 +23,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   HoverCard,
   HoverCardContent,
@@ -30,13 +30,12 @@ import {
 } from "@/components/ui/preview-card";
 import { useDeleteTask } from "@/hooks/mutations/task/use-delete-task";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
-import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
+import { cn } from "@/lib/cn";
 import {
   dueDateStatusColors,
   getDueDateStatus,
   isTaskCompleted,
 } from "@/lib/due-date-status";
-import { getInitials } from "@/lib/get-initials";
 import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
 import queryClient from "@/query-client";
@@ -142,16 +141,6 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
     zIndex: isDragging ? 999 : "auto",
   };
 
-  const { data: workspaceUsers } = useGetActiveWorkspaceUsers(
-    workspace?.id ?? "",
-  );
-
-  const assignee = useMemo(() => {
-    return workspaceUsers?.members?.find(
-      (member) => member.userId === task.userId,
-    );
-  }, [workspaceUsers, task.userId]);
-
   function handleTaskCardClick(
     e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>,
   ) {
@@ -243,30 +232,16 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
 
             {showAssignees && (
               <div className="absolute top-(--density-card-pad) right-(--density-card-pad)">
-                {task.userId ? (
-                  <Avatar className="h-5 w-5">
-                    <AvatarImage
-                      src={assignee?.user?.image ?? ""}
-                      alt={assignee?.user?.name || ""}
-                    />
-                    <AvatarFallback className="text-xs font-medium border border-border/30">
-                      {getInitials(assignee?.user?.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                ) : (
-                  <div
-                    className="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-muted"
-                    title={t("tasks:assignee.unassigned")}
-                  >
-                    <span className="text-label font-medium text-muted-foreground">
-                      ?
-                    </span>
-                  </div>
-                )}
+                <AssigneeStack assignees={task.assignees ?? []} size="sm" />
               </div>
             )}
 
-            <div className="mb-(--density-stack) pr-6">
+            <div
+              className={cn(
+                "mb-(--density-stack)",
+                (task.assignees?.length ?? 0) > 1 ? "pr-12" : "pr-6",
+              )}
+            >
               <div
                 className="overflow-hidden break-words leading-5 font-medium text-foreground/95 text-body"
                 style={{

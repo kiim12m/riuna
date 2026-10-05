@@ -486,6 +486,22 @@ subscribeToEvent<{ userId: string }>("schedule.changed", async (data) => {
   }
 });
 
+// Festivos, ausencias y el responsable de un departamento (ADR 060, ADR 059):
+// el evento ya trae a quien le cambia lo que ve, resuelto al publicar. Cambian
+// la capacidad de Hoy, del Planificador y del Cronograma, el aviso de «tu
+// responsable» y «Mi equipo».
+subscribeToEvent<{ workspaceId: string; userIds: string[] }>(
+  "availability.changed",
+  async (data) => {
+    for (const userId of data.userIds) {
+      broadcastToUser(userId, {
+        type: "AVAILABILITY_INVALIDATED",
+        workspaceId: data.workspaceId,
+      });
+    }
+  },
+);
+
 // Un solo cronometro por persona (ADR 044): arrancar, parar -a mano o porque
 // la tarea entro en una columna final-, editar y borrar son los cuatro
 // cambios que el pie de la barra, Hoy y el parte de horas necesitan saber. La

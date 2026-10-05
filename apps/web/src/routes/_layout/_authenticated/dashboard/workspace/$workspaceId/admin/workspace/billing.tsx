@@ -136,7 +136,7 @@ function RouteComponent() {
       <>
         <PageTitle title="Billing" />
         <div className="mx-auto max-w-4xl space-y-2">
-          <h1 className="font-semibold text-2xl">Billing</h1>
+          <h1 className="text-page">Billing</h1>
           <p className="text-muted-foreground text-sm">
             Billing isn't enabled on this instance. Self-hosted Riuna includes
             every feature, free forever.
@@ -166,7 +166,7 @@ function RouteComponent() {
       <PageTitle title="Billing" />
       <div className="mx-auto max-w-4xl space-y-8">
         <div className="space-y-2">
-          <h1 className="font-semibold text-2xl">Billing</h1>
+          <h1 className="text-page">Billing</h1>
           <p className="text-muted-foreground">
             Manage the Riuna Cloud subscription for this workspace.
           </p>
@@ -349,9 +349,7 @@ function RouteComponent() {
                       </p>
 
                       <div className="mt-6 flex items-baseline gap-1.5">
-                        <span className="font-medium text-4xl tracking-tight">
-                          {price.price}
-                        </span>
+                        <span className="text-display">{price.price}</span>
                         <span className="text-foreground/60 text-sm">
                           {price.suffix}
                         </span>

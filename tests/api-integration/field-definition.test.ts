@@ -363,10 +363,10 @@ describe("field definition permissions", () => {
 
   // Hallazgo, no decision: el rol `member` heredado de Kaneo tiene
   // `project: ["create", "read"]` y NO `update`, asi que definir campos queda
-  // hoy en manos de `admin` y `owner` incluso dentro de un proyecto. Es el
-  // mismo descubrimiento que la Fase 1 hizo con `task:assign`. Rellenar el
-  // valor de un campo si esta al alcance de un miembro, porque eso es
-  // `task:update`, que si tiene.
+  // hoy en manos de `admin` y `owner` incluso dentro de un proyecto. Es una
+  // decision (ADR 062): `member` si asigna tareas, pero definir campos cambia
+  // la estructura del proyecto. Rellenar el valor de un campo si esta al
+  // alcance de un miembro, porque eso es `task:update`, que si tiene.
   it("stops a member from defining a project field, because project:update is admin-only", async () => {
     const { app, projectId } = await setup("member");
 
@@ -461,5 +461,68 @@ describe("field definition permissions", () => {
       },
     );
     expect(onWorkspace.status).toBe(403);
+  });
+});
+
+describe("workspace field list: filterable", () => {
+  beforeEach(async () => {
+    await resetTestDatabase();
+  });
+
+  type Listed = { key: string; filterable: boolean };
+
+  async function listWorkspace(
+    app: ReturnType<typeof createApp>["app"],
+    workspaceId: string,
+  ) {
+    const response = await app.request(`/api/field/workspace/${workspaceId}`);
+    expect(response.status).toBe(200);
+    return new Map(
+      ((await response.json()) as Listed[]).map((field) => [
+        field.key,
+        field.filterable,
+      ]),
+    );
+  }
+
+  it("marks a field a view across projects can filter by", async () => {
+    const { app, workspaceId } = await setup();
+    await createWorkspaceField(app, workspaceId, {
+      name: "Presupuesto",
+      type: "currency",
+      config: { currency: "EUR" },
+    });
+    await createWorkspaceField(app, workspaceId, {
+      name: "Expediente",
+      type: "relation",
+    });
+
+    const fields = await listWorkspace(app, workspaceId);
+
+    expect(fields.get("presupuesto")).toBe(true);
+    // Una relacion vive fuera del JSONB y el motor no la incluye.
+    expect(fields.get("expediente")).toBe(false);
+  });
+
+  // Ofrecerlo en la interfaz acabaria en un 400 del servidor, que lo retira.
+  it("marks as not filterable a field a project redefines with another comparison", async () => {
+    const { app, workspaceId, projectId } = await setup();
+    await createWorkspaceField(app, workspaceId, {
+      name: "Monto",
+      type: "number",
+    });
+    await createWorkspaceField(app, workspaceId, {
+      name: "Zona",
+      type: "text",
+    });
+    // Mismo "monto", otra forma de comparar: texto en vez de numero.
+    await createProjectField(app, projectId, { name: "Monto", type: "text" });
+    // Misma forma de comparar (numero y moneda): no estorba.
+    await createProjectField(app, projectId, { name: "Zona", type: "text" });
+
+    const fields = await listWorkspace(app, workspaceId);
+
+    expect(fields.get("monto")).toBe(false);
+    expect(fields.get("zona")).toBe(true);
   });
 });

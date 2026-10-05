@@ -2,10 +2,12 @@ import { format } from "date-fns";
 import { CalendarRange, ChevronUp, ListTree, Timer } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatForDisplay } from "@/components/table-view/custom-field-cell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useUpdateTaskEstimate } from "@/hooks/mutations/task/use-update-task-estimate";
 import { useUpdateTaskParent } from "@/hooks/mutations/task/use-update-task-parent";
+import useGetFieldDefinitions from "@/hooks/queries/field/use-get-field-definitions";
 import useGetTask from "@/hooks/queries/task/use-get-task";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import {
@@ -29,6 +31,7 @@ type TaskTreeProps = {
 export default function TaskTree({ taskId, projectId }: TaskTreeProps) {
   const { t, i18n } = useTranslation();
   const { data: task } = useGetTask(taskId);
+  const { data: definitions } = useGetFieldDefinitions(projectId);
   const { mutateAsync: reparent, isPending: isReparenting } =
     useUpdateTaskParent();
   const { mutateAsync: saveEstimate } = useUpdateTaskEstimate();
@@ -89,7 +92,7 @@ export default function TaskTree({ taskId, projectId }: TaskTreeProps) {
   return (
     <section className="flex flex-col gap-2 rounded-md border border-border/60 p-3">
       <div className="flex items-center justify-between">
-        <h2 className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+        <h2 className="flex items-center gap-1.5 text-section">
           <ListTree className="size-4" />
           {t("tasks:tree.title")}
         </h2>
@@ -134,6 +137,26 @@ export default function TaskTree({ taskId, projectId }: TaskTreeProps) {
               </dd>
             </>
           )}
+
+          {/* Las sumas de los campos numericos y de moneda de toda la rama. */}
+          {(definitions ?? [])
+            .filter((definition) => subtree.fieldSums?.[definition.key] != null)
+            .map((definition) => (
+              <div key={definition.key} className="contents">
+                <dt className="text-muted-foreground">
+                  {t("tasks:tree.branchSum", { name: definition.name })}
+                </dt>
+                <dd
+                  className="text-right font-medium tabular-nums"
+                  data-testid={`branch-sum-${definition.key}`}
+                >
+                  {formatForDisplay(
+                    definition,
+                    subtree.fieldSums?.[definition.key],
+                  )}
+                </dd>
+              </div>
+            ))}
 
           <dt className="flex items-center gap-1 text-muted-foreground">
             <Timer className="size-3" />

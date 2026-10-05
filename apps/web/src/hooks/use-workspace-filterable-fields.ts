@@ -1,21 +1,32 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import type { FieldDefinition } from "@/components/table-view/custom-field-cell";
+import { useGetWorkspaceFieldDefinitions } from "@/hooks/queries/field/use-get-field-definitions";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
+import { customFieldsToFilterable } from "@/hooks/use-filterable-fields";
 import { getPriorityLabel } from "@/lib/i18n/domain";
 import type { FilterableField } from "@/types/task-filter";
 
 /**
  * Los campos por los que se puede filtrar en "Mis tareas": los mismos fijos
  * que un proyecto, salvo `status`, que compara contra las columnas de **un**
- * proyecto y mentiria en otro (ADR 038). Sin campos personalizados todavia:
- * no hay endpoint que liste los de espacio fuera del motor de filtros.
+ * proyecto y mentiria en otro (ADR 038), mas los campos personalizados **del
+ * espacio** por los que el servidor deja filtrar entre proyectos.
  */
 export function useWorkspaceFilterableFields(workspaceId: string) {
   const { t } = useTranslation();
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
+  const { data: workspaceFields = [] } =
+    useGetWorkspaceFieldDefinitions(workspaceId);
 
   return useMemo<FilterableField[]>(() => {
     const members = workspaceUsers?.members ?? [];
+    const custom = customFieldsToFilterable(
+      (
+        workspaceFields as Array<FieldDefinition & { filterable?: boolean }>
+      ).filter((field) => field.filterable),
+      t,
+    );
 
     return [
       {
@@ -60,8 +71,9 @@ export function useWorkspaceFilterableFields(workspaceId: string) {
         label: t("tasks:table.columns.completedAt"),
         valueType: "date",
       },
+      ...custom,
     ];
-  }, [workspaceUsers, t]);
+  }, [workspaceUsers, workspaceFields, t]);
 }
 
 export default useWorkspaceFilterableFields;

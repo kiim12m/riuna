@@ -7,12 +7,25 @@ import { ProjectSizeWarning } from "@/components/project/project-size-warning";
 import TableView from "@/components/table-view";
 import type { AddFieldPayload } from "@/components/table-view/add-field-dialog";
 import AddFieldDialog from "@/components/table-view/add-field-dialog";
+import ColumnPicker from "@/components/table-view/column-picker";
+import {
+  availableColumns,
+  resolveVisibleColumns,
+  toggleColumn,
+} from "@/components/table-view/columns";
 import type { FieldDefinition } from "@/components/table-view/custom-field-cell";
 import FilterBar from "@/components/table-view/filter-bar";
 import ViewPicker, {
   type SavedView,
 } from "@/components/table-view/view-picker";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   useCreateFieldDefinition,
   useUpdateTaskCustomFields,
@@ -49,7 +62,14 @@ type TableSearchParams = {
   treeMode?: TreeMode;
   /** La vista guardada que se esta mirando, para marcarla en el selector. */
   viewId?: string;
+  /** Las columnas que se ven, por id. Sin dato, las de siempre. */
+  columns?: string[];
+  /** Por que se agrupan las filas. Sin dato, sin agrupar. */
+  groupBy?: GroupBy;
 };
+
+const GROUP_BYS = ["epic"] as const;
+type GroupBy = (typeof GROUP_BYS)[number];
 
 const TREE_MODES = ["tree", "flat", "roots", "withDescendants"] as const;
 type TreeMode = (typeof TREE_MODES)[number];
@@ -67,6 +87,14 @@ export const Route = createFileRoute(
       ? (search.treeMode as TreeMode)
       : undefined,
     viewId: typeof search.viewId === "string" ? search.viewId : undefined,
+    columns:
+      Array.isArray(search.columns) &&
+      search.columns.every((id) => typeof id === "string")
+        ? (search.columns as string[])
+        : undefined,
+    groupBy: GROUP_BYS.includes(search.groupBy as GroupBy)
+      ? (search.groupBy as GroupBy)
+      : undefined,
   }),
 });
 
@@ -78,6 +106,8 @@ function RouteComponent() {
     filter: filterParam,
     treeMode = "tree",
     viewId,
+    columns: columnsParam,
+    groupBy,
   } = Route.useSearch();
   const navigate = useNavigate();
 
@@ -117,6 +147,14 @@ function RouteComponent() {
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
   const { data: views = [] } = useGetViews(projectId, "table");
   const filterableFields = useFilterableFields(projectId, workspaceId);
+  const columnOptions = useMemo(
+    () => availableColumns(definitions as FieldDefinition[], t),
+    [definitions, t],
+  );
+  const visibleColumns = useMemo(
+    () => resolveVisibleColumns(columnsParam, columnOptions),
+    [columnsParam, columnOptions],
+  );
   const { data: session } = authClient.useSession();
   const { mutate: saveView, isPending: isSavingView } = useSaveView(projectId);
   const { mutate: removeView } = useDeleteView(projectId);
@@ -167,6 +205,12 @@ function RouteComponent() {
             ? (view.config.filter as EditableCondition[])
             : undefined,
           treeMode: (view.config.treeMode as TreeMode | undefined) ?? undefined,
+          columns: Array.isArray(view.config.columns)
+            ? (view.config.columns as string[])
+            : undefined,
+          groupBy: GROUP_BYS.includes(view.config.groupBy as GroupBy)
+            ? (view.config.groupBy as GroupBy)
+            : undefined,
           viewId: view.id,
         },
         replace: true,
@@ -186,6 +230,8 @@ function RouteComponent() {
           config: {
             ...(conditions.length > 0 ? { filter: conditions } : {}),
             ...(treeMode !== "tree" ? { treeMode } : {}),
+            ...(columnsParam ? { columns: columnsParam } : {}),
+            ...(groupBy ? { groupBy } : {}),
           },
         },
         {
@@ -202,7 +248,7 @@ function RouteComponent() {
         },
       );
     },
-    [saveView, conditions, treeMode, t],
+    [saveView, conditions, treeMode, columnsParam, groupBy, t],
   );
 
   const handleOpenTask = useCallback(
@@ -277,11 +323,62 @@ function RouteComponent() {
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-card">
         <div className="border-border/80 border-b">
           <div className="flex items-center gap-1 px-3 pt-2">
+            <ColumnPicker
+              options={columnOptions}
+              visible={visibleColumns}
+              onToggle={(id) =>
+                navigate({
+                  to: ".",
+                  search: (previous: TableSearchParams) => ({
+                    ...previous,
+                    columns: toggleColumn(columnsParam, columnOptions, id),
+                  }),
+                  replace: true,
+                })
+              }
+            />
+            <Select
+              value={groupBy ?? "none"}
+              onValueChange={(next) =>
+                navigate({
+                  to: ".",
+                  search: (previous: TableSearchParams) => ({
+                    ...previous,
+                    groupBy: next === "epic" ? ("epic" as const) : undefined,
+                  }),
+                  replace: true,
+                })
+              }
+            >
+              <SelectTrigger
+                size="sm"
+                className="h-6 w-auto gap-1.5 border-0 bg-transparent px-2 text-xs shadow-none"
+                aria-label={t("tasks:table.groupBy.label")}
+              >
+                <SelectValue>
+                  {t("tasks:table.groupBy.label")}:{" "}
+                  {t(`tasks:table.groupBy.${groupBy ?? "none"}`)}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  {t("tasks:table.groupBy.none")}
+                </SelectItem>
+                <SelectItem value="epic">
+                  {t("tasks:table.groupBy.epic")}
+                </SelectItem>
+              </SelectContent>
+            </Select>
             <ViewPicker
               views={views as SavedView[]}
               activeViewId={viewId}
               currentUserId={session?.user?.id}
-              canSave={conditions.length > 0 || treeMode !== "tree"}
+              canSave={
+                conditions.length > 0 ||
+                treeMode !== "tree" ||
+                Boolean(columnsParam) ||
+                Boolean(groupBy)
+              }
               saving={isSavingView}
               onApply={handleApplyView}
               onSave={handleSaveView}
@@ -326,6 +423,8 @@ function RouteComponent() {
           members={members}
           columns={project?.columns ?? []}
           flatten={treeMode === "flat"}
+          visibleColumns={visibleColumns}
+          groupBy={groupBy}
           canEdit={canEditValues}
           onOpenTask={handleOpenTask}
           onSetCustomField={handleSetCustomField}

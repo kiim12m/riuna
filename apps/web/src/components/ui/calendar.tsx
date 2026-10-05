@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import type * as React from "react";
 import { DayPicker } from "react-day-picker";
+import { enUS, es } from "react-day-picker/locale";
+import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/cn";
 import { useUserPreferencesStore } from "@/store/user-preferences";
@@ -22,6 +24,11 @@ function Calendar({
   weekStartsOn: weekStartsOnProp,
   ...props
 }: React.ComponentProps<typeof DayPicker>) {
+  // Sin `locale`, DayPicker pinta los dias y el titulo del mes en ingles
+  // aunque la interfaz este en espanol.
+  const { i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language ?? "es-ES";
+  const locale = language.startsWith("es") ? es : enUS;
   const preferredWeekStartsOn = useUserPreferencesStore(
     (state) => state.weekStartsOn,
   );
@@ -130,8 +137,9 @@ function Calendar({
       data-slot="calendar"
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+          date.toLocaleString(language, { month: "short" }),
       }}
+      locale={locale}
       mode="single"
       showOutsideDays={showOutsideDays}
       weekStartsOn={weekStartsOnProp ?? preferredWeekStartsOn}

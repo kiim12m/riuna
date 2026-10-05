@@ -598,3 +598,205 @@ describe("API integration: templates", () => {
     ).toBe(403);
   });
 });
+
+describe("API integration: a whole project from a project template", () => {
+  beforeEach(async () => {
+    await resetTestDatabase();
+  });
+
+  async function insertProjectTemplate(
+    workspaceId: string,
+    createdBy: string,
+    content: Record<string, unknown>,
+  ) {
+    const [row] = await db
+      .insert(schema.templateTable)
+      .values({
+        workspaceId,
+        createdBy,
+        name: "Obra tipo",
+        kind: "project",
+        content,
+      })
+      .returning();
+    return row;
+  }
+
+  function createFrom(
+    app: ReturnType<typeof createApp>["app"],
+    workspaceId: string,
+    templateId: string,
+    slug = "OBR",
+  ) {
+    return app.request("/api/project", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Obra nueva",
+        workspaceId,
+        icon: "Folder",
+        slug,
+        templateId,
+      }),
+    });
+  }
+
+  it("is born with the template's columns, epics and task tree", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const template = await insertProjectTemplate(
+      member.workspace.id,
+      member.user.id,
+      {
+        columns: [
+          { name: "Pendiente", slug: "pending", position: 0, isFinal: false },
+          { name: "Entregado", slug: "delivered", position: 1, isFinal: true },
+        ],
+        epics: [{ name: "Fase 1", color: "#16a34a" }],
+        tasks: [
+          {
+            title: "Replanteo",
+            status: "pending",
+            epics: ["Fase 1"],
+            children: [{ title: "Medir", status: "delivered" }],
+          },
+        ],
+      },
+    );
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const response = await createFrom(app, member.workspace.id, template.id);
+    expect(response.status).toBe(200);
+    const project = (await response.json()) as { id: string };
+
+    const columns = await db
+      .select({
+        slug: schema.columnTable.slug,
+        isFinal: schema.columnTable.isFinal,
+      })
+      .from(schema.columnTable)
+      .where(eq(schema.columnTable.projectId, project.id))
+      .orderBy(schema.columnTable.position);
+    expect(columns).toEqual([
+      { slug: "pending", isFinal: false },
+      { slug: "delivered", isFinal: true },
+    ]);
+
+    const epics = await db
+      .select({ name: schema.epicTable.name })
+      .from(schema.epicTable)
+      .where(eq(schema.epicTable.projectId, project.id));
+    expect(epics).toEqual([{ name: "Fase 1" }]);
+
+    const tasks = await db
+      .select({
+        id: schema.taskTable.id,
+        title: schema.taskTable.title,
+        parentId: schema.taskTable.parentId,
+        status: schema.taskTable.status,
+      })
+      .from(schema.taskTable)
+      .where(eq(schema.taskTable.projectId, project.id));
+    const root = tasks.find((task) => task.title === "Replanteo");
+    const child = tasks.find((task) => task.title === "Medir");
+    expect(root?.status).toBe("pending");
+    expect(child?.parentId).toBe(root?.id);
+    expect(child?.status).toBe("delivered");
+  });
+
+  it("keeps the four default columns when the template brings none", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const template = await insertProjectTemplate(
+      member.workspace.id,
+      member.user.id,
+      { tasks: [{ title: "Una tarea" }] },
+    );
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const response = await createFrom(app, member.workspace.id, template.id);
+    const project = (await response.json()) as { id: string };
+
+    const columns = await db
+      .select({ slug: schema.columnTable.slug })
+      .from(schema.columnTable)
+      .where(eq(schema.columnTable.projectId, project.id));
+    expect(columns).toHaveLength(4);
+  });
+
+  it("leaves no half-made project behind when the tree does not fit", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const template = await insertProjectTemplate(
+      member.workspace.id,
+      member.user.id,
+      {
+        columns: [
+          { name: "Pendiente", slug: "pending", position: 0, isFinal: false },
+        ],
+        // Un estado que ninguna columna de la plantilla tiene.
+        tasks: [{ title: "Rota", status: "no-existe" }],
+      },
+    );
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const response = await createFrom(app, member.workspace.id, template.id);
+
+    expect(response.status).toBe(400);
+    const projects = await db
+      .select({ id: schema.projectTable.id })
+      .from(schema.projectTable)
+      .where(eq(schema.projectTable.slug, "OBR"));
+    expect(projects).toHaveLength(0);
+  });
+
+  it("does not take a template from another workspace", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const stranger = await createWorkspaceMember({ role: "admin" });
+    const foreign = await insertProjectTemplate(
+      stranger.workspace.id,
+      stranger.user.id,
+      { tasks: [{ title: "Ajena" }] },
+    );
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const response = await createFrom(app, member.workspace.id, foreign.id);
+
+    expect(response.status).toBe(404);
+    const projects = await db
+      .select({ id: schema.projectTable.id })
+      .from(schema.projectTable)
+      .where(eq(schema.projectTable.slug, "OBR"));
+    expect(projects).toHaveLength(0);
+  });
+
+  it("refuses a task template: it brings no columns and is applied inside a project", async () => {
+    const member = await createWorkspaceMember({ role: "admin" });
+    const [taskTemplate] = await db
+      .insert(schema.templateTable)
+      .values({
+        workspaceId: member.workspace.id,
+        createdBy: member.user.id,
+        name: "Revision tipo",
+        kind: "task",
+        content: { tasks: [{ title: "Revisar" }] },
+      })
+      .returning();
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const response = await createFrom(
+      app,
+      member.workspace.id,
+      taskTemplate.id,
+    );
+
+    expect(response.status).toBe(400);
+    const projects = await db
+      .select({ id: schema.projectTable.id })
+      .from(schema.projectTable)
+      .where(eq(schema.projectTable.slug, "OBR"));
+    expect(projects).toHaveLength(0);
+  });
+});

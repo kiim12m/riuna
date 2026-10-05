@@ -79,6 +79,46 @@ describe("registerTools", () => {
     });
   });
 
+  it("saves the assignees, team and custom fields of a new task after creating it", async () => {
+    const { server, tools } = createServerMock();
+    const client = {
+      json: vi
+        .fn()
+        .mockResolvedValueOnce({ id: "task-9" }) // POST
+        .mockResolvedValueOnce({}) // assignees
+        .mockResolvedValueOnce({}) // team
+        .mockResolvedValueOnce({}) // custom fields
+        .mockResolvedValueOnce({ id: "task-9", title: "Nueva" }), // GET
+    };
+
+    registerTools(server as never, { client: client as never });
+
+    const result = await tools.get("create_task")?.handler({
+      projectId: "p1",
+      title: "Nueva",
+      description: "",
+      priority: "medium",
+      status: "to-do",
+      assigneeIds: ["u1", "u2"],
+      teamId: "team-1",
+      customFields: { presupuesto: 1500 },
+    });
+
+    expect(client.json.mock.calls.map(([path]) => path)).toEqual([
+      "/api/task/p1",
+      "/api/task/assignees/task-9",
+      "/api/task/team/task-9",
+      "/api/task/custom-fields/task-9",
+      "/api/task/task-9",
+    ]);
+    const bodyOf = (index: number) =>
+      JSON.parse(String(client.json.mock.calls[index]?.[1]?.body ?? "{}"));
+    expect(bodyOf(1)).toEqual({ userIds: ["u1", "u2"] });
+    expect(bodyOf(2)).toEqual({ teamId: "team-1" });
+    expect(bodyOf(3)).toEqual({ values: { presupuesto: 1500 } });
+    expect(result?.isError).toBe(false);
+  });
+
   it("fetches the current task and sends a full body for update_task", async () => {
     const { server, tools } = createServerMock();
     const client = {

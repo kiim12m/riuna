@@ -7,6 +7,7 @@ import {
   setPlanOrder,
 } from "@/fetchers/planner";
 import { plannerQueryKey } from "@/hooks/queries/planner/use-planner";
+import { dayKey } from "@/lib/day-key";
 
 type Destination = {
   plannedDate: string;
@@ -27,12 +28,9 @@ type Destination = {
  * vale la pena estrechar a mano-: `onSettled` los corrige en cuanto vuelve
  * la respuesta real, que tarda un instante.
  */
-function sameDay(plannedDate: string | null | undefined, dayKey: string) {
+function sameDay(plannedDate: string | null | undefined, key: string) {
   if (!plannedDate) return false;
-  const date = new Date(plannedDate);
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${date.getFullYear()}-${month}-${day}` === dayKey;
+  return dayKey(new Date(plannedDate)) === key;
 }
 
 export function usePlannerMutations(

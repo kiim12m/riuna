@@ -26,9 +26,8 @@ const VISIBLE = 8;
  * lectura de lo mismo. Es lo que decidio la ADR 024 y sigue valiendo: la bandeja
  * no estrena modelo.
  *
- * Lo que se pierde al dejar de ser pagina es el listado largo; la campana sigue
- * estando, y `getNotifications` continua topada en 50 sin paginar, que es deuda
- * declarada desde la Fase 6.
+ * Lo que se pierde al dejar de ser pagina es el listado largo: la campana
+ * sigue estando, y es la que carga las anteriores a las 50 primeras.
  */
 export function InboxWidget() {
   const { t } = useTranslation();

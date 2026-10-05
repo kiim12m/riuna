@@ -5,6 +5,7 @@ import {
   taskEpicTable,
   taskTable,
 } from "../database/schema";
+import { addDays } from "../utils/day-boundaries";
 import type {
   FieldDescriptor,
   FieldRegistry,
@@ -225,6 +226,66 @@ function normalizeValue(
   return raw;
 }
 
+const DAY_ONLY = /^(\d{4})-(\d{2})-(\d{2})$/u;
+
+/**
+ * El dia del servidor que nombra un valor de fecha suelta (`2026-09-01`, lo que
+ * manda `<input type="date">`) sobre una columna `timestamp`, como el rango
+ * `[inicio, fin)` de ese dia. Es `null` para todo lo demas: un instante
+ * completo sigue siendo un instante.
+ *
+ * Una columna `timestamp` guarda un instante, y comparar «vence el 5 de
+ * octubre» contra la medianoche UTC de ese dia no casaba con nada que se
+ * hubiera elegido en el navegador: el vencimiento guarda la medianoche de
+ * Madrid. «Un dia» es el de la zona de la API (ADR 049), la misma que usan Hoy
+ * y los paneles, y por eso se resuelve aqui y no en el cliente.
+ */
+function dayBounds(
+  descriptor: ComparableDescriptor,
+  raw: unknown,
+): { start: Date; end: Date } | null {
+  if (descriptor.kind !== "column" || descriptor.valueType !== "date") {
+    return null;
+  }
+  if (typeof raw !== "string") return null;
+  const match = DAY_ONLY.exec(raw);
+  if (!match) return null;
+
+  const [, year, month, day] = match.map(Number);
+  const start = new Date(year as number, (month as number) - 1, day as number);
+  // `new Date(2026, 12, 45)` no falla: se desborda al ano siguiente.
+  if (
+    start.getFullYear() !== year ||
+    start.getMonth() !== (month as number) - 1 ||
+    start.getDate() !== day
+  ) {
+    throw new FilterError(`"${raw}" is not a valid date`);
+  }
+  return { start, end: addDays(start, 1) };
+}
+
+/** La comparacion de una columna con un dia entero, no con un instante. */
+function dayComparison(
+  expression: SQL,
+  operator: "eq" | "neq" | "gt" | "gte" | "lt" | "lte",
+  { start, end }: { start: Date; end: Date },
+): SQL {
+  switch (operator) {
+    case "eq":
+      return sql`(${expression} >= ${start} AND ${expression} < ${end})`;
+    case "neq":
+      return sql`(${expression} IS NULL OR ${expression} < ${start} OR ${expression} >= ${end})`;
+    case "gt":
+      return sql`${expression} >= ${end}`;
+    case "gte":
+      return sql`${expression} >= ${start}`;
+    case "lt":
+      return sql`${expression} < ${start}`;
+    case "lte":
+      return sql`${expression} < ${end}`;
+  }
+}
+
 /**
  * Los ids de un filtro de pertenencia, comprobados uno a uno.
  *
@@ -395,10 +456,14 @@ function conditionToSql(
       return sql`${expression} ILIKE ${`${escapeLike(value)}%`}`;
     }
     case "neq": {
+      const day = dayBounds(descriptor, node.value);
+      if (day) return dayComparison(expression, "neq", day);
       const value = normalizeValue(descriptor, node.value);
       return sql`(${expression} IS NULL OR ${expression} <> ${value})`;
     }
     default: {
+      const day = dayBounds(descriptor, node.value);
+      if (day) return dayComparison(expression, node.operator, day);
       const value = normalizeValue(descriptor, node.value);
       const comparison = {
         eq: sql`=`,

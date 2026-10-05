@@ -1,5 +1,6 @@
 import {
   defaultLocale,
+  findUsedKeysMissingFrom,
   flattenLocale,
   formatKeyList,
   getValueAtKey,
@@ -66,9 +67,22 @@ for (const locale of filteredLocales) {
   }
 }
 
-if (!hasIssues) {
+// Una clave que el codigo usa y que no esta en ninguna locale no la arregla
+// `--fix`: hay que escribirla.
+const usedButMissing = localeFilter
+  ? []
+  : await findUsedKeysMissingFrom(reference.data);
+
+if (usedButMissing.length > 0) {
+  console.log("Keys used in the web app that do not exist in en-US:");
+  for (const { file, key } of usedButMissing) {
+    console.log(`    - ${key}  (${file})`);
+  }
+}
+
+if (!hasIssues && usedButMissing.length === 0) {
   console.log("All locale files are in sync with en-US.");
   process.exit(0);
 }
 
-process.exit(shouldFix ? 0 : 1);
+process.exit(shouldFix && usedButMissing.length === 0 ? 0 : 1);

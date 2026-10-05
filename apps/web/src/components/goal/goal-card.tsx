@@ -68,9 +68,7 @@ export function GoalCard({
         </div>
 
         {overall !== null && (
-          <span className="shrink-0 font-semibold text-lg tabular-nums">
-            {overall}%
-          </span>
+          <span className="shrink-0 text-section tabular-nums">{overall}%</span>
         )}
 
         {(onAddTarget || onEdit || onToggleShare || onDelete) && (

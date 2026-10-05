@@ -1,6 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
 import { Bell } from "lucide-react";
-import { forwardRef, useCallback, useImperativeHandle, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertDialog,
@@ -26,10 +32,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { shortcuts } from "@/constants/shortcuts";
+import getNotifications from "@/fetchers/notification/get-notifications";
 import useClearNotifications from "@/hooks/mutations/notification/use-clear-notifications";
 import useMarkAllNotificationsAsRead from "@/hooks/mutations/notification/use-mark-all-notifications-as-read";
 import useMarkNotificationAsRead from "@/hooks/mutations/notification/use-mark-notification-as-read";
 import useGetNotifications from "@/hooks/queries/notification/use-get-notifications";
+import useUnreadNotificationCount from "@/hooks/queries/notification/use-unread-notification-count";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { cn } from "@/lib/cn";
 import { formatRelativeTime } from "@/lib/format";
@@ -43,6 +51,9 @@ import type { Notification } from "@/types/notification";
 export type NotificationDropdownRef = {
   toggle: () => void;
 };
+
+// Lo que devuelve el servidor por pagina cuando no se le pide otra cosa.
+const PAGE_SIZE = 50;
 
 type Props = {
   /**
@@ -58,7 +69,53 @@ const NotificationDropdown = forwardRef<NotificationDropdownRef, Props>(
   ({ registerShortcut = true }, ref) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { data: notifications } = useGetNotifications();
+    const {
+      data: firstPage,
+      dataUpdatedAt,
+      isError: listFailed,
+    } = useGetNotifications();
+    const { data: unreadTotal } = useUnreadNotificationCount();
+    // Las paginas siguientes a la primera. Se vacian en cuanto la primera se
+    // vuelve a leer —marcar leida, borrar, un aviso nuevo—, porque lo que
+    // habia ahi ya puede no ser verdad.
+    const [olderPages, setOlderPages] = useState<Notification[]>([]);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [reachedEnd, setReachedEnd] = useState(false);
+    const [loadMoreFailed, setLoadMoreFailed] = useState(false);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: es el aviso de que la primera pagina cambio
+    useEffect(() => {
+      setOlderPages([]);
+      setReachedEnd(false);
+      setLoadMoreFailed(false);
+    }, [dataUpdatedAt]);
+    const notifications = firstPage ? [...firstPage, ...olderPages] : firstPage;
+    const canLoadMore =
+      !reachedEnd && !listFailed && (firstPage?.length ?? 0) >= PAGE_SIZE;
+
+    const loadMore = async () => {
+      const last = notifications?.at(-1);
+      if (!last || isLoadingMore) return;
+      setIsLoadingMore(true);
+      setLoadMoreFailed(false);
+      try {
+        const next = await getNotifications({
+          limit: PAGE_SIZE,
+          before: String(last.createdAt),
+          beforeId: last.id,
+        });
+        setOlderPages((current) => [
+          ...current,
+          ...next.filter(
+            (item) => !current.some((seen) => seen.id === item.id),
+          ),
+        ]);
+        if (next.length < PAGE_SIZE) setReachedEnd(true);
+      } catch {
+        setLoadMoreFailed(true);
+      } finally {
+        setIsLoadingMore(false);
+      }
+    };
     const [isOpen, setIsOpen] = useState(false);
     const [showClearDialog, setShowClearDialog] = useState(false);
 
@@ -84,7 +141,10 @@ const NotificationDropdown = forwardRef<NotificationDropdownRef, Props>(
       [markAsRead, navigate],
     );
 
-    const unreadNotifications = notifications?.filter((n) => !n.isRead) || [];
+    // El total viene del servidor: contar las que se ven ocultaba todas las
+    // que no caben en la primera pagina.
+    const unreadCount =
+      unreadTotal ?? notifications?.filter((n) => !n.isRead).length ?? 0;
     const hasNotifications = notifications && notifications.length > 0;
 
     useImperativeHandle(ref, () => ({
@@ -115,11 +175,9 @@ const NotificationDropdown = forwardRef<NotificationDropdownRef, Props>(
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative">
                     <Bell className="h-4 w-4" />
-                    {unreadNotifications.length > 0 && (
+                    {unreadCount > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-destructive px-1 text-label font-semibold leading-none text-white ring-2 ring-sidebar transition-[scale,opacity] duration-200 ease-out starting:scale-75 starting:opacity-0 motion-reduce:starting:scale-100">
-                        {unreadNotifications.length > 99
-                          ? "99+"
-                          : unreadNotifications.length}
+                        {unreadCount > 99 ? "99+" : unreadCount}
                       </span>
                     )}
                     <span className="sr-only">
@@ -148,7 +206,7 @@ const NotificationDropdown = forwardRef<NotificationDropdownRef, Props>(
                 <h3 className="font-medium text-sm">
                   {t("notifications:title")}
                 </h3>
-                {unreadNotifications.length > 0 && (
+                {unreadCount > 0 && (
                   <DropdownMenuItem
                     closeOnClick={false}
                     onClick={() => markAllAsRead()}
@@ -216,6 +274,20 @@ const NotificationDropdown = forwardRef<NotificationDropdownRef, Props>(
                   })
                 )}
               </div>
+              {hasNotifications && canLoadMore && (
+                <div className="border-border/50 border-t p-1">
+                  <DropdownMenuItem
+                    closeOnClick={false}
+                    disabled={isLoadingMore}
+                    onClick={loadMore}
+                    className="min-h-0 cursor-pointer justify-center rounded-md px-2 py-1 text-muted-foreground text-xs sm:min-h-0 sm:text-xs data-highlighted:text-foreground"
+                  >
+                    {loadMoreFailed
+                      ? t("notifications:loadMoreFailed")
+                      : t("notifications:loadMore")}
+                  </DropdownMenuItem>
+                </div>
+              )}
               {hasNotifications && (
                 <div className="border-border/50 border-t p-1">
                   <DropdownMenuItem

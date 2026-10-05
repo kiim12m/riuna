@@ -49,6 +49,21 @@ export function userMessageInvalidations(message: UserWsMessage): QueryKey[] {
     // Planificador y Hoy tambien leen (ADR 045).
     case "SCHEDULE_INVALIDATED":
       return [["schedule"], ["planner"], ["today"]];
+    // Un festivo, una ausencia o marcar a un responsable (ADR 060, ADR 059):
+    // cambian la capacidad que pintan Hoy, el Planificador y el Cronograma, los
+    // dias que salta «el siguiente dia laborable», el aviso de «tu responsable»
+    // y «Mi equipo».
+    case "AVAILABILITY_INVALIDATED":
+      return [
+        ["holidays"],
+        ["time-off"],
+        ["planner"],
+        ["schedule"],
+        ["today"],
+        ["lead"],
+        ["my-leads"],
+        ["team-leads"],
+      ];
     // Arrancar, parar -a mano o porque la tarea entro en una columna final- y
     // editar o borrar una entrada (ADR 044). El Planificador ensena lo
     // registrado de cada tarjeta, asi que tambien.
