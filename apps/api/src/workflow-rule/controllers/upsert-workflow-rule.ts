@@ -27,31 +27,10 @@ async function upsertWorkflowRule({
     });
   }
 
-  const existing = await db.query.workflowRuleTable.findFirst({
-    where: and(
-      eq(workflowRuleTable.projectId, projectId),
-      eq(workflowRuleTable.integrationType, integrationType),
-      eq(workflowRuleTable.eventType, eventType),
-    ),
-  });
-
-  if (existing) {
-    const [updated] = await db
-      .update(workflowRuleTable)
-      .set({ columnId })
-      .where(eq(workflowRuleTable.id, existing.id))
-      .returning();
-
-    if (!updated) {
-      throw new HTTPException(500, {
-        message: "Failed to update workflow rule",
-      });
-    }
-
-    return updated;
-  }
-
-  const [created] = await db
+  // Un solo `INSERT … ON CONFLICT` contra el indice unico: leer y luego
+  // escribir dejaba dos filas cuando dos guardados del mismo evento se
+  // cruzaban.
+  const [rule] = await db
     .insert(workflowRuleTable)
     .values({
       projectId,
@@ -59,15 +38,23 @@ async function upsertWorkflowRule({
       eventType,
       columnId,
     })
+    .onConflictDoUpdate({
+      target: [
+        workflowRuleTable.projectId,
+        workflowRuleTable.integrationType,
+        workflowRuleTable.eventType,
+      ],
+      set: { columnId, updatedAt: new Date() },
+    })
     .returning();
 
-  if (!created) {
+  if (!rule) {
     throw new HTTPException(500, {
-      message: "Failed to create workflow rule",
+      message: "Failed to save workflow rule",
     });
   }
 
-  return created;
+  return rule;
 }
 
 export default upsertWorkflowRule;

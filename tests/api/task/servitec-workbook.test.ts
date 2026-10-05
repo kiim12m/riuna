@@ -64,7 +64,15 @@ describe("buildServitecWorkbook", () => {
       concepto: "Revisar Puesta a Tierra Torrevieja",
       proyecto: "BAUHAUS TORREVIEJA",
       estado: ".Realizado",
-      comentario: "03/06/2026 — Demanar medicions\n\n05/06/2026 — Rebut",
+      comentarios: [
+        {
+          fecha: new Date("2026-06-03T09:00:00Z"),
+          // Un parrafo vacio en el editor deja una linea en blanco: en la hoja
+          // no tiene que verse.
+          texto: "Demanar medicions\n\nUrgent",
+        },
+        { fecha: new Date("2026-06-05T09:00:00Z"), texto: "Rebut" },
+      ],
     },
     {
       fecha: new Date("2026-08-17T22:30:00Z"),
@@ -72,7 +80,7 @@ describe("buildServitecWorkbook", () => {
       concepto: "Enviar fotografies CGP",
       proyecto: "IES SANT BOI",
       estado: "Pendiente",
-      comentario: "",
+      comentarios: [],
     },
   ];
 
@@ -139,11 +147,20 @@ describe("buildServitecWorkbook", () => {
     expect(sheet.getCell("B4").numFmt).toBe("dd/mm/yyyy");
   });
 
-  it("keeps the blank line between stacked comments", () => {
-    expect(sheet.getCell("F4").value).toBe(
-      "03/06/2026 — Demanar medicions\n\n05/06/2026 — Rebut",
+  it("stacks the comments one per line, with no blank lines", () => {
+    expect(sheet.getCell("F4").text).toBe(
+      "03/06/2026 — Demanar medicions\nUrgent\n05/06/2026 — Rebut",
     );
     expect(sheet.getCell("F4").alignment?.wrapText).toBe(true);
+  });
+
+  it("writes the date of each comment in bold, and only the date", () => {
+    const value = sheet.getCell("F4").value as ExcelJS.CellRichTextValue;
+    const bold = value.richText
+      .filter((run) => run.font?.bold)
+      .map((run) => run.text);
+
+    expect(bold).toEqual(["03/06/2026", "05/06/2026"]);
   });
 
   it("leaves pre-formatted blank rows under the data", () => {
@@ -229,7 +246,7 @@ describe("buildServitecWorkbook", () => {
         concepto: "Sin fechas",
         proyecto: "GOU MENORCA",
         estado: "En curso",
-        comentario: "",
+        comentarios: [],
       },
     ]);
     const workbook = new ExcelJS.Workbook();

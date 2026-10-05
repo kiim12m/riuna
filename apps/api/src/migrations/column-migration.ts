@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import db from "../database";
 import {
   columnTable,
@@ -154,22 +154,14 @@ async function ensureMigrationWorkflowRule(
   eventType: string,
   columnId: string,
 ) {
-  const existing = await db.query.workflowRuleTable.findFirst({
-    where: and(
-      eq(workflowRuleTable.projectId, projectId),
-      eq(workflowRuleTable.integrationType, integrationType),
-      eq(workflowRuleTable.eventType, eventType),
-    ),
-  });
-
-  if (existing) {
-    return;
-  }
-
-  await db.insert(workflowRuleTable).values({
-    projectId,
-    integrationType,
-    eventType,
-    columnId,
-  });
+  // La que ya exista manda: es la que la persona eligio.
+  await db
+    .insert(workflowRuleTable)
+    .values({
+      projectId,
+      integrationType,
+      eventType,
+      columnId,
+    })
+    .onConflictDoNothing();
 }

@@ -424,6 +424,13 @@ export const workflowRuleTable = pgTable(
   (table) => [
     index("workflow_rule_projectId_idx").on(table.projectId),
     index("workflow_rule_columnId_idx").on(table.columnId),
+    // Una regla por evento de integracion: `resolveTargetStatus` lee una sola,
+    // y con dos no habria forma de saber cual manda.
+    uniqueIndex("workflow_rule_project_integration_event_unique").on(
+      table.projectId,
+      table.integrationType,
+      table.eventType,
+    ),
   ],
 );
 

@@ -9,9 +9,10 @@ import {
   workspaceTable,
 } from "../../database/schema";
 import { richTextToPlainText } from "../../utils/rich-text-to-plain-text";
-import { formatSheetDate, formatSheetDateIso } from "../exchange/sheet-dates";
+import { formatSheetDateIso } from "../exchange/sheet-dates";
 import {
   buildServitecWorkbook,
+  type ServitecComment,
   type ServitecEstado,
   type ServitecRow,
 } from "../exports/servitec-workbook";
@@ -126,11 +127,11 @@ async function exportWorkspaceTasks(workspaceId: string) {
           .orderBy(asc(activityTable.createdAt))
       : [];
 
-  const commentsByTask = new Map<string, string[]>();
+  const commentsByTask = new Map<string, ServitecComment[]>();
   for (const comment of comments) {
     const text = richTextToPlainText(comment.content);
     if (!text) continue;
-    const entry = `${formatSheetDate(comment.createdAt)} — ${text}`;
+    const entry = { fecha: comment.createdAt, texto: text };
     const existing = commentsByTask.get(comment.taskId);
     if (existing) {
       existing.push(entry);
@@ -148,9 +149,7 @@ async function exportWorkspaceTasks(workspaceId: string) {
       task.status,
       columnsByProjectAndSlug.get(`${task.projectId}:${task.status}`),
     ),
-    // A blank line between comments, so a cell with several of them still reads
-    // as separate entries once Excel wraps it.
-    comentario: (commentsByTask.get(task.id) ?? []).join("\n\n"),
+    comentarios: commentsByTask.get(task.id) ?? [],
   }));
 
   const buffer = await buildServitecWorkbook(rows);

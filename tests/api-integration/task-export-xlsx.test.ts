@@ -293,7 +293,9 @@ describe("API integration: workspace tasks spreadsheet export", () => {
         taskId: task.id,
         type: "comment",
         userId: owner.user.id,
-        content: "Revisada i **enviada** per corregir",
+        // Dos parrafos con uno vacio entre medias, como los deja el editor.
+        content:
+          "<p>Revisada i <strong>enviada</strong> per corregir</p><p></p><p>Falta el plànol</p>",
         createdAt: new Date("2026-08-05T09:00:00Z"),
       },
       // Un evento del sistema entre medias: no es un comentario y no debe salir
@@ -323,9 +325,14 @@ describe("API integration: workspace tasks spreadsheet export", () => {
     );
     const sheet = await readSheet(response);
 
-    expect(sheet.getCell("F4").value).toBe(
-      "05/08/2026 — Revisada i enviada per corregir\n\n06/08/2026 — Ok, pero falten pressupostos",
+    // Seguidos, sin lineas en blanco, y la fecha en negrita.
+    expect(sheet.getCell("F4").text).toBe(
+      "05/08/2026 — Revisada i enviada per corregir\nFalta el plànol\n06/08/2026 — Ok, pero falten pressupostos",
     );
+    const value = sheet.getCell("F4").value as ExcelJS.CellRichTextValue;
+    expect(
+      value.richText.filter((run) => run.font?.bold).map((run) => run.text),
+    ).toEqual(["05/08/2026", "06/08/2026"]);
   });
 
   it("returns an empty but usable sheet for a workspace with no tasks", async () => {

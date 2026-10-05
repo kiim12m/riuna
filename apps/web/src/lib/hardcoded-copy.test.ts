@@ -124,7 +124,12 @@ function findHardcodedCopy(file: string): string[] {
 }
 
 describe("hardcoded copy", () => {
-  it("has no user-facing text written by hand: it goes through t()", () => {
+  // Analiza todos los `.tsx`: a solas tarda ~2 s, pero con la maquina cargada
+  // (la bateria de integracion a la vez, o turbo con todos los paquetes)
+  // pasaba de los 5 s por defecto y caducaba sin haber encontrado nada.
+  it("has no user-facing text written by hand: it goes through t()", {
+    timeout: 30_000,
+  }, () => {
     const offenders = sourceFiles(SRC)
       .filter((file) => !EXEMPT_FILES.has(relative(SRC, file)))
       .flatMap(findHardcodedCopy);

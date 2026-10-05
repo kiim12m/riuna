@@ -25,10 +25,10 @@
 | 7 — Dashboards, informes y objetivos | 3 | **Cerrada** — deuda abierta (ver abajo) |
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
 | Interludio — Productividad personal y equipo | 18 | **Cerrado** — Bloques 0 a 5; el 4.2 (importar iCal), aplazado · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--cerrado) |
-| Cierre de la deuda de las fases cerradas | 18 | **En curso** — cinco tandas · [inventario](#cierre-de-la-deuda-de-las-fases-cerradas) |
-| 8 — Automatizaciones e importadores externos | 3 | Pendiente |
+| Cierre de la deuda de las fases cerradas | 18 | **Cerrado** — cinco tandas, en `main` el 2026-10-05 (PR #38–#45); la facturación heredada sigue abierta por decisión · [inventario](#cierre-de-la-deuda-de-las-fases-cerradas) |
+| 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **En curso** — replanificada el 2026-10-05 · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--en-curso) |
 | 9 — Operación | 2 | Pendiente |
-| **Total Bloque A** | **35** + 18 del interludio | |
+| **Total Bloque A** | **41** + 18 del interludio | |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -37,6 +37,11 @@ sino en cuándo llega el valor: Riuna fue usable en la **semana 2** y la
 plataforma diferencial —árbol, campos personalizados, vistas e importación—
 llega en la **semana 18**. Escribiéndolo desde cero, en la semana 18 habría un
 gestor de tareas básico y nada propio.
+
+La Fase 8 se replanificó el 2026-10-05 al empezarla: pasa de 3 a **9 semanas
+nominales** porque entran el motor de automatizaciones completo, las reglas de
+espacio, los disparadores por fecha, el stand-up a chat y la hoja de SERVITEC de
+ida y vuelta, y salen los cuatro importadores externos. Ver su sección.
 
 ### Deuda abierta de las fases cerradas
 
@@ -301,7 +306,7 @@ Kaneo no tiene.
 - **Prioridad:** núcleo de tareas/proyectos y productividad primero; CRM/ERP después.
 - **Escala:** decenas de personas, varios departamentos. **Sin permisos finos: todo el mundo ve todas las tareas.** Los departamentos sirven para *asignar tareas a un grupo de usuarios*, no para aislar información.
 - **Jerarquía de tareas:** requisito destacado. Árbol padre→hijo a varios niveles **con agregados y cascada**, más **épicas** transversales dentro del proyecto.
-- **Datos:** se empieza limpio, pero importar y exportar **CSV/Excel** es funcionalidad de producto, e importadores desde Trello/Jira/Asana/Notion entran en el plan.
+- **Datos:** se empieza limpio, pero importar y exportar **CSV/Excel** es funcionalidad de producto, e importadores desde Trello/Jira/Asana/Notion entran en el plan (desde el 2026-10-05, solo documentados: ver la Fase 8).
 - **Móvil:** consulta puntual (lectura y captura rápida).
 - **Licencia:** se mantiene la vía permisiva por si algún día se quiere vender Riuna o instalarlo en clientes.
 - **Ejecución:** una persona, ~8 h/semana, con Claude Code.
@@ -2251,14 +2256,150 @@ pendiente, trabajas en foco con avisos del navegador, ves tu plan con hora en tu
 tu responsable ve tu plan y tu carga —con ausencias y festivos— pero no tu valoración. Ver tus
 reuniones en el Cronograma se aplazó con el 4.2.
 
-### Fase 8 — Automatizaciones e importadores externos (≈3 semanas)
-Motor disparador → condición → acción (`automation`, `automation_run`) sobre
-los eventos que Kaneo ya emite, ampliando su `workflowRule` en lugar de
-sustituirlo. Acciones: cambiar campo, asignar, crear tarea, notificar, webhook.
-**Importadores desde Trello, Jira, Asana y Notion**, conservando la jerarquía y
-los identificadores en `external_ref`, con adjuntos y comentarios.
-**Hecho cuando:** importas un tablero real de Trello con sus adjuntos y una
-regla mueve la tarea, avisa y dispara un webhook sin intervención.
+### Fase 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat · **en curso**
+
+*Replanificada el 2026-10-05 al empezarla, preguntando antes de diseñar. El texto
+original pedía el motor de automatizaciones e importadores de Trello, Jira, Asana y
+Notion; le habían llegado además la hoja de SERVITEC (Fase 5) y enviar el stand-up a
+Slack o Telegram (interludio, 2.4). Las decisiones del usuario son vinculantes para
+toda la fase.*
+
+**Decisiones del usuario:**
+
+- **Importadores de Trello, Jira, Asana y Notion: solo documentados.** «Solo necesito
+  Excel por ahora»: una ADR con la receta, sin código que nadie use todavía.
+- **La hoja de SERVITEC, de ida y vuelta**: se migra el cuadro histórico que se llevaba
+  a mano **y** se puede exportar, editar en Excel y volver a subir. Un PROYECTO que no
+  existe se resuelve en el asistente: uno existente, crearlo o descartar sus filas.
+- **Reglas de proyecto y de espacio.**
+- **Entran:** disparadores por fecha; el stand-up a Slack o Telegram, que programa **un
+  admin o el responsable** del departamento; la acción «mensaje a chat»; y recetas
+  listas para usar.
+- El permiso de las reglas no tenía preferencia: se aplica el de abajo.
+
+**Ampliar `workflowRule`, no sustituirlo.** Sigue siendo el mapeo *(integración, evento)
+→ columna* de GitHub y Gitea. Los movimientos que provoca publican `task.status_changed`
+y el motor reacciona a ellos, así que «cuando GitHub la pase a En revisión, avisa a…»
+funciona encadenando. Los dos se editan en la misma página.
+
+**El motor**, en `apps/api/src/automation/`, es un suscriptor más del bus, como la
+actividad o los avisos:
+
+- **Modelo** (migración 0081, solo tablas nuevas): `automation` —`project_id` nulo para
+  una regla de espacio, `team_id` para el stand-up, `trigger_type`, y en `jsonb` la
+  configuración del disparador, las condiciones y las acciones— y `automation_run`, el
+  historial de cada ejecución con el resultado de cada acción, purgado a los 30 días.
+- **Disparadores**: tarea creada, cambia de columna, se asigna, cambia la prioridad,
+  cambia un campo, comentario, etiqueta; vence en N días y vencida (planificador); y una
+  hora fija de ciertos días, solo para el stand-up.
+- **Condición**: las mismas condiciones editables que un widget, compiladas por el motor
+  de filtros y evaluadas sobre la tarea por su id. La semántica es la de las vistas,
+  campos personalizados incluidos.
+- **Acciones**: mover de columna (solo en proyecto: las columnas son de cada uno),
+  marcar hecha, prioridad, vencimiento relativo, campo, etiqueta, asignar a personas o
+  equipo, crear tarea o subtarea, avisar, webhook, mensaje a chat (la integración del
+  proyecto, o un destino propio cifrado en una regla de espacio) y enviar el stand-up.
+- **Lo que no dispara**: lo importado (`origin: "import"`), lo que arrastra una cascada,
+  los proyectos archivados y, en las reglas de espacio, los proyectos «Personal».
+- **Bucles**: la cadena de reglas viaja en el contexto del bus (`eventContext`), y una
+  regla que ya está en ella, o una cadena de tres, no corre y queda anotada.
+- **Actor**: quien guardó la regla por última vez, como las recurrentes. Si pierde el
+  permiso, la regla se pausa y lo dice. La actividad lo enseña como «Automatización
+  ‹nombre›».
+- **Permisos**: una regla de proyecto pide `project:update`; si saca datos fuera —webhook
+  o chat—, también `workspace:manage_settings`, como las integraciones. Una de espacio,
+  `workspace:manage_settings`. El stand-up, eso **o** ser responsable de ese equipo. Los
+  secretos se guardan cifrados y no salen nunca de la API.
+
+**Bloques.** Mismas tallas: **S** unos días · **M** ≈ 1 semana · **L** 2+ semanas. Las
+ADR siguen en la 066 (la 058 sigue reservada).
+
+**Bloque 0 — `workflowRule` a punto** · S
+- **0.1** ✔ Índice único `(proyecto, integración, evento)` con limpieza previa de
+  duplicados; `issue_reopened` en la web, que la API ya maneja; quitar una regla (el hook
+  existía sin consumidor); y el editor respeta el permiso, como el de campos.
+  **Hecho (2026-10-05).** Sin ADR: es un arreglo, no una decisión.
+  - **Migración 0081**: borra los duplicados conservando la regla guardada la última y
+    crea el índice. El guardado pasa a ser un solo `INSERT … ON CONFLICT DO UPDATE`, y la
+    siembra heredada de las integraciones, `ON CONFLICT DO NOTHING`.
+  - **En la web**: «Por defecto» encabeza cada desplegable y, elegido, quita la regla; un
+    texto explica que entonces decide la integración. Sale «Issue reabierto». Sin
+    `project:update` los desplegables se ven pero no se tocan.
+  - **Pruebas**: seis de integración (`workflow-rule.test.ts`), entre ellas la migración
+    sobre duplicados reales y veinte guardados simultáneos del mismo evento, que con el
+    guardado antiguo dan un 500 (comprobado dos de dos), y un e2e
+    (`workflow-rules.spec.ts`) que falla sin el cambio.
+  - **De paso**: `hardcoded-copy.test.ts` caducaba a los 5 s con la máquina cargada
+    —analiza todos los `.tsx`; a solas tarda ~2 s—. Lleva ahora su propio plazo de 30 s.
+
+**Bloque 1 — Motor** · L
+- **1.1 Modelo y API** · M · ADR 066. Tablas, router `/automation` con Valibot y OpenAPI,
+  historial paginado por cursor.
+- **1.2 Ejecución** · M · ADR 067. Emparejar, condición, cadena contra bucles, actor y
+  pausa, marcador en actividad y avisos.
+- **1.3 Acciones internas** · M. Envoltorios finos de los controladores que ya existen.
+- **1.4 Acciones de salida** · M. Aviso (tipo `automation`), webhook firmado con la
+  guarda anti-SSRF del webhook genérico, y mensaje a Slack, Discord o Telegram.
+
+**Bloque 2 — Por fecha y programadas** · M
+- **2.1 Disparadores por fecha** · S. Trabajo programado con `withJobLease`; «ya
+  disparado» en `task_reminder_sent`, que el disparador de la 0069 rearma al cambiar el
+  vencimiento. `EXPLAIN` en el banco.
+- **2.2 Stand-up a chat** · M · ADR 068. `standupMarkdown` pasa a `packages/libs` para que
+  web y API compartan una sola implementación. No sale en festivo, las ausencias no
+  aparecen y nunca lleva la valoración. **La ADR deja escrito que enviarlo amplía, a
+  propósito, quién lo lee** —el interludio decidió «solo la persona y su responsable»—: lo
+  decide quien lo programa.
+
+**Bloque 3 — Interfaz** · M–L
+- **3.1** *Ajustes del proyecto › Automatizaciones* (con «Desde GitHub y Gitea») y
+  *Administración del espacio › Automatizaciones*. Editor «Cuando · Si · Entonces» con la
+  barra de filtros de las vistas para la condición.
+- **3.2** Historial de cada regla.
+- **3.3** Recetas: reglas predefinidas que solo rellenan el editor.
+- **3.4** El responsable programa el stand-up desde «Mi equipo».
+
+**Bloque 4 — La hoja de SERVITEC vuelve** · M · ADR 069
+- **Adelantado (2026-10-05), a petición del usuario:** en la celda «Comentario» los
+  comentarios van **seguidos**, uno por línea, sin líneas en blanco ni entre ellos ni
+  dentro de uno —un párrafo vacío del editor dejaba una—, y **la fecha va en negrita**.
+  La celda pasa a ser texto enriquecido de Excel, así que el libro recibe los comentarios
+  como lista (fecha y texto) y no como una cadena ya montada. Pruebas:
+  `servitec-workbook.test.ts` y `task-export-xlsx.test.ts`, que miran el texto y qué
+  trozos van en negrita después de releer el fichero.
+- **4.1** La exportación gana una columna **oculta** con el id de la tarea; la captura
+  diaria no cambia.
+- **4.2** Lector de la hoja que busca la fila de cabeceras —el cuadro histórico se hizo a
+  mano—, salta la leyenda y los relevos, y parte «Comentario» en comentarios fechados.
+  Sin líneas en blanco entre ellos, **una línea que empieza por `dd/mm/yyyy —` abre un
+  comentario y las demás siguen al de arriba**; y la celda puede venir como texto
+  enriquecido, no solo como texto.
+- **4.3** Importar con el núcleo del importador de Excel abierto a una transacción externa
+  (segundo consumidor, que es lo que justifica separarlo). Identidad por la columna de
+  id o, sin ella, por `external_ref` con una huella de proyecto + concepto + fecha. El
+  estado vuelve a columna con el inverso de la exportación. Los comentarios entran con
+  su fecha y sin avisos, y no se repite uno que la tarea ya tenga del mismo día con el
+  mismo texto.
+- **4.4** Asistente en la administración del espacio, junto a la exportación.
+
+**Bloque 5 — Importadores documentados y cierre** · S
+- **5.1** ADR 070, «Cómo se añade un importador externo»: qué piezas reutilizar, qué falta
+  —guardar en el servidor un fichero descargado; hoy solo hay URL prefirmada de S3— y
+  notas por origen.
+- **5.2** `funcionalidades.md`, este documento y `AGENTS.md`.
+- **5.3** Verificación de la fase.
+
+**Hecho cuando:** importas el cuadro de SERVITEC que se llevaba a mano y lo vuelves a
+subir sin duplicar nada; exportas, cambias un estado en Excel y al subirlo cambia en
+Riuna; una regla de proyecto mueve una tarea, avisa y dispara un webhook sin
+intervención; una regla de espacio sube la prioridad de lo que vence mañana en cualquier
+proyecto; y el stand-up de un departamento llega a Telegram a su hora, y en festivo no
+sale.
+
+**Fuera de alcance, declarado:** los cuatro importadores externos (solo la ADR 070),
+herramientas MCP de automatizaciones, WebSocket para la lista de reglas, reintentos de
+webhook, tope de ejecuciones por minuto, disparadores directos de eventos de GitHub o
+Gitea (se encadenan a través de `workflowRule`) y enviar la hoja de SERVITEC programada.
 
 ### Fase 9 — Operación (≈2 semanas)
 Logs estructurados, métricas, límites de tasa, repaso de índices con datos
@@ -2383,6 +2524,9 @@ destructiva.
 ---
 
 ## Cierre de la deuda de las fases cerradas
+
+**Cerrado (2026-10-05).** Las cinco tandas y sus remates están en `main` (PR #38–#45). Solo
+queda abierta, por decisión del usuario, la facturación heredada.
 
 *Decidido el 2026-10-03, antes de empezar la Fase 8: dejar a cero lo que las fases
 anteriores declararon pendiente, o cerrarlo por escrito con su razón. El inventario
@@ -2761,7 +2905,10 @@ mismo que hace la API al arrancar y sin planificador, plugins ni WebSocket:
 
 Falta desplegar la instancia como explica [actualizar.md](actualizar.md).
 
-Lo siguiente es la **Fase 8**: automatizaciones e importadores externos.
+La **Fase 8** está en curso desde el 2026-10-05, replanificada: motor de
+automatizaciones, hoja de SERVITEC de ida y vuelta y stand-up a chat, con los
+importadores externos solo documentados. Empieza por el Bloque 0 (`workflowRule` a
+punto); ver su [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--en-curso).
 
 **Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
 seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.
