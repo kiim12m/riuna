@@ -1704,6 +1704,42 @@
 				"rules": "En festivo no se envía, y quien está ausente no aparece.",
 				"saved": "Envío programado"
 			}
+		},
+		"servitecImport": {
+			"rowTitle": "Importar la hoja de SERVITEC",
+			"rowDescription": "El cuadro que se llevaba a mano, o una exportación editada en Excel: vuelven sus estados y comentarios.",
+			"open": "Importar",
+			"title": "Importar la hoja de SERVITEC",
+			"hint": "Una fila exportada desde Riuna actualiza su tarea por su ID oculto. Sin él, volver a subir la misma hoja no duplica nada. La hoja nunca mueve una tarea a otro proyecto.",
+			"file": "Hoja (.xlsx)",
+			"summary_one": "{{count}} fila: {{existing}} son tareas que ya existen, con {{comments}} comentarios.",
+			"summary_other": "{{count}} filas: {{existing}} son tareas que ya existen, con {{comments}} comentarios.",
+			"knownProject": "{{name}}: {{count}} filas",
+			"unknownProject": "«{{name}}» no existe ({{count}} filas)",
+			"choice": {
+				"create": "Crear el proyecto «{{name}}»",
+				"skip": "Descartar sus filas",
+				"map": "Llevarlas a «{{name}}»"
+			},
+			"check": "Comprobar",
+			"import": "Importar",
+			"close": "Cerrar",
+			"imported": "Hoja importada",
+			"error": "No se ha podido leer la hoja",
+			"report": {
+				"checkTitle": "Si la importas:",
+				"doneTitle": "Importada:",
+				"created_one": "{{count}} tarea creada",
+				"created_other": "{{count}} tareas creadas",
+				"updated_one": "{{count}} tarea actualizada",
+				"updated_other": "{{count}} tareas actualizadas",
+				"skipped_one": "{{count}} fila descartada",
+				"skipped_other": "{{count}} filas descartadas",
+				"comments": "{{added}} comentarios añadidos, {{kept}} que ya estaban",
+				"pending_one": "{{count}} tarea en el proyecto nuevo «{{name}}»",
+				"pending_other": "{{count}} tareas en el proyecto nuevo «{{name}}»",
+				"failure": "Fila {{row}}: {{error}}"
+			}
 		}
 	},
 	"navigation": {

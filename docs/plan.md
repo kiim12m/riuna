@@ -2444,20 +2444,31 @@ ADR siguen en la 066 (la 058 sigue reservada).
   como lista (fecha y texto) y no como una cadena ya montada. Pruebas:
   `servitec-workbook.test.ts` y `task-export-xlsx.test.ts`, que miran el texto y qué
   trozos van en negrita después de releer el fichero.
-- **4.1** La exportación gana una columna **oculta** con el id de la tarea; la captura
+- **4.1** ✔ La exportación lleva el id de cada tarea en la columna J, oculta; la captura
   diaria no cambia.
-- **4.2** Lector de la hoja que busca la fila de cabeceras —el cuadro histórico se hizo a
-  mano—, salta la leyenda y los relevos, y parte «Comentario» en comentarios fechados.
-  Sin líneas en blanco entre ellos, **una línea que empieza por `dd/mm/yyyy —` abre un
-  comentario y las demás siguen al de arriba**; y la celda puede venir como texto
-  enriquecido, no solo como texto.
-- **4.3** Importar con el núcleo del importador de Excel abierto a una transacción externa
-  (segundo consumidor, que es lo que justifica separarlo). Identidad por la columna de
-  id o, sin ella, por `external_ref` con una huella de proyecto + concepto + fecha. El
-  estado vuelve a columna con el inverso de la exportación. Los comentarios entran con
-  su fecha y sin avisos, y no se repite uno que la tarea ya tenga del mismo día con el
-  mismo texto.
-- **4.4** Asistente en la administración del espacio, junto a la exportación.
+- **4.2** ✔ Lector puro (`servitec-parse.ts`):
+  - busca la fila de cabeceras por nombre, porque el cuadro histórico se hizo a mano;
+  - salta la leyenda y los relevos;
+  - una línea que empieza por fecha abre un comentario, y las demás siguen al de arriba.
+- **4.3** ✔ Importar (`import-servitec.ts` y `servitec-{plan,write,finish,comments}.ts`):
+  - el núcleo del importador de Excel sale a `importTasksInTransaction`, y sus eventos a
+    `publishImportEvents`: SERVITEC es el segundo consumidor;
+  - una transacción para el libro, con los cerrojos en orden de id;
+  - identidad por id o por huella en `external_ref`;
+  - estado a columna sin mover lo que ya cuadra;
+  - fecha de alta de la hoja en las altas;
+  - comentarios con su día, sin avisos y sin repetir;
+  - un proyecto nuevo se crea antes y se borra si falla.
+- **4.4** ✔ Asistente en *Administración del espacio › General*, junto a la exportación:
+  subir, ver qué trae, decidir cada proyecto que no existe, «Comprobar» e importar.
+- **Hecho (2026-10-07)**, [ADR 069](adr/069-la-hoja-de-servitec-vuelve.md). Pruebas:
+  - ocho unitarias del lector y del paso de estado a columna;
+  - seis de integración: migrar el cuadro creando un proyecto, subirlo dos veces sin
+    duplicar, ida y vuelta por el ID oculto que cambia concepto y estado y añade solo el
+    comentario nuevo, proyectos desconocidos (preguntar, descartar, llevar a otro),
+    ensayo sin escribir, y permisos;
+  - un e2e del asistente.
+  - Las 19 del importador de Excel siguen en verde tras separar su núcleo.
 
 **Bloque 5 — Importadores documentados y cierre** · S
 - **5.1** ADR 070, «Cómo se añade un importador externo»: qué piezas reutilizar, qué falta

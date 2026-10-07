@@ -6717,6 +6717,148 @@
 						"editor",
 						"standup"
 					]
+				},
+				"servitecImport": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"rowTitle": {
+							"type": "string"
+						},
+						"rowDescription": {
+							"type": "string"
+						},
+						"open": {
+							"type": "string"
+						},
+						"title": {
+							"type": "string"
+						},
+						"hint": {
+							"type": "string"
+						},
+						"file": {
+							"type": "string"
+						},
+						"summary_one": {
+							"type": "string"
+						},
+						"summary_other": {
+							"type": "string"
+						},
+						"knownProject": {
+							"type": "string"
+						},
+						"unknownProject": {
+							"type": "string"
+						},
+						"choice": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"create": {
+									"type": "string"
+								},
+								"skip": {
+									"type": "string"
+								},
+								"map": {
+									"type": "string"
+								}
+							},
+							"required": ["create", "skip", "map"]
+						},
+						"check": {
+							"type": "string"
+						},
+						"import": {
+							"type": "string"
+						},
+						"close": {
+							"type": "string"
+						},
+						"imported": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						},
+						"report": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"checkTitle": {
+									"type": "string"
+								},
+								"doneTitle": {
+									"type": "string"
+								},
+								"created_one": {
+									"type": "string"
+								},
+								"created_other": {
+									"type": "string"
+								},
+								"updated_one": {
+									"type": "string"
+								},
+								"updated_other": {
+									"type": "string"
+								},
+								"skipped_one": {
+									"type": "string"
+								},
+								"skipped_other": {
+									"type": "string"
+								},
+								"comments": {
+									"type": "string"
+								},
+								"pending_one": {
+									"type": "string"
+								},
+								"pending_other": {
+									"type": "string"
+								},
+								"failure": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"checkTitle",
+								"doneTitle",
+								"created_one",
+								"created_other",
+								"updated_one",
+								"updated_other",
+								"skipped_one",
+								"skipped_other",
+								"comments",
+								"pending_one",
+								"pending_other",
+								"failure"
+							]
+						}
+					},
+					"required": [
+						"rowTitle",
+						"rowDescription",
+						"open",
+						"title",
+						"hint",
+						"file",
+						"summary_one",
+						"summary_other",
+						"knownProject",
+						"unknownProject",
+						"choice",
+						"check",
+						"import",
+						"close",
+						"imported",
+						"error",
+						"report"
+					]
 				}
 			},
 			"required": [
@@ -6758,7 +6900,8 @@
 				"projectTemplates",
 				"projectFields",
 				"workspaceFields",
-				"automations"
+				"automations",
+				"servitecImport"
 			]
 		},
 		"navigation": {

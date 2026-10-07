@@ -1704,6 +1704,42 @@
 				"rules": "It is not sent on holidays, and whoever is away does not appear.",
 				"saved": "Delivery scheduled"
 			}
+		},
+		"servitecImport": {
+			"rowTitle": "Import the SERVITEC sheet",
+			"rowDescription": "The board kept by hand, or an export edited in Excel: its states and comments come back.",
+			"open": "Import",
+			"title": "Import the SERVITEC sheet",
+			"hint": "A row exported from Riuna updates its task by its hidden ID. Without it, uploading the same sheet again duplicates nothing. The sheet never moves a task to another project.",
+			"file": "Sheet (.xlsx)",
+			"summary_one": "{{count}} row: {{existing}} are tasks that already exist, with {{comments}} comments.",
+			"summary_other": "{{count}} rows: {{existing}} are tasks that already exist, with {{comments}} comments.",
+			"knownProject": "{{name}}: {{count}} rows",
+			"unknownProject": "“{{name}}” does not exist ({{count}} rows)",
+			"choice": {
+				"create": "Create the project “{{name}}”",
+				"skip": "Discard its rows",
+				"map": "Put them in “{{name}}”"
+			},
+			"check": "Check",
+			"import": "Import",
+			"close": "Close",
+			"imported": "Sheet imported",
+			"error": "The sheet could not be read",
+			"report": {
+				"checkTitle": "If you import it:",
+				"doneTitle": "Imported:",
+				"created_one": "{{count}} task created",
+				"created_other": "{{count}} tasks created",
+				"updated_one": "{{count}} task updated",
+				"updated_other": "{{count}} tasks updated",
+				"skipped_one": "{{count}} row discarded",
+				"skipped_other": "{{count}} rows discarded",
+				"comments": "{{added}} comments added, {{kept}} already there",
+				"pending_one": "{{count}} task in the new project “{{name}}”",
+				"pending_other": "{{count}} tasks in the new project “{{name}}”",
+				"failure": "Row {{row}}: {{error}}"
+			}
 		}
 	},
 	"navigation": {

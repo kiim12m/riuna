@@ -137,7 +137,13 @@ async function importTasks(input: ImportInput): Promise<ImportReport> {
   let outcome: { report: ImportReport; created: Task[] };
 
   try {
-    outcome = await db.transaction((tx) => run(tx, input, project));
+    outcome = await db.transaction(async (tx) => {
+      const result = await importTasksInTransaction(tx, input, project);
+      // Lanzar deshace la transaccion. Es la unica forma de recorrer el camino
+      // real —restricciones de la base incluidas— sin dejar rastro.
+      if (input.dryRun) throw new DryRunComplete(result.report);
+      return result;
+    });
   } catch (error) {
     if (error instanceof DryRunComplete) {
       return error.report;
@@ -145,22 +151,36 @@ async function importTasks(input: ImportInput): Promise<ImportReport> {
     throw error;
   }
 
-  // Los eventos van **despues** del commit: emitirlos dentro haria que un
-  // consumidor leyera una tarea que todavia no existe para el, y un fallo
-  // posterior dejaria avisos de algo que se deshizo.
-  //
-  // Y por tandas y sin esperar la respuesta: miles de `task.created` de golpe
-  // dejaban a los gestores sin conexion y perdian su actividad (ver
-  // `publishEventsPaced`). Quien importa ya tiene su informe; los avisos y la
-  // actividad llegan en cuanto la base va dando de si.
+  publishImportEvents(outcome.created, input.currentUserId);
+
+  return outcome.report;
+}
+
+type Task = typeof taskTable.$inferSelect;
+
+/**
+ * Los `task.created` de lo importado, **despues** del commit: emitirlos dentro
+ * haria que un consumidor leyera una tarea que todavia no existe para el, y un
+ * fallo posterior dejaria avisos de algo que se deshizo.
+ *
+ * Y por tandas y sin esperar la respuesta: miles de `task.created` de golpe
+ * dejaban a los gestores sin conexion y perdian su actividad (ver
+ * `publishEventsPaced`). Quien importa ya tiene su informe; los avisos y la
+ * actividad llegan en cuanto la base va dando de si. Lo comparten el
+ * importador de Excel y la hoja de SERVITEC.
+ */
+export function publishImportEvents(
+  created: readonly Task[],
+  currentUserId: string,
+) {
   void publishEventsPaced(
-    outcome.created.map((task) => ({
+    created.map((task) => ({
       type: "task.created",
       data: {
         ...task,
         taskId: task.id,
         userId: task.userId ?? "",
-        currentUserId: input.currentUserId,
+        currentUserId,
         // Importar no dispara automatizaciones (ADR 067): miles de altas
         // no son miles de decisiones de nadie.
         origin: "import",
@@ -169,18 +189,20 @@ async function importTasks(input: ImportInput): Promise<ImportReport> {
       },
     })),
   ).catch((error) => console.error("Failed to publish import events:", error));
-
-  return outcome.report;
 }
 
-type Task = typeof taskTable.$inferSelect;
-
-type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Project = NonNullable<
   Awaited<ReturnType<typeof db.query.projectTable.findFirst>>
 >;
 
-async function run(
+/**
+ * El nucleo del importador, dentro de la transaccion de quien llama. Lo usa el
+ * importador de Excel y la hoja de SERVITEC (ADR 069), que importa varios
+ * proyectos en una sola transaccion. Toma el cerrojo de arbol del proyecto
+ * (ADR 016) y deja a quien llama deshacer o publicar los eventos.
+ */
+export async function importTasksInTransaction(
   tx: Tx,
   input: ImportInput,
   project: Project,
@@ -605,12 +627,6 @@ async function run(
       rows: results,
     },
   };
-
-  if (input.dryRun) {
-    // Lanzar deshace la transaccion. Es la unica forma de recorrer el camino
-    // real —restricciones de la base incluidas— sin dejar rastro.
-    throw new DryRunComplete(report);
-  }
 
   return { report, created };
 }

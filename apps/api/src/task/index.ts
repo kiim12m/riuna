@@ -34,6 +34,7 @@ import { workspaceAccess } from "../utils/workspace-access-middleware";
 import { parseFilterParam } from "../view/filter-schema";
 import { FilterError, type FilterNode } from "../view/filter-to-sql";
 import analyzeImport from "./controllers/analyze-import";
+import { analyzeServitec } from "./controllers/analyze-servitec";
 import bulkUpdateTasks from "./controllers/bulk-update-tasks";
 import completeTask from "./controllers/complete-task";
 import createTask from "./controllers/create-task";
@@ -43,6 +44,7 @@ import exportTasks from "./controllers/export-tasks";
 import exportWorkspaceTasks from "./controllers/export-workspace-tasks";
 import getTask from "./controllers/get-task";
 import getTasks from "./controllers/get-tasks";
+import { importServitec } from "./controllers/import-servitec";
 import importTasks from "./controllers/import-tasks";
 import moveTask from "./controllers/move-task";
 import {
@@ -70,6 +72,16 @@ import {
   rejectOversized,
 } from "./exchange/upload";
 import { VALID_PRIORITIES } from "./validate-task-fields";
+
+// Que hacer con cada PROYECTO de la hoja SERVITEC que no existe (ADR 069).
+const servitecChoicesSchema = v.record(
+  v.pipe(v.string(), v.maxLength(200)),
+  v.variant("action", [
+    v.object({ action: v.literal("map"), projectId: v.string() }),
+    v.object({ action: v.literal("create") }),
+    v.object({ action: v.literal("skip") }),
+  ]),
+);
 
 const task = new Hono<{
   Variables: {
@@ -664,6 +676,97 @@ const task = new Hono<{
       });
 
       return c.json(report);
+    },
+  )
+  .post(
+    "/import/servitec/:workspaceId/analyze",
+    describeRoute({
+      operationId: "analyzeServitecImport",
+      tags: ["Tasks"],
+      description:
+        "Read a SERVITEC sheet without writing anything: how many rows, which are tasks that already exist, and which PROYECTO names match no project",
+      responses: {
+        200: {
+          description: "What the sheet would bring",
+          content: { "application/json": { schema: resolver(v.any()) } },
+        },
+      },
+    }),
+    bodyLimit({ maxSize: MAX_IMPORT_UPLOAD_BYTES, onError: rejectOversized }),
+    validator("param", v.object({ workspaceId: v.string() })),
+    validator("form", v.object({ file: v.instance(File) })),
+    workspaceAccess.fromParam("workspaceId"),
+    requireWorkspacePermission({ task: ["create"] }),
+    async (c) => {
+      const { workspaceId } = c.req.valid("param");
+      const upload = await readUpload(c);
+      return c.json(await analyzeServitec(workspaceId, upload.buffer));
+    },
+  )
+  .post(
+    "/import/servitec/:workspaceId",
+    describeRoute({
+      operationId: "importServitec",
+      tags: ["Tasks"],
+      description:
+        "Import a SERVITEC sheet into the workspace: the hand-kept board or one exported before. A row with the hidden ID updates its task; without it, the same row is recognised by project, concept and date. `choices` (JSON) says what to do with each PROYECTO that matches no project: map it, create it or skip its rows. Creating one needs project:create",
+      responses: {
+        200: {
+          description: "What the import did",
+          content: { "application/json": { schema: resolver(v.any()) } },
+        },
+      },
+    }),
+    bodyLimit({ maxSize: MAX_IMPORT_UPLOAD_BYTES, onError: rejectOversized }),
+    validator("param", v.object({ workspaceId: v.string() })),
+    validator(
+      "form",
+      v.object({
+        file: v.instance(File),
+        choices: v.optional(v.string()),
+        dryRun: v.optional(v.string()),
+      }),
+    ),
+    workspaceAccess.fromParam("workspaceId"),
+    requireWorkspacePermission({ task: ["create"] }),
+    requireEntitlement,
+    async (c) => {
+      const upload = await readUpload(c);
+      const raw = c.req.valid("form").choices;
+      let parsed: unknown = {};
+      try {
+        parsed = raw ? JSON.parse(raw) : {};
+      } catch {
+        throw new HTTPException(400, { message: "choices is not valid JSON" });
+      }
+      const choices = v.safeParse(servitecChoicesSchema, parsed);
+      if (!choices.success) {
+        throw new HTTPException(400, {
+          message: "choices has an unexpected shape",
+        });
+      }
+      // Crear proyectos es lo que gobierna `project:create`; importar tareas
+      // en los que ya hay sigue al alcance de un `member`.
+      if (
+        Object.values(choices.output).some(
+          (choice) => choice.action === "create",
+        ) &&
+        !(await hasWorkspacePermission(c, { project: ["create"] }))
+      ) {
+        throw new HTTPException(403, {
+          message:
+            "Creating projects while importing requires permission to create projects",
+        });
+      }
+      return c.json(
+        await importServitec({
+          workspaceId: c.req.valid("param").workspaceId,
+          currentUserId: c.get("userId"),
+          buffer: upload.buffer,
+          choices: choices.output,
+          dryRun: upload.dryRun,
+        }),
+      );
     },
   )
   .delete(

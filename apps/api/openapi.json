@@ -3032,6 +3032,114 @@
         "summary": "Import Tasks"
       }
     },
+    "/task/import/servitec/{workspaceId}/analyze": {
+      "post": {
+        "operationId": "analyzeServitecImport",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Read a SERVITEC sheet without writing anything: how many rows, which are tasks that already exist, and which PROYECTO names match no project",
+        "responses": {
+          "200": {
+            "description": "What the sheet would bring",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Analyze Servitec Import"
+      }
+    },
+    "/task/import/servitec/{workspaceId}": {
+      "post": {
+        "operationId": "importServitec",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Import a SERVITEC sheet into the workspace: the hand-kept board or one exported before. A row with the hidden ID updates its task; without it, the same row is recognised by project, concept and date. `choices` (JSON) says what to do with each PROYECTO that matches no project: map it, create it or skip its rows. Creating one needs project:create",
+        "responses": {
+          "200": {
+            "description": "What the import did",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "choices": {
+                    "type": "string"
+                  },
+                  "dryRun": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Import Servitec"
+      }
+    },
     "/task/status/{id}": {
       "put": {
         "operationId": "updateTaskStatus",
