@@ -26,7 +26,7 @@
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
 | Interludio — Productividad personal y equipo | 18 | **Cerrado** — Bloques 0 a 5; el 4.2 (importar iCal), aplazado · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--cerrado) |
 | Cierre de la deuda de las fases cerradas | 18 | **Cerrado** — cinco tandas, en `main` el 2026-10-05 (PR #38–#45); la facturación heredada sigue abierta por decisión · [inventario](#cierre-de-la-deuda-de-las-fases-cerradas) |
-| 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **En curso** — replanificada el 2026-10-05 · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--en-curso) |
+| 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **41** + 18 del interludio | |
 
@@ -384,7 +384,7 @@ invitaciones, i18n y tema claro/oscuro.
 | Motor de vistas: filtros guardados, agrupación, columnas, **vista Tabla editable** | **Hecho** (fase 4), salvo agrupación y columnas configurables |
 | Importación CSV/Excel genérica con mapeo | Hay import/export de tareas; hay que generalizarlo |
 | Dashboards, widgets, informes y objetivos/OKR | No existe |
-| Automatizaciones de usuario | Solo `workflowRule` para eventos de integración |
+| Automatizaciones de usuario | **Hecho** (fase 8): reglas de proyecto y de espacio, por evento y por fecha |
 | Ciclos/sprints, recurrentes, plantillas, "Mi trabajo" | Confirmado inexistente en la auditoría |
 | CRM y ERP | No existe (Bloque B) |
 
@@ -2256,7 +2256,7 @@ pendiente, trabajas en foco con avisos del navegador, ves tu plan con hora en tu
 tu responsable ve tu plan y tu carga —con ausencias y festivos— pero no tu valoración. Ver tus
 reuniones en el Cronograma se aplazó con el 4.2.
 
-### Fase 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat · **en curso**
+### Fase 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat · **cerrada**
 
 *Replanificada el 2026-10-05 al empezarla, preguntando antes de diseñar. El texto
 original pedía el motor de automatizaciones e importadores de Trello, Jira, Asana y
@@ -2471,11 +2471,27 @@ ADR siguen en la 066 (la 058 sigue reservada).
   - Las 19 del importador de Excel siguen en verde tras separar su núcleo.
 
 **Bloque 5 — Importadores documentados y cierre** · S
-- **5.1** ADR 070, «Cómo se añade un importador externo»: qué piezas reutilizar, qué falta
-  —guardar en el servidor un fichero descargado; hoy solo hay URL prefirmada de S3— y
-  notas por origen.
-- **5.2** `funcionalidades.md`, este documento y `AGENTS.md`.
-- **5.3** Verificación de la fase.
+- **5.1** ✔ [ADR 070](adr/070-como-se-anade-un-importador-externo.md), «Cómo se añade un
+  importador externo»: un adaptador del lado del servidor sobre
+  `importTasksInTransaction`, `external_ref`, los comentarios fechados sin avisos y
+  `origin: "import"`; lo que falta (guardar ficheros sin S3, ampliar la `CHECK` de
+  `external_ref`) y notas de Trello, Jira, Asana y Notion. Sin código.
+- **5.2** ✔ `funcionalidades.md` (automatizaciones, la hoja de vuelta, seis trabajos
+  programados y «Lo que no está»), este documento y `AGENTS.md`, que aún decía que
+  `import-tasks` no era idempotente.
+- **5.3** ✔ **Verificación de la fase (2026-10-07)**, sobre el estado final de los cinco
+  bloques:
+  - integración: 823 bien y 1 omitida, ninguna fallada;
+  - humo: 92 bien, 1 omitida (avisos de ritmo, que se salta sola de noche) y 2 falladas,
+    ya corregidas y repetidas 3 veces cada una:
+    - el e2e de las reglas de GitHub seguía abriendo «Flujo de trabajo», de donde el
+      Bloque 3 movió su editor;
+    - `task-time` consultaba la API antes de que el servidor confirmara el alta del
+      cronómetro. Ahora espera la respuesta;
+  - unitarias: API 789, web 430, MCP 34, permisos 10, libs 6, PLANKA 54 y email 11;
+  - typecheck, `biome ci`, i18n y `openapi.json` al día.
+  - De paso: `leader-lock.test.ts` caía por carga (esperaba un segundo a que el
+    arrendamiento se tomase); ahora espera hasta diez.
 
 **Hecho cuando:** importas el cuadro de SERVITEC que se llevaba a mano y lo vuelves a
 subir sin duplicar nada; exportas, cambias un estado en Excel y al subirlo cambia en
@@ -2993,10 +3009,14 @@ mismo que hace la API al arrancar y sin planificador, plugins ni WebSocket:
 
 Falta desplegar la instancia como explica [actualizar.md](actualizar.md).
 
-La **Fase 8** está en curso desde el 2026-10-05, replanificada: motor de
-automatizaciones, hoja de SERVITEC de ida y vuelta y stand-up a chat, con los
-importadores externos solo documentados. Empieza por el Bloque 0 (`workflowRule` a
-punto); ver su [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--en-curso).
+La **Fase 8** está **cerrada** (2026-10-07):
+- el motor de automatizaciones, de proyecto y de espacio, por evento y por fecha;
+- el stand-up programado a un chat;
+- la hoja de SERVITEC de ida y vuelta;
+- los importadores externos, solo documentados (ADR 070).
+
+Ver su [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada).
+Lo siguiente es la **Fase 9**: operación.
 
 **Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
 seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.

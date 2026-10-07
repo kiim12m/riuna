@@ -11,9 +11,9 @@
 Riuna es una plataforma de productividad **self-hosted**: gestión de proyectos
 y tareas primero, CRM y ERP ligero después. Es un fork duro de
 [Kaneo](https://github.com/usekaneo/kaneo) v2.22.0 mantenido como programa
-independiente. A fecha de este documento están cerradas las fases 0 a 7.5 del
-plan; las fases 8 (automatizaciones e importadores externos) y 9 (operación)
-siguen pendientes.
+independiente. A fecha de este documento están cerradas las fases 0 a 8 del
+plan; la 9 (operación) sigue pendiente. De la 8, los importadores de Trello,
+Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
 
 ---
 
@@ -512,12 +512,28 @@ la tarea y en la propia tabla.
   reimportación.
 - **Exportar** a CSV, a Excel y a copia JSON; **cualquier vista con sus filtros
   aplicados**; y el libro completo del espacio en formato SERVITEC
-  ([ADR 012](adr/012-exportacion-a-excel.md)).
+  ([ADR 012](adr/012-exportacion-a-excel.md)), con los comentarios seguidos y la
+  fecha de cada uno en negrita.
+- **La hoja de SERVITEC de vuelta** ([ADR 069](adr/069-la-hoja-de-servitec-vuelve.md)),
+  desde *Administración del espacio › General*:
+  - sirve para migrar el cuadro que se llevaba a mano y para la ida y vuelta,
+    exportar, editar en Excel y volver a subir;
+  - una fila exportada actualiza su tarea por el ID que lleva en una columna oculta;
+  - sin él, subir dos veces la misma hoja no duplica nada;
+  - el asistente resuelve cada PROYECTO que no existe: crearlo, llevar sus filas a
+    otro o descartarlas;
+  - los estados vuelven a columnas y los comentarios entran con su día y sin
+    repetirse;
+  - tiene ensayo en seco;
+  - la hoja no mueve tareas de proyecto.
 - **Importar issues** existentes de GitHub y de Gitea.
 - **Importador de PLANKA** (`packages/planka-import`): una CLI que lee PLANKA
   por su API y crea en Riuna por la API pública con una API key, con
   `--dry-run`. Mapea tableros, listas, tarjetas, checklists, elementos
   enlazados, etiquetas, asignados y comentarios.
+- Los importadores de **Trello, Jira, Asana y Notion** están documentados, no
+  construidos: la receta y lo que falta están en la
+  [ADR 070](adr/070-como-se-anade-un-importador-externo.md).
 
 ## 11. Integraciones
 
@@ -534,6 +550,61 @@ la tarea y en la propia tabla.
   ejemplo, «cuando se abre un pull request, mueve la tarea a En revisión».
 - **Enlaces externos** en la tarea: issue, rama y pull requests con su estado
   (merged, draft, open).
+
+### Automatizaciones
+
+Reglas de la forma **«Cuando · Si · Entonces»**
+([ADR 066](adr/066-automatizaciones-modelo-y-alcance.md),
+[067](adr/067-como-corre-una-automatizacion.md)), en *Ajustes del proyecto ›
+Automatizaciones* y en *Administración del espacio › Automatizaciones*.
+
+- **De proyecto o de espacio.** Las de espacio actúan en todos los proyectos menos
+  los «Personal», y no nombran columnas: dicen «a una columna final» y «marcar
+  hecha».
+- **Cuando:**
+  - se crea una tarea;
+  - cambia de columna (de una a otra, o a una final);
+  - se asigna a alguien o a un departamento;
+  - cambia la prioridad o un campo personalizado;
+  - alguien comenta;
+  - se le pone una etiqueta;
+  - **vence en N días**, o **está vencida**.
+- **Si:** los mismos filtros que las vistas, campos personalizados incluidos.
+- **Entonces**, en orden; si una falla, las siguientes no se hacen:
+  - mover a una columna;
+  - marcar hecha;
+  - prioridad;
+  - vencimiento relativo;
+  - un campo personalizado;
+  - una etiqueta;
+  - asignar personas o un departamento;
+  - crear una tarea o subtarea;
+  - **avisar** a asignados, a quien la creó, al departamento o a su responsable;
+  - **webhook firmado**;
+  - **mensaje a Slack, Discord o Telegram**.
+
+  Los textos admiten `{tarea}`, `{titulo}`, `{estado}`, `{proyecto}` y `{enlace}`.
+- **Encadenan con las reglas de GitHub y Gitea**: los movimientos que estas provocan
+  disparan aquellas.
+- **Actúa en nombre de quien la guardó por última vez.**
+  - Si esa persona pierde el permiso, la regla se pausa sola y lo dice.
+  - En la actividad aparece como «Automatización ‹nombre›».
+- **No disparan** con lo importado ni con lo que arrastra una cascada, y cortan los
+  bucles entre reglas.
+- **Historial** de cada ejecución: lo que hizo, la acción que falló y por qué no corrió.
+- **Cinco recetas** listas para usar.
+- **Permisos:**
+  - de proyecto, `project:update`; si sacan datos fuera, también
+    `workspace:manage_settings`;
+  - de espacio, `workspace:manage_settings`.
+
+  Los secretos (el del webhook, el del bot, la URL de Slack o Discord) se guardan
+  cifrados y no vuelven nunca.
+- **El stand-up de un departamento, a un chat, a una hora fija**
+  ([ADR 068](adr/068-el-stand-up-sale-de-riuna.md)).
+  - Lo programa el responsable desde «Mi equipo», o un admin.
+  - Sale una vez al día. En festivo no sale, quien está ausente no aparece y nunca
+    lleva la valoración.
 
 ## 12. MCP — agentes de IA
 
@@ -608,9 +679,10 @@ no lista los proyectos Personal.
   renombrado al final. La **restauración está verificada**: comprueba el
   volcado antes de tocar nada y permite restaurar a una base de ensayo. Ver
   [copias de seguridad](copias-de-seguridad.md).
-- **Cinco trabajos programados**: recordatorios de vencimiento, recordatorios
-  de webhook de proyecto, reconciliación de asientos, recordatorios de prueba y
-  generación de tareas recurrentes.
+- **Seis trabajos programados**: recordatorios de vencimiento, recordatorios
+  de webhook de proyecto, reconciliación de asientos, recordatorios de prueba,
+  generación de tareas recurrentes y automatizaciones (por fecha, el stand-up
+  programado y la purga de su historial a los 30 días).
 - **«Hoy» es el día de Madrid** ([ADR 049](adr/049-la-api-vive-en-madrid.md)):
   la API corre en `Europe/Madrid` (fijado en su imagen) y PostgreSQL en UTC.
   Un vencimiento elegido en el calendario vence ese día, no el anterior.
@@ -633,10 +705,15 @@ no lista los proyectos Personal.
 
 Para que nadie busque lo que no existe:
 
-- **Motor de automatizaciones de usuario** (disparador → condición → acción).
-  Solo existe `workflowRule`, que mapea eventos de integración a columnas.
-- **Importadores de Trello, Jira, Asana y Notion** — fase 8.
-- **Importar** la hoja de SERVITEC: se exporta, no se importa.
+- ~~**Motor de automatizaciones de usuario**.~~ Ya existe. Lo que le falta:
+  - reintentos de webhook: un fallo queda en el historial;
+  - un tope de ejecuciones por minuto;
+  - herramientas MCP;
+  - que la lista de reglas se refresque sola sin volver a cargar.
+- **Importadores de Trello, Jira, Asana y Notion**: solo documentados
+  ([ADR 070](adr/070-como-se-anade-un-importador-externo.md)). Les falta, sobre todo,
+  guardar adjuntos sin S3.
+- ~~**Importar** la hoja de SERVITEC.~~ Ya se puede, de ida y vuelta.
 - ~~**Agrupar por épica** y elegir qué columnas se ven en la vista Tabla.~~ Ya se puede, y la vista guardada lo recuerda.
 - ~~**Editor de definiciones de campos personalizados**: renombrar, archivar,
   borrar y reordenar existen en la API y no en la interfaz.~~ Ya existe, en los
