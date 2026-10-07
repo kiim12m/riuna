@@ -4,7 +4,8 @@ type Column = { id: string; name: string };
 type Rule = { id: string; eventType: string; columnId: string };
 
 /**
- * Las reglas de GitHub y Gitea (Fase 8, Bloque 0): el editor no dejaba
+ * Las reglas de GitHub y Gitea (Fase 8, Bloque 0), que desde el Bloque 3 viven
+ * en la pagina de Automatizaciones del proyecto: el editor no dejaba
  * quitar una regla —el hook existia sin consumidor— ni ofrecia «issue
  * reabierto», que la API ya resolvia.
  */
@@ -29,7 +30,7 @@ test.describe("Reglas de flujo de trabajo", () => {
       riuna.api<Rule[]>("get", `/api/workflow-rule/${riuna.projectId}`);
 
     await page.goto(
-      `/dashboard/workspace/${riuna.workspaceId}/admin/project-settings/${riuna.projectId}/workflow`,
+      `/dashboard/workspace/${riuna.workspaceId}/admin/project-settings/${riuna.projectId}/automations`,
     );
     const row = page.getByTestId("workflow-rule-github-pr_opened");
     await expect(row.getByRole("combobox")).toContainText(target.name, {

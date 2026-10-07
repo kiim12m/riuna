@@ -3844,12 +3844,6 @@
 						},
 						"columnsDescription": {
 							"type": "string"
-						},
-						"automationTitle": {
-							"type": "string"
-						},
-						"automationDescription": {
-							"type": "string"
 						}
 					},
 					"required": [
@@ -3857,9 +3851,7 @@
 						"title",
 						"subtitle",
 						"columnsTitle",
-						"columnsDescription",
-						"automationTitle",
-						"automationDescription"
+						"columnsDescription"
 					]
 				},
 				"projectSwitcher": {
@@ -6007,6 +5999,724 @@
 						}
 					},
 					"required": ["title", "pageTitle", "description"]
+				},
+				"automations": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"projectPageTitle": {
+							"type": "string"
+						},
+						"workspacePageTitle": {
+							"type": "string"
+						},
+						"projectDescription": {
+							"type": "string"
+						},
+						"workspaceDescription": {
+							"type": "string"
+						},
+						"integrationsTitle": {
+							"type": "string"
+						},
+						"integrationsDescription": {
+							"type": "string"
+						},
+						"newRule": {
+							"type": "string"
+						},
+						"fromRecipe": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"noPermission": {
+							"type": "string"
+						},
+						"toggle": {
+							"type": "string"
+						},
+						"actionCount_one": {
+							"type": "string"
+						},
+						"actionCount_other": {
+							"type": "string"
+						},
+						"history": {
+							"type": "string"
+						},
+						"edit": {
+							"type": "string"
+						},
+						"archive": {
+							"type": "string"
+						},
+						"archived": {
+							"type": "string"
+						},
+						"archiveTitle": {
+							"type": "string"
+						},
+						"archiveDescription": {
+							"type": "string"
+						},
+						"archiveAction": {
+							"type": "string"
+						},
+						"paused": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"actor_lost_permission": {
+									"type": "string"
+								},
+								"generic": {
+									"type": "string"
+								}
+							},
+							"required": ["actor_lost_permission", "generic"]
+						},
+						"status": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"ok": {
+									"type": "string"
+								},
+								"failed": {
+									"type": "string"
+								},
+								"skipped": {
+									"type": "string"
+								}
+							},
+							"required": ["ok", "failed", "skipped"]
+						},
+						"reasons": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"loop": {
+									"type": "string"
+								},
+								"actor_lost_permission": {
+									"type": "string"
+								},
+								"holiday": {
+									"type": "string"
+								},
+								"no_members": {
+									"type": "string"
+								},
+								"everyone_away": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"loop",
+								"actor_lost_permission",
+								"holiday",
+								"no_members",
+								"everyone_away"
+							]
+						},
+						"runs": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"empty": {
+									"type": "string"
+								},
+								"more": {
+									"type": "string"
+								},
+								"failedAction": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "empty", "more", "failedAction"]
+						},
+						"channels": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"slack": {
+									"type": "string"
+								},
+								"discord": {
+									"type": "string"
+								},
+								"telegram": {
+									"type": "string"
+								}
+							},
+							"required": ["slack", "discord", "telegram"]
+						},
+						"triggers": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"task_created": {
+									"type": "string"
+								},
+								"task_status_changed": {
+									"type": "string"
+								},
+								"task_assigned": {
+									"type": "string"
+								},
+								"task_priority_changed": {
+									"type": "string"
+								},
+								"task_field_changed": {
+									"type": "string"
+								},
+								"task_commented": {
+									"type": "string"
+								},
+								"task_labeled": {
+									"type": "string"
+								},
+								"task_due_in": {
+									"type": "string"
+								},
+								"task_overdue": {
+									"type": "string"
+								},
+								"schedule": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"task_created",
+								"task_status_changed",
+								"task_assigned",
+								"task_priority_changed",
+								"task_field_changed",
+								"task_commented",
+								"task_labeled",
+								"task_due_in",
+								"task_overdue",
+								"schedule"
+							]
+						},
+						"actions": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"move": {
+									"type": "string"
+								},
+								"complete": {
+									"type": "string"
+								},
+								"priority": {
+									"type": "string"
+								},
+								"due_date": {
+									"type": "string"
+								},
+								"custom_field": {
+									"type": "string"
+								},
+								"label": {
+									"type": "string"
+								},
+								"assign_users": {
+									"type": "string"
+								},
+								"assign_team": {
+									"type": "string"
+								},
+								"create_task": {
+									"type": "string"
+								},
+								"notify": {
+									"type": "string"
+								},
+								"webhook": {
+									"type": "string"
+								},
+								"chat": {
+									"type": "string"
+								},
+								"standup": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"move",
+								"complete",
+								"priority",
+								"due_date",
+								"custom_field",
+								"label",
+								"assign_users",
+								"assign_team",
+								"create_task",
+								"notify",
+								"webhook",
+								"chat",
+								"standup"
+							]
+						},
+						"recipes": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"notifyCreatorOnDone": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"name": {
+											"type": "string"
+										},
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": ["name", "message"]
+								},
+								"notifyLeadOnTeam": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"name": {
+											"type": "string"
+										},
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": ["name", "message"]
+								},
+								"overdueToHigh": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"name": {
+											"type": "string"
+										},
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": ["name", "message"]
+								},
+								"urgentToLead": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"name": {
+											"type": "string"
+										},
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": ["name", "message"]
+								},
+								"chatOnDone": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"name": {
+											"type": "string"
+										},
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": ["name", "message"]
+								}
+							},
+							"required": [
+								"notifyCreatorOnDone",
+								"notifyLeadOnTeam",
+								"overdueToHigh",
+								"urgentToLead",
+								"chatOnDone"
+							]
+						},
+						"editor": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"newTitle": {
+									"type": "string"
+								},
+								"editTitle": {
+									"type": "string"
+								},
+								"name": {
+									"type": "string"
+								},
+								"when": {
+									"type": "string"
+								},
+								"trigger": {
+									"type": "string"
+								},
+								"if": {
+									"type": "string"
+								},
+								"ifHint": {
+									"type": "string"
+								},
+								"then": {
+									"type": "string"
+								},
+								"thenHint": {
+									"type": "string"
+								},
+								"addAction": {
+									"type": "string"
+								},
+								"moveUp": {
+									"type": "string"
+								},
+								"moveDown": {
+									"type": "string"
+								},
+								"removeAction": {
+									"type": "string"
+								},
+								"cancel": {
+									"type": "string"
+								},
+								"save": {
+									"type": "string"
+								},
+								"saved": {
+									"type": "string"
+								},
+								"saveError": {
+									"type": "string"
+								},
+								"any": {
+									"type": "string"
+								},
+								"finalColumn": {
+									"type": "string"
+								},
+								"fromColumn": {
+									"type": "string"
+								},
+								"toColumn": {
+									"type": "string"
+								},
+								"chooseColumn": {
+									"type": "string"
+								},
+								"assignedTo": {
+									"type": "string"
+								},
+								"teamOption": {
+									"type": "string"
+								},
+								"toPriority": {
+									"type": "string"
+								},
+								"field": {
+									"type": "string"
+								},
+								"chooseField": {
+									"type": "string"
+								},
+								"value": {
+									"type": "string"
+								},
+								"label": {
+									"type": "string"
+								},
+								"chooseLabel": {
+									"type": "string"
+								},
+								"dueDays": {
+									"type": "string"
+								},
+								"dueDaysHint": {
+									"type": "string"
+								},
+								"overdueHint": {
+									"type": "string"
+								},
+								"placeholdersHint": {
+									"type": "string"
+								},
+								"markDone": {
+									"type": "string"
+								},
+								"markUndone": {
+									"type": "string"
+								},
+								"priority": {
+									"type": "string"
+								},
+								"dueInDays": {
+									"type": "string"
+								},
+								"clearDueDate": {
+									"type": "string"
+								},
+								"assignMode": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"add": {
+											"type": "string"
+										},
+										"replace": {
+											"type": "string"
+										},
+										"remove": {
+											"type": "string"
+										}
+									},
+									"required": ["add", "replace", "remove"]
+								},
+								"people": {
+									"type": "string"
+								},
+								"addPerson": {
+									"type": "string"
+								},
+								"removePerson": {
+									"type": "string"
+								},
+								"team": {
+									"type": "string"
+								},
+								"noTeam": {
+									"type": "string"
+								},
+								"taskTitle": {
+									"type": "string"
+								},
+								"asSubtask": {
+									"type": "string"
+								},
+								"assignees": {
+									"type": "string"
+								},
+								"recipientsTitle": {
+									"type": "string"
+								},
+								"recipients": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"assignees": {
+											"type": "string"
+										},
+										"creator": {
+											"type": "string"
+										},
+										"teamMembers": {
+											"type": "string"
+										},
+										"teamLeads": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"assignees",
+										"creator",
+										"teamMembers",
+										"teamLeads"
+									]
+								},
+								"alsoPeople": {
+									"type": "string"
+								},
+								"message": {
+									"type": "string"
+								},
+								"url": {
+									"type": "string"
+								},
+								"signingSecret": {
+									"type": "string"
+								},
+								"secretKept": {
+									"type": "string"
+								},
+								"channel": {
+									"type": "string"
+								},
+								"projectChatHint": {
+									"type": "string"
+								},
+								"webhookUrl": {
+									"type": "string"
+								},
+								"botToken": {
+									"type": "string"
+								},
+								"chatId": {
+									"type": "string"
+								},
+								"threadId": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"newTitle",
+								"editTitle",
+								"name",
+								"when",
+								"trigger",
+								"if",
+								"ifHint",
+								"then",
+								"thenHint",
+								"addAction",
+								"moveUp",
+								"moveDown",
+								"removeAction",
+								"cancel",
+								"save",
+								"saved",
+								"saveError",
+								"any",
+								"finalColumn",
+								"fromColumn",
+								"toColumn",
+								"chooseColumn",
+								"assignedTo",
+								"teamOption",
+								"toPriority",
+								"field",
+								"chooseField",
+								"value",
+								"label",
+								"chooseLabel",
+								"dueDays",
+								"dueDaysHint",
+								"overdueHint",
+								"placeholdersHint",
+								"markDone",
+								"markUndone",
+								"priority",
+								"dueInDays",
+								"clearDueDate",
+								"assignMode",
+								"people",
+								"addPerson",
+								"removePerson",
+								"team",
+								"noTeam",
+								"taskTitle",
+								"asSubtask",
+								"assignees",
+								"recipientsTitle",
+								"recipients",
+								"alsoPeople",
+								"message",
+								"url",
+								"signingSecret",
+								"secretKept",
+								"channel",
+								"projectChatHint",
+								"webhookUrl",
+								"botToken",
+								"chatId",
+								"threadId"
+							]
+						},
+						"standup": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"sectionTitle": {
+									"type": "string"
+								},
+								"sectionHint": {
+									"type": "string"
+								},
+								"schedule": {
+									"type": "string"
+								},
+								"summary": {
+									"type": "string"
+								},
+								"title": {
+									"type": "string"
+								},
+								"ruleName": {
+									"type": "string"
+								},
+								"audienceWarning": {
+									"type": "string"
+								},
+								"days": {
+									"type": "string"
+								},
+								"time": {
+									"type": "string"
+								},
+								"rules": {
+									"type": "string"
+								},
+								"saved": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"sectionTitle",
+								"sectionHint",
+								"schedule",
+								"summary",
+								"title",
+								"ruleName",
+								"audienceWarning",
+								"days",
+								"time",
+								"rules",
+								"saved"
+							]
+						}
+					},
+					"required": [
+						"title",
+						"projectPageTitle",
+						"workspacePageTitle",
+						"projectDescription",
+						"workspaceDescription",
+						"integrationsTitle",
+						"integrationsDescription",
+						"newRule",
+						"fromRecipe",
+						"empty",
+						"noPermission",
+						"toggle",
+						"actionCount_one",
+						"actionCount_other",
+						"history",
+						"edit",
+						"archive",
+						"archived",
+						"archiveTitle",
+						"archiveDescription",
+						"archiveAction",
+						"paused",
+						"status",
+						"reasons",
+						"runs",
+						"channels",
+						"triggers",
+						"actions",
+						"recipes",
+						"editor",
+						"standup"
+					]
 				}
 			},
 			"required": [
@@ -6047,7 +6757,8 @@
 				"projectRecurrences",
 				"projectTemplates",
 				"projectFields",
-				"workspaceFields"
+				"workspaceFields",
+				"automations"
 			]
 		},
 		"navigation": {

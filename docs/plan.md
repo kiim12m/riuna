@@ -2408,13 +2408,33 @@ ADR siguen en la 066 (la 058 sigue reservada).
     ausente, festivo y día no programado, forma de la regla— y cuatro unitarias (paridad
     del texto y negrita por canal).
 
-**Bloque 3 — Interfaz** · M–L
-- **3.1** *Ajustes del proyecto › Automatizaciones* (con «Desde GitHub y Gitea») y
-  *Administración del espacio › Automatizaciones*. Editor «Cuando · Si · Entonces» con la
-  barra de filtros de las vistas para la condición.
-- **3.2** Historial de cada regla.
-- **3.3** Recetas: reglas predefinidas que solo rellenan el editor.
-- **3.4** El responsable programa el stand-up desde «Mi equipo».
+**Bloque 3 — Interfaz** · M–L · **Hecho (2026-10-07)**
+- **3.1** ✔ *Ajustes del proyecto › Automatizaciones* (con «Desde GitHub y Gitea», que sale
+  de «Flujo de trabajo») y *Administración del espacio › Automatizaciones*.
+  - Editor «Cuando · Si · Entonces» (`components/automation/`). La condición es la barra de
+    filtros de las vistas, y los campos filtrables los da `useWidgetFields`.
+  - Las acciones se ordenan con flechas.
+  - Los secretos son de solo escritura: un campo secreto vacío conserva el guardado
+    (`toInput`).
+  - Fetchers y hooks siguen el patrón de las recurrentes. Sin WebSocket: la pantalla relee
+    al montar.
+  - **De la pasada por el navegador**: las etiquetas de los campos no estaban asociadas a
+    su control (lo cazó el e2e, que buscaba «URL del webhook» por su etiqueta). Ahora lo
+    están, con `TextField`. Además el cuerpo de los diálogos va en `DialogPanel` (iba
+    pegado al borde), y la fila de una regla deja bajar sus botones en móvil (el nombre se
+    partía letra a letra).
+- **3.2** ✔ Historial de cada regla: estado, tarea, acción que falló, error y motivo de
+  salto, paginado.
+- **3.3** ✔ Cinco recetas que solo rellenan el editor.
+- **3.4** ✔ En «Mi equipo», pestaña Stand-up, el responsable programa el envío de cada
+  departamento que lleva, con el aviso de que todo el chat lo leerá. Desde la lista del
+  espacio, una regla programada abre ese mismo editor.
+- **Pruebas**:
+  - siete unitarias del modelo del editor;
+  - tres e2e (`automations.spec.ts`): una receta que avisa al cerrar la tarea y deja
+    historial; el responsable que programa el stand-up; una regla pausada que lo dice;
+  - pasada visual a 1440 y 390 px en los dos temas.
+  - `playwright.config.ts` da a la API del humo una clave de cifrado: en CI no hay `.env`.
 
 **Bloque 4 — La hoja de SERVITEC vuelve** · M · ADR 069
 - **Adelantado (2026-10-05), a petición del usuario:** en la celda «Comentario» los

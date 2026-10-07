@@ -7,7 +7,6 @@ import FieldEditor from "@/components/project/field-editor";
 import RecurrenceEditor from "@/components/project/recurrence-editor";
 import TemplatePanel from "@/components/project/template-panel";
 import TreeSettings from "@/components/project/tree-settings";
-import WorkflowEditor from "@/components/project/workflow-editor";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 
 export const Route = createFileRoute(
@@ -106,18 +105,6 @@ function RouteComponent() {
             </p>
           </div>
           <TemplatePanel projectId={projectId} />
-        </div>
-
-        <div className="space-y-6">
-          <div className="space-y-1">
-            <h2 className="text-md font-medium">
-              {t("settings:projectWorkflow.automationTitle")}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              {t("settings:projectWorkflow.automationDescription")}
-            </p>
-          </div>
-          <WorkflowEditor projectId={projectId} canEdit={canUpdateProjects()} />
         </div>
       </div>
     </>

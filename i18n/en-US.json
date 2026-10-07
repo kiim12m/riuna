@@ -981,9 +981,7 @@
 			"title": "Workflow",
 			"subtitle": "Configure board columns and automation rules for this project.",
 			"columnsTitle": "Columns",
-			"columnsDescription": "Manage the columns that appear on your board. Drag to reorder. Turn on \"Done column\" for stages that represent completed work.",
-			"automationTitle": "Automation Rules",
-			"automationDescription": "Map integration events to columns. When an event occurs, the linked task moves to the specified column."
+			"columnsDescription": "Manage the columns that appear on your board. Drag to reorder. Turn on \"Done column\" for stages that represent completed work."
 		},
 		"projectSwitcher": {
 			"selectProject": "Select project",
@@ -1522,6 +1520,190 @@
 			"title": "Custom fields",
 			"pageTitle": "Custom fields",
 			"description": "Fields that apply to every project of the workspace. A project can define its own on top of these."
+		},
+		"automations": {
+			"title": "Automations",
+			"projectPageTitle": "Project automations",
+			"workspacePageTitle": "Workspace automations",
+			"projectDescription": "When something happens to a task in this project, and it meets the conditions, the rule acts on its own.",
+			"workspaceDescription": "Rules that act on every project in the workspace, except the personal ones.",
+			"integrationsTitle": "From GitHub and Gitea",
+			"integrationsDescription": "Which column a linked task moves to when something happens in the repository. Those moves can in turn fire the rules above.",
+			"newRule": "New rule",
+			"fromRecipe": "Start from a recipe…",
+			"empty": "No rules yet.",
+			"noPermission": "You do not have permission to manage automations here.",
+			"toggle": "Turn on “{{name}}”",
+			"actionCount_one": "{{count}} action",
+			"actionCount_other": "{{count}} actions",
+			"history": "History of “{{name}}”",
+			"edit": "Edit “{{name}}”",
+			"archive": "Archive “{{name}}”",
+			"archived": "Rule archived",
+			"archiveTitle": "Archive “{{name}}”?",
+			"archiveDescription": "It stops acting. Its history is kept.",
+			"archiveAction": "Archive",
+			"paused": {
+				"actor_lost_permission": "Paused: whoever saved it last no longer has the permission it needs. Saving or turning it on puts it in your name.",
+				"generic": "Paused."
+			},
+			"status": {
+				"ok": "Ran",
+				"failed": "Failed",
+				"skipped": "Skipped"
+			},
+			"reasons": {
+				"loop": "Not run: it would have fired itself again in a loop.",
+				"actor_lost_permission": "Not run: whoever saved it no longer has permission.",
+				"holiday": "Not sent: it is a holiday.",
+				"no_members": "Not sent: the team has nobody.",
+				"everyone_away": "Not sent: everyone is away."
+			},
+			"runs": {
+				"title": "History of “{{name}}”",
+				"empty": "It has not run yet.",
+				"more": "Load older runs",
+				"failedAction": "Failed at: {{action}}"
+			},
+			"channels": {
+				"slack": "Slack",
+				"discord": "Discord",
+				"telegram": "Telegram"
+			},
+			"triggers": {
+				"task_created": "A task is created",
+				"task_status_changed": "It changes column",
+				"task_assigned": "It is assigned",
+				"task_priority_changed": "Its priority changes",
+				"task_field_changed": "A custom field changes",
+				"task_commented": "Someone comments",
+				"task_labeled": "A label is added",
+				"task_due_in": "It is due soon",
+				"task_overdue": "It is overdue",
+				"schedule": "On a schedule"
+			},
+			"actions": {
+				"move": "Move to a column",
+				"complete": "Mark done or not done",
+				"priority": "Set the priority",
+				"due_date": "Set the due date",
+				"custom_field": "Set a custom field",
+				"label": "Add a label",
+				"assign_users": "Assign people",
+				"assign_team": "Assign a team",
+				"create_task": "Create a task",
+				"notify": "Notify",
+				"webhook": "Send a webhook",
+				"chat": "Post to a chat",
+				"standup": "Send the stand-up"
+			},
+			"recipes": {
+				"notifyCreatorOnDone": {
+					"name": "When done, notify whoever created it",
+					"message": "{tarea} is done"
+				},
+				"notifyLeadOnTeam": {
+					"name": "When assigned, notify the team lead",
+					"message": "{tarea} has been assigned"
+				},
+				"overdueToHigh": {
+					"name": "Overdue tasks become high priority",
+					"message": ""
+				},
+				"urgentToLead": {
+					"name": "A new urgent task notifies the team lead",
+					"message": "New urgent task: {tarea}"
+				},
+				"chatOnDone": {
+					"name": "When done, post to the chat",
+					"message": "✅ {tarea} is done: {enlace}"
+				}
+			},
+			"editor": {
+				"newTitle": "New rule",
+				"editTitle": "Edit rule",
+				"name": "Name",
+				"when": "When",
+				"trigger": "What happens",
+				"if": "If",
+				"ifHint": "The same filters as the views. Without conditions, every task counts.",
+				"then": "Then",
+				"thenHint": "In order. If one fails, the ones after it do not run.",
+				"addAction": "Add an action…",
+				"moveUp": "Move up",
+				"moveDown": "Move down",
+				"removeAction": "Remove the action",
+				"cancel": "Cancel",
+				"save": "Save",
+				"saved": "Rule saved",
+				"saveError": "The rule could not be saved",
+				"any": "Any",
+				"finalColumn": "A done column",
+				"fromColumn": "From column",
+				"toColumn": "To column",
+				"chooseColumn": "Choose a column",
+				"assignedTo": "Assigned to",
+				"teamOption": "Team: {{name}}",
+				"toPriority": "To priority",
+				"field": "Field",
+				"chooseField": "Choose a field",
+				"value": "Value",
+				"label": "Label",
+				"chooseLabel": "Choose a label",
+				"dueDays": "Days before it is due",
+				"dueDaysHint": "0 is the day it is due. It acts once per task and due date; moving the date makes it act again.",
+				"overdueHint": "From the day after it was due. It does not act on what was already more than a week overdue.",
+				"placeholdersHint": "You can use {tarea}, {titulo}, {estado}, {proyecto} and {enlace}.",
+				"markDone": "Mark done",
+				"markUndone": "Mark not done",
+				"priority": "Priority",
+				"dueInDays": "Days from today",
+				"clearDueDate": "Remove the due date",
+				"assignMode": {
+					"add": "Add these people",
+					"replace": "Assign only these people",
+					"remove": "Remove these people"
+				},
+				"people": "People",
+				"addPerson": "Add…",
+				"removePerson": "Remove {{name}}",
+				"team": "Team",
+				"noTeam": "No team",
+				"taskTitle": "Title of the new task",
+				"asSubtask": "As a subtask of the task that fired it",
+				"assignees": "Assignees",
+				"recipientsTitle": "Who",
+				"recipients": {
+					"assignees": "Its assignees",
+					"creator": "Whoever created it",
+					"teamMembers": "Its team",
+					"teamLeads": "Its team lead"
+				},
+				"alsoPeople": "Also these people",
+				"message": "Message",
+				"url": "URL",
+				"signingSecret": "Signing secret (optional)",
+				"secretKept": "Saved; leave empty to keep it",
+				"channel": "Channel",
+				"projectChatHint": "It posts through the project's integration for that channel.",
+				"webhookUrl": "Webhook URL",
+				"botToken": "Bot token",
+				"chatId": "Chat ID",
+				"threadId": "Thread ID (optional)"
+			},
+			"standup": {
+				"sectionTitle": "Send the stand-up to a chat",
+				"sectionHint": "For the teams you lead: once a day, at its time, except on holidays.",
+				"schedule": "Schedule",
+				"summary": "{{days}} at {{time}}",
+				"title": "Stand-up of {{team}} to a chat",
+				"ruleName": "Stand-up of {{team}}",
+				"audienceWarning": "Everyone in that chat will read your team's stand-up. The daily rating is never sent.",
+				"days": "Days",
+				"time": "Time",
+				"rules": "It is not sent on holidays, and whoever is away does not appear.",
+				"saved": "Delivery scheduled"
+			}
 		}
 	},
 	"navigation": {
