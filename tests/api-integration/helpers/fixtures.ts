@@ -54,6 +54,31 @@ export async function createWorkspaceMember(
   return { user, workspace };
 }
 
+/**
+ * Una persona mas en un espacio que ya existe, con el rol que se pida. Habia
+ * cinco copias de esto en las pruebas; las nuevas usan esta.
+ */
+export async function addWorkspaceMember(workspaceId: string, role: string) {
+  const id = `user-${randomUUID()}`;
+  const [user] = await db
+    .insert(schema.userTable)
+    .values({
+      id,
+      email: `${id}@example.com`,
+      emailVerified: true,
+      name: "Otra persona",
+    })
+    .returning();
+  if (!user) throw new Error("Failed to seed user");
+  await db.insert(schema.workspaceUserTable).values({
+    workspaceId,
+    userId: user.id,
+    role,
+    joinedAt: new Date(),
+  });
+  return user;
+}
+
 export async function createProjectFixture({
   workspaceId,
   name = "Integration Project",

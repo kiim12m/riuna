@@ -24,6 +24,8 @@ export type ServitecComment = {
 };
 
 export type ServitecRow = {
+  /** El id de la tarea, en una columna oculta: es lo que reconoce la fila al volver. */
+  id: string;
   fecha: Date | null;
   fechaActualizacion: Date | null;
   concepto: string;
@@ -99,6 +101,11 @@ const CONDITIONAL_COLOURS = [
   { text: "Pendiente", argb: "FFFFFF00" },
 ] as const;
 
+// La columna oculta del id (ADR 069), lejos de las que se ven: la G separa los
+// datos de la nota de la H, y la captura diaria no debe cambiar.
+const ID_COLUMN = 10;
+const ID_HEADER = "ID";
+
 const TITLE_ROW = 1;
 const HEADER_ROW = 2;
 const LEGEND_ROW = 3;
@@ -145,6 +152,11 @@ export async function buildServitecWorkbook(
   });
 
   writeLegendRow(sheet);
+
+  const idHeader = sheet.getCell(HEADER_ROW, ID_COLUMN);
+  idHeader.value = ID_HEADER;
+  idHeader.font = FONT;
+  sheet.getColumn(ID_COLUMN).hidden = true;
 
   rows.forEach((row, index) => {
     writeDataRow(sheet, FIRST_DATA_ROW + index, row);
@@ -283,6 +295,8 @@ function writeDataRow(
   estado.value = row.estado;
   estado.font = FONT;
   estado.alignment = { horizontal: "center" };
+
+  sheet.getCell(rowNumber, ID_COLUMN).value = row.id;
 
   const comentario = sheet.getCell(rowNumber, 6);
   comentario.value = commentCellValue(row.comentarios);

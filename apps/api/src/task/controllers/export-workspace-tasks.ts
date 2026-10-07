@@ -141,6 +141,7 @@ async function exportWorkspaceTasks(workspaceId: string) {
   }
 
   const rows: ServitecRow[] = tasks.map((task) => ({
+    id: task.id,
     fecha: task.createdAt,
     fechaActualizacion: task.updatedAt,
     concepto: task.title,

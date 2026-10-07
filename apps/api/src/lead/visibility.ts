@@ -83,3 +83,45 @@ export async function leadIdsOf({
   const pairs = await leadPairs(workspaceId, eq(memberRow.userId, userId));
   return pairs.map((pair) => pair.leadId);
 }
+
+/**
+ * Si alguien lleva la marca de responsable en un equipo de **este** espacio y
+ * sigue siendo miembro. Es lo que le deja programar el envio del stand-up de
+ * su gente (ADR 068).
+ */
+export async function isLeadOfTeam({
+  workspaceId,
+  teamId,
+  userId,
+}: {
+  workspaceId: string;
+  teamId: string;
+  userId: string;
+}): Promise<boolean> {
+  const [row] = await db
+    .select({ userId: leadRow.userId })
+    .from(leadRow)
+    .innerJoin(
+      teamTable,
+      and(
+        eq(teamTable.id, leadRow.teamId),
+        eq(teamTable.workspaceId, workspaceId),
+      ),
+    )
+    .innerJoin(
+      leadInWorkspace,
+      and(
+        eq(leadInWorkspace.workspaceId, workspaceId),
+        eq(leadInWorkspace.userId, leadRow.userId),
+      ),
+    )
+    .where(
+      and(
+        eq(leadRow.teamId, teamId),
+        eq(leadRow.userId, userId),
+        eq(leadRow.isLead, true),
+      ),
+    )
+    .limit(1);
+  return Boolean(row);
+}

@@ -29,10 +29,16 @@ test.describe("Tiempo en el detalle de la tarea", () => {
     await expect(
       page.getByRole("button", { name: "Parar el cronómetro" }).first(),
     ).toBeVisible();
-    const running = await riuna.api<{
-      running: { task: { id: string } } | null;
-    }>("get", `/api/time-entry/running?workspaceId=${riuna.workspaceId}`);
-    expect(running.running?.task.id).toBe(taskId);
+    // El boton cambia en cuanto se pulsa, antes de que el servidor responda:
+    // con la maquina cargada, una consulta inmediata llegaba antes que el alta.
+    await expect
+      .poll(async () => {
+        const running = await riuna.api<{
+          running: { task: { id: string } } | null;
+        }>("get", `/api/time-entry/running?workspaceId=${riuna.workspaceId}`);
+        return running.running?.task.id;
+      })
+      .toBe(taskId);
 
     await page
       .getByRole("button", { name: "Parar el cronómetro" })

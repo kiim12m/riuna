@@ -59,6 +59,7 @@ describe("resolveEstado", () => {
 describe("buildServitecWorkbook", () => {
   const rows: ServitecRow[] = [
     {
+      id: "task-a",
       fecha: new Date("2026-05-29T08:00:00Z"),
       fechaActualizacion: new Date("2026-06-03T10:00:00Z"),
       concepto: "Revisar Puesta a Tierra Torrevieja",
@@ -75,6 +76,7 @@ describe("buildServitecWorkbook", () => {
       ],
     },
     {
+      id: "task-b",
       fecha: new Date("2026-08-17T22:30:00Z"),
       fechaActualizacion: new Date("2026-08-17T22:30:00Z"),
       concepto: "Enviar fotografies CGP",
@@ -145,6 +147,15 @@ describe("buildServitecWorkbook", () => {
   it("formats the date columns as the reader expects", () => {
     expect(sheet.getCell("A4").numFmt).toBe("dd/mm/yyyy");
     expect(sheet.getCell("B4").numFmt).toBe("dd/mm/yyyy");
+  });
+
+  it("keeps the task id in a hidden column, away from what is captured", () => {
+    expect(sheet.getCell("J2").value).toBe("ID");
+    expect(sheet.getCell("J4").value).toBe("task-a");
+    expect(sheet.getCell("J5").value).toBe("task-b");
+    expect(sheet.getColumn("J").hidden).toBe(true);
+    // La G sigue separando los datos de la nota.
+    expect(sheet.getColumn("G").hidden).toBe(false);
   });
 
   it("stacks the comments one per line, with no blank lines", () => {
@@ -241,6 +252,7 @@ describe("buildServitecWorkbook", () => {
   it("leaves the date cells empty when a task has no dates", async () => {
     const buffer = await buildServitecWorkbook([
       {
+        id: "task-c",
         fecha: null,
         fechaActualizacion: null,
         concepto: "Sin fechas",

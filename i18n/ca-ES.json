@@ -688,9 +688,7 @@
 			"title": "Flujo de trabajo",
 			"subtitle": "Configura las columnas del tablero y las reglas de automatización para este proyecto.",
 			"columnsTitle": "Columnas",
-			"columnsDescription": "Gestiona las columnas de tu tablero. Arrastra para reordenar. Activa la columna  \"Hecho\" para representar el trabajo completado.",
-			"automationTitle": "Reglas de automatización",
-			"automationDescription": "Mapea eventos de integración y columnas integration. Cuando un evento ocurre, la tarea vinculada se moverá a la columna especificada."
+			"columnsDescription": "Gestiona las columnas de tu tablero. Arrastra para reordenar. Activa la columna  \"Hecho\" para representar el trabajo completado."
 		},
 		"projectSwitcher": {
 			"selectProject": "Selecciona proyecto",
@@ -1522,6 +1520,226 @@
 			"title": "Custom fields",
 			"pageTitle": "Custom fields",
 			"description": "Fields that apply to every project of the workspace. A project can define its own on top of these."
+		},
+		"automations": {
+			"title": "Automatizaciones",
+			"projectPageTitle": "Automatizaciones del proyecto",
+			"workspacePageTitle": "Automatizaciones del espacio",
+			"projectDescription": "Cuando le pasa algo a una tarea de este proyecto y cumple las condiciones, la regla actúa sola.",
+			"workspaceDescription": "Reglas que actúan en todos los proyectos del espacio, salvo los personales.",
+			"integrationsTitle": "Desde GitHub y Gitea",
+			"integrationsDescription": "A qué columna pasa la tarea vinculada cuando ocurre algo en el repositorio. Esos movimientos pueden disparar a su vez las reglas de arriba.",
+			"newRule": "Nueva regla",
+			"fromRecipe": "Empezar desde una receta…",
+			"empty": "Todavía no hay reglas.",
+			"noPermission": "No tienes permiso para gestionar automatizaciones aquí.",
+			"toggle": "Activar «{{name}}»",
+			"actionCount_one": "{{count}} acción",
+			"actionCount_other": "{{count}} acciones",
+			"history": "Historial de «{{name}}»",
+			"edit": "Editar «{{name}}»",
+			"archive": "Archivar «{{name}}»",
+			"archived": "Regla archivada",
+			"archiveTitle": "¿Archivar «{{name}}»?",
+			"archiveDescription": "Deja de actuar. Su historial se conserva.",
+			"archiveAction": "Archivar",
+			"paused": {
+				"actor_lost_permission": "Pausada: quien la guardó por última vez ya no tiene el permiso que necesita. Guardarla o activarla la pone a tu nombre.",
+				"generic": "Pausada."
+			},
+			"status": {
+				"ok": "Hecha",
+				"failed": "Fallida",
+				"skipped": "Saltada"
+			},
+			"reasons": {
+				"loop": "No corrió: se habría vuelto a disparar a sí misma en bucle.",
+				"actor_lost_permission": "No corrió: quien la guardó ya no tiene permiso.",
+				"holiday": "No se envió: es festivo.",
+				"no_members": "No se envió: el departamento no tiene a nadie.",
+				"everyone_away": "No se envió: todo el mundo está ausente."
+			},
+			"runs": {
+				"title": "Historial de «{{name}}»",
+				"empty": "Todavía no ha corrido.",
+				"more": "Cargar ejecuciones anteriores",
+				"failedAction": "Falló en: {{action}}"
+			},
+			"channels": {
+				"slack": "Slack",
+				"discord": "Discord",
+				"telegram": "Telegram"
+			},
+			"triggers": {
+				"task_created": "Se crea una tarea",
+				"task_status_changed": "Cambia de columna",
+				"task_assigned": "Se asigna",
+				"task_priority_changed": "Cambia la prioridad",
+				"task_field_changed": "Cambia un campo personalizado",
+				"task_commented": "Alguien comenta",
+				"task_labeled": "Se le pone una etiqueta",
+				"task_due_in": "Vence pronto",
+				"task_overdue": "Está vencida",
+				"schedule": "A una hora fija"
+			},
+			"actions": {
+				"move": "Mover a una columna",
+				"complete": "Marcar hecha o no hecha",
+				"priority": "Poner la prioridad",
+				"due_date": "Poner el vencimiento",
+				"custom_field": "Poner un campo personalizado",
+				"label": "Añadir una etiqueta",
+				"assign_users": "Asignar personas",
+				"assign_team": "Asignar un departamento",
+				"create_task": "Crear una tarea",
+				"notify": "Avisar",
+				"webhook": "Enviar un webhook",
+				"chat": "Escribir en un chat",
+				"standup": "Enviar el stand-up"
+			},
+			"recipes": {
+				"notifyCreatorOnDone": {
+					"name": "Al terminar, avisar a quien la creó",
+					"message": "{tarea} está terminada"
+				},
+				"notifyLeadOnTeam": {
+					"name": "Al asignar, avisar al responsable del departamento",
+					"message": "Se ha asignado {tarea}"
+				},
+				"overdueToHigh": {
+					"name": "Lo vencido pasa a prioridad alta",
+					"message": ""
+				},
+				"urgentToLead": {
+					"name": "Una urgente nueva avisa al responsable",
+					"message": "Nueva tarea urgente: {tarea}"
+				},
+				"chatOnDone": {
+					"name": "Al terminar, escribir en el chat",
+					"message": "✅ {tarea} terminada: {enlace}"
+				}
+			},
+			"editor": {
+				"newTitle": "Nueva regla",
+				"editTitle": "Editar regla",
+				"name": "Nombre",
+				"when": "Cuando",
+				"trigger": "Qué pasa",
+				"if": "Si",
+				"ifHint": "Los mismos filtros que las vistas. Sin condiciones, vale cualquier tarea.",
+				"then": "Entonces",
+				"thenHint": "En orden. Si una falla, las siguientes no se hacen.",
+				"addAction": "Añadir una acción…",
+				"moveUp": "Subir",
+				"moveDown": "Bajar",
+				"removeAction": "Quitar la acción",
+				"cancel": "Cancelar",
+				"save": "Guardar",
+				"saved": "Regla guardada",
+				"saveError": "No se ha podido guardar la regla",
+				"any": "Cualquiera",
+				"finalColumn": "Una columna de terminado",
+				"fromColumn": "De la columna",
+				"toColumn": "A la columna",
+				"chooseColumn": "Elige una columna",
+				"assignedTo": "Asignada a",
+				"teamOption": "Departamento: {{name}}",
+				"toPriority": "A la prioridad",
+				"field": "Campo",
+				"chooseField": "Elige un campo",
+				"value": "Valor",
+				"label": "Etiqueta",
+				"chooseLabel": "Elige una etiqueta",
+				"dueDays": "Días antes de que venza",
+				"dueDaysHint": "0 es el día que vence. Actúa una vez por tarea y vencimiento; mover la fecha la vuelve a armar.",
+				"overdueHint": "Desde el día siguiente al vencimiento. No actúa sobre lo que ya llevaba más de una semana vencido.",
+				"placeholdersHint": "Puedes usar {tarea}, {titulo}, {estado}, {proyecto} y {enlace}.",
+				"markDone": "Marcar como hecha",
+				"markUndone": "Marcar como no hecha",
+				"priority": "Prioridad",
+				"dueInDays": "Días desde hoy",
+				"clearDueDate": "Quitar el vencimiento",
+				"assignMode": {
+					"add": "Añadir a estas personas",
+					"replace": "Dejar solo a estas personas",
+					"remove": "Quitar a estas personas"
+				},
+				"people": "Personas",
+				"addPerson": "Añadir…",
+				"removePerson": "Quitar a {{name}}",
+				"team": "Departamento",
+				"noTeam": "Sin departamento",
+				"taskTitle": "Título de la tarea nueva",
+				"asSubtask": "Como subtarea de la que la disparó",
+				"assignees": "Asignados",
+				"recipientsTitle": "A quién",
+				"recipients": {
+					"assignees": "Sus asignados",
+					"creator": "Quien la creó",
+					"teamMembers": "Su departamento",
+					"teamLeads": "El responsable de su departamento"
+				},
+				"alsoPeople": "También a estas personas",
+				"message": "Mensaje",
+				"url": "URL",
+				"signingSecret": "Secreto de firma (opcional)",
+				"secretKept": "Guardado; déjalo vacío para conservarlo",
+				"channel": "Canal",
+				"projectChatHint": "Escribe por la integración del proyecto para ese canal.",
+				"webhookUrl": "URL del webhook",
+				"botToken": "Token del bot",
+				"chatId": "ID del chat",
+				"threadId": "ID del hilo (opcional)"
+			},
+			"standup": {
+				"sectionTitle": "Enviar el stand-up a un chat",
+				"sectionHint": "De los departamentos que llevas: una vez al día, a su hora, salvo festivos.",
+				"schedule": "Programar",
+				"summary": "{{days}} a las {{time}}",
+				"title": "Stand-up de {{team}} a un chat",
+				"ruleName": "Stand-up de {{team}}",
+				"audienceWarning": "Todo el que esté en ese chat leerá el stand-up de tu gente. La valoración del día no se envía nunca.",
+				"days": "Días",
+				"time": "Hora",
+				"rules": "En festivo no se envía, y quien está ausente no aparece.",
+				"saved": "Envío programado"
+			}
+		},
+		"servitecImport": {
+			"rowTitle": "Importar la hoja de SERVITEC",
+			"rowDescription": "El cuadro que se llevaba a mano, o una exportación editada en Excel: vuelven sus estados y comentarios.",
+			"open": "Importar",
+			"title": "Importar la hoja de SERVITEC",
+			"hint": "Una fila exportada desde Riuna actualiza su tarea por su ID oculto. Sin él, volver a subir la misma hoja no duplica nada. La hoja nunca mueve una tarea a otro proyecto.",
+			"file": "Hoja (.xlsx)",
+			"summary_one": "{{count}} fila: {{existing}} son tareas que ya existen, con {{comments}} comentarios.",
+			"summary_other": "{{count}} filas: {{existing}} son tareas que ya existen, con {{comments}} comentarios.",
+			"knownProject": "{{name}}: {{count}} filas",
+			"unknownProject": "«{{name}}» no existe ({{count}} filas)",
+			"choice": {
+				"create": "Crear el proyecto «{{name}}»",
+				"skip": "Descartar sus filas",
+				"map": "Llevarlas a «{{name}}»"
+			},
+			"check": "Comprobar",
+			"import": "Importar",
+			"close": "Cerrar",
+			"imported": "Hoja importada",
+			"error": "No se ha podido leer la hoja",
+			"report": {
+				"checkTitle": "Si la importas:",
+				"doneTitle": "Importada:",
+				"created_one": "{{count}} tarea creada",
+				"created_other": "{{count}} tareas creadas",
+				"updated_one": "{{count}} tarea actualizada",
+				"updated_other": "{{count}} tareas actualizadas",
+				"skipped_one": "{{count}} fila descartada",
+				"skipped_other": "{{count}} filas descartadas",
+				"comments": "{{added}} comentarios añadidos, {{kept}} que ya estaban",
+				"pending_one": "{{count}} tarea en el proyecto nuevo «{{name}}»",
+				"pending_other": "{{count}} tareas en el proyecto nuevo «{{name}}»",
+				"failure": "Fila {{row}}: {{error}}"
+			}
 		}
 	},
 	"navigation": {
@@ -1858,7 +2076,8 @@
 		},
 		"customFieldChanged": "changed “{{name}}” from {{from}} to {{to}}",
 		"customFieldChangedPlain": "changed “{{name}}”",
-		"emptyValue": "empty"
+		"emptyValue": "empty",
+		"automationActor": "Automatización «{{name}}»"
 	},
 	"tasks": {
 		"actions": {

@@ -215,6 +215,15 @@ const notification = new Hono<{
     },
   );
 
+/**
+ * A quien no se avisa: a quien hizo el cambio. Si lo hizo una automatizacion
+ * (ADR 067), la persona en cuyo nombre corre no hizo nada, asi que tambien a
+ * ella le llega.
+ */
+function actorToSkip(data: object, actorId: string | undefined) {
+  return "automation" in data && data.automation ? undefined : actorId;
+}
+
 subscribeToEvent<{
   taskId: string;
   userId: string;
@@ -222,7 +231,7 @@ subscribeToEvent<{
   title: string;
   projectId: string;
 }>("task.created", async (data) => {
-  if (data.userId && data.userId !== data.currentUserId) {
+  if (data.userId && data.userId !== actorToSkip(data, data.currentUserId)) {
     const [project] = await db
       .select({ workspaceId: projectTable.workspaceId })
       .from(projectTable)
@@ -288,7 +297,7 @@ subscribeToEvent<{
   title: string;
   assigneeId?: string;
 }>("task.status_changed", async (data) => {
-  if (data.assigneeId && data.assigneeId !== data.userId) {
+  if (data.assigneeId && data.assigneeId !== actorToSkip(data, data.userId)) {
     const [task] = await db
       .select({ projectId: taskTable.projectId })
       .from(taskTable)
@@ -370,7 +379,7 @@ subscribeToEvent<{
   title: string;
 }>("task.assignees_changed", async (data) => {
   const added = (data.addedIds ?? []).filter(
-    (userId) => userId && userId !== data.userId,
+    (userId) => userId && userId !== actorToSkip(data, data.userId),
   );
 
   if (added.length === 0) return;
@@ -420,7 +429,7 @@ subscribeToEvent<{
 
   const recipients = members
     .map((member) => member.userId)
-    .filter((userId) => userId && userId !== data.userId);
+    .filter((userId) => userId && userId !== actorToSkip(data, data.userId));
 
   if (recipients.length === 0) return;
 
