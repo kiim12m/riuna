@@ -26,7 +26,7 @@
 | 7.5 — Revisión estética | 1 | **Cerrada** — deuda abierta declarada (ver abajo) |
 | Interludio — Productividad personal y equipo | 18 | **Cerrado** — Bloques 0 a 5; el 4.2 (importar iCal), aplazado · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--cerrado) |
 | Cierre de la deuda de las fases cerradas | 18 | **Cerrado** — cinco tandas, en `main` el 2026-10-05 (PR #38–#45); la facturación heredada sigue abierta por decisión · [inventario](#cierre-de-la-deuda-de-las-fases-cerradas) |
-| 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **En curso** — replanificada el 2026-10-05 · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--en-curso) |
+| 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 2 | Pendiente |
 | **Total Bloque A** | **41** + 18 del interludio | |
 
@@ -384,7 +384,7 @@ invitaciones, i18n y tema claro/oscuro.
 | Motor de vistas: filtros guardados, agrupación, columnas, **vista Tabla editable** | **Hecho** (fase 4), salvo agrupación y columnas configurables |
 | Importación CSV/Excel genérica con mapeo | Hay import/export de tareas; hay que generalizarlo |
 | Dashboards, widgets, informes y objetivos/OKR | No existe |
-| Automatizaciones de usuario | Solo `workflowRule` para eventos de integración |
+| Automatizaciones de usuario | **Hecho** (fase 8): reglas de proyecto y de espacio, por evento y por fecha |
 | Ciclos/sprints, recurrentes, plantillas, "Mi trabajo" | Confirmado inexistente en la auditoría |
 | CRM y ERP | No existe (Bloque B) |
 
@@ -2256,7 +2256,7 @@ pendiente, trabajas en foco con avisos del navegador, ves tu plan con hora en tu
 tu responsable ve tu plan y tu carga —con ausencias y festivos— pero no tu valoración. Ver tus
 reuniones en el Cronograma se aplazó con el 4.2.
 
-### Fase 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat · **en curso**
+### Fase 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat · **cerrada**
 
 *Replanificada el 2026-10-05 al empezarla, preguntando antes de diseñar. El texto
 original pedía el motor de automatizaciones e importadores de Trello, Jira, Asana y
@@ -2285,7 +2285,7 @@ funciona encadenando. Los dos se editan en la misma página.
 **El motor**, en `apps/api/src/automation/`, es un suscriptor más del bus, como la
 actividad o los avisos:
 
-- **Modelo** (migración 0081, solo tablas nuevas): `automation` —`project_id` nulo para
+- **Modelo** (migración 0082, solo tablas nuevas): `automation` —`project_id` nulo para
   una regla de espacio, `team_id` para el stand-up, `trigger_type`, y en `jsonb` la
   configuración del disparador, las condiciones y las acciones— y `automation_run`, el
   historial de cada ejecución con el resultado de cada acción, purgado a los 30 días.
@@ -2333,31 +2333,108 @@ ADR siguen en la 066 (la 058 sigue reservada).
     —analiza todos los `.tsx`; a solas tarda ~2 s—. Lleva ahora su propio plazo de 30 s.
 
 **Bloque 1 — Motor** · L
-- **1.1 Modelo y API** · M · ADR 066. Tablas, router `/automation` con Valibot y OpenAPI,
-  historial paginado por cursor.
-- **1.2 Ejecución** · M · ADR 067. Emparejar, condición, cadena contra bucles, actor y
-  pausa, marcador en actividad y avisos.
-- **1.3 Acciones internas** · M. Envoltorios finos de los controladores que ya existen.
-- **1.4 Acciones de salida** · M. Aviso (tipo `automation`), webhook firmado con la
-  guarda anti-SSRF del webhook genérico, y mensaje a Slack, Discord o Telegram.
+- **1.1 Modelo y API** ✔ · M · [ADR 066](adr/066-automatizaciones-modelo-y-alcance.md).
+  **Hecho (2026-10-05).**
+  - **Migración 0082**, solo tablas nuevas: `automation` y `automation_run`.
+  - **Router `/automation`**: listar, crear, editar, activar, archivar e historial
+    paginado por cursor, con Valibot y OpenAPI.
+  - **Permisos según la regla** (`automation/permissions.ts`). De ahí sale
+    `roleHasWorkspacePermission`, que el motor necesita sin petición de por medio.
+  - **Secretos** cifrados y de solo escritura (`automation/secrets.ts`).
+  - **Al guardar se valida** todo lo que la regla nombra.
+  - Ocho pruebas de integración y siete unitarias.
+- **1.2 Ejecución** ✔ · M · [ADR 067](adr/067-como-corre-una-automatizacion.md). **Hecho
+  (2026-10-05).**
+  - `automation/engine.ts` se suscribe a nueve eventos y busca las reglas en una
+    consulta.
+  - El disparador se empareja en `triggers.ts`, que es puro.
+  - La condición se evalúa con el motor de filtros, por la clave primaria de la tarea.
+  - **Bus**: la cadena de reglas viaja en `eventContext` y `publishEvent` la copia en cada
+    evento. Las importaciones marcan `origin: "import"`.
+  - **Actividad y avisos**: la actividad lleva la marca de la regla y la web la pinta como
+    «Automatización ‹nombre›». Los avisos no se saltan a quien guardó la regla.
+- **1.3 Acciones internas** ✔ · M. **Hecho (2026-10-05).**
+  - Mover, marcar hecha, prioridad, vencimiento relativo, campo, etiqueta, asignar
+    personas o equipo, y crear tarea o subtarea.
+  - Cada una llama al controlador que ya usa la interfaz.
+  - Si la tarea ya está como la acción quiere, no la toca: un evento de más sería un
+    disparo de más.
+- **1.4 Acciones de salida** ✔ · M. **Hecho (2026-10-05).**
+  - **Aviso**: tipo `automation`, con el nombre de la regla y su texto ya rellenado. La
+    campana y los canales de cada persona pintan título y texto tal cual, así que no hizo
+    falta clave i18n.
+  - **Webhook**: firmado y con la guarda anti-SSRF del cliente del webhook genérico.
+  - **Chat**: Slack, Discord o Telegram. Una regla de proyecto usa la integración del
+    proyecto; una de espacio, un destino cifrado.
+  - **Pruebas del motor**: ocho de integración.
+    - Cubren el criterio de aceptación: mueve, avisa y dispara un webhook firmado a un
+      receptor real.
+    - También la condición por campo, la regla de espacio sin «Personal», el bucle
+      cortado, la importación, la cascada, la pausa por permiso perdido y el destino
+      privado.
+    - Las guardas de importación y cascada, de «Personal» y de bucle se comprobaron
+      quitándolas: cada una tumba su prueba.
+  - Doce unitarias, y un e2e (`automation-activity.spec.ts`) que falla sin el cambio de la
+    actividad.
 
-**Bloque 2 — Por fecha y programadas** · M
-- **2.1 Disparadores por fecha** · S. Trabajo programado con `withJobLease`; «ya
-  disparado» en `task_reminder_sent`, que el disparador de la 0069 rearma al cambiar el
-  vencimiento. `EXPLAIN` en el banco.
-- **2.2 Stand-up a chat** · M · ADR 068. `standupMarkdown` pasa a `packages/libs` para que
-  web y API compartan una sola implementación. No sale en festivo, las ausencias no
-  aparecen y nunca lleva la valoración. **La ADR deja escrito que enviarlo amplía, a
-  propósito, quién lo lee** —el interludio decidió «solo la persona y su responsable»—: lo
-  decide quien lo programa.
+**Bloque 2 — Por fecha y programadas** · M · [ADR 068](adr/068-el-stand-up-sale-de-riuna.md)
+- **2.1 Disparadores por fecha** ✔ · S. **Hecho (2026-10-05).**
+  - Disparadores `task.due_in` (vence en N días o menos) y `task.overdue`, con las fronteras
+    de día de `utils/due-window.ts`. «Vencida» no avisa de lo que llevaba más de una semana
+    vencido.
+  - Un trabajo cada cinco minutos (`automations`, `automation/scheduled.ts`) con
+    arrendamiento. El «ya disparado» va en `task_reminder_sent`, que el disparador de la
+    0069 rearma al cambiar el vencimiento.
+  - El mismo trabajo purga el historial de más de 30 días.
+  - **Medido en el banco de 50.000 tareas**, las dos por `task_dueDate_idx`: 1,3 ms y
+    0,9 ms; 10 ms con 20.000 marcas «ya disparado». La consulta de reglas por evento del
+    Bloque 1 tarda 0,14 ms.
+- **2.2 Stand-up a chat** ✔ · M. **Hecho (2026-10-05).**
+  - Disparador `schedule` (días y hora de Madrid) y acción `standup`. Una regla de espacio
+    con `team_id`, que solo envía stand-ups.
+  - La gestionan un admin o el responsable de ese departamento (`isLeadOfTeam` en
+    `lead/visibility.ts`), y este solo desde su sesión. Ruta propia para que liste los envíos
+    de su equipo.
+  - Sale una vez al día. En festivo no sale, quien está ausente no aparece y nunca lleva la
+    valoración.
+  - **`standupMarkdown` no pasó a `packages/libs`**, como decía este plan: ese paquete
+    depende de la API para los tipos del cliente. Hay una segunda copia en la API con prueba
+    de paridad, como `buildFilter`.
+  - La negrita se adapta a cada canal.
+  - **La ADR deja escrito que enviarlo amplía, a propósito, quién lo lee**: el interludio
+    decidió «solo la persona y su responsable», y aquí lo decide quien lo programa.
+  - **Pruebas**: seis de integración —por fecha: una vez y rearme al mover la fecha,
+    vencidas sin las antiguas; stand-up: permisos del responsable, una vez al día sin el
+    ausente, festivo y día no programado, forma de la regla— y cuatro unitarias (paridad
+    del texto y negrita por canal).
 
-**Bloque 3 — Interfaz** · M–L
-- **3.1** *Ajustes del proyecto › Automatizaciones* (con «Desde GitHub y Gitea») y
-  *Administración del espacio › Automatizaciones*. Editor «Cuando · Si · Entonces» con la
-  barra de filtros de las vistas para la condición.
-- **3.2** Historial de cada regla.
-- **3.3** Recetas: reglas predefinidas que solo rellenan el editor.
-- **3.4** El responsable programa el stand-up desde «Mi equipo».
+**Bloque 3 — Interfaz** · M–L · **Hecho (2026-10-07)**
+- **3.1** ✔ *Ajustes del proyecto › Automatizaciones* (con «Desde GitHub y Gitea», que sale
+  de «Flujo de trabajo») y *Administración del espacio › Automatizaciones*.
+  - Editor «Cuando · Si · Entonces» (`components/automation/`). La condición es la barra de
+    filtros de las vistas, y los campos filtrables los da `useWidgetFields`.
+  - Las acciones se ordenan con flechas.
+  - Los secretos son de solo escritura: un campo secreto vacío conserva el guardado
+    (`toInput`).
+  - Fetchers y hooks siguen el patrón de las recurrentes. Sin WebSocket: la pantalla relee
+    al montar.
+  - **De la pasada por el navegador**: las etiquetas de los campos no estaban asociadas a
+    su control (lo cazó el e2e, que buscaba «URL del webhook» por su etiqueta). Ahora lo
+    están, con `TextField`. Además el cuerpo de los diálogos va en `DialogPanel` (iba
+    pegado al borde), y la fila de una regla deja bajar sus botones en móvil (el nombre se
+    partía letra a letra).
+- **3.2** ✔ Historial de cada regla: estado, tarea, acción que falló, error y motivo de
+  salto, paginado.
+- **3.3** ✔ Cinco recetas que solo rellenan el editor.
+- **3.4** ✔ En «Mi equipo», pestaña Stand-up, el responsable programa el envío de cada
+  departamento que lleva, con el aviso de que todo el chat lo leerá. Desde la lista del
+  espacio, una regla programada abre ese mismo editor.
+- **Pruebas**:
+  - siete unitarias del modelo del editor;
+  - tres e2e (`automations.spec.ts`): una receta que avisa al cerrar la tarea y deja
+    historial; el responsable que programa el stand-up; una regla pausada que lo dice;
+  - pasada visual a 1440 y 390 px en los dos temas.
+  - `playwright.config.ts` da a la API del humo una clave de cifrado: en CI no hay `.env`.
 
 **Bloque 4 — La hoja de SERVITEC vuelve** · M · ADR 069
 - **Adelantado (2026-10-05), a petición del usuario:** en la celda «Comentario» los
@@ -2367,27 +2444,54 @@ ADR siguen en la 066 (la 058 sigue reservada).
   como lista (fecha y texto) y no como una cadena ya montada. Pruebas:
   `servitec-workbook.test.ts` y `task-export-xlsx.test.ts`, que miran el texto y qué
   trozos van en negrita después de releer el fichero.
-- **4.1** La exportación gana una columna **oculta** con el id de la tarea; la captura
+- **4.1** ✔ La exportación lleva el id de cada tarea en la columna J, oculta; la captura
   diaria no cambia.
-- **4.2** Lector de la hoja que busca la fila de cabeceras —el cuadro histórico se hizo a
-  mano—, salta la leyenda y los relevos, y parte «Comentario» en comentarios fechados.
-  Sin líneas en blanco entre ellos, **una línea que empieza por `dd/mm/yyyy —` abre un
-  comentario y las demás siguen al de arriba**; y la celda puede venir como texto
-  enriquecido, no solo como texto.
-- **4.3** Importar con el núcleo del importador de Excel abierto a una transacción externa
-  (segundo consumidor, que es lo que justifica separarlo). Identidad por la columna de
-  id o, sin ella, por `external_ref` con una huella de proyecto + concepto + fecha. El
-  estado vuelve a columna con el inverso de la exportación. Los comentarios entran con
-  su fecha y sin avisos, y no se repite uno que la tarea ya tenga del mismo día con el
-  mismo texto.
-- **4.4** Asistente en la administración del espacio, junto a la exportación.
+- **4.2** ✔ Lector puro (`servitec-parse.ts`):
+  - busca la fila de cabeceras por nombre, porque el cuadro histórico se hizo a mano;
+  - salta la leyenda y los relevos;
+  - una línea que empieza por fecha abre un comentario, y las demás siguen al de arriba.
+- **4.3** ✔ Importar (`import-servitec.ts` y `servitec-{plan,write,finish,comments}.ts`):
+  - el núcleo del importador de Excel sale a `importTasksInTransaction`, y sus eventos a
+    `publishImportEvents`: SERVITEC es el segundo consumidor;
+  - una transacción para el libro, con los cerrojos en orden de id;
+  - identidad por id o por huella en `external_ref`;
+  - estado a columna sin mover lo que ya cuadra;
+  - fecha de alta de la hoja en las altas;
+  - comentarios con su día, sin avisos y sin repetir;
+  - un proyecto nuevo se crea antes y se borra si falla.
+- **4.4** ✔ Asistente en *Administración del espacio › General*, junto a la exportación:
+  subir, ver qué trae, decidir cada proyecto que no existe, «Comprobar» e importar.
+- **Hecho (2026-10-07)**, [ADR 069](adr/069-la-hoja-de-servitec-vuelve.md). Pruebas:
+  - ocho unitarias del lector y del paso de estado a columna;
+  - seis de integración: migrar el cuadro creando un proyecto, subirlo dos veces sin
+    duplicar, ida y vuelta por el ID oculto que cambia concepto y estado y añade solo el
+    comentario nuevo, proyectos desconocidos (preguntar, descartar, llevar a otro),
+    ensayo sin escribir, y permisos;
+  - un e2e del asistente.
+  - Las 19 del importador de Excel siguen en verde tras separar su núcleo.
 
 **Bloque 5 — Importadores documentados y cierre** · S
-- **5.1** ADR 070, «Cómo se añade un importador externo»: qué piezas reutilizar, qué falta
-  —guardar en el servidor un fichero descargado; hoy solo hay URL prefirmada de S3— y
-  notas por origen.
-- **5.2** `funcionalidades.md`, este documento y `AGENTS.md`.
-- **5.3** Verificación de la fase.
+- **5.1** ✔ [ADR 070](adr/070-como-se-anade-un-importador-externo.md), «Cómo se añade un
+  importador externo»: un adaptador del lado del servidor sobre
+  `importTasksInTransaction`, `external_ref`, los comentarios fechados sin avisos y
+  `origin: "import"`; lo que falta (guardar ficheros sin S3, ampliar la `CHECK` de
+  `external_ref`) y notas de Trello, Jira, Asana y Notion. Sin código.
+- **5.2** ✔ `funcionalidades.md` (automatizaciones, la hoja de vuelta, seis trabajos
+  programados y «Lo que no está»), este documento y `AGENTS.md`, que aún decía que
+  `import-tasks` no era idempotente.
+- **5.3** ✔ **Verificación de la fase (2026-10-07)**, sobre el estado final de los cinco
+  bloques:
+  - integración: 823 bien y 1 omitida, ninguna fallada;
+  - humo: 92 bien, 1 omitida (avisos de ritmo, que se salta sola de noche) y 2 falladas,
+    ya corregidas y repetidas 3 veces cada una:
+    - el e2e de las reglas de GitHub seguía abriendo «Flujo de trabajo», de donde el
+      Bloque 3 movió su editor;
+    - `task-time` consultaba la API antes de que el servidor confirmara el alta del
+      cronómetro. Ahora espera la respuesta;
+  - unitarias: API 789, web 430, MCP 34, permisos 10, libs 6, PLANKA 54 y email 11;
+  - typecheck, `biome ci`, i18n y `openapi.json` al día.
+  - De paso: `leader-lock.test.ts` caía por carga (esperaba un segundo a que el
+    arrendamiento se tomase); ahora espera hasta diez.
 
 **Hecho cuando:** importas el cuadro de SERVITEC que se llevaba a mano y lo vuelves a
 subir sin duplicar nada; exportas, cambias un estado en Excel y al subirlo cambia en
@@ -2905,10 +3009,14 @@ mismo que hace la API al arrancar y sin planificador, plugins ni WebSocket:
 
 Falta desplegar la instancia como explica [actualizar.md](actualizar.md).
 
-La **Fase 8** está en curso desde el 2026-10-05, replanificada: motor de
-automatizaciones, hoja de SERVITEC de ida y vuelta y stand-up a chat, con los
-importadores externos solo documentados. Empieza por el Bloque 0 (`workflowRule` a
-punto); ver su [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--en-curso).
+La **Fase 8** está **cerrada** (2026-10-07):
+- el motor de automatizaciones, de proyecto y de espacio, por evento y por fecha;
+- el stand-up programado a un chat;
+- la hoja de SERVITEC de ida y vuelta;
+- los importadores externos, solo documentados (ADR 070).
+
+Ver su [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada).
+Lo siguiente es la **Fase 9**: operación.
 
 **Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
 seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.

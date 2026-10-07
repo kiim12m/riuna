@@ -3,7 +3,18 @@ import { EventEmitter } from "node:events";
 
 const EVENTS = new EventEmitter();
 EVENTS.setMaxListeners(100);
-export const eventContext = new AsyncLocalStorage<{ initiatorId: string }>();
+/**
+ * Quien provoca lo que se publica. Una automatizacion (ADR 067) corre sus
+ * acciones con su propio contexto: los eventos que estas publican llevan la
+ * cadena de reglas que los causo, que es lo que corta un bucle A→B→A, y la
+ * actividad sabe que el autor es la regla y no una persona.
+ */
+export type EventContext = {
+  initiatorId: string;
+  automation?: { id: string; name: string; chain: string[] };
+};
+
+export const eventContext = new AsyncLocalStorage<EventContext>();
 
 export type EventPayload<T = unknown> = {
   type: string;
@@ -73,7 +84,11 @@ export async function publishEvent(
   let enhancedData = null;
   if (typeof data === "object" && data !== null) {
     const store = eventContext.getStore();
-    enhancedData = { ...data, initiatorId: store?.initiatorId };
+    enhancedData = {
+      ...data,
+      initiatorId: store?.initiatorId,
+      ...(store?.automation ? { automation: store.automation } : {}),
+    };
   }
 
   const payload: EventPayload = {

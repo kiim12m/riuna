@@ -1824,6 +1824,121 @@ export const userPreferenceTable = pgTable("user_preference", {
     .notNull(),
 });
 
+// Automatizaciones de usuario (Fase 8, ADR 066): cuando pasa algo -el
+// disparador-, si la tarea cumple unas condiciones, se hacen unas acciones.
+// Amplian `workflow_rule` sin sustituirlo: aquella mapea eventos de GitHub y
+// Gitea a una columna, y los movimientos que provoca disparan estas.
+export const automationTable = pgTable(
+  "automation",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    // Nulo para una regla de espacio, que actua en todos sus proyectos menos
+    // los «Personal».
+    projectId: text("project_id").references(() => projectTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+    // El departamento de un envio del stand-up, y con el, quien es su
+    // responsable y puede gestionarlo.
+    teamId: text("team_id").references(() => teamTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
+    name: text("name").notNull(),
+    enabled: boolean("enabled").notNull().default(true),
+    // Columna propia porque es por lo que se busca en cada evento; su forma y
+    // la de las acciones las valida la API, no la base.
+    triggerType: text("trigger_type").notNull(),
+    triggerConfig: jsonb("trigger_config")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    // Condiciones editables, las mismas que guarda un widget.
+    conditions: jsonb("conditions").$type<unknown[]>().notNull().default([]),
+    actions: jsonb("actions").$type<unknown[]>().notNull().default([]),
+    // Por que se paro sola, si se paro: quien la guardo ya no tiene permiso.
+    pausedReason: text("paused_reason"),
+    createdBy: text("created_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    // Quien la guardo la ultima vez: es en nombre de quien actua.
+    updatedBy: text("updated_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+    archivedAt: timestamp("archived_at", { mode: "date" }),
+  },
+  (table) => [
+    // La consulta de cada evento: las reglas activas de un espacio para un
+    // disparador. Solo las activas, que son las que importan.
+    index("automation_active_trigger_idx")
+      .on(table.workspaceId, table.triggerType)
+      .where(sql`${table.enabled} AND ${table.archivedAt} IS NULL`),
+    index("automation_workspaceId_idx").on(table.workspaceId),
+    index("automation_projectId_idx").on(table.projectId),
+    index("automation_teamId_idx").on(table.teamId),
+    index("automation_createdBy_idx").on(table.createdBy),
+    index("automation_updatedBy_idx").on(table.updatedBy),
+  ],
+);
+
+// Lo que hizo cada ejecucion de una automatizacion, para el historial de la
+// regla. Se purga a los 30 dias.
+export const automationRunTable = pgTable(
+  "automation_run",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    automationId: text("automation_id")
+      .notNull()
+      .references(() => automationTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    taskId: text("task_id").references(() => taskTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    triggerType: text("trigger_type").notNull(),
+    status: text("status").notNull(),
+    // El resultado de cada accion, el error o el motivo por el que no corrio.
+    detail: jsonb("detail")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    // Lo que ya se hizo y no se repite, como el stand-up de un dia.
+    occurrence: text("occurrence"),
+    startedAt: timestamp("started_at", { mode: "date" }).defaultNow().notNull(),
+    durationMs: integer("duration_ms").notNull().default(0),
+  },
+  (table) => [
+    index("automation_run_automation_started_idx").on(
+      table.automationId,
+      table.startedAt.desc(),
+    ),
+    index("automation_run_taskId_idx").on(table.taskId),
+    check(
+      "automation_run_status_valid",
+      sql`${table.status} IN ('ok', 'failed', 'skipped')`,
+    ),
+  ],
+);
+
 // La jornada personal (ADR 045): fuente unica de horario y capacidad para el
 // Planificador, el Cronograma y Hoy. Sin fila, se aplican los valores por
 // defecto de super-productivity -09:00 a 17:00, sin comida, lunes a viernes-,

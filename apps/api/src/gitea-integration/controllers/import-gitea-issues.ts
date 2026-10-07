@@ -298,6 +298,8 @@ async function importSingleIssue(
     type: "task",
     content: null,
     source: "gitea-import",
+    // Como cualquier importacion, no dispara automatizaciones (ADR 067).
+    origin: "import",
     integrationId,
     externalId: issue.number.toString(),
   });

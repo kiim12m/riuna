@@ -4,6 +4,8 @@ import {
   activityTable,
   apikeyTable,
   assetTable,
+  automationRunTable,
+  automationTable,
   columnTable,
   commentTable,
   cycleTable,
@@ -143,6 +145,39 @@ export const columnTableRelations = relations(columnTable, ({ one, many }) => ({
   tasks: many(taskTable),
   workflowRules: many(workflowRuleTable),
 }));
+
+export const automationTableRelations = relations(
+  automationTable,
+  ({ one, many }) => ({
+    workspace: one(workspaceTable, {
+      fields: [automationTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    project: one(projectTable, {
+      fields: [automationTable.projectId],
+      references: [projectTable.id],
+    }),
+    team: one(teamTable, {
+      fields: [automationTable.teamId],
+      references: [teamTable.id],
+    }),
+    runs: many(automationRunTable),
+  }),
+);
+
+export const automationRunTableRelations = relations(
+  automationRunTable,
+  ({ one }) => ({
+    automation: one(automationTable, {
+      fields: [automationRunTable.automationId],
+      references: [automationTable.id],
+    }),
+    task: one(taskTable, {
+      fields: [automationRunTable.taskId],
+      references: [taskTable.id],
+    }),
+  }),
+);
 
 export const workflowRuleTableRelations = relations(
   workflowRuleTable,

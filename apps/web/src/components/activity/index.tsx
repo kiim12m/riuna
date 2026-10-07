@@ -574,7 +574,15 @@ function Activity({
     : null;
 
   const isExternalComment = Boolean(activity.externalSource);
-  const actorName = user?.user?.name || t("common:people.someone");
+  // Un cambio que hizo una automatizacion (ADR 067) es de la regla, no de
+  // quien la guardo: se nombra a ella y no se pinta a nadie.
+  const automation = getEventDataRecord(
+    getEventDataRecord(activity.eventData)?.automation,
+  );
+  const actor = automation ? null : user;
+  const actorName = automation
+    ? t("activity:automationActor", { name: String(automation.name ?? "") })
+    : user?.user?.name || t("common:people.someone");
 
   if (isCommentActivity(activity)) {
     const commentUser = isExternalComment
@@ -621,9 +629,9 @@ function Activity({
       <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground/80">
         {activityIcon}
       </span>
-      <ActorAvatar user={user || null} fallbackName={actorName} />
+      <ActorAvatar user={actor || null} fallbackName={actorName} />
       <TimelineContent className="text-sm leading-6 text-foreground">
-        <UserHoverName user={user || null} fallbackName={actorName} />{" "}
+        <UserHoverName user={actor || null} fallbackName={actorName} />{" "}
         {renderActivityContent({
           activity,
           workspaceUsers: workspaceUsers as WorkspaceUser[] | undefined,

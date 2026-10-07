@@ -575,6 +575,13 @@
 			"when": 1791227866650,
 			"tag": "0081_workflow_rule_unique",
 			"breakpoints": true
+		},
+		{
+			"idx": 82,
+			"version": "7",
+			"when": 1791232290712,
+			"tag": "0082_automation",
+			"breakpoints": true
 		}
 	]
 }

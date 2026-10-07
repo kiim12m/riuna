@@ -105,6 +105,20 @@ export async function hasWorkspacePermission(
   const userId = c.get("userId");
   if (!userId) return false;
 
+  return roleHasWorkspacePermission(workspaceId, userId, permissions);
+}
+
+/**
+ * Lo que el rol de una persona le deja hacer en un espacio, sin peticion de
+ * por medio: ni clave de API ni sesion. Lo usan las automatizaciones, que
+ * actuan en nombre de quien las guardo y tienen que comprobar en cada
+ * ejecucion que sigue pudiendo (ADR 067).
+ */
+export async function roleHasWorkspacePermission(
+  workspaceId: string,
+  userId: string,
+  permissions: PermissionMap,
+): Promise<boolean> {
   const [member] = await db
     .select({ role: schema.workspaceUserTable.role })
     .from(schema.workspaceUserTable)

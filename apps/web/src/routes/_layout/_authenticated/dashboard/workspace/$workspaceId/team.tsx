@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Copy, UsersRound } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { StandupDeliveries } from "@/components/automation/standup-schedule";
 import { PageHeading } from "@/components/common/page-heading";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import { TeamMemberCard } from "@/components/lead/team-member-card";
@@ -126,6 +127,7 @@ function TeamRoute() {
             </div>
           ) : (
             <div className="max-w-3xl space-y-4">
+              <StandupDeliveries workspaceId={workspaceId} />
               <Button onClick={copyAll} disabled={sections.length === 0}>
                 <Copy />
                 {t("lead:team.copyAll")}

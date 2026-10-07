@@ -12,6 +12,7 @@ import {
   SlidersHorizontal,
   Tag,
   Users,
+  Zap,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import WorkspaceLayout from "@/components/common/workspace-layout";
@@ -86,6 +87,11 @@ function RouteComponent() {
       title: t("availability:holidays.title"),
       url: `${base}/holidays`,
       icon: CalendarOff,
+    },
+    {
+      title: t("settings:automations.title"),
+      url: `${base}/automations`,
+      icon: Zap,
     },
     ...(config?.billingEnabled
       ? [

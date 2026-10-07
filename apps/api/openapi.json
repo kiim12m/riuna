@@ -3032,6 +3032,114 @@
         "summary": "Import Tasks"
       }
     },
+    "/task/import/servitec/{workspaceId}/analyze": {
+      "post": {
+        "operationId": "analyzeServitecImport",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Read a SERVITEC sheet without writing anything: how many rows, which are tasks that already exist, and which PROYECTO names match no project",
+        "responses": {
+          "200": {
+            "description": "What the sheet would bring",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Analyze Servitec Import"
+      }
+    },
+    "/task/import/servitec/{workspaceId}": {
+      "post": {
+        "operationId": "importServitec",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Import a SERVITEC sheet into the workspace: the hand-kept board or one exported before. A row with the hidden ID updates its task; without it, the same row is recognised by project, concept and date. `choices` (JSON) says what to do with each PROYECTO that matches no project: map it, create it or skip its rows. Creating one needs project:create",
+        "responses": {
+          "200": {
+            "description": "What the import did",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "choices": {
+                    "type": "string"
+                  },
+                  "dryRun": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Import Servitec"
+      }
+    },
     "/task/status/{id}": {
       "put": {
         "operationId": "updateTaskStatus",
@@ -21844,6 +21952,2388 @@
           }
         ],
         "summary": "Delete Workflow Rule"
+      }
+    },
+    "/automation/project/{projectId}": {
+      "get": {
+        "operationId": "listProjectAutomations",
+        "tags": [
+          "Automations"
+        ],
+        "description": "List a project's automations, each with its last run",
+        "responses": {
+          "200": {
+            "description": "Automations, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "List Project Automations"
+      },
+      "post": {
+        "operationId": "createProjectAutomation",
+        "tags": [
+          "Automations"
+        ],
+        "description": "Create a project automation. Webhook and chat actions also need workspace:manage_settings",
+        "responses": {
+          "200": {
+            "description": "Automation created, without its secrets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "trigger": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.created"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.status_changed"
+                          },
+                          "fromColumnId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "toColumnId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "toFinal": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.assigned"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "teamId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.priority_changed"
+                          },
+                          "to": {
+                            "enum": [
+                              "no-priority",
+                              "low",
+                              "medium",
+                              "high",
+                              "urgent"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.field_changed"
+                          },
+                          "fieldKey": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.commented"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.due_in"
+                          },
+                          "days": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "days"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.overdue"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "schedule"
+                          },
+                          "weekdays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 6
+                            },
+                            "minItems": 1,
+                            "maxItems": 7
+                          },
+                          "time": {
+                            "type": "string",
+                            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "weekdays",
+                          "time"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.labeled"
+                          },
+                          "labelName": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      }
+                    ]
+                  },
+                  "teamId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "conditions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "maxLength": 120
+                        },
+                        "field": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "operator": {
+                          "enum": [
+                            "eq",
+                            "neq",
+                            "gt",
+                            "gte",
+                            "lt",
+                            "lte",
+                            "contains",
+                            "startsWith",
+                            "in",
+                            "notIn",
+                            "isEmpty",
+                            "isNotEmpty"
+                          ],
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "field",
+                        "operator"
+                      ]
+                    },
+                    "maxItems": 50
+                  },
+                  "actions": {
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "move"
+                            },
+                            "columnId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "columnId"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "complete"
+                            },
+                            "done": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "done"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "priority"
+                            },
+                            "priority": {
+                              "enum": [
+                                "no-priority",
+                                "low",
+                                "medium",
+                                "high",
+                                "urgent"
+                              ],
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "priority"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "due_date"
+                            },
+                            "days": {
+                              "type": "integer",
+                              "minimum": -365,
+                              "maximum": 365,
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "days"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "custom_field"
+                            },
+                            "fieldKey": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "value": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "fieldKey",
+                            "value"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "label"
+                            },
+                            "labelId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "labelId"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "assign_users"
+                            },
+                            "mode": {
+                              "enum": [
+                                "add",
+                                "replace",
+                                "remove"
+                              ],
+                              "type": "string"
+                            },
+                            "userIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
+                              },
+                              "maxItems": 50
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "mode",
+                            "userIds"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "assign_team"
+                            },
+                            "teamId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120,
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "teamId"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "create_task"
+                            },
+                            "title": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 500
+                            },
+                            "asSubtask": {
+                              "type": "boolean"
+                            },
+                            "assigneeIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
+                              },
+                              "maxItems": 50
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "title",
+                            "asSubtask"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "notify"
+                            },
+                            "recipients": {
+                              "type": "object",
+                              "properties": {
+                                "assignees": {
+                                  "type": "boolean"
+                                },
+                                "creator": {
+                                  "type": "boolean"
+                                },
+                                "teamMembers": {
+                                  "type": "boolean"
+                                },
+                                "teamLeads": {
+                                  "type": "boolean"
+                                },
+                                "userIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 120
+                                  },
+                                  "maxItems": 50
+                                }
+                              }
+                            },
+                            "message": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "recipients",
+                            "message"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "webhook"
+                            },
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "maxLength": 2000
+                            },
+                            "secret": {
+                              "type": "string",
+                              "maxLength": 2000
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "url"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "chat"
+                            },
+                            "channel": {
+                              "enum": [
+                                "slack",
+                                "discord",
+                                "telegram"
+                              ],
+                              "type": "string"
+                            },
+                            "message": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            },
+                            "destination": {
+                              "type": "object",
+                              "properties": {
+                                "webhookUrl": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "botToken": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "chatId": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "threadId": {
+                                  "type": "integer",
+                                  "minimum": 1
+                                }
+                              }
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "channel",
+                            "message"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "standup"
+                            },
+                            "channel": {
+                              "enum": [
+                                "slack",
+                                "discord",
+                                "telegram"
+                              ],
+                              "type": "string"
+                            },
+                            "destination": {
+                              "type": "object",
+                              "properties": {
+                                "webhookUrl": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "botToken": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "chatId": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "threadId": {
+                                  "type": "integer",
+                                  "minimum": 1
+                                }
+                              }
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "channel",
+                            "destination"
+                          ]
+                        }
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 10
+                  }
+                },
+                "required": [
+                  "name",
+                  "trigger",
+                  "actions"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Create Project Automation"
+      }
+    },
+    "/automation/workspace/{workspaceId}": {
+      "get": {
+        "operationId": "listWorkspaceAutomations",
+        "tags": [
+          "Automations"
+        ],
+        "description": "List the workspace-wide automations, each with its last run",
+        "responses": {
+          "200": {
+            "description": "Automations, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "List Workspace Automations"
+      },
+      "post": {
+        "operationId": "createWorkspaceAutomation",
+        "tags": [
+          "Automations"
+        ],
+        "description": "Create an automation that acts on every project of the workspace except the personal ones",
+        "responses": {
+          "200": {
+            "description": "Automation created, without its secrets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "trigger": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.created"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.status_changed"
+                          },
+                          "fromColumnId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "toColumnId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "toFinal": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.assigned"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "teamId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.priority_changed"
+                          },
+                          "to": {
+                            "enum": [
+                              "no-priority",
+                              "low",
+                              "medium",
+                              "high",
+                              "urgent"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.field_changed"
+                          },
+                          "fieldKey": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.commented"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.due_in"
+                          },
+                          "days": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "days"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.overdue"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "schedule"
+                          },
+                          "weekdays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 6
+                            },
+                            "minItems": 1,
+                            "maxItems": 7
+                          },
+                          "time": {
+                            "type": "string",
+                            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "weekdays",
+                          "time"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.labeled"
+                          },
+                          "labelName": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      }
+                    ]
+                  },
+                  "teamId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "conditions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "maxLength": 120
+                        },
+                        "field": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "operator": {
+                          "enum": [
+                            "eq",
+                            "neq",
+                            "gt",
+                            "gte",
+                            "lt",
+                            "lte",
+                            "contains",
+                            "startsWith",
+                            "in",
+                            "notIn",
+                            "isEmpty",
+                            "isNotEmpty"
+                          ],
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "field",
+                        "operator"
+                      ]
+                    },
+                    "maxItems": 50
+                  },
+                  "actions": {
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "move"
+                            },
+                            "columnId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "columnId"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "complete"
+                            },
+                            "done": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "done"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "priority"
+                            },
+                            "priority": {
+                              "enum": [
+                                "no-priority",
+                                "low",
+                                "medium",
+                                "high",
+                                "urgent"
+                              ],
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "priority"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "due_date"
+                            },
+                            "days": {
+                              "type": "integer",
+                              "minimum": -365,
+                              "maximum": 365,
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "days"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "custom_field"
+                            },
+                            "fieldKey": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "value": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "fieldKey",
+                            "value"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "label"
+                            },
+                            "labelId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "labelId"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "assign_users"
+                            },
+                            "mode": {
+                              "enum": [
+                                "add",
+                                "replace",
+                                "remove"
+                              ],
+                              "type": "string"
+                            },
+                            "userIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
+                              },
+                              "maxItems": 50
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "mode",
+                            "userIds"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "assign_team"
+                            },
+                            "teamId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120,
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "teamId"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "create_task"
+                            },
+                            "title": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 500
+                            },
+                            "asSubtask": {
+                              "type": "boolean"
+                            },
+                            "assigneeIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
+                              },
+                              "maxItems": 50
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "title",
+                            "asSubtask"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "notify"
+                            },
+                            "recipients": {
+                              "type": "object",
+                              "properties": {
+                                "assignees": {
+                                  "type": "boolean"
+                                },
+                                "creator": {
+                                  "type": "boolean"
+                                },
+                                "teamMembers": {
+                                  "type": "boolean"
+                                },
+                                "teamLeads": {
+                                  "type": "boolean"
+                                },
+                                "userIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 120
+                                  },
+                                  "maxItems": 50
+                                }
+                              }
+                            },
+                            "message": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "recipients",
+                            "message"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "webhook"
+                            },
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "maxLength": 2000
+                            },
+                            "secret": {
+                              "type": "string",
+                              "maxLength": 2000
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "url"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "chat"
+                            },
+                            "channel": {
+                              "enum": [
+                                "slack",
+                                "discord",
+                                "telegram"
+                              ],
+                              "type": "string"
+                            },
+                            "message": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            },
+                            "destination": {
+                              "type": "object",
+                              "properties": {
+                                "webhookUrl": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "botToken": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "chatId": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "threadId": {
+                                  "type": "integer",
+                                  "minimum": 1
+                                }
+                              }
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "channel",
+                            "message"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "standup"
+                            },
+                            "channel": {
+                              "enum": [
+                                "slack",
+                                "discord",
+                                "telegram"
+                              ],
+                              "type": "string"
+                            },
+                            "destination": {
+                              "type": "object",
+                              "properties": {
+                                "webhookUrl": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "botToken": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "chatId": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "threadId": {
+                                  "type": "integer",
+                                  "minimum": 1
+                                }
+                              }
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "channel",
+                            "destination"
+                          ]
+                        }
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 10
+                  }
+                },
+                "required": [
+                  "name",
+                  "trigger",
+                  "actions"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Create Workspace Automation"
+      }
+    },
+    "/automation/workspace/{workspaceId}/team/{teamId}": {
+      "get": {
+        "operationId": "listTeamStandupAutomations",
+        "tags": [
+          "Automations"
+        ],
+        "description": "List the scheduled stand-up deliveries of a team. Open to the team's lead as well as to workspace managers",
+        "responses": {
+          "200": {
+            "description": "Automations, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "teamId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "List Team Standup Automations"
+      }
+    },
+    "/automation/{id}": {
+      "put": {
+        "operationId": "updateAutomation",
+        "tags": [
+          "Automations"
+        ],
+        "description": "Replace an automation. It then acts on behalf of whoever saved it, and a paused one runs again. A secret left out keeps the stored one; an empty one removes it",
+        "responses": {
+          "200": {
+            "description": "Automation updated, without its secrets",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "trigger": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.created"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.status_changed"
+                          },
+                          "fromColumnId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "toColumnId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "toFinal": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.assigned"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          },
+                          "teamId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.priority_changed"
+                          },
+                          "to": {
+                            "enum": [
+                              "no-priority",
+                              "low",
+                              "medium",
+                              "high",
+                              "urgent"
+                            ],
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.field_changed"
+                          },
+                          "fieldKey": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.commented"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.due_in"
+                          },
+                          "days": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "days"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.overdue"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "schedule"
+                          },
+                          "weekdays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 6
+                            },
+                            "minItems": 1,
+                            "maxItems": 7
+                          },
+                          "time": {
+                            "type": "string",
+                            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "weekdays",
+                          "time"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.labeled"
+                          },
+                          "labelName": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 120
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      }
+                    ]
+                  },
+                  "teamId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "conditions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "maxLength": 120
+                        },
+                        "field": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 120
+                        },
+                        "operator": {
+                          "enum": [
+                            "eq",
+                            "neq",
+                            "gt",
+                            "gte",
+                            "lt",
+                            "lte",
+                            "contains",
+                            "startsWith",
+                            "in",
+                            "notIn",
+                            "isEmpty",
+                            "isNotEmpty"
+                          ],
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "field",
+                        "operator"
+                      ]
+                    },
+                    "maxItems": 50
+                  },
+                  "actions": {
+                    "type": "array",
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "move"
+                            },
+                            "columnId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "columnId"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "complete"
+                            },
+                            "done": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "done"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "priority"
+                            },
+                            "priority": {
+                              "enum": [
+                                "no-priority",
+                                "low",
+                                "medium",
+                                "high",
+                                "urgent"
+                              ],
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "priority"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "due_date"
+                            },
+                            "days": {
+                              "type": "integer",
+                              "minimum": -365,
+                              "maximum": 365,
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "days"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "custom_field"
+                            },
+                            "fieldKey": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "value": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "fieldKey",
+                            "value"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "label"
+                            },
+                            "labelId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "labelId"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "assign_users"
+                            },
+                            "mode": {
+                              "enum": [
+                                "add",
+                                "replace",
+                                "remove"
+                              ],
+                              "type": "string"
+                            },
+                            "userIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
+                              },
+                              "maxItems": 50
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "mode",
+                            "userIds"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "assign_team"
+                            },
+                            "teamId": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120,
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "teamId"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "create_task"
+                            },
+                            "title": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 500
+                            },
+                            "asSubtask": {
+                              "type": "boolean"
+                            },
+                            "assigneeIds": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
+                              },
+                              "maxItems": 50
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "title",
+                            "asSubtask"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "notify"
+                            },
+                            "recipients": {
+                              "type": "object",
+                              "properties": {
+                                "assignees": {
+                                  "type": "boolean"
+                                },
+                                "creator": {
+                                  "type": "boolean"
+                                },
+                                "teamMembers": {
+                                  "type": "boolean"
+                                },
+                                "teamLeads": {
+                                  "type": "boolean"
+                                },
+                                "userIds": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "minLength": 1,
+                                    "maxLength": 120
+                                  },
+                                  "maxItems": 50
+                                }
+                              }
+                            },
+                            "message": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "recipients",
+                            "message"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "webhook"
+                            },
+                            "url": {
+                              "type": "string",
+                              "format": "uri",
+                              "maxLength": 2000
+                            },
+                            "secret": {
+                              "type": "string",
+                              "maxLength": 2000
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "url"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "chat"
+                            },
+                            "channel": {
+                              "enum": [
+                                "slack",
+                                "discord",
+                                "telegram"
+                              ],
+                              "type": "string"
+                            },
+                            "message": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 2000
+                            },
+                            "destination": {
+                              "type": "object",
+                              "properties": {
+                                "webhookUrl": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "botToken": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "chatId": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "threadId": {
+                                  "type": "integer",
+                                  "minimum": 1
+                                }
+                              }
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "channel",
+                            "message"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "standup"
+                            },
+                            "channel": {
+                              "enum": [
+                                "slack",
+                                "discord",
+                                "telegram"
+                              ],
+                              "type": "string"
+                            },
+                            "destination": {
+                              "type": "object",
+                              "properties": {
+                                "webhookUrl": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "botToken": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "chatId": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "threadId": {
+                                  "type": "integer",
+                                  "minimum": 1
+                                }
+                              }
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "channel",
+                            "destination"
+                          ]
+                        }
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 10
+                  }
+                },
+                "required": [
+                  "name",
+                  "trigger",
+                  "actions"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Automation"
+      },
+      "delete": {
+        "operationId": "archiveAutomation",
+        "tags": [
+          "Automations"
+        ],
+        "description": "Archive an automation; its run history is kept",
+        "responses": {
+          "200": {
+            "description": "Automation archived",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Archive Automation"
+      }
+    },
+    "/automation/{id}/enabled": {
+      "patch": {
+        "operationId": "setAutomationEnabled",
+        "tags": [
+          "Automations"
+        ],
+        "description": "Turn an automation on or off. Turning it on puts it on behalf of the caller and clears a pause",
+        "responses": {
+          "200": {
+            "description": "Automation updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "enabled": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "enabled"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Set Automation Enabled"
+      }
+    },
+    "/automation/{id}/runs": {
+      "get": {
+        "operationId": "listAutomationRuns",
+        "tags": [
+          "Automations"
+        ],
+        "description": "An automation's runs, newest first: 50 by default. `limit` (1-100) sizes the page; `before` (the `startedAt` of the last one received) with `beforeId` (its `id`) asks for the next",
+        "responses": {
+          "200": {
+            "description": "Runs, newest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "before",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "in": "query",
+            "name": "beforeId",
+            "schema": {
+              "type": "string",
+              "maxLength": 120
+            }
+          }
+        ],
+        "summary": "List Automation Runs"
       }
     },
     "/invitation/{id}": {

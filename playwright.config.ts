@@ -71,6 +71,9 @@ export default defineConfig({
         NODE_ENV: "development",
         TZ: "Europe/Madrid",
         AUTH_SECRET: "e2e-secret-with-at-least-32-characters",
+        // Las automatizaciones guardan cifrados sus destinos de chat (ADR 066).
+        // En local saldria del `.env`; en CI no hay `.env`.
+        NOTIFICATION_SECRET_ENCRYPTION_KEY: "e2e-notification-secret-key",
         RIUNA_API_URL: `http://localhost:${API_PORT}`,
         RIUNA_CLIENT_URL: `http://localhost:${WEB_PORT}`,
         CORS_ORIGINS: `http://localhost:${WEB_PORT}`,

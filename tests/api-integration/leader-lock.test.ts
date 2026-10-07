@@ -43,9 +43,14 @@ describe("withJobLease", () => {
     );
 
     try {
-      await vi.waitFor(() => {
-        expect(firstHasLease).toBe(true);
-      });
+      // Con la maquina cargada, coger el arrendamiento pasaba del segundo que
+      // espera `waitFor` por defecto y la prueba caia sin que nada fallara.
+      await vi.waitFor(
+        () => {
+          expect(firstHasLease).toBe(true);
+        },
+        { timeout: 10_000 },
+      );
 
       const second = await withJobLease(
         LEASE,

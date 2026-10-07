@@ -1,9 +1,11 @@
 import { saveAs } from "file-saver";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, Upload } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import useExportWorkspaceTasksXlsx from "@/hooks/mutations/task/use-export-workspace-tasks-xlsx";
 import { toast } from "@/lib/toast";
+import { ServitecImportWizard } from "./servitec-import-wizard";
 
 type WorkspaceTasksExportProps = {
   workspaceId: string;
@@ -14,6 +16,7 @@ export function WorkspaceTasksExport({
 }: WorkspaceTasksExportProps) {
   const { t } = useTranslation();
   const { mutateAsync: exportTasks, isPending } = useExportWorkspaceTasksXlsx();
+  const [importing, setImporting] = useState(false);
 
   const handleExport = async () => {
     try {
@@ -63,7 +66,36 @@ export function WorkspaceTasksExport({
             {t("settings:workspaceTasksExport.exportButton")}
           </Button>
         </div>
+        <div
+          data-testid="servitec-import-row"
+          className="flex flex-col items-start gap-2 border-border border-t pt-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+        >
+          <div className="space-y-0.5 min-w-0">
+            <p className="text-sm font-medium">
+              {t("settings:servitecImport.rowTitle")}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {t("settings:servitecImport.rowDescription")}
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            type="button"
+            onClick={() => setImporting(true)}
+          >
+            <Upload />
+            {t("settings:servitecImport.open")}
+          </Button>
+        </div>
       </div>
+      {importing && (
+        <ServitecImportWizard
+          workspaceId={workspaceId}
+          open
+          onOpenChange={setImporting}
+        />
+      )}
     </div>
   );
 }
