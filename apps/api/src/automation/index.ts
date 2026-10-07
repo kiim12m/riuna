@@ -20,7 +20,11 @@ import {
   updateAutomation,
 } from "./controllers/save-automation";
 import { type Action, automationInputSchema } from "./definition";
-import { requiredPermissions } from "./permissions";
+import {
+  leadManagesStandup,
+  onlySendsStandups,
+  requiredPermissions,
+} from "./permissions";
 // El motor se suscribe al bus al cargarse, como la actividad y los avisos.
 import "./engine";
 
@@ -41,6 +45,7 @@ async function assertCanManage(
   c: Context,
   projectId: string | null,
   actions: readonly Pick<Action, "type">[],
+  teamIds: readonly (string | null | undefined)[] = [],
 ) {
   if (
     await hasWorkspacePermission(c, requiredPermissions(projectId, actions))
@@ -49,6 +54,24 @@ async function assertCanManage(
   }
   if (!c.get("userId"))
     throw new HTTPException(401, { message: "Unauthorized" });
+
+  // El responsable de un departamento gestiona el envio de su stand-up, y solo
+  // desde su sesion: una clave de API no lleva ese permiso (ADR 068).
+  const teams = teamIds.filter((teamId): teamId is string => Boolean(teamId));
+  if (!c.get("apiKey") && teams.length > 0) {
+    const leads = await Promise.all(
+      teams.map((teamId) =>
+        leadManagesStandup({
+          workspaceId: c.get("workspaceId"),
+          teamId,
+          userId: c.get("userId"),
+          actions,
+        }),
+      ),
+    );
+    if (leads.every(Boolean)) return;
+  }
+
   throw new HTTPException(403, { message: "Insufficient permissions" });
 }
 
@@ -135,6 +158,32 @@ const automation = new Hono<{ Variables: Variables }>()
         }),
       ),
   )
+  .get(
+    "/workspace/:workspaceId/team/:teamId",
+    describeRoute({
+      operationId: "listTeamStandupAutomations",
+      tags: ["Automations"],
+      description:
+        "List the scheduled stand-up deliveries of a team. Open to the team's lead as well as to workspace managers",
+      responses: json("Automations, oldest first"),
+    }),
+    validator(
+      "param",
+      v.object({ workspaceId: v.string(), teamId: v.string() }),
+    ),
+    workspaceAccess.fromParam("workspaceId"),
+    async (c) => {
+      const { teamId } = c.req.valid("param");
+      await assertCanManage(c, null, [{ type: "standup" }], [teamId]);
+      return c.json(
+        await listAutomations({
+          workspaceId: c.get("workspaceId"),
+          projectId: null,
+          teamId,
+        }),
+      );
+    },
+  )
   .post(
     "/workspace/:workspaceId",
     describeRoute({
@@ -149,7 +198,7 @@ const automation = new Hono<{ Variables: Variables }>()
     workspaceAccess.fromParam("workspaceId"),
     async (c) => {
       const input = c.req.valid("json");
-      await assertCanManage(c, null, input.actions);
+      await assertCanManage(c, null, input.actions, [input.teamId]);
       return c.json(
         await createAutomation({
           workspaceId: c.get("workspaceId"),
@@ -177,10 +226,12 @@ const automation = new Hono<{ Variables: Variables }>()
       const input = c.req.valid("json");
       // Lo mas estricto de antes y de despues: quitar un webhook tambien es
       // tocar lo que sale fuera.
-      await assertCanManage(c, row.projectId, [
-        ...(row.actions as Action[]),
-        ...input.actions,
-      ]);
+      await assertCanManage(
+        c,
+        row.projectId,
+        [...(row.actions as Action[]), ...input.actions],
+        [row.teamId, input.teamId],
+      );
       return c.json(
         await updateAutomation({
           automation: row,
@@ -204,7 +255,9 @@ const automation = new Hono<{ Variables: Variables }>()
     workspaceAccess.fromAutomation("id"),
     async (c) => {
       const row = await loadAutomation(c, c.req.valid("param").id);
-      await assertCanManage(c, row.projectId, row.actions as Action[]);
+      await assertCanManage(c, row.projectId, row.actions as Action[], [
+        row.teamId,
+      ]);
       return c.json(
         await setAutomationEnabled({
           automation: row,
@@ -226,7 +279,9 @@ const automation = new Hono<{ Variables: Variables }>()
     workspaceAccess.fromAutomation("id"),
     async (c) => {
       const row = await loadAutomation(c, c.req.valid("param").id);
-      await assertCanManage(c, row.projectId, row.actions as Action[]);
+      await assertCanManage(c, row.projectId, row.actions as Action[], [
+        row.teamId,
+      ]);
       return c.json(await archiveAutomation(row));
     },
   )
@@ -265,7 +320,15 @@ const automation = new Hono<{ Variables: Variables }>()
     workspaceAccess.fromAutomation("id"),
     async (c) => {
       const row = await loadAutomation(c, c.req.valid("param").id);
-      await assertCanManage(c, row.projectId, []);
+      // Leer pide lo mismo que listar; el de un envio del stand-up, tambien
+      // a su responsable.
+      const actions = row.actions as Action[];
+      await assertCanManage(
+        c,
+        row.projectId,
+        onlySendsStandups(actions) ? actions : [],
+        [row.teamId],
+      );
       return c.json(await listAutomationRuns(row.id, c.req.valid("query")));
     },
   );

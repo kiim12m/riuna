@@ -4,8 +4,8 @@ import { automationTable, columnTable, projectTable } from "../database/schema";
 import { subscribeToEvent } from "../events";
 import type { EditableCondition } from "../view/filter-schema";
 import { taskMatchesConditions } from "./condition";
-import type { Action, Trigger, TriggerType } from "./definition";
-import { actorCanRun, requiredPermissions } from "./permissions";
+import type { Trigger, TriggerType } from "./definition";
+import { ruleActorCanRun } from "./permissions";
 import { executeRule, pauseRule, recordRun } from "./run";
 import { loadTaskInfo, type TaskInfo } from "./task-info";
 import { EVENT_TRIGGERS, matchesTrigger, type StatusMove } from "./triggers";
@@ -112,10 +112,8 @@ async function considerRule({
   }
 
   // Actua en nombre de quien la guardo, que tiene que seguir pudiendo.
-  const actions = rule.actions as Action[];
   const actorId = rule.updatedBy;
-  const required = requiredPermissions(rule.projectId, actions);
-  if (!actorId || !(await actorCanRun(rule.workspaceId, actorId, required))) {
+  if (!actorId || !(await ruleActorCanRun(rule))) {
     await pauseRule(rule, "actor_lost_permission");
     await recordRun({
       rule,

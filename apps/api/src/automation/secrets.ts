@@ -58,8 +58,14 @@ export function sealActions(
       });
     }
 
-    if (action.type === "chat" && action.destination) {
-      const oldDestination = old?.type === "chat" ? old.destination : undefined;
+    if (
+      (action.type === "chat" || action.type === "standup") &&
+      action.destination
+    ) {
+      const oldDestination =
+        old?.type === "chat" || old?.type === "standup"
+          ? old.destination
+          : undefined;
       return {
         ...action,
         destination: withoutUndefined({
@@ -92,7 +98,10 @@ export function publicActions(stored: readonly StoredAction[]) {
       return { ...rest, hasSecret: Boolean(secret) };
     }
 
-    if (action.type === "chat" && action.destination) {
+    if (
+      (action.type === "chat" || action.type === "standup") &&
+      action.destination
+    ) {
       const { webhookUrl, botToken, ...rest } = action.destination;
       return {
         ...action,

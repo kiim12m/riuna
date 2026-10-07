@@ -29,6 +29,7 @@ export async function createAutomation({
     .values({
       workspaceId,
       projectId,
+      teamId: input.teamId ?? null,
       name: input.name,
       enabled: input.enabled ?? true,
       ...splitTrigger(input.trigger),
@@ -72,6 +73,7 @@ export async function updateAutomation({
     .update(automationTable)
     .set({
       name: input.name,
+      teamId: input.teamId ?? null,
       enabled: input.enabled ?? automation.enabled,
       ...splitTrigger(input.trigger),
       conditions: input.conditions ?? [],

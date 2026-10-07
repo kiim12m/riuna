@@ -47,7 +47,7 @@ export async function assertTeam(teamId: string, workspaceId: string) {
 // canal; lo que se conserva cifrado ya se comprobo al guardarlo. Que el destino
 // este completo se mira despues de fundir con lo guardado (`assertChatComplete`).
 async function assertChatDestination(
-  action: Extract<Action, { type: "chat" }>,
+  action: Extract<Action, { type: "chat" | "standup" }>,
 ) {
   const { webhookUrl, botToken } = action.destination ?? {};
   let errors: string[] | undefined;
@@ -69,7 +69,12 @@ async function assertChatDestination(
 /** Una regla de espacio sin destino guardado no tendria adonde escribir. */
 export function assertChatComplete(actions: readonly Action[]) {
   for (const action of actions) {
-    if (action.type !== "chat" || !action.destination) continue;
+    if (
+      (action.type !== "chat" && action.type !== "standup") ||
+      !action.destination
+    ) {
+      continue;
+    }
     const { webhookUrl, botToken, chatId } = action.destination;
     const complete =
       action.channel === "telegram"
@@ -162,6 +167,12 @@ export async function validateActions(
         } catch (error) {
           throw invalid(error instanceof Error ? error.message : "Invalid URL");
         }
+        break;
+      case "standup":
+        if (scope.projectId) {
+          throw invalid("Only a workspace rule sends a stand-up");
+        }
+        await assertChatDestination(action);
         break;
       case "chat":
         if (scope.projectId) {

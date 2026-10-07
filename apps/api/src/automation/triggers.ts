@@ -89,6 +89,11 @@ export function matchesTrigger(
           (change as { key?: unknown }).key === trigger.fieldKey,
       );
     }
+    case "task.due_in":
+    case "task.overdue":
+    case "schedule":
+      // No vienen del bus: los mira el planificador.
+      return false;
     case "task.labeled": {
       if (!trigger.labelName) return true;
       const label = data.label as { name?: unknown } | undefined;

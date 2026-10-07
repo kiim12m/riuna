@@ -15,12 +15,15 @@ export async function recordRun({
   taskId,
   status,
   detail,
+  occurrence = null,
   startedAt = new Date(),
 }: {
   rule: AutomationRow;
   taskId: string | null;
   status: RunStatus;
   detail: Record<string, unknown>;
+  /** Lo que no se repite, como el stand-up de un dia (`yyyy-mm-dd`). */
+  occurrence?: string | null;
   startedAt?: Date;
 }) {
   await db.insert(automationRunTable).values({
@@ -29,6 +32,7 @@ export async function recordRun({
     triggerType: rule.triggerType,
     status,
     detail,
+    occurrence,
     startedAt,
     durationMs: Date.now() - startedAt.getTime(),
   });

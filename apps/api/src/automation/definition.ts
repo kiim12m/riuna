@@ -51,6 +51,26 @@ export const triggerSchema = v.variant("type", [
     fieldKey: v.optional(fieldKey),
   }),
   v.object({ type: v.literal("task.commented") }),
+  // Por fecha (Bloque 2), los mira el planificador cada cinco minutos.
+  v.object({
+    type: v.literal("task.due_in"),
+    // El dia de vencimiento esta a N dias o menos (0 = vence hoy) y aun no ha
+    // vencido.
+    days: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(60)),
+  }),
+  v.object({ type: v.literal("task.overdue") }),
+  // A una hora fija de ciertos dias, en la zona de la instancia. Solo para
+  // el envio del stand-up de un departamento.
+  v.object({
+    type: v.literal("schedule"),
+    // 0 = domingo, como `Date.getDay()`.
+    weekdays: v.pipe(
+      v.array(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(6))),
+      v.minLength(1),
+      v.maxLength(7),
+    ),
+    time: v.pipe(v.string(), v.regex(/^([01]\d|2[0-3]):[0-5]\d$/)),
+  }),
   v.object({
     type: v.literal("task.labeled"),
     labelName: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(120))),
@@ -59,6 +79,9 @@ export const triggerSchema = v.variant("type", [
 
 export type Trigger = v.InferOutput<typeof triggerSchema>;
 export type TriggerType = Trigger["type"];
+
+/** Los que no vienen de un evento: los mira el planificador. */
+export const DATE_TRIGGERS = ["task.due_in", "task.overdue"] as const;
 
 // Telegram y los webhooks de Slack y Discord: lo que va cifrado es lo que da
 // acceso al canal (la URL del webhook, el token del bot).
@@ -137,6 +160,12 @@ export const actionSchema = v.variant("type", [
     // Solo en una regla de espacio: la de proyecto usa su integracion.
     destination: v.optional(chatDestination),
   }),
+  v.object({
+    ...actionId,
+    type: v.literal("standup"),
+    channel: v.picklist(["slack", "discord", "telegram"]),
+    destination: chatDestination,
+  }),
 ]);
 
 export type Action = v.InferOutput<typeof actionSchema>;
@@ -147,6 +176,8 @@ export const automationInputSchema = v.object({
   name: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(120)),
   enabled: v.optional(v.boolean()),
   trigger: triggerSchema,
+  // El departamento cuyo stand-up se envia: solo con el disparador `schedule`.
+  teamId: v.optional(id),
   conditions: v.optional(editableFilterSchema),
   actions: v.pipe(v.array(actionSchema), v.minLength(1), v.maxLength(10)),
 });
@@ -154,4 +185,8 @@ export const automationInputSchema = v.object({
 export type AutomationInput = v.InferOutput<typeof automationInputSchema>;
 
 /** Las acciones que sacan datos de Riuna. */
-export const OUTBOUND_ACTIONS: readonly ActionType[] = ["webhook", "chat"];
+export const OUTBOUND_ACTIONS: readonly ActionType[] = [
+  "webhook",
+  "chat",
+  "standup",
+];

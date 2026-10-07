@@ -22030,6 +22030,61 @@
                         "type": "object",
                         "properties": {
                           "type": {
+                            "const": "task.due_in"
+                          },
+                          "days": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "days"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.overdue"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "schedule"
+                          },
+                          "weekdays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 6
+                            },
+                            "minItems": 1,
+                            "maxItems": 7
+                          },
+                          "time": {
+                            "type": "string",
+                            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "weekdays",
+                          "time"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
                             "const": "task.labeled"
                           },
                           "labelName": {
@@ -22043,6 +22098,11 @@
                         ]
                       }
                     ]
+                  },
+                  "teamId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
                   },
                   "conditions": {
                     "type": "array",
@@ -22463,6 +22523,54 @@
                             "type",
                             "channel",
                             "message"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "standup"
+                            },
+                            "channel": {
+                              "enum": [
+                                "slack",
+                                "discord",
+                                "telegram"
+                              ],
+                              "type": "string"
+                            },
+                            "destination": {
+                              "type": "object",
+                              "properties": {
+                                "webhookUrl": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "botToken": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "chatId": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "threadId": {
+                                  "type": "integer",
+                                  "minimum": 1
+                                }
+                              }
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "channel",
+                            "destination"
                           ]
                         }
                       ]
@@ -22667,6 +22775,61 @@
                         "type": "object",
                         "properties": {
                           "type": {
+                            "const": "task.due_in"
+                          },
+                          "days": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "days"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.overdue"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "schedule"
+                          },
+                          "weekdays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 6
+                            },
+                            "minItems": 1,
+                            "maxItems": 7
+                          },
+                          "time": {
+                            "type": "string",
+                            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "weekdays",
+                          "time"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
                             "const": "task.labeled"
                           },
                           "labelName": {
@@ -22680,6 +22843,11 @@
                         ]
                       }
                     ]
+                  },
+                  "teamId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
                   },
                   "conditions": {
                     "type": "array",
@@ -23101,6 +23269,54 @@
                             "channel",
                             "message"
                           ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "standup"
+                            },
+                            "channel": {
+                              "enum": [
+                                "slack",
+                                "discord",
+                                "telegram"
+                              ],
+                              "type": "string"
+                            },
+                            "destination": {
+                              "type": "object",
+                              "properties": {
+                                "webhookUrl": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "botToken": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "chatId": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "threadId": {
+                                  "type": "integer",
+                                  "minimum": 1
+                                }
+                              }
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "channel",
+                            "destination"
+                          ]
                         }
                       ]
                     },
@@ -23118,6 +23334,46 @@
           }
         },
         "summary": "Create Workspace Automation"
+      }
+    },
+    "/automation/workspace/{workspaceId}/team/{teamId}": {
+      "get": {
+        "operationId": "listTeamStandupAutomations",
+        "tags": [
+          "Automations"
+        ],
+        "description": "List the scheduled stand-up deliveries of a team. Open to the team's lead as well as to workspace managers",
+        "responses": {
+          "200": {
+            "description": "Automations, oldest first",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "teamId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "List Team Standup Automations"
       }
     },
     "/automation/{id}": {
@@ -23274,6 +23530,61 @@
                         "type": "object",
                         "properties": {
                           "type": {
+                            "const": "task.due_in"
+                          },
+                          "days": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 60
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "days"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "task.overdue"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "schedule"
+                          },
+                          "weekdays": {
+                            "type": "array",
+                            "items": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 6
+                            },
+                            "minItems": 1,
+                            "maxItems": 7
+                          },
+                          "time": {
+                            "type": "string",
+                            "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                          }
+                        },
+                        "required": [
+                          "type",
+                          "weekdays",
+                          "time"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
                             "const": "task.labeled"
                           },
                           "labelName": {
@@ -23287,6 +23598,11 @@
                         ]
                       }
                     ]
+                  },
+                  "teamId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
                   },
                   "conditions": {
                     "type": "array",
@@ -23707,6 +24023,54 @@
                             "type",
                             "channel",
                             "message"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 120
+                            },
+                            "type": {
+                              "const": "standup"
+                            },
+                            "channel": {
+                              "enum": [
+                                "slack",
+                                "discord",
+                                "telegram"
+                              ],
+                              "type": "string"
+                            },
+                            "destination": {
+                              "type": "object",
+                              "properties": {
+                                "webhookUrl": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "botToken": {
+                                  "type": "string",
+                                  "maxLength": 2000
+                                },
+                                "chatId": {
+                                  "type": "string",
+                                  "maxLength": 120
+                                },
+                                "threadId": {
+                                  "type": "integer",
+                                  "minimum": 1
+                                }
+                              }
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "channel",
+                            "destination"
                           ]
                         }
                       ]

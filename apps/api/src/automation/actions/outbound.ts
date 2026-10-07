@@ -127,20 +127,32 @@ async function projectChat(projectId: string, channel: Chat["channel"]) {
   return JSON.parse(integration.config) as Record<string, unknown>;
 }
 
-async function chat(action: Chat, { rule, task }: ActionContext) {
-  // Regla de proyecto: la integracion del proyecto. De espacio: su destino,
-  // guardado cifrado en la propia regla.
-  const destination = rule.projectId
-    ? await projectChat(task.projectId, action.channel)
-    : {
-        webhookUrl: openSecret(action.destination?.webhookUrl),
-        botToken: openSecret(action.destination?.botToken),
-        chatId: action.destination?.chatId,
-        threadId: action.destination?.threadId,
-      };
-  const text = renderTemplate(action.message, task);
+export type ChatDestination = {
+  webhookUrl?: unknown;
+  botToken?: unknown;
+  chatId?: unknown;
+  threadId?: unknown;
+};
 
-  if (action.channel === "telegram") {
+/**
+ * La negrita de Markdown (`**x**`) como la entiende cada canal: Discord la
+ * lee tal cual, Slack la escribe con un asterisco y Telegram, sin
+ * `parse_mode`, la enseñaria con los asteriscos.
+ */
+export function chatMarkup(text: string, channel: Chat["channel"]) {
+  if (channel === "discord") return text;
+  return text.replace(/\*\*(.+?)\*\*/g, channel === "slack" ? "*$1*" : "$1");
+}
+
+/** Escribe en un chat; lo comparten la accion «mensaje» y el stand-up. */
+export async function postToChat(
+  channel: Chat["channel"],
+  destination: ChatDestination,
+  markdown: string,
+) {
+  const text = chatMarkup(markdown, channel);
+
+  if (channel === "telegram") {
     const { botToken, chatId, threadId } = destination;
     if (typeof botToken !== "string" || typeof chatId !== "string") {
       throw new Error("The telegram destination is incomplete");
@@ -150,18 +162,43 @@ async function chat(action: Chat, { rule, task }: ActionContext) {
       text,
       ...(typeof threadId === "number" ? { message_thread_id: threadId } : {}),
     });
-    return { channel: action.channel };
+    return;
   }
 
   const { webhookUrl } = destination;
   if (typeof webhookUrl !== "string") {
-    throw new Error(`The ${action.channel} destination is incomplete`);
+    throw new Error(`The ${channel} destination is incomplete`);
   }
-  if (action.channel === "slack") {
+  if (channel === "slack") {
     await postToSlack(webhookUrl, { text });
   } else {
     await postToDiscord(webhookUrl, { content: sanitizeDiscordContent(text) });
   }
+}
+
+/** Un destino guardado en una regla, con sus secretos ya descifrados. */
+export function openDestination(
+  destination: Extract<Action, { type: "standup" }>["destination"] | undefined,
+): ChatDestination {
+  return {
+    webhookUrl: openSecret(destination?.webhookUrl),
+    botToken: openSecret(destination?.botToken),
+    chatId: destination?.chatId,
+    threadId: destination?.threadId,
+  };
+}
+
+async function chat(action: Chat, { rule, task }: ActionContext) {
+  // Regla de proyecto: la integracion del proyecto. De espacio: su destino,
+  // guardado cifrado en la propia regla.
+  const destination = rule.projectId
+    ? await projectChat(task.projectId, action.channel)
+    : openDestination(action.destination);
+  await postToChat(
+    action.channel,
+    destination,
+    renderTemplate(action.message, task),
+  );
   return { channel: action.channel };
 }
 

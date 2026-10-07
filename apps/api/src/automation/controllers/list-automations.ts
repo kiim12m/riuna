@@ -10,9 +10,12 @@ import { type LastRun, toPublicAutomation } from "../serialize";
 export async function listAutomations({
   workspaceId,
   projectId,
+  teamId,
 }: {
   workspaceId: string;
   projectId: string | null;
+  /** Solo los envios del stand-up de ese departamento. */
+  teamId?: string;
 }) {
   const rows = await db
     .select()
@@ -24,6 +27,7 @@ export async function listAutomations({
           ? eq(automationTable.projectId, projectId)
           : isNull(automationTable.projectId),
         isNull(automationTable.archivedAt),
+        teamId ? eq(automationTable.teamId, teamId) : undefined,
       ),
     )
     .orderBy(automationTable.createdAt);

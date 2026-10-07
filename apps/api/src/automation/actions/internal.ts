@@ -15,7 +15,10 @@ import type { Action } from "../definition";
 import { renderTemplate } from "../task-info";
 import type { ActionContext, ActionOutcome } from "./types";
 
-type InternalAction = Exclude<Action, { type: "notify" | "webhook" | "chat" }>;
+type InternalAction = Exclude<
+  Action,
+  { type: "notify" | "webhook" | "chat" | "standup" }
+>;
 
 // Cada accion es un envoltorio fino del controlador que ya usa la interfaz,
 // asi que publica los mismos eventos y deja la misma actividad. Lo que ya esta

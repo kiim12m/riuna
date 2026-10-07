@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/node";
 import { Cron } from "croner";
+import { checkAutomations } from "../automation/scheduled";
 import { generateRecurringTasks } from "../recurrence/generate";
 import { checkDueDateReminders } from "./due-date-reminders";
 import { withJobLease } from "./leader-lock";
@@ -79,6 +80,22 @@ export function initializeScheduler(): void {
         withJobLease("recurring-tasks", generateRecurringTasks, () => ({
           degraded: false,
         })),
+      ),
+    ),
+  );
+  // Las automatizaciones por fecha y el envio del stand-up (ADR 067 y 068).
+  // Con arrendamiento: enviar un stand-up o un webhook no es idempotente.
+  jobs.push(
+    new Cron(
+      "*/5 * * * *",
+      withCheckIn("automations", () =>
+        withJobLease(
+          "automations",
+          () => checkAutomations(),
+          () => ({
+            degraded: false,
+          }),
+        ),
       ),
     ),
   );

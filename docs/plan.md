@@ -2377,15 +2377,36 @@ ADR siguen en la 066 (la 058 sigue reservada).
   - Doce unitarias, y un e2e (`automation-activity.spec.ts`) que falla sin el cambio de la
     actividad.
 
-**Bloque 2 — Por fecha y programadas** · M
-- **2.1 Disparadores por fecha** · S. Trabajo programado con `withJobLease`; «ya
-  disparado» en `task_reminder_sent`, que el disparador de la 0069 rearma al cambiar el
-  vencimiento. `EXPLAIN` en el banco.
-- **2.2 Stand-up a chat** · M · ADR 068. `standupMarkdown` pasa a `packages/libs` para que
-  web y API compartan una sola implementación. No sale en festivo, las ausencias no
-  aparecen y nunca lleva la valoración. **La ADR deja escrito que enviarlo amplía, a
-  propósito, quién lo lee** —el interludio decidió «solo la persona y su responsable»—: lo
-  decide quien lo programa.
+**Bloque 2 — Por fecha y programadas** · M · [ADR 068](adr/068-el-stand-up-sale-de-riuna.md)
+- **2.1 Disparadores por fecha** ✔ · S. **Hecho (2026-10-05).**
+  - Disparadores `task.due_in` (vence en N días o menos) y `task.overdue`, con las fronteras
+    de día de `utils/due-window.ts`. «Vencida» no avisa de lo que llevaba más de una semana
+    vencido.
+  - Un trabajo cada cinco minutos (`automations`, `automation/scheduled.ts`) con
+    arrendamiento. El «ya disparado» va en `task_reminder_sent`, que el disparador de la
+    0069 rearma al cambiar el vencimiento.
+  - El mismo trabajo purga el historial de más de 30 días.
+  - **Medido en el banco de 50.000 tareas**, las dos por `task_dueDate_idx`: 1,3 ms y
+    0,9 ms; 10 ms con 20.000 marcas «ya disparado». La consulta de reglas por evento del
+    Bloque 1 tarda 0,14 ms.
+- **2.2 Stand-up a chat** ✔ · M. **Hecho (2026-10-05).**
+  - Disparador `schedule` (días y hora de Madrid) y acción `standup`. Una regla de espacio
+    con `team_id`, que solo envía stand-ups.
+  - La gestionan un admin o el responsable de ese departamento (`isLeadOfTeam` en
+    `lead/visibility.ts`), y este solo desde su sesión. Ruta propia para que liste los envíos
+    de su equipo.
+  - Sale una vez al día. En festivo no sale, quien está ausente no aparece y nunca lleva la
+    valoración.
+  - **`standupMarkdown` no pasó a `packages/libs`**, como decía este plan: ese paquete
+    depende de la API para los tipos del cliente. Hay una segunda copia en la API con prueba
+    de paridad, como `buildFilter`.
+  - La negrita se adapta a cada canal.
+  - **La ADR deja escrito que enviarlo amplía, a propósito, quién lo lee**: el interludio
+    decidió «solo la persona y su responsable», y aquí lo decide quien lo programa.
+  - **Pruebas**: seis de integración —por fecha: una vez y rearme al mover la fecha,
+    vencidas sin las antiguas; stand-up: permisos del responsable, una vez al día sin el
+    ausente, festivo y día no programado, forma de la regla— y cuatro unitarias (paridad
+    del texto y negrita por canal).
 
 **Bloque 3 — Interfaz** · M–L
 - **3.1** *Ajustes del proyecto › Automatizaciones* (con «Desde GitHub y Gitea») y
