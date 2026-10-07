@@ -20,7 +20,7 @@ export const telegramEventsSchema = v.object(
   >,
 );
 
-const telegramBotTokenSchema = v.pipe(
+export const telegramBotTokenSchema = v.pipe(
   v.string(),
   v.regex(/^\d{8,10}:[A-Za-z0-9_-]{35}$/, "Enter a valid Telegram bot token"),
 );

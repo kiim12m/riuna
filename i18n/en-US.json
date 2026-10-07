@@ -1858,7 +1858,8 @@
 		},
 		"customFieldChanged": "changed “{{name}}” from {{from}} to {{to}}",
 		"customFieldChangedPlain": "changed “{{name}}”",
-		"emptyValue": "empty"
+		"emptyValue": "empty",
+		"automationActor": "Automation “{{name}}”"
 	},
 	"tasks": {
 		"actions": {

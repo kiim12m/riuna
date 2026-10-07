@@ -2285,7 +2285,7 @@ funciona encadenando. Los dos se editan en la misma página.
 **El motor**, en `apps/api/src/automation/`, es un suscriptor más del bus, como la
 actividad o los avisos:
 
-- **Modelo** (migración 0081, solo tablas nuevas): `automation` —`project_id` nulo para
+- **Modelo** (migración 0082, solo tablas nuevas): `automation` —`project_id` nulo para
   una regla de espacio, `team_id` para el stand-up, `trigger_type`, y en `jsonb` la
   configuración del disparador, las condiciones y las acciones— y `automation_run`, el
   historial de cada ejecución con el resultado de cada acción, purgado a los 30 días.
@@ -2333,13 +2333,49 @@ ADR siguen en la 066 (la 058 sigue reservada).
     —analiza todos los `.tsx`; a solas tarda ~2 s—. Lleva ahora su propio plazo de 30 s.
 
 **Bloque 1 — Motor** · L
-- **1.1 Modelo y API** · M · ADR 066. Tablas, router `/automation` con Valibot y OpenAPI,
-  historial paginado por cursor.
-- **1.2 Ejecución** · M · ADR 067. Emparejar, condición, cadena contra bucles, actor y
-  pausa, marcador en actividad y avisos.
-- **1.3 Acciones internas** · M. Envoltorios finos de los controladores que ya existen.
-- **1.4 Acciones de salida** · M. Aviso (tipo `automation`), webhook firmado con la
-  guarda anti-SSRF del webhook genérico, y mensaje a Slack, Discord o Telegram.
+- **1.1 Modelo y API** ✔ · M · [ADR 066](adr/066-automatizaciones-modelo-y-alcance.md).
+  **Hecho (2026-10-05).**
+  - **Migración 0082**, solo tablas nuevas: `automation` y `automation_run`.
+  - **Router `/automation`**: listar, crear, editar, activar, archivar e historial
+    paginado por cursor, con Valibot y OpenAPI.
+  - **Permisos según la regla** (`automation/permissions.ts`). De ahí sale
+    `roleHasWorkspacePermission`, que el motor necesita sin petición de por medio.
+  - **Secretos** cifrados y de solo escritura (`automation/secrets.ts`).
+  - **Al guardar se valida** todo lo que la regla nombra.
+  - Ocho pruebas de integración y siete unitarias.
+- **1.2 Ejecución** ✔ · M · [ADR 067](adr/067-como-corre-una-automatizacion.md). **Hecho
+  (2026-10-05).**
+  - `automation/engine.ts` se suscribe a nueve eventos y busca las reglas en una
+    consulta.
+  - El disparador se empareja en `triggers.ts`, que es puro.
+  - La condición se evalúa con el motor de filtros, por la clave primaria de la tarea.
+  - **Bus**: la cadena de reglas viaja en `eventContext` y `publishEvent` la copia en cada
+    evento. Las importaciones marcan `origin: "import"`.
+  - **Actividad y avisos**: la actividad lleva la marca de la regla y la web la pinta como
+    «Automatización ‹nombre›». Los avisos no se saltan a quien guardó la regla.
+- **1.3 Acciones internas** ✔ · M. **Hecho (2026-10-05).**
+  - Mover, marcar hecha, prioridad, vencimiento relativo, campo, etiqueta, asignar
+    personas o equipo, y crear tarea o subtarea.
+  - Cada una llama al controlador que ya usa la interfaz.
+  - Si la tarea ya está como la acción quiere, no la toca: un evento de más sería un
+    disparo de más.
+- **1.4 Acciones de salida** ✔ · M. **Hecho (2026-10-05).**
+  - **Aviso**: tipo `automation`, con el nombre de la regla y su texto ya rellenado. La
+    campana y los canales de cada persona pintan título y texto tal cual, así que no hizo
+    falta clave i18n.
+  - **Webhook**: firmado y con la guarda anti-SSRF del cliente del webhook genérico.
+  - **Chat**: Slack, Discord o Telegram. Una regla de proyecto usa la integración del
+    proyecto; una de espacio, un destino cifrado.
+  - **Pruebas del motor**: ocho de integración.
+    - Cubren el criterio de aceptación: mueve, avisa y dispara un webhook firmado a un
+      receptor real.
+    - También la condición por campo, la regla de espacio sin «Personal», el bucle
+      cortado, la importación, la cascada, la pausa por permiso perdido y el destino
+      privado.
+    - Las guardas de importación y cascada, de «Personal» y de bucle se comprobaron
+      quitándolas: cada una tumba su prueba.
+  - Doce unitarias, y un e2e (`automation-activity.spec.ts`) que falla sin el cambio de la
+    actividad.
 
 **Bloque 2 — Por fecha y programadas** · M
 - **2.1 Disparadores por fecha** · S. Trabajo programado con `withJobLease`; «ya

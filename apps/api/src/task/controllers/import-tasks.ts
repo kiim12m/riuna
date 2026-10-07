@@ -161,6 +161,9 @@ async function importTasks(input: ImportInput): Promise<ImportReport> {
         taskId: task.id,
         userId: task.userId ?? "",
         currentUserId: input.currentUserId,
+        // Importar no dispara automatizaciones (ADR 067): miles de altas
+        // no son miles de decisiones de nadie.
+        origin: "import",
         type: "create",
         content: "imported the task",
       },

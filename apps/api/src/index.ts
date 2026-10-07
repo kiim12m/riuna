@@ -21,6 +21,7 @@ import {
 import * as v from "valibot";
 import activity from "./activity";
 import { auth } from "./auth";
+import automation from "./automation";
 import availability from "./availability";
 import billing from "./billing";
 import calendar from "./calendar";
@@ -703,6 +704,7 @@ export function createApp() {
   const taskRelationApi = api.route("/task-relation", taskRelation);
   const externalLinkApi = api.route("/external-link", externalLink);
   const workflowRuleApi = api.route("/workflow-rule", workflowRule);
+  const automationApi = api.route("/automation", automation);
   const invitationApi = api.route("/invitation", invitation);
   const workspaceApi = api.route("/workspace", workspace);
   const userApi = api.route("/user", user);
@@ -891,6 +893,7 @@ export function createApp() {
     todayApi,
     userApi,
     workflowRuleApi,
+    automationApi,
     workspaceApi,
     oauthApi,
   };
@@ -1056,6 +1059,7 @@ const {
   todayApi,
   userApi,
   workflowRuleApi,
+  automationApi,
   workspaceApi,
   oauthApi,
 } = createdApp;
@@ -1118,6 +1122,7 @@ export type AppType =
   | typeof taskRelationApi
   | typeof externalLinkApi
   | typeof workflowRuleApi
+  | typeof automationApi
   | typeof invitationApi
   | typeof workspaceApi
   | typeof userApi

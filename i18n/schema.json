@@ -7351,6 +7351,9 @@
 				},
 				"emptyValue": {
 					"type": "string"
+				},
+				"automationActor": {
+					"type": "string"
 				}
 			},
 			"required": [
@@ -7375,7 +7378,8 @@
 				"comment",
 				"customFieldChanged",
 				"customFieldChangedPlain",
-				"emptyValue"
+				"emptyValue",
+				"automationActor"
 			]
 		},
 		"tasks": {
