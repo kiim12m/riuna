@@ -5,7 +5,9 @@ services:
       - .env
     ports:
       # 5433 en el host: el 5432 lo ocupa el Postgres de otro proyecto.
-      - "5433:5432"
+      # Solo en 127.0.0.1 (ADR 071): con 0.0.0.0, cualquiera de la red local
+      # llegaba a la base con solo la contrasena.
+      - "${RIUNA_BIND_ADDRESS:-127.0.0.1}:5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -46,8 +48,13 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      # deploy/actualizar.sh sella aqui el commit construido: es lo que lee
+      # para saber que version sirve y a cual volver si la nueva no arranca.
+      labels:
+        org.opencontainers.image.revision: ${RIUNA_REVISION:-}
     ports:
-      - "1337:1337"
+      # Se entra por `tailscale serve`, que llega por localhost (ADR 071).
+      - "${RIUNA_BIND_ADDRESS:-127.0.0.1}:1337:1337"
     env_file:
       - .env
     # El .env compartido apunta a localhost:5433, que es como se alcanza
@@ -72,8 +79,10 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      labels:
+        org.opencontainers.image.revision: ${RIUNA_REVISION:-}
     ports:
-      - "5173:5173"
+      - "${RIUNA_BIND_ADDRESS:-127.0.0.1}:5173:5173"
     env_file:
       - .env
     depends_on:
