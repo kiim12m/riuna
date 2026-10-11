@@ -182,6 +182,24 @@ leerlo a ojo, pon `LOG_FORMAT=pretty` en el `.env` y vuelve a levantar `api`. Ca
 lleva una cabecera `X-Request-Id`, y todas las líneas de esa petición llevan el mismo
 `requestId`: es lo que hay que buscar cuando algo falla en el navegador.
 
+## Informe de la base
+
+Para repasar índices con el uso real (Fase 9):
+
+```bash
+sh scripts/ops/informe-bd.sh > informe-bd.txt
+```
+
+Saca **solo estadísticas, ni una fila de datos**:
+
+- tamaño y volumen;
+- índices sin uso;
+- tablas con más barridos secuenciales;
+- las sentencias más caras, normalizadas (los valores salen como `$1`).
+
+Así que se puede pasar a quien desarrolla. Cuanto más tiempo lleve la instancia en marcha desde
+la última actualización, más dice.
+
 ## Quitarte el `-f` de encima
 
 Añade esta línea a tu `.env` (está en `.gitignore`, así que es solo de esta

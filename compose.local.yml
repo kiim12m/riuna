@@ -13,8 +13,15 @@ services:
     # pg_stat_statements solo recoge si se carga al arrancar. Es lo que lee
     # scripts/ops/informe-bd.sh para repasar indices con el uso real (Fase 9).
     # La extension se crea en la base `postgres`, no en la de Riuna, para que
-    # no viaje en las copias.
-    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
+    # no viaje en las copias. Sin las ordenes de utilidad (ALTER, CREATE...):
+    # esas no se normalizan, y una que llevara una contrasena la guardaria tal
+    # cual.
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track_utility=off
     env_file:
       - .env
     ports:
