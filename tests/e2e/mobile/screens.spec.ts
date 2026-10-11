@@ -85,8 +85,16 @@ test.describe("En el móvil", () => {
     const box = await title.boundingBox();
     expect(box?.height ?? 0).toBeGreaterThan(60);
 
-    await page.getByRole("button", { name: "Por hacer" }).first().click();
-    await page.getByRole("button", { name: "En curso" }).click();
+    // Con el build de produccion (el simulacro de restauracion) el primer
+    // clic podia llegar antes de que el desplegable estuviera listo.
+    const inProgress = page.getByRole("button", { name: "En curso" });
+    await expect(async () => {
+      if (!(await inProgress.isVisible())) {
+        await page.getByRole("button", { name: "Por hacer" }).first().click();
+      }
+      await expect(inProgress).toBeVisible({ timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
+    await inProgress.click();
     await expect
       .poll(
         async () =>

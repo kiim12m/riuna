@@ -2805,6 +2805,12 @@ instancia.
     defecto valen lo de siempre, y fija los nombres de imagen (`riuna-api`, `riuna-web`).
   - **El simulacro nocturno de CI usa este mismo guion**, así que lo que se lanza en el PC se
     prueba entero cada noche con Docker de verdad.
+  - **Primera vuelta real (2026-10-11):** restauró, los recuentos coincidieron y el humo pasó
+    contra la copia, **100 bien** (1 omitida, la que necesita la base, y 1 frágil que pasó al
+    reintentar y quedó reforzada), en 15 minutos.
+  - Antes falló entera: con los nombres de servicio (`web`, `api`), la web y la API eran dos
+    sitios para el navegador y la cookie de sesión no viajaba. El humo entra ahora por
+    `localhost`, como en el PC (`deploy/simulacro-proxy.mjs`).
   - Probado aquí con `shellcheck` y un `docker` simulado: mirar, `--humo` bien y mal, sin
     imágenes, sin copias, opción desconocida y `--down`.
   - Una prueba vigila que la imagen de Playwright sea la de la versión instalada.

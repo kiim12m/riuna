@@ -61,4 +61,10 @@
   - Reutiliza las imágenes que ya sirven.
   - El humo corre desde un contenedor de Playwright dentro de su red. La versión de la imagen la
     vigila una prueba, para que acompañe a la de `@playwright/test`.
+  - **Entra por `localhost`**, como el navegador del PC: `deploy/simulacro-proxy.mjs` reenvía
+    `localhost:5183` a la web y `localhost:1347` a la API.
+    - Con los nombres de servicio, la web y la API eran dos sitios distintos y la cookie de
+      sesión (`SameSite=Lax`) no viajaba: la primera vuelta en CI falló entera.
+    - Un mismo dominio arreglaría la cookie, pero `http` fuera de `localhost` no es un contexto
+      seguro y el portapapeles deja de funcionar.
   - Así, el guion que se lanza en el PC con la copia real se ejecuta entero cada noche.
