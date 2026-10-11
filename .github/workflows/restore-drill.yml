@@ -52,9 +52,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # Como una instancia que se restaura para un simulacro: sin planificador,
-      # sin correo y con una clave de cifrado propia. POSTGRES_USER y _DB se
-      # quedan en `riuna` porque el healthcheck de compose.local.yml los da por
-      # hechos.
+      # sin correo, sin limites de tasa y con una clave de cifrado propia.
+      # POSTGRES_USER y _DB se quedan en `riuna` porque el healthcheck de
+      # compose.local.yml los da por hechos.
       - name: Write the drill .env
         run: |
           {
@@ -67,6 +67,8 @@ jobs:
             echo "RIUNA_API_URL=http://localhost:1337"
             echo "DISABLE_REGISTRATION=false"
             echo "RIUNA_DISABLE_SCHEDULER=true"
+            # El humo se registra cada prueba desde la misma IP (ADR 074).
+            echo "RATE_LIMIT_ENABLED=false"
           } > .env
           mkdir -p backups
 

@@ -78,6 +78,7 @@ import userPreferences from "./user-preferences";
 import { authenticateApiRequest } from "./utils/authenticate-api-request";
 import { authorizeAssetAccess } from "./utils/authorize-asset-access";
 import { getInvitationDetails } from "./utils/check-registration-allowed";
+import { requestWithClientIp } from "./utils/client-ip";
 import { buildContentDisposition } from "./utils/content-disposition";
 import { log } from "./utils/log";
 import {
@@ -92,6 +93,7 @@ import {
   normalizeNullableSchemasForOpenApi30,
   normalizeOrganizationAuthOperations,
 } from "./utils/openapi-spec";
+import { enforceUserLimit, limitByIp } from "./utils/rate-limit";
 import { requestLog, respondingRoute } from "./utils/request-log";
 import { validateWorkspaceAccess } from "./utils/validate-workspace-access";
 import view from "./view";
@@ -196,8 +198,9 @@ export function createApp() {
     cors({
       credentials: true,
       // Downloads carry their filename here, and a separately hosted web app
-      // cannot read it unless the header is exposed.
-      exposeHeaders: ["Content-Disposition"],
+      // cannot read it unless the header is exposed. Same for how long to wait
+      // after a 429 and the id that ties a failure to its log lines.
+      exposeHeaders: ["Content-Disposition", "Retry-After", "X-Request-Id"],
       origin: (origin) => {
         // Reflecting an arbitrary origin alongside credentials lets any site
         // read authenticated responses, so it stays a development convenience.
@@ -224,6 +227,20 @@ export function createApp() {
   api.get("/health", (c) => {
     return c.json({ status: "ok" });
   });
+
+  // Lo que se sirve sin sesion se limita por IP (ADR 074), cada ruta con su
+  // cupo. Van antes que sus rutas porque Hono ejecuta en orden de registro.
+  // Los avatares y los adjuntos quedan fuera: un tablero carga decenas de
+  // golpe, el navegador los guarda y sus ids no se adivinan.
+  api.use("/instance/status", limitByIp("instance-status", 60));
+  api.use("/public-project/:id", limitByIp("public-project", 120));
+  api.use("/invitation/public/:id", limitByIp("invitation-public", 30));
+  api.use("/calendar/:file{.+\\.ics}", limitByIp("calendar-feed", 60));
+  api.use("/github-integration/webhook", limitByIp("github-webhook", 300));
+  api.use(
+    "/gitea-integration/webhook/:integrationId",
+    limitByIp("gitea-webhook", 300),
+  );
 
   api.get(
     "/instance/status",
@@ -327,7 +344,7 @@ export function createApp() {
       },
     }),
     async (c) => {
-      return auth.handler(c.req.raw);
+      return auth.handler(requestWithClientIp(c));
     },
   );
 
@@ -585,7 +602,7 @@ export function createApp() {
         }
         return c.redirect(deviceUrl.toString(), 302);
       }
-      return auth.handler(c.req.raw);
+      return auth.handler(requestWithClientIp(c));
     },
   );
 
@@ -601,22 +618,23 @@ export function createApp() {
 
       // Preserve Better Auth bearer session tokens on auth routes.
       if (session?.session && session.user) {
-        return auth.handler(c.req.raw);
+        return auth.handler(requestWithClientIp(c));
       }
 
-      const headers = new Headers(c.req.raw.headers);
+      const request = requestWithClientIp(c);
+      const headers = new Headers(request.headers);
 
       // Better Auth API key plugin validates from x-api-key by default.
       headers.set("x-api-key", bearerToken);
 
       return auth.handler(
-        new Request(c.req.raw, {
+        new Request(request, {
           headers,
         }),
       );
     }
 
-    return auth.handler(c.req.raw);
+    return auth.handler(requestWithClientIp(c));
   });
 
   api.route("/", mcpRoutes);
@@ -636,6 +654,7 @@ export function createApp() {
         await authenticateApiRequest(c);
         const windowId = c.req.header("X-Riuna-Window-Id");
         const userId = c.get("userId");
+        enforceUserLimit(c, userId);
         const initiatorId = windowId ? `${userId}:${windowId}` : userId;
         return await eventContext.run({ initiatorId }, next);
       } catch (error) {

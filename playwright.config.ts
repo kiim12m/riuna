@@ -88,6 +88,9 @@ export default defineConfig({
             DISABLE_REGISTRATION: "false",
             DISABLE_PASSWORD_REGISTRATION: "false",
             DEMO_MODE: "false",
+            // Cada prueba se registra desde la misma IP: con los limites de
+            // tasa (ADR 074) el humo mediria el limite, no la pantalla.
+            RATE_LIMIT_ENABLED: "false",
           },
         },
         {
