@@ -49,6 +49,36 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # Copias fuera de la maquina (ADR 072): sube ./backups a un remoto de rclone
+  # cada OFFSITE_INTERVAL_HOURS. Va en un perfil porque sin remoto configurado
+  # solo fallaria: se enciende con COMPOSE_PROFILES=offsite en el .env, despues
+  # de crear el remoto (docs/copias-de-seguridad.md). No lee el .env entero: no
+  # necesita ni la contrasena de la base ni el secreto de sesiones.
+  offsite:
+    image: rclone/rclone:1.68.2
+    profiles: ["offsite"]
+    environment:
+      BACKUP_DIR: /backups
+      OFFSITE_REMOTE: ${OFFSITE_REMOTE:-}
+      OFFSITE_RETENTION_DAYS: ${OFFSITE_RETENTION_DAYS:-90}
+      OFFSITE_KEEP_MIN: ${OFFSITE_KEEP_MIN:-5}
+    volumes:
+      # Escribe en ./backups su fichero de estado, que lee la API.
+      - ./backups:/backups
+      - ./scripts/backup:/scripts:ro
+      # La configuracion de rclone, con el token de Drive y las claves del
+      # cifrado. De lectura y escritura: rclone renueva el token.
+      - ./deploy/rclone:/config/rclone
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        interval=$$(( ${OFFSITE_INTERVAL_HOURS:-6} * 3600 ))
+        while true; do
+          sh /scripts/offsite.sh || echo "[offsite] la subida ha fallado"
+          sleep "$$interval"
+        done
+    restart: unless-stopped
+
   api:
     build:
       context: .
