@@ -102,7 +102,7 @@ export function PlannerDay({
   return (
     <div
       data-testid={`planner-column-${dayKey}`}
-      className="flex h-full w-64 shrink-0 flex-col rounded-lg border border-border/60 bg-sidebar/40"
+      className="flex h-full w-[85vw] shrink-0 snap-center flex-col rounded-lg border border-border/60 bg-sidebar/40 sm:w-64"
     >
       <div className="space-y-1 px-2 py-2" title={loadHint}>
         <h2 className="font-semibold text-meta">{label}</h2>

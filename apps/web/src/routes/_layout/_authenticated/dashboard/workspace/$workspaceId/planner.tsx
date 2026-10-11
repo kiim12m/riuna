@@ -408,7 +408,9 @@ function RouteComponent() {
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
             >
-              <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto p-4">
+              {/* En movil, columnas casi a todo lo ancho que encajan al
+               * deslizar (Fase 9). */}
+              <div className="flex min-h-0 flex-1 snap-x snap-mandatory gap-3 overflow-x-auto p-4 sm:snap-none">
                 <PlannerColumn
                   id={UNPLANNED_ID}
                   title={t("planner:unplanned")}
@@ -552,7 +554,7 @@ function PlannerColumn({
       ref={setNodeRef}
       data-testid={`planner-column-${id}`}
       className={cn(
-        "flex h-full w-56 shrink-0 flex-col rounded-lg border bg-sidebar/40",
+        "flex h-full w-[85vw] shrink-0 snap-center flex-col rounded-lg border bg-sidebar/40 sm:w-56",
         isOver ? "border-brand/50" : "border-border/60",
       )}
     >
@@ -602,7 +604,7 @@ function PreviousColumn({
   return (
     <div
       data-testid="planner-column-previous"
-      className="flex h-full w-56 shrink-0 flex-col rounded-lg border border-warning/40 bg-warning/5"
+      className="flex h-full w-[85vw] shrink-0 snap-center flex-col rounded-lg border border-warning/40 bg-warning/5 sm:w-56"
     >
       <div className="space-y-1 px-2 py-2">
         <div className="flex items-center justify-between">
