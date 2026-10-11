@@ -27,7 +27,7 @@
 | Interludio — Productividad personal y equipo | 18 | **Cerrado** — Bloques 0 a 5; el 4.2 (importar iCal), aplazado · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--cerrado) |
 | Cierre de la deuda de las fases cerradas | 18 | **Cerrado** — cinco tandas, en `main` el 2026-10-05 (PR #38–#45); la facturación heredada sigue abierta por decisión · [inventario](#cierre-de-la-deuda-de-las-fases-cerradas) |
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
-| 9 — Operación | 6 | **En curso** (desde 2026-10-11) — en el PC con Tailscale; Oracle, pospuesto · [plan por bloques](#fase-9--operación) |
+| 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
 | **Total Bloque A** | **45** + 18 del interludio | |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
@@ -2789,19 +2789,37 @@ instancia.
   - `focus.spec.ts` avanza el reloj de 2 en 2 s y cae con el código de antes.
 
 **Bloque 7 — Simulacro real y cierre** · S
-- **7.1** `deploy/simulacro.sh`:
-  - restaura la última copia en un proyecto aislado;
-  - compara los recuentos;
-  - arranca sin planificador, sin correo, sin la clave de los destinos y con los límites
-    relajados;
-  - imprime la orden del humo.
-- **7.2** El criterio de la fase: tu copia real, restaurada y aislada, con el humo entero en
-  verde.
-- **7.3** Documentación:
-  - `actualizar.md` como guía propia;
-  - copias, funcionalidades y este documento;
-  - `plan-despliegue.md` queda pospuesto.
-- **7.4** Verificación final de todo.
+- **7.1** ✔ `deploy/simulacro.sh`.
+  - **Proyecto Compose aparte** (`riuna-simulacro`):
+    - un `.env` generado, sin SMTP y con claves nuevas;
+    - su directorio de copias y sus puertos (web 5183 y API 1347, solo en `127.0.0.1`);
+    - planificador apagado y sin límites de tasa.
+  - **Lo que hace:**
+    - restaura la copia;
+    - compara los recuentos con la instancia de verdad;
+    - arranca sobre las imágenes que ya sirven;
+    - con `--humo`, pasa el humo entero desde un contenedor de Playwright dentro de su red, así
+      que no hace falta Node en el PC;
+    - `--down` lo tira todo.
+  - `compose.local.yml` admite `RIUNA_ENV_FILE`, `RIUNA_BACKUP_DIR` y `RIUNA_*_PORT`, que por
+    defecto valen lo de siempre, y fija los nombres de imagen (`riuna-api`, `riuna-web`).
+  - **El simulacro nocturno de CI usa este mismo guion**, así que lo que se lanza en el PC se
+    prueba entero cada noche con Docker de verdad.
+  - Probado aquí con `shellcheck` y un `docker` simulado: mirar, `--humo` bien y mal, sin
+    imágenes, sin copias, opción desconocida y `--down`.
+  - Una prueba vigila que la imagen de Playwright sea la de la versión instalada.
+- **7.2** ⏳ **Pendiente del PC: el criterio de la fase con la copia real.**
+  - `sh deploy/simulacro.sh --humo` tras actualizar.
+  - La fecha y los recuentos van a [copias de seguridad](copias-de-seguridad.md).
+- **7.3** ✔ Documentación:
+  - [actualizar](actualizar.md), como guía propia: Tailscale, `actualizar.sh`, `migrate`, logs,
+    el informe de la base y volver atrás;
+  - [copias de seguridad](copias-de-seguridad.md): la copia externa, recuperar desde Drive y el
+    simulacro;
+  - funcionalidades, las ADR 071 a 075, `AGENTS.md` y `.env.sample`;
+  - [plan de despliegue](plan-despliegue.md), pospuesto.
+- **7.4** Verificación final: integración, humo (escritorio y móvil), unitarias de todos los
+  paquetes, typecheck, `biome ci`, `i18n:check`, `check:env` y `openapi.json`.
 
 **Fuera de alcance, declarado:**
 - Oracle;
@@ -3311,7 +3329,22 @@ La **Fase 8** está **cerrada** (2026-10-07):
 - los importadores externos, solo documentados (ADR 070).
 
 Ver su [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada).
-La **Fase 9**, operación, está en curso desde el 2026-10-11: ver su [plan por bloques](#fase-9--operación).
+La **Fase 9**, operación, está hecha (2026-10-11), en las PR apiladas #51 a #58. Ver su
+[plan por bloques](#fase-9--operación).
+
+**Lo que queda se hace en el PC**, en este orden:
+
+1. **Fusionar las PR** y actualizar siguiendo [actualizar](actualizar.md). El paso de la IP y
+   los puertos a `tailscale serve` va antes del primer `deploy/actualizar.sh`.
+2. **En «Estado de la instancia»**, comprobar que la API te ve con tu IP de Tailscale y que ve
+   las copias.
+3. **Montar la copia externa** en Google Drive ([copias de seguridad](copias-de-seguridad.md)) y
+   guardar las dos contraseñas del cifrado fuera del PC.
+4. **`sh deploy/simulacro.sh --humo`**: el criterio de la fase con la copia real (7.2).
+5. **Unos días después, `sh scripts/ops/informe-bd.sh`**, y pasar el resultado para repasar
+   los índices con el uso real (5.2).
+
+Con eso se cierra el Bloque A. El Bloque B (CRM y ERP ligero) empieza en la Fase 10.
 
 **Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
 seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.

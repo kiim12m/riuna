@@ -12,7 +12,7 @@ Riuna es una plataforma de productividad **self-hosted**: gestión de proyectos
 y tareas primero, CRM y ERP ligero después. Es un fork duro de
 [Kaneo](https://github.com/usekaneo/kaneo) v2.22.0 mantenido como programa
 independiente. A fecha de este documento están cerradas las fases 0 a 8 del
-plan; la 9 (operación) está en curso. De la 8, los importadores de Trello,
+plan, y la 9 (operación) está hecha salvo dos cosas que se lanzan en el PC. De la 8, los importadores de Trello,
 Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
 
 ---
@@ -695,9 +695,12 @@ no lista los proyectos Personal.
 - **Copia fuera de la máquina**: el servicio `offsite` sube las copias a Google Drive, cifradas
   con rclone. Nunca sincroniza borrando, y no purga si las copias locales han dejado de llegar
   ([ADR 072](adr/072-copias-fuera-de-la-maquina-y-simulacro.md)).
-- **Simulacro de restauración cada noche** en CI. Construye, siembra, copia, tira la
-  instancia, restaura en limpio, compara los recuentos y pasa el humo entero contra lo
-  restaurado.
+- **Simulacro de restauración** (`deploy/simulacro.sh`), en el PC con la copia real y cada
+  noche en CI con datos sembrados.
+  - Restaura en un proyecto Compose aislado y compara los recuentos.
+  - Pasa el humo entero contra lo restaurado.
+  - Arranca sin planificador, sin correo y con una clave de cifrado nueva, así que nada de lo
+    restaurado puede salir.
 - **Actualizar con red** ([ADR 071](adr/071-la-instancia-del-pc-por-tailscale.md)):
   `deploy/actualizar.sh` construye, copia, migra con la imagen nueva antes de cambiar la que
   sirve (`node dist/migrate.js`), levanta y, si algo falla, dice cómo volver. La instancia del

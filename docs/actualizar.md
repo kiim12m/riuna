@@ -153,6 +153,22 @@ git fetch
 git log --oneline HEAD..origin/main -- apps/api/drizzle/
 ```
 
+### Ensayar antes una actualización con migraciones
+
+Antes de una migración que borra o transforma datos, se ensaya sobre tu copia real, sin tocar
+la instancia ([copias de seguridad](copias-de-seguridad.md), «El simulacro»):
+
+```bash
+git pull --ff-only
+RIUNA_REVISION=$(git rev-parse HEAD) docker compose -f compose.local.yml build api web
+sh deploy/simulacro.sh --humo
+```
+
+Construir no cambia lo que sirve: el contenedor sigue con su imagen hasta el `up`. El
+simulacro, en cambio, arranca con las imágenes recién construidas, así que **migra la copia
+restaurada con el código nuevo** y pasa el humo contra ella. Si todo va bien, `sh
+deploy/simulacro.sh --down` y `sh deploy/actualizar.sh`. Si no, la instancia ni se ha enterado.
+
 ## La zona horaria (ADR 049)
 
 La API corre en `Europe/Madrid` (`ENV TZ` en su imagen) y PostgreSQL en UTC.

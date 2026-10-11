@@ -42,20 +42,23 @@ Los detalles que evitan los fallos clásicos:
 
 ## Probar una restauración (hazlo cada pocos meses)
 
-Se restaura sobre una base **aparte**, así que no toca los datos reales:
+La forma completa es el simulacro (abajo). Esta es la rápida, sin humo: se restaura sobre una
+base **aparte** del mismo servidor, así que no toca los datos reales:
 
 ```bash
 docker compose -f compose.local.yml exec backup sh -c 'sh /scripts/restore.sh $(ls /backups/riuna_*.sql.gz | tail -1) riuna_restore_test'
 ```
 
-Y se comparan las dos bases:
+Y se comparan las dos bases con `scripts/backup/counts.sh`, que cuenta las tablas que
+importan:
 
 ```bash
-docker exec riuna-postgres-1 psql -U riuna -d riuna -c "select 'task' t, count(*) from task union all select 'activity', count(*) from activity union all select 'project', count(*) from project order by 1;"
+docker compose -f compose.local.yml exec backup sh /scripts/counts.sh
+docker compose -f compose.local.yml exec backup sh /scripts/counts.sh riuna_restore_test
 ```
 
-Repite el mismo comando cambiando `-d riuna` por `-d riuna_restore_test`. Los
-recuentos deben coincidir. Después, borra la base de prueba:
+Los recuentos deben coincidir, salvo lo que haya pasado desde la copia. Después, borra la base
+de prueba:
 
 ```bash
 docker exec riuna-postgres-1 psql -U riuna -d postgres -c "DROP DATABASE riuna_restore_test WITH (FORCE);"
@@ -64,6 +67,45 @@ docker exec riuna-postgres-1 psql -U riuna -d postgres -c "DROP DATABASE riuna_r
 **Última prueba superada:** 23 de agosto de 2026 — 23 tareas, 25 actividades,
 2 proyectos, 2 equipos y 2 tareas con equipo asignado, idénticos en origen y
 en la copia restaurada.
+
+## El simulacro: restaurar en limpio y pasar el humo
+
+Es el criterio de la Fase 9: una copia que se restaura en limpio y contra la que pasa la suite
+de humo entera ([ADR 072](adr/072-copias-fuera-de-la-maquina-y-simulacro.md)). Con tu copia
+real, en el PC:
+
+```bash
+sh deploy/simulacro.sh --humo        # la copia más reciente; o pásale una
+```
+
+El guion hace esto:
+
+1. levanta un proyecto Compose aparte, `riuna-simulacro`, con un Postgres vacío, su propio
+   `.env` generado, su propio directorio de copias y otros puertos;
+2. restaura la copia;
+3. **compara los recuentos** con la instancia de verdad (lo que difiera es lo que ha pasado
+   desde la copia);
+4. arranca la API y la web con las imágenes que ya sirven;
+5. **pasa el humo entero** desde un contenedor de Playwright dentro de su red. La primera vez
+   instala dependencias, y tarda unos minutos.
+
+**Nada de lo restaurado puede salir de ahí:**
+
+- no hay planificador, así que no salen stand-ups ni recordatorios a chats de verdad;
+- no hay SMTP;
+- la clave de cifrado es nueva, así que los destinos de chat y de webhook restaurados no se
+  pueden descifrar;
+- todo escucha solo en `127.0.0.1`.
+
+La copia no sale del PC.
+
+- **Sin `--humo`**, deja el simulacro en `http://localhost:5183` para entrar con tu cuenta y
+  mirarlo.
+- **Para tirarlo**, `sh deploy/simulacro.sh --down`.
+
+Cada noche, CI hace lo mismo con datos sembrados (`restore-drill.yml`), con este mismo guion.
+
+**Simulacro con la copia real:** pendiente (Fase 9, 7.2).
 
 ## Restaurar de verdad
 
