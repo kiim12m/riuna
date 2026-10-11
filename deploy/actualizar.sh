@@ -98,10 +98,12 @@ fi
 
 # --- 4. copia justo antes del cambio ------------------------------------------
 # `run` y no `exec`: funciona tambien con el servicio de copias parado. El
-# entrypoint del servicio es el bucle periodico, asi que se sustituye.
+# entrypoint del servicio es el bucle periodico, asi que se sustituye. `-T`
+# porque Git Bash (mintty) no es una terminal para Docker: pedir un TTY falla
+# con «the input device is not a TTY».
 say "copia de seguridad previa"
 before_copy=$(latest_backup)
-if ! compose run --rm --entrypoint /bin/sh backup /scripts/backup.sh; then
+if ! compose run --rm -T --entrypoint /bin/sh backup /scripts/backup.sh; then
   fail "la copia previa ha fallado. No se ha tocado nada: la version actual sigue sirviendo."
 fi
 backup=$(latest_backup)
@@ -113,7 +115,7 @@ say "copia lista: $backup"
 # --- 5. migrar con la imagen nueva --------------------------------------------
 applied_before=$(applied_migrations)
 say "migrando con la imagen nueva"
-if ! compose run --rm --no-deps api node dist/migrate.js; then
+if ! compose run --rm -T --no-deps api node dist/migrate.js; then
   cat >&2 <<EOF
 
 [actualizar] ERROR: la migracion ha fallado.

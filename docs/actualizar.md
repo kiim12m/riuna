@@ -135,8 +135,8 @@ Lo mismo, paso a paso:
 export MSYS_NO_PATHCONV=1                       # solo en Git Bash
 git pull --ff-only
 RIUNA_REVISION=$(git rev-parse HEAD) docker compose -f compose.local.yml build api web
-docker compose -f compose.local.yml run --rm --entrypoint /bin/sh backup /scripts/backup.sh
-docker compose -f compose.local.yml run --rm --no-deps api node dist/migrate.js
+docker compose -f compose.local.yml run --rm -T --entrypoint /bin/sh backup /scripts/backup.sh
+docker compose -f compose.local.yml run --rm -T --no-deps api node dist/migrate.js
 docker compose -f compose.local.yml up -d --wait
 ```
 
