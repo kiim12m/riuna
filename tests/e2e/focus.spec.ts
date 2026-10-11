@@ -76,10 +76,15 @@ test.describe("Modo foco", () => {
 
     // Otro dispositivo para el cronometro: la sesion de foco se acaba aqui.
     await riuna.api("post", "/api/time-entry/stop", {});
-    await page.clock.fastForward("00:20");
-    await expect(
-      page.getByText("El cronómetro se paró fuera del modo foco"),
-    ).toBeVisible();
+    // El aviso llega por WebSocket en tiempo real, o por el sondeo, que corre
+    // con el reloj falso, y dura 5 s. Adelantar 20 s de golpe lo cerraba si ya
+    // habia llegado: con el build de produccion del simulacro llegaba antes, y
+    // la prueba fallaba. Se avanza de 2 en 2 y se mira en cada paso.
+    const notice = page.getByText("El cronómetro se paró fuera del modo foco");
+    await expect(async () => {
+      await page.clock.fastForward("00:02");
+      await expect(notice).toBeVisible({ timeout: 500 });
+    }).toPass({ timeout: 30_000 });
     await expect(page.getByTestId("focus-phase")).toHaveText(
       "Listo para concentrarte",
     );
