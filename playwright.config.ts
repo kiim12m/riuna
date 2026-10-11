@@ -56,7 +56,25 @@ export default defineConfig({
     screenshot: "only-on-failure",
     video: "off",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: /mobile\//,
+    },
+    // El movil de quien consulta (Fase 9, Bloque 6): 390 px, tactil. Con
+    // Chromium, que es el unico navegador que CI instala.
+    {
+      name: "mobile",
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+      },
+      testMatch: /mobile\/.*\.spec\.ts/,
+    },
+  ],
   webServer: EXTERNAL_BASE_URL
     ? []
     : [

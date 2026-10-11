@@ -672,6 +672,13 @@ no lista los proyectos Personal.
   de «Ajustes», y solo sale lo que el papel de cada uno permite
   ([ADR 061](adr/061-la-administracion-en-el-menu-del-avatar.md)).
 - Navegación móvil propia para las vistas de proyecto.
+- **Para leer desde el móvil (390 px)**:
+  - Hoy, Mis tareas, el Planificador, Mi panel, el detalle de tarea, el Tablero y la Lista se
+    leen enteros;
+  - los títulos tienen dos líneas, y el del detalle crece con el texto;
+  - el Tablero y el Planificador van columna a columna, encajando al deslizar;
+  - las cabeceras pasan a dos líneas en vez de desbordarse.
+  - Una prueba recorre 26 pantallas a ese ancho y falla si alguna se sale.
 
 ## 15. Operación
 

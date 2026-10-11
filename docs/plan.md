@@ -2755,11 +2755,38 @@ instancia.
     planificar.
   - Las automatizaciones no están: su coste es el número de reglas, medido en la ADR 068.
 
-**Bloque 6 — Móvil a 390 px** · M
-- **6.1** Un proyecto `mobile` en Playwright, con una guarda de desbordamiento sobre todas las
-  rutas principales.
-- **6.2** Rehacer las pantallas elegidas.
-- **6.3** Pasada visual en los dos temas.
+**Bloque 6 — Móvil a 390 px** · M · **Hecho (2026-10-11)**
+- **6.1** ✔ Proyecto `mobile` en Playwright (Chromium a 390×844, táctil) y
+  `tests/e2e/mobile/`.
+  - **`overflow.spec.ts`** recorre 26 rutas y falla si algo visible asoma por la derecha fuera
+    de un contenedor que se desplace en horizontal. También falla si el marco de la página se
+    desliza de lado: `SidebarInset` es `overflow-auto`, así que lo que lo desbordaba arrastraba la
+    página entera. La primera versión de la guarda lo daba por bueno; ahora salta con la
+    cabecera de antes, comprobado.
+  - **`screens.spec.ts`**: un gesto por pantalla elegida, y que el título se lea entero.
+- **6.2** ✔ Lo que se arregló:
+  - **La cabecera de las páginas** (`WorkspaceLayout`).
+    - En Mi panel y en Mis tareas, las acciones desbordaban y **la página entera se
+      deslizaba 450 px de lado**.
+    - Ahora crece en dos líneas: arriba el título, la tarea nueva y la campana; debajo, las
+      acciones, que se desplazan.
+    - El nombre del espacio sale desde `sm`.
+  - **Hoy y Mis tareas**: el título se quedaba en una o dos letras. Ahora va arriba, con hasta
+    dos líneas, y la etiqueta de vencimiento y la acción debajo. En escritorio, igual que antes.
+  - **El detalle de tarea**: el título era un `input` de una línea. Ahora es un `textarea` que
+    crece (ajustado en JS, porque Safari de iOS no tiene `field-sizing`). Intro guarda, y un
+    salto de línea pegado pasa a espacio.
+  - **Tablero y Planificador**: columnas al 85 % del ancho con `scroll-snap`. Se mueve de columna
+    manteniendo pulsada la tarjeta (menú «Estado»).
+  - **La Lista**: la clave se oculta por debajo de `sm`, y el título tiene dos líneas.
+- **6.3** ✔ Pasada visual a 390 px en los dos temas, y a 1440 para comprobar que el escritorio
+  no cambió.
+- **De paso, un fallo real del modo foco**, destapado por el simulacro de restauración con el
+  build de producción.
+  - Una parada del cronómetro desde otro dispositivo en los primeros 15 s de un bloque no se
+    notaba nunca: el modo foco seguía «Trabajando».
+  - Ahora se vuelve a mirar al acabar el margen.
+  - `focus.spec.ts` avanza el reloj de 2 en 2 s y cae con el código de antes.
 
 **Bloque 7 — Simulacro real y cierre** · S
 - **7.1** `deploy/simulacro.sh`:
