@@ -1,0 +1,150 @@
+name: Restore drill
+
+# El criterio de la Fase 9, con datos sinteticos y cada noche (ADR 072): una
+# instancia construida como la del PC se siembra, se copia, se tira entera, se
+# restaura en un Postgres vacio y el humo completo pasa contra lo restaurado.
+# El simulacro con la copia real lo hace deploy/simulacro.sh en el PC.
+
+on:
+  schedule:
+    # 03:47 UTC, lejos del nightly (02:17) y de las horas en punto.
+    - cron: "47 3 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - compose.local.yml
+      - scripts/backup/**
+      - apps/api/Dockerfile
+      - apps/api/drizzle/**
+      - apps/web/Dockerfile
+      - apps/web/env.sh
+      - apps/web/nginx.conf
+      - playwright.config.ts
+      - .github/workflows/restore-drill.yml
+
+concurrency:
+  group: restore-drill-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  drill:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.32.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.19.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Como una instancia que se restaura para un simulacro: sin planificador,
+      # sin correo y con una clave de cifrado propia. POSTGRES_USER y _DB se
+      # quedan en `riuna` porque el healthcheck de compose.local.yml los da por
+      # hechos.
+      - name: Write the drill .env
+        run: |
+          {
+            echo "POSTGRES_DB=riuna"
+            echo "POSTGRES_USER=riuna"
+            echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)"
+            echo "AUTH_SECRET=$(openssl rand -hex 32)"
+            echo "NOTIFICATION_SECRET_ENCRYPTION_KEY=$(openssl rand -hex 32)"
+            echo "RIUNA_CLIENT_URL=http://localhost:5173"
+            echo "RIUNA_API_URL=http://localhost:1337"
+            echo "DISABLE_REGISTRATION=false"
+            echo "RIUNA_DISABLE_SCHEDULER=true"
+          } > .env
+          mkdir -p backups
+
+      - name: Build the images
+        run: docker compose -f compose.local.yml build api web
+
+      - name: Start a fresh instance
+        run: docker compose -f compose.local.yml up -d --wait --wait-timeout 180 postgres api web
+
+      - name: Seed it
+        run: node scripts/dev-seed.mjs
+        env:
+          DEV_SEED_API: http://localhost:1337
+          DEV_SEED_ORIGIN: http://localhost:5173
+
+      - name: Back it up
+        run: |
+          docker compose -f compose.local.yml run --rm -T --entrypoint /bin/sh backup /scripts/backup.sh
+          dump=$(find backups -maxdepth 1 -name 'riuna_*.sql.gz' | sort | tail -n 1)
+          test -n "$dump"
+          echo "DUMP=$(basename "$dump")" >> "$GITHUB_ENV"
+
+      - name: Count the source
+        run: |
+          docker compose -f compose.local.yml run --rm -T --entrypoint /bin/sh backup /scripts/counts.sh > counts-source.txt
+          cat counts-source.txt
+          grep -q '^task [1-9]' counts-source.txt
+
+      - name: Throw the instance away
+        run: docker compose -f compose.local.yml down -v
+
+      - name: Start an empty Postgres
+        run: docker compose -f compose.local.yml up -d --wait postgres
+
+      - name: A truncated dump is refused before touching anything
+        run: |
+          gunzip -c "backups/$DUMP" | head -n -50 | gzip > backups/truncated.sql.gz
+          if docker compose -f compose.local.yml run --rm -T --entrypoint /bin/sh backup \
+            /scripts/restore.sh /backups/truncated.sql.gz riuna_truncated_test; then
+            echo "restore.sh accepted a truncated dump" >&2
+            exit 1
+          fi
+          left=$(docker compose -f compose.local.yml exec -T postgres \
+            psql -U riuna -d postgres -tAc "select count(*) from pg_database where datname like 'riuna_truncated%'")
+          test "$left" = "0"
+
+      - name: Restore the dump
+        run: docker compose -f compose.local.yml run --rm -T --entrypoint /bin/sh backup /scripts/restore.sh "/backups/$DUMP"
+
+      - name: The restored database has the same rows
+        run: |
+          docker compose -f compose.local.yml run --rm -T --entrypoint /bin/sh backup /scripts/counts.sh > counts-restored.txt
+          diff counts-source.txt counts-restored.txt
+
+      - name: Start the instance on the restored database
+        run: docker compose -f compose.local.yml up -d --wait --wait-timeout 180 api web
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Smoke against the restored instance
+        run: pnpm test:e2e
+        env:
+          E2E_BASE_URL: http://localhost:5173
+          E2E_API_URL: http://localhost:1337
+
+      - name: API log
+        if: failure()
+        run: docker compose -f compose.local.yml logs --tail=200 api
+
+      - name: Upload traces of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: restore-drill-traces
+          path: test-results/
+          retention-days: 7
+
+      - name: Clean up
+        if: always()
+        run: docker compose -f compose.local.yml down -v

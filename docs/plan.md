@@ -2581,23 +2581,39 @@ instancia.
 - **0.4** ✔ `pg_stat_statements` se carga en el Postgres del PC. La extensión se creará en la
   base `postgres`, así que no viaja en las copias.
 
-**Bloque 1 — Copias fuera de la máquina y simulacro en CI** · M · ADR 072
-- **1.1** Servicio `offsite` (rclone):
-  - `copy` y nunca `sync`;
-  - solo copias terminadas;
-  - no purga si las copias locales han dejado de llegar;
-  - retención propia;
-  - deja un fichero de estado.
-- **1.2** Recuperar desde Drive, documentado.
-- **1.3** El humo puede correr contra una instancia ya en marcha (`E2E_BASE_URL`), y la API
-  acepta `RIUNA_DISABLE_SCHEDULER`. Una instancia restaurada no puede mandar el stand-up ni
-  recordatorios.
-- **1.4** Job nocturno `restore-drill`:
-  1. imágenes de `compose.local.yml`;
-  2. siembra y copia;
-  3. Postgres vacío;
-  4. restauración y recuentos;
-  5. el humo entero contra lo restaurado.
+**Bloque 1 — Copias fuera de la máquina y simulacro en CI** · M ·
+[ADR 072](adr/072-copias-fuera-de-la-maquina-y-simulacro.md) · **Hecho (2026-10-11)**
+- **1.1** ✔ Servicio `offsite` (rclone 1.68) y `scripts/backup/offsite.sh`.
+  - `copy` y nunca `sync`, y solo copias terminadas.
+  - No purga si la última copia local tiene más de 48 h o está dañada.
+  - Retención de 90 días, conservando siempre las 5 más recientes.
+  - Deja `backups/.offsite-status.json`.
+  - Va en el perfil `offsite` (`COMPOSE_PROFILES`) y no lee el `.env` entero.
+  - **Probado** con el busybox y el rclone de la imagen contra un remoto local cifrado: sano
+    (sube cifrado, deja fuera el `.partial` y purga hasta dejar 5), copia vieja, copia dañada,
+    remoto inexistente y sin copias. Los cuatro fallos salen con 1 y no purgan.
+- **1.2** ✔ [Copias de seguridad](copias-de-seguridad.md) explica:
+  - cómo montar Drive cifrado (la autorización se hace con `rclone.exe` en Windows);
+  - que **las dos contraseñas del `crypt` se guardan fuera del PC**;
+  - cómo recuperar desde Drive en una máquina nueva.
+- **1.3** ✔ El humo puede correr contra una instancia en marcha (`E2E_BASE_URL` y `E2E_API_URL`).
+  - El único origen escrito a mano (`home.spec.ts`) pasa a leer `baseURL`.
+  - `RIUNA_DISABLE_SCHEDULER=true` no arranca ningún trabajo. Lo vigila una unitaria, que falla
+    quitando la guarda.
+- **1.4** ✔ `restore-drill.yml`, cada noche y en las PR que tocan copias, imágenes o
+  migraciones:
+  1. construye las imágenes de `compose.local.yml`, siembra y copia;
+  2. tira la instancia y levanta un Postgres vacío;
+  3. rechaza un volcado truncado sin crear nada;
+  4. restaura y compara los recuentos (`scripts/backup/counts.sh`);
+  5. pasa el humo entero contra lo restaurado.
+  - **Ensayado aquí sin Docker**: los mismos `backup.sh`, `restore.sh` y `counts.sh` contra el
+    Postgres local, y la API y la web sobre la base restaurada, con datos previos y sin
+    planificador. Recuentos iguales, el truncado rechazado y el humo **94 de 95**. Falló el
+    arrastre para redimensionar del Cronograma, que pasó 2 de 2 al repetirlo: es un gesto
+    sensible a los tiempos tras diez minutos de carga, y en CI las pruebas ya tienen un
+    reintento.
+  - El job de verdad corre por primera vez en la PR de este bloque.
 
 **Bloque 2 — Logs estructurados** · M · ADR 073
 - **2.1** `utils/log.ts`, sin dependencia: JSON en producción, legible en desarrollo, niveles y
