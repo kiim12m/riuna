@@ -27,8 +27,8 @@
 | Interludio — Productividad personal y equipo | 18 | **Cerrado** — Bloques 0 a 5; el 4.2 (importar iCal), aplazado · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--cerrado) |
 | Cierre de la deuda de las fases cerradas | 18 | **Cerrado** — cinco tandas, en `main` el 2026-10-05 (PR #38–#45); la facturación heredada sigue abierta por decisión · [inventario](#cierre-de-la-deuda-de-las-fases-cerradas) |
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
-| 9 — Operación | 2 | Pendiente |
-| **Total Bloque A** | **41** + 18 del interludio | |
+| 9 — Operación | 6 | **En curso** (desde 2026-10-11) — en el PC con Tailscale; Oracle, pospuesto · [plan por bloques](#fase-9--operación) |
+| **Total Bloque A** | **45** + 18 del interludio | |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -2505,16 +2505,153 @@ herramientas MCP de automatizaciones, WebSocket para la lista de reglas, reinten
 webhook, tope de ejecuciones por minuto, disparadores directos de eventos de GitHub o
 Gitea (se encadenan a través de `workflowRule`) y enviar la hoja de SERVITEC programada.
 
-### Fase 9 — Operación (≈2 semanas)
-Logs estructurados, métricas, límites de tasa, repaso de índices con datos
-reales, responsive de las pantallas de consulta móvil, Playwright de humo,
-**copias fuera de la máquina** y guía de actualización propia de Riuna.
-**Hecho cuando:** restauras un backup en limpio y la suite de humo pasa contra
-esa instancia.
+### Fase 9 — Operación
 
-La guía de actualización y las copias externas tienen ya un plan concreto,
-pendiente de aplicar: [plan de despliegue](plan-despliegue.md) (Oracle Always
-Free + Tailscale).
+*Planificada el 2026-10-10 preguntando antes de diseñar, como la 8. El texto original
+pedía logs estructurados, métricas, límites de tasa, repaso de índices con datos reales,
+las pantallas de consulta móvil, humo, copias fuera de la máquina y una guía de
+actualización propia, en ≈2 semanas. Con lo que el usuario eligió pasa a **≈6 semanas
+nominales**. Es la última fase del Bloque A.*
+
+**Hecho cuando:** restauras una copia en limpio y la suite de humo pasa contra esa
+instancia.
+
+**Decisiones del usuario:**
+
+- **Oracle se pospone.** La instancia sigue en el PC (Docker Desktop y
+  `compose.local.yml`) y se entra por Tailscale. Del [plan de despliegue](plan-despliegue.md)
+  se aprovecha lo que sirve en el PC, y el resto queda para cuando haya VM.
+- **Tailscale con `tailscale serve`.** Hoy se entra por la IP de Tailscale y los puertos.
+  Se pasa a HTTPS con una sola URL, y los puertos dejan de escuchar en la red local.
+- **Observabilidad:**
+  - logs estructurados;
+  - una página «Estado de la instancia» para el admin de instancia;
+  - alertas por los canales que ya existen (ntfy, Gotify, correo, webhook).
+  - **Sentry, pospuesto**, y sin endpoint `/metrics`.
+- **Restauración, por partida doble:**
+  - un simulacro sintético cada noche en CI;
+  - y el simulacro con la copia real, en el PC, en un proyecto Compose aislado. La copia real
+    nunca baja a desarrollo.
+- **Copia externa a Google Drive**, cifrada con un remoto `crypt` de rclone, desde un
+  contenedor más de `compose.local.yml`.
+- **Móvil a 390 px**:
+  - se rehacen Hoy y Mi trabajo (Hoy, Mis tareas, Planificador y Mi panel), el detalle de
+    tarea, el Tablero y la Lista;
+  - el resto solo se revisa para que no se desborde.
+
+**Lo que había al empezar**, comprobado en el código:
+
+- **Un 500 no dejaba rastro.** `app.onError` solo llamaba a `Sentry.captureException`, y
+  Sentry está inactivo.
+- No había logs de petición, sino unas 300 llamadas `console.*`.
+- Better Auth solo limitaba la tasa en modo cloud: en autoalojado nada frenaba los intentos de
+  contraseña.
+- `compose.local.yml` publicaba Postgres en todas las interfaces.
+- Las copias vivían en el mismo disco que la base.
+
+**Bloques.** Mismas tallas. ADR desde la 071 (la 058 sigue reservada); migraciones desde la
+0083.
+
+**Bloque 0 — El PC, solo por Tailscale, y actualizar con red** · S · ADR 071
+- **0.0** Este plan.
+- **0.1** Los puertos de `compose.local.yml` pasan a `127.0.0.1` (configurable). Se publica con
+  `tailscale serve`: `/` hacia la web y `/api` hacia la API.
+- **0.2** Orden `migrate`: migra y sale, con 0 o distinto de 0. El arranque normal sigue
+  migrando.
+- **0.3** `deploy/actualizar.sh`:
+  - se niega con el worktree sucio;
+  - construye mientras sirve la versión vieja;
+  - hace una copia forzada;
+  - migra con la imagen nueva antes de cambiar nada;
+  - levanta;
+  - si algo falla, imprime cómo volver atrás, sin revertir solo.
+- **0.4** `pg_stat_statements` en el Postgres del PC, para que el Bloque 5 tenga estadísticas
+  reales acumuladas.
+
+**Bloque 1 — Copias fuera de la máquina y simulacro en CI** · M · ADR 072
+- **1.1** Servicio `offsite` (rclone):
+  - `copy` y nunca `sync`;
+  - solo copias terminadas;
+  - no purga si las copias locales han dejado de llegar;
+  - retención propia;
+  - deja un fichero de estado.
+- **1.2** Recuperar desde Drive, documentado.
+- **1.3** El humo puede correr contra una instancia ya en marcha (`E2E_BASE_URL`), y la API
+  acepta `RIUNA_DISABLE_SCHEDULER`. Una instancia restaurada no puede mandar el stand-up ni
+  recordatorios.
+- **1.4** Job nocturno `restore-drill`:
+  1. imágenes de `compose.local.yml`;
+  2. siembra y copia;
+  3. Postgres vacío;
+  4. restauración y recuentos;
+  5. el humo entero contra lo restaurado.
+
+**Bloque 2 — Logs estructurados** · M · ADR 073
+- **2.1** `utils/log.ts`, sin dependencia: JSON en producción, legible en desarrollo, niveles y
+  redacción de secretos.
+- **2.2** Una línea por petición: `requestId`, patrón de ruta (nunca la ruta cruda: el token del
+  `.ics` va en ella), estado, duración y usuario.
+- **2.3** Todo 500 se registra con su pila, y cada trabajo programado deja su línea.
+- **2.4** Los `console.*` pasan al logger, con una guarda que impide volver a usarlos.
+
+**Bloque 3 — Límites de tasa** · S · ADR 074
+- Better Auth limita siempre, no solo en cloud, con reglas propias para entrar, recuperar la
+  contraseña, registrarse, invitar y el *device flow*.
+- Límite general por usuario o clave, y por IP en lo público. Responde 429 con `Retry-After`.
+- `TRUST_PROXY` decide si se lee `X-Forwarded-For`.
+- En la web, un 429 no se reintenta y se explica.
+
+**Bloque 4 — Estado de la instancia y alertas** · M–L · ADR 075
+- **4.1** `job_status`: una fila por trabajo programado con su último resultado y los fallos
+  seguidos. Los tiempos por ruta (p50/p95) se guardan en memoria.
+- **4.2** El informe, solo para el admin de instancia:
+  - versión y SHA;
+  - base: tamaño y migraciones;
+  - trabajos y copias local y externa;
+  - Redis, WebSocket y rutas lentas.
+  - Además, `/api/health/ready`, que sí mira la base.
+- **4.3** La página «Estado de la instancia», en el menú del avatar.
+- **4.4** Alertas al admin de instancia por sus canales, una por condición, con aviso de
+  «resuelto»:
+  - copia local vieja;
+  - copia externa fallida;
+  - trabajo con tres fallos seguidos.
+
+**Bloque 5 — Índices con datos reales y presupuesto** · S–M
+- **5.1** `scripts/ops/informe-bd.sh` saca solo estadísticas, sin filas: índices sin uso,
+  barridos secuenciales, las sentencias más caras y el proyecto más grande.
+- **5.2** Cada candidato se mide en el banco de 50.000 tareas con `EXPLAIN`, antes y después.
+- **5.3** El p95 de las pantallas posteriores a la Fase 4.5: Hoy, Planificador, Mis tareas, Mi
+  equipo, Mi panel, la búsqueda y las automatizaciones.
+
+**Bloque 6 — Móvil a 390 px** · M
+- **6.1** Un proyecto `mobile` en Playwright, con una guarda de desbordamiento sobre todas las
+  rutas principales.
+- **6.2** Rehacer las pantallas elegidas.
+- **6.3** Pasada visual en los dos temas.
+
+**Bloque 7 — Simulacro real y cierre** · S
+- **7.1** `deploy/simulacro.sh`:
+  - restaura la última copia en un proyecto aislado;
+  - compara los recuentos;
+  - arranca sin planificador, sin correo, sin la clave de los destinos y con los límites
+    relajados;
+  - imprime la orden del humo.
+- **7.2** El criterio de la fase: tu copia real, restaurada y aislada, con el humo entero en
+  verde.
+- **7.3** Documentación:
+  - `actualizar.md` como guía propia;
+  - copias, funcionalidades y este documento;
+  - `plan-despliegue.md` queda pospuesto.
+- **7.4** Verificación final de todo.
+
+**Fuera de alcance, declarado:**
+- Oracle;
+- Sentry y `/metrics`;
+- avisar si la API entera cae, que necesita un vigilante externo;
+- paginar las vistas, cerrado por decisión;
+- la facturación heredada, abierta por decisión;
+- la zona horaria por persona.
 
 ---
 
@@ -3016,7 +3153,7 @@ La **Fase 8** está **cerrada** (2026-10-07):
 - los importadores externos, solo documentados (ADR 070).
 
 Ver su [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada).
-Lo siguiente es la **Fase 9**: operación.
+La **Fase 9**, operación, está en curso desde el 2026-10-11: ver su [plan por bloques](#fase-9--operación).
 
 **Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
 seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.

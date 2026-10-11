@@ -1,9 +1,9 @@
 # Plan de despliegue personal de Riuna
 
-> **Estado:** pendiente, guardado para más adelante (19-09-2026, revisado el
-> 20-09-2026). Nada de esto está aplicado todavía: ni `compose.prod.yml` ni los
-> scripts de `deploy/` existen. Adelanta parte de la
-> [Fase 9](plan.md#fase-9--operación-2-semanas).
+> **Estado:** pospuesto (decisión del 2026-10-10). La instancia sigue en el PC, con
+> Tailscale. La [Fase 9](plan.md#fase-9--operación) aplica en el PC lo que de aquí sirve
+> allí: la orden `migrate`, `deploy/actualizar.sh` y la copia externa con rclone. La VM,
+> `compose.prod.yml` y el runbook de Oracle quedan para cuando se retome.
 
 ## Contexto
 
