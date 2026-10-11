@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import db from "../database";
+import { log } from "./log";
 
 /**
  * Migration script to:
@@ -8,7 +9,7 @@ import db from "../database";
  * This runs before Drizzle migrations to ensure the column names match the schema.
  */
 export async function migrateSessionColumn() {
-  console.log(
+  log.info(
     "🔄 Checking session table for active_workspace_id to active_organization_id migration...",
   );
 
@@ -43,33 +44,31 @@ export async function migrateSessionColumn() {
       `);
 
       if (hasOldColumn.rows.length > 0 && hasNewColumn.rows.length === 0) {
-        console.log(
+        log.info(
           "📝 Found active_workspace_id column, renaming to active_organization_id...",
         );
         await db.execute(sql`
           ALTER TABLE "session" 
           RENAME COLUMN "active_workspace_id" TO "active_organization_id";
         `);
-        console.log(
+        log.info(
           "✅ Successfully renamed active_workspace_id to active_organization_id",
         );
       } else if (hasNewColumn.rows.length > 0) {
-        console.log(
+        log.info(
           "✅ active_organization_id column already exists; skipping migration.",
         );
       } else if (hasOldColumn.rows.length === 0) {
-        console.log(
+        log.info(
           "🛈 active_workspace_id column does not exist; skipping migration.",
         );
       }
     } else {
-      console.log("🛈 session table does not exist; skipping migration.");
+      log.info("🛈 session table does not exist; skipping migration.");
     }
 
     // Migrate invitation table - add created_at column
-    console.log(
-      "🔄 Checking invitation table for created_at column migration...",
-    );
+    log.info("🔄 Checking invitation table for created_at column migration...");
 
     const invitationTableExists = await db.execute(sql`
       SELECT EXISTS (
@@ -92,7 +91,7 @@ export async function migrateSessionColumn() {
       `);
 
       if (hasCreatedAt.rows.length === 0) {
-        console.log("📝 Adding created_at column to invitation table...");
+        log.info("📝 Adding created_at column to invitation table...");
         // Add column as nullable first
         await db.execute(sql`
           ALTER TABLE "invitation" 
@@ -112,19 +111,17 @@ export async function migrateSessionColumn() {
           ALTER COLUMN "created_at" SET DEFAULT NOW(),
           ALTER COLUMN "created_at" SET NOT NULL;
         `);
-        console.log(
-          "✅ Successfully added created_at column to invitation table",
-        );
+        log.info("✅ Successfully added created_at column to invitation table");
       } else {
-        console.log(
+        log.info(
           "✅ created_at column already exists in invitation table; skipping migration.",
         );
       }
     } else {
-      console.log("🛈 invitation table does not exist; skipping migration.");
+      log.info("🛈 invitation table does not exist; skipping migration.");
     }
   } catch (error) {
-    console.error("❌ Error during migration:", error);
+    log.error("❌ Error during migration:", error);
     throw error;
   }
 }

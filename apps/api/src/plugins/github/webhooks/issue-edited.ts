@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import db from "../../../database";
 import { taskTable } from "../../../database/schema";
+import { log } from "../../../utils/log";
 import { findExternalLink, updateExternalLink } from "../services/link-manager";
 import { findAllIntegrationsByRepo } from "../services/task-service";
 import { formatTaskDescriptionFromIssue } from "../utils/format";
@@ -48,7 +49,7 @@ export async function handleIssueEdited(payload: IssueEditedPayload) {
   const { issue, repository, changes } = payload;
 
   if (!changes?.title && !changes?.body) {
-    console.log(
+    log.info(
       `Issue #${issue.number} edited but no title/body changes detected`,
     );
     return;
@@ -75,7 +76,7 @@ export async function handleIssueEdited(payload: IssueEditedPayload) {
     });
 
     if (!task) {
-      console.error(`Task ${externalLink.taskId} not found`);
+      log.error(`Task ${externalLink.taskId} not found`);
       continue;
     }
 
@@ -104,14 +105,14 @@ export async function handleIssueEdited(payload: IssueEditedPayload) {
           lastTitleSync.value === issue.title &&
           (lastTitleSync.source === "riuna" || lastTitleSync.source === "kaneo")
         ) {
-          console.log("Skipping title update - already synced from Riuna");
+          log.info("Skipping title update - already synced from Riuna");
           shouldUpdateTitle = false;
         }
 
         const timeSinceLastSync =
           Date.now() - new Date(lastTitleSync.timestamp ?? 0).getTime();
         if (timeSinceLastSync < 2000 && shouldUpdateTitle) {
-          console.log(
+          log.info(
             `Skipping title update - recent sync detected (${timeSinceLastSync}ms ago)`,
           );
           shouldUpdateTitle = false;
@@ -125,7 +126,7 @@ export async function handleIssueEdited(payload: IssueEditedPayload) {
           source: "github",
           value: issue.title,
         };
-        console.log(
+        log.info(
           `Updating task title from GitHub: "${changes.title.from}" → "${issue.title}"`,
         );
       }
@@ -142,16 +143,14 @@ export async function handleIssueEdited(payload: IssueEditedPayload) {
           lastDescSync.value === formattedDescription &&
           (lastDescSync.source === "riuna" || lastDescSync.source === "kaneo")
         ) {
-          console.log(
-            "Skipping description update - already synced from Riuna",
-          );
+          log.info("Skipping description update - already synced from Riuna");
           shouldUpdateDescription = false;
         }
 
         const timeSinceLastSync =
           Date.now() - new Date(lastDescSync.timestamp ?? 0).getTime();
         if (timeSinceLastSync < 2000 && shouldUpdateDescription) {
-          console.log(
+          log.info(
             `Skipping description update - recent sync detected (${timeSinceLastSync}ms ago)`,
           );
           shouldUpdateDescription = false;
@@ -165,7 +164,7 @@ export async function handleIssueEdited(payload: IssueEditedPayload) {
           source: "github",
           value: formattedDescription,
         };
-        console.log("Updating task description from GitHub");
+        log.info("Updating task description from GitHub");
       }
     }
 
@@ -180,11 +179,11 @@ export async function handleIssueEdited(payload: IssueEditedPayload) {
         metadata: updatedMetadata,
       });
 
-      console.log(
+      log.info(
         `Synced ${Object.keys(updateData).join(", ")} from GitHub issue #${issue.number} to task ${task.id}`,
       );
     } else {
-      console.log(
+      log.info(
         `No updates needed for task ${task.id} from issue #${issue.number}`,
       );
     }

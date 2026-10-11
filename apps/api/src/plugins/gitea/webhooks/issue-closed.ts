@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import db from "../../../database";
 import { externalLinkTable, taskTable } from "../../../database/schema";
 import { publishEvent } from "../../../events";
+import { log } from "../../../utils/log";
 import { updateExternalLink } from "../../github/services/link-manager";
 import { updateTaskStatus } from "../../github/services/task-service";
 import {
@@ -81,7 +82,7 @@ export async function handleGiteaIssueClosed(
           unknown
         >;
       } catch (error) {
-        console.warn("Failed to parse Gitea issue metadata for close sync", {
+        log.warn("Failed to parse Gitea issue metadata for close sync", {
           externalLinkId: externalLink.id,
           metadata: externalLink.metadata,
           error,

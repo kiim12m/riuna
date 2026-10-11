@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import db from "../../../database";
 import { integrationTable } from "../../../database/schema";
+import { log } from "../../../utils/log";
 import type { GiteaConfig } from "../config";
 import { normalizeGiteaBaseUrl } from "../config";
 
@@ -34,7 +35,7 @@ export async function findAllIntegrationsByGiteaRepo(
         config.repositoryOwner === owner &&
         config.repositoryName === repo;
       if (integrationId && !matches) {
-        console.warn("[Gitea Webhook] Signed integration repository mismatch", {
+        log.warn("[Gitea Webhook] Signed integration repository mismatch", {
           integrationId,
         });
       }

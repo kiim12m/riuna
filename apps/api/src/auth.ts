@@ -56,6 +56,7 @@ import { isCloud } from "./utils/is-cloud";
 import { isDisposableEmail } from "./utils/is-disposable-email";
 import { isLocalSignInPath } from "./utils/is-local-sign-in-path";
 import { isLocalAccountEmail } from "./utils/local-account";
+import { log } from "./utils/log";
 import { verifyTurnstile } from "./utils/verify-turnstile";
 
 config();
@@ -105,7 +106,7 @@ const baseURLWithoutPath = (() => {
 })();
 
 if (process.env.AUTH_SECRET && process.env.AUTH_SECRET.length < 32) {
-  console.error(
+  log.error(
     "AUTH_SECRET is less than 32 characters, please generate a new one.",
   );
   process.exit(1);
@@ -294,7 +295,7 @@ export const auth = betterAuth({
             locale,
           });
         } catch (error) {
-          console.error(error);
+          log.error(error);
         }
       },
     }),
@@ -443,7 +444,7 @@ export const auth = betterAuth({
               await db.insert(schema.workspaceRoleTable).values(rows);
             }
           } catch (error) {
-            console.error(
+            log.error(
               "Failed to seed default workspace roles for workspace",
               organization.id,
               error,
@@ -470,14 +471,14 @@ export const auth = betterAuth({
         afterAddMember: async ({ member }) => {
           if (member?.organizationId) {
             void syncWorkspaceSeats(member.organizationId).catch((error) => {
-              console.error("Seat sync after member add failed:", error);
+              log.error("Seat sync after member add failed:", error);
             });
           }
         },
         afterRemoveMember: async ({ member }) => {
           if (member?.organizationId) {
             void syncWorkspaceSeats(member.organizationId).catch((error) => {
-              console.error("Seat sync after member remove failed:", error);
+              log.error("Seat sync after member remove failed:", error);
             });
           }
         },
@@ -508,7 +509,7 @@ export const auth = betterAuth({
           result?.success === false &&
           result.reason === "SMTP_NOT_CONFIGURED"
         ) {
-          console.warn(
+          log.warn(
             "Invitation created but email not sent due to SMTP not being configured",
           );
           return;
@@ -707,7 +708,7 @@ export const auth = betterAuth({
               auth.api.addMember({ body }),
             );
           } catch (error) {
-            console.error("Failed to grant pending invitations", {
+            log.error("Failed to grant pending invitations", {
               userId: user.id,
               error,
             });

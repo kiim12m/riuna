@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import db from "../../../database";
 import { externalLinkTable } from "../../../database/schema";
+import { log } from "../../../utils/log";
 import { getInstallationOctokit } from "./github-app";
 
 const namedColorToHex: Record<string, string> = {
@@ -114,7 +115,7 @@ export async function syncLabelToGitHub(
         color,
       });
     } catch (createError) {
-      console.error(
+      log.error(
         `Failed to create label "${labelName}" in GitHub:`,
         createError,
       );
@@ -130,7 +131,7 @@ export async function syncLabelToGitHub(
       labels: [labelName],
     });
   } catch (error) {
-    console.error(`Failed to add label "${labelName}" to GitHub issue:`, error);
+    log.error(`Failed to add label "${labelName}" to GitHub issue:`, error);
   }
 }
 
@@ -148,7 +149,7 @@ export async function removeLabelFromGitHub(taskId: string, labelName: string) {
       name: labelName,
     });
   } catch (error) {
-    console.error(
+    log.error(
       `Failed to remove label "${labelName}" from GitHub issue:`,
       error,
     );

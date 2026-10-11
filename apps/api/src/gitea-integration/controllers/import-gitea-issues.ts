@@ -28,6 +28,7 @@ import {
 } from "../../plugins/github/utils/extract-priority";
 import { formatTaskDescriptionFromIssue } from "../../plugins/github/utils/format";
 import { rootTaskTreeFields } from "../../task/tree";
+import { log } from "../../utils/log";
 
 type ImportResult = {
   imported: number;
@@ -80,7 +81,7 @@ export async function importGiteaIssues(
     config = JSON.parse(integration.config) as GiteaConfig;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.warn("Invalid Gitea integration config JSON", {
+    log.warn("Invalid Gitea integration config JSON", {
       integrationId: integration.id,
       error,
     });

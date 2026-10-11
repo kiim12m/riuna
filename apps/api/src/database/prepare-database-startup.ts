@@ -1,3 +1,4 @@
+import { log } from "../utils/log";
 import type { ResolvedDatabaseConfig } from "./resolve-database-url";
 import { resolveDatabaseConfig } from "./resolve-database-url";
 
@@ -13,8 +14,8 @@ export async function prepareDatabaseStartup({
   resolveConfig = resolveDatabaseConfig,
   waitForDatabase,
   runStartupMigrations,
-  logInfo = console.log,
-  logError = console.error,
+  logInfo = log.info,
+  logError = log.error,
 }: PrepareDatabaseStartupOptions): Promise<void> {
   let config: ResolvedDatabaseConfig;
 

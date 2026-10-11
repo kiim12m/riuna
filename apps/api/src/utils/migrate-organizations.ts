@@ -1,9 +1,10 @@
 import { eq } from "drizzle-orm";
 import { auth } from "../auth";
 import db, { schema } from "../database";
+import { log } from "./log";
 
 async function migrateOrganizations() {
-  console.log("Migrating organizations...");
+  log.info("Migrating organizations...");
 
   const workspaces = await db.select().from(schema.workspaceTable);
 

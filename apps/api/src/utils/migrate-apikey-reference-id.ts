@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import db from "../database";
+import { log } from "./log";
 
 /**
  * Ensures API key schema matches Better Auth expectations:
@@ -10,7 +11,7 @@ import db from "../database";
  * Must run after Drizzle `migrate()` so the `apikey` table exists (see `runStartupTasks`).
  */
 export async function migrateApiKeyReferenceId() {
-  console.log("🔄 Checking apikey table reference_id migration...");
+  log.info("🔄 Checking apikey table reference_id migration...");
 
   try {
     const tableExists = await db.execute(sql`
@@ -25,7 +26,7 @@ export async function migrateApiKeyReferenceId() {
       tableExists.rows[0]?.exists === true ||
       tableExists.rows[0]?.exists === "t";
     if (!exists) {
-      console.log("🛈 apikey table does not exist; skipping migration.");
+      log.info("🛈 apikey table does not exist; skipping migration.");
       return;
     }
 
@@ -51,14 +52,14 @@ export async function migrateApiKeyReferenceId() {
     `);
 
     if (hasReferenceIdColumn.rows.length === 0) {
-      console.log("➕ Adding reference_id column to apikey...");
+      log.info("➕ Adding reference_id column to apikey...");
       await db.execute(sql`
         ALTER TABLE "apikey" ADD COLUMN "reference_id" text;
       `);
     }
 
     if (hasConfigIdColumn.rows.length === 0) {
-      console.log("➕ Adding config_id column to apikey...");
+      log.info("➕ Adding config_id column to apikey...");
       await db.execute(sql`
         ALTER TABLE "apikey" ADD COLUMN "config_id" text DEFAULT 'default';
       `);
@@ -123,9 +124,9 @@ export async function migrateApiKeyReferenceId() {
       `);
     }
 
-    console.log("✅ API key reference_id migration completed successfully!");
+    log.info("✅ API key reference_id migration completed successfully!");
   } catch (error) {
-    console.error("❌ Error during apikey migration:", error);
+    log.error("❌ Error during apikey migration:", error);
     throw error;
   }
 }

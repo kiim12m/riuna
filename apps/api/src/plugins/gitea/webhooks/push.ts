@@ -1,4 +1,5 @@
 import { publishEvent } from "../../../events";
+import { log } from "../../../utils/log";
 import { createOrUpdateExternalLink } from "../../github/services/link-manager";
 import {
   findTaskByNumber,
@@ -50,15 +51,15 @@ export async function handleGiteaPush(
   const { ref, repository } = payload;
 
   if (!ref.startsWith("refs/heads/")) {
-    console.log(`[Gitea Push] Skipping non-branch ref: ${ref}`);
+    log.info(`[Gitea Push] Skipping non-branch ref: ${ref}`);
     return;
   }
 
   const branchName = ref.slice("refs/heads/".length);
-  console.log(`[Gitea Push] Processing branch: ${branchName}`);
+  log.info(`[Gitea Push] Processing branch: ${branchName}`);
 
   if (PROTECTED_BRANCHES.includes(branchName)) {
-    console.log(`[Gitea Push] Skipping protected branch: ${branchName}`);
+    log.info(`[Gitea Push] Skipping protected branch: ${branchName}`);
     return;
   }
 
@@ -90,7 +91,7 @@ export async function handleGiteaPush(
     try {
       config = JSON.parse(integration.config) as GiteaConfig;
     } catch (error) {
-      console.error("Invalid Gitea integration config for push webhook", {
+      log.error("Invalid Gitea integration config for push webhook", {
         integrationId: integration.id,
         error,
       });

@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 import type { PluginContext, TaskTitleChangedEvent } from "../../types";
 import type { GitHubConfig } from "../config";
 import {
@@ -40,7 +41,7 @@ export async function handleTaskTitleChanged(
         lastTitleSync.value === event.newTitle &&
         lastTitleSync.source === "github"
       ) {
-        console.log("Skipping title sync - already synced from GitHub");
+        log.info("Skipping title sync - already synced from GitHub");
         return;
       }
 
@@ -48,7 +49,7 @@ export async function handleTaskTitleChanged(
       const timeSinceLastSync =
         Date.now() - new Date(lastTitleSync.timestamp).getTime();
       if (timeSinceLastSync < 2000) {
-        console.log(
+        log.info(
           `Skipping title sync - recent sync detected (${timeSinceLastSync}ms ago)`,
         );
         return;
@@ -89,8 +90,8 @@ export async function handleTaskTitleChanged(
       },
     });
 
-    console.log(`Synced task title to GitHub issue #${issueNumber}`);
+    log.info(`Synced task title to GitHub issue #${issueNumber}`);
   } catch (error) {
-    console.error("Failed to update GitHub issue title:", error);
+    log.error("Failed to update GitHub issue title:", error);
   }
 }

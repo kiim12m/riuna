@@ -2,6 +2,7 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { getDatabasePool } from "./database";
 import { runMigrations } from "./database/run-migrations";
+import { log } from "./utils/log";
 
 /**
  * `node dist/migrate.js`: migra y sale, sin servir nada (ADR 071).
@@ -18,6 +19,6 @@ try {
   await getDatabasePool().end();
   process.exit(0);
 } catch (error) {
-  console.error("❌ Database migration failed!", error);
+  log.error("❌ Database migration failed!", error);
   process.exit(1);
 }

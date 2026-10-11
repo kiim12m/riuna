@@ -3,6 +3,7 @@ import aggregate from "../../dashboard/aggregate";
 import db from "../../database";
 import { goalTable, goalTargetTable } from "../../database/schema";
 import { getFieldDefinitionsForProject } from "../../field/controllers/get-field-definitions";
+import { log } from "../../utils/log";
 import { buildFilter } from "../../view/build-filter";
 import {
   buildFieldRegistry,
@@ -131,7 +132,7 @@ export default async function getGoals(workspaceId: string, userId: string) {
             };
           } catch (error) {
             if (!(error instanceof FilterError)) {
-              console.error(`[goal] target ${target.id} failed`, error);
+              log.error(`[goal] target ${target.id} failed`, error);
             }
 
             return {

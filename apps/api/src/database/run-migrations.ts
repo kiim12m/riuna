@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { migrateColumns } from "../migrations/column-migration";
 import { migrateGitHubIntegration } from "../plugins/github/migration";
+import { log } from "../utils/log";
 import { migrateApiKeyReferenceId } from "../utils/migrate-apikey-reference-id";
 import { migrateNotificationPreferencesSchema } from "../utils/migrate-notification-preferences-schema";
 import { migrateSessionColumn } from "../utils/migrate-session-column";
@@ -40,7 +41,7 @@ export async function runMigrations({
       await migrateWorkspaceUserEmail();
       await migrateSessionColumn();
 
-      console.log("🔄 Migrating database...");
+      log.info("🔄 Migrating database...");
 
       // Un cerrojo de sesion alrededor de las migraciones, por dos motivos.
       //
@@ -67,7 +68,7 @@ export async function runMigrations({
         await database.execute(sql`SET lock_timeout = DEFAULT`);
       }
 
-      console.log("✅ Database migrated successfully!");
+      log.info("✅ Database migrated successfully!");
     },
   });
 

@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 import {
   findExternalLinksByTask,
   updateExternalLink,
@@ -47,15 +48,12 @@ export async function handleTaskTitleChanged(
       try {
         metadata = JSON.parse(issueLink.metadata) as LinkMetadata;
       } catch (error) {
-        console.warn(
-          "Failed to parse Gitea issue link metadata for title sync",
-          {
-            issueLinkId: issueLink.id,
-            taskId: issueLink.taskId,
-            metadata: issueLink.metadata,
-            error,
-          },
-        );
+        log.warn("Failed to parse Gitea issue link metadata for title sync", {
+          issueLinkId: issueLink.id,
+          taskId: issueLink.taskId,
+          metadata: issueLink.metadata,
+          error,
+        });
       }
     }
 
@@ -65,14 +63,14 @@ export async function handleTaskTitleChanged(
         lastTitleSync.value === event.newTitle &&
         lastTitleSync.source === "gitea"
       ) {
-        console.log("Skipping title sync - already synced from Gitea");
+        log.info("Skipping title sync - already synced from Gitea");
         return;
       }
 
       const timeSinceLastSync =
         Date.now() - new Date(lastTitleSync.timestamp).getTime();
       if (lastTitleSync.source === "gitea" && timeSinceLastSync < 2000) {
-        console.log(
+        log.info(
           `Skipping title sync - recent sync detected (${timeSinceLastSync}ms ago)`,
         );
         return;
@@ -82,7 +80,7 @@ export async function handleTaskTitleChanged(
     const client = createGiteaClient(config);
     const issueNumber = Number.parseInt(issueLink.externalId, 10);
     if (Number.isNaN(issueNumber)) {
-      console.warn("Skipping Gitea title sync for invalid issue number", {
+      log.warn("Skipping Gitea title sync for invalid issue number", {
         issueLinkId: issueLink.id,
         externalId: issueLink.externalId,
         taskId: issueLink.taskId,
@@ -109,8 +107,8 @@ export async function handleTaskTitleChanged(
       },
     });
 
-    console.log(`Synced task title to Gitea issue #${issueNumber}`);
+    log.info(`Synced task title to Gitea issue #${issueNumber}`);
   } catch (error) {
-    console.error("Failed to update Gitea issue title:", error);
+    log.error("Failed to update Gitea issue title:", error);
   }
 }

@@ -4,6 +4,7 @@ import {
   billingEventTable,
   workspaceBillingTable,
 } from "../../database/schema";
+import { log } from "../../utils/log";
 import { planForProductId } from "../config";
 
 type WebhookObject = {
@@ -100,7 +101,7 @@ async function applyEvent(event: BillingWebhookEvent, tx: DbOrTx) {
       object.metadata?.workspaceId ??
       object.subscription?.metadata?.workspaceId;
     if (!workspaceId) {
-      console.error("billing: checkout.completed without workspaceId");
+      log.error("billing: checkout.completed without workspaceId");
       return { processed: false, duplicate: false };
     }
 

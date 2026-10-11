@@ -7,6 +7,7 @@ import {
   taskTable,
   workflowRuleTable,
 } from "../database/schema";
+import { log } from "../utils/log";
 
 const DEFAULT_COLUMNS = [
   { name: "To Do", slug: "to-do", position: 0, isFinal: false },
@@ -22,12 +23,12 @@ const EVENT_MAPPING: Record<string, string> = {
 };
 
 export async function migrateColumns() {
-  console.log("🔄 Starting column migration...");
+  log.info("🔄 Starting column migration...");
 
   const projects = await db.select().from(projectTable);
 
   if (projects.length === 0) {
-    console.log("No projects found, skipping column migration");
+    log.info("No projects found, skipping column migration");
     return;
   }
 
@@ -136,14 +137,14 @@ export async function migrateColumns() {
           );
         }
       } catch {
-        console.error(
+        log.error(
           `Failed to migrate workflow rules for integration ${integration.id}`,
         );
       }
     }
   }
 
-  console.log(
+  log.info(
     `✅ Column migration complete! Migrated ${projects.length} projects`,
   );
 }

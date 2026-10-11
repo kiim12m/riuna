@@ -5,6 +5,7 @@ import { taskRecurrenceTable, taskTable } from "../database/schema";
 import createTask from "../task/controllers/create-task";
 import { decorateTask, resolveEpics } from "../template/decorate-task";
 import { getProjectWorkspaceId } from "../utils/assert-assignable-user";
+import { log } from "../utils/log";
 import { advancePast, parseCadence } from "./cadence";
 import { assertTemplateUsable, parseTemplate } from "./template";
 
@@ -33,7 +34,7 @@ function isRejection(error: unknown): boolean {
 }
 
 async function disable(recurrenceId: string, reason: string, error: unknown) {
-  console.error(reason, { recurrenceId, error });
+  log.error(reason, { recurrenceId, error });
   await db
     .update(taskRecurrenceTable)
     .set({ active: false })
@@ -88,7 +89,7 @@ async function runOne(
     // vuelta. Lo demas se reporta como degradado y se reintenta en la
     // siguiente, dentro de cinco minutos.
     if (!isRejection(error)) {
-      console.error("Could not check a recurrence template", {
+      log.error("Could not check a recurrence template", {
         recurrenceId: recurrence.id,
         error,
       });
@@ -179,7 +180,7 @@ export async function generateRecurringTasks(): Promise<{ degraded: boolean }> {
   try {
     due = await getDueRecurrences(now);
   } catch (error) {
-    console.error("Failed to read the due recurrences", error);
+    log.error("Failed to read the due recurrences", error);
     return { degraded: true };
   }
 
@@ -190,7 +191,7 @@ export async function generateRecurringTasks(): Promise<{ degraded: boolean }> {
     } catch (error) {
       // Una recurrencia rota no puede llevarse por delante a las demas.
       degraded = true;
-      console.error("Failed to generate a recurring task", {
+      log.error("Failed to generate a recurring task", {
         recurrenceId: recurrence.id,
         error,
       });

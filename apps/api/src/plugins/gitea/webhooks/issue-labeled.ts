@@ -2,6 +2,7 @@ import { eq, inArray } from "drizzle-orm";
 import db from "../../../database";
 import { labelTable, taskTable } from "../../../database/schema";
 import { publishEvent } from "../../../events";
+import { log } from "../../../utils/log";
 import { findExternalLink } from "../../github/services/link-manager";
 import { updateTaskStatus } from "../../github/services/task-service";
 import {
@@ -253,7 +254,7 @@ export async function handleGiteaIssueLabeled(
         }
       }
     } catch (error) {
-      console.error("Gitea issue_labeled handler failed for integration", {
+      log.error("Gitea issue_labeled handler failed for integration", {
         integrationId: integration.id,
         issueNumber: issue.number,
         repository: `${owner}/${repository.name}`,

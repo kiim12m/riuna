@@ -2,6 +2,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import type { Context, Next } from "hono";
 import { HTTPException } from "hono/http-exception";
 import db, { schema } from "../database";
+import { log } from "./log";
 import { validateWorkspaceAccess } from "./validate-workspace-access";
 
 type WorkspaceIdSource =
@@ -415,7 +416,7 @@ async function lookupWorkspaceId(
         return null;
     }
   } catch (error) {
-    console.error(`Error looking up workspaceId for ${resource}:`, error);
+    log.error(`Error looking up workspaceId for ${resource}:`, error);
     return null;
   }
 }

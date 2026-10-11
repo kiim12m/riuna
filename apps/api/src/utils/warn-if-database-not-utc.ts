@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import db from "../database";
+import { log } from "./log";
 
 /**
  * PostgreSQL tiene que quedarse en UTC aunque la API no lo este: `now()` en los
@@ -14,7 +15,7 @@ export async function warnIfDatabaseIsNotUtc() {
     (result.rows[0] as { TimeZone?: string } | undefined)?.TimeZone ?? "",
   );
   if (zone && !["UTC", "Etc/UTC", "GMT", "Etc/GMT"].includes(zone)) {
-    console.warn(
+    log.warn(
       `⚠️ PostgreSQL esta en la zona "${zone}" y Riuna espera UTC: las fechas que escribe la base (completed_at, created_at) saldran corridas. Ver docs/adr/049.`,
     );
   }

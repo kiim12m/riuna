@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 import { findExternalLinksByTask } from "../../github/services/link-manager";
 import type { PluginContext, TaskPriorityChangedEvent } from "../../types";
 import type { GiteaConfig } from "../config";
@@ -40,6 +41,6 @@ export async function handleTaskPriorityChanged(
       ]);
     }
   } catch (error) {
-    console.error("Failed to update Gitea issue priority:", error);
+    log.error("Failed to update Gitea issue priority:", error);
   }
 }

@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 // An external link's metadata is a JSON string in the database, so a row
 // written by an older version, or truncated, is not the caller's fault and
 // should not take the webhook delivery down with it. The Gitea handlers already
@@ -19,7 +20,7 @@ export function parseLinkMetadata<T extends object = Record<string, unknown>>(
   try {
     parsed = JSON.parse(raw);
   } catch (error) {
-    console.warn("Failed to parse GitHub external link metadata", {
+    log.warn("Failed to parse GitHub external link metadata", {
       ...context,
       error,
     });
@@ -34,13 +35,10 @@ export function parseLinkMetadata<T extends object = Record<string, unknown>>(
   // here produces either, and spreading one forward would turn its indices into
   // keys. Both take the same exit as a row that will not parse.
   if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    console.warn(
-      "Ignoring GitHub external link metadata that is not an object",
-      {
-        ...context,
-        metadataType: parsed === null ? "null" : typeof parsed,
-      },
-    );
+    log.warn("Ignoring GitHub external link metadata that is not an object", {
+      ...context,
+      metadataType: parsed === null ? "null" : typeof parsed,
+    });
 
     return {};
   }

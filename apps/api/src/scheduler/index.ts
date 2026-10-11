@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/node";
 import { Cron } from "croner";
 import { checkAutomations } from "../automation/scheduled";
 import { generateRecurringTasks } from "../recurrence/generate";
+import { log } from "../utils/log";
 import { checkDueDateReminders } from "./due-date-reminders";
 import { withJobLease } from "./leader-lock";
 import { checkProjectWebhookReminders } from "./project-webhook-reminders";
@@ -42,7 +43,7 @@ function withCheckIn<T>(name: string, fn: () => Promise<T>) {
         monitorSlug: name,
         status: "error",
       });
-      console.error(`Cron job ${name} failed`, error);
+      log.error(`Cron job ${name} failed`, error);
     }
   };
 }
@@ -53,7 +54,7 @@ export function initializeScheduler(): number {
   // stand-ups programados y los recordatorios de la de verdad: con el
   // planificador en marcha, una copia mandaria mensajes reales a chats reales.
   if (process.env.RIUNA_DISABLE_SCHEDULER === "true") {
-    console.warn("⏸️ Scheduler disabled (RIUNA_DISABLE_SCHEDULER=true)");
+    log.warn("⏸️ Scheduler disabled (RIUNA_DISABLE_SCHEDULER=true)");
     return 0;
   }
 
@@ -108,7 +109,7 @@ export function initializeScheduler(): number {
       ),
     ),
   );
-  console.log(
+  log.info(
     "⏰ Scheduler started (reminders every 5 minutes, seat reconciliation and trial reminders hourly)",
   );
   return jobs.length;

@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import db from "../../../database";
 import { externalLinkTable } from "../../../database/schema";
+import { log } from "../../../utils/log";
 import type { GiteaConfig } from "../config";
 import { createGiteaClient } from "./gitea-api";
 
@@ -80,7 +81,7 @@ async function getGiteaIssueContext(taskId: string) {
   const client = createGiteaClient(config);
   const issueNumber = Number.parseInt(externalLink.externalId, 10);
   if (Number.isNaN(issueNumber)) {
-    console.warn("Invalid Gitea issue externalId for label sync", {
+    log.warn("Invalid Gitea issue externalId for label sync", {
       externalLinkId: externalLink.id,
       externalId: externalLink.externalId,
       taskId,
@@ -121,7 +122,7 @@ export async function syncLabelToGitea(
         color,
       );
     } catch (error) {
-      console.error(`Failed to create label "${labelName}" in Gitea:`, error);
+      log.error(`Failed to create label "${labelName}" in Gitea:`, error);
       return;
     }
   }
@@ -143,7 +144,7 @@ export async function syncLabelToGitea(
       [label.id],
     );
   } catch (error) {
-    console.error(`Failed to add label "${labelName}" to Gitea issue:`, error);
+    log.error(`Failed to add label "${labelName}" to Gitea issue:`, error);
   }
 }
 
@@ -168,9 +169,6 @@ export async function removeLabelFromGitea(taskId: string, labelName: string) {
       label.id,
     );
   } catch (error) {
-    console.error(
-      `Failed to remove label "${labelName}" from Gitea issue:`,
-      error,
-    );
+    log.error(`Failed to remove label "${labelName}" from Gitea issue:`, error);
   }
 }

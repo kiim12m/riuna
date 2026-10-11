@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import db from "../database";
+import { log } from "./log";
 
 /**
  * Migration script to handle conversion from user_email to user_id in workspace_member table.
@@ -7,7 +8,7 @@ import db from "../database";
  * column collision errors during migration.
  */
 export async function migrateWorkspaceUserEmail() {
-  console.log(
+  log.info(
     "🔄 Checking workspace_member table for user_email to user_id migration...",
   );
 
@@ -24,9 +25,7 @@ export async function migrateWorkspaceUserEmail() {
       tableExists.rows[0]?.exists === true ||
       tableExists.rows[0]?.exists === "t";
     if (!exists) {
-      console.log(
-        "🛈 workspace_member table does not exist; skipping migration.",
-      );
+      log.info("🛈 workspace_member table does not exist; skipping migration.");
       return;
     }
 
@@ -47,14 +46,14 @@ export async function migrateWorkspaceUserEmail() {
     `);
 
     if (hasUserEmailColumn.rows.length > 0) {
-      console.log("📧 Found user_email column, migrating to user_id...");
+      log.info("📧 Found user_email column, migrating to user_id...");
 
       // Add user_id column if it doesn't exist
       if (hasUserIdColumn.rows.length === 0) {
         await db.execute(sql`
           ALTER TABLE "workspace_member" ADD COLUMN "user_id" text;
         `);
-        console.log("➕ Added user_id column");
+        log.info("➕ Added user_id column");
       }
 
       // Update user_id based on user_email
@@ -79,7 +78,7 @@ export async function migrateWorkspaceUserEmail() {
         orphanedRecords.rows[0]?.count &&
         Number(orphanedRecords.rows[0].count) > 0
       ) {
-        console.log(
+        log.info(
           `⚠️  Found ${orphanedRecords.rows[0].count} workspace_member records with invalid user_email. Removing them...`,
         );
 
@@ -97,7 +96,7 @@ export async function migrateWorkspaceUserEmail() {
       `);
 
       if (nullRecords.rows[0]?.count && Number(nullRecords.rows[0].count) > 0) {
-        console.log(
+        log.info(
           `⚠️  Found ${nullRecords.rows[0].count} workspace_member records with no user identification. Removing them...`,
         );
 
@@ -112,12 +111,12 @@ export async function migrateWorkspaceUserEmail() {
         ALTER TABLE "workspace_member" DROP COLUMN "user_email";
       `);
 
-      console.log(
+      log.info(
         "✅ Successfully migrated user_email to user_id and dropped user_email column",
       );
     } else if (hasUserIdColumn.rows.length === 0) {
       // Neither column exists, add user_id column
-      console.log("➕ Adding user_id column to workspace_member table...");
+      log.info("➕ Adding user_id column to workspace_member table...");
       await db.execute(sql`
         ALTER TABLE "workspace_member" ADD COLUMN "user_id" text;
       `);
@@ -131,7 +130,7 @@ export async function migrateWorkspaceUserEmail() {
     `);
 
     if (nullUserIds.rows[0]?.count && Number(nullUserIds.rows[0].count) > 0) {
-      console.log(
+      log.info(
         `⚠️  Found ${nullUserIds.rows[0].count} workspace_member records with NULL user_id. Removing them...`,
       );
 
@@ -140,12 +139,12 @@ export async function migrateWorkspaceUserEmail() {
         WHERE "user_id" IS NULL;
       `);
 
-      console.log("✅ Removed records with NULL user_id");
+      log.info("✅ Removed records with NULL user_id");
     }
 
-    console.log("✅ Workspace member migration completed successfully!");
+    log.info("✅ Workspace member migration completed successfully!");
   } catch (error) {
-    console.error("❌ Error during workspace member migration:", error);
+    log.error("❌ Error during workspace member migration:", error);
     throw error;
   }
 }

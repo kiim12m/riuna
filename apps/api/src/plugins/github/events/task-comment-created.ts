@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 import type { PluginContext, TaskCommentCreatedEvent } from "../../types";
 import type { GitHubConfig } from "../config";
 import { findExternalLinkByTaskAndType } from "../services/link-manager";
@@ -45,6 +46,6 @@ export async function handleTaskCommentCreated(
       body: event.comment,
     });
   } catch (error) {
-    console.error("Failed to create GitHub comment:", error);
+    log.error("Failed to create GitHub comment:", error);
   }
 }

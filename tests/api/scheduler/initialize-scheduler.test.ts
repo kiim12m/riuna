@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { log } from "../../../apps/api/src/utils/log";
 
 // Los trabajos se sustituyen por dobles: aqui solo importa si el planificador
 // llega a programarlos, no lo que hacen.
@@ -36,7 +37,7 @@ describe("initializeScheduler", () => {
   });
 
   it("starts the scheduled jobs", () => {
-    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(log, "info").mockImplementation(() => {});
 
     expect(initializeScheduler()).toBeGreaterThan(0);
   });
@@ -45,7 +46,7 @@ describe("initializeScheduler", () => {
   // los recordatorios de la de verdad (ADR 072).
   it("starts none with RIUNA_DISABLE_SCHEDULER=true", () => {
     vi.stubEnv("RIUNA_DISABLE_SCHEDULER", "true");
-    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(log, "warn").mockImplementation(() => {});
 
     expect(initializeScheduler()).toBe(0);
   });

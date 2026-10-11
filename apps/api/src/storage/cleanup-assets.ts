@@ -1,6 +1,7 @@
 import { and, eq, inArray, like } from "drizzle-orm";
 import db from "../database";
 import { activityTable, assetTable, taskTable } from "../database/schema";
+import { log } from "../utils/log";
 import { deleteS3Object } from "./s3";
 
 const ASSET_URL_PATTERN = /\/api\/asset\/([a-z0-9]+)/gi;
@@ -149,7 +150,7 @@ export async function deleteS3Keys(
     );
 
   if (failedDeletions.length > 0) {
-    console.error(
+    log.error(
       "Failed to delete S3 objects",
       failedDeletions.map(({ key, result }) => ({
         key,

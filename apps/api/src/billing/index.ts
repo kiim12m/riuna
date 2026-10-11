@@ -6,6 +6,7 @@ import { describeRoute, validator } from "hono-openapi";
 import * as v from "valibot";
 import db from "../database";
 import { workspaceUserTable } from "../database/schema";
+import { log } from "../utils/log";
 import { validateWorkspaceAccess } from "../utils/validate-workspace-access";
 import { creemWebhookSecret, isBillingEnabled } from "./config";
 import createCheckout from "./controllers/create-checkout";
@@ -63,7 +64,7 @@ const billing = new Hono<{ Variables: Variables }>()
         data: parsed.data as BillingWebhookEvent["data"],
       };
     } catch (error) {
-      console.error("billing: webhook signature verification failed", error);
+      log.error("billing: webhook signature verification failed", error);
       throw new HTTPException(400, { message: "Invalid signature" });
     }
 

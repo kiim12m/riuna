@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 import type { PluginContext, TaskPriorityChangedEvent } from "../../types";
 import type { GitHubConfig } from "../config";
 import { findExternalLinksByTask } from "../services/link-manager";
@@ -59,6 +60,6 @@ export async function handleTaskPriorityChanged(
       );
     }
   } catch (error) {
-    console.error("Failed to update GitHub issue priority:", error);
+    log.error("Failed to update GitHub issue priority:", error);
   }
 }

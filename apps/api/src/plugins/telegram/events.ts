@@ -7,6 +7,7 @@ import {
   userTable,
   workspaceTable,
 } from "../../database/schema";
+import { log } from "../../utils/log";
 import type {
   PluginContext,
   TaskCommentCreatedEvent,
@@ -182,7 +183,7 @@ async function sendTelegramMessage(
       message_thread_id: config.threadId,
     });
   } catch (error) {
-    console.error("sendTelegramMessage postToTelegram failed", {
+    log.error("sendTelegramMessage postToTelegram failed", {
       error,
       botToken: redactBotToken(config.botToken),
       telegramTarget: getSafeTelegramTargetIdentifier(config),
@@ -208,7 +209,7 @@ async function runTelegramHandler(
 ): Promise<void> {
   const validation = validateTelegramConfig(context.config);
   if (!validation.valid) {
-    console.error("Invalid Telegram plugin config; skipping event dispatch", {
+    log.error("Invalid Telegram plugin config; skipping event dispatch", {
       errors: validation.errors,
       config: context.config,
       featureKey,

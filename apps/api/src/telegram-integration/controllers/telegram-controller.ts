@@ -10,6 +10,7 @@ import {
   telegramConfigSchema,
   telegramEventsSchema,
 } from "../../plugins/telegram/config";
+import { log } from "../../utils/log";
 
 export const telegramIntegrationPatchBodySchema = v.object({
   botToken: v.optional(v.string()),
@@ -100,7 +101,7 @@ export function parseTelegramIntegrationConfig(
     );
     return normalizeTelegramConfig(parsed);
   } catch (error) {
-    console.error("Failed to parse Telegram integration config", {
+    log.error("Failed to parse Telegram integration config", {
       error,
       integrationId: integration.id,
       projectId: integration.projectId,

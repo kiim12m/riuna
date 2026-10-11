@@ -5,6 +5,7 @@ import {
   integrationTable,
   taskTable,
 } from "../../database/schema";
+import { log } from "../../utils/log";
 import { defaultGitHubConfig } from "./config";
 
 async function tableExists(tableName: string): Promise<boolean> {
@@ -26,17 +27,17 @@ export async function migrateGitHubIntegration() {
   const oldTableExists = await tableExists("github_integration");
 
   if (!oldTableExists) {
-    console.log("No old github_integration table found, skipping migration");
+    log.info("No old github_integration table found, skipping migration");
     return;
   }
 
-  console.log("🔄 Starting GitHub integration migration...");
+  log.info("🔄 Starting GitHub integration migration...");
 
   try {
     const oldIntegrations = await db.query.githubIntegrationTable.findMany();
 
     if (oldIntegrations.length === 0) {
-      console.log("No old integrations to migrate");
+      log.info("No old integrations to migrate");
       await dropOldTable();
       return;
     }
@@ -72,21 +73,21 @@ export async function migrateGitHubIntegration() {
       migratedCount++;
     }
 
-    console.log(`✓ Migrated ${migratedCount} integrations`);
+    log.info(`✓ Migrated ${migratedCount} integrations`);
 
     await migrateTaskLinks();
 
     await dropOldTable();
 
-    console.log("✅ GitHub integration migration complete!");
+    log.info("✅ GitHub integration migration complete!");
   } catch (error) {
-    console.error("Failed to migrate GitHub integration:", error);
+    log.error("Failed to migrate GitHub integration:", error);
     throw error;
   }
 }
 
 async function migrateTaskLinks() {
-  console.log("🔄 Migrating task links from descriptions...");
+  log.info("🔄 Migrating task links from descriptions...");
 
   const tasks = await db.query.taskTable.findMany();
 
@@ -162,12 +163,12 @@ async function migrateTaskLinks() {
     }
   }
 
-  console.log(`✓ Created ${linksCreated} external links`);
-  console.log(`✓ Cleaned ${descriptionsUpdated} task descriptions`);
+  log.info(`✓ Created ${linksCreated} external links`);
+  log.info(`✓ Cleaned ${descriptionsUpdated} task descriptions`);
 }
 
 async function dropOldTable() {
-  console.log("🗑️ Dropping old github_integration table...");
+  log.info("🗑️ Dropping old github_integration table...");
   await db.execute(sql`DROP TABLE IF EXISTS github_integration CASCADE`);
-  console.log("✓ Dropped github_integration table");
+  log.info("✓ Dropped github_integration table");
 }

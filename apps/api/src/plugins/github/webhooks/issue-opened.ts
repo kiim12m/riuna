@@ -3,6 +3,7 @@ import db from "../../../database";
 import { columnTable, projectTable, taskTable } from "../../../database/schema";
 import { claimTaskNumber } from "../../../task/controllers/claim-task-numbers";
 import { rootTaskTreeFields } from "../../../task/tree";
+import { log } from "../../../utils/log";
 import type { GitHubConfig } from "../config";
 import { createExternalLink, findExternalLink } from "../services/link-manager";
 import { findAllIntegrationsByRepo } from "../services/task-service";
@@ -42,7 +43,7 @@ export async function handleIssueOpened(payload: IssueOpenedPayload) {
 
   const appName = process.env.GITHUB_APP_NAME;
   if (appName && issue.user?.login === `${appName}[bot]`) {
-    console.log(
+    log.info(
       `Issue #${issue.number} was created by the configured GitHub App, skipping task creation`,
     );
     return;
@@ -71,7 +72,7 @@ export async function handleIssueOpened(payload: IssueOpenedPayload) {
     );
 
     if (existingLink) {
-      console.log(
+      log.info(
         `Issue #${issue.number} already linked to task ${existingLink.taskId} in project ${projectId}, skipping`,
       );
       continue;
@@ -111,7 +112,7 @@ export async function handleIssueOpened(payload: IssueOpenedPayload) {
       .returning();
 
     if (!createdTask) {
-      console.error("Failed to create task from GitHub issue");
+      log.error("Failed to create task from GitHub issue");
       continue;
     }
 
@@ -134,7 +135,7 @@ export async function handleIssueOpened(payload: IssueOpenedPayload) {
     });
 
     if (!project) {
-      console.error("Project not found for task linking comment");
+      log.error("Project not found for task linking comment");
       continue;
     }
 
@@ -189,7 +190,7 @@ export async function handleIssueOpened(payload: IssueOpenedPayload) {
         });
       }
     } catch (error) {
-      console.error("Failed to process GitHub issue:", error);
+      log.error("Failed to process GitHub issue:", error);
     }
   }
 }

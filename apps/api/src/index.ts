@@ -79,6 +79,7 @@ import { authenticateApiRequest } from "./utils/authenticate-api-request";
 import { authorizeAssetAccess } from "./utils/authorize-asset-access";
 import { getInvitationDetails } from "./utils/check-registration-allowed";
 import { buildContentDisposition } from "./utils/content-disposition";
+import { log } from "./utils/log";
 import {
   dedupeOperationIds,
   ensureOperationSummaries,
@@ -172,7 +173,7 @@ export function createApp() {
   const reflectUnconfiguredOrigins = process.env.NODE_ENV !== "production";
 
   if (!corsOrigins && !reflectUnconfiguredOrigins) {
-    console.warn(
+    log.warn(
       "[cors] Neither CORS_ORIGINS nor RIUNA_CLIENT_URL is set, so cross-origin requests are refused. Same-origin deployments (the bundled image) are unaffected; set RIUNA_CLIENT_URL if the web app is served from another origin.",
     );
   }
@@ -387,7 +388,7 @@ export function createApp() {
           },
         });
       } catch (error) {
-        console.error("Failed to stream asset:", error);
+        log.error("Failed to stream asset:", error);
         throw new HTTPException(404, { message: "Asset object not found" });
       }
     },
@@ -483,7 +484,7 @@ export function createApp() {
         unknown
       >;
     } catch (error) {
-      console.error("Failed to generate Better Auth OpenAPI schema:", error);
+      log.error("Failed to generate Better Auth OpenAPI schema:", error);
     }
 
     const normalizedAuthSpec = normalizeOrganizationAuthOperations(authSpec);
@@ -626,7 +627,7 @@ export function createApp() {
         return await eventContext.run({ initiatorId }, next);
       } catch (error) {
         if (!(error instanceof HTTPException)) {
-          console.error("API authentication failed:", error);
+          log.error("API authentication failed:", error);
           throw new HTTPException(500, { message: "Internal Server Error" });
         }
         throw error;
@@ -720,7 +721,7 @@ export function createApp() {
         if (error instanceof HTTPException) {
           throw error;
         }
-        console.error("API authentication failed:", error);
+        log.error("API authentication failed:", error);
         throw new HTTPException(500, { message: "Internal Server Error" });
       }
 
@@ -771,7 +772,7 @@ export function createApp() {
         if (error instanceof HTTPException) {
           throw error;
         }
-        console.error("API authentication failed:", error);
+        log.error("API authentication failed:", error);
         throw new HTTPException(500, { message: "Internal Server Error" });
       }
 
@@ -906,7 +907,7 @@ export async function startServer(
   try {
     await runStartupTasks();
   } catch (error) {
-    console.error("❌ Database migration failed!", error);
+    log.error("❌ Database migration failed!", error);
     process.exit(1);
   }
 
@@ -918,7 +919,7 @@ export async function startServer(
       port,
     },
     () => {
-      console.log(
+      log.info(
         `⚡ API is running at ${process.env.RIUNA_API_URL || "http://localhost:1337"}`,
       );
     },
@@ -930,7 +931,7 @@ export async function startServer(
     if (shuttingDown) return;
     shuttingDown = true;
 
-    console.log("🛑 Shutting down gracefully...");
+    log.info("🛑 Shutting down gracefully...");
     shutdownScheduler();
     await shutdownWebSocketAdapter();
     server.close();

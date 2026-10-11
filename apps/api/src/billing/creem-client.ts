@@ -1,5 +1,6 @@
 import { Creem } from "creem";
 import { HTTPException } from "hono/http-exception";
+import { log } from "../utils/log";
 import { creemApiKey } from "./config";
 
 function creemClient() {
@@ -32,7 +33,7 @@ export async function createCheckoutSession(input: {
     }
     return { checkoutUrl: checkout.checkoutUrl };
   } catch (error) {
-    console.error("Creem checkout creation failed:", error);
+    log.error("Creem checkout creation failed:", error);
     throw new HTTPException(502, {
       message: "Billing provider request failed",
     });
@@ -51,7 +52,7 @@ export async function updateSubscriptionSeats(input: {
     });
     return { ok: true as const };
   } catch (error) {
-    console.error("Creem seat update failed:", error);
+    log.error("Creem seat update failed:", error);
     return { ok: false as const };
   }
 }
@@ -63,7 +64,7 @@ export async function createCustomerPortalLink(customerId: string) {
     });
     return { portalUrl: links.customerPortalLink };
   } catch (error) {
-    console.error("Creem portal link creation failed:", error);
+    log.error("Creem portal link creation failed:", error);
     throw new HTTPException(502, {
       message: "Billing provider request failed",
     });

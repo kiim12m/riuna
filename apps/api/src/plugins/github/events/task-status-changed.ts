@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 import type { PluginContext, TaskStatusChangedEvent } from "../../types";
 import type { GitHubConfig } from "../config";
 import {
@@ -88,6 +89,6 @@ export async function handleTaskStatusChanged(
       });
     }
   } catch (error) {
-    console.error("Failed to update GitHub issue status:", error);
+    log.error("Failed to update GitHub issue status:", error);
   }
 }

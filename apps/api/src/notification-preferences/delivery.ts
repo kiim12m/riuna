@@ -13,6 +13,7 @@ import {
 } from "../database/schema";
 import { assertPublicWebhookDestination } from "../plugins/generic-webhook/config";
 import { isLocalAccountEmail } from "../utils/local-account";
+import { log } from "../utils/log";
 import { decryptSecret } from "./secrets";
 
 const DEFAULT_OUTBOUND_FETCH_TIMEOUT_MS = 15_000;
@@ -407,7 +408,7 @@ export async function deliverNotification(
 
   const context = await resolveNotificationContext(notification);
   if (!context) {
-    console.info("Notification delivery skipped: unresolved context", {
+    log.info("Notification delivery skipped: unresolved context", {
       notificationId,
       notificationTableId: notification.id,
       resourceType: notification.resourceType,
@@ -589,7 +590,7 @@ export async function deliverNotification(
   const results = await Promise.allSettled(deliveries);
   for (const result of results) {
     if (result.status === "rejected") {
-      console.error("Notification delivery failed", {
+      log.error("Notification delivery failed", {
         notificationId,
         error: result.reason,
       });

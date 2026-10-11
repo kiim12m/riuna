@@ -7,6 +7,7 @@ import {
   userTable,
   workspaceTable,
 } from "../../database/schema";
+import { log } from "../../utils/log";
 import type {
   PluginContext,
   TaskCommentCreatedEvent,
@@ -184,7 +185,7 @@ async function sendDiscordMessage(
       ],
     });
   } catch (error) {
-    console.error("sendDiscordMessage postToDiscord failed", {
+    log.error("sendDiscordMessage postToDiscord failed", {
       error,
       webhookUrl: redactWebhookUrl(config.webhookUrl),
       channelName: config.channelName ?? null,

@@ -9,6 +9,7 @@ import {
 } from "../database/schema";
 import { getFieldDefinitionsForProject } from "../field/controllers/get-field-definitions";
 import { addDays, startOfServerDay } from "../utils/day-boundaries";
+import { log } from "../utils/log";
 import { buildFilter } from "../view/build-filter";
 import { buildFieldRegistry } from "../view/field-registry";
 import type { EditableCondition } from "../view/filter-schema";
@@ -167,7 +168,7 @@ export async function checkAutomations(now = new Date()) {
       await runDateRule(rule, now);
     } catch (error) {
       degraded = true;
-      console.error(`Automation ${rule.id} failed on its date check:`, error);
+      log.error(`Automation ${rule.id} failed on its date check:`, error);
     }
   }
 
@@ -176,10 +177,7 @@ export async function checkAutomations(now = new Date()) {
       await sendScheduledStandup(rule, now);
     } catch (error) {
       degraded = true;
-      console.error(
-        `Automation ${rule.id} failed to send its stand-up:`,
-        error,
-      );
+      log.error(`Automation ${rule.id} failed to send its stand-up:`, error);
     }
   }
 

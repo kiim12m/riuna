@@ -80,6 +80,7 @@ Not every change touches every surface. Make the decision deliberately rather th
 - Generate migrations with `pnpm --filter @riuna/api db:generate`, inspect the SQL, and include it with the schema change.
 - **Inside a `sql` template, wrap arrays in `sql.param()`.** Drizzle expands a bare array into `($1, $2, …)` — which is what you want for `IN`, and silently wrong everywhere else: `${keys}::text[]` compiles to `($1, $2)::text[]`, and an empty array to `()`, a syntax error. It bit this codebase twice in one afternoon.
 - Prefer inferred TypeScript types and `type` over `interface` unless extension or declaration merging is required.
+- Log through `apps/api/src/utils/log.ts` (`log.info/warn/error`, console-shaped arguments), never `console.*`: the logger adds the level, the `requestId` and redacts secrets, and `tests/api/no-console.test.ts` enforces it. Log route patterns, never raw paths — some carry tokens (ADR 073).
 - Comments should explain constraints or surprising decisions, not narrate code.
 
 ## Safety and tooling

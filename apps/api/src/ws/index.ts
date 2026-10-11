@@ -5,6 +5,7 @@ import db, { schema } from "../database";
 import { subscribeToEvent } from "../events";
 import { MY_WORK_EVENTS, recipientsForMyWork } from "../my-work/recipients";
 import { isRedisConfigured } from "../redis";
+import { log } from "../utils/log";
 import type {
   BroadcastAdapter,
   BroadcastMessage,
@@ -62,7 +63,7 @@ export function broadcastToUser(userId: string, message: UserBroadcastMessage) {
   void adapter
     .publishToUser({ userId, message, origin: INSTANCE_ID })
     .catch((err) => {
-      console.error("Failed to publish a user broadcast:", err);
+      log.error("Failed to publish a user broadcast:", err);
     });
 }
 
@@ -134,7 +135,7 @@ export async function initializeWebSocketAdapter() {
   }
 
   adapter = nextAdapter;
-  console.log(`📡 WebSockets Initialized using: "${adapter.constructor.name}"`);
+  log.info(`📡 WebSockets Initialized using: "${adapter.constructor.name}"`);
 }
 
 export async function shutdownWebSocketAdapter() {
@@ -213,7 +214,7 @@ export function broadcastToProject(
   excludeInitiatorId?: string,
 ) {
   if (!adapter) {
-    console.warn("broadcastToProject called before adapter initialization");
+    log.warn("broadcastToProject called before adapter initialization");
     return;
   }
 
@@ -246,7 +247,7 @@ export function broadcastToProject(
           excludeInitiatorId: exId,
         })
         .catch((err) => {
-          console.error(
+          log.error(
             `Failed to publish broadcast for project ${projectId}:`,
             err,
           );

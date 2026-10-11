@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 import type { GitHubConfig } from "../config";
 
 function slugify(text: string): string {
@@ -52,7 +53,7 @@ export function extractTaskNumberFromBranch(
         if (!Number.isNaN(num)) return num;
       }
     } catch {
-      console.error("Invalid custom branch regex:", config.customBranchRegex);
+      log.error("Invalid custom branch regex:", config.customBranchRegex);
     }
     return null;
   }

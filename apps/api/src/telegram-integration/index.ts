@@ -12,6 +12,7 @@ import {
   validateTelegramConfig,
 } from "../plugins/telegram/config";
 import { telegramIntegrationSchema } from "../schemas";
+import { log } from "../utils/log";
 import { requireWorkspacePermission } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import {
@@ -36,7 +37,7 @@ function safePublishIntegrationEvent(
   },
 ) {
   void publishEvent(eventName, data).catch((error) => {
-    console.error(`Failed to publish ${eventName}:`, error);
+    log.error(`Failed to publish ${eventName}:`, error);
   });
 }
 

@@ -15,6 +15,7 @@ import {
   GiteaApiError,
   verifyGiteaToken,
 } from "../../plugins/gitea/utils/gitea-api";
+import { log } from "../../utils/log";
 
 async function createGiteaIntegration({
   projectId,
@@ -52,7 +53,7 @@ async function createGiteaIntegration({
       const prev = JSON.parse(existingIntegration.config) as GiteaConfig;
       resolvedToken = prev.accessToken;
     } catch (error) {
-      console.warn("Failed to parse existing Gitea integration config", {
+      log.warn("Failed to parse existing Gitea integration config", {
         integrationId: existingIntegration.id,
         error,
       });
@@ -112,7 +113,7 @@ async function createGiteaIntegration({
       if (error instanceof HTTPException) {
         throw error;
       }
-      console.warn(
+      log.warn(
         "Skipping invalid Gitea integration config during conflict check",
         {
           integrationId: integration.id,
@@ -130,7 +131,7 @@ async function createGiteaIntegration({
       ) as GiteaConfig;
       webhookSecret = previousConfig.webhookSecret ?? webhookSecret;
     } catch (error) {
-      console.warn("Failed to parse existing Gitea config for webhook secret", {
+      log.warn("Failed to parse existing Gitea config for webhook secret", {
         integrationId: existingIntegration.id,
         error,
       });
