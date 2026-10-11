@@ -84,4 +84,31 @@ describe("request log (ADR 073)", () => {
 
     expect(response.headers.get("X-Request-Id")).toMatch(/^[0-9a-f-]{36}$/);
   });
+
+  // Hasta la Fase 9 un 500 solo iba a Sentry, inactivo sin DSN: no quedaba
+  // nada en ningun sitio.
+  it("leaves the stack of an unhandled error, tied to its request", async () => {
+    const { app } = createApp();
+    app.get("/__boom", () => {
+      throw new Error("se rompio el disco");
+    });
+
+    const response = await app.request("/__boom");
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      message: "Internal Server Error",
+    });
+    const requestId = response.headers.get("X-Request-Id");
+    const failure = lines.find((line) => line.msg === "Unhandled error");
+    expect(failure).toMatchObject({
+      level: "error",
+      requestId,
+      route: "/__boom",
+      error: { message: "se rompio el disco" },
+    });
+    const stack = (failure?.error as { stack?: string } | undefined)?.stack;
+    expect(String(stack)).toContain("request-log.test.ts");
+    expect(requests()[0]).toMatchObject({ level: "error", status: 500 });
+  });
 });

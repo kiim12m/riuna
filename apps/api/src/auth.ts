@@ -190,6 +190,12 @@ function getDeviceAuthVerificationUri(): string {
 }
 
 export const auth = betterAuth({
+  // Sus avisos salen por el registro de la API (ADR 073): con nivel, en JSON y
+  // con el `requestId` de la peticion, en vez de en texto plano aparte.
+  logger: {
+    log: (level, message, ...args) =>
+      log[level](`[Better Auth] ${message}`, ...args),
+  },
   baseURL: baseURLWithoutPath,
   trustedOrigins,
   secret: process.env.AUTH_SECRET || "",

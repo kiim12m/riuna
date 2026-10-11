@@ -20,12 +20,17 @@ type JobOutcome = { degraded?: boolean };
 // up the monitor without aborting the rest of the work. Unexpected throws are
 // captured as exception events and swallowed so one bad tick can't take down
 // the scheduler via an unhandled rejection.
+//
+// Each run also leaves a log line (ADR 073): debug when it went well — every
+// five minutes that would be noise — and warn or error when it did not.
 function withCheckIn<T>(name: string, fn: () => Promise<T>) {
   return async (): Promise<void> => {
     const checkInId = Sentry.captureCheckIn({
       monitorSlug: name,
       status: "in_progress",
     });
+    const started = performance.now();
+    const elapsed = () => Math.round(performance.now() - started);
     try {
       const result = await fn();
       const degraded = Boolean(
@@ -36,6 +41,17 @@ function withCheckIn<T>(name: string, fn: () => Promise<T>) {
         monitorSlug: name,
         status: degraded ? "error" : "ok",
       });
+      if (degraded) {
+        log.warn("Scheduled job degraded", {
+          job: name,
+          durationMs: elapsed(),
+        });
+      } else {
+        log.debug("Scheduled job finished", {
+          job: name,
+          durationMs: elapsed(),
+        });
+      }
     } catch (error) {
       Sentry.captureException(error, { tags: { area: "cron", job: name } });
       Sentry.captureCheckIn({
@@ -43,7 +59,10 @@ function withCheckIn<T>(name: string, fn: () => Promise<T>) {
         monitorSlug: name,
         status: "error",
       });
-      log.error(`Cron job ${name} failed`, error);
+      log.error("Scheduled job failed", error, {
+        job: name,
+        durationMs: elapsed(),
+      });
     }
   };
 }

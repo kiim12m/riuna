@@ -2615,13 +2615,34 @@ instancia.
     reintento.
   - El job de verdad corre por primera vez en la PR de este bloque.
 
-**Bloque 2 — Logs estructurados** · M · ADR 073
-- **2.1** `utils/log.ts`, sin dependencia: JSON en producción, legible en desarrollo, niveles y
-  redacción de secretos.
-- **2.2** Una línea por petición: `requestId`, patrón de ruta (nunca la ruta cruda: el token del
-  `.ics` va en ella), estado, duración y usuario.
-- **2.3** Todo 500 se registra con su pila, y cada trabajo programado deja su línea.
-- **2.4** Los `console.*` pasan al logger, con una guarda que impide volver a usarlos.
+**Bloque 2 — Logs estructurados** · M · [ADR 073](adr/073-logs-estructurados.md) ·
+**Hecho (2026-10-11)**
+- **2.1** ✔ `utils/log.ts`, sin dependencia.
+  - JSON por línea en producción y legible en desarrollo (`LOG_FORMAT`), con `LOG_LEVEL`.
+  - Firma de `console`: texto, campos, `Error` con su pila y su causa.
+  - Tapa los secretos a cualquier profundidad.
+  - Doce unitarias. Una cazó que un campo llamado `level` o `msg` pisaba la cabecera.
+- **2.2** ✔ Una línea por petición (`utils/request-log.ts`):
+  - `requestId` (respeta uno entrante razonable y lo devuelve en `X-Request-Id`), método,
+    patrón de ruta, estado, duración y usuario;
+  - todo lo registrado durante la petición lleva su `requestId`, por `AsyncLocalStorage`;
+  - el patrón es el de la ruta que respondió, o el de la ruta pedida si cortó un middleware: un
+    401 sale como `/api/task/:id` y no como `/api/*`;
+  - **nunca la ruta cruda**: el token del `.ics` no aparece, y una prueba lo vigila;
+  - `/api/health` no se registra.
+- **2.3** ✔ Todo 500 deja su pila con la ruta y el `requestId` (**antes no dejaba nada**). Los
+  trabajos programados registran cómo acabaron (`debug`, `warn` o `error`), y Better Auth
+  escribe por el mismo registro.
+- **2.4** ✔ Los ~300 `console.*` de 87 ficheros pasan a `log.*`, con un cambio mecánico que la
+  firma permite. `tests/api/no-console.test.ts` impide que vuelvan, y salta con uno de prueba.
+  Las cinco pruebas que espiaban `console` espían ahora `log`.
+- **De paso**: `compose.local.yml` rota los logs de cada contenedor (5 × 10 MB). Docker Desktop no
+  los rota, y con una línea por petición crecerían sin límite.
+- **Visto en vivo**: la API empaquetada con `NODE_ENV=production` escribe JSON por línea, el `.ics`
+  sale como `/api/calendar/:file{.+\.ics}` y el token no aparece en el log.
+- **Pruebas**: 12 unitarias del logger, la guarda y 5 de integración del middleware (patrón sin
+  token, `/health` callado, `X-Request-Id` de ida y vuelta, id entrante descartado y la pila de un
+  500). Unitarias de la API: 804 de 804.
 
 **Bloque 3 — Límites de tasa** · S · ADR 074
 - Better Auth limita siempre, no solo en cloud, con reglas propias para entrar, recuperar la

@@ -92,7 +92,7 @@ import {
   normalizeNullableSchemasForOpenApi30,
   normalizeOrganizationAuthOperations,
 } from "./utils/openapi-spec";
-import { requestLog } from "./utils/request-log";
+import { requestLog, respondingRoute } from "./utils/request-log";
 import { validateWorkspaceAccess } from "./utils/validate-workspace-access";
 import view from "./view";
 import workSchedule from "./work-schedule";
@@ -150,15 +150,24 @@ const SAFE_INLINE_ASSET_TYPES = new Set([
 export function createApp() {
   const app = new Hono<AppVariables>();
 
+  // Antes de la Fase 9, un 500 solo iba a Sentry, que esta inactivo sin DSN:
+  // no dejaba ningun rastro. Ahora cada uno deja su pila en el log, con el
+  // `requestId` de la peticion (ADR 073).
   app.onError((err, c) => {
+    const where = {
+      method: c.req.method,
+      route: respondingRoute(c),
+    };
     if (err instanceof HTTPException) {
       // expected errors (401/404/...) are not reported; real failures are
       if (err.status >= 500) {
+        log.error("Request failed", err, { ...where, status: err.status });
         Sentry.captureException(err);
       }
       return err.getResponse();
     }
 
+    log.error("Unhandled error", err, where);
     Sentry.captureException(err);
     return c.json({ message: "Internal Server Error" }, 500);
   });
