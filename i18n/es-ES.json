@@ -76,7 +76,9 @@
 				"network": "Error de red. Comprueba tu conexión a internet e inténtalo de nuevo.",
 				"auth": "Ha fallado la autenticación. Vuelve a iniciar sesión.",
 				"server": "Error del servidor. Inténtalo de nuevo más tarde.",
-				"unknown": "Se ha producido un error inesperado."
+				"unknown": "Se ha producido un error inesperado.",
+				"rateLimited": "Demasiadas peticiones. Vuelve a probar dentro de {{seconds}} s.",
+				"tooManyAttempts": "Demasiados intentos. Espera un minuto y vuelve a probar."
 			},
 			"troubleshootingSteps": {
 				"cors": {

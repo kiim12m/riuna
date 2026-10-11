@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { authErrorMessage } from "@/lib/auth-error";
 import { toast } from "@/lib/toast";
 
 type OtpSignInFormProps = {
@@ -53,7 +54,9 @@ export function OtpSignInForm({
       });
 
       if (result.error) {
-        toast.error(result.error.message || t("auth:otpSignIn.sendFailed"));
+        toast.error(
+          authErrorMessage(t, result.error, "auth:otpSignIn.sendFailed"),
+        );
         return;
       }
 

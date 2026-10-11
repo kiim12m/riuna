@@ -2644,12 +2644,39 @@ instancia.
   token, `/health` callado, `X-Request-Id` de ida y vuelta, id entrante descartado y la pila de un
   500). Unitarias de la API: 804 de 804.
 
-**Bloque 3 — Límites de tasa** · S · ADR 074
-- Better Auth limita siempre, no solo en cloud, con reglas propias para entrar, recuperar la
-  contraseña, registrarse, invitar y el *device flow*.
-- Límite general por usuario o clave, y por IP en lo público. Responde 429 con `Retry-After`.
-- `TRUST_PROXY` decide si se lee `X-Forwarded-For`.
-- En la web, un 429 no se reintenta y se explica.
+**Bloque 3 — Límites de tasa** · S · [ADR 074](adr/074-limites-de-tasa.md) ·
+**Hecho (2026-10-11)**
+- **3.1** ✔ **La IP sale de un solo sitio** (`utils/client-ip.ts`).
+  - `X-Forwarded-For` solo cuenta si la conexión viene de un proxy de confianza
+    (`TRUSTED_PROXIES`, por defecto localhost y las redes privadas, con `net.BlockList`).
+  - Better Auth la recibe resuelta en una cabecera propia que se borra a la entrada.
+  - **Hallazgo heredado**: Better Auth leía `cf-connecting-ip` y `X-Forwarded-For` sin mirar de
+    dónde venía la conexión. Con los límites encendidos, inventarse la cabecera habría dado un cupo
+    nuevo en cada intento.
+  - En el PC no hay que configurar nada: la pasarela de Docker es una red privada.
+- **3.2** ✔ **Better Auth limita siempre**, no solo en cloud. Entrar: 10 por minuto. Enlace
+  mágico: 5. Registrarse: 3. Invitar: 5. *Device flow*: 10.
+- **3.3** ✔ **El resto de la API** (`utils/rate-limit.ts`, en memoria y con ventana fija):
+  - 600 por minuto por persona o clave (`RATE_LIMIT_USER_PER_MINUTE`);
+  - por IP, lo público: el `.ics`, el proyecto público, la invitación pública, el estado de la
+    instancia y los webhooks de GitHub y Gitea;
+  - 429 con `Retry-After`, que CORS expone igual que `X-Request-Id`;
+  - `/health`, los avatares y los adjuntos, sin límite.
+- **3.4** ✔ **En la web**, un 429 no se reintenta (ya no se reintentaba ningún 4xx).
+  - El cliente compartido avisa (`onRateLimited`), y la web enseña un aviso traducido por tanda.
+  - Los formularios de acceso explican en español el 429 de Better Auth, que llega en inglés.
+- `RATE_LIMIT_ENABLED=false` lo apaga: lo usan la integración, el humo y los simulacros.
+- **Pruebas**:
+  - cuatro de integración: el cupo por persona con `Retry-After` sin tocar a otra, lo público por
+    IP, `/health` libre y **once intentos de contraseña con una IP inventada en las tres
+    cabeceras: el undécimo es un 429**;
+  - comprobado quitando cada guarda: sin el límite por persona, y con la lectura antigua de la IP,
+    cae su prueba;
+  - ocho unitarias de la IP y del contador, y dos del aviso en `libs`;
+  - `session-client-ip.test.ts`, heredada, mandaba `X-Forwarded-For` sin socket y daba por
+    buena la cabecera. Ahora simula de dónde viene la conexión, y tiene un caso nuevo: si no viene
+    de un proxy de confianza, se ignora;
+  - con la API empaquetada en producción, diez 401 y el undécimo intento es un 429.
 
 **Bloque 4 — Estado de la instancia y alertas** · M–L · ADR 075
 - **4.1** `job_status`: una fila por trabajo programado con su último resultado y los fallos

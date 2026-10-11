@@ -37,8 +37,14 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
 - **API keys** por usuario, con alcance de permisos, caducidad (1/7/30/90 días
   o nunca) y límite de 100 peticiones por minuto.
 - **Device flow** para CLI y clientes MCP (`riuna-cli`, `riuna-mcp`).
-- Antiabuso, solo en modo cloud: Turnstile en el registro, bloqueo de correos
-  desechables y límites de tasa en el alta y en las invitaciones.
+- **Límites de tasa** ([ADR 074](adr/074-limites-de-tasa.md)):
+  - entrar, registrarse, invitar y recuperar la contraseña, por IP;
+  - toda la API, por persona o clave (600 por minuto);
+  - lo público, por IP: el calendario `.ics`, los webhooks y el proyecto público.
+  - La IP solo se toma de `X-Forwarded-For` si la conexión viene de un proxy de confianza.
+  - En la web, un 429 se explica en español.
+- Antiabuso, solo en modo cloud: Turnstile en el registro y bloqueo de correos
+  desechables.
 - Perfil: nombre, correo, **avatar con recorte**, idioma, y **borrado de
   cuenta** con purga de datos.
 
@@ -724,7 +730,5 @@ Para que nadie busque lo que no existe:
 - **Las vistas no paginan.** El presupuesto de 300 ms se cruza en torno a las
   6.500 tareas en un mismo proyecto.
 - ~~**Cambiar un campo personalizado no deja rastro en la actividad.**~~ Ya lo deja (con el valor anterior y el nuevo).
-- **Límite de tasa general de la API.** Solo lo tienen las API keys y, en modo
-  cloud, el registro.
 - **Copias fuera de la máquina** y guía de actualización propia — fase 9.
 - **CRM y ERP** — bloque B del plan.

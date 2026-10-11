@@ -290,9 +290,23 @@
 								},
 								"unknown": {
 									"type": "string"
+								},
+								"rateLimited": {
+									"type": "string"
+								},
+								"tooManyAttempts": {
+									"type": "string"
 								}
 							},
-							"required": ["cors", "network", "auth", "server", "unknown"]
+							"required": [
+								"cors",
+								"network",
+								"auth",
+								"server",
+								"unknown",
+								"rateLimited",
+								"tooManyAttempts"
+							]
 						},
 						"troubleshootingSteps": {
 							"type": "object",

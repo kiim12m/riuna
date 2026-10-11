@@ -76,7 +76,9 @@
 				"network": "Error de xarxa. Comprova la connexió a internet i torna-ho a provar.",
 				"auth": "L'autenticació ha fallat. Torna a iniciar la sessió.",
 				"server": "Error del servidor. Torna-ho a provar més tard.",
-				"unknown": "S'ha produït un error inesperat."
+				"unknown": "S'ha produït un error inesperat.",
+				"rateLimited": "Demasiadas peticiones. Vuelve a probar dentro de {{seconds}} s.",
+				"tooManyAttempts": "Demasiados intentos. Espera un minuto y vuelve a probar."
 			},
 			"troubleshootingSteps": {
 				"cors": {

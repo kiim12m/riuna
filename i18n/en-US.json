@@ -76,7 +76,9 @@
 				"network": "Network error. Please check your internet connection and try again.",
 				"auth": "Authentication failed. Please sign in again.",
 				"server": "Server error. Please try again later.",
-				"unknown": "An unexpected error occurred."
+				"unknown": "An unexpected error occurred.",
+				"rateLimited": "Too many requests. Try again in {{seconds}} s.",
+				"tooManyAttempts": "Too many attempts. Wait a minute and try again."
 			},
 			"troubleshootingSteps": {
 				"cors": {

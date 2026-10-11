@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { authErrorMessage } from "@/lib/auth-error";
 import { toast } from "@/lib/toast";
 
 export type SignUpFormValues = {
@@ -89,7 +90,9 @@ export function SignUpForm({
       );
 
       if (result.error) {
-        toast.error(result.error.message || t("auth:signUpForm.failedSignUp"));
+        toast.error(
+          authErrorMessage(t, result.error, "auth:signUpForm.failedSignUp"),
+        );
         return;
       }
 

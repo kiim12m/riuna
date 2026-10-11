@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
+import { authErrorMessage } from "@/lib/auth-error";
 import { toast } from "@/lib/toast";
 
 export type SignInFormValues = {
@@ -67,7 +68,9 @@ export function SignInForm({ onSuccess, defaultEmail }: SignInFormProps) {
           });
 
       if (result.error) {
-        toast.error(result.error.message || t("auth:signInForm.failedSignIn"));
+        toast.error(
+          authErrorMessage(t, result.error, "auth:signInForm.failedSignIn"),
+        );
         return;
       }
 
