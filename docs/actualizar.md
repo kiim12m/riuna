@@ -170,6 +170,12 @@ motivo está en su log:
 docker compose -f compose.local.yml logs --tail=40 api
 ```
 
+La API escribe **una línea JSON por suceso** ([ADR 073](adr/073-logs-estructurados.md)): una
+por petición, con su ruta, su estado y lo que tardó, y cualquier error con su pila. Para
+leerlo a ojo, pon `LOG_FORMAT=pretty` en el `.env` y vuelve a levantar `api`. Cada respuesta
+lleva una cabecera `X-Request-Id`, y todas las líneas de esa petición llevan el mismo
+`requestId`: es lo que hay que buscar cuando algo falla en el navegador.
+
 ## Quitarte el `-f` de encima
 
 Añade esta línea a tu `.env` (está en `.gitignore`, así que es solo de esta

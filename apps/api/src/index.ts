@@ -92,6 +92,7 @@ import {
   normalizeNullableSchemasForOpenApi30,
   normalizeOrganizationAuthOperations,
 } from "./utils/openapi-spec";
+import { requestLog } from "./utils/request-log";
 import { validateWorkspaceAccess } from "./utils/validate-workspace-access";
 import view from "./view";
 import workSchedule from "./work-schedule";
@@ -115,6 +116,7 @@ type ApiKey = {
 
 type AppVariables = {
   Variables: {
+    requestId: string;
     user: User | null;
     session: Session | null;
     userId: string;
@@ -124,6 +126,7 @@ type AppVariables = {
 
 type ApiVariables = {
   Variables: {
+    requestId: string;
     user: User | null;
     session: Session | null;
     userId: string;
@@ -159,6 +162,7 @@ export function createApp() {
     Sentry.captureException(err);
     return c.json({ message: "Internal Server Error" }, 500);
   });
+  app.use("*", requestLog);
   const nodeWs = createNodeWebSocket({ app });
   const { upgradeWebSocket, injectWebSocket } = nodeWs;
   const corsOriginSource = [

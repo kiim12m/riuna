@@ -1,5 +1,14 @@
+# Docker Desktop guarda los logs de cada contenedor sin limite. Con una linea
+# por peticion (ADR 073), el de la API crecia sin parar: se rotan a 5 x 10 MB.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   postgres:
+    logging: *logging
     image: postgres:16-alpine
     # pg_stat_statements solo recoge si se carga al arrancar. Es lo que lee
     # scripts/ops/informe-bd.sh para repasar indices con el uso real (Fase 9).
@@ -27,6 +36,7 @@ services:
   # ./backups del host. PGHOST se fija aqui: el .env compartido define
   # POSTGRES_HOST=localhost para la API, que corre fuera de Docker.
   backup:
+    logging: *logging
     image: postgres:16-alpine
     env_file:
       - .env
@@ -55,6 +65,7 @@ services:
   # de crear el remoto (docs/copias-de-seguridad.md). No lee el .env entero: no
   # necesita ni la contrasena de la base ni el secreto de sesiones.
   offsite:
+    logging: *logging
     image: rclone/rclone:1.68.2
     profiles: ["offsite"]
     environment:
@@ -80,6 +91,7 @@ services:
     restart: unless-stopped
 
   api:
+    logging: *logging
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -111,6 +123,7 @@ services:
 #      - "6379:6379"
 
   web:
+    logging: *logging
     build:
       context: .
       dockerfile: apps/web/Dockerfile
