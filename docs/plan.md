@@ -2717,11 +2717,43 @@ instancia.
   - la entrada del menú, en la unitaria del hook.
 
 **Bloque 5 — Índices con datos reales y presupuesto** · S–M
-- **5.1** `scripts/ops/informe-bd.sh` saca solo estadísticas, sin filas: índices sin uso,
-  barridos secuenciales, las sentencias más caras y el proyecto más grande.
-- **5.2** Cada candidato se mide en el banco de 50.000 tareas con `EXPLAIN`, antes y después.
-- **5.3** El p95 de las pantallas posteriores a la Fase 4.5: Hoy, Planificador, Mis tareas, Mi
-  equipo, Mi panel, la búsqueda y las automatizaciones.
+- **5.1** ✔ `scripts/ops/informe-bd.sh`, que corre en el PC y saca **solo estadísticas, ni una
+  fila**: tamaño y volumen, el recuento de los cinco proyectos más grandes, índices sin uso,
+  tablas con más barridos secuenciales, y las sentencias más caras de `pg_stat_statements`,
+  normalizadas.
+  - `compose.local.yml` deja de registrar las órdenes de utilidad: no se normalizan, y una que
+    llevara una contraseña la guardaría tal cual.
+  - Probado contra una base de pruebas, salvo crear la extensión: aquí no hay superusuario, y en
+    el contenedor del PC sí.
+- **5.2** ⏳ **Pendiente del informe real.** Se lanza en el PC tras actualizar
+  (`sh scripts/ops/informe-bd.sh > informe-bd.txt`), cuando `pg_stat_statements` lleve unos días
+  recogiendo. Cada candidato se mide en el banco con `EXPLAIN`, antes y después.
+- **5.3** ✔ **Presupuesto de las pantallas posteriores a la Fase 4.5**, medido con
+  `apps/api/scripts/bench-views.ts`:
+  - en el mismo proceso, con la app entera (middleware y autenticación incluidos);
+  - sobre el banco de 50.000 tareas;
+  - con la persona con más tareas asignadas, hecha responsable de un departamento;
+  - 30 vueltas tras 3 de calentamiento.
+
+  | Pantalla | p50 | p95 |
+  |---|---|---|
+  | Hoy | 74 ms | 83 ms |
+  | Planificador (7 días) | 114 ms | 146 ms |
+  | Cronograma (7 días) | 7 ms | 11 ms |
+  | Mis tareas: contadores | 41 ms | 73 ms |
+  | Mis tareas: asignadas | 36 ms | 49 ms |
+  | Mis tareas: del departamento | 11 ms | 16 ms |
+  | Mis tareas: esperando | 10 ms | 14 ms |
+  | Mi equipo: el día | 9 ms | 11 ms |
+  | Mi equipo: stand-up | 8 ms | 10 ms |
+  | Búsqueda | 129 ms | 138 ms |
+  | Mi panel (todos los widgets) | 79 ms | 104 ms |
+
+  **Todas por debajo de 300 ms p95**, y la más cara, la búsqueda, con más del doble de margen.
+  - El plan personal no se siembra: tiene decenas de entradas, no miles. Así que Hoy, el
+    Planificador y el Cronograma miden lo que sí crece con el volumen, lo vencido y lo sin
+    planificar.
+  - Las automatizaciones no están: su coste es el número de reglas, medido en la ADR 068.
 
 **Bloque 6 — Móvil a 390 px** · M
 - **6.1** Un proyecto `mobile` en Playwright, con una guarda de desbordamiento sobre todas las
