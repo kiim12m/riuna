@@ -6,8 +6,7 @@ import { serve } from "@hono/node-server";
 import { createNodeWebSocket } from "@hono/node-ws";
 import * as Sentry from "@sentry/node";
 import type { Session, User } from "better-auth/types";
-import { eq, sql } from "drizzle-orm";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { compress } from "hono/compress";
 import { cors } from "hono/cors";
@@ -32,9 +31,8 @@ import comment from "./comment";
 import config from "./config";
 import cycle from "./cycle";
 import dashboard from "./dashboard";
-import db, { getDatabase, schema } from "./database";
-import { prepareDatabaseStartup } from "./database/prepare-database-startup";
-import { waitForDatabase } from "./database/wait-for-database";
+import db, { schema } from "./database";
+import { runMigrations } from "./database/run-migrations";
 import discordIntegration from "./discord-integration";
 import epic from "./epic";
 import { eventContext } from "./events";
@@ -51,14 +49,12 @@ import invitation from "./invitation";
 import label from "./label";
 import lead from "./lead";
 import mcpRoutes, { mcpWellKnownRoutes } from "./mcp";
-import { migrateColumns } from "./migrations/column-migration";
 import myWork from "./my-work";
 import notification from "./notification";
 import notificationPreferences from "./notification-preferences";
 import oauth from "./oauth";
 import planner from "./planner";
 import { initializePlugins } from "./plugins";
-import { migrateGitHubIntegration } from "./plugins/github/migration";
 import project from "./project";
 import { getPublicProject } from "./project/controllers/get-public-project";
 import recurrence from "./recurrence";
@@ -83,10 +79,6 @@ import { authenticateApiRequest } from "./utils/authenticate-api-request";
 import { authorizeAssetAccess } from "./utils/authorize-asset-access";
 import { getInvitationDetails } from "./utils/check-registration-allowed";
 import { buildContentDisposition } from "./utils/content-disposition";
-import { migrateApiKeyReferenceId } from "./utils/migrate-apikey-reference-id";
-import { migrateNotificationPreferencesSchema } from "./utils/migrate-notification-preferences-schema";
-import { migrateSessionColumn } from "./utils/migrate-session-column";
-import { migrateWorkspaceUserEmail } from "./utils/migrate-workspace-user-email";
 import {
   dedupeOperationIds,
   ensureOperationSummaries,
@@ -99,9 +91,7 @@ import {
   normalizeNullableSchemasForOpenApi30,
   normalizeOrganizationAuthOperations,
 } from "./utils/openapi-spec";
-import { seedDefaultWorkspaceRoles } from "./utils/seed-default-workspace-roles";
 import { validateWorkspaceAccess } from "./utils/validate-workspace-access";
-import { warnIfDatabaseIsNotUtc } from "./utils/warn-if-database-not-utc";
 import view from "./view";
 import workSchedule from "./work-schedule";
 import workflowRule from "./workflow-rule";
@@ -902,60 +892,7 @@ export function createApp() {
 export async function runStartupTasks() {
   const currentDir = dirname(fileURLToPath(import.meta.url));
 
-  await prepareDatabaseStartup({
-    waitForDatabase: async () => {
-      await waitForDatabase({
-        query: async () => {
-          await getDatabase().execute(sql`SELECT 1`);
-        },
-      });
-    },
-    runStartupMigrations: async () => {
-      await migrateWorkspaceUserEmail();
-      await migrateSessionColumn();
-
-      console.log("🔄 Migrating database...");
-
-      // Un cerrojo de sesion alrededor de las migraciones, por dos motivos.
-      //
-      // 1. Drizzle lee la ultima migracion aplicada **fuera** de la transaccion
-      //    y luego envuelve el bucle entero en una sola. Con mas de una replica
-      //    arrancando a la vez, las dos ven las mismas pendientes; la segunda
-      //    espera a la primera y despues reejecuta `ALTER TABLE ... ADD COLUMN`,
-      //    que falla con «column already exists» y tumba el proceso.
-      // 2. `lock_timeout` acota lo que se espera por un bloqueo de tabla: sin
-      //    el, un pod viejo que siga sirviendo durante un despliegue progresivo
-      //    se encola detras del `ALTER TABLE` y deja de responder, sin limite.
-      //
-      // El 1524 y el 1148 son los otros dos espacios de nombres de cerrojo del
-      // repositorio (ordenacion de proyectos y escrituras de arbol).
-      const database = getDatabase();
-
-      await database.execute(sql`SET lock_timeout = '30s'`);
-      await database.execute(sql`SELECT pg_advisory_lock(2051)`);
-
-      try {
-        await migrate(database, {
-          migrationsFolder: `${currentDir}/../drizzle`,
-        });
-      } finally {
-        await database.execute(sql`SELECT pg_advisory_unlock(2051)`);
-        await database.execute(sql`SET lock_timeout = DEFAULT`);
-      }
-
-      console.log("✅ Database migrated successfully!");
-    },
-  });
-
-  // After Drizzle migrations: apikey table must exist so we can align columns
-  // with Better Auth (reference_id + nullable user_id).
-  await migrateApiKeyReferenceId();
-
-  await migrateNotificationPreferencesSchema();
-  await migrateGitHubIntegration();
-  await migrateColumns();
-  await warnIfDatabaseIsNotUtc();
-  await seedDefaultWorkspaceRoles();
+  await runMigrations({ migrationsFolder: `${currentDir}/../drizzle` });
 
   initializePlugins();
   initializeScheduler();
