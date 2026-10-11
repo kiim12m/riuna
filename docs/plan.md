@@ -2552,21 +2552,34 @@ instancia.
 **Bloques.** Mismas tallas. ADR desde la 071 (la 058 sigue reservada); migraciones desde la
 0083.
 
-**Bloque 0 — El PC, solo por Tailscale, y actualizar con red** · S · ADR 071
-- **0.0** Este plan.
-- **0.1** Los puertos de `compose.local.yml` pasan a `127.0.0.1` (configurable). Se publica con
-  `tailscale serve`: `/` hacia la web y `/api` hacia la API.
-- **0.2** Orden `migrate`: migra y sale, con 0 o distinto de 0. El arranque normal sigue
-  migrando.
-- **0.3** `deploy/actualizar.sh`:
-  - se niega con el worktree sucio;
-  - construye mientras sirve la versión vieja;
-  - hace una copia forzada;
-  - migra con la imagen nueva antes de cambiar nada;
-  - levanta;
-  - si algo falla, imprime cómo volver atrás, sin revertir solo.
-- **0.4** `pg_stat_statements` en el Postgres del PC, para que el Bloque 5 tenga estadísticas
-  reales acumuladas.
+**Bloque 0 — El PC, solo por Tailscale, y actualizar con red** · S ·
+[ADR 071](adr/071-la-instancia-del-pc-por-tailscale.md) · **Hecho (2026-10-11)**
+- **0.0** ✔ Este plan.
+- **0.1** ✔ Puertos y `tailscale serve`.
+  - Los puertos de `compose.local.yml` escuchan en `127.0.0.1` (`RIUNA_BIND_ADDRESS`).
+  - Se publica con `tailscale serve`: `/` va a la web y `/api` a `http://127.0.0.1:1337/api`.
+    `serve` quita el prefijo del montaje y le añade la ruta del destino, así que hay que
+    repetirlo en ella.
+  - El paso único de la IP y los puertos a `serve` está en [actualizar](actualizar.md), y el
+    orden importa: cerrar los puertos antes de montar `serve` deja fuera a quien entraba por la
+    IP.
+- **0.2** ✔ Orden `migrate`.
+  - `node dist/migrate.js` migra y sale, con 0 o con 1.
+  - Lo común sale a `database/run-migrations.ts`, y el arranque normal sigue migrando.
+  - Tres pruebas de integración en un proceso aparte: base vacía, base ya migrada y una
+    migración que falla.
+- **0.3** ✔ `deploy/actualizar.sh`, en el orden de arriba.
+  - La versión que sirve se lee de la etiqueta `org.opencontainers.image.revision`, que
+    `compose.local.yml` sella al construir, y no de git.
+  - Fija `MSYS_NO_PATHCONV=1`: sin eso, Git Bash convierte `/scripts/backup.sh` en una ruta de
+    Windows.
+  - **Probado** con `shellcheck` y con un `docker` simulado en un clon desechable: worktree
+    sucio, al día, fallo al construir, al copiar, al migrar y al arrancar (con y sin migraciones
+    aplicadas) y primera vez sin etiqueta.
+  - **Sin probar aquí**: este devcontainer no tiene Docker. La primera ejecución real es en el
+    PC.
+- **0.4** ✔ `pg_stat_statements` se carga en el Postgres del PC. La extensión se creará en la
+  base `postgres`, así que no viaja en las copias.
 
 **Bloque 1 — Copias fuera de la máquina y simulacro en CI** · M · ADR 072
 - **1.1** Servicio `offsite` (rclone):

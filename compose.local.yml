@@ -1,6 +1,11 @@
 services:
   postgres:
     image: postgres:16-alpine
+    # pg_stat_statements solo recoge si se carga al arrancar. Es lo que lee
+    # scripts/ops/informe-bd.sh para repasar indices con el uso real (Fase 9).
+    # La extension se crea en la base `postgres`, no en la de Riuna, para que
+    # no viaje en las copias.
+    command: ["postgres", "-c", "shared_preload_libraries=pg_stat_statements"]
     env_file:
       - .env
     ports:
