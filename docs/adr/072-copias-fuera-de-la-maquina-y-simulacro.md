@@ -52,4 +52,13 @@
 - Autorizar Drive necesita un navegador: se hace con `rclone authorize` en Windows y se pega
   el resultado en el contenedor.
 - El simulacro nocturno tarda unos 20-30 minutos y no toca nada del PC.
-- El simulacro real (`deploy/simulacro.sh`) llega en el Bloque 7, sobre estas mismas piezas.
+- **El simulacro real** (`deploy/simulacro.sh`, Bloque 7) se apoya en estas mismas piezas, y
+  desde entonces es el que corre también en CI.
+  - Usa un proyecto Compose aparte, con su `.env` generado (sin SMTP y con claves nuevas), su
+    directorio de copias y sus puertos.
+  - `compose.local.yml` admite `RIUNA_ENV_FILE`, `RIUNA_BACKUP_DIR` y `RIUNA_*_PORT`, que por
+    defecto valen lo de siempre.
+  - Reutiliza las imágenes que ya sirven.
+  - El humo corre desde un contenedor de Playwright dentro de su red. La versión de la imagen la
+    vigila una prueba, para que acompañe a la de `@playwright/test`.
+  - Así, el guion que se lanza en el PC con la copia real se ejecuta entero cada noche.

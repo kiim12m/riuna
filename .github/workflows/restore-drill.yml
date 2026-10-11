@@ -1,9 +1,10 @@
 name: Restore drill
 
 # El criterio de la Fase 9, con datos sinteticos y cada noche (ADR 072): una
-# instancia construida como la del PC se siembra, se copia, se tira entera, se
-# restaura en un Postgres vacio y el humo completo pasa contra lo restaurado.
-# El simulacro con la copia real lo hace deploy/simulacro.sh en el PC.
+# instancia construida como la del PC se siembra y se copia, y
+# deploy/simulacro.sh —el mismo guion que se lanza en el PC con la copia
+# real— la restaura en un proyecto aparte con un Postgres vacio, compara los
+# recuentos y pasa el humo entero contra lo restaurado.
 
 on:
   schedule:
@@ -13,6 +14,8 @@ on:
   pull_request:
     paths:
       - compose.local.yml
+      - deploy/simulacro.sh
+      - deploy/simulacro.compose.yml
       - scripts/backup/**
       - apps/api/Dockerfile
       - apps/api/drizzle/**
@@ -37,25 +40,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7.0.1
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 10.32.1
-
+      # Solo para sembrar: dev-seed.mjs no importa nada. El humo corre dentro
+      # del contenedor de Playwright que levanta el simulacro.
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: 24.19.0
-          cache: pnpm
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      # Como una instancia que se restaura para un simulacro: sin planificador,
-      # sin correo, sin limites de tasa y con una clave de cifrado propia.
-      # POSTGRES_USER y _DB se quedan en `riuna` porque el healthcheck de
-      # compose.local.yml los da por hechos.
-      - name: Write the drill .env
+      # La instancia «de verdad» del simulacro. POSTGRES_USER y _DB se quedan
+      # en `riuna` porque el healthcheck de compose.local.yml los da por
+      # hechos.
+      - name: Write the instance .env
         run: |
           {
             echo "POSTGRES_DB=riuna"
@@ -67,16 +62,14 @@ jobs:
             echo "RIUNA_API_URL=http://localhost:1337"
             echo "DISABLE_REGISTRATION=false"
             echo "RIUNA_DISABLE_SCHEDULER=true"
-            # El humo se registra cada prueba desde la misma IP (ADR 074).
-            echo "RATE_LIMIT_ENABLED=false"
           } > .env
           mkdir -p backups
 
       - name: Build the images
         run: docker compose -f compose.local.yml build api web
 
-      - name: Start a fresh instance
-        run: docker compose -f compose.local.yml up -d --wait --wait-timeout 180 postgres api web
+      - name: Start the instance
+        run: docker compose -f compose.local.yml up -d --wait postgres api web
 
       - name: Seed it
         run: node scripts/dev-seed.mjs
@@ -91,18 +84,6 @@ jobs:
           test -n "$dump"
           echo "DUMP=$(basename "$dump")" >> "$GITHUB_ENV"
 
-      - name: Count the source
-        run: |
-          docker compose -f compose.local.yml run --rm -T --entrypoint /bin/sh backup /scripts/counts.sh > counts-source.txt
-          cat counts-source.txt
-          grep -q '^task [1-9]' counts-source.txt
-
-      - name: Throw the instance away
-        run: docker compose -f compose.local.yml down -v
-
-      - name: Start an empty Postgres
-        run: docker compose -f compose.local.yml up -d --wait postgres
-
       - name: A truncated dump is refused before touching anything
         run: |
           gunzip -c "backups/$DUMP" | head -n -50 | gzip > backups/truncated.sql.gz
@@ -114,39 +95,32 @@ jobs:
           left=$(docker compose -f compose.local.yml exec -T postgres \
             psql -U riuna -d postgres -tAc "select count(*) from pg_database where datname like 'riuna_truncated%'")
           test "$left" = "0"
+          rm backups/truncated.sql.gz
 
-      - name: Restore the dump
-        run: docker compose -f compose.local.yml run --rm -T --entrypoint /bin/sh backup /scripts/restore.sh "/backups/$DUMP"
+      - name: Drill - restore in a clean project and run the smoke against it
+        run: sh deploy/simulacro.sh --humo "backups/$DUMP"
 
+      # Nada cambio despues de la copia: los recuentos tienen que ser iguales.
       - name: The restored database has the same rows
-        run: |
-          docker compose -f compose.local.yml run --rm -T --entrypoint /bin/sh backup /scripts/counts.sh > counts-restored.txt
-          diff counts-source.txt counts-restored.txt
+        run: diff deploy/.simulacro/recuentos-instancia.txt deploy/.simulacro/recuentos-copia.txt
 
-      - name: Start the instance on the restored database
-        run: docker compose -f compose.local.yml up -d --wait --wait-timeout 180 api web
-
-      - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Smoke against the restored instance
-        run: pnpm test:e2e
-        env:
-          E2E_BASE_URL: http://localhost:5173
-          E2E_API_URL: http://localhost:1337
-
-      - name: API log
+      - name: Drill API log
         if: failure()
-        run: docker compose -f compose.local.yml logs --tail=200 api
+        run: |
+          docker compose -p riuna-simulacro --env-file deploy/.simulacro/simulacro.env \
+            -f compose.local.yml -f deploy/simulacro.compose.yml logs --tail=200 api || true
 
       - name: Upload traces of failed tests
         if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: restore-drill-traces
-          path: test-results/
+          path: deploy/.simulacro/test-results/
           retention-days: 7
 
       - name: Clean up
         if: always()
-        run: docker compose -f compose.local.yml down -v
+        run: |
+          sh deploy/simulacro.sh --down || true
+          docker compose -f compose.local.yml down -v
+          sudo rm -rf deploy/.simulacro

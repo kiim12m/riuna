@@ -64,6 +64,8 @@ apps/web/.tanstack/
 /backups/
 # rclone de la copia externa: token de Drive y claves del cifrado (ADR 072)
 /deploy/rclone/
+# El simulacro de restauracion: su .env generado y su copia (ADR 072)
+/deploy/.simulacro/
 
 # Artefactos locales de Claude Code y del arranque directo de la API: cambian
 # en cada sesion y llevan rutas de la maquina de quien los genera.

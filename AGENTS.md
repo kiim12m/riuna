@@ -114,7 +114,7 @@ What survives in `.github/workflows/`:
 
 - `ci.yml` — lint, typecheck and tests on push and pull request. The safety net; keep it green.
 - `nightly.yml` — scheduled verification with a real PostgreSQL service.
-- `restore-drill.yml` — nightly (and on PRs touching backups, images or migrations): builds the `compose.local.yml` images, seeds, backs up, restores into an empty Postgres and runs the full smoke against the restored instance (ADR 072).
+- `restore-drill.yml` — nightly (and on PRs touching backups, images or migrations): builds the `compose.local.yml` images, seeds and backs up, then runs `deploy/simulacro.sh --humo` — the same script used on the PC with the real backup — which restores into an isolated Compose project and runs the full smoke from a Playwright container (ADR 072).
 - `docker.yml` → `build-images.yml` — manual dispatch that builds and pushes images to `ghcr.io/<owner>/…` under **your** namespace.
 - `helm-chart.yml` → `helm-validate.yml` — packages and validates the Helm chart.
 
