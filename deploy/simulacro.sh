@@ -86,16 +86,6 @@ secret() {
   od -An -tx1 -N24 /dev/urandom | tr -d ' \n'
 }
 
-# Para mirarlo en el navegador del PC, las URL son las de localhost; para el
-# humo, que corre dentro de la red del simulacro, las de sus servicios.
-if [ "$smoke" = true ]; then
-  client_url=http://web:5173
-  api_url=http://api:1337
-else
-  client_url=http://localhost:5183
-  api_url=http://localhost:1347
-fi
-
 mkdir -p "$DIR/backups"
 cp "$dump" "$DIR/backups/$name"
 {
@@ -111,8 +101,10 @@ cp "$dump" "$DIR/backups/$name"
   echo "POSTGRES_PASSWORD=$(secret)"
   echo "AUTH_SECRET=$(secret)$(secret)"
   echo "NOTIFICATION_SECRET_ENCRYPTION_KEY=$(secret)$(secret)"
-  echo "RIUNA_CLIENT_URL=$client_url"
-  echo "RIUNA_API_URL=$api_url"
+  # Las de localhost, tanto para mirarlo en el navegador del PC como para el
+  # humo, que las alcanza por deploy/simulacro-proxy.mjs.
+  echo "RIUNA_CLIENT_URL=http://localhost:5183"
+  echo "RIUNA_API_URL=http://localhost:1347"
   echo "DISABLE_REGISTRATION=false"
   echo "RIUNA_DISABLE_SCHEDULER=true"
   echo "RATE_LIMIT_ENABLED=false"
@@ -162,5 +154,5 @@ if drill --profile smoke run --rm smoke; then
   echo "simulacro con: sh deploy/simulacro.sh --down"
 else
   fail "el humo ha fallado contra la copia. Las trazas estan en $DIR/test-results, y
-el simulacro sigue en marcha (para mirarlo en el navegador, relanza sin --humo)."
+el simulacro sigue en marcha en http://localhost:5183 para mirarlo."
 fi
