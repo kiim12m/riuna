@@ -44,6 +44,7 @@ import githubIntegration, {
   handleGithubWebhookRoute,
 } from "./github-integration";
 import goal from "./goal";
+import instance from "./instance";
 import getInstanceStatus from "./instance/controllers/get-instance-status";
 import invitation from "./invitation";
 import label from "./label";
@@ -728,6 +729,7 @@ export function createApp() {
   const externalLinkApi = api.route("/external-link", externalLink);
   const workflowRuleApi = api.route("/workflow-rule", workflowRule);
   const automationApi = api.route("/automation", automation);
+  const instanceApi = api.route("/instance", instance);
   const invitationApi = api.route("/invitation", invitation);
   const workspaceApi = api.route("/workspace", workspace);
   const userApi = api.route("/user", user);
@@ -917,6 +919,7 @@ export function createApp() {
     userApi,
     workflowRuleApi,
     automationApi,
+    instanceApi,
     workspaceApi,
     oauthApi,
   };
@@ -1030,6 +1033,7 @@ const {
   userApi,
   workflowRuleApi,
   automationApi,
+  instanceApi,
   workspaceApi,
   oauthApi,
 } = createdApp;
@@ -1093,6 +1097,7 @@ export type AppType =
   | typeof externalLinkApi
   | typeof workflowRuleApi
   | typeof automationApi
+  | typeof instanceApi
   | typeof invitationApi
   | typeof workspaceApi
   | typeof userApi

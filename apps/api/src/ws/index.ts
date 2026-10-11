@@ -208,6 +208,23 @@ export function removeConnection(projectId: string, conn: ProjectConnection) {
   }
 }
 
+/**
+ * Las conexiones abiertas en este proceso, para el estado de la instancia
+ * (ADR 075): las de usuario —una por pestaña— y las de proyecto, que cada
+ * pestaña abre al mirar un tablero o una lista.
+ */
+export function openConnectionCounts() {
+  let users = 0;
+  for (const connections of userConnections.values()) {
+    users += connections.size;
+  }
+  let projects = 0;
+  for (const connections of projectConnections.values()) {
+    projects += connections.size;
+  }
+  return { users, projects };
+}
+
 export function broadcastToProject(
   projectId: string,
   message: ProjectBroadcastMessage,

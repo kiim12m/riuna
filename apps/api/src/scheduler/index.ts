@@ -1,6 +1,8 @@
 import * as Sentry from "@sentry/node";
 import { Cron } from "croner";
 import { checkAutomations } from "../automation/scheduled";
+import { checkInstanceHealth } from "../instance/alerts";
+import { type JobRunStatus, recordJobRun } from "../instance/job-status";
 import { generateRecurringTasks } from "../recurrence/generate";
 import { log } from "../utils/log";
 import { checkDueDateReminders } from "./due-date-reminders";
@@ -22,15 +24,20 @@ type JobOutcome = { degraded?: boolean };
 // the scheduler via an unhandled rejection.
 //
 // Each run also leaves a log line (ADR 073): debug when it went well — every
-// five minutes that would be noise — and warn or error when it did not.
-function withCheckIn<T>(name: string, fn: () => Promise<T>) {
+// five minutes that would be noise — and warn or error when it did not. And
+// its outcome goes to `job_status`, which the instance status page shows and
+// the "keeps failing" alert watches (ADR 075).
+export function withCheckIn<T>(name: string, fn: () => Promise<T>) {
   return async (): Promise<void> => {
     const checkInId = Sentry.captureCheckIn({
       monitorSlug: name,
       status: "in_progress",
     });
+    const startedAt = new Date();
     const started = performance.now();
     const elapsed = () => Math.round(performance.now() - started);
+    const record = (status: JobRunStatus, error?: unknown) =>
+      recordJobRun(name, { startedAt, finishedAt: new Date(), status, error });
     try {
       const result = await fn();
       const degraded = Boolean(
@@ -52,6 +59,7 @@ function withCheckIn<T>(name: string, fn: () => Promise<T>) {
           durationMs: elapsed(),
         });
       }
+      await record(degraded ? "degraded" : "ok");
     } catch (error) {
       Sentry.captureException(error, { tags: { area: "cron", job: name } });
       Sentry.captureCheckIn({
@@ -63,6 +71,7 @@ function withCheckIn<T>(name: string, fn: () => Promise<T>) {
         job: name,
         durationMs: elapsed(),
       });
+      await record("error", error);
     }
   };
 }
@@ -125,6 +134,21 @@ export function initializeScheduler(): number {
             degraded: false,
           }),
         ),
+      ),
+    ),
+  );
+  // La salud de la instancia (ADR 075): copias, copia externa y trabajos que
+  // fallan seguido. Con arrendamiento para que dos instancias no avisen dos
+  // veces de lo mismo.
+  jobs.push(
+    new Cron(
+      "*/15 * * * *",
+      withCheckIn("instance-health", () =>
+        withJobLease("instance-health", checkInstanceHealth, () => ({
+          degraded: false,
+          opened: 0,
+          resolved: 0,
+        })),
       ),
     ),
   );

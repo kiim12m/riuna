@@ -3,6 +3,7 @@ import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 import { matchedRoutes } from "hono/route";
 import { log, withRequestContext } from "./log";
+import { recordRequest } from "./route-metrics";
 
 // Un id que llega de fuera se respeta solo si es razonable: va a cada línea de
 // log y a una cabecera de respuesta.
@@ -69,6 +70,11 @@ export const requestLog = createMiddleware<{
     durationMs: Math.round(performance.now() - started),
     userId: c.get("userId") || undefined,
   };
+
+  // Los preflight de CORS no dicen nada de lo lenta que va una pantalla.
+  if (fields.method !== "OPTIONS") {
+    recordRequest(fields.method, fields.route, status, fields.durationMs);
+  }
 
   if (status >= 500) {
     log.error("request", fields);

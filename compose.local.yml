@@ -99,6 +99,9 @@ services:
       # para saber que version sirve y a cual volver si la nueva no arranca.
       labels:
         org.opencontainers.image.revision: ${RIUNA_REVISION:-}
+      # Y dentro de la imagen, para que el estado de la instancia lo enseñe.
+      args:
+        RIUNA_REVISION: ${RIUNA_REVISION:-}
     ports:
       # Se entra por `tailscale serve`, que llega por localhost (ADR 071).
       - "${RIUNA_BIND_ADDRESS:-127.0.0.1}:1337:1337"
@@ -111,6 +114,11 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
+      # Las copias, de solo lectura: el estado de la instancia y sus alertas
+      # miran la ultima y lo que dejo la copia externa (ADR 075).
+      BACKUP_DIR: /backups
+    volumes:
+      - ./backups:/backups:ro
     depends_on:
       postgres:
         condition: service_healthy
