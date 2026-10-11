@@ -2678,21 +2678,43 @@ instancia.
     de un proxy de confianza, se ignora;
   - con la API empaquetada en producción, diez 401 y el undécimo intento es un 429.
 
-**Bloque 4 — Estado de la instancia y alertas** · M–L · ADR 075
-- **4.1** `job_status`: una fila por trabajo programado con su último resultado y los fallos
-  seguidos. Los tiempos por ruta (p50/p95) se guardan en memoria.
-- **4.2** El informe, solo para el admin de instancia:
-  - versión y SHA;
-  - base: tamaño y migraciones;
-  - trabajos y copias local y externa;
-  - Redis, WebSocket y rutas lentas.
-  - Además, `/api/health/ready`, que sí mira la base.
-- **4.3** La página «Estado de la instancia», en el menú del avatar.
-- **4.4** Alertas al admin de instancia por sus canales, una por condición, con aviso de
-  «resuelto»:
-  - copia local vieja;
-  - copia externa fallida;
-  - trabajo con tres fallos seguidos.
+**Bloque 4 — Estado de la instancia y alertas** · M–L ·
+[ADR 075](adr/075-estado-de-la-instancia-y-alertas.md) · **Hecho (2026-10-11)**
+- **4.1** ✔ Migración 0083, solo tablas nuevas:
+  - `job_status`: una fila por trabajo con la última vuelta, el estado, la duración, el último
+    éxito, los fallos seguidos y el último error, sin la consulta de las URL;
+  - `instance_alert`: con un índice único mientras está abierta.
+  - La escribe `withCheckIn`, así que vale para los siete trabajos sin tocarlos.
+  - Los tiempos por ruta (p50 y p95 de las últimas 200 peticiones) van en memoria y no cuentan
+    los preflight de CORS.
+- **4.2** ✔ `GET /api/instance/report`, solo para el admin de instancia y solo con sesión.
+  - Enseña:
+    - versión, commit (`RIUNA_REVISION`, que ahora se sella en la imagen) y tiempo en marcha;
+    - la base y sus migraciones;
+    - los trabajos;
+    - las copias, desde `BACKUP_DIR`, que `compose.local.yml` monta de solo lectura;
+    - Redis y WebSocket;
+    - rutas lentas, problemas y alertas;
+    - **la IP con la que la API ve a quien pregunta**.
+  - Con Valibot y OpenAPI.
+- **4.3** ✔ «Estado de la instancia» en el menú del avatar, solo para el admin de instancia.
+  Se refresca cada minuto.
+  - **Pasada visual** a 1440 y 390 px, en los dos temas: sin desbordamiento.
+  - De ella salieron el margen que faltaba, los preflight que llenaban la tabla de rutas y dos
+    plurales mal hechos.
+- **4.4** ✔ El trabajo `instance-health`, cada 15 minutos y con arrendamiento.
+  - Abre una alerta cuando la copia local se retrasa, la copia externa deja de subir o un
+    trabajo falla tres veces seguidas.
+  - Avisa al admin de instancia por sus canales una vez, y otra al resolverse.
+  - Sin `BACKUP_DIR` no alerta de copias.
+- **Pruebas**:
+  - 8 unitarias de las condiciones y 4 de los tiempos por ruta;
+  - 6 de integración: 403 a quien no es admin y a una clave de API, el informe completo (sin el
+    token del error), los fallos seguidos que se reinician y la alerta que se abre, no se
+    repite, no llega a quien no es admin y se cierra;
+  - un e2e que promueve al usuario por la base y abre la página desde el avatar; contra el
+    simulacro se salta;
+  - la entrada del menú, en la unitaria del hook.
 
 **Bloque 5 — Índices con datos reales y presupuesto** · S–M
 - **5.1** `scripts/ops/informe-bd.sh` saca solo estadísticas, sin filas: índices sin uso,

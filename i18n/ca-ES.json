@@ -1742,6 +1742,82 @@
 				"pending_other": "{{count}} tareas en el proyecto nuevo «{{name}}»",
 				"failure": "Fila {{row}}: {{error}}"
 			}
+		},
+		"instance": {
+			"pageTitle": "Estado de la instancia",
+			"refreshNote": "Se actualiza cada minuto.",
+			"allGood": "Todo en orden",
+			"problemsTitle_one": "Una cosa necesita atención",
+			"problemsTitle_other": "{{count}} cosas necesitan atención",
+			"notified": "Avisado al admin",
+			"loadError": "No se pudo cargar el estado de la instancia.",
+			"rateLimitOff": "Los límites de tasa están apagados (RATE_LIMIT_ENABLED=false).",
+			"version": {
+				"title": "Versión",
+				"commit": "Commit {{revision}}",
+				"noRevision": "Construida sin sello de commit",
+				"started": "En marcha desde {{when}}"
+			},
+			"database": {
+				"title": "Base de datos",
+				"postgres": "PostgreSQL {{version}}",
+				"migrations": "{{applied}} de {{bundled}} migraciones",
+				"pending": "Migraciones pendientes"
+			},
+			"backups": {
+				"title": "Copias",
+				"notConfigured": "La API no ve el directorio de copias (BACKUP_DIR).",
+				"none": "Todavía no hay copias",
+				"latest": "La última, {{when}} · {{size}}",
+				"count": "Copias locales: {{count}}",
+				"offsite": "Fuera de la máquina",
+				"offsiteOff": "Sin montar",
+				"offsiteOk": "Subida {{when}} · copias fuera: {{count}}",
+				"offsiteError": "Falla: {{message}}"
+			},
+			"realtime": {
+				"title": "Tiempo real",
+				"redisOn": "Con Redis",
+				"redisOff": "En memoria",
+				"connections": "Pestañas abiertas: {{users}} · vistas de proyecto: {{projects}}"
+			},
+			"jobs": {
+				"title": "Trabajos programados",
+				"disabled": "El planificador está apagado (RIUNA_DISABLE_SCHEDULER).",
+				"empty": "Todavía no hay vueltas apuntadas.",
+				"job": "Trabajo",
+				"status": "Estado",
+				"lastRun": "Última vuelta",
+				"duration": "Duración",
+				"failures": "Fallos seguidos",
+				"error": "Último error",
+				"statusOk": "Bien",
+				"statusDegraded": "A medias",
+				"statusError": "Falló",
+				"names": {
+					"dueDateReminders": "Recordatorios de vencimiento",
+					"projectWebhookReminders": "Recordatorios por webhook",
+					"seatReconciliation": "Conciliación de plazas",
+					"trialReminders": "Avisos de prueba",
+					"recurringTasks": "Tareas recurrentes",
+					"automations": "Automatizaciones",
+					"instanceHealth": "Salud de la instancia"
+				}
+			},
+			"routes": {
+				"title": "Rutas más lentas",
+				"note": "Desde que arrancó la API: se pierde al reiniciar.",
+				"empty": "Todavía no hay peticiones suficientes.",
+				"route": "Ruta",
+				"requests": "Peticiones",
+				"errors": "5xx",
+				"serverErrors": "Errores de servidor desde el arranque: {{count}}"
+			},
+			"you": {
+				"title": "Tu IP, según la API",
+				"hint": "Detrás de tailscale serve debería ser tu dirección de Tailscale (100.x).",
+				"unknown": "Desconocida"
+			}
 		}
 	},
 	"navigation": {
@@ -1787,7 +1863,8 @@
 			"projectSettings": "Configuració del projecte",
 			"more": "Més",
 			"backToBoard": "Torna al tauler",
-			"team": "Mi equipo"
+			"team": "Mi equipo",
+			"instanceStatus": "Estado de la instancia"
 		},
 		"projectList": {
 			"viewProject": "Mostra el projecte",

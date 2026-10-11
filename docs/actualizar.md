@@ -74,7 +74,13 @@ montar `serve`, deja fuera a todo el que entraba por la IP.
 3. `docker compose -f compose.local.yml up -d`, que recrea `api` y `web` con las URL nuevas.
 4. Abre `https://<pc>.<tailnet>.ts.net`, entra y comprueba que el tablero se actualiza solo
    (WebSocket). Hazlo también desde el móvil, con Tailscale activo.
-5. Ya puedes actualizar con el guion.
+5. Ya puedes actualizar con el guion: `sh deploy/actualizar.sh`.
+6. Con la versión nueva en marcha, abre **Estado de la instancia** en el menú del avatar
+   ([ADR 075](adr/075-estado-de-la-instancia-y-alertas.md)):
+   - en «Tu IP, según la API» tiene que salir tu dirección de Tailscale (`100.x.x.x`), no una
+     `172.x` de Docker. Si sale la de Docker, `tailscale serve` no pasa `X-Forwarded-For`, y
+     los límites de entrar contarían a todo el mundo junto (ADR 074);
+   - en «Copias» debe aparecer la última.
 
 Lo que cambia de dirección con la URL nueva:
 

@@ -12,7 +12,7 @@ Riuna es una plataforma de productividad **self-hosted**: gestión de proyectos
 y tareas primero, CRM y ERP ligero después. Es un fork duro de
 [Kaneo](https://github.com/usekaneo/kaneo) v2.22.0 mantenido como programa
 independiente. A fecha de este documento están cerradas las fases 0 a 8 del
-plan; la 9 (operación) sigue pendiente. De la 8, los importadores de Trello,
+plan; la 9 (operación) está en curso. De la 8, los importadores de Trello,
 Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
 
 ---
@@ -685,10 +685,39 @@ no lista los proyectos Personal.
   renombrado al final. La **restauración está verificada**: comprueba el
   volcado antes de tocar nada y permite restaurar a una base de ensayo. Ver
   [copias de seguridad](copias-de-seguridad.md).
-- **Seis trabajos programados**: recordatorios de vencimiento, recordatorios
+- **Copia fuera de la máquina**: el servicio `offsite` sube las copias a Google Drive, cifradas
+  con rclone. Nunca sincroniza borrando, y no purga si las copias locales han dejado de llegar
+  ([ADR 072](adr/072-copias-fuera-de-la-maquina-y-simulacro.md)).
+- **Simulacro de restauración cada noche** en CI. Construye, siembra, copia, tira la
+  instancia, restaura en limpio, compara los recuentos y pasa el humo entero contra lo
+  restaurado.
+- **Actualizar con red** ([ADR 071](adr/071-la-instancia-del-pc-por-tailscale.md)):
+  `deploy/actualizar.sh` construye, copia, migra con la imagen nueva antes de cambiar la que
+  sirve (`node dist/migrate.js`), levanta y, si algo falla, dice cómo volver. La instancia del
+  PC solo escucha en localhost y se publica con `tailscale serve`.
+- **Siete trabajos programados**: recordatorios de vencimiento, recordatorios
   de webhook de proyecto, reconciliación de asientos, recordatorios de prueba,
-  generación de tareas recurrentes y automatizaciones (por fecha, el stand-up
-  programado y la purga de su historial a los 30 días).
+  generación de tareas recurrentes, automatizaciones (por fecha, el stand-up
+  programado y la purga de su historial a los 30 días) y la salud de la instancia.
+  Cada vuelta deja su resultado en `job_status`.
+- **Estado de la instancia** ([ADR 075](adr/075-estado-de-la-instancia-y-alertas.md)), para
+  el admin de instancia, en el menú del avatar. Enseña:
+  - versión y commit;
+  - la base y sus migraciones;
+  - los trabajos programados;
+  - las copias local y externa;
+  - el tiempo real;
+  - las rutas más lentas (p50 y p95);
+  - la IP con la que la API ve a quien pregunta.
+- **Alertas al admin de instancia** por sus canales (ntfy, Gotify, correo, webhook), cuando:
+  - la copia local se retrasa;
+  - la copia externa deja de subir;
+  - un trabajo programado falla tres veces seguidas.
+  Cada alerta avisa una vez y avisa de nuevo al resolverse.
+- **Logs estructurados** ([ADR 073](adr/073-logs-estructurados.md)):
+  - JSON por línea, con una por petición y un `requestId` que también sale en `X-Request-Id`;
+  - los secretos, tapados;
+  - todo 500, con su pila.
 - **«Hoy» es el día de Madrid** ([ADR 049](adr/049-la-api-vive-en-madrid.md)):
   la API corre en `Europe/Madrid` (fijado en su imagen) y PostgreSQL en UTC.
   Un vencimiento elegido en el calendario vence ese día, no el anterior.
@@ -702,8 +731,8 @@ no lista los proyectos Personal.
   niega a correr contra una base cuyo nombre no acabe en `_bench` o `_test`.
 - Almacenamiento **S3** para adjuntos, con URL prefirmadas y limpieza de
   huérfanos.
-- 86 variables de entorno documentadas en `.env.sample`, con una guarda en CI
-  que impide añadir una sin documentar.
+- Todas las variables de entorno que lee la API, documentadas en `.env.sample`, con una guarda
+  en CI que impide añadir una sin documentar.
 
 ---
 
@@ -730,5 +759,4 @@ Para que nadie busque lo que no existe:
 - **Las vistas no paginan.** El presupuesto de 300 ms se cruza en torno a las
   6.500 tareas en un mismo proyecto.
 - ~~**Cambiar un campo personalizado no deja rastro en la actividad.**~~ Ya lo deja (con el valor anterior y el nuevo).
-- **Copias fuera de la máquina** y guía de actualización propia — fase 9.
 - **CRM y ERP** — bloque B del plan.

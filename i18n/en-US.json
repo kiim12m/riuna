@@ -1742,6 +1742,82 @@
 				"pending_other": "{{count}} tasks in the new project “{{name}}”",
 				"failure": "Row {{row}}: {{error}}"
 			}
+		},
+		"instance": {
+			"pageTitle": "Instance status",
+			"refreshNote": "Updates every minute.",
+			"allGood": "Everything in order",
+			"problemsTitle_one": "{{count}} thing needs attention",
+			"problemsTitle_other": "{{count}} things need attention",
+			"notified": "Admin notified",
+			"loadError": "Could not load the instance status.",
+			"rateLimitOff": "Rate limits are off (RATE_LIMIT_ENABLED=false).",
+			"version": {
+				"title": "Version",
+				"commit": "Commit {{revision}}",
+				"noRevision": "Built without a commit stamp",
+				"started": "Running since {{when}}"
+			},
+			"database": {
+				"title": "Database",
+				"postgres": "PostgreSQL {{version}}",
+				"migrations": "{{applied}} of {{bundled}} migrations",
+				"pending": "Migrations pending"
+			},
+			"backups": {
+				"title": "Backups",
+				"notConfigured": "The API cannot see the backup directory (BACKUP_DIR).",
+				"none": "No backups yet",
+				"latest": "Latest {{when}} · {{size}}",
+				"count": "Local copies: {{count}}",
+				"offsite": "Off-site",
+				"offsiteOff": "Not set up",
+				"offsiteOk": "Uploaded {{when}} · copies off-site: {{count}}",
+				"offsiteError": "Failing: {{message}}"
+			},
+			"realtime": {
+				"title": "Realtime",
+				"redisOn": "Through Redis",
+				"redisOff": "In memory",
+				"connections": "Open tabs: {{users}} · project views: {{projects}}"
+			},
+			"jobs": {
+				"title": "Scheduled jobs",
+				"disabled": "The scheduler is off (RIUNA_DISABLE_SCHEDULER).",
+				"empty": "No runs recorded yet.",
+				"job": "Job",
+				"status": "Status",
+				"lastRun": "Last run",
+				"duration": "Duration",
+				"failures": "Failures in a row",
+				"error": "Last error",
+				"statusOk": "OK",
+				"statusDegraded": "Partial",
+				"statusError": "Failed",
+				"names": {
+					"dueDateReminders": "Due date reminders",
+					"projectWebhookReminders": "Webhook reminders",
+					"seatReconciliation": "Seat reconciliation",
+					"trialReminders": "Trial reminders",
+					"recurringTasks": "Recurring tasks",
+					"automations": "Automations",
+					"instanceHealth": "Instance health"
+				}
+			},
+			"routes": {
+				"title": "Slowest routes",
+				"note": "Since the API started: lost on restart.",
+				"empty": "Not enough requests yet.",
+				"route": "Route",
+				"requests": "Requests",
+				"errors": "5xx",
+				"serverErrors": "Server errors since start: {{count}}"
+			},
+			"you": {
+				"title": "Your IP, as the API sees it",
+				"hint": "Behind tailscale serve it should be your Tailscale address (100.x).",
+				"unknown": "Unknown"
+			}
 		}
 	},
 	"navigation": {
@@ -1787,7 +1863,8 @@
 			"projectSettings": "Project settings",
 			"more": "More",
 			"backToBoard": "Back to board",
-			"team": "My team"
+			"team": "My team",
+			"instanceStatus": "Instance status"
 		},
 		"projectList": {
 			"viewProject": "View Project",
