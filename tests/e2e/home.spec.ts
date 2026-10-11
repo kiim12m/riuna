@@ -86,7 +86,9 @@ test.describe("Panel personal", () => {
     page,
     riuna,
     browser,
+    baseURL,
   }) => {
+    const origin = baseURL ?? "http://localhost:5174";
     const taskId = await createTask(riuna, "Llega sola");
 
     await page.goto(`/dashboard/workspace/${riuna.workspaceId}/home`);
@@ -101,7 +103,7 @@ test.describe("Panel personal", () => {
     await otherPage.request.post(`${API_URL}/api/auth/sign-in/email`, {
       headers: {
         "content-type": "application/json",
-        Origin: "http://localhost:5174",
+        Origin: origin,
       },
       data: { email: riuna.email, password: "E2e-passw0rd!" },
     });
@@ -112,7 +114,7 @@ test.describe("Panel personal", () => {
         {
           headers: {
             "content-type": "application/json",
-            Origin: "http://localhost:5174",
+            Origin: origin,
           },
           data: { userId },
         },

@@ -47,7 +47,16 @@ function withCheckIn<T>(name: string, fn: () => Promise<T>) {
   };
 }
 
-export function initializeScheduler(): void {
+/** Arranca los trabajos programados y devuelve cuántos. */
+export function initializeScheduler(): number {
+  // Una instancia restaurada para un simulacro (ADR 072) trae las reglas, los
+  // stand-ups programados y los recordatorios de la de verdad: con el
+  // planificador en marcha, una copia mandaria mensajes reales a chats reales.
+  if (process.env.RIUNA_DISABLE_SCHEDULER === "true") {
+    console.warn("⏸️ Scheduler disabled (RIUNA_DISABLE_SCHEDULER=true)");
+    return 0;
+  }
+
   jobs.push(
     new Cron(
       "*/5 * * * *",
@@ -102,6 +111,7 @@ export function initializeScheduler(): void {
   console.log(
     "⏰ Scheduler started (reminders every 5 minutes, seat reconciliation and trial reminders hourly)",
   );
+  return jobs.length;
 }
 
 export function shutdownScheduler(): void {
