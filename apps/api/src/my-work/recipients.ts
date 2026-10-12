@@ -23,6 +23,8 @@ export const MY_WORK_EVENTS = [
   "task.team_changed",
   "task.team_unassigned",
   "task.deleted",
+  // Entrar o salir de lo que observo cambia «Observando» (ADR 076).
+  "task.watchers_changed",
 ] as const;
 
 export type MyWorkEvent = (typeof MY_WORK_EVENTS)[number];
@@ -109,6 +111,12 @@ export async function recipientsForMyWork(
       if (oldTeamId) {
         for (const id of await membersOfTeams([oldTeamId])) add(id);
       }
+      break;
+    }
+
+    case "task.watchers_changed": {
+      for (const id of asIdList(data.addedIds)) add(id);
+      for (const id of asIdList(data.removedIds)) add(id);
       break;
     }
 

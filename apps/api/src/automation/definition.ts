@@ -141,6 +141,8 @@ export const actionSchema = v.variant("type", [
       creator: v.optional(v.boolean()),
       teamMembers: v.optional(v.boolean()),
       teamLeads: v.optional(v.boolean()),
+      // Quien la observa a proposito (ADR 076); los asignados van aparte.
+      watchers: v.optional(v.boolean()),
       userIds: v.optional(ids),
     }),
     message: template,

@@ -461,7 +461,7 @@ export function registerMcpTools(
           .string()
           .optional()
           .describe(
-            'A filter as JSON, the same the views use: {"type":"condition","field":"custom.presupuesto","operator":"gt","value":1000}, or several combined with {"type":"and","children":[…]} or {"type":"or","children":[…]}, and negated with {"type":"not","child":…}. Fields: title, description, status, priority, number, dueDate, assignee, team, done, completedAt, epic and assignees (by id), label (by name) and custom.<key>.',
+            'A filter as JSON, the same the views use: {"type":"condition","field":"custom.presupuesto","operator":"gt","value":1000}, or several combined with {"type":"and","children":[…]} or {"type":"or","children":[…]}, and negated with {"type":"not","child":…}. Fields: title, description, status, priority, number, dueDate, assignee, team, done, completedAt, epic, assignees and watchers (by id), label (by name) and custom.<key>.',
           ),
         treeScope: z
           .enum(["matching", "roots", "withDescendants"])
@@ -864,6 +864,61 @@ export function registerMcpTools(
         client.json(`/api/task-relation/${encodeURIComponent(args.id)}`, {
           method: "DELETE",
         }),
+      ),
+  );
+
+  registerTool(
+    "get_task_watchers",
+    {
+      description:
+        "Who watches a task. Assignees always do (assignee: true); watching: true means the person watches it on purpose, which is what unwatch_task removes. Watchers get the task's comments and status and due date changes as notifications.",
+      inputSchema: z.object({ taskId: nonEmptyString }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/task-watcher/${encodeURIComponent(args.taskId)}`, {
+          method: "GET",
+        }),
+      ),
+  );
+
+  registerTool(
+    "watch_task",
+    {
+      description:
+        "Watch a task so its comments and status and due date changes arrive as notifications. Without userId it is the current user; adding someone else needs the task:assign permission and a workspace member. Returns the watchers.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        userId: nonEmptyString.optional(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/task-watcher/${encodeURIComponent(args.taskId)}`, {
+          method: "POST",
+          body: JSON.stringify(args.userId ? { userId: args.userId } : {}),
+        }),
+      ),
+  );
+
+  registerTool(
+    "unwatch_task",
+    {
+      description:
+        "Stop watching a task. Without userId it is the current user; removing someone else needs task:assign. An assignee keeps getting notified while assigned. Returns the watchers.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        userId: nonEmptyString.optional(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/task-watcher/${encodeURIComponent(args.taskId)}${
+            args.userId ? `?userId=${encodeURIComponent(args.userId)}` : ""
+          }`,
+          { method: "DELETE" },
+        ),
       ),
   );
 

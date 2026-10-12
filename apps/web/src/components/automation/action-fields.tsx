@@ -223,7 +223,7 @@ export function ActionFields({
     case "notify": {
       const recipients = action.recipients;
       const toggle = (
-        key: "assignees" | "creator" | "teamMembers" | "teamLeads",
+        key: "assignees" | "creator" | "watchers" | "teamMembers" | "teamLeads",
       ) => (
         <Label key={key} className="flex items-center gap-2 font-normal">
           <Checkbox
@@ -246,6 +246,7 @@ export function ActionFields({
             </legend>
             {toggle("assignees")}
             {toggle("creator")}
+            {toggle("watchers")}
             {toggle("teamMembers")}
             {toggle("teamLeads")}
           </fieldset>

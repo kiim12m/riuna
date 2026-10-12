@@ -69,6 +69,19 @@ function getNumberValue(
   return typeof value === "number" ? value : null;
 }
 
+// Un vencimiento es un dia de Madrid guardado como su medianoche (ADR 049):
+// cortar el ISO daria el dia anterior.
+function formatDay(iso: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Madrid",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
 function formatLeadTime(minutes: number | null) {
   if (!minutes) return "soon";
   if (minutes % 1440 === 0) {
@@ -138,7 +151,9 @@ function buildDeliveryContent(notification: {
         body:
           taskTitle && oldStatus && newStatus
             ? `${taskTitle} moved from ${oldStatus} to ${newStatus}.`
-            : "A task status changed in Riuna.",
+            : taskTitle && newStatus
+              ? `${taskTitle} moved to ${newStatus}.`
+              : "A task status changed in Riuna.",
       };
     }
     case "task_assignee_changed": {
@@ -201,13 +216,29 @@ function buildDeliveryContent(notification: {
         notification.eventData,
         "commenterName",
       );
+      const watching =
+        getStringValue(notification.eventData, "reason") === "watcher";
       return {
         title: commenterName
-          ? `${commenterName} commented on your task`
+          ? watching
+            ? `${commenterName} commented on a task you watch`
+            : `${commenterName} commented on your task`
           : "New task comment",
         body: taskTitle
           ? `A new comment was added to ${taskTitle}.`
           : "A new comment was added to a Riuna task.",
+      };
+    }
+    case "task_due_date_changed": {
+      const taskTitle = getStringValue(notification.eventData, "taskTitle");
+      const newDueDate = getStringValue(notification.eventData, "newDueDate");
+      return {
+        title: "Due date changed",
+        body: !taskTitle
+          ? "A task due date changed in Riuna."
+          : newDueDate
+            ? `"${taskTitle}" is now due ${formatDay(newDueDate)}.`
+            : `"${taskTitle}" no longer has a due date.`,
       };
     }
     default:

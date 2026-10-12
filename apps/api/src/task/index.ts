@@ -309,6 +309,7 @@ const task = new Hono<{
         status,
         parentId,
         estimate,
+        creatorWatches: true,
       });
 
       return c.json(task);

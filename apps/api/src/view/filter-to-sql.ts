@@ -4,6 +4,7 @@ import {
   taskAssigneeTable,
   taskEpicTable,
   taskTable,
+  taskWatcherTable,
 } from "../database/schema";
 import { addDays } from "../utils/day-boundaries";
 import type {
@@ -11,6 +12,11 @@ import type {
   FieldRegistry,
   ValueType,
 } from "./field-registry";
+
+type MembershipRelation = Extract<
+  FieldDescriptor,
+  { kind: "membership" }
+>["relation"];
 
 export type FilterOperator =
   | "eq"
@@ -315,7 +321,7 @@ function toList(value: unknown): unknown[] {
 // paginada que filtrase en memoria devolveria paginas incompletas, que es la
 // razon por la que el filtro de epicas ya se escribio asi en la Fase 2.
 function membershipCondition(
-  relation: "epic" | "label" | "assignee",
+  relation: MembershipRelation,
   ids: unknown[],
 ): SQL {
   switch (relation) {
@@ -335,6 +341,10 @@ function membershipCondition(
       return sql`EXISTS (SELECT 1 FROM ${taskAssigneeTable}
         WHERE ${taskAssigneeTable.taskId} = ${taskTable.id}
         AND ${taskAssigneeTable.userId} IN ${ids})`;
+    case "watcher":
+      return sql`EXISTS (SELECT 1 FROM ${taskWatcherTable}
+        WHERE ${taskWatcherTable.taskId} = ${taskTable.id}
+        AND ${taskWatcherTable.userId} IN ${ids})`;
   }
 }
 
@@ -477,7 +487,7 @@ function conditionToSql(
   }
 }
 
-function membershipExists(relation: "epic" | "label" | "assignee"): SQL {
+function membershipExists(relation: MembershipRelation): SQL {
   switch (relation) {
     case "epic":
       return sql`EXISTS (SELECT 1 FROM ${taskEpicTable}
@@ -488,6 +498,9 @@ function membershipExists(relation: "epic" | "label" | "assignee"): SQL {
     case "assignee":
       return sql`EXISTS (SELECT 1 FROM ${taskAssigneeTable}
         WHERE ${taskAssigneeTable.taskId} = ${taskTable.id})`;
+    case "watcher":
+      return sql`EXISTS (SELECT 1 FROM ${taskWatcherTable}
+        WHERE ${taskWatcherTable.taskId} = ${taskTable.id})`;
   }
 }
 

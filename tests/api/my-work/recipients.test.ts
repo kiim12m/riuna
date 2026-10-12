@@ -41,6 +41,12 @@ describe("recipientsForMyWork", () => {
       ],
       ["task.unassigned", { previousAssigneeId: "ana" }, ["ana"]],
       ["task.status_changed", { assigneeId: "ana" }, ["ana"]],
+      // Quien entra o sale de lo que observa (ADR 076).
+      [
+        "task.watchers_changed",
+        { addedIds: ["ana"], removedIds: ["luis"] },
+        ["ana", "luis"],
+      ],
     ];
 
     for (const [eventName, data, expected] of cases) {

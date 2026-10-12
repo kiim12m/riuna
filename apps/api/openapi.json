@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://100.87.147.114:1337/api",
+      "url": "https://riuna-lix.tail01016d.ts.net/api",
       "description": "Riuna API Server"
     }
   ],
@@ -9160,7 +9160,8 @@
                           "due_date_reminder",
                           "task_overdue",
                           "task_mention",
-                          "task_comment"
+                          "task_comment",
+                          "task_due_date_changed"
                         ],
                         "type": "string"
                       },
@@ -9288,7 +9289,8 @@
                         "due_date_reminder",
                         "task_overdue",
                         "task_mention",
-                        "task_comment"
+                        "task_comment",
+                        "task_due_date_changed"
                       ],
                       "type": "string"
                     },
@@ -9445,7 +9447,8 @@
                         "due_date_reminder",
                         "task_overdue",
                         "task_mention",
-                        "task_comment"
+                        "task_comment",
+                        "task_due_date_changed"
                       ],
                       "type": "string"
                     },
@@ -13161,6 +13164,205 @@
           }
         ],
         "summary": "List My Work Waiting"
+      }
+    },
+    "/my-work/watching": {
+      "get": {
+        "operationId": "listMyWorkWatching",
+        "tags": [
+          "My work"
+        ],
+        "description": "Open tasks the current user watches on purpose and isn't assigned to, most recently updated first. Capped at 100",
+        "responses": {
+          "200": {
+            "description": "The watched tasks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "number": {
+                            "type": "number"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "priority": {
+                            "type": "string"
+                          },
+                          "startDate": {
+                            "nullable": true
+                          },
+                          "dueDate": {
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "parentId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "depth": {
+                            "type": "number"
+                          },
+                          "projectId": {
+                            "type": "string"
+                          },
+                          "projectName": {
+                            "type": "string"
+                          },
+                          "projectSlug": {
+                            "type": "string"
+                          },
+                          "projectIcon": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "teamId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "teamName": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "statusColumn": {
+                            "type": "object",
+                            "properties": {
+                              "slug": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "icon": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "isFinal": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "slug",
+                              "name",
+                              "icon",
+                              "isFinal"
+                            ],
+                            "nullable": true
+                          },
+                          "isDone": {
+                            "type": "boolean"
+                          },
+                          "labels": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "color": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "color"
+                              ]
+                            }
+                          },
+                          "assignees": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": "string",
+                                  "nullable": true
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "image"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "number",
+                          "title",
+                          "status",
+                          "priority",
+                          "startDate",
+                          "dueDate",
+                          "createdAt",
+                          "userId",
+                          "parentId",
+                          "depth",
+                          "projectId",
+                          "projectName",
+                          "projectSlug",
+                          "projectIcon",
+                          "teamId",
+                          "teamName",
+                          "statusColumn",
+                          "isDone",
+                          "labels",
+                          "assignees"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "tasks"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true
+          }
+        ],
+        "summary": "List My Work Watching"
       }
     },
     "/my-work/tasks": {
@@ -21751,6 +21953,209 @@
         "summary": "Delete Task Relation"
       }
     },
+    "/task-watcher/{taskId}": {
+      "get": {
+        "operationId": "listTaskWatchers",
+        "tags": [
+          "Task Watchers"
+        ],
+        "description": "Who watches a task. Assignees always do and are flagged `assignee`; `watching` means a row of its own, which is what unwatching removes",
+        "responses": {
+          "200": {
+            "description": "Who watches the task: its assignees, who always do, and whoever watches it on purpose",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "userId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "image": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "watching": {
+                        "type": "boolean"
+                      },
+                      "assignee": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "userId",
+                      "name",
+                      "image",
+                      "watching",
+                      "assignee"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "List Task Watchers"
+      },
+      "post": {
+        "operationId": "watchTask",
+        "tags": [
+          "Task Watchers"
+        ],
+        "description": "Watch a task: its comments and its status and due date changes reach you as notifications. Without `userId` it is you; adding someone else needs task:assign and a member of the workspace",
+        "responses": {
+          "200": {
+            "description": "Who watches the task: its assignees, who always do, and whoever watches it on purpose",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "userId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "image": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "watching": {
+                        "type": "boolean"
+                      },
+                      "assignee": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "userId",
+                      "name",
+                      "image",
+                      "watching",
+                      "assignee"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Watch Task"
+      },
+      "delete": {
+        "operationId": "unwatchTask",
+        "tags": [
+          "Task Watchers"
+        ],
+        "description": "Stop watching a task. Without `userId` it is you; removing someone else needs task:assign. An assignee keeps being notified while assigned",
+        "responses": {
+          "200": {
+            "description": "Who watches the task: its assignees, who always do, and whoever watches it on purpose",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "userId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "image": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "watching": {
+                        "type": "boolean"
+                      },
+                      "assignee": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "userId",
+                      "name",
+                      "image",
+                      "watching",
+                      "assignee"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "userId",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "summary": "Unwatch Task"
+      }
+    },
     "/external-link/task/{taskId}": {
       "get": {
         "operationId": "getExternalLinksByTask",
@@ -22204,6 +22609,17 @@
                         "required": [
                           "type"
                         ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "manual"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
                       }
                     ]
                   },
@@ -22527,6 +22943,9 @@
                                   "type": "boolean"
                                 },
                                 "teamLeads": {
+                                  "type": "boolean"
+                                },
+                                "watchers": {
                                   "type": "boolean"
                                 },
                                 "userIds": {
@@ -22949,6 +23368,17 @@
                         "required": [
                           "type"
                         ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "manual"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
                       }
                     ]
                   },
@@ -23272,6 +23702,9 @@
                                   "type": "boolean"
                                 },
                                 "teamLeads": {
+                                  "type": "boolean"
+                                },
+                                "watchers": {
                                   "type": "boolean"
                                 },
                                 "userIds": {
@@ -23704,6 +24137,17 @@
                         "required": [
                           "type"
                         ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "manual"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
                       }
                     ]
                   },
@@ -24027,6 +24471,9 @@
                                   "type": "boolean"
                                 },
                                 "teamLeads": {
+                                  "type": "boolean"
+                                },
+                                "watchers": {
                                   "type": "boolean"
                                 },
                                 "userIds": {

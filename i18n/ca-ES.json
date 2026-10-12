@@ -1679,7 +1679,8 @@
 					"assignees": "Sus asignados",
 					"creator": "Quien la creó",
 					"teamMembers": "Su departamento",
-					"teamLeads": "El responsable de su departamento"
+					"teamLeads": "El responsable de su departamento",
+					"watchers": "Quien la observa"
 				},
 				"alsoPeople": "También a estas personas",
 				"message": "Mensaje",
@@ -2011,7 +2012,8 @@
 			},
 			"task_status_changed": {
 				"title": "El estado de una tarea ha cambiado",
-				"content": "El estado de la tarea \"{{taskTitle}}\" ha cambiado de \"{{oldStatus}}\" a \"{{newStatus}}\""
+				"content": "El estado de la tarea \"{{taskTitle}}\" ha cambiado de \"{{oldStatus}}\" a \"{{newStatus}}\"",
+				"contentWithoutOld": "La tarea \"{{taskTitle}}\" ha pasado a \"{{newStatus}}\""
 			},
 			"task_assignee_changed": {
 				"title": "Se te ha asignado una tarea",
@@ -2028,7 +2030,8 @@
 			},
 			"task_comment": {
 				"title": "{{commenterName}} ha comentado en tu tarea",
-				"content": "Nuevo comentario en {{taskTitle}}: {{commentPreview}}"
+				"content": "Nuevo comentario en {{taskTitle}}: {{commentPreview}}",
+				"titleWatching": "{{commenterName}} ha comentado en una tarea que observas"
 			},
 			"due_date_reminder": {
 				"title": "Tarea próxima a vencer",
@@ -2042,6 +2045,11 @@
 				"title": "Riuna · {{area}}",
 				"resolvedTitle": "Riuna · resuelto",
 				"resolvedContent": "Resuelto: {{area}}."
+			},
+			"task_due_date_changed": {
+				"title": "Ha cambiado el vencimiento",
+				"content": "{{taskTitle}} vence ahora el {{dueDate}}",
+				"contentCleared": "{{taskTitle}} ya no tiene vencimiento"
 			}
 		},
 		"reminderLeadTime": {
@@ -2652,7 +2660,8 @@
 				"assignee": "Responsable",
 				"dueDate": "Fecha límite",
 				"done": "Hecha",
-				"completedAt": "Fecha de cierre"
+				"completedAt": "Fecha de cierre",
+				"watchers": "Observada por"
 			},
 			"addField": "Añadir un campo",
 			"addFieldTitle": "Campo personalizado nuevo",
@@ -2792,6 +2801,21 @@
 			"title": "Archivar tareas",
 			"description_one": "¿Seguro que quieres archivar la tarea completada? Saldrá del tablero activo y pasará al archivo.",
 			"description_other": "¿Seguro que quieres archivar las {{count}} tareas completadas? Saldrán del tablero activo y pasarán al archivo."
+		},
+		"watchers": {
+			"watch": "Observar",
+			"watching": "Observando",
+			"title": "Observan esta tarea",
+			"empty": "Nadie observa esta tarea todavía.",
+			"you": "(tú)",
+			"assignee": "asignado",
+			"remove": "Quitar a {{name}}",
+			"help": "Quien observa recibe los comentarios y los cambios de estado y de vencimiento. Los asignados, siempre.",
+			"assignedHint": "Estás asignado: te llega igualmente.",
+			"stopWatching": "Dejar de observar",
+			"startWatching": "Observar esta tarea",
+			"add": "Añadir a alguien",
+			"updateError": "No se pudo cambiar quién observa"
 		}
 	},
 	"invitations": {
@@ -3279,7 +3303,8 @@
 			"board": "Tablero",
 			"gantt": "Gantt",
 			"table": "Tabla",
-			"waiting": "Esperando a"
+			"waiting": "Esperando a",
+			"watching": "Observando"
 		},
 		"table": {
 			"moreResults": "Mostrando {{shown}} de {{total}}. Acota con un filtro para ver el resto."
@@ -3304,6 +3329,17 @@
 			"empty": {
 				"title": "No esperas a nadie",
 				"description": "Aquí salen las tareas que asignas a otras personas y las tuyas bloqueadas por tareas ajenas."
+			}
+		},
+		"watching": {
+			"title": "Observando",
+			"description": "Lo que observas, sigue abierto y no tienes asignado; lo último que se movió, primero.",
+			"assignedTo": "La tiene {{names}}",
+			"unassigned": "Sin asignar",
+			"capped": "Se enseñan las {{limit}} primeras.",
+			"empty": {
+				"title": "No observas nada",
+				"description": "Observa una tarea desde su detalle, o coméntala, y aparecerá aquí."
 			}
 		}
 	},

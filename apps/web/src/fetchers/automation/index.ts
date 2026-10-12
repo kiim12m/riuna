@@ -64,6 +64,7 @@ export type Action = { id: string } & (
       recipients: {
         assignees?: boolean;
         creator?: boolean;
+        watchers?: boolean;
         teamMembers?: boolean;
         teamLeads?: boolean;
         userIds?: string[];

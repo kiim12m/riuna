@@ -30,6 +30,7 @@ async function updateTask(
       id: taskTable.id,
       description: taskTable.description,
       status: taskTable.status,
+      dueDate: taskTable.dueDate,
       projectId: taskTable.projectId,
       userId: taskTable.userId,
     })
@@ -122,6 +123,23 @@ async function updateTask(
     await publishEvent("task-relation.refresh", {
       projectId: updatedTask.projectId,
       userId: currentUserId,
+    });
+  }
+
+  // La edicion completa tambien mueve el vencimiento, y sin este evento ni los
+  // avisos de quien observa (ADR 076) ni las automatizaciones se enteraban.
+  if (
+    (existingTask.dueDate?.getTime() ?? null) !==
+    (updatedTask.dueDate?.getTime() ?? null)
+  ) {
+    await publishEvent("task.due_date_changed", {
+      taskId: updatedTask.id,
+      projectId: updatedTask.projectId,
+      userId: currentUserId,
+      oldDueDate: existingTask.dueDate,
+      newDueDate: updatedTask.dueDate,
+      title: updatedTask.title,
+      type: "due_date_changed",
     });
   }
 

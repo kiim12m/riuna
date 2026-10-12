@@ -1,3 +1,4 @@
+import { formatDateShort } from "@/lib/format";
 import { getStatusLabel } from "@/lib/i18n/domain";
 import { instanceAlertArea, instanceProblemText } from "@/lib/instance-alert";
 import type { Notification } from "@/types/notification";
@@ -76,8 +77,19 @@ export function getNotificationTitle(notification: Notification, t: Translate) {
           ...eventData,
           defaultValue: notification.title ?? notification.type,
         });
+      // A quien solo observa no se le dice «tu tarea» (ADR 076).
       case "task_comment":
-        return t("notifications:events.task_comment.title", {
+        return t(
+          eventData.reason === "watcher"
+            ? "notifications:events.task_comment.titleWatching"
+            : "notifications:events.task_comment.title",
+          {
+            ...eventData,
+            defaultValue: notification.title ?? notification.type,
+          },
+        );
+      case "task_due_date_changed":
+        return t("notifications:events.task_due_date_changed.title", {
           ...eventData,
           defaultValue: notification.title ?? notification.type,
         });
@@ -135,13 +147,19 @@ export function getNotificationContent(
           ...eventData,
           defaultValue: notification.content ?? "",
         });
+      // La edicion en bloque de antes no mandaba el estado anterior.
       case "task_status_changed":
-        return t("notifications:events.task_status_changed.content", {
-          ...eventData,
-          oldStatus: getStatusLabel(String(eventData.oldStatus ?? "")),
-          newStatus: getStatusLabel(String(eventData.newStatus ?? "")),
-          defaultValue: notification.content ?? "",
-        });
+        return t(
+          eventData.oldStatus
+            ? "notifications:events.task_status_changed.content"
+            : "notifications:events.task_status_changed.contentWithoutOld",
+          {
+            ...eventData,
+            oldStatus: getStatusLabel(String(eventData.oldStatus ?? "")),
+            newStatus: getStatusLabel(String(eventData.newStatus ?? "")),
+            defaultValue: notification.content ?? "",
+          },
+        );
       case "task_assignee_changed":
         return t("notifications:events.task_assignee_changed.content", {
           ...eventData,
@@ -167,6 +185,17 @@ export function getNotificationContent(
           ...eventData,
           defaultValue: notification.content ?? "",
         });
+      case "task_due_date_changed":
+        return typeof eventData.newDueDate === "string"
+          ? t("notifications:events.task_due_date_changed.content", {
+              ...eventData,
+              dueDate: formatDateShort(eventData.newDueDate),
+              defaultValue: notification.content ?? "",
+            })
+          : t("notifications:events.task_due_date_changed.contentCleared", {
+              ...eventData,
+              defaultValue: notification.content ?? "",
+            });
       case "due_date_reminder":
         return t("notifications:events.due_date_reminder.content", {
           ...eventData,

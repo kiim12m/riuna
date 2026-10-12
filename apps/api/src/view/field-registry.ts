@@ -25,8 +25,11 @@ export type FieldDescriptor =
   // Una clave dentro de `task.custom_fields`.
   | { kind: "json"; key: string; valueType: ValueType }
   // Pertenencia, que se resuelve con un EXISTS y no con una comparacion:
-  // epicas, etiquetas y asignados adicionales.
-  | { kind: "membership"; relation: "epic" | "label" | "assignee" };
+  // epicas, etiquetas, asignados adicionales y observadores.
+  | {
+      kind: "membership";
+      relation: "epic" | "label" | "assignee" | "watcher";
+    };
 
 export type FieldRegistry = Record<string, FieldDescriptor>;
 
@@ -89,6 +92,8 @@ export const BUILT_IN_FIELDS: FieldRegistry = {
   epic: { kind: "membership", relation: "epic" },
   label: { kind: "membership", relation: "label" },
   assignees: { kind: "membership", relation: "assignee" },
+  // Quien la observa a proposito (ADR 076). Los asignados ya tienen el suyo.
+  watchers: { kind: "membership", relation: "watcher" },
 };
 
 // Como se compara cada tipo de campo personalizado. `relation` no aparece: su
@@ -148,8 +153,8 @@ export function buildFieldRegistry(
  *   proyectos no significa nada.
  * - `parent` y `depth` describen un arbol que esta acotado al proyecto.
  *
- * `epic`, `label` y `assignees` **si** se quedan: casan por id o por nombre,
- * y los dos son estables en el espacio.
+ * `epic`, `label`, `assignees` y `watchers` **si** se quedan: casan por id o
+ * por nombre, y son estables en el espacio.
  */
 const PROJECT_SCOPED_FIELDS = [
   "status",

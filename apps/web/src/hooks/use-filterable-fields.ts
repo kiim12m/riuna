@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/components/providers/auth-provider/hooks/use-auth";
 import type { FieldDefinition } from "@/components/table-view/custom-field-cell";
 import useGetFieldDefinitions from "@/hooks/queries/field/use-get-field-definitions";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
@@ -63,6 +64,44 @@ export function customFieldsToFilterable(
   });
 }
 
+type MemberOption = {
+  userId: string;
+  user?: { name?: string | null } | null;
+};
+
+/**
+ * «Observada por» (ADR 076): quien la observa a proposito. Quien mira va
+ * primero y marcado, porque la pregunta casi siempre es «lo que observo yo».
+ * Guarda el id, como el filtro de asignado: el motor no sabe decir «yo».
+ */
+export function watchersFilterField(
+  members: MemberOption[],
+  currentUserId: string | undefined,
+  t: TFunction,
+): FilterableField {
+  const options = members.map((member) => ({
+    value: member.userId,
+    label: member.user?.name ?? "",
+  }));
+  const mine = options.findIndex((option) => option.value === currentUserId);
+  if (mine >= 0) {
+    const [me] = options.splice(mine, 1);
+    if (me) {
+      options.unshift({
+        ...me,
+        label: `${me.label} ${t("tasks:watchers.you")}`,
+      });
+    }
+  }
+
+  return {
+    key: "watchers",
+    label: t("tasks:table.columns.watchers"),
+    valueType: "id",
+    options,
+  };
+}
+
 /**
  * Los campos por los que se puede filtrar en un proyecto: los fijos que el
  * motor conoce mas los personalizados que apliquen.
@@ -76,6 +115,7 @@ export function useFilterableFields(projectId: string, workspaceId: string) {
   const { t } = useTranslation();
   const { data: definitions = [] } = useGetFieldDefinitions(projectId);
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
+  const { user } = useAuth();
 
   return useMemo<FilterableField[]>(() => {
     const members = workspaceUsers?.members ?? [];
@@ -114,6 +154,7 @@ export function useFilterableFields(projectId: string, workspaceId: string) {
           label: member.user?.name ?? "",
         })),
       },
+      watchersFilterField(members, user?.id, t),
       // "Hecha" es `completed_at IS NOT NULL`, que es la definicion unica del
       // producto. Filtrar por `status` obliga a saber el slug de la columna
       // final de **este** proyecto; esto no.
@@ -139,7 +180,7 @@ export function useFilterableFields(projectId: string, workspaceId: string) {
     );
 
     return [...builtIn, ...custom];
-  }, [definitions, workspaceUsers, t]);
+  }, [definitions, workspaceUsers, user?.id, t]);
 }
 
 export default useFilterableFields;

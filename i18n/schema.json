@@ -6538,13 +6538,17 @@
 										},
 										"teamLeads": {
 											"type": "string"
+										},
+										"watchers": {
+											"type": "string"
 										}
 									},
 									"required": [
 										"assignees",
 										"creator",
 										"teamMembers",
-										"teamLeads"
+										"teamLeads",
+										"watchers"
 									]
 								},
 								"alsoPeople": {
@@ -7989,9 +7993,12 @@
 								},
 								"content": {
 									"type": "string"
+								},
+								"contentWithoutOld": {
+									"type": "string"
 								}
 							},
-							"required": ["title", "content"]
+							"required": ["title", "content", "contentWithoutOld"]
 						},
 						"task_assignee_changed": {
 							"type": "object",
@@ -8028,9 +8035,12 @@
 								},
 								"content": {
 									"type": "string"
+								},
+								"titleWatching": {
+									"type": "string"
 								}
 							},
-							"required": ["title", "content"]
+							"required": ["title", "content", "titleWatching"]
 						},
 						"due_date_reminder": {
 							"type": "object",
@@ -8044,6 +8054,22 @@
 								}
 							},
 							"required": ["title", "content"]
+						},
+						"task_due_date_changed": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"content": {
+									"type": "string"
+								},
+								"contentCleared": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "content", "contentCleared"]
 						},
 						"task_overdue": {
 							"type": "object",
@@ -8100,6 +8126,7 @@
 						"task_mention",
 						"task_comment",
 						"due_date_reminder",
+						"task_due_date_changed",
 						"task_overdue",
 						"time_entry_created",
 						"instance_alert"
@@ -10442,6 +10469,9 @@
 								},
 								"completedAt": {
 									"type": "string"
+								},
+								"watchers": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -10451,7 +10481,8 @@
 								"assignee",
 								"dueDate",
 								"done",
-								"completedAt"
+								"completedAt",
+								"watchers"
 							]
 						},
 						"addField": {
@@ -10985,6 +11016,66 @@
 						}
 					},
 					"required": ["title", "description_one", "description_other"]
+				},
+				"watchers": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"watch": {
+							"type": "string"
+						},
+						"watching": {
+							"type": "string"
+						},
+						"title": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"you": {
+							"type": "string"
+						},
+						"assignee": {
+							"type": "string"
+						},
+						"remove": {
+							"type": "string"
+						},
+						"help": {
+							"type": "string"
+						},
+						"assignedHint": {
+							"type": "string"
+						},
+						"stopWatching": {
+							"type": "string"
+						},
+						"startWatching": {
+							"type": "string"
+						},
+						"add": {
+							"type": "string"
+						},
+						"updateError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"watch",
+						"watching",
+						"title",
+						"empty",
+						"you",
+						"assignee",
+						"remove",
+						"help",
+						"assignedHint",
+						"stopWatching",
+						"startWatching",
+						"add",
+						"updateError"
+					]
 				}
 			},
 			"required": [
@@ -11027,7 +11118,8 @@
 				"update",
 				"view",
 				"composer",
-				"archiveModal"
+				"archiveModal",
+				"watchers"
 			]
 		},
 		"invitations": {
@@ -12895,9 +12987,12 @@
 						},
 						"waiting": {
 							"type": "string"
+						},
+						"watching": {
+							"type": "string"
 						}
 					},
-					"required": ["list", "board", "gantt", "table", "waiting"]
+					"required": ["list", "board", "gantt", "table", "waiting", "watching"]
 				},
 				"table": {
 					"type": "object",
@@ -12988,6 +13083,48 @@
 						"capped",
 						"empty"
 					]
+				},
+				"watching": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"assignedTo": {
+							"type": "string"
+						},
+						"unassigned": {
+							"type": "string"
+						},
+						"capped": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"description": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "description"]
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"assignedTo",
+						"unassigned",
+						"capped",
+						"empty"
+					]
 				}
 			},
 			"required": [
@@ -12998,7 +13135,8 @@
 				"description",
 				"shownOf",
 				"loadMore",
-				"waiting"
+				"waiting",
+				"watching"
 			]
 		},
 		"planner": {

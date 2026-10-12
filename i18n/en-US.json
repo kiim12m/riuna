@@ -1679,7 +1679,8 @@
 					"assignees": "Its assignees",
 					"creator": "Whoever created it",
 					"teamMembers": "Its team",
-					"teamLeads": "Its team lead"
+					"teamLeads": "Its team lead",
+					"watchers": "Its watchers"
 				},
 				"alsoPeople": "Also these people",
 				"message": "Message",
@@ -2019,7 +2020,8 @@
 			},
 			"task_status_changed": {
 				"title": "Task status changed",
-				"content": "Task \"{{taskTitle}}\" status changed from \"{{oldStatus}}\" to \"{{newStatus}}\""
+				"content": "Task \"{{taskTitle}}\" status changed from \"{{oldStatus}}\" to \"{{newStatus}}\"",
+				"contentWithoutOld": "Task \"{{taskTitle}}\" moved to \"{{newStatus}}\""
 			},
 			"task_assignee_changed": {
 				"title": "Task assigned to you",
@@ -2031,11 +2033,17 @@
 			},
 			"task_comment": {
 				"title": "{{commenterName}} commented on your task",
-				"content": "New comment on {{taskTitle}}: {{commentPreview}}"
+				"content": "New comment on {{taskTitle}}: {{commentPreview}}",
+				"titleWatching": "{{commenterName}} commented on a task you watch"
 			},
 			"due_date_reminder": {
 				"title": "Task due soon",
 				"content": "{{taskTitle}} is due in {{leadTime}}"
+			},
+			"task_due_date_changed": {
+				"title": "Due date changed",
+				"content": "{{taskTitle}} is now due {{dueDate}}",
+				"contentCleared": "{{taskTitle}} no longer has a due date"
 			},
 			"task_overdue": {
 				"title": "Task overdue",
@@ -2652,7 +2660,8 @@
 				"assignee": "Assignee",
 				"dueDate": "Due date",
 				"done": "Done",
-				"completedAt": "Completed on"
+				"completedAt": "Completed on",
+				"watchers": "Watched by"
 			},
 			"addField": "Add a field",
 			"addFieldTitle": "New custom field",
@@ -2792,6 +2801,21 @@
 			"title": "Archive Tasks",
 			"description_one": "Are you sure you want to archive the completed task? It will move from the active board to your archive.",
 			"description_other": "Are you sure you want to archive all {{count}} completed tasks? They will move from the active board to your archive."
+		},
+		"watchers": {
+			"watch": "Watch",
+			"watching": "Watching",
+			"title": "Watching this task",
+			"empty": "Nobody watches this task yet.",
+			"you": "(you)",
+			"assignee": "assignee",
+			"remove": "Remove {{name}}",
+			"help": "Watchers get its comments and its status and due date changes. Assignees always do.",
+			"assignedHint": "You're assigned, so it reaches you anyway.",
+			"stopWatching": "Stop watching",
+			"startWatching": "Watch this task",
+			"add": "Add someone",
+			"updateError": "Could not change who watches"
 		}
 	},
 	"invitations": {
@@ -3279,7 +3303,8 @@
 			"board": "Board",
 			"gantt": "Gantt",
 			"table": "Table",
-			"waiting": "Waiting on"
+			"waiting": "Waiting on",
+			"watching": "Watching"
 		},
 		"table": {
 			"moreResults": "Showing {{shown}} of {{total}}. Narrow it down with a filter to see the rest."
@@ -3304,6 +3329,17 @@
 			"empty": {
 				"title": "Not waiting on anyone",
 				"description": "Tasks you assign to others, and yours blocked by someone else’s, show up here."
+			}
+		},
+		"watching": {
+			"title": "Watching",
+			"description": "Open tasks you watch and aren't assigned to, latest change first.",
+			"assignedTo": "Assigned to {{names}}",
+			"unassigned": "Unassigned",
+			"capped": "Showing the first {{limit}}.",
+			"empty": {
+				"title": "You're not watching anything",
+				"description": "Watch a task from its detail, or comment on it, and it shows up here."
 			}
 		}
 	},

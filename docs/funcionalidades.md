@@ -47,6 +47,14 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
   desechables.
 - Perfil: nombre, correo, **avatar con recorte**, idioma, y **borrado de
   cuenta** con purga de datos.
+- **Sesiones activas** en *Ajustes › Seguridad*
+  ([ADR 079](adr/079-sesiones-activas.md)):
+  - dónde está abierta la cuenta: navegador y sistema, IP, cuándo entró y cuándo
+    caduca, y si un administrador entró como tú;
+  - cerrar una sesión o todas menos esta. El dispositivo cerrado deja de
+    funcionar en cinco minutos como mucho;
+  - la API nunca devuelve el token de una sesión, y una clave de API no puede
+    cerrarlas.
 
 ## 2. Espacios de trabajo, equipos y permisos
 
@@ -96,6 +104,17 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
 - **Ajustes de jerarquía por proyecto**: cascada al cerrar, cascada al
   archivar y profundidad máxima.
 - Aviso automático cuando el proyecto pasa de 5.000 tareas.
+- **Avisos del proyecto y del espacio**
+  ([ADR 081](adr/081-avisos-de-proyecto-y-espacio.md)):
+  - un tablón con el editor de siempre, el del proyecto en el megáfono de su
+    cabecera y el del espacio en la paleta de comandos;
+  - publican quien puede configurar el proyecto (`project:update`) o el espacio
+    (`workspace:manage_settings`);
+  - al publicar se puede avisar a todos los miembros, por la campana y los
+    canales; editar no vuelve a avisar;
+  - uno fijado sale como franja en las vistas del proyecto, hasta una fecha o
+    sin fin, y cada uno puede ocultarla en su navegador;
+  - un proyecto «Personal» no tiene avisos.
 
 ## 4. Tareas
 
@@ -152,7 +171,7 @@ prioridad, título, fechas, asignaciones de persona y de equipo, anidado,
 | **Tablero (Kanban)** | Arrastrar entre columnas y dentro de una columna, filtros y búsqueda rápida resueltos en el servidor (el mismo motor que la Tabla), orden y añadir tarea por columna |
 | **Lista** | Agrupación por estado, equipo o **jerarquía**; secciones plegables; arrastrar para reparentar; archivar todas las completadas |
 | **Backlog** | Secciones *planificadas* y *archivadas*, filtros del servidor, agrupación, orden y «mover todo» al tablero |
-| **Tabla** | Hoja de cálculo con edición en línea, **campos personalizados como columnas**, filtros compuestos, cuatro modos de jerarquía y **vistas guardadas** |
+| **Tabla** | Hoja de cálculo con edición en línea, **campos personalizados como columnas**, filtros compuestos, cuatro modos de jerarquía, **vistas guardadas**, **totales de todo el filtro** (cuántas, estimado, registrado y cada campo de número o moneda) y **colorear filas** por prioridad o vencimiento ([ADR 080](adr/080-totales-y-colores-en-la-tabla.md)) |
 | **Calendario** | Rejilla mensual, barras multi-día por fecha de inicio y de vencimiento, desbordamiento por día y filtros |
 | **Gantt** | Zoom día/semana/mes/trimestre, arrastrar y redimensionar barras para cambiar fechas, **capa de dependencias**, rango de rama y filtros |
 | **Ciclos** | Panel de sprint con métricas y gráficas |
@@ -161,7 +180,8 @@ prioridad, título, fechas, asignaciones de persona y de equipo, anidado,
 árbol `and`/`or`/`not` con los operadores `eq`, `neq`, `gt`, `gte`, `lt`,
 `lte`, `contains`, `startsWith`, `in`, `notIn`, `isEmpty` y `isNotEmpty`, sobre
 campos nativos, campos personalizados y pertenencia (épica, etiqueta,
-asignado). El filtro vive en la URL, así que se comparte pegando el enlace.
+asignado, observador). El filtro vive en la URL, así que se comparte pegando el
+enlace.
 
 **Vistas guardadas** ([ADR 015](adr/015-vistas-guardadas.md)): guardar el
 filtro y el modo de jerarquía con un nombre, compartirlo con el espacio de
@@ -372,6 +392,10 @@ la tarea y en la propia tabla.
   - lo que creaste y asignaste a otra persona, y sigue abierto, con a quién
     esperas;
   - lo tuyo bloqueado por una tarea abierta que no es tuya, con cuál.
+
+  La pestaña **«Observando»** ([ADR 076](adr/076-observadores.md)) enseña lo que
+  observas, sigue abierto y no tienes asignado, lo último que se movió primero y
+  con quién lo tiene.
 - **Planificador** ([ADR 040](adr/040-planificador.md),
   [ADR 046](adr/046-planificador-en-tres-secciones.md)): ventana rodante de
   15 días para decidir qué día se piensa hacer cada tarea, sin tocar su
@@ -481,7 +505,7 @@ la tarea y en la propia tabla.
   tarea.
 - **Paleta de comandos** con `Ctrl/Cmd+K`:
   - ir a las pantallas personales (Hoy, Planificador, Cronograma, Mis tareas,
-    Parte de horas, Mi panel, Objetivos) o a cualquier proyecto del espacio
+    Parte de horas, Mi panel, Objetivos, Avisos del espacio) o a cualquier proyecto del espacio
     (`p`+`l` abre la paleta en esa lista);
   - parar el cronómetro o reanudar la última tarea;
   - crear tarea, proyecto o espacio. Fuera de un proyecto, la tarea nace
@@ -493,6 +517,11 @@ la tarea y en la propia tabla.
   como leídas y borrar todas. Eventos: tarea creada, asignación, mención,
   comentario, cambio de estado, recordatorio de vencimiento, tarea vencida,
   espacio creado y alta en un espacio de trabajo.
+- **Comentarios, cambios de estado y cambios de vencimiento llegan a todos los
+  asignados y a quien observa**, nunca a quien hizo el cambio ni a quien ya no es
+  del espacio ([ADR 076](adr/076-observadores.md)). A quien solo observa no se le
+  dice «tu tarea». Quien sale mencionado recibe la mención y no también el
+  comentario. Lo que arrastra una cascada y lo importado no avisan.
 - **Canales de entrega externos** por usuario: **email (SMTP)**, **ntfy**,
   **Gotify** y **webhook propio firmado**, con reglas por espacio de trabajo
   —qué canales y qué proyectos, todos o una selección— y **antelación
@@ -574,7 +603,9 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
   - cambia la prioridad o un campo personalizado;
   - alguien comenta;
   - se le pone una etiqueta;
-  - **vence en N días**, o **está vencida**.
+  - **vence en N días**, o **está vencida**;
+  - **se pulsa el botón**: la regla sale como acción de un clic en la tarea
+    ([ADR 078](adr/078-acciones-de-un-clic.md)).
 - **Si:** los mismos filtros que las vistas, campos personalizados incluidos.
 - **Entonces**, en orden; si una falla, las siguientes no se hacen:
   - mover a una columna;
@@ -585,7 +616,8 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
   - una etiqueta;
   - asignar personas o un departamento;
   - crear una tarea o subtarea;
-  - **avisar** a asignados, a quien la creó, al departamento o a su responsable;
+  - **avisar** a asignados, a quien la creó, a quien la observa, al departamento
+    o a su responsable;
   - **webhook firmado**;
   - **mensaje a Slack, Discord o Telegram**.
 
@@ -614,7 +646,7 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 46 herramientas**. Una prueba de paridad
+Dos caminos con **las mismas 56 herramientas**. Una prueba de paridad
 (`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
 antes el paquete stdio se había quedado sin las cinco del plan personal y el
 cronómetro.
@@ -637,7 +669,8 @@ no lista los proyectos Personal.
 - **WebSockets** por proyecto y por usuario, con lotes de 100 ms y
   deduplicación, que empujan creación, actualización, borrado y movimiento de
   tareas, además de relaciones, etiquetas, comentarios, ciclos, épicas, vistas,
-  campos y notificaciones.
+  campos, notificaciones y avisos (estos, a todo el espacio por el canal de
+  usuario).
 - **El canal de usuario no depende de la barra lateral**
   ([ADR 048](adr/048-frescura-de-las-pantallas-personales.md)): sigue conectado
   al cambiar de pantalla, en los ajustes de cuenta y en móvil con la barra

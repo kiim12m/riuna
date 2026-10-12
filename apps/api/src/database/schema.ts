@@ -593,6 +593,28 @@ export const taskAssigneeTable = pgTable(
   ],
 );
 
+// Quien sigue una tarea a proposito (ADR 076). Los asignados no se copian aqui:
+// son observadores implicitos y los avisos los suman al leer.
+export const taskWatcherTable = pgTable(
+  "task_watcher",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => taskTable.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("taskWatcher_userId_idx").on(table.userId),
+    unique("task_watcher_unique").on(table.taskId, table.userId),
+  ],
+);
+
 // Las epicas cortan el proyecto en vertical: agrupan tareas de cualquier rama
 // del arbol y de cualquier columna. Son entidad propia y no una etiqueta
 // porque tienen fechas, orden y un ciclo de vida —se archivan— que una

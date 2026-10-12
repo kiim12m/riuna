@@ -6,6 +6,7 @@ import db from "../database";
 import { projectTable, taskTable, teamMemberTable } from "../database/schema";
 import { subscribeToEvent } from "../events";
 import { notificationSchema } from "../schemas";
+import { taskAudience } from "../task-watcher/watchers";
 import clearNotifications from "./controllers/clear-notifications";
 import createNotification from "./controllers/create-notification";
 import getNotifications, {
@@ -289,38 +290,98 @@ subscribeToEvent<{
   });
 });
 
+/**
+ * Lo que arrastra una cascada y lo importado no avisan, igual que no disparan
+ * automatizaciones (ADR 067): cerrar una madre con treinta hijas avisaria
+ * treinta veces de lo mismo, e importar cinco mil filas, cinco mil.
+ */
+function isSideEffect(data: object) {
+  return (
+    ("cascadedFrom" in data && Boolean(data.cascadedFrom)) ||
+    ("origin" in data && data.origin === "import")
+  );
+}
+
+async function taskContext(taskId: string) {
+  const [task] = await db
+    .select({
+      title: taskTable.title,
+      projectId: taskTable.projectId,
+      workspaceId: projectTable.workspaceId,
+    })
+    .from(taskTable)
+    .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+    .where(eq(taskTable.id, taskId))
+    .limit(1);
+  return task ?? null;
+}
+
+// A los asignados y a quien observa (ADR 076). Antes, solo al responsable
+// principal, y solo si el evento traia `assigneeId`, que la edicion en bloque
+// no manda.
 subscribeToEvent<{
   taskId: string;
   userId: string;
-  oldStatus: string;
+  oldStatus?: string;
   newStatus: string;
-  title: string;
-  assigneeId?: string;
 }>("task.status_changed", async (data) => {
-  if (data.assigneeId && data.assigneeId !== actorToSkip(data, data.userId)) {
-    const [task] = await db
-      .select({ projectId: taskTable.projectId })
-      .from(taskTable)
-      .where(eq(taskTable.id, data.taskId))
-      .limit(1);
+  if (isSideEffect(data)) return;
 
-    const [project] = task
-      ? await db
-          .select({ workspaceId: projectTable.workspaceId })
-          .from(projectTable)
-          .where(eq(projectTable.id, task.projectId))
-          .limit(1)
-      : [];
+  const task = await taskContext(data.taskId);
+  if (!task) return;
 
+  const audience = await taskAudience(data.taskId, [
+    actorToSkip(data, data.userId),
+  ]);
+  for (const { userId, reason } of audience) {
     await createNotification({
-      userId: data.assigneeId,
+      userId,
       type: "task_status_changed",
       eventData: {
-        taskTitle: data.title,
-        oldStatus: data.oldStatus,
+        taskTitle: task.title,
+        oldStatus: data.oldStatus ?? null,
         newStatus: data.newStatus,
-        projectId: task?.projectId ?? null,
-        workspaceId: project?.workspaceId ?? null,
+        projectId: task.projectId,
+        workspaceId: task.workspaceId,
+        reason,
+      },
+      resourceId: data.taskId,
+      resourceType: "task",
+    });
+  }
+});
+
+function isoOrNull(value: unknown) {
+  if (value == null) return null;
+  const date = value instanceof Date ? value : new Date(String(value));
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  oldDueDate?: Date | string | null;
+  newDueDate?: Date | string | null;
+}>("task.due_date_changed", async (data) => {
+  if (isSideEffect(data)) return;
+
+  const task = await taskContext(data.taskId);
+  if (!task) return;
+
+  const audience = await taskAudience(data.taskId, [
+    actorToSkip(data, data.userId),
+  ]);
+  for (const { userId, reason } of audience) {
+    await createNotification({
+      userId,
+      type: "task_due_date_changed",
+      eventData: {
+        taskTitle: task.title,
+        oldDueDate: isoOrNull(data.oldDueDate),
+        newDueDate: isoOrNull(data.newDueDate),
+        projectId: task.projectId,
+        workspaceId: task.workspaceId,
+        reason,
       },
       resourceId: data.taskId,
       resourceType: "task",

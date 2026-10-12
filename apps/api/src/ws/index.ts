@@ -316,6 +316,8 @@ const taskUpdateEvents = [
   "task.label_deleted",
   "task-relation.created",
   "task-relation.deleted",
+  // Refresca la lista de observadores del detalle abierto (ADR 076).
+  "task.watchers_changed",
   "comment.created",
   "comment.deleted",
   "comment.updated",

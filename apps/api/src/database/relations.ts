@@ -31,6 +31,7 @@ import {
   taskRelationTable,
   taskReminderSentTable,
   taskTable,
+  taskWatcherTable,
   teamMemberTable,
   teamTable,
   templateTable,
@@ -220,6 +221,7 @@ export const taskTableRelations = relations(taskTable, ({ one, many }) => ({
   targetRelations: many(taskRelationTable, { relationName: "targetTask" }),
   remindersSent: many(taskReminderSentTable),
   assignees: many(taskAssigneeTable),
+  watchers: many(taskWatcherTable),
   parent: one(taskTable, {
     fields: [taskTable.parentId],
     references: [taskTable.id],
@@ -415,6 +417,20 @@ export const taskAssigneeTableRelations = relations(
     }),
     user: one(userTable, {
       fields: [taskAssigneeTable.userId],
+      references: [userTable.id],
+    }),
+  }),
+);
+
+export const taskWatcherTableRelations = relations(
+  taskWatcherTable,
+  ({ one }) => ({
+    task: one(taskTable, {
+      fields: [taskWatcherTable.taskId],
+      references: [taskTable.id],
+    }),
+    user: one(userTable, {
+      fields: [taskWatcherTable.userId],
       references: [userTable.id],
     }),
   }),

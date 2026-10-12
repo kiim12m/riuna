@@ -30,7 +30,7 @@
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
 | **Total Bloque A** | **45** + 18 del interludio | |
-| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **Planificado** (2026-10-12) — cinco tandas · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
+| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hecha la tanda 1 (1.1-1.6) · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -3554,7 +3554,8 @@ La **Fase 9**, operación, está hecha (2026-10-11), en las PR apiladas #51 a #5
 
 Con eso se cierra el Bloque A. Después viene el
 [interludio de ideas de OpenProject](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado),
-planificado el 2026-10-12, y el Bloque B (CRM y ERP ligero) empieza en la Fase 10.
+planificado el 2026-10-12, y el Bloque B (CRM y ERP ligero) empieza en la Fase 10. Del
+interludio está hecha la tanda 1 (2026-10-12); la siguiente es la tanda 2, planificación.
 
 **Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
 seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.

@@ -45,6 +45,7 @@ async function bulkUpdateTasks({
     .select({
       id: taskTable.id,
       title: taskTable.title,
+      status: taskTable.status,
       projectId: taskTable.projectId,
       path: taskTable.path,
       userId: taskTable.userId,
@@ -125,12 +126,18 @@ async function bulkUpdateTasks({
 
         updatedCount += result.rowCount ?? projectTaskIds.length;
 
-        for (const taskId of projectTaskIds) {
+        // Solo las que cambian, y con su estado anterior: ahora avisan a sus
+        // asignados y a quien observa (ADR 076), y una tarea que ya estaba en
+        // esa columna no ha cambiado de nada.
+        for (const task of tasks) {
+          if (task.projectId !== projectId || task.status === value) continue;
           await publishEvent("task.status_changed", {
-            taskId,
+            taskId: task.id,
             projectId,
             userId,
+            oldStatus: task.status,
             newStatus: value,
+            title: task.title,
             type: "status_changed",
           });
         }

@@ -10,6 +10,7 @@ import { getWorkspaceFieldRegistry } from "../view/workspace-registry";
 import getCounts from "./controllers/get-counts";
 import getMyWork from "./controllers/get-my-work";
 import getWaiting from "./controllers/get-waiting";
+import getWatching from "./controllers/get-watching";
 import searchTasks, {
   SEARCH_SORT_FIELDS,
   type SearchSortField,
@@ -81,6 +82,11 @@ const waitingResponseSchema = v.object({
       ),
     }),
   ),
+});
+
+const watchingResponseSchema = v.object({
+  /** Lo que observo, abierto y sin asignarme. Topado en 100. */
+  tasks: v.array(myWorkTaskSchema),
 });
 
 const myWorkResponseSchema = v.object({
@@ -219,6 +225,35 @@ const myWork = new Hono<{
     async (c) => {
       const { workspaceId } = c.req.valid("query");
       return c.json(await getWaiting({ workspaceId, userId: c.get("userId") }));
+    },
+  )
+  .get(
+    "/watching",
+    describeRoute({
+      operationId: "listMyWorkWatching",
+      tags: ["My work"],
+      description:
+        "Open tasks the current user watches on purpose and isn't assigned to, most recently updated first. Capped at 100",
+      responses: {
+        200: {
+          description: "The watched tasks",
+          content: {
+            "application/json": { schema: resolver(watchingResponseSchema) },
+          },
+        },
+      },
+    }),
+    validator(
+      "query",
+      v.object({ workspaceId: v.pipe(v.string(), v.minLength(1)) }),
+    ),
+    workspaceAccess.fromQuery(),
+    requireApiKeyScope({ task: ["read"] }),
+    async (c) => {
+      const { workspaceId } = c.req.valid("query");
+      return c.json(
+        await getWatching({ workspaceId, userId: c.get("userId") }),
+      );
     },
   )
   .get(

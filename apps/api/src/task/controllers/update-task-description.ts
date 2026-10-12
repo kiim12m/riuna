@@ -5,6 +5,11 @@ import { taskTable, userTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import createNotification from "../../notification/controllers/create-notification";
 import { deleteOrphanedAssets } from "../../storage/cleanup-assets";
+import { watchBecauseInvolved } from "../../task-watcher/watchers";
+import {
+  filterAssignableUsers,
+  getProjectWorkspaceId,
+} from "../../utils/assert-assignable-user";
 import { parseMentionIds } from "../../utils/parse-mentions";
 
 async function updateTaskDescription({
@@ -77,6 +82,19 @@ async function updateTaskDescription({
         resourceType: "task",
       });
     }
+
+    // Quien sale mencionado sigue la tarea (ADR 076). Una mencion puede traer
+    // cualquier id: solo cuentan los del espacio.
+    const members = await filterAssignableUsers(
+      newlyMentioned,
+      await getProjectWorkspaceId(updatedTask.projectId),
+    );
+    await watchBecauseInvolved({
+      taskId: updatedTask.id,
+      projectId: updatedTask.projectId,
+      actorId: currentUserId,
+      userIds: newlyMentioned.filter((id) => members.has(id)),
+    });
   }
 
   return updatedTask;

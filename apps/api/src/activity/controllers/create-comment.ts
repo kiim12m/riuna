@@ -9,6 +9,11 @@ import {
 } from "../../database/schema";
 import { publishEvent } from "../../events";
 import createNotification from "../../notification/controllers/create-notification";
+import {
+  taskAudience,
+  watchBecauseInvolved,
+} from "../../task-watcher/watchers";
+import { filterAssignableUsers } from "../../utils/assert-assignable-user";
 import { parseMentionIds } from "../../utils/parse-mentions";
 
 async function createComment(
@@ -46,7 +51,6 @@ async function createComment(
 
   const [task] = await db
     .select({
-      assigneeId: taskTable.userId,
       projectId: taskTable.projectId,
       title: taskTable.title,
       workspaceId: projectTable.workspaceId,
@@ -80,13 +84,17 @@ async function createComment(
     });
   }
 
-  if (
-    task?.assigneeId &&
-    task.assigneeId !== userId &&
-    !mentionedIds.includes(task.assigneeId)
-  ) {
+  // Un comentario importado (PLANKA, Trello, Jira) ni avisa ni hace observar:
+  // lo importado no avisa (ADR 076), y quinientos comentarios serian quinientos
+  // avisos por persona.
+  if (!task || external) return activity;
+
+  // A los asignados y a quien observa (ADR 076); antes, solo al responsable
+  // principal. Quien sale mencionado ya recibio la mencion.
+  const audience = await taskAudience(taskId, [userId, ...mentionedIds]);
+  for (const { userId: recipientId, reason } of audience) {
     await createNotification({
-      userId: task.assigneeId,
+      userId: recipientId,
       type: "task_comment",
       eventData: {
         taskTitle: task.title,
@@ -94,11 +102,22 @@ async function createComment(
         commentPreview: content.slice(0, 160),
         projectId: task.projectId,
         workspaceId: task.workspaceId,
+        reason,
       },
       resourceId: taskId,
       resourceType: "task",
     });
   }
+
+  // Quien comenta entra en la conversacion, y quien sale mencionado la sigue.
+  // Una mencion puede traer cualquier id: solo cuentan los del espacio.
+  const members = await filterAssignableUsers(mentionedIds, task.workspaceId);
+  await watchBecauseInvolved({
+    taskId,
+    projectId: task.projectId,
+    actorId: userId,
+    userIds: [userId, ...mentionedIds.filter((id) => members.has(id))],
+  });
 
   return activity;
 }

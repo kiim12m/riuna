@@ -4,6 +4,10 @@ import db from "../../database";
 import { columnTable, taskTable, userTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import {
+  addWatchers,
+  publishWatchersChanged,
+} from "../../task-watcher/watchers";
+import {
   assertAssignableUser,
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
@@ -26,6 +30,7 @@ async function createTask({
   priority,
   parentId,
   estimate,
+  creatorWatches = false,
 }: {
   projectId: string;
   currentUserId: string;
@@ -38,6 +43,12 @@ async function createTask({
   priority?: string;
   parentId?: string | null;
   estimate?: number | null;
+  /**
+   * Quien la crea la observa (ADR 076). Solo lo piden quienes crean de una en
+   * una —la interfaz, la API y la captura—: una plantilla, una recurrencia o
+   * una automatizacion crearian decenas de golpe.
+   */
+  creatorWatches?: boolean;
 }) {
   const resolvedStatus = status || "to-do";
   const resolvedPriority = priority || "no-priority";
@@ -115,6 +126,9 @@ async function createTask({
 
     if (task) {
       await syncPrimaryAssignee(task.id, null, task.userId, tx);
+      if (creatorWatches) {
+        await addWatchers(task.id, [currentUserId], tx);
+      }
     }
 
     return task;
@@ -134,6 +148,15 @@ async function createTask({
     type: "created",
     content: null,
   });
+
+  if (creatorWatches) {
+    await publishWatchersChanged({
+      taskId: createdTask.id,
+      projectId,
+      userId: currentUserId,
+      addedIds: [currentUserId],
+    });
+  }
 
   return {
     ...createdTask,

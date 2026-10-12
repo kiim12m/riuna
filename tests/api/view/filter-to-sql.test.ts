@@ -329,6 +329,22 @@ describe("filterToSql", () => {
       expect(text).toContain('"label"."name"');
     });
 
+    // Quien la observa a proposito (ADR 076), por su id.
+    it("turns a watcher filter into an EXISTS on task_watcher", () => {
+      const { sql: text, params } = compile(
+        condition("watchers", "eq", "user-1"),
+      );
+      expect(text).toContain("EXISTS");
+      expect(text).toContain("task_watcher");
+      expect(params).toContain("user-1");
+    });
+
+    it("asks whether anyone watches at all", () => {
+      const { sql: text } = compile(condition("watchers", "isEmpty"));
+      expect(text).toContain("NOT EXISTS");
+      expect(text).toContain("task_watcher");
+    });
+
     it("negates membership for notIn", () => {
       const { sql: text } = compile(condition("epic", "notIn", ["epic-1"]));
       expect(text).toContain("NOT EXISTS");

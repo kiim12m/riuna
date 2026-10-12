@@ -3,6 +3,7 @@ import db from "../../database";
 import {
   activityTable,
   integrationTable,
+  taskWatcherTable,
   teamMemberTable,
 } from "../../database/schema";
 import createNotification from "../../notification/controllers/create-notification";
@@ -50,6 +51,13 @@ async function resolveRecipients(
   if (recipients.creator) {
     const creator = await creatorOf(task.id);
     if (creator) ids.add(creator);
+  }
+  if (recipients.watchers) {
+    const watchers = await db
+      .select({ userId: taskWatcherTable.userId })
+      .from(taskWatcherTable)
+      .where(eq(taskWatcherTable.taskId, task.id));
+    for (const watcher of watchers) ids.add(watcher.userId);
   }
   if (task.teamId && (recipients.teamMembers || recipients.teamLeads)) {
     const members = await db

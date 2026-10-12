@@ -35,6 +35,22 @@ export async function getWaiting(workspaceId: string) {
 
 export type WaitingResponse = Awaited<ReturnType<typeof getWaiting>>;
 
+/**
+ * «Observando» (ADR 076): lo que observo, abierto y sin asignarme, lo ultimo
+ * que se movio primero. Topado en 100.
+ */
+export async function getWatching(workspaceId: string) {
+  const response = await client["my-work"].watching.$get({
+    query: { workspaceId },
+  });
+
+  if (!response.ok) {
+    throw new HttpError(await response.text(), response.status);
+  }
+
+  return response.json();
+}
+
 // El mismo vocabulario que `SEARCH_SORT_FIELDS` en la API. Sin `number` ni
 // `position`: se numeran por proyecto, y ordenar por ellos entre proyectos no
 // significa nada (misma razon que ADR 038 los retira del registro).
