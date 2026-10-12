@@ -12,10 +12,14 @@
 # solo en 127.0.0.1). No toca la instancia de verdad, ni su .env, ni ./backups.
 #
 # Y nada de lo restaurado puede salir:
-#   - sin planificador: ni stand-ups ni recordatorios a chats de verdad;
+#   - sin salida a la red (RIUNA_DISABLE_OUTBOUND): la API solo alcanza
+#     localhost. Es lo que lo garantiza: las integraciones de proyecto (el
+#     token de Gitea, los webhooks de Discord, Slack y Telegram) se restauran
+#     en claro, y una tarea movida por el humo las dispararia;
+#   - sin planificador: ni stand-ups ni recordatorios;
 #   - sin correo: el .env del simulacro no lleva SMTP;
-#   - con una clave de cifrado nueva: los destinos de chat y webhook
-#     restaurados no se pueden descifrar;
+#   - con una clave de cifrado nueva: los destinos de aviso cifrados no se
+#     pueden descifrar;
 #   - sin limites de tasa, porque el humo se registra muchas veces seguidas.
 #
 # La copia real se queda en esta maquina: AGENTS.md no deja bajarla a
@@ -107,6 +111,7 @@ cp "$dump" "$DIR/backups/$name"
   echo "RIUNA_API_URL=http://localhost:1347"
   echo "DISABLE_REGISTRATION=false"
   echo "RIUNA_DISABLE_SCHEDULER=true"
+  echo "RIUNA_DISABLE_OUTBOUND=true"
   echo "RATE_LIMIT_ENABLED=false"
 } > "$ENV_FILE"
 

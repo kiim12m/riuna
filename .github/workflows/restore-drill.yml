@@ -62,6 +62,7 @@ jobs:
             echo "RIUNA_API_URL=http://localhost:1337"
             echo "DISABLE_REGISTRATION=false"
             echo "RIUNA_DISABLE_SCHEDULER=true"
+            echo "RIUNA_DISABLE_OUTBOUND=true"
           } > .env
           mkdir -p backups
 

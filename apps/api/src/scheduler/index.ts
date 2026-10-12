@@ -6,14 +6,18 @@ import { type JobRunStatus, recordJobRun } from "../instance/job-status";
 import { generateRecurringTasks } from "../recurrence/generate";
 import { log } from "../utils/log";
 import { checkDueDateReminders } from "./due-date-reminders";
-import { withJobLease } from "./leader-lock";
+import { HELD_ELSEWHERE, withJobLease } from "./leader-lock";
 import { checkProjectWebhookReminders } from "./project-webhook-reminders";
 import { reconcileWorkspaceSeats } from "./seat-reconciliation";
 import { checkTrialReminders } from "./trial-reminders";
 
 const jobs: Cron[] = [];
 
-type JobOutcome = { degraded?: boolean };
+// `skipped`: otra instancia tiene el arrendamiento y la vuelta no corrio
+// aqui. No es una vuelta buena: apuntarla como `ok` ponia a cero los fallos
+// seguidos de la instancia que si corre, y «falla seguido» no saltaba nunca
+// con dos replicas (revision de la Fase 9).
+type JobOutcome = { degraded?: boolean; skipped?: boolean };
 
 // Cron jobs swallow their operational failures (per-item try/catch) so they
 // can keep processing the rest of the batch. Reporting Sentry status purely
@@ -40,6 +44,11 @@ export function withCheckIn<T>(name: string, fn: () => Promise<T>) {
       recordJobRun(name, { startedAt, finishedAt: new Date(), status, error });
     try {
       const result = await fn();
+      if ((result as JobOutcome | null | undefined)?.skipped) {
+        Sentry.captureCheckIn({ checkInId, monitorSlug: name, status: "ok" });
+        log.debug("Scheduled job held by another instance", { job: name });
+        return;
+      }
       const degraded = Boolean(
         (result as JobOutcome | null | undefined)?.degraded,
       );
@@ -115,9 +124,11 @@ export function initializeScheduler(): number {
     new Cron(
       "*/5 * * * *",
       withCheckIn("recurring-tasks", () =>
-        withJobLease("recurring-tasks", generateRecurringTasks, () => ({
-          degraded: false,
-        })),
+        withJobLease(
+          "recurring-tasks",
+          generateRecurringTasks,
+          () => HELD_ELSEWHERE,
+        ),
       ),
     ),
   );
@@ -130,9 +141,7 @@ export function initializeScheduler(): number {
         withJobLease(
           "automations",
           () => checkAutomations(),
-          () => ({
-            degraded: false,
-          }),
+          () => HELD_ELSEWHERE,
         ),
       ),
     ),
@@ -145,7 +154,7 @@ export function initializeScheduler(): number {
       "*/15 * * * *",
       withCheckIn("instance-health", () =>
         withJobLease("instance-health", checkInstanceHealth, () => ({
-          degraded: false,
+          ...HELD_ELSEWHERE,
           opened: 0,
           resolved: 0,
         })),

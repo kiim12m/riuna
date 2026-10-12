@@ -1,11 +1,25 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 // `setup.ts` apaga los limites para el resto de la integracion; este fichero
 // los enciende (ADR 074). Antes de cargar la API, porque Better Auth lee el
-// interruptor al construirse.
-vi.hoisted(() => {
+// interruptor al construirse. Y al acabar los deja como estaban: si los
+// ficheros llegan a compartir proceso, el siguiente no hereda un cupo de 5.
+const previousEnv = vi.hoisted(() => {
+  const previous = {
+    RATE_LIMIT_ENABLED: process.env.RATE_LIMIT_ENABLED,
+    RATE_LIMIT_USER_PER_MINUTE: process.env.RATE_LIMIT_USER_PER_MINUTE,
+  };
   process.env.RATE_LIMIT_ENABLED = "true";
   process.env.RATE_LIMIT_USER_PER_MINUTE = "5";
+  return previous;
 });
 
 import { createApp } from "../../apps/api/src/index";
@@ -21,6 +35,13 @@ beforeEach(async () => {
 
 afterEach(() => {
   vi.unstubAllEnvs();
+});
+
+afterAll(() => {
+  for (const [key, value] of Object.entries(previousEnv)) {
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  }
 });
 
 async function times(count: number, request: () => Promise<Response>) {

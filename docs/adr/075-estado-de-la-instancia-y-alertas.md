@@ -27,7 +27,11 @@ Y descartó:
   - la escribe el envoltorio `withCheckIn` del planificador, así que vale para los siete
     trabajos sin tocarlos;
   - va en la base, no en memoria, porque sobrevive a un reinicio y vale con varias instancias;
-  - del error se quita la consulta de cualquier URL, que puede llevar un token.
+  - del error, cada URL se queda en su origen, porque el token puede ir en la consulta o en la
+    ruta (Telegram, Discord, Slack), y se corta lo que va tras `params:`, que son los datos de la
+    consulta que falló;
+  - una vuelta que se salta porque otra instancia tiene el arrendamiento no se apunta: contarla
+    como buena ponía a cero los fallos de la que sí corre.
 - **Tiempos por ruta en memoria** (`utils/route-metrics.ts`):
   - las últimas 200 duraciones de cada patrón, y de ahí el p50 y el p95;
   - se pierden al reiniciar, y la página lo dice;
@@ -46,13 +50,19 @@ Y descartó:
 - **Alertas: el trabajo `instance-health`**, cada 15 minutos y con arrendamiento.
   - **Condiciones** (`instance/health.ts`, pura, la misma que enseña la página):
     - la última copia local tiene más de `BACKUP_INTERVAL_HOURS` + 2 h, o no hay ninguna;
+    - `BACKUP_DIR` está definido pero no se puede leer (el montaje se perdió). Mientras dure, las
+      alertas de copias abiertas siguen abiertas: no saber no es estar bien;
     - la copia externa no sube desde hace dos intervalos y una hora, o no ha subido nunca;
     - un trabajo lleva tres fallos seguidos.
   - **Una alerta por condición** (`instance_alert`, con un índice único mientras está abierta):
     avisa al abrirse y otra vez al resolverse, con el tipo `instance_alert`.
-  - El texto va en español y ya montado, como el de las automatizaciones, porque los canales
-    externos no pasan por las traducciones de la web.
-  - **Lo que la API no ve no alerta**: sin `BACKUP_DIR` no hay alertas de copias.
+  - **Sale por los canales de las preferencias generales** del admin (correo, ntfy, Gotify,
+    webhook). No es de ningún espacio, así que no pide regla de espacio; el webhook la manda con
+    `workspace: null`.
+  - **Cada problema va dos veces**: `kind` y `params`, que la página y la campana traducen con
+    claves estáticas, y el texto en español ya montado, para los canales externos, que no pasan
+    por las traducciones de la web.
+  - **Lo que la API no sabe no alerta**: sin `BACKUP_DIR` no hay alertas de copias.
 
 **Consecuencias.**
 
@@ -60,3 +70,5 @@ Y descartó:
   fuera de alcance.
 - Los tiempos por ruta son de un proceso. Con varias instancias, cada página enseña la suya.
 - Activar Sentry más adelante no cambia nada de esto: los dos conviven.
+- La revisión de código de la Fase 9 corrigió la entrega por canales, el arrendamiento, los
+  secretos del error, el directorio ilegible y las traducciones (`docs/plan.md`).

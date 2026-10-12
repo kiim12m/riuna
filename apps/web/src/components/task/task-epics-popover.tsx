@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { useUpdateTaskEpics } from "@/hooks/mutations/epic/use-epic-mutations";
 import useGetEpics from "@/hooks/queries/epic/use-get-epics";
-import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { useEditableUntilKnown } from "@/hooks/use-workspace-permission";
 import { resolveEpicColor } from "@/lib/epic-color";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
@@ -31,9 +31,9 @@ export default function TaskEpicsPopover({
   const [open, setOpen] = useState(false);
   const { data: epics = [] } = useGetEpics(projectId);
   const { mutateAsync: updateTaskEpics } = useUpdateTaskEpics(projectId);
-  const { canUpdateTasks } = useWorkspacePermission();
+  const canEdit = useEditableUntilKnown("updateTasks");
 
-  if (!canUpdateTasks()) return <>{children}</>;
+  if (!canEdit) return <>{children}</>;
 
   const selectedIds = new Set((task.epics ?? []).map((epic) => epic.id));
 

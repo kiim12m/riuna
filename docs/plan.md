@@ -2793,7 +2793,8 @@ instancia.
   - **Proyecto Compose aparte** (`riuna-simulacro`):
     - un `.env` generado, sin SMTP y con claves nuevas;
     - su directorio de copias y sus puertos (web 5183 y API 1347, solo en `127.0.0.1`);
-    - planificador apagado y sin límites de tasa.
+    - planificador apagado, sin salida a la red (`RIUNA_DISABLE_OUTBOUND`) y sin límites de
+      tasa.
   - **Lo que hace:**
     - restaura la copia;
     - compara los recuentos con la instancia de verdad;
@@ -2834,6 +2835,38 @@ instancia.
 - paginar las vistas, cerrado por decisión;
 - la facturación heredada, abierta por decisión;
 - la zona horaria por persona.
+
+**Revisión de código de la Fase 9 (2026-10-12):** `/code-review extra-high` sobre los ocho
+bloques (PR #51 a #58) devolvió 15 hallazgos, comprobados uno a uno contra el código. Están
+corregidos en la PR #59, un commit por hallazgo, y cada arreglo con una prueba que fallaba antes
+(salvo el de la caché de Docker, que se revisó a mano):
+1. **las alertas de la instancia no salían de la campana**: sin recurso ni regla de espacio, la
+   entrega se las saltaba. Ahora van por los canales de las preferencias generales;
+2. **con dos réplicas, «falla seguido» no saltaba nunca**: la vuelta que se salta porque otra
+   instancia tiene el arrendamiento se apuntaba como buena;
+3. **el simulacro podía mandar mensajes reales**: las integraciones de proyecto (el token de
+   Gitea y los webhooks de Discord, Slack y Telegram) se restauran en claro y los plugins seguían
+   escuchando. `RIUNA_DISABLE_OUTBOUND=true` deja a la API sin red, salvo `localhost`;
+4. el último error de un trabajo podía llevar un token en la ruta de una URL, o los datos tras
+   `params:` de un error de Drizzle;
+5. un `TRUSTED_PROXIES` con un prefijo fuera de rango hacía fallar cada petición; ahora se valida
+   y la lista se construye una vez por valor;
+6. un directorio de copias ilegible contaba como «no configurado» y cerraba las alertas abiertas.
+   Ahora es su propio problema, `backup.unreadable`;
+7. Turnstile recibía la IP de `cf-connecting-ip`, que escribe quien llama;
+8. los cupos por IP contaban cada dirección IPv6 aparte: ahora, por su /64;
+9. el contenedor del humo copiaba el `.env` de la instancia de verdad;
+10. `rate-limit.test.ts` no devolvía el entorno como lo encontró;
+11. el Intro que confirma una palabra de un método de entrada (japonés, chino, coreano) cerraba
+    el título;
+12. **el primer toque en un desplegable del detalle no abría nada** si llegaba antes que los
+    permisos. Era la causa de los reintentos del humo, que se quitan; once desplegables usan
+    ahora `useEditableUntilKnown`, y `permission-race.spec.ts` retrasa los permisos 2 s a
+    propósito;
+13. los problemas y los avisos de la instancia salían en español fijo; ahora llevan `kind` y
+    `params` y se traducen;
+14. `RIUNA_REVISION` iba antes de los `COPY` de la imagen de la API y rompía su caché de capas;
+15. un prefijo vacío en `TRUSTED_PROXIES` (`10.0.0.0/`) se leía como `/0`: confiar en todo.
 
 ---
 

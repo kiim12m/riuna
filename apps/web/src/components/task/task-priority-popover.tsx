@@ -11,7 +11,7 @@ import { ShortcutNumber } from "@/components/ui/shortcut-number";
 import { useUpdateTaskPriority } from "@/hooks/mutations/task/use-update-task-status-priority";
 import { useControllableOpen } from "@/hooks/use-controllable-open";
 import { useNumberedShortcuts } from "@/hooks/use-numbered-shortcuts";
-import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { useEditableUntilKnown } from "@/hooks/use-workspace-permission";
 import { getPriorityLabel } from "@/lib/i18n/domain";
 import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
@@ -45,8 +45,7 @@ export default function TaskPriorityPopover({
   const { t } = useTranslation();
   const [open, setOpen] = useControllableOpen(openProp, onOpenChange);
   const { mutateAsync: updateTaskPriority } = useUpdateTaskPriority();
-  const { canUpdateTasks } = useWorkspacePermission();
-  const canEdit = canUpdateTasks();
+  const canEdit = useEditableUntilKnown("updateTasks");
 
   const handlePriorityChange = useCallback(
     async (newPriority: string) => {

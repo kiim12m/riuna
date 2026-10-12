@@ -8,7 +8,12 @@ import {
 import createNotification from "../notification/controllers/create-notification";
 import { log } from "../utils/log";
 import { readBackupState } from "./backups";
-import { findProblems } from "./health";
+import {
+  alertArea,
+  alertAreaLabel,
+  findProblems,
+  uncheckedKeys,
+} from "./health";
 
 async function instanceAdmins() {
   const rows = await db
@@ -18,7 +23,14 @@ async function instanceAdmins() {
   return rows.filter((row) => !row.banned).map((row) => row.id);
 }
 
-async function notifyAdmins(title: string, content: string, key: string) {
+// `title` y `content` en español, para los canales externos; `eventData`, para
+// que la campana lo traduzca (`apps/web/src/lib/instance-alert.ts`).
+async function notifyAdmins(
+  title: string,
+  content: string,
+  eventData: Record<string, unknown> & { key: string },
+) {
+  const { key } = eventData;
   const admins = await instanceAdmins();
   for (const userId of admins) {
     try {
@@ -27,7 +39,7 @@ async function notifyAdmins(title: string, content: string, key: string) {
         type: "instance_alert",
         title,
         content,
-        eventData: { key },
+        eventData,
       });
     } catch (error) {
       log.error("Could not deliver an instance alert", error, { key, userId });
@@ -65,13 +77,20 @@ export async function checkInstanceHealth() {
     if (!created) continue;
     opened += 1;
     await notifyAdmins(
-      `Riuna · ${problem.label}`,
+      `Riuna · ${alertAreaLabel(problem.key)}`,
       problem.message,
-      problem.key,
+      {
+        key: problem.key,
+        ...alertArea(problem.key),
+        kind: problem.kind,
+        params: problem.params,
+      },
     );
   }
 
+  const unchecked = new Set(uncheckedKeys(backups));
   for (const alert of open) {
+    if (unchecked.has(alert.key)) continue;
     const still = problems.find((problem) => problem.key === alert.key);
     if (still) continue;
     const [closed] = await db
@@ -86,11 +105,11 @@ export async function checkInstanceHealth() {
       .returning();
     if (!closed) continue;
     resolved += 1;
-    await notifyAdmins(
-      "Riuna · resuelto",
-      `Resuelto: ${alert.message}`,
-      alert.key,
-    );
+    await notifyAdmins("Riuna · resuelto", `Resuelto: ${alert.message}`, {
+      key: alert.key,
+      ...alertArea(alert.key),
+      resolved: true,
+    });
   }
 
   if (opened > 0 || resolved > 0) {

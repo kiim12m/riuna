@@ -1,12 +1,13 @@
 import { mkdtemp, rm, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
 import { checkInstanceHealth } from "../../apps/api/src/instance/alerts";
 import { withCheckIn } from "../../apps/api/src/scheduler";
+import { HELD_ELSEWHERE } from "../../apps/api/src/scheduler/leader-lock";
 import { log } from "../../apps/api/src/utils/log";
 import { createApiKey, mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
@@ -24,6 +25,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   vi.unstubAllEnvs();
+  vi.restoreAllMocks();
   await rm(backupDir, { recursive: true, force: true });
 });
 
@@ -133,6 +135,14 @@ describe("instance report", () => {
       "backup.stale",
       "job.failing:due-date-reminders",
     ]);
+    // Para que la web lo traduzca (revision de la Fase 9, hallazgo 13).
+    expect(report.problems).toContainEqual(
+      expect.objectContaining({
+        key: "backup.stale",
+        kind: "backupStale",
+        params: { hours: 30, every: 24 },
+      }),
+    );
   });
 });
 
@@ -152,6 +162,23 @@ describe("job status", () => {
     });
     expect(row?.lastSuccessAt).toBeInstanceOf(Date);
   });
+
+  // Revision de la Fase 9: cuando otra instancia tiene el arrendamiento, la
+  // vuelta no corrio aqui. Apuntarla como buena ponia a cero los fallos de la
+  // que si corre, y «falla seguido» no saltaba nunca con dos replicas.
+  it("does not count a turn held by another instance as a good run", async () => {
+    vi.spyOn(log, "error").mockImplementation(() => {});
+    await withCheckIn("automations", async () => {
+      throw new Error("fallo en la instancia que tiene el turno");
+    })();
+    await withCheckIn("automations", async () => HELD_ELSEWHERE)();
+
+    const [row] = await db
+      .select()
+      .from(schema.jobStatusTable)
+      .where(eq(schema.jobStatusTable.job, "automations"));
+    expect(row).toMatchObject({ lastStatus: "error", consecutiveFailures: 1 });
+  });
 });
 
 describe("instance alerts", () => {
@@ -169,6 +196,13 @@ describe("instance alerts", () => {
     const opened = await alertsFor(admin.id);
     expect(opened).toHaveLength(1);
     expect(opened[0]?.content).toContain("recurring-tasks");
+    expect(opened[0]?.eventData).toMatchObject({
+      key: "job.failing:recurring-tasks",
+      area: "job",
+      job: "recurring-tasks",
+      kind: "jobFailing",
+      params: { job: "recurring-tasks", failures: 3 },
+    });
     expect(await alertsFor(bystander.user.id)).toHaveLength(0);
 
     await withCheckIn("recurring-tasks", async () => ({ degraded: false }))();
@@ -178,8 +212,71 @@ describe("instance alerts", () => {
     const all = await alertsFor(admin.id);
     expect(all).toHaveLength(2);
     expect(all.map((n) => n.title)).toContain("Riuna · resuelto");
+    expect(all.map((n) => n.eventData)).toContainEqual({
+      key: "job.failing:recurring-tasks",
+      area: "job",
+      job: "recurring-tasks",
+      resolved: true,
+    });
     const [alert] = await db.select().from(schema.instanceAlertTable);
     expect(alert?.resolvedAt).toBeInstanceOf(Date);
+  });
+
+  // Revision de la Fase 9, hallazgo 6.
+  it("keeps a backup alert open while the backup directory cannot be read", async () => {
+    await instanceAdmin();
+    await writeBackup("riuna_2026-10-01_030000.sql.gz", 200);
+    expect(await checkInstanceHealth()).toMatchObject({ opened: 1 });
+
+    // El montaje se pierde: la API ya no sabe nada de las copias.
+    vi.stubEnv("BACKUP_DIR", join(backupDir, "no-existe"));
+    const lost = await checkInstanceHealth();
+
+    expect(lost).toMatchObject({ opened: 1, resolved: 0 });
+    const open = await db
+      .select()
+      .from(schema.instanceAlertTable)
+      .where(isNull(schema.instanceAlertTable.resolvedAt));
+    expect(open.map((alert) => alert.key).sort()).toEqual([
+      "backup.stale",
+      "backup.unreadable",
+    ]);
+  });
+
+  // Revision de la Fase 9, hallazgo 1: sin recurso ni regla de espacio, la
+  // entrega se saltaba y la alerta solo llegaba a la campana.
+  it("reaches the admin through the channels in their general preferences", async () => {
+    const admin = await instanceAdmin();
+    vi.stubEnv("RIUNA_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS", "true");
+    await db.insert(schema.userNotificationPreferenceTable).values({
+      userId: admin.id,
+      ntfyEnabled: true,
+      ntfyServerUrl: "https://ntfy.example.com",
+      ntfyTopic: "riuna-instancia",
+      webhookEnabled: true,
+      webhookUrl: "https://hooks.example.com/riuna",
+    });
+    // Solo el trabajo que falla: con las copias al dia no hay otra alerta.
+    await writeBackup("riuna_2026-10-11_030000.sql.gz", 1);
+    await failThreeTimes("automations");
+    const sent: { url: string; body: string }[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      sent.push({ url: String(input), body: String(init?.body ?? "") });
+      return new Response("ok");
+    });
+
+    await checkInstanceHealth();
+
+    await vi.waitFor(() => expect(sent).toHaveLength(2));
+    const ntfy = sent.find((call) => call.url.startsWith("https://ntfy."));
+    expect(ntfy?.url).toBe("https://ntfy.example.com/riuna-instancia");
+    expect(ntfy?.body).toContain("automations");
+    const webhook = sent.find((call) => call.url.startsWith("https://hooks."));
+    expect(JSON.parse(webhook?.body ?? "{}")).toMatchObject({
+      notification: { type: "instance_alert" },
+      workspace: null,
+      user: { id: admin.id },
+    });
   });
 
   it("does not alert about backups it cannot see", async () => {

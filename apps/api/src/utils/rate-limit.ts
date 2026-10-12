@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
 import { HTTPException } from "hono/http-exception";
-import { clientIp } from "./client-ip";
+import { clientIp, ipBucket } from "./client-ip";
 import { log } from "./log";
 
 /**
@@ -90,7 +90,12 @@ function tooManyRequests(c: Context, limit: string, retryAfter: number): never {
 export function limitByIp(name: string, max: number, windowMs = 60_000) {
   return createMiddleware(async (c, next) => {
     if (rateLimitEnabled()) {
-      const wait = hit(`${name}:${clientIp(c) ?? "unknown"}`, max, windowMs);
+      const ip = clientIp(c);
+      const wait = hit(
+        `${name}:${ip ? ipBucket(ip) : "unknown"}`,
+        max,
+        windowMs,
+      );
       if (wait !== null) tooManyRequests(c, name, wait);
     }
     await next();

@@ -1767,6 +1767,7 @@
 			"backups": {
 				"title": "Backups",
 				"notConfigured": "The API cannot see the backup directory (BACKUP_DIR).",
+				"unreadable": "BACKUP_DIR is set, but the API cannot read it",
 				"none": "No backups yet",
 				"latest": "Latest {{when}} · {{size}}",
 				"count": "Local copies: {{count}}",
@@ -1817,6 +1818,20 @@
 				"title": "Your IP, as the API sees it",
 				"hint": "Behind tailscale serve it should be your Tailscale address (100.x).",
 				"unknown": "Unknown"
+			},
+			"problems": {
+				"backupMissing": "There is no database backup in the backup directory.",
+				"backupStale": "The latest database backup is {{hours}} h old, and one is expected every {{every}} h.",
+				"backupUnreadable": "The API cannot read the backup directory (BACKUP_DIR), so it cannot tell whether backups are being made.",
+				"offsiteNever": "The off-site copy has never uploaded.",
+				"offsiteStale": "The off-site copy has not uploaded for {{hours}} h.",
+				"jobFailing": "The scheduled job “{{job}}” has failed {{failures}} times in a row.",
+				"lastError": "Last error: {{error}}",
+				"areas": {
+					"backups": "local backups",
+					"offsite": "off-site copy",
+					"job": "job “{{job}}”"
+				}
 			}
 		}
 	},
@@ -2030,6 +2045,11 @@
 				"title": "Time tracking started",
 				"contentWithTask": "Time tracking started on task: {{taskTitle}}",
 				"contentWithoutTask": "Time tracking started on a task"
+			},
+			"instance_alert": {
+				"title": "Riuna · {{area}}",
+				"resolvedTitle": "Riuna · resolved",
+				"resolvedContent": "Back to normal: {{area}}."
 			}
 		},
 		"loadMore": "Load older notifications",

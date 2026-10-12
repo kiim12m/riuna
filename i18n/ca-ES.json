@@ -1767,6 +1767,7 @@
 			"backups": {
 				"title": "Copias",
 				"notConfigured": "La API no ve el directorio de copias (BACKUP_DIR).",
+				"unreadable": "BACKUP_DIR está definido, pero la API no lo puede leer",
 				"none": "Todavía no hay copias",
 				"latest": "La última, {{when}} · {{size}}",
 				"count": "Copias locales: {{count}}",
@@ -1817,6 +1818,20 @@
 				"title": "Tu IP, según la API",
 				"hint": "Detrás de tailscale serve debería ser tu dirección de Tailscale (100.x).",
 				"unknown": "Desconocida"
+			},
+			"problems": {
+				"backupMissing": "No hay ninguna copia de la base en el directorio de copias.",
+				"backupStale": "La última copia de la base es de hace {{hours}} h, y se espera una cada {{every}} h.",
+				"backupUnreadable": "La API no puede leer el directorio de copias (BACKUP_DIR): no sabe si se están haciendo.",
+				"offsiteNever": "La copia externa no ha subido nunca.",
+				"offsiteStale": "La copia externa no sube desde hace {{hours}} h.",
+				"jobFailing": "El trabajo programado «{{job}}» ha fallado {{failures}} veces seguidas.",
+				"lastError": "Último error: {{error}}",
+				"areas": {
+					"backups": "copias locales",
+					"offsite": "copia externa",
+					"job": "trabajo «{{job}}»"
+				}
 			}
 		}
 	},
@@ -2022,6 +2037,11 @@
 			"task_overdue": {
 				"title": "Tarea vencida",
 				"content": "{{taskTitle}} ha superado su fecha de vencimiento"
+			},
+			"instance_alert": {
+				"title": "Riuna · {{area}}",
+				"resolvedTitle": "Riuna · resuelto",
+				"resolvedContent": "Resuelto: {{area}}."
 			}
 		},
 		"reminderLeadTime": {

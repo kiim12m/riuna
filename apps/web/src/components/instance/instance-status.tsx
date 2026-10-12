@@ -14,19 +14,7 @@ import {
 } from "@/components/ui/table";
 import type { InstanceReport } from "@/fetchers/instance";
 import { formatDateTime, formatRelativeTime } from "@/lib/format";
-
-// Los trabajos se llaman por su id en la API; aquí, por su nombre. Un trabajo
-// nuevo sin traducción sale con su id, que también se entiende.
-const JOB_NAME_KEYS = {
-  "due-date-reminders": "settings:instance.jobs.names.dueDateReminders",
-  "project-webhook-reminders":
-    "settings:instance.jobs.names.projectWebhookReminders",
-  "seat-reconciliation": "settings:instance.jobs.names.seatReconciliation",
-  "trial-reminders": "settings:instance.jobs.names.trialReminders",
-  "recurring-tasks": "settings:instance.jobs.names.recurringTasks",
-  automations: "settings:instance.jobs.names.automations",
-  "instance-health": "settings:instance.jobs.names.instanceHealth",
-} as const;
+import { instanceProblemText, jobName } from "@/lib/instance-alert";
 
 const STATUS_KEYS = {
   ok: "settings:instance.jobs.statusOk",
@@ -109,7 +97,7 @@ function Summary({ report }: { report: InstanceReport }) {
         <ul className="flex flex-col gap-1">
           {report.problems.map((problem) => (
             <li key={problem.key} className="flex flex-wrap items-center gap-2">
-              <span>{problem.message}</span>
+              <span>{instanceProblemText(problem, problem.message, t)}</span>
               {notified.has(problem.key) && (
                 <Badge variant="outline" size="sm">
                   {t("settings:instance.notified")}
@@ -175,6 +163,10 @@ function Facts({ report, locale }: { report: InstanceReport; locale: string }) {
         {!backups.configured ? (
           <span className="text-meta text-muted-foreground">
             {t("settings:instance.backups.notConfigured")}
+          </span>
+        ) : !backups.readable ? (
+          <span className="text-destructive">
+            {t("settings:instance.backups.unreadable")}
           </span>
         ) : (
           <>
@@ -260,14 +252,12 @@ function Jobs({ report, locale }: { report: InstanceReport; locale: string }) {
             </TableHeader>
             <TableBody>
               {report.jobs.map((job) => {
-                const nameKey =
-                  JOB_NAME_KEYS[job.job as keyof typeof JOB_NAME_KEYS];
                 const statusKey =
                   STATUS_KEYS[job.lastStatus as keyof typeof STATUS_KEYS];
                 return (
                   <TableRow key={job.job}>
                     <TableCell className="font-medium">
-                      {nameKey ? t(nameKey) : job.job}
+                      {jobName(job.job, t)}
                     </TableCell>
                     <TableCell>
                       <Badge

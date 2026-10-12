@@ -2,7 +2,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useWorkspacePermission } from "./use-workspace-permission";
+import {
+  useEditableUntilKnown,
+  useWorkspacePermission,
+} from "./use-workspace-permission";
 
 const { hasPermission } = vi.hoisted(() => ({
   hasPermission: vi.fn(),
@@ -69,5 +72,26 @@ describe("useWorkspacePermission", () => {
     expect(result.current.canCreateLabels()).toBe(true);
     expect(result.current.canUpdateLabels()).toBe(true);
     expect(result.current.canDeleteLabels()).toBe(false);
+  });
+
+  // Revision de la Fase 9, hallazgo 12.
+  it("lets an editing control open until the permissions arrive, then follows them", async () => {
+    let answer: (value: { data: { success: boolean } }) => void = () => {};
+    const pending = new Promise<{ data: { success: boolean } }>((resolve) => {
+      answer = resolve;
+    });
+    hasPermission.mockImplementation(() => pending);
+
+    const { result } = renderHook(() => useEditableUntilKnown("updateTasks"), {
+      wrapper: createWrapper(),
+    });
+
+    expect(result.current).toBe(true);
+
+    answer({ data: { success: false } });
+
+    await waitFor(() => {
+      expect(result.current).toBe(false);
+    });
   });
 });

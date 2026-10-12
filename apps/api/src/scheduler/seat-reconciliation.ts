@@ -4,7 +4,11 @@ import { syncWorkspaceSeats } from "../billing/controllers/sync-seats";
 import db from "../database";
 import { workspaceBillingTable, workspaceUserTable } from "../database/schema";
 import { log } from "../utils/log";
-import { SEAT_RECONCILIATION_LEASE, withJobLease } from "./leader-lock";
+import {
+  HELD_ELSEWHERE,
+  SEAT_RECONCILIATION_LEASE,
+  withJobLease,
+} from "./leader-lock";
 
 const BATCH_SIZE = 100;
 
@@ -33,14 +37,17 @@ async function findDriftedWorkspaces() {
 
 export async function reconcileWorkspaceSeats(): Promise<{
   degraded: boolean;
+  skipped?: boolean;
 }> {
   if (!isBillingEnabled()) {
     return { degraded: false };
   }
 
-  return withJobLease(SEAT_RECONCILIATION_LEASE, runReconciliation, () => ({
-    degraded: false,
-  }));
+  return withJobLease(
+    SEAT_RECONCILIATION_LEASE,
+    runReconciliation,
+    () => HELD_ELSEWHERE,
+  );
 }
 
 async function runReconciliation(): Promise<{ degraded: boolean }> {

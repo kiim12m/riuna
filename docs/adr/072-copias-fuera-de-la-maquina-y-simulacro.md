@@ -36,6 +36,15 @@
 - **`RIUNA_DISABLE_SCHEDULER=true`** apaga todos los trabajos programados. Una copia trae las
   reglas, los stand-ups programados y los recordatorios de la instancia de verdad: con el
   planificador en marcha, mandaría mensajes reales a chats reales.
+- **`RIUNA_DISABLE_OUTBOUND=true`** deja a la API sin red: `fetch` solo alcanza `localhost`
+  (`utils/outbound-guard.ts`, instalado antes que los plugins). Añadido en la revisión de la
+  Fase 9:
+  - las integraciones de proyecto (el token de Gitea y los webhooks de Discord, Slack y
+    Telegram) se restauran en claro, y la clave de cifrado nueva no las cubre;
+  - sin planificador, los suscriptores de los plugins seguían escuchando: una tarea movida por
+    el humo avisaba a un chat de verdad;
+  - basta con `fetch` porque toda salida HTTP de la API pasa por él. El correo no, y lo cubre
+    que el `.env` del simulacro no lleve SMTP.
 - **Simulacro sintético cada noche** (`restore-drill.yml`, también en las PR que tocan copias,
   imágenes o migraciones):
   1. construye las imágenes de `compose.local.yml`, siembra con `dev-seed.mjs` y copia;
@@ -61,6 +70,8 @@
   - Reutiliza las imágenes que ya sirven.
   - El humo corre desde un contenedor de Playwright dentro de su red. La versión de la imagen la
     vigila una prueba, para que acompañe a la de `@playwright/test`.
+  - Ese contenedor copia el repositorio sin ningún `.env`: el de la instancia de verdad lleva
+    sus secretos (revisión de la Fase 9).
   - **Entra por `localhost`**, como el navegador del PC: `deploy/simulacro-proxy.mjs` reenvía
     `localhost:5183` a la web y `localhost:1347` a la API.
     - Con los nombres de servicio, la web y la API eran dos sitios distintos y la cookie de
