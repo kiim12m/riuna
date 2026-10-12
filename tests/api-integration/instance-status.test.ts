@@ -7,6 +7,7 @@ import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
 import { checkInstanceHealth } from "../../apps/api/src/instance/alerts";
 import { withCheckIn } from "../../apps/api/src/scheduler";
+import { HELD_ELSEWHERE } from "../../apps/api/src/scheduler/leader-lock";
 import { log } from "../../apps/api/src/utils/log";
 import { createApiKey, mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
@@ -151,6 +152,23 @@ describe("job status", () => {
       lastError: null,
     });
     expect(row?.lastSuccessAt).toBeInstanceOf(Date);
+  });
+
+  // Revision de la Fase 9: cuando otra instancia tiene el arrendamiento, la
+  // vuelta no corrio aqui. Apuntarla como buena ponia a cero los fallos de la
+  // que si corre, y «falla seguido» no saltaba nunca con dos replicas.
+  it("does not count a turn held by another instance as a good run", async () => {
+    vi.spyOn(log, "error").mockImplementation(() => {});
+    await withCheckIn("automations", async () => {
+      throw new Error("fallo en la instancia que tiene el turno");
+    })();
+    await withCheckIn("automations", async () => HELD_ELSEWHERE)();
+
+    const [row] = await db
+      .select()
+      .from(schema.jobStatusTable)
+      .where(eq(schema.jobStatusTable.job, "automations"));
+    expect(row).toMatchObject({ lastStatus: "error", consecutiveFailures: 1 });
   });
 });
 

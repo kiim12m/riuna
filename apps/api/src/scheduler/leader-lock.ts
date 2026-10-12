@@ -9,6 +9,13 @@ export const SEAT_RECONCILIATION_LEASE = "seat-reconciliation";
 
 const DEFAULT_LEASE_MS = 15 * 60 * 1000;
 
+/**
+ * Lo que devuelve un trabajo con arrendamiento cuando lo tiene otra instancia:
+ * la vuelta no corrio aqui, y `withCheckIn` no la apunta (revision de la
+ * Fase 9; ver `JobOutcome` en `scheduler/index.ts`).
+ */
+export const HELD_ELSEWHERE = { degraded: false, skipped: true } as const;
+
 export async function withJobLease<T>(
   name: string,
   run: () => Promise<T>,

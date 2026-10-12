@@ -13,6 +13,7 @@ vi.mock("../../../apps/api/src/scheduler/due-date-reminders", () => ({
   checkDueDateReminders: vi.fn(),
 }));
 vi.mock("../../../apps/api/src/scheduler/leader-lock", () => ({
+  HELD_ELSEWHERE: { degraded: false, skipped: true },
   withJobLease: vi.fn(),
 }));
 vi.mock("../../../apps/api/src/scheduler/project-webhook-reminders", () => ({
