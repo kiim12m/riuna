@@ -16,8 +16,9 @@ services:
       E2E_BASE_URL: http://localhost:5183
       E2E_API_URL: http://localhost:1347
     volumes:
-      # El repositorio, de solo lectura: se copia dentro sin node_modules ni
-      # copias, y se instala aparte, para no dejar nada de Linux en el PC.
+      # El repositorio, de solo lectura: se copia dentro sin node_modules, sin
+      # copias y sin ningun .env (el de la instancia de verdad lleva sus
+      # secretos), y se instala aparte, para no dejar nada de Linux en el PC.
       - .:/src:ro
       # Las trazas de lo que falle, fuera, para mirarlas (o subirlas en CI).
       - ./deploy/.simulacro/test-results:/work/test-results
@@ -27,7 +28,8 @@ services:
         set -e
         cd /src
         tar --exclude=node_modules --exclude=.git --exclude=./backups \
-          --exclude=./deploy/.simulacro --exclude=./deploy/rclone -cf - . \
+          --exclude=./deploy/.simulacro --exclude=./deploy/rclone \
+          --exclude='.env' --exclude='.env.*' -cf - . \
           | tar -xf - -C /work
         cd /work
         node deploy/simulacro-proxy.mjs &

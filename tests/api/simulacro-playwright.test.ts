@@ -37,4 +37,15 @@ describe("simulacro de restauracion", () => {
     expect(script).toContain('echo "RIUNA_DISABLE_OUTBOUND=true"');
     expect(script).toContain('echo "RIUNA_DISABLE_SCHEDULER=true"');
   });
+
+  // Revision de la Fase 9, hallazgo 9: el .env de la instancia de verdad no
+  // entra en el contenedor del humo.
+  it("no copia ningun .env al contenedor del humo", () => {
+    const compose = readFileSync(
+      join(ROOT, "deploy/simulacro.compose.yml"),
+      "utf8",
+    );
+
+    expect(compose).toContain("--exclude='.env' --exclude='.env.*'");
+  });
 });

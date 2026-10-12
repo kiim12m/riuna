@@ -70,6 +70,8 @@
   - Reutiliza las imágenes que ya sirven.
   - El humo corre desde un contenedor de Playwright dentro de su red. La versión de la imagen la
     vigila una prueba, para que acompañe a la de `@playwright/test`.
+  - Ese contenedor copia el repositorio sin ningún `.env`: el de la instancia de verdad lleva
+    sus secretos (revisión de la Fase 9).
   - **Entra por `localhost`**, como el navegador del PC: `deploy/simulacro-proxy.mjs` reenvía
     `localhost:5183` a la web y `localhost:1347` a la API.
     - Con los nombres de servicio, la web y la API eran dos sitios distintos y la cookie de
