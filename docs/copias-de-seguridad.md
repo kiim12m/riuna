@@ -91,10 +91,13 @@ El guion hace esto:
 
 **Nada de lo restaurado puede salir de ahí:**
 
-- no hay planificador, así que no salen stand-ups ni recordatorios a chats de verdad;
+- la API no tiene red (`RIUNA_DISABLE_OUTBOUND=true`): solo alcanza `localhost`. Es lo que lo
+  garantiza, porque las integraciones de proyecto (el token de Gitea y los webhooks de Discord,
+  Slack y Telegram) se restauran en claro;
+- no hay planificador, así que no salen stand-ups ni recordatorios;
 - no hay SMTP;
-- la clave de cifrado es nueva, así que los destinos de chat y de webhook restaurados no se
-  pueden descifrar;
+- la clave de cifrado es nueva, así que los destinos de aviso cifrados no se pueden descifrar;
+- el contenedor del humo no copia ningún `.env`;
 - todo escucha solo en `127.0.0.1`.
 
 La copia no sale del PC.

@@ -22,7 +22,11 @@
   - Se recorre de derecha a izquierda saltando proxies, y la primera que no lo es, es el
     cliente. La de más a la izquierda la escribe quien llama.
   - Better Auth la recibe ya resuelta en `x-riuna-client-ip`, y solo lee esa cabecera. Si la
-    trae quien llama, se borra.
+    trae quien llama, se borra. Turnstile también la recibe de ahí.
+  - La lista de `TRUSTED_PROXIES` se valida y se construye una vez por valor. Una entrada que
+    no vale se ignora con un aviso en el log: un prefijo fuera de rango (`/33`) hacía lanzar a
+    cada petición, y uno vacío (`10.0.0.0/`) se leía como `/0`, confiar en todo. Un `/0` escrito
+    a propósito sí vale.
 - **Better Auth limita siempre**, no solo en cloud, por IP:
   - entrar con contraseña, con usuario o por OTP: 10 por minuto;
   - enlace mágico: 5 por minuto;
@@ -35,7 +39,8 @@
     (`RATE_LIMIT_USER_PER_MINUTE`): detrás de Docker todas las IP son iguales, y la persona no;
   - lo que se sirve sin sesión cuenta por IP, con un cupo por ruta. Son el `.ics` del calendario,
     el proyecto público, la invitación pública, el estado de la instancia y los receptores de
-    webhooks de GitHub y Gitea;
+    webhooks de GitHub y Gitea. Una IPv6 cuenta por su /64, como en Better Auth: una conexión
+    doméstica tiene la /64 entera;
   - los avatares y los adjuntos quedan fuera: un tablero carga decenas, el navegador los guarda y
     sus ids no se adivinan;
   - `/api/health` no tiene límite.

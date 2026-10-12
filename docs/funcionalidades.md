@@ -699,8 +699,8 @@ no lista los proyectos Personal.
   noche en CI con datos sembrados.
   - Restaura en un proyecto Compose aislado y compara los recuentos.
   - Pasa el humo entero contra lo restaurado.
-  - Arranca sin planificador, sin correo y con una clave de cifrado nueva, así que nada de lo
-    restaurado puede salir.
+  - Arranca sin red (la API solo alcanza `localhost`), sin planificador, sin correo y con una
+    clave de cifrado nueva, así que nada de lo restaurado puede salir.
 - **Actualizar con red** ([ADR 071](adr/071-la-instancia-del-pc-por-tailscale.md)):
   `deploy/actualizar.sh` construye, copia, migra con la imagen nueva antes de cambiar la que
   sirve (`node dist/migrate.js`), levanta y, si algo falla, dice cómo volver. La instancia del
@@ -719,11 +719,13 @@ no lista los proyectos Personal.
   - el tiempo real;
   - las rutas más lentas (p50 y p95);
   - la IP con la que la API ve a quien pregunta.
-- **Alertas al admin de instancia** por sus canales (ntfy, Gotify, correo, webhook), cuando:
-  - la copia local se retrasa;
+- **Alertas al admin de instancia** en la campana y por los canales de sus preferencias
+  generales (ntfy, Gotify, correo, webhook), sin regla de espacio, cuando:
+  - la copia local se retrasa, o la API no puede leer el directorio de copias;
   - la copia externa deja de subir;
   - un trabajo programado falla tres veces seguidas.
-  Cada alerta avisa una vez y avisa de nuevo al resolverse.
+  Cada alerta avisa una vez y avisa de nuevo al resolverse. En la página y en la campana sale
+  traducida; por los canales, en español.
 - **Logs estructurados** ([ADR 073](adr/073-logs-estructurados.md)):
   - JSON por línea, con una por petición y un `requestId` que también sale en `X-Request-Id`;
   - los secretos, tapados;
