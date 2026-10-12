@@ -28,4 +28,13 @@ describe("simulacro de restauracion", () => {
 
     expect(tag).toBe(installed);
   });
+
+  // Revision de la Fase 9, hallazgo 3: la copia real trae webhooks y tokens
+  // en claro. Lo restaurado no puede salir a la red ni programar nada.
+  it("apaga la salida a la red y el planificador de lo restaurado", () => {
+    const script = readFileSync(join(ROOT, "deploy/simulacro.sh"), "utf8");
+
+    expect(script).toContain('echo "RIUNA_DISABLE_OUTBOUND=true"');
+    expect(script).toContain('echo "RIUNA_DISABLE_SCHEDULER=true"');
+  });
 });

@@ -94,6 +94,7 @@ import {
   normalizeNullableSchemasForOpenApi30,
   normalizeOrganizationAuthOperations,
 } from "./utils/openapi-spec";
+import { installOutboundGuard } from "./utils/outbound-guard";
 import { enforceUserLimit, limitByIp } from "./utils/rate-limit";
 import { requestLog, respondingRoute } from "./utils/request-log";
 import { validateWorkspaceAccess } from "./utils/validate-workspace-access";
@@ -928,6 +929,7 @@ export function createApp() {
 export async function runStartupTasks() {
   const currentDir = dirname(fileURLToPath(import.meta.url));
 
+  installOutboundGuard();
   await runMigrations({ migrationsFolder: `${currentDir}/../drizzle` });
 
   initializePlugins();
