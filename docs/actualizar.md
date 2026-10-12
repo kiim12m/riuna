@@ -37,7 +37,9 @@ reconstruir las imágenes. No toca nada de lo de arriba; está en
 
 ## Cómo se entra: `tailscale serve`
 
-Una sola URL con HTTPS, `https://<pc>.<tailnet>.ts.net`, para la web y para la API:
+Una sola URL con HTTPS, `https://<pc>.<tailnet>.ts.net`, para la web y para la API. La de
+esta instancia es **`https://riuna-lix.tail01016d.ts.net`** (el MCP, en
+`https://riuna-lix.tail01016d.ts.net/api/mcp`):
 
 ```bash
 tailscale serve --bg http://127.0.0.1:5173
