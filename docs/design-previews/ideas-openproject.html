@@ -1,0 +1,1120 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ideas de OpenProject para Riuna</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Maqueta del interludio «Ideas de OpenProject». Shell de producto con los
+   tokens semanticos de apps/web/src/index.css (copiados de design-previews/gantt.html);
+   la franja oscura de arriba y las etiquetas negras con el numero del plan son andamiaje. */
+:root {
+  --color-white:#fff;
+  --font-sans:"Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:"Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --riuna-navy:#1b3a5c; --riuna-ink:#141d2b; --riuna-mid:#4a6380; --riuna-surface:#f6f7f9;
+  --riuna-teal:#0e8a7a; --riuna-teal-strong:#0b7466; --riuna-teal-light:#2ab39f; --riuna-teal-lighter:#5fd3c0;
+  --riuna-ground:#0b141f; --riuna-raised:#101c2a; --riuna-sunken:#0e1825; --riuna-text-night:#e6edf4; --riuna-mid-night:#8fa7c0;
+
+  --background:var(--color-white); --foreground:var(--riuna-ink);
+  --card:var(--color-white); --popover:var(--color-white);
+  --border:color-mix(in srgb, var(--riuna-navy) 17%, transparent);
+  --input:color-mix(in srgb, var(--riuna-navy) 22%, transparent);
+  --muted:color-mix(in srgb, var(--riuna-navy) 5%, transparent);
+  --muted-foreground:var(--riuna-mid);
+  --accent:color-mix(in srgb, var(--riuna-teal) 10%, transparent);
+  --brand:var(--riuna-teal); --brand-strong:var(--riuna-teal-strong);
+  --primary:var(--riuna-navy); --primary-foreground:var(--color-white);
+  --ring:var(--riuna-teal);
+  --sidebar:var(--riuna-surface);
+  --destructive:#dc2626; --destructive-foreground:#b91c1c;
+  --warning:#d97706; --warning-foreground:#b45309;
+  --success:#16a34a; --success-foreground:#15803d;
+  --info:#2563eb; --info-foreground:#1d4ed8;
+  --scaffold:var(--riuna-ink); --scaffold-fg:#cdd7e2;
+  --paper:#ffffff; --paper-ink:#141d2b; --paper-rule:#d5dbe3;
+
+  --elevation-1:0 1px 2px -1px color-mix(in srgb, var(--riuna-navy) 24%, transparent), 0 1px 1px -1px color-mix(in srgb, var(--riuna-navy) 16%, transparent);
+  --elevation-2:0 2px 6px -2px color-mix(in srgb, var(--riuna-navy) 22%, transparent), 0 4px 12px -4px color-mix(in srgb, var(--riuna-navy) 16%, transparent);
+  --elevation-3:0 8px 24px -6px color-mix(in srgb, var(--riuna-navy) 26%, transparent), 0 2px 6px -2px color-mix(in srgb, var(--riuna-navy) 18%, transparent);
+  --motion-fast:140ms; --motion-base:220ms; --ease-out:cubic-bezier(0.23,1,0.32,1);
+
+  --text-page:1.25rem; --text-section:1rem; --text-body:0.875rem; --text-secondary:0.75rem; --text-label:0.6875rem;
+  --tr-label:0.06em; --density-control:2rem; --row:2rem; --day:26px; --rail:15rem;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --background:var(--riuna-ground); --foreground:var(--riuna-text-night);
+  --card:var(--riuna-raised); --popover:var(--riuna-raised);
+  --border:color-mix(in srgb, var(--color-white) 10%, transparent);
+  --input:color-mix(in srgb, var(--color-white) 12%, transparent);
+  --muted:color-mix(in srgb, var(--color-white) 5%, transparent);
+  --muted-foreground:var(--riuna-mid-night);
+  --accent:color-mix(in srgb, var(--riuna-teal-light) 14%, transparent);
+  --brand:var(--riuna-teal-light); --brand-strong:var(--riuna-teal-light);
+  --primary:var(--riuna-text-night); --primary-foreground:#14293f; --ring:var(--riuna-teal-light);
+  --sidebar:var(--riuna-sunken);
+  --destructive-foreground:#f26d6d; --warning-foreground:#f0a83c; --success-foreground:#55d486; --info-foreground:#7ca9f5;
+  --scaffold:#05090f; --scaffold-fg:#b9c6d4;
+  --paper:#f4f6f8; --paper-ink:#141d2b; --paper-rule:#cfd6df;
+  --elevation-1:0 1px 2px -1px color-mix(in srgb, #000 55%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent);
+  --elevation-2:0 3px 10px -3px color-mix(in srgb, #000 55%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+  --elevation-3:0 10px 28px -8px color-mix(in srgb, #000 60%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"] {
+  --background:var(--riuna-ground); --foreground:var(--riuna-text-night);
+  --card:var(--riuna-raised); --popover:var(--riuna-raised);
+  --border:color-mix(in srgb, var(--color-white) 10%, transparent);
+  --input:color-mix(in srgb, var(--color-white) 12%, transparent);
+  --muted:color-mix(in srgb, var(--color-white) 5%, transparent);
+  --muted-foreground:var(--riuna-mid-night);
+  --accent:color-mix(in srgb, var(--riuna-teal-light) 14%, transparent);
+  --brand:var(--riuna-teal-light); --brand-strong:var(--riuna-teal-light);
+  --primary:var(--riuna-text-night); --primary-foreground:#14293f; --ring:var(--riuna-teal-light);
+  --sidebar:var(--riuna-sunken);
+  --destructive-foreground:#f26d6d; --warning-foreground:#f0a83c; --success-foreground:#55d486; --info-foreground:#7ca9f5;
+  --scaffold:#05090f; --scaffold-fg:#b9c6d4;
+  --paper:#f4f6f8; --paper-ink:#141d2b; --paper-rule:#cfd6df;
+  --elevation-1:0 1px 2px -1px color-mix(in srgb, #000 55%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent);
+  --elevation-2:0 3px 10px -3px color-mix(in srgb, #000 55%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+  --elevation-3:0 10px 28px -8px color-mix(in srgb, #000 60%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+  color-scheme:dark;
+}
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { transition-duration:.001ms !important; animation-duration:.001ms !important; } }
+
+* { box-sizing:border-box; }
+/* Abierta como fichero suelto no hay reset que lo haga: sin esto, .pop, .alert e .icn ganan al atributo. */
+[hidden] { display:none !important; }
+body { margin:0; background:var(--sidebar); color:var(--foreground); font-family:var(--font-sans); font-size:var(--text-body); -webkit-font-smoothing:antialiased; }
+button, input, select, textarea { font:inherit; color:inherit; }
+h1,h2,h3,p { margin:0; }
+h1,h2,h3 { text-wrap:balance; }
+.mono { font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+.num { font-variant-numeric:tabular-nums; }
+:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
+.icn { width:1rem; height:1rem; flex:none; display:inline-block; vertical-align:-0.18em; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.icn-s { width:0.85rem; height:0.85rem; }
+.muted { color:var(--muted-foreground); }
+
+/* ===== andamiaje ===== */
+.pchrome { position:sticky; top:env(safe-area-inset-top,0px); z-index:50; display:flex; flex-wrap:wrap; align-items:center; gap:0.4rem 1rem; padding:0.45rem 1rem; background:var(--scaffold); color:var(--scaffold-fg); font-size:var(--text-label); text-transform:uppercase; letter-spacing:var(--tr-label); font-weight:600; }
+.pchrome .spacer { flex:1; }
+.pseg { display:inline-flex; flex-wrap:wrap; padding:2px; gap:2px; border:1px solid #ffffff26; border-radius:7px; }
+.pseg button { border:0; cursor:pointer; background:transparent; color:#9fb0c2; font-size:var(--text-label); font-weight:600; text-transform:uppercase; letter-spacing:var(--tr-label); padding:4px 8px; border-radius:5px; }
+.pseg button[aria-pressed="true"] { background:var(--riuna-teal-strong); color:#fff; }
+.ptag { display:inline-flex; align-items:center; height:1.05rem; padding:0 0.35rem; border-radius:4px; background:var(--scaffold); color:#e6edf4; font:600 0.625rem/1 var(--font-mono); letter-spacing:0.02em; vertical-align:0.12em; white-space:nowrap; }
+.pnote { display:flex; flex-wrap:wrap; align-items:baseline; gap:0.35rem 0.6rem; padding:0.55rem 0.75rem; border:1px dashed color-mix(in srgb, var(--muted-foreground) 55%, transparent); border-radius:9px; color:var(--muted-foreground); font-size:var(--text-secondary); line-height:1.5; }
+.pnote b { color:var(--foreground); font-weight:600; }
+.pctl { display:flex; flex-wrap:wrap; align-items:center; gap:0.5rem; padding:0.4rem 0.6rem; border-radius:9px; background:var(--scaffold); color:var(--scaffold-fg); font-size:var(--text-label); text-transform:uppercase; letter-spacing:var(--tr-label); font-weight:600; }
+.pctl .btnsim { border:1px solid #ffffff26; background:#ffffff12; color:#e6edf4; cursor:pointer; padding:4px 10px; border-radius:6px; font-size:var(--text-label); font-weight:600; text-transform:uppercase; letter-spacing:var(--tr-label); }
+
+.wrap { padding-inline:16px; padding-block:1rem 3rem; max-width:1440px; margin:0 auto; display:grid; gap:0.75rem; }
+.panel[hidden] { display:none !important; }
+/* Sin esto la pestaña, que es un elemento de rejilla, crece hasta el ancho del Gantt o la tabla en vez de dejarlos desplazar por dentro. */
+.panel { min-width:0; }
+
+/* ===== shell de producto ===== */
+.inset { border:1px solid color-mix(in srgb, var(--border) 80%, transparent); border-radius:14px; background:var(--background); box-shadow:var(--elevation-1); min-width:0; overflow:hidden; }
+.topbar { min-height:2.75rem; display:flex; flex-wrap:wrap; align-items:center; gap:0.4rem 0.6rem; padding:0.35rem 0.6rem; border-bottom:1px solid var(--border); background:var(--card); }
+.crumb { display:flex; align-items:center; gap:0.35rem; font-size:var(--text-secondary); color:var(--muted-foreground); min-width:0; }
+.crumb b { color:var(--foreground); font-weight:500; }
+.viewtabs { display:inline-flex; flex-wrap:wrap; gap:1px; border:1px solid var(--border); border-radius:9px; padding:2px; background:var(--background); }
+.viewtabs span { color:var(--muted-foreground); font-size:var(--text-secondary); padding:0.28rem 0.55rem; border-radius:7px; }
+.viewtabs span[aria-current] { background:var(--accent); color:var(--foreground); box-shadow:inset 0 -2px 0 var(--brand); }
+.tb-right { margin-left:auto; display:flex; flex-wrap:wrap; align-items:center; gap:0.4rem; }
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:0.35rem; height:var(--density-control); padding:0 0.65rem; border-radius:8px; border:1px solid var(--primary); background:var(--primary); color:var(--primary-foreground); font-size:var(--text-secondary); font-weight:500; cursor:pointer; white-space:nowrap; transition:background-color var(--motion-fast) var(--ease-out), transform var(--motion-fast) var(--ease-out); }
+.btn:active { transform:scale(0.97); }
+.btn.outline { background:var(--card); border-color:var(--input); color:var(--foreground); }
+.btn.outline:hover, .btn.ghost:hover { background:var(--accent); }
+.btn.ghost { background:transparent; border-color:transparent; color:var(--foreground); }
+.btn.sm { height:1.65rem; padding:0 0.5rem; font-size:var(--text-label); }
+.btn.danger { background:transparent; border-color:color-mix(in srgb, var(--destructive) 40%, transparent); color:var(--destructive-foreground); }
+.btn[aria-pressed="true"] { background:var(--accent); border-color:color-mix(in srgb, var(--brand) 45%, transparent); color:var(--brand-strong); }
+.chip { display:inline-flex; align-items:center; gap:0.35rem; height:1.75rem; padding:0 0.5rem; border-radius:7px; border:1px solid transparent; font-size:var(--text-secondary); font-weight:600; white-space:nowrap; }
+.chip:hover { background:var(--accent); }
+.pill { display:inline-flex; align-items:center; gap:0.3rem; padding:0.1rem 0.45rem; border-radius:999px; font-size:var(--text-label); font-weight:600; white-space:nowrap; border:1px solid var(--border); }
+.dot { width:7px; height:7px; border-radius:999px; flex:none; background:currentColor; }
+.av { width:1.35rem; height:1.35rem; border-radius:999px; display:inline-grid; place-items:center; font-size:0.6rem; font-weight:600; background:var(--accent); color:var(--brand-strong); border:1px solid color-mix(in srgb, var(--brand) 30%, transparent); flex:none; }
+.avs { display:inline-flex; } .avs .av + .av { margin-left:-0.35rem; box-shadow:0 0 0 2px var(--card); }
+.section-h { font-size:var(--text-label); text-transform:uppercase; letter-spacing:var(--tr-label); font-weight:600; color:var(--muted-foreground); }
+.card { border:1px solid var(--border); border-radius:10px; background:var(--card); }
+.pop { position:absolute; z-index:20; width:min(19rem, calc(100vw - 2rem)); background:var(--popover); border:1px solid var(--border); border-radius:10px; box-shadow:var(--elevation-3); padding:0.5rem; display:grid; gap:0.25rem; }
+.menu-item { display:flex; align-items:center; gap:0.5rem; width:100%; border:0; background:transparent; text-align:left; padding:0.42rem 0.5rem; border-radius:7px; cursor:pointer; font-size:var(--text-secondary); }
+.menu-item:hover, .menu-item[aria-checked="true"] { background:var(--accent); }
+.menu-item .r { margin-left:auto; color:var(--muted-foreground); font-size:var(--text-label); }
+.field { width:100%; border:1px solid var(--input); background:var(--background); border-radius:8px; padding:0.4rem 0.55rem; font-size:var(--text-secondary); }
+.help { display:inline-grid; place-items:center; width:1rem; height:1rem; border-radius:999px; border:1px solid var(--input); color:var(--muted-foreground); font-size:0.6rem; font-weight:700; cursor:help; position:relative; }
+.help:hover::after, .help:focus::after { content:attr(data-tip); position:absolute; left:50%; bottom:calc(100% + 6px); transform:translateX(-50%); width:15rem; padding:0.45rem 0.55rem; border-radius:8px; background:var(--popover); color:var(--foreground); border:1px solid var(--border); box-shadow:var(--elevation-3); font-size:var(--text-secondary); font-weight:400; line-height:1.45; text-align:left; z-index:30; white-space:normal; }
+.help.down:hover::after, .help.down:focus::after { bottom:auto; top:calc(100% + 6px); left:auto; right:-0.5rem; transform:none; }
+.linkbtn { border:0; background:none; padding:0; color:var(--brand-strong); cursor:pointer; font-size:inherit; text-decoration:underline; text-underline-offset:2px; }
+.alert { display:flex; gap:0.6rem; align-items:flex-start; padding:0.6rem 0.75rem; border-radius:10px; border:1px solid color-mix(in srgb, var(--destructive) 35%, transparent); background:color-mix(in srgb, var(--destructive) 7%, transparent); font-size:var(--text-secondary); line-height:1.5; }
+.alert .icn { color:var(--destructive-foreground); margin-top:0.1rem; }
+.alert.warn { border-color:color-mix(in srgb, var(--warning) 40%, transparent); background:color-mix(in srgb, var(--warning) 9%, transparent); }
+.alert.warn .icn { color:var(--warning-foreground); }
+.alert.info { border-color:color-mix(in srgb, var(--brand) 35%, transparent); background:var(--accent); }
+.alert.info .icn { color:var(--brand-strong); }
+.alert .acts { display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.45rem; }
+.toasts { position:fixed; right:1rem; bottom:1rem; z-index:60; display:grid; gap:0.5rem; }
+.toast { background:var(--popover); border:1px solid var(--border); border-radius:10px; box-shadow:var(--elevation-3); padding:0.55rem 0.75rem; font-size:var(--text-secondary); max-width:22rem; }
+.toast b { display:block; font-size:var(--text-body); }
+
+/* ===== detalle de tarea ===== */
+.detail { display:grid; grid-template-columns:minmax(0,1fr) 19rem; }
+.detail-main { padding:1rem 1.25rem 1.5rem; display:grid; gap:1rem; align-content:start; min-width:0; border-right:1px solid var(--border); }
+.detail-side { padding:1rem; display:grid; gap:1rem; align-content:start; background:color-mix(in srgb, var(--muted) 60%, transparent); }
+.props { display:flex; flex-wrap:wrap; gap:0.25rem; align-items:center; padding-bottom:0.75rem; border-bottom:1px solid var(--border); }
+.title-h { font-size:var(--text-page); font-weight:600; letter-spacing:-0.01em; }
+.actions-row { display:flex; flex-wrap:wrap; gap:0.35rem; align-items:center; }
+.btn.action { background:var(--card); border-color:color-mix(in srgb, var(--brand) 40%, var(--input)); color:var(--foreground); }
+.btn.action .icn { color:var(--brand-strong); }
+.kv { display:grid; grid-template-columns:auto 1fr; gap:0.45rem 0.9rem; font-size:var(--text-secondary); align-items:center; }
+.kv dt { color:var(--muted-foreground); display:flex; align-items:center; gap:0.3rem; }
+.kv dd { margin:0; font-weight:500; }
+.formula { display:inline-flex; align-items:center; gap:0.25rem; font-family:var(--font-mono); font-size:var(--text-label); color:var(--muted-foreground); }
+.subrow { display:grid; grid-template-columns:auto auto minmax(0,1fr) auto auto; gap:0.6rem; align-items:center; padding:0.45rem 0.5rem; border-radius:8px; font-size:var(--text-secondary); }
+.subrow:hover { background:var(--accent); }
+.subrow .t { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500; }
+.progress { height:6px; border-radius:999px; background:var(--muted); overflow:hidden; } .progress > i { display:block; height:100%; background:var(--brand); border-radius:999px; }
+.relrow { display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; padding:0.4rem 0.5rem; border-radius:8px; font-size:var(--text-secondary); }
+.relrow:hover { background:var(--accent); }
+.relrow .k { color:var(--muted-foreground); min-width:5.5rem; }
+.lag { font-family:var(--font-mono); font-size:var(--text-label); padding:0.05rem 0.35rem; border-radius:5px; background:var(--muted); color:var(--muted-foreground); }
+.addrel { display:grid; grid-template-columns:9rem minmax(0,1fr) 6.5rem auto; gap:0.4rem; align-items:end; padding:0.6rem; border:1px solid var(--border); border-radius:10px; background:var(--card); }
+.addrel label { display:grid; gap:0.2rem; font-size:var(--text-label); color:var(--muted-foreground); }
+.act-item { display:grid; grid-template-columns:auto minmax(0,1fr); gap:0.6rem; font-size:var(--text-secondary); line-height:1.5; }
+.watch-list { display:grid; gap:0.2rem; }
+.watch-list .w { display:flex; align-items:center; gap:0.5rem; font-size:var(--text-secondary); padding:0.3rem 0.4rem; border-radius:7px; }
+.reminder-chip { display:flex; gap:0.5rem; align-items:flex-start; padding:0.55rem 0.65rem; border-radius:9px; border:1px solid color-mix(in srgb, var(--brand) 35%, transparent); background:var(--accent); font-size:var(--text-secondary); line-height:1.45; }
+.reminder-chip .icn { color:var(--brand-strong); margin-top:0.1rem; }
+.rel-anchor { position:relative; display:inline-block; }
+
+/* ===== Gantt ===== */
+.gtool { display:flex; flex-wrap:wrap; gap:0.5rem 0.75rem; align-items:center; padding:0.45rem 0.6rem; border-bottom:1px solid var(--border); background:var(--card); font-size:var(--text-secondary); }
+.seg { display:inline-flex; flex-wrap:wrap; gap:1px; border:1px solid var(--border); border-radius:9px; padding:2px; background:var(--background); }
+.seg button { border:0; background:transparent; color:var(--muted-foreground); cursor:pointer; font-size:var(--text-secondary); padding:0.26rem 0.55rem; border-radius:7px; }
+.seg button[aria-pressed="true"] { background:var(--accent); color:var(--foreground); box-shadow:inset 0 -2px 0 var(--brand); }
+.legend { display:flex; flex-wrap:wrap; gap:0.35rem 0.9rem; padding:0.4rem 0.6rem; border-bottom:1px solid var(--border); font-size:var(--text-label); color:var(--muted-foreground); }
+.legend span { display:inline-flex; align-items:center; gap:0.35rem; }
+.lg-bar { width:20px; height:6px; border-radius:99px; background:color-mix(in srgb, var(--brand) 30%, transparent); }
+.lg-sum { width:20px; height:5px; background:color-mix(in srgb, var(--brand-strong) 75%, transparent); position:relative; }
+.lg-sum::before, .lg-sum::after { content:""; position:absolute; top:4px; border:3px solid transparent; border-top-color:color-mix(in srgb, var(--brand-strong) 75%, transparent); }
+.lg-sum::before { left:-3px; } .lg-sum::after { right:-3px; }
+.lg-ms { width:9px; height:9px; transform:rotate(45deg); background:var(--brand-strong); border-radius:2px; }
+.lg-hol { width:14px; height:12px; background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--muted-foreground) 22%, transparent) 0 2px, transparent 2px 5px); border-radius:2px; }
+.lg-base { width:20px; height:6px; border-radius:99px; border:1.5px dashed var(--muted-foreground); }
+.lg-over { width:20px; height:5px; border:1.5px solid var(--destructive); border-bottom:0; border-radius:3px 3px 0 0; }
+.gscroll { overflow:auto; max-height:34rem; }
+.gcanvas { position:relative; }
+.ghead { position:sticky; top:0; z-index:6; display:flex; background:var(--background); border-bottom:1px solid var(--border); }
+.ghead-rail { position:sticky; left:0; z-index:7; flex:0 0 var(--rail); background:var(--background); border-right:1px solid var(--border); display:flex; align-items:flex-end; padding:0 0.75rem 0.35rem; font-size:var(--text-label); text-transform:uppercase; letter-spacing:var(--tr-label); color:var(--muted-foreground); font-weight:500; }
+.gbands { position:relative; flex:none; }
+.gband-top, .gband-bot { position:relative; }
+.gband-top { height:1.15rem; border-bottom:1px solid color-mix(in srgb, var(--border) 60%, transparent); }
+.gband-bot { height:1.6rem; }
+.gseg { position:absolute; top:0; bottom:0; display:flex; align-items:center; font-size:var(--text-label); color:var(--muted-foreground); white-space:nowrap; overflow:hidden; }
+.gband-top .gseg { padding-left:0.4rem; text-transform:uppercase; letter-spacing:var(--tr-label); font-weight:500; }
+.gband-bot .gseg { justify-content:center; flex-direction:column; line-height:1; gap:1px; border-left:1px solid color-mix(in srgb, var(--border) 55%, transparent); }
+.gband-bot .gseg small { font-size:0.55rem; opacity:0.7; }
+.gband-bot .gseg.today { color:var(--brand-strong); font-weight:600; background:color-mix(in srgb, var(--brand) 10%, transparent); }
+.gbody { position:relative; }
+.gcol { position:absolute; top:0; bottom:0; pointer-events:none; }
+.gcol.hol { background:repeating-linear-gradient(135deg, color-mix(in srgb, var(--muted-foreground) 13%, transparent) 0 2px, transparent 2px 6px); }
+.gcol.today { background:color-mix(in srgb, var(--brand) 7%, transparent); }
+.gcol.wk { width:1px; background:color-mix(in srgb, var(--border) 60%, transparent); }
+.grow { position:relative; display:flex; height:var(--row); border-bottom:1px solid color-mix(in srgb, var(--border) 42%, transparent); }
+.grow:hover { background:color-mix(in srgb, var(--accent) 45%, transparent); }
+.grail { position:sticky; left:0; z-index:4; flex:0 0 var(--rail); display:flex; align-items:center; gap:0.4rem; padding-right:0.5rem; background:var(--background); border-right:1px solid var(--border); overflow:hidden; font-size:var(--text-secondary); }
+.grow:hover .grail { background-image:linear-gradient(var(--accent), var(--accent)); }
+.grail .stripe { flex:none; width:3px; align-self:stretch; margin-right:0.4rem; background:var(--muted-foreground); }
+.grail .indent { flex:none; width:0.9rem; align-self:stretch; position:relative; }
+.grail .indent::before { content:""; position:absolute; right:0.35rem; top:0; height:50%; border-left:1px solid var(--border); }
+.grail .indent::after { content:""; position:absolute; right:0; width:0.35rem; top:50%; border-top:1px solid var(--border); }
+.grail .rid { font-family:var(--font-mono); font-size:var(--text-label); color:var(--muted-foreground); flex:none; }
+.grail .rt { min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500; }
+.grail .auto { flex:none; font-size:0.6rem; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; padding:0.05rem 0.3rem; border-radius:4px; color:var(--brand-strong); background:var(--accent); }
+.grail .over { flex:none; color:var(--destructive-foreground); }
+.grail .chg { flex:none; width:6px; height:6px; border-radius:99px; background:var(--warning); }
+.gtrack { position:relative; flex:none; }
+.gbar { position:absolute; top:50%; transform:translateY(-50%); height:10px; border-radius:999px; background:color-mix(in srgb, var(--brand) 24%, transparent); z-index:2; }
+.grow[data-depth="1"] .gbar { height:6px; }
+.gbar .fill { position:absolute; inset:0 auto 0 0; background:color-mix(in srgb, var(--brand) 50%, transparent); border-radius:999px 0 0 999px; }
+.gsum { position:absolute; top:50%; height:6px; transform:translateY(-70%); background:color-mix(in srgb, var(--brand-strong) 75%, transparent); z-index:2; cursor:grab; touch-action:none; }
+.gsum::before, .gsum::after { content:""; position:absolute; top:5px; border:4px solid transparent; border-top:5px solid color-mix(in srgb, var(--brand-strong) 75%, transparent); }
+.gsum::before { left:-4px; } .gsum::after { right:-4px; }
+.gsum:hover, .gsum.dragging { background:var(--brand-strong); box-shadow:var(--elevation-2); }
+.gsum.dragging { cursor:grabbing; }
+.gsum .grab { position:absolute; inset:-10px 0; }
+.gms { position:absolute; top:50%; width:12px; height:12px; margin-left:-6px; transform:translateY(-50%) rotate(45deg); background:var(--brand-strong); border-radius:2px; z-index:3; box-shadow:0 0 0 2px var(--background); }
+.gbranch { position:absolute; top:calc(50% - 13px); height:5px; border:1.5px solid color-mix(in srgb, var(--brand) 45%, transparent); border-bottom:0; border-radius:3px 3px 0 0; z-index:2; pointer-events:none; }
+.gbranch.over { border-color:var(--destructive); }
+/* Pastilla centrada sobre el tramo desbordado y montada en la linea del corchete: el fondo tapa la linea,
+   asi que no queda tachada ni hundida debajo de ella. */
+.gover-label { position:absolute; top:calc(50% - 12.25px); transform:translate(-50%, -50%); display:inline-flex; align-items:center; height:1rem; padding:0 0.4rem; border-radius:999px; background:var(--background); border:1px solid var(--destructive); color:var(--destructive-foreground); font:600 0.6rem/1 var(--font-mono); white-space:nowrap; z-index:3; pointer-events:none; }
+.gghost { position:absolute; top:calc(50% + 7px); height:5px; border-radius:999px; border:1.5px dashed color-mix(in srgb, var(--muted-foreground) 80%, transparent); z-index:1; }
+.gghost.ms { width:9px; height:9px; margin-left:-4.5px; transform:rotate(45deg); border-radius:2px; top:calc(50% + 4px); }
+.gdeps { position:absolute; top:0; left:var(--rail); z-index:3; pointer-events:none; overflow:visible; }
+.gdeps path { fill:none; stroke:color-mix(in srgb, var(--muted-foreground) 60%, transparent); stroke-width:1.5; }
+.gdeps polygon { fill:color-mix(in srgb, var(--muted-foreground) 60%, transparent); }
+.gdeps text { font:600 9px var(--font-mono); fill:var(--muted-foreground); paint-order:stroke; stroke:var(--background); stroke-width:3px; }
+.gtip { position:fixed; z-index:70; background:var(--popover); border:1px solid var(--border); border-radius:8px; box-shadow:var(--elevation-3); padding:0.35rem 0.55rem; font-size:var(--text-label); pointer-events:none; max-width:20rem; }
+
+/* ===== Tabla ===== */
+.tscroll { overflow:auto; }
+table.grid { width:100%; min-width:62rem; border-collapse:separate; border-spacing:0; font-size:var(--text-secondary); }
+table.grid th { position:sticky; top:0; z-index:2; background:var(--card); text-align:left; font-weight:500; color:var(--muted-foreground); padding:0.45rem 0.6rem; border-bottom:1px solid var(--border); white-space:nowrap; }
+table.grid td { padding:0.42rem 0.6rem; border-bottom:1px solid color-mix(in srgb, var(--border) 55%, transparent); white-space:nowrap; vertical-align:middle; }
+table.grid td.r, table.grid th.r { text-align:right; font-variant-numeric:tabular-nums; }
+table.grid tbody tr { transition:background-color var(--motion-fast) var(--ease-out); }
+table.grid tbody tr:hover { background:color-mix(in srgb, var(--accent) 50%, transparent); }
+table.grid tr.tint-red td { background:color-mix(in srgb, var(--destructive) 7%, transparent); }
+table.grid tr.tint-red td:first-child { box-shadow:inset 3px 0 0 var(--destructive); }
+table.grid tr.tint-amber td { background:color-mix(in srgb, var(--warning) 8%, transparent); }
+table.grid tr.tint-amber td:first-child { box-shadow:inset 3px 0 0 var(--warning); }
+table.grid tr.removed td { opacity:0.55; }
+table.grid tr.removed td.tt { text-decoration:line-through; }
+table.grid tfoot td { position:sticky; bottom:0; background:var(--card); border-top:1px solid var(--border); border-bottom:0; font-weight:600; }
+.old { display:block; text-decoration:line-through; color:var(--muted-foreground); font-size:var(--text-label); line-height:1.2; }
+.cellchg { background:color-mix(in srgb, var(--warning) 12%, transparent); border-radius:5px; padding:0.1rem 0.3rem; margin:-0.1rem -0.3rem; display:inline-block; }
+.bmark { display:inline-grid; place-items:center; width:1.1rem; height:1.1rem; border-radius:5px; font:700 0.7rem/1 var(--font-mono); }
+.bmark.add { color:var(--success-foreground); background:color-mix(in srgb, var(--success) 14%, transparent); }
+.bmark.rem { color:var(--destructive-foreground); background:color-mix(in srgb, var(--destructive) 12%, transparent); }
+.bmark.chg { color:var(--warning-foreground); background:color-mix(in srgb, var(--warning) 15%, transparent); }
+.prio { display:inline-flex; align-items:center; gap:0.3rem; }
+.stat { display:inline-flex; align-items:center; gap:0.3rem; }
+.tfootnote { padding:0.45rem 0.75rem; font-size:var(--text-label); color:var(--muted-foreground); border-top:1px solid var(--border); display:flex; flex-wrap:wrap; gap:0.3rem 1rem; }
+
+/* ===== Proyectos ===== */
+.proj-grid { display:grid; grid-template-columns:minmax(0,1fr) 20rem; gap:0.75rem; align-items:start; }
+.health-sum { display:flex; flex-wrap:wrap; gap:0.4rem; padding:0.6rem; border-bottom:1px solid var(--border); }
+.hs { display:inline-flex; align-items:center; gap:0.4rem; padding:0.3rem 0.55rem; border:1px solid var(--border); border-radius:8px; font-size:var(--text-secondary); background:var(--card); }
+.hs b { font-variant-numeric:tabular-nums; }
+.h-sin { color:var(--muted-foreground); } .h-plazo { color:var(--success-foreground); } .h-riesgo { color:var(--warning-foreground); } .h-desv { color:var(--destructive-foreground); } .h-term { color:var(--info-foreground); }
+.hbtn { border:1px solid var(--border); background:var(--card); border-radius:999px; padding:0.12rem 0.5rem; display:inline-flex; align-items:center; gap:0.35rem; font-size:var(--text-label); font-weight:600; cursor:pointer; white-space:nowrap; }
+.hbtn:hover { background:var(--accent); }
+.ptree { display:inline-flex; align-items:center; gap:0.35rem; }
+.ptree .tg { width:1.1rem; height:1.1rem; display:inline-grid; place-items:center; border:0; background:transparent; cursor:pointer; color:var(--muted-foreground); padding:0; border-radius:4px; }
+.ptree .tg:hover { background:var(--accent); }
+.ptree .pj { width:1.15rem; height:1.15rem; border-radius:5px; display:inline-grid; place-items:center; font-size:0.55rem; font-weight:700; color:#fff; background:var(--riuna-navy); flex:none; }
+.ptree .pj.prog { background:transparent; color:var(--muted-foreground); border:1px dashed var(--input); }
+.ptree .nm { font-weight:500; }
+.minibar { display:inline-block; width:4.5rem; height:5px; border-radius:99px; background:var(--muted); overflow:hidden; vertical-align:middle; margin-right:0.4rem; }
+.minibar i { display:block; height:100%; background:var(--brand); }
+.attrh { display:inline-flex; align-items:center; gap:0.25rem; }
+.attrh::before { content:""; width:5px; height:5px; border-radius:1px; transform:rotate(45deg); background:var(--brand); opacity:0.7; }
+.radio-row { display:flex; gap:0.5rem; align-items:flex-start; padding:0.45rem 0.5rem; border-radius:8px; font-size:var(--text-secondary); cursor:pointer; }
+.radio-row:hover { background:var(--accent); }
+.radio-row input { margin-top:0.15rem; accent-color:var(--brand); }
+.radio-row small { display:block; color:var(--muted-foreground); }
+.switch-row { display:flex; justify-content:space-between; gap:0.75rem; align-items:center; font-size:var(--text-secondary); padding:0.35rem 0; }
+.sw { width:2rem; height:1.15rem; border-radius:99px; background:var(--input); position:relative; flex:none; border:0; cursor:pointer; }
+.sw::after { content:""; position:absolute; top:2px; left:2px; width:calc(1.15rem - 4px); height:calc(1.15rem - 4px); border-radius:99px; background:var(--color-white); transition:transform var(--motion-fast) var(--ease-out); box-shadow:var(--elevation-1); }
+.sw[aria-checked="true"] { background:var(--brand); } .sw[aria-checked="true"]::after { transform:translateX(0.85rem); }
+
+/* ===== Wiki ===== */
+.wiki { display:grid; grid-template-columns:15rem minmax(0,1fr) 17rem; min-height:34rem; }
+.wtree { border-right:1px solid var(--border); padding:0.6rem; display:grid; gap:0.15rem; align-content:start; background:color-mix(in srgb, var(--muted) 60%, transparent); }
+.wtree .grp { font-size:var(--text-label); text-transform:uppercase; letter-spacing:var(--tr-label); font-weight:600; color:var(--muted-foreground); padding:0.6rem 0.4rem 0.25rem; }
+.wnode { display:flex; align-items:center; gap:0.4rem; padding:0.32rem 0.45rem; border-radius:7px; font-size:var(--text-secondary); color:var(--muted-foreground); }
+.wnode.l1 { padding-left:1.35rem; } .wnode.l2 { padding-left:2.3rem; }
+.wnode[aria-current] { background:var(--accent); color:var(--brand-strong); font-weight:500; }
+.wpage { padding:1.1rem 1.5rem 2rem; min-width:0; display:grid; gap:0.9rem; align-content:start; }
+.wmeta { display:flex; flex-wrap:wrap; gap:0.4rem 0.8rem; font-size:var(--text-label); color:var(--muted-foreground); align-items:center; }
+.prose { max-width:68ch; line-height:1.6; font-size:var(--text-body); display:grid; gap:0.6rem; }
+.prose h2 { font-size:var(--text-section); font-weight:600; margin-top:0.4rem; }
+.prose ol, .prose ul { margin:0; padding-left:1.2rem; display:grid; gap:0.2rem; }
+.prose .todo { list-style:none; padding-left:0; }
+.prose .todo li { display:flex; gap:0.5rem; align-items:flex-start; }
+.prose .todo input { margin-top:0.35rem; accent-color:var(--brand); }
+.tasklink { display:inline-flex; align-items:center; gap:0.25rem; padding:0 0.35rem; border-radius:5px; background:var(--accent); color:var(--brand-strong); font-family:var(--font-mono); font-size:var(--text-label); font-weight:500; white-space:nowrap; }
+.prose table { border-collapse:collapse; font-size:var(--text-secondary); width:100%; }
+.prose th, .prose td { border:1px solid var(--border); padding:0.35rem 0.5rem; text-align:left; }
+.editing .prose { border:1px solid color-mix(in srgb, var(--brand) 45%, var(--input)); border-radius:10px; padding:0.9rem; box-shadow:0 0 0 3px color-mix(in srgb, var(--brand) 14%, transparent); }
+.edbar { display:flex; flex-wrap:wrap; gap:0.25rem; align-items:center; padding:0.3rem; border:1px solid var(--border); border-radius:9px; background:var(--card); font-size:var(--text-secondary); }
+.edbar span { padding:0.2rem 0.45rem; border-radius:6px; color:var(--muted-foreground); }
+.whist { border-left:1px solid var(--border); padding:0.75rem; display:grid; gap:0.6rem; align-content:start; }
+.ver { display:grid; gap:0.1rem; padding:0.45rem 0.5rem; border-radius:8px; font-size:var(--text-secondary); border:1px solid transparent; }
+.ver[aria-current] { border-color:var(--border); background:var(--card); }
+.ver small { color:var(--muted-foreground); font-size:var(--text-label); }
+.diff { font-family:var(--font-mono); font-size:var(--text-label); line-height:1.6; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.diff div { padding:0.1rem 0.5rem; white-space:pre-wrap; }
+.diff .add { background:color-mix(in srgb, var(--success) 12%, transparent); }
+.diff .del { background:color-mix(in srgb, var(--destructive) 10%, transparent); text-decoration:line-through; }
+
+/* ===== Avisos y sesiones ===== */
+.two { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:0.75rem; align-items:start; }
+.banner { display:flex; flex-wrap:wrap; gap:0.5rem 0.75rem; align-items:center; padding:0.45rem 0.75rem; border-bottom:1px solid var(--border); background:var(--accent); font-size:var(--text-secondary); }
+.banner .icn { color:var(--brand-strong); }
+.ann { display:grid; gap:0.4rem; padding:0.85rem 1rem; border-bottom:1px solid var(--border); }
+.ann:last-child { border-bottom:0; }
+.ann h3 { font-size:var(--text-body); font-weight:600; display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; }
+.ann p { font-size:var(--text-secondary); line-height:1.55; color:var(--foreground); max-width:70ch; }
+.ann .meta { display:flex; flex-wrap:wrap; gap:0.35rem 0.75rem; align-items:center; font-size:var(--text-label); color:var(--muted-foreground); }
+.sess { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:0.75rem; align-items:center; padding:0.7rem 1rem; border-bottom:1px solid var(--border); font-size:var(--text-secondary); }
+.sess:last-child { border-bottom:0; }
+.sess .ic { width:2rem; height:2rem; border-radius:8px; display:grid; place-items:center; background:var(--muted); color:var(--muted-foreground); }
+.sess b { font-weight:600; }
+.sess small { display:block; color:var(--muted-foreground); font-size:var(--text-label); margin-top:0.1rem; }
+.here { color:var(--success-foreground); font-weight:600; font-size:var(--text-label); display:inline-flex; align-items:center; gap:0.3rem; }
+.sett-h { padding:0.85rem 1rem 0.6rem; display:grid; gap:0.25rem; border-bottom:1px solid var(--border); }
+.sett-h h2 { font-size:var(--text-section); font-weight:600; }
+.sett-h p { font-size:var(--text-secondary); color:var(--muted-foreground); line-height:1.5; }
+.notif { display:grid; grid-template-columns:auto minmax(0,1fr); gap:0.6rem; padding:0.6rem 0.75rem; font-size:var(--text-secondary); line-height:1.45; border-top:1px solid var(--border); }
+
+/* ===== PDF ===== */
+.pdf-stage { display:grid; grid-template-columns:16rem minmax(0,1fr); gap:0.75rem; align-items:start; }
+.pdf-paperwrap { overflow-x:auto; padding:1rem; background:color-mix(in srgb, var(--muted-foreground) 14%, var(--background)); border-radius:12px; }
+.paper { width:min(100%, 40rem); min-width:30rem; margin:0 auto; aspect-ratio:210/297; background:var(--paper); color:var(--paper-ink); box-shadow:0 10px 30px -10px rgba(0,0,0,.35); padding:2.2rem 2.2rem 1.6rem; display:flex; flex-direction:column; gap:0.9rem; font-size:0.72rem; line-height:1.5; }
+.paper .ph { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #1b3a5c; padding-bottom:0.6rem; }
+.paper .brandmark { font-weight:600; letter-spacing:-0.02em; font-size:1rem; color:#1b3a5c; display:flex; align-items:center; gap:0.4rem; }
+.paper .brandmark i { width:0.9rem; height:0.9rem; border-radius:3px; background:#0e8a7a; display:inline-block; }
+.paper h1 { font-size:1.15rem; font-weight:600; letter-spacing:-0.01em; color:#141d2b; }
+.paper .sub { color:#4a6380; font-size:0.68rem; }
+.paper table { width:100%; border-collapse:collapse; font-size:0.66rem; }
+.paper th { text-align:left; color:#4a6380; font-weight:600; border-bottom:1px solid #1b3a5c; padding:0.25rem 0.3rem; }
+.paper td { border-bottom:1px solid var(--paper-rule); padding:0.25rem 0.3rem; }
+.paper td.r, .paper th.r { text-align:right; font-variant-numeric:tabular-nums; }
+.paper tfoot td { font-weight:600; border-top:1px solid #1b3a5c; border-bottom:0; }
+.paper .meta-grid { display:grid; grid-template-columns:auto 1fr auto 1fr; gap:0.2rem 0.8rem; font-size:0.66rem; }
+.paper .meta-grid dt { color:#4a6380; } .paper .meta-grid dd { margin:0; font-weight:500; }
+.paper .pf { margin-top:auto; display:flex; justify-content:space-between; color:#4a6380; font-size:0.6rem; border-top:1px solid var(--paper-rule); padding-top:0.4rem; }
+.paper .sign { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:0.6rem; }
+.paper .sign div { border-top:1px solid #4a6380; padding-top:0.25rem; color:#4a6380; font-size:0.6rem; }
+.paper .cmt { border-left:2px solid var(--paper-rule); padding-left:0.5rem; }
+.exportmenu { display:grid; gap:0.15rem; padding:0.4rem; }
+
+@media (max-width: 1000px) {
+  .detail, .proj-grid, .two, .pdf-stage { grid-template-columns:1fr; }
+  .detail-main { border-right:0; border-bottom:1px solid var(--border); }
+  .wiki { grid-template-columns:1fr; }
+  .wtree, .whist { border:0; border-bottom:1px solid var(--border); }
+  .addrel { grid-template-columns:1fr 1fr; }
+  :root { --rail:11rem; }
+}
+@media (max-width: 560px) { .paper { min-width:24rem; padding:1.4rem; } .subrow { grid-template-columns:auto minmax(0,1fr) auto; } .subrow .hide-s { display:none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-alarm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M22 6l-3-3"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+  <symbol id="i-branch" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 8v8M18 10a6 6 0 0 1-6 6H8"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-chevr" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></symbol>
+  <symbol id="i-hist" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-laptop" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-mega" viewBox="0 0 24 24"><path d="M3 11v2a1 1 0 0 0 1 1h3l6 4V6L7 10H4a1 1 0 0 0-1 1ZM17 9a4 4 0 0 1 0 6"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5M8 3h8l-1 6 3 4H6l3-4-1-6Z"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-sigma" viewBox="0 0 24 24"><path d="M18 7V4H6l6 8-6 8h12v-3"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3 5h18l-7 8v6l-4-2v-4Z"/></symbol>
+</svg>
+
+<div class="pchrome">
+  <span>Preview · ideas de OpenProject para Riuna</span>
+  <span class="spacer"></span>
+  <div class="pseg" id="tabs" role="tablist" aria-label="Pantalla">
+    <button type="button" data-tab="detalle" aria-pressed="true">Detalle de tarea</button>
+    <button type="button" data-tab="gantt" aria-pressed="false">Gantt</button>
+    <button type="button" data-tab="tabla" aria-pressed="false">Tabla</button>
+    <button type="button" data-tab="proyectos" aria-pressed="false">Proyectos</button>
+    <button type="button" data-tab="wiki" aria-pressed="false">Wiki</button>
+    <button type="button" data-tab="avisos" aria-pressed="false">Avisos y sesiones</button>
+    <button type="button" data-tab="pdf" aria-pressed="false">PDF</button>
+  </div>
+  <div class="pseg" id="theme" role="group" aria-label="Tema">
+    <button type="button" data-v="system" aria-pressed="true">Sistema</button>
+    <button type="button" data-v="light" aria-pressed="false">Claro</button>
+    <button type="button" data-v="dark" aria-pressed="false">Oscuro</button>
+  </div>
+</div>
+
+<main class="wrap">
+
+<!-- ================= DETALLE DE TAREA ================= -->
+<section class="panel" id="p-detalle" aria-label="Detalle de tarea">
+  <div class="pnote" style="margin-bottom:0.75rem"><b>Detalle de una tarea padre.</b>
+    <span><span class="ptag">1.1</span> observadores</span>
+    <span><span class="ptag">1.2</span> recordatorio</span>
+    <span><span class="ptag">1.3</span> acciones de un clic</span>
+    <span><span class="ptag">2.2</span> fechas del padre, aviso de desviación, progreso ponderado</span>
+    <span><span class="ptag">2.3</span> precede/sigue con desfase</span>
+    <span><span class="ptag">4.1</span> campo calculado y textos de ayuda</span>
+    <span>Los botones con etiqueta se pueden pulsar.</span>
+  </div>
+  <div class="inset">
+    <div class="topbar">
+      <div class="crumb"><span>Logística Henares</span><span>/</span><span>Reforma nave Alcalá</span><span>/</span><b class="mono">ALC-5</b></div>
+      <div class="tb-right">
+        <span class="rel-anchor">
+          <button class="btn outline sm" id="watch-btn" type="button" aria-pressed="true" aria-haspopup="dialog"><svg class="icn icn-s"><use href="#i-eye"/></svg><span id="watch-label">Observando</span><span class="num" id="watch-count">3</span></button>
+          <span class="ptag">1.1</span>
+          <div class="pop" id="watch-pop" hidden style="right:0; top:2.1rem">
+            <div class="section-h" style="padding:0.2rem 0.4rem">Observan esta tarea</div>
+            <div class="watch-list" id="watch-list"></div>
+            <p class="muted" style="font-size:var(--text-label); padding:0.3rem 0.4rem; line-height:1.45">Reciben los comentarios y los cambios de estado y de vencimiento, por la campana y por sus canales. Los asignados avisan siempre, observen o no.</p>
+            <button class="menu-item" type="button" id="watch-toggle"><svg class="icn icn-s"><use href="#i-eye"/></svg><span id="watch-toggle-label">Dejar de observar</span></button>
+            <button class="menu-item" type="button"><svg class="icn icn-s"><use href="#i-plus"/></svg>Añadir a alguien del espacio</button>
+          </div>
+        </span>
+        <span class="rel-anchor">
+          <button class="btn outline sm" id="rem-btn" type="button" aria-haspopup="dialog"><svg class="icn icn-s"><use href="#i-alarm"/></svg>Recuérdamelo</button>
+          <span class="ptag">1.2</span>
+          <div class="pop" id="rem-pop" hidden style="right:0; top:2.1rem">
+            <div class="section-h" style="padding:0.2rem 0.4rem">Recuérdamelo</div>
+            <button class="menu-item" type="button" data-rem="mar 13 oct, 9:00">Mañana<span class="r">mar 13 oct · 9:00</span></button>
+            <button class="menu-item" type="button" data-rem="lun 19 oct, 9:00">El próximo lunes<span class="r">lun 19 oct · 9:00</span></button>
+            <button class="menu-item" type="button" data-rem="lun 19 oct, 9:00">En una semana<span class="r">lun 19 oct · 9:00</span></button>
+            <button class="menu-item" type="button" data-rem="jue 15 oct, 9:00">Elegir día y hora…<span class="r">jue 15 oct · 9:00</span></button>
+            <label class="muted" for="rem-note" style="font-size:var(--text-label); padding:0.3rem 0.4rem 0">Nota (opcional)</label>
+            <input class="field" id="rem-note" value="Llamar a la distribuidora por el cuadro">
+            <p class="muted" style="font-size:var(--text-label); padding:0.3rem 0.4rem; line-height:1.45">Solo lo ves tú. Llega por la campana y por tus canales. No planifica la tarea en tu día.</p>
+          </div>
+        </span>
+        <button class="btn ghost sm" type="button" aria-label="Copiar enlace"><svg class="icn icn-s"><use href="#i-link"/></svg></button>
+        <button class="btn ghost sm" type="button" aria-label="Copiar nombre de rama"><svg class="icn icn-s"><use href="#i-branch"/></svg></button>
+      </div>
+    </div>
+
+    <div class="detail">
+      <div class="detail-main">
+        <div class="props">
+          <span class="chip"><span class="dot" style="color:var(--info)"></span>En curso</span>
+          <span class="chip" style="color:var(--warning-foreground)">▲ Alta</span>
+          <span class="chip"><span class="avs"><span class="av">MS</span><span class="av">LP</span></span>2 asignados</span>
+          <span class="chip"><svg class="icn icn-s muted"><use href="#i-users"/></svg>Electricidad</span>
+          <span class="chip"><svg class="icn icn-s muted"><use href="#i-cal"/></svg>26 oct</span>
+          <span class="chip" style="color:var(--destructive-foreground)"><svg class="icn icn-s"><use href="#i-cal"/></svg>Vence 30 oct</span>
+          <span class="rel-anchor">
+            <button class="chip" id="dates-mode-btn" type="button" style="border-color:var(--border); background:var(--card); cursor:pointer">Fechas: <span id="dates-mode-label">propias</span><svg class="icn icn-s"><use href="#i-chev"/></svg></button>
+            <span class="ptag">2.2</span>
+            <div class="pop" id="dates-pop" hidden style="left:0; top:2.1rem">
+              <button class="menu-item" type="button" role="menuitemradio" aria-checked="true" data-mode="propias"><span><b>Propias</b><br><span class="muted">Las pones tú. Si las subtareas se salen, te avisa.</span></span></button>
+              <button class="menu-item" type="button" role="menuitemradio" aria-checked="false" data-mode="automáticas"><span><b>Automáticas</b><br><span class="muted">Salen de las subtareas: del primer inicio al último fin. No se editan a mano.</span></span></button>
+            </div>
+          </span>
+        </div>
+
+        <div class="actions-row">
+          <span class="section-h">Acciones</span><span class="ptag">1.3</span>
+          <button class="btn action sm" type="button" id="act-review"><svg class="icn icn-s"><use href="#i-zap"/></svg>Enviar a revisión</button>
+          <button class="btn action sm" type="button"><svg class="icn icn-s"><use href="#i-zap"/></svg>Pedir material</button>
+          <span class="muted" style="font-size:var(--text-label)">Reglas del proyecto con «Cuando: se pulsa el botón». Solo salen si la tarea cumple su «Si».</span>
+        </div>
+
+        <div class="alert" id="overflow-alert">
+          <svg class="icn"><use href="#i-alert"/></svg>
+          <div><b>Las subtareas acaban el mar 3 nov, 2 días laborables después del vencimiento.</b> <span class="ptag">2.2</span><br>
+            <span class="muted">ALC-7 «Montaje del cuadro general» empieza solapada con el cableado y termina después del 30 oct.</span>
+            <div class="acts"><button class="btn outline sm" type="button">Mover el vencimiento al 3 nov</button><button class="btn ghost sm" type="button" data-set-auto>Pasar a fechas automáticas</button></div>
+          </div>
+        </div>
+        <div class="alert info" id="auto-note" hidden>
+          <svg class="icn"><use href="#i-sigma"/></svg>
+          <div><b>Fechas automáticas: lun 26 oct → mar 3 nov.</b> <span class="ptag">2.2</span><br><span class="muted">Salen de las subtareas. Para cambiarlas, mueve las subtareas o arrastra la rama en el Gantt.</span></div>
+        </div>
+
+        <div style="display:grid; gap:0.5rem">
+          <h1 class="title-h">Fase 2 · Instalación eléctrica</h1>
+          <p class="muted" style="max-width:70ch; line-height:1.6">Cableado de la nave y montaje del cuadro general según la memoria técnica rev. 3. El boletín lo firma el instalador autorizado al terminar las pruebas.</p>
+        </div>
+
+        <div style="display:grid; gap:0.4rem">
+          <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap">
+            <h2 class="section-h">Subtareas · 2</h2>
+            <span class="muted" style="font-size:var(--text-label)">Progreso <b class="num" style="color:var(--foreground)">0 %</b> · se mide por estimación, como dice el ajuste del proyecto</span><span class="ptag">2.2</span>
+          </div>
+          <div class="progress" style="max-width:28rem"><i style="width:0%"></i></div>
+          <div class="subrow"><span class="dot" style="color:var(--info)"></span><span class="mono muted">ALC-6</span><span class="t">Tendido de cableado</span><span class="muted mono hide-s">26–30 oct</span><span class="muted num">40 h</span></div>
+          <div class="subrow"><span class="dot" style="color:var(--muted-foreground)"></span><span class="mono muted">ALC-7</span><span class="t">Montaje del cuadro general</span><span class="mono hide-s" style="color:var(--destructive-foreground)">29 oct–3 nov</span><span class="muted num">24 h</span></div>
+        </div>
+
+        <div style="display:grid; gap:0.4rem">
+          <div style="display:flex; align-items:center; gap:0.5rem"><h2 class="section-h">Relaciones</h2><span class="ptag">2.3</span></div>
+          <div class="relrow"><span class="k">Sigue a</span><span class="mono muted">ALC-4</span><span>Solera de hormigón</span><span class="lag">desfase 0 d</span><span class="muted" style="font-size:var(--text-label)">empieza el siguiente día laborable a que acabe</span></div>
+          <div class="relrow"><span class="k">Precede a</span><span class="mono muted">ALC-8</span><span>◆ Boletín eléctrico entregado</span><span class="lag">desfase 0 d</span></div>
+          <div class="relrow"><span class="k">Bloquea</span><span class="mono muted">ALC-9</span><span>Pruebas y puesta en marcha</span></div>
+          <form class="addrel" id="addrel">
+            <label for="rel-type">Tipo<select class="field" id="rel-type"><option>Precede a</option><option>Sigue a</option><option>Bloquea</option><option>Bloqueada por</option><option>Relacionada con</option></select></label>
+            <label for="rel-task">Tarea<input class="field" id="rel-task" value="ALC-9 Pruebas y puesta en marcha"></label>
+            <label for="rel-lag">Desfase (días lab.)<input class="field mono" id="rel-lag" type="number" value="-1"></label>
+            <button class="btn sm" type="submit" style="height:2rem">Añadir</button>
+            <span class="muted" style="grid-column:1/-1; font-size:var(--text-label)">Negativo para solapar: −1 empieza un día laborable antes de que acabe la anterior. Se saltan fines de semana y festivos del espacio.</span>
+          </form>
+        </div>
+
+        <div style="display:grid; gap:0.5rem">
+          <h2 class="section-h">Actividad</h2>
+          <div class="act-item"><span class="av">AR</span><div><b>Ana Ruiz</b> pulsó <b>«Enviar a revisión»</b> · <span class="muted">hace 5 min</span><br><span class="muted">Automatización «Enviar a revisión»: movió a En revisión y asignó a Marc Soler. Actuó en nombre de quien pulsó.</span> <span class="ptag">1.3</span></div></div>
+          <div class="act-item"><span class="av">∑</span><div><b>Planificación automática</b> movió <span class="mono">ALC-7</span> del 28 oct al 29 oct · <span class="muted">ayer</span><br><span class="muted">Porque <span class="mono">ALC-6</span> pasó a acabar el 30 oct.</span> <span class="ptag">2.3</span></div></div>
+        </div>
+      </div>
+
+      <aside class="detail-side">
+        <div class="reminder-chip" id="rem-chip">
+          <svg class="icn"><use href="#i-alarm"/></svg>
+          <div><b>Te lo recuerda el <span id="rem-when">jue 15 oct, 9:00</span></b><br><span class="muted" id="rem-what">«Llamar a la distribuidora por el cuadro»</span><br><button class="btn ghost sm" type="button" style="margin-left:-0.5rem">Quitar</button></div>
+        </div>
+        <div style="display:grid; gap:0.6rem">
+          <div style="display:flex; align-items:center; gap:0.5rem"><h2 class="section-h">Campos</h2><span class="ptag">4.1</span></div>
+          <dl class="kv">
+            <dt>Partida <span class="help" tabindex="0" data-tip="Código de la partida en el presupuesto del cliente, con el formato capítulo.partida, por ejemplo 05.02.">?</span></dt><dd class="mono">05.02</dd>
+            <dt>Presupuesto</dt><dd class="num">18.400,00 €</dd>
+            <dt>Horas previstas</dt><dd class="num">64 h</dd>
+            <dt>Coste por hora <span class="help" tabindex="0" data-tip="Campo calculado: Presupuesto ÷ Horas previstas. Se recalcula solo; no se edita.">?</span></dt><dd><span class="num">287,50 €</span><br><span class="formula">ƒ Presupuesto ÷ Horas previstas</span></dd>
+            <dt>Margen previsto <span class="help" tabindex="0" data-tip="Campo calculado: si(Presupuesto &gt; 0; (Presupuesto − Coste estimado) ÷ Presupuesto; vacío).">?</span></dt><dd><span class="num">22 %</span><br><span class="formula">ƒ si(Presupuesto &gt; 0; …)</span></dd>
+          </dl>
+        </div>
+        <div style="display:grid; gap:0.45rem">
+          <h2 class="section-h">Tiempo</h2>
+          <dl class="kv"><dt>Estimado (rama)</dt><dd class="num">64 h</dd><dt>Registrado (rama)</dt><dd class="num">20 h 15 min</dd></dl>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================= GANTT ================= -->
+<section class="panel" id="p-gantt" aria-label="Gantt" hidden>
+  <div class="pnote" style="margin-bottom:0.75rem"><b>Gantt del proyecto.</b>
+    <span><span class="ptag">2.1</span> hitos</span>
+    <span><span class="ptag">2.2</span> resumen con fechas automáticas, arrastrar la rama, desviación en rojo</span>
+    <span><span class="ptag">2.3</span> precede/sigue con desfase, saltando el festivo del 12 oct</span>
+    <span><span class="ptag">2.4</span> línea base</span>
+    <span><b>Prueba:</b> arrastra la barra de resumen de «Fase 1»; se mueve la rama y se recalculan las sucesoras. «Fase 2» tiene fechas propias y no se mueve, así que el corchete rojo crece.</span>
+  </div>
+  <div class="inset">
+    <div class="topbar">
+      <div class="crumb"><span>Logística Henares</span><span>/</span><b>Reforma nave Alcalá</b></div>
+      <div class="viewtabs"><span>Backlog</span><span>Tareas</span><span>Calendario</span><span aria-current="page">Gantt</span><span>Tabla</span><span>Ciclos</span><span>Wiki</span></div>
+    </div>
+    <div class="gtool">
+      <div class="seg" aria-label="Zoom"><button type="button" aria-pressed="true">Día</button><button type="button" aria-pressed="false">Semana</button><button type="button" aria-pressed="false">Mes</button><button type="button" aria-pressed="false">Trimestre</button></div>
+      <span style="display:inline-flex; align-items:center; gap:0.4rem">Línea base <span class="ptag">2.4</span>
+        <span class="seg" id="g-base"><button type="button" data-v="none" aria-pressed="true">Ninguna</button><button type="button" data-v="yesterday" aria-pressed="false">Ayer</button><button type="button" data-v="week" aria-pressed="false">Hace una semana</button><button type="button" data-v="date" aria-pressed="false">Fecha…</button></span>
+      </span>
+      <span class="tb-right"><button class="btn outline sm" type="button" id="g-reset">Restablecer la maqueta</button></span>
+    </div>
+    <div class="legend">
+      <span><i class="lg-bar"></i>tarea</span>
+      <span><i class="lg-sum"></i>resumen con fechas automáticas</span>
+      <span><i class="lg-over"></i>las subtareas desbordan al padre</span>
+      <span><i class="lg-ms"></i>hito</span>
+      <span>→ precede, con desfase en días laborables</span>
+      <span><i class="lg-hol"></i>festivo del espacio</span>
+      <span><i class="lg-base"></i>línea base</span>
+    </div>
+    <div class="gscroll" id="g-scroll"><div class="gcanvas" id="g-canvas"></div></div>
+  </div>
+</section>
+
+<!-- ================= TABLA ================= -->
+<section class="panel" id="p-tabla" aria-label="Tabla" hidden>
+  <div class="pnote" style="margin-bottom:0.75rem"><b>Vista Tabla.</b>
+    <span><span class="ptag">1.5</span> fila de totales sobre todo el filtro y colorear filas</span>
+    <span><span class="ptag">2.4</span> línea base: entró, salió, cambió</span>
+    <span><span class="ptag">4.1</span> columna de un campo calculado con su ayuda</span>
+  </div>
+  <div class="inset">
+    <div class="topbar">
+      <div class="crumb"><span>Logística Henares</span><span>/</span><b>Reforma nave Alcalá</b></div>
+      <div class="viewtabs"><span>Backlog</span><span>Tareas</span><span>Calendario</span><span>Gantt</span><span aria-current="page">Tabla</span><span>Ciclos</span><span>Wiki</span></div>
+    </div>
+    <div class="gtool">
+      <span class="pill"><svg class="icn icn-s"><use href="#i-filter"/></svg>Épica es Fase 1 o Fase 2</span>
+      <span style="display:inline-flex; align-items:center; gap:0.4rem">Colorear filas <span class="ptag">1.5</span>
+        <span class="seg" id="t-color"><button type="button" data-v="none" aria-pressed="false">No</button><button type="button" data-v="prio" aria-pressed="false">Prioridad</button><button type="button" data-v="due" aria-pressed="true">Vencimiento</button></span>
+      </span>
+      <span style="display:inline-flex; align-items:center; gap:0.4rem">Línea base <span class="ptag">2.4</span>
+        <span class="seg" id="t-base"><button type="button" data-v="none" aria-pressed="true">Ninguna</button><button type="button" data-v="week" aria-pressed="false">Hace una semana</button></span>
+      </span>
+      <span class="tb-right muted" style="font-size:var(--text-label)">Vista guardada «Obra en curso» · recuerda el color</span>
+    </div>
+    <div class="tscroll"><table class="grid" id="t-grid"></table></div>
+    <div class="tfootnote" id="t-foot"></div>
+  </div>
+</section>
+
+<!-- ================= PROYECTOS ================= -->
+<section class="panel" id="p-proyectos" aria-label="Proyectos" hidden>
+  <div class="pnote" style="margin-bottom:0.75rem"><b>Lista de proyectos como cartera.</b>
+    <span><span class="ptag">3.1</span> estado de salud con nota (pulsa un estado)</span>
+    <span><span class="ptag">3.2</span> atributos de proyecto como columnas, filtros y exportación</span>
+    <span><span class="ptag">3.3</span> subproyectos en árbol</span>
+    <span><span class="ptag">2.2</span> ajuste de progreso ponderado</span>
+  </div>
+  <div class="proj-grid">
+    <div class="inset">
+      <div class="topbar">
+        <div class="crumb"><span>Administración</span><span>/</span><b>Proyectos</b></div>
+        <div class="viewtabs"><span aria-current="page">Todos</span><span>En riesgo o desviados</span><span>Los míos</span></div>
+        <div class="tb-right"><button class="btn outline sm" type="button"><svg class="icn icn-s"><use href="#i-filter"/></svg>Filtrar</button><button class="btn outline sm" type="button">Columnas</button><button class="btn outline sm" type="button"><svg class="icn icn-s"><use href="#i-dl"/></svg>Exportar<svg class="icn icn-s"><use href="#i-chev"/></svg></button><button class="btn sm" type="button"><svg class="icn icn-s"><use href="#i-plus"/></svg>Nuevo proyecto</button></div>
+      </div>
+      <div class="health-sum" id="health-sum"></div>
+      <div class="tscroll" style="position:relative"><table class="grid" id="proj-grid" style="min-width:58rem"></table></div>
+      <div class="pop" id="health-pop" hidden></div>
+      <div class="tfootnote"><span>Las columnas con rombo son atributos de proyecto, definidos en el espacio <span class="ptag">3.2</span></span><span>Exportar: Excel ahora; PDF al llegar la <span class="ptag">4.2</span></span></div>
+    </div>
+    <div style="display:grid; gap:0.75rem">
+      <div class="inset">
+        <div class="sett-h"><h2>Estado de salud · Reforma nave Alcalá</h2><p>Lo ve todo el espacio en la lista de proyectos y en la cabecera del proyecto.</p></div>
+        <div style="padding:0.75rem 1rem; display:grid; gap:0.6rem">
+          <div class="seg" style="justify-self:start"><button type="button" aria-pressed="false">Sin empezar</button><button type="button" aria-pressed="false">En plazo</button><button type="button" aria-pressed="true">En riesgo</button><button type="button" aria-pressed="false">Desviado</button><button type="button" aria-pressed="false">Terminado</button></div>
+          <label class="muted" for="h-note" style="font-size:var(--text-label)">Nota</label>
+          <textarea class="field" id="h-note" rows="2">El cuadro general acaba 2 días después de lo previsto; la entrega del 13 nov sigue en pie.</textarea>
+          <div class="switch-row"><span>Avisar a los miembros del proyecto</span><button class="sw" type="button" role="switch" aria-checked="true" aria-label="Avisar a los miembros"></button></div>
+          <div class="muted" style="font-size:var(--text-label)">Inicio 6 oct 2026 · Fin 13 nov 2026 <span class="ptag">3.1</span></div>
+        </div>
+      </div>
+      <div class="inset">
+        <div class="sett-h"><h2>Ajustes del proyecto · Jerarquía</h2><p>Lo que ya existe, más cómo se mide el progreso de una rama.</p></div>
+        <div style="padding:0.6rem 1rem 0.9rem; display:grid; gap:0.2rem">
+          <div class="switch-row"><span>Cerrar en cascada</span><button class="sw" type="button" role="switch" aria-checked="true" aria-label="Cerrar en cascada"></button></div>
+          <div class="switch-row"><span>Archivar en cascada</span><button class="sw" type="button" role="switch" aria-checked="false" aria-label="Archivar en cascada"></button></div>
+          <div class="switch-row"><span>Profundidad máxima</span><span class="mono">5</span></div>
+          <div class="section-h" style="margin-top:0.6rem; display:flex; gap:0.4rem; align-items:center">Progreso de la rama <span class="ptag">2.2</span></div>
+          <label class="radio-row"><input type="radio" name="prog" id="prog-count"><span>Por tareas hechas<small>4 de 14 hechas → 29 %</small></span></label>
+          <label class="radio-row"><input type="radio" name="prog" id="prog-est" checked><span>Por estimación<small>Cada tarea pesa lo que estima: las hechas suman 41 h de 187 h 30 min → 22 %</small></span></label>
+        </div>
+      </div>
+      <div class="inset">
+        <div class="sett-h"><h2>Tablero de Logística Henares</h2><p>Un proyecto con subproyectos puede enseñar también sus tareas.</p></div>
+        <div style="padding:0.6rem 1rem 0.9rem">
+          <div class="switch-row"><span>Incluir las tareas de los 2 subproyectos <span class="ptag">3.3</span></span><button class="sw" type="button" role="switch" aria-checked="true" aria-label="Incluir subproyectos"></button></div>
+          <p class="muted" style="font-size:var(--text-label); line-height:1.5">Cada tarjeta lleva la clave de su proyecto (ALC, MNT). Las columnas son las del proyecto que miras; una tarea de otro proyecto se coloca por la categoría de su columna.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WIKI ================= -->
+<section class="panel" id="p-wiki" aria-label="Wiki" hidden>
+  <div class="pnote" style="margin-bottom:0.75rem"><b>Wiki de páginas</b> <span class="ptag">5</span>
+    <span>Árbol por espacio y por proyecto, el editor TipTap de siempre, historial con diferencias, enlaces página ↔ tarea y aviso si otro guardó mientras editabas. Sin edición simultánea.</span>
+  </div>
+  <div class="pctl" style="margin-bottom:0.75rem"><span>Simular</span>
+    <span class="pseg" id="w-mode"><button type="button" data-v="read" aria-pressed="true">Leer</button><button type="button" data-v="edit" aria-pressed="false">Editar</button><button type="button" data-v="conflict" aria-pressed="false">Marc guardó mientras editabas</button></span>
+  </div>
+  <div class="inset">
+    <div class="topbar">
+      <div class="crumb"><span>Reforma nave Alcalá</span><span>/</span><span>Wiki</span><span>/</span><span>Procedimientos</span><span>/</span><b>Puesta en marcha del cuadro</b></div>
+      <div class="viewtabs"><span>Backlog</span><span>Tareas</span><span>Calendario</span><span>Gantt</span><span>Tabla</span><span>Ciclos</span><span aria-current="page">Wiki</span></div>
+      <div class="tb-right" id="w-actions"></div>
+    </div>
+    <div class="wiki" id="w-root">
+      <nav class="wtree" aria-label="Páginas">
+        <div class="grp">Espacio</div>
+        <div class="wnode"><svg class="icn icn-s"><use href="#i-doc"/></svg>Manual de calidad</div>
+        <div class="wnode"><svg class="icn icn-s"><use href="#i-doc"/></svg>Plantillas de actas</div>
+        <div class="wnode"><svg class="icn icn-s"><use href="#i-doc"/></svg>Contactos de proveedores</div>
+        <div class="grp">Reforma nave Alcalá</div>
+        <div class="wnode"><svg class="icn icn-s"><use href="#i-doc"/></svg>Memoria técnica rev. 3</div>
+        <div class="wnode"><svg class="icn icn-s"><use href="#i-chev"/></svg>Procedimientos</div>
+        <div class="wnode l1" aria-current="page"><svg class="icn icn-s"><use href="#i-doc"/></svg>Puesta en marcha del cuadro</div>
+        <div class="wnode l1"><svg class="icn icn-s"><use href="#i-doc"/></svg>Corte de suministro</div>
+        <div class="wnode"><svg class="icn icn-s"><use href="#i-doc"/></svg>Contactos de obra</div>
+        <button class="menu-item" type="button" style="margin-top:0.4rem"><svg class="icn icn-s"><use href="#i-plus"/></svg>Nueva página</button>
+      </nav>
+      <article class="wpage" id="w-page">
+        <div class="alert warn" id="w-conflict" hidden>
+          <svg class="icn"><use href="#i-alert"/></svg>
+          <div><b>Marc Soler guardó esta página hace 1 min, mientras la editabas.</b><br><span class="muted">Tus cambios siguen aquí, sin guardar. Su versión 8 cambió el paso 3.</span>
+            <div class="acts"><button class="btn outline sm" type="button">Ver diferencias</button><button class="btn sm" type="button">Guardar encima de la suya</button><button class="btn ghost sm" type="button">Descartar lo mío</button></div></div>
+        </div>
+        <div class="edbar" id="w-edbar" hidden><span><b>B</b></span><span><i>I</i></span><span>H2</span><span>• Lista</span><span>☐ Tareas</span><span>Tabla</span><span>Mermaid</span><span>@ Mención</span><span># Tarea</span><span class="muted" style="margin-left:auto">Borrador guardado en este navegador</span></div>
+        <div style="display:grid; gap:0.35rem">
+          <h1 class="title-h">Puesta en marcha del cuadro general</h1>
+          <div class="wmeta"><span>Versión 7 · editada por Marc Soler hace 2 h</span><span>·</span><span>Enlazada desde <span class="tasklink">ALC-7</span> <span class="tasklink">ALC-9</span></span></div>
+        </div>
+        <div class="prose">
+          <p>Procedimiento para energizar el cuadro general por primera vez. Lo sigue el instalador autorizado con alguien de la propiedad presente.</p>
+          <h2>Antes de empezar</h2>
+          <ul class="todo">
+            <li><input type="checkbox" checked aria-label="Hecho"> <span>Boletín de pruebas del cableado firmado (<span class="tasklink">ALC-6</span>).</span></li>
+            <li><input type="checkbox" aria-label="Hecho"> <span>Medición de aislamiento ≥ 1 MΩ en cada circuito, según la ITC-BT-19.</span></li>
+            <li><input type="checkbox" aria-label="Hecho"> <span>Aviso a la distribuidora con 48 h de antelación.</span></li>
+          </ul>
+          <h2>Pasos</h2>
+          <ol>
+            <li>Comprobar el par de apriete de las bornas del interruptor general.</li>
+            <li>Cerrar el general con todos los magnetotérmicos abiertos.</li>
+            <li id="w-step3">Ir cerrando los circuitos de uno en uno y medir la tensión en la salida.</li>
+            <li>Probar cada diferencial con el botón de test y con el comprobador.</li>
+          </ol>
+          <table><thead><tr><th>Circuito</th><th>Sección</th><th>Protección</th></tr></thead><tbody><tr><td>Alumbrado nave</td><td>2,5 mm²</td><td>16 A · 30 mA</td></tr><tr><td>Fuerza puente grúa</td><td>16 mm²</td><td>63 A · 300 mA</td></tr></tbody></table>
+        </div>
+      </article>
+      <aside class="whist">
+        <div style="display:flex; align-items:center; gap:0.4rem"><svg class="icn icn-s muted"><use href="#i-hist"/></svg><h2 class="section-h">Historial</h2></div>
+        <div class="ver" aria-current="true"><b>Versión 7</b><small>Marc Soler · hoy 11:42 · «Añade la tabla de circuitos»</small></div>
+        <div class="ver"><b>Versión 6</b><small>Ana Ruiz · ayer 17:05</small></div>
+        <div class="ver"><b>Versión 5</b><small>Ana Ruiz · 8 oct</small></div>
+        <div class="section-h" style="margin-top:0.4rem">Diferencias 6 → 7</div>
+        <div class="diff"><div class="del">3. Cerrar todos los circuitos y medir.</div><div class="add">3. Ir cerrando los circuitos de uno en uno y medir la tensión en la salida.</div><div class="add">+ tabla «Circuito · Sección · Protección»</div></div>
+        <button class="btn outline sm" type="button" style="justify-self:start">Restaurar la versión 6</button>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ================= AVISOS Y SESIONES ================= -->
+<section class="panel" id="p-avisos" aria-label="Avisos y sesiones" hidden>
+  <div class="pnote" style="margin-bottom:0.75rem"><b>Avisos del proyecto y sesiones activas.</b>
+    <span><span class="ptag">1.6</span> tablón de avisos por proyecto y espacio, y la franja del aviso fijado en las vistas del proyecto</span>
+    <span><span class="ptag">1.4</span> Ajustes › Seguridad: dónde tienes la sesión abierta</span>
+  </div>
+  <div class="two">
+    <div class="inset">
+      <div class="banner" id="ann-banner"><svg class="icn icn-s"><use href="#i-pin"/></svg><span><b>Aviso fijado:</b> corte de luz en la nave el jueves 15 de 8:00 a 10:00.</span><span class="ptag">1.6</span><span class="tb-right"><button class="btn ghost sm" type="button">Ver avisos</button><button class="btn ghost sm" type="button" aria-label="Ocultar para mí" id="ann-hide"><svg class="icn icn-s"><use href="#i-x"/></svg></button></span></div>
+      <div class="topbar">
+        <div class="crumb"><span>Reforma nave Alcalá</span><span>/</span><b>Avisos</b></div>
+        <div class="tb-right"><button class="btn sm" type="button"><svg class="icn icn-s"><use href="#i-mega"/></svg>Nuevo aviso</button></div>
+      </div>
+      <div class="ann">
+        <h3><svg class="icn icn-s" style="color:var(--brand-strong)"><use href="#i-pin"/></svg>Corte de luz en la nave el jueves 15</h3>
+        <p>La distribuidora corta el suministro de 8:00 a 10:00 para cambiar la acometida. Quien tenga el cableado (<span class="tasklink">ALC-6</span>) ese día, que empiece por la zona de oficinas, que tiene grupo.</p>
+        <div class="meta"><span class="av">MS</span><span>Marc Soler · hoy 9:10</span><span>· Fijado hasta el 15 oct</span><span>· Avisó a 6 miembros</span></div>
+      </div>
+      <div class="ann">
+        <h3>Las actas de replanteo pasan a la wiki</h3>
+        <p>Desde el lunes 19, cada acta se sube como página bajo «Actas» y se enlaza a su tarea. Las antiguas se quedan como adjuntos.</p>
+        <div class="meta"><span class="av">AR</span><span>Ana Ruiz · 8 oct</span><span>· Aviso del espacio</span></div>
+      </div>
+      <div class="notif"><svg class="icn" style="color:var(--brand-strong)"><use href="#i-bell"/></svg><div><b>En la campana:</b> Marc Soler publicó un aviso en Reforma nave Alcalá: «Corte de luz en la nave el jueves 15». <span class="muted">Y por los canales de cada uno, con sus reglas por espacio.</span></div></div>
+    </div>
+    <div class="inset">
+      <div class="sett-h"><h2>Sesiones activas</h2><p>Dónde tienes Riuna abierto ahora. Cerrar una sesión obliga a volver a entrar en ese dispositivo. <span class="ptag">1.4</span></p></div>
+      <div id="sess-list"></div>
+      <div style="padding:0.75rem 1rem; border-top:1px solid var(--border); display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center">
+        <button class="btn danger sm" type="button" id="sess-all">Cerrar todas menos esta</button>
+        <span class="muted" style="font-size:var(--text-label)">La IP es la que ve la API: por Tailscale, una 100.x.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PDF ================= -->
+<section class="panel" id="p-pdf" aria-label="Exportar a PDF" hidden>
+  <div class="pnote" style="margin-bottom:0.75rem"><b>Exportar a PDF</b> <span class="ptag">4.2</span>
+    <span>Junto a CSV, Excel y la copia JSON. Tres documentos: una tarea, cualquier vista con sus filtros, y el parte de horas con totales.</span>
+  </div>
+  <div class="pdf-stage">
+    <div class="inset">
+      <div class="sett-h"><h2>Exportar</h2><p>Desde el menú de la vista, del detalle o del parte de horas.</p></div>
+      <div class="exportmenu" id="pdf-menu">
+        <button class="menu-item" type="button" disabled>CSV<span class="r">ya existe</span></button>
+        <button class="menu-item" type="button" disabled>Excel<span class="r">ya existe</span></button>
+        <button class="menu-item" type="button" data-pdf="task" aria-checked="true"><svg class="icn icn-s"><use href="#i-doc"/></svg>PDF · esta tarea</button>
+        <button class="menu-item" type="button" data-pdf="view" aria-checked="false"><svg class="icn icn-s"><use href="#i-doc"/></svg>PDF · esta vista</button>
+        <button class="menu-item" type="button" data-pdf="time" aria-checked="false"><svg class="icn icn-s"><use href="#i-doc"/></svg>PDF · parte de horas</button>
+        <button class="menu-item" type="button" disabled>Copia JSON<span class="r">ya existe</span></button>
+      </div>
+    </div>
+    <div class="pdf-paperwrap"><div class="paper" id="paper"></div></div>
+  </div>
+</section>
+</main>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function(){
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function toast(title, body){ const t=document.createElement('div'); t.className='toast'; t.innerHTML='<b>'+esc(title)+'</b>'+esc(body||''); $('#toasts').appendChild(t); setTimeout(()=>t.remove(), 4200); }
+  function segBind(el, fn){ el.addEventListener('click', e=>{ const b=e.target.closest('button[data-v]'); if(!b) return; $$('button', el).forEach(x=>x.setAttribute('aria-pressed', String(x===b))); fn(b.dataset.v); }); }
+
+  /* ---------- tema y pestañas ---------- */
+  segBind($('#theme'), v => { if (v==='system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', v); });
+  const tabs = ['detalle','gantt','tabla','proyectos','wiki','avisos','pdf'];
+  function showTab(id){ if(!tabs.includes(id)) id='detalle'; tabs.forEach(t=>{ $('#p-'+t).hidden = t!==id; }); $$('#tabs button').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.tab===id))); if(id==='gantt') renderGantt(); }
+  $('#tabs').addEventListener('click', e=>{ const b=e.target.closest('button[data-tab]'); if(!b) return; showTab(b.dataset.tab); try{ history.replaceState(null,'','#'+b.dataset.tab); }catch(_){} });
+
+  /* ---------- fechas ---------- */
+  const DOW=['dom','lun','mar','mié','jue','vie','sáb']; const MON=['ene','feb','mar','abr','may','jun','jul','ago','sept','oct','nov','dic'];
+  const HOLI = { '2026-10-12':'Fiesta Nacional' };
+  const TODAY='2026-10-12';
+  const D = s => new Date(s+'T00:00:00Z');
+  const iso = d => d.toISOString().slice(0,10);
+  const addDays = (s,n) => { const d=D(s); d.setUTCDate(d.getUTCDate()+n); return iso(d); };
+  const isWork = s => { const g=D(s).getUTCDay(); return g!==0 && g!==6 && !HOLI[s]; };
+  const nextWork = s => { let d=addDays(s,1); while(!isWork(d)) d=addDays(d,1); return d; };
+  const snapFwd = s => { let d=s; while(!isWork(d)) d=addDays(d,1); return d; };
+  const addWork = (s,n) => { let d=s, k=Math.abs(n); const st=n<0?-1:1; while(k>0){ d=addDays(d,st); if(isWork(d)) k--; } return d; };
+  const wdBetween = (a,b) => { let n=0, d=a; while(d<b){ d=addDays(d,1); if(isWork(d)) n++; } return n; };
+  const fmt = s => { const d=D(s); return DOW[d.getUTCDay()]+' '+d.getUTCDate()+' '+MON[d.getUTCMonth()]; };
+  const fmtShort = s => { const d=D(s); return d.getUTCDate()+' '+MON[d.getUTCMonth()]; };
+
+  /* ---------- detalle ---------- */
+  const watchers = [{i:'AR', n:'Ana Ruiz (tú)'},{i:'MS', n:'Marc Soler · asignado'},{i:'JG', n:'Javier Gómez'}];
+  let watching = true;
+  function renderWatch(){ $('#watch-list').innerHTML = watchers.filter(w=> watching || w.i!=='AR').map(w=>'<div class="w"><span class="av">'+w.i+'</span>'+esc(w.n)+'</div>').join('');
+    $('#watch-count').textContent = String(watchers.length - (watching?0:1)); $('#watch-label').textContent = watching ? 'Observando' : 'Observar'; $('#watch-btn').setAttribute('aria-pressed', String(watching));
+    $('#watch-toggle-label').textContent = watching ? 'Dejar de observar' : 'Observar esta tarea'; }
+  renderWatch();
+  function togglePop(btn, pop){ const open = pop.hidden; $$('.pop').forEach(p=>p.hidden=true); pop.hidden = !open; }
+  $('#watch-btn').addEventListener('click', e=>{ e.stopPropagation(); togglePop(e.currentTarget, $('#watch-pop')); });
+  $('#watch-pop').addEventListener('click', e=>e.stopPropagation());
+  $('#watch-toggle').addEventListener('click', ()=>{ watching=!watching; renderWatch(); toast(watching?'Observas ALC-5':'Ya no observas ALC-5', watching?' · Te llegarán sus comentarios y cambios.':''); });
+  $('#addrel').addEventListener('submit', e=>{ e.preventDefault(); toast('Relación añadida', ' · ALC-5 precede a ALC-9 con desfase −1: las pruebas empiezan un día laborable antes.'); });
+  $('#rem-btn').addEventListener('click', e=>{ e.stopPropagation(); togglePop(e.currentTarget, $('#rem-pop')); });
+  $('#rem-pop').addEventListener('click', e=>{ e.stopPropagation(); const b=e.target.closest('[data-rem]'); if(!b) return; $('#rem-when').textContent=b.dataset.rem; const n=$('#rem-note').value.trim(); $('#rem-what').textContent = n ? '«'+n+'»' : 'Sin nota'; $('#rem-pop').hidden=true; toast('Recordatorio guardado', ' · '+b.dataset.rem); });
+  $('#dates-mode-btn').addEventListener('click', e=>{ e.stopPropagation(); togglePop(e.currentTarget, $('#dates-pop')); });
+  function setDatesMode(m){ $('#dates-mode-label').textContent=m; $$('#dates-pop [data-mode]').forEach(x=>x.setAttribute('aria-checked', String(x.dataset.mode===m))); const auto=m==='automáticas'; $('#overflow-alert').hidden=auto; $('#auto-note').hidden=!auto; $('#dates-pop').hidden=true; }
+  $('#dates-pop').addEventListener('click', e=>{ e.stopPropagation(); const b=e.target.closest('[data-mode]'); if(b) setDatesMode(b.dataset.mode); });
+  $('[data-set-auto]').addEventListener('click', ()=>setDatesMode('automáticas'));
+  $('#act-review').addEventListener('click', ()=>toast('«Enviar a revisión» aplicada', ' · Movida a En revisión y asignada a Marc Soler.'));
+  document.addEventListener('click', e=>{ if(!e.target.closest('.pop')) $$('.pop').forEach(p=>p.hidden=true); });
+
+  /* ---------- Gantt ---------- */
+  const G_START='2026-10-05', G_DAYS=42, DAY=26, ROW=32;
+  const idx = s => Math.round((D(s)-D(G_START))/86400000);
+  const seed = () => ([
+    {id:'ALC-1', t:'Fase 1 · Obra civil', depth:0, sum:true, auto:true, kids:['ALC-2','ALC-3','ALC-4'], prio:'high'},
+    {id:'ALC-2', t:'Demolición de tabiques', depth:1, start:'2026-10-06', dur:4, prio:'high', done:1},
+    {id:'ALC-3', t:'Zanja y canalización', depth:1, dur:4, pred:{id:'ALC-2', lag:0}, prio:'high', done:0.4},
+    {id:'ALC-4', t:'Solera de hormigón', depth:1, dur:3, pred:{id:'ALC-3', lag:2}, prio:'medium'},
+    {id:'ALC-5', t:'Fase 2 · Instalación eléctrica', depth:0, sum:true, auto:false, own:['2026-10-26','2026-10-30'], kids:['ALC-6','ALC-7'], prio:'high'},
+    {id:'ALC-6', t:'Tendido de cableado', depth:1, dur:5, pred:{id:'ALC-4', lag:0}, prio:'medium', done:0.5},
+    {id:'ALC-7', t:'Montaje del cuadro general', depth:1, dur:4, pred:{id:'ALC-6', lag:-2}, prio:'urgent'},
+    {id:'ALC-8', t:'Boletín eléctrico entregado', depth:0, ms:true, pred:{id:'ALC-7', lag:0}, prio:'high'},
+    {id:'ALC-9', t:'Pruebas y puesta en marcha', depth:0, dur:4, pred:{id:'ALC-8', lag:0}, prio:'medium'},
+    {id:'ALC-10', t:'Entrega al cliente', depth:0, ms:true, start:'2026-11-13', prio:'high'}
+  ]);
+  const BASE = { week:{ 'ALC-1':['2026-10-06','2026-10-20'], 'ALC-2':['2026-10-06','2026-10-09'], 'ALC-3':['2026-10-12','2026-10-15'], 'ALC-4':['2026-10-16','2026-10-20'], 'ALC-5':['2026-10-26','2026-10-30'], 'ALC-6':['2026-10-21','2026-10-27'], 'ALC-7':['2026-10-28','2026-10-30'], 'ALC-8':['2026-11-02','2026-11-02'], 'ALC-9':['2026-11-03','2026-11-06'], 'ALC-10':['2026-11-13','2026-11-13'] } };
+  BASE.yesterday = Object.assign({}, BASE.week, { 'ALC-3':['2026-10-13','2026-10-16'], 'ALC-4':['2026-10-19','2026-10-21'], 'ALC-6':['2026-10-22','2026-10-28'], 'ALC-7':['2026-10-27','2026-10-30'], 'ALC-1':['2026-10-06','2026-10-21'] });
+  BASE.date = BASE.week;
+  let T = seed(), baseMode='none', built=false;
+  const byId = () => Object.fromEntries(T.map(t=>[t.id,t]));
+  function schedule(){ const m=byId();
+    T.forEach(t=>{ if(t.sum) return; let s;
+      if(t.pred){ const p=m[t.pred.id]; s=addWork(nextWork(p.end), t.pred.lag); }
+      else s=snapFwd(t.start);
+      t.s=s; t.end = t.ms ? s : addWork(s, t.dur-1); });
+    T.forEach(t=>{ if(!t.sum) return; const ks=t.kids.map(k=>m[k]); t.spanS=ks.map(k=>k.s).sort()[0]; t.spanE=ks.map(k=>k.end).sort().slice(-1)[0];
+      if(t.auto){ t.s=t.spanS; t.end=t.spanE; } else { t.s=t.own[0]; t.end=t.own[1]; } });
+  }
+  const prioColor = p => ({urgent:'var(--destructive)', high:'var(--warning)', medium:'var(--info)', low:'var(--muted-foreground)'}[p]);
+  function buildGantt(){
+    const W = G_DAYS*DAY; const c=$('#g-canvas'); c.style.width='calc(var(--rail) + '+W+'px)';
+    let top='', bot='', cols='';
+    let m0=null, mStart=0;
+    for(let i=0;i<=G_DAYS;i++){ const s=addDays(G_START,i); const d=D(s); const mo=d.getUTCMonth();
+      if(m0===null){ m0=mo; mStart=0; }
+      if(mo!==m0 || i===G_DAYS){ top+='<div class="gseg" style="left:'+(mStart*DAY)+'px;width:'+((i-mStart)*DAY)+'px">'+(m0===9?'Octubre':'Noviembre')+' 2026</div>'; m0=mo; mStart=i; }
+      if(i===G_DAYS) break;
+      const cls = s===TODAY ? ' today' : '';
+      bot+='<div class="gseg'+cls+'" style="left:'+(i*DAY)+'px;width:'+DAY+'px" title="'+(HOLI[s]?'Festivo · '+HOLI[s]:fmt(s))+'"><span>'+d.getUTCDate()+'</span><small>'+['D','L','M','X','J','V','S'][d.getUTCDay()]+'</small></div>';
+      if(HOLI[s]) cols+='<div class="gcol hol" style="left:calc(var(--rail) + '+(i*DAY)+'px);width:'+DAY+'px"></div>';
+      if(s===TODAY) cols+='<div class="gcol today" style="left:calc(var(--rail) + '+(i*DAY)+'px);width:'+DAY+'px"></div>';
+      if(d.getUTCDay()===1) cols+='<div class="gcol wk" style="left:calc(var(--rail) + '+(i*DAY)+'px)"></div>';
+    }
+    let rows='';
+    T.forEach(t=>{
+      rows+='<div class="grow" data-depth="'+t.depth+'" data-id="'+t.id+'"><div class="grail" tabindex="0"><span class="stripe" style="background:'+prioColor(t.prio)+'"></span>'+(t.depth?'<span class="indent"></span>':'')+
+        '<span class="rid">'+t.id+'</span><span class="rt">'+(t.ms?'◆ ':'')+esc(t.t)+'</span>'+(t.sum&&t.auto?'<span class="auto" title="Fechas automáticas: salen de las subtareas">auto</span>':'')+
+        '<svg class="icn icn-s over" data-over hidden><use href="#i-alert"/></svg><span class="chg" data-chg hidden title="Cambió respecto a la línea base"></span></div>'+
+        '<div class="gtrack" style="width:'+W+'px" data-track></div></div>';
+    });
+    c.innerHTML = '<div class="ghead"><div class="ghead-rail">Tarea</div><div class="gbands" style="width:'+W+'px"><div class="gband-top">'+top+'</div><div class="gband-bot">'+bot+'</div></div></div>'+
+      '<div class="gbody" id="g-body">'+cols+rows+'<svg class="gdeps" id="g-deps" width="'+W+'" height="'+(T.length*ROW)+'"></svg></div>';
+    built=true;
+  }
+  const xc = s => idx(s)*DAY + DAY/2;
+  function renderGantt(){
+    if(!built) buildGantt();
+    schedule(); const m=byId(); const base = baseMode==='none' ? null : BASE[baseMode];
+    T.forEach((t,ri)=>{
+      const row=$('.grow[data-id="'+t.id+'"]'); const tr=$('[data-track]', row); let h='';
+      if(base && base[t.id]){ const [bs,be]=base[t.id]; h+= t.ms ? '<div class="gghost ms" style="left:'+xc(bs)+'px"></div>' : '<div class="gghost" style="left:'+(xc(bs)-5)+'px;width:'+(xc(be)-xc(bs)+10)+'px" title="Línea base: '+fmtShort(bs)+' – '+fmtShort(be)+'"></div>'; }
+      if(t.ms){ h+='<div class="gms" style="left:'+xc(t.s)+'px" title="Hito · '+fmt(t.s)+'"></div>'; }
+      else if(t.sum && t.auto){ h+='<div class="gsum" data-sum="'+t.id+'" style="left:'+(xc(t.s)-4)+'px;width:'+(xc(t.end)-xc(t.s)+8)+'px" title="Arrastra para mover la rama entera"><span class="grab"></span></div>'; }
+      else {
+        const done = t.done ? Math.round(t.done*100) : 0;
+        h+='<div class="gbar" style="left:'+(xc(t.s)-5)+'px;width:'+(xc(t.end)-xc(t.s)+10)+'px" title="'+esc(t.t)+' · '+fmtShort(t.s)+' – '+fmtShort(t.end)+'">'+(done?'<span class="fill" style="width:'+done+'%"></span>':'')+'</div>';
+        if(t.sum && !t.auto){ const over = t.spanE>t.end || t.spanS<t.s; const a = t.spanS<t.s?t.spanS:t.s, b=t.spanE>t.end?t.spanE:t.end;
+          if(over){ h+='<div class="gbranch over" style="left:'+(xc(a)-5)+'px;width:'+(xc(b)-xc(a)+10)+'px"></div>'; const n=wdBetween(t.end,t.spanE); if(n>0) h+='<span class="gover-label" style="left:'+((xc(t.end)+xc(t.spanE))/2)+'px" title="Las subtareas acaban '+n+' días laborables después del vencimiento">+'+n+' d lab.</span>'; }
+          $('[data-over]',row).hidden=!over; $('[data-over]',row).setAttribute('aria-label', over?'Las subtareas desbordan las fechas':''); }
+      }
+      tr.innerHTML=h;
+      const chg = base && base[t.id] && (base[t.id][0]!==t.s || base[t.id][1]!==t.end);
+      $('[data-chg]',row).hidden = !chg;
+    });
+    let svg='';
+    T.forEach((t,ri)=>{ if(!t.pred) return; const p=m[t.pred.id]; const pi=T.indexOf(p);
+      const x1 = p.ms ? xc(p.end)+7 : xc(p.end)+5; const y1 = pi*ROW+ROW/2; const x2 = t.ms ? xc(t.s)-8 : xc(t.s)-6; const y2=ri*ROW+ROW/2;
+      const midY = y1 + (y2>y1 ? ROW/2 : -ROW/2);
+      svg+='<path d="M'+x1+','+y1+' h6 V'+midY+' H'+(x2-8)+' V'+y2+' H'+(x2-1)+'"/><polygon points="'+(x2+1)+','+y2+' '+(x2-4)+','+(y2-3)+' '+(x2-4)+','+(y2+3)+'"/>';
+      if(t.pred.lag) svg+='<text x="'+(x2-30)+'" y="'+(midY+ (y2>y1?-3:10))+'">'+(t.pred.lag>0?'+':'−')+Math.abs(t.pred.lag)+' d</text>';
+    });
+    $('#g-deps').innerHTML=svg;
+    bindSum();
+  }
+  // Redibujar sustituye la barra arrastrada, asi que el arrastre escucha en el documento y no en ella.
+  let drag=null, tip=null;
+  function bindSum(){ $$('.gsum').forEach(el=>{ el.onpointerdown = startDrag; }); }
+  function startDrag(e){ e.preventDefault(); schedule(); const m=byId(); const id=e.currentTarget.dataset.sum;
+    const roots=m[id].kids.map(k=>m[k]).filter(k=>!k.pred);
+    drag={id, x:e.clientX, roots:roots.map(r=>({r, s0:r.start})), before:Object.fromEntries(T.map(t=>[t.id,t.s+'|'+t.end])), delta:0};
+    tip=document.createElement('div'); tip.className='gtip'; document.body.appendChild(tip);
+    document.addEventListener('pointermove', onDragMove); document.addEventListener('pointerup', endDrag); document.addEventListener('pointercancel', endDrag);
+    markDragging(); moveTip(e); }
+  function onDragMove(e){ if(!drag) return; const dd=Math.round((e.clientX-drag.x)/DAY);
+    if(dd!==drag.delta){ drag.delta=dd; drag.roots.forEach(o=>{ o.r.start=snapFwd(addDays(o.s0, dd)); }); renderGantt(); markDragging(); }
+    moveTip(e); }
+  function endDrag(){ document.removeEventListener('pointermove', onDragMove); document.removeEventListener('pointerup', endDrag); document.removeEventListener('pointercancel', endDrag);
+    if(!drag) return; if(tip) tip.remove(); tip=null; renderGantt();
+    const changed=T.filter(t=>drag.before[t.id]!==t.s+'|'+t.end).length; const d=drag.delta; drag=null;
+    if(d!==0) toast('Rama movida', ' · '+changed+' elementos cambian de fecha: la rama y sus sucesoras automáticas. Fase 2 conserva sus fechas propias.'); }
+  function markDragging(){ const el=drag && $('.gsum[data-sum="'+drag.id+'"]'); if(el) el.classList.add('dragging'); }
+  function moveTip(e){ if(!tip||!drag) return; schedule(); const m=byId(); const r=drag.roots[0].r; tip.style.left=Math.min(e.clientX+14, window.innerWidth-260)+'px'; tip.style.top=(e.clientY+14)+'px';
+    tip.innerHTML='<b>'+(drag.delta>=0?'+':'')+drag.delta+' d</b> · Demolición empieza el '+fmt(r.s)+'<br><span class="muted">Fase 1 acaba el '+fmt(m['ALC-1'].end)+' · Boletín el '+fmt(m['ALC-8'].s)+'</span>'; }
+  segBind($('#g-base'), v=>{ baseMode=v; renderGantt(); });
+  $('#g-reset').addEventListener('click', ()=>{ T=seed(); built=false; renderGantt(); });
+
+  /* ---------- Tabla ---------- */
+  const ST = {'Hecha':'var(--success)','En curso':'var(--info)','En revisión':'var(--warning)','Por hacer':'var(--muted-foreground)'};
+  const PR = {'Urgente':['var(--destructive-foreground)','▲▲'],'Alta':['var(--warning-foreground)','▲'],'Media':['var(--info-foreground)','■'],'Baja':['var(--muted-foreground)','▼']};
+  const rows = [
+    {id:'ALC-2', t:'Demolición de tabiques', st:'Hecha', pr:'Alta', who:'MS', due:'2026-10-09', est:32, log:30.5, bud:2400},
+    {id:'ALC-3', t:'Zanja y canalización', st:'En curso', pr:'Alta', who:'JG', due:'2026-10-16', est:32, log:12, bud:3100, old:{due:'2026-10-15'}},
+    {id:'ALC-4', t:'Solera de hormigón', st:'Por hacer', pr:'Alta', who:'JG', due:'2026-10-23', est:24, log:0, bud:4200, old:{pr:'Media', due:'2026-10-20'}},
+    {id:'ALC-14', t:'Llamar a la distribuidora', st:'Por hacer', pr:'Urgente', who:'AR', due:'2026-10-12', est:0.5, log:0, bud:null},
+    {id:'ALC-11', t:'Revisar acometida', st:'Por hacer', pr:'Alta', who:'MS', due:'2026-10-14', est:3, log:0, bud:null, added:true},
+    {id:'ALC-13', t:'Presupuesto de luminarias', st:'En revisión', pr:'Media', who:'AR', due:'2026-10-08', est:4, log:3.5, bud:null},
+    {id:'ALC-6', t:'Tendido de cableado', st:'En curso', pr:'Media', who:'LP', due:'2026-10-30', est:40, log:20.25, bud:5200},
+    {id:'ALC-7', t:'Montaje del cuadro general', st:'Por hacer', pr:'Urgente', who:'MS', due:'2026-11-03', est:24, log:0, bud:6900, old:{who:'LP', due:'2026-10-30'}},
+    {id:'ALC-9', t:'Pruebas y puesta en marcha', st:'Por hacer', pr:'Media', who:'AR', due:'2026-11-10', est:16, log:0, bud:1300},
+    {id:'ALC-15', t:'Acta de replanteo', st:'Hecha', pr:'Baja', who:'LP', due:'2026-10-02', est:2, log:2.25, bud:null}
+  ];
+  const hidden = [ {est:1, log:1, bud:180}, {est:2, log:0, bud:240}, {est:6, log:6, bud:0}, {est:1, log:1, bud:null} ];
+  const removed = {id:'ALC-12', t:'Pedir permiso de corte', st:'Hecha', pr:'Media', who:'MS', due:'2026-10-07', est:1, log:1.5, bud:null, removed:true};
+  const eur = n => n==null ? '—' : new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR', maximumFractionDigits:2, minimumFractionDigits:2}).format(n);
+  const hrs = n => { if(!n) return '0 h'; const h=Math.floor(n), m=Math.round((n-h)*60); return h+' h'+(m?' '+m+' min':''); };
+  let tColor='due', tBase='none';
+  function tint(r){ if(tColor==='none' || r.removed) return ''; if(tColor==='prio') return r.pr==='Urgente'?'tint-red':r.pr==='Alta'?'tint-amber':'';
+    if(r.st==='Hecha') return ''; if(r.due<TODAY) return 'tint-red'; if(r.due<=addDays(TODAY,6)) return 'tint-amber'; return ''; }
+  function cell(r, key, html){ if(tBase==='week' && r.old && r.old[key]!==undefined){ const o = key==='due'?fmtShort(r.old[key]):key==='pr'?r.old[key]:r.old[key]; return '<span class="cellchg"><span class="old">'+esc(o)+'</span>'+html+'</span>'; } return html; }
+  function renderTable(){
+    const list = tBase==='week' ? rows.slice(0,5).concat([removed], rows.slice(5)) : rows;
+    const all = rows.concat(hidden);
+    const sEst = all.reduce((a,r)=>a+(r.est||0),0), sLog = all.reduce((a,r)=>a+(r.log||0),0), sBud = all.reduce((a,r)=>a+(r.bud||0),0);
+    let h='<thead><tr>'+(tBase==='week'?'<th></th>':'')+'<th>ID</th><th>Título</th><th>Estado</th><th>Prioridad</th><th>Asignado</th><th>Vence</th><th class="r">Estimado</th><th class="r">Registrado</th><th class="r"><span class="attrh">Presupuesto</span></th><th class="r">ƒ Coste por hora <span class="help down" tabindex="0" data-tip="Campo calculado: Presupuesto ÷ Estimado. No se suma en el total, porque la suma de cocientes no significa nada.">?</span></th></tr></thead><tbody>';
+    list.forEach(r=>{ const mark = tBase!=='week' ? '' : '<td>'+(r.added?'<span class="bmark add" title="Entró: ahora cumple el filtro">+</span>':r.removed?'<span class="bmark rem" title="Salió: se archivó">−</span>':r.old?'<span class="bmark chg" title="Cambió">●</span>':'')+'</td>';
+      const f = (r.bud && r.est) ? eur(r.bud/r.est) : '—';
+      h+='<tr class="'+tint(r)+(r.removed?' removed':'')+'">'+mark+'<td class="mono muted">'+r.id+'</td><td class="tt" style="font-weight:500">'+esc(r.t)+'</td><td><span class="stat"><span class="dot" style="color:'+ST[r.st]+'"></span>'+r.st+'</span></td>'+
+        '<td>'+cell(r,'pr','<span class="prio" style="color:'+PR[r.pr][0]+'">'+PR[r.pr][1]+' '+r.pr+'</span>')+'</td><td>'+cell(r,'who','<span class="av">'+r.who+'</span>')+'</td><td class="mono">'+cell(r,'due',fmtShort(r.due))+'</td>'+
+        '<td class="r">'+hrs(r.est)+'</td><td class="r">'+hrs(r.log)+'</td><td class="r">'+eur(r.bud)+'</td><td class="r">'+f+'</td></tr>'; });
+    h+='</tbody><tfoot><tr>'+(tBase==='week'?'<td></td>':'')+'<td colspan="6">Total del filtro · 14 tareas <span class="ptag">1.5</span></td><td class="r">'+hrs(sEst)+'</td><td class="r">'+hrs(sLog)+'</td><td class="r">'+eur(sBud)+'</td><td class="r muted">—</td></tr></tfoot>';
+    $('#t-grid').innerHTML=h;
+    $('#t-foot').innerHTML='<span>Mostrando 10 de 14 · <button class="linkbtn" type="button">Cargar más</button></span><span>El total suma las 14, no solo las 10 de la página: lo calcula la API con el mismo filtro.</span>'+(tBase==='week'?'<span><span class="bmark add">+</span> entró · <span class="bmark rem">−</span> salió · <span class="bmark chg">●</span> cambió, con el valor de hace una semana tachado</span>':'')+(tColor==='due'?'<span>Rojo: vencida · ámbar: vence esta semana (hoy es lun 12 oct, festivo)</span>':'');
+  }
+  segBind($('#t-color'), v=>{ tColor=v; renderTable(); });
+  segBind($('#t-base'), v=>{ tBase=v; renderTable(); });
+  renderTable();
+
+  /* ---------- Proyectos ---------- */
+  const HS = { 'sin':['Sin empezar','h-sin'], 'plazo':['En plazo','h-plazo'], 'riesgo':['En riesgo','h-riesgo'], 'desv':['Desviado','h-desv'], 'term':['Terminado','h-term'] };
+  const projects = [
+    {n:'Logística Henares', k:'', prog:true, hs:'plazo', note:'Dos obras en marcha; la de Alcalá va justa.', lead:'AR', s:'2026-09-01', e:'2027-03-31', p:41, cli:'Logística Henares S.L.', tipo:'Industrial', bud:142000, open:true, kids:[
+      {n:'Reforma nave Alcalá', k:'ALC', hs:'riesgo', note:'El cuadro general acaba 2 días después de lo previsto.', lead:'MS', s:'2026-10-06', e:'2026-11-13', p:22, cli:'Logística Henares S.L.', tipo:'Industrial', bud:96000},
+      {n:'Mantenimiento preventivo 2026', k:'MNT', hs:'plazo', note:'', lead:'JG', s:'2026-01-12', e:'2026-12-18', p:78, cli:'Logística Henares S.L.', tipo:'Mantenimiento', bud:46000}]},
+    {n:'Ayuntamiento de Coslada', k:'', prog:true, hs:'desv', note:'Licencia del polideportivo pendiente.', lead:'LP', s:'2026-09-15', e:'2027-02-26', p:24, cli:'Ayto. de Coslada', tipo:'Público', bud:79500, open:true, kids:[
+      {n:'Alumbrado del polideportivo', k:'ALU', hs:'desv', note:'Licencia pendiente desde el 28 sept.', lead:'LP', s:'2026-09-15', e:'2026-11-27', p:35, cli:'Ayto. de Coslada', tipo:'Alumbrado público', bud:58000},
+      {n:'Cuadros CEIP Valle-Inclán', k:'CEI', hs:'sin', note:'', lead:'JG', s:'2027-01-11', e:'2027-02-26', p:0, cli:'Ayto. de Coslada', tipo:'Educativo', bud:21500}]},
+    {n:'Formación PRL 2026', k:'PRL', hs:'term', note:'Todo el equipo con el curso de 20 h.', lead:'AR', s:'2026-02-02', e:'2026-06-30', p:100, cli:'Interno', tipo:'Interno', bud:3200, kids:[]}
+  ];
+  const flat = () => { const out=[]; projects.forEach(p=>{ out.push([p,0]); if(p.open) p.kids.forEach(k=>out.push([k,1])); }); return out; };
+  let healthTarget=null;
+  function renderProjects(){
+    const counts={}; projects.forEach(p=>{ counts[p.hs]=(counts[p.hs]||0)+1; p.kids.forEach(k=>counts[k.hs]=(counts[k.hs]||0)+1); });
+    $('#health-sum').innerHTML = Object.keys(HS).map(k=>'<span class="hs"><span class="dot '+HS[k][1]+'"></span>'+HS[k][0]+' <b>'+(counts[k]||0)+'</b></span>').join('')+'<span class="ptag">3.1</span>';
+    let h='<thead><tr><th>Proyecto <span class="ptag">3.3</span></th><th>Estado</th><th>Responsable</th><th>Inicio</th><th>Fin</th><th>Progreso</th><th><span class="attrh">Cliente</span></th><th><span class="attrh">Tipo de obra</span></th><th class="r"><span class="attrh">Presupuesto</span></th></tr></thead><tbody>';
+    flat().forEach(([p,lvl],i)=>{ h+='<tr><td><span class="ptree" style="padding-left:'+(lvl*1.4)+'rem">'+(p.kids&&p.kids.length?'<button class="tg" type="button" data-tg="'+i+'" aria-expanded="'+(!!p.open)+'" aria-label="Plegar o desplegar"><svg class="icn icn-s"><use href="'+(p.open?'#i-chev':'#i-chevr')+'"/></svg></button>':'<span style="width:1.1rem"></span>')+
+      '<span class="pj'+(p.prog?' prog':'')+'">'+(p.k?p.k.slice(0,2):'')+'</span><span class="nm">'+esc(p.n)+'</span>'+(p.kids&&p.kids.length?'<span class="muted" style="font-size:var(--text-label)">'+p.kids.length+' subproyectos</span>':'')+'</span></td>'+
+      '<td><button class="hbtn '+HS[p.hs][1]+'" type="button" data-hs="'+i+'" title="'+esc(p.note||'Sin nota')+'"><span class="dot"></span>'+HS[p.hs][0]+'</button></td><td><span class="av">'+p.lead+'</span></td><td class="mono">'+fmtShort(p.s)+'</td><td class="mono">'+fmtShort(p.e)+'</td>'+
+      '<td><span class="minibar"><i style="width:'+p.p+'%"></i></span><span class="num">'+p.p+' %</span></td><td>'+esc(p.cli)+'</td><td>'+esc(p.tipo)+'</td><td class="r">'+eur(p.bud)+'</td></tr>'; });
+    $('#proj-grid').innerHTML=h+'</tbody>';
+  }
+  $('#proj-grid').addEventListener('click', e=>{ const tg=e.target.closest('[data-tg]'); const fl=flat();
+    if(tg){ const p=fl[+tg.dataset.tg][0]; p.open=!p.open; renderProjects(); return; }
+    const hb=e.target.closest('[data-hs]'); if(hb){ e.stopPropagation(); healthTarget=fl[+hb.dataset.hs][0]; const pop=$('#health-pop'); const r=hb.getBoundingClientRect();
+      // Fija a la ventana: la tabla recorta lo que se sale de su caja con scroll.
+      pop.style.position='fixed'; pop.style.left=Math.max(8, Math.min(r.left, window.innerWidth-320))+'px'; pop.style.top=Math.min(r.bottom+6, window.innerHeight-300)+'px';
+      pop.innerHTML='<div class="section-h" style="padding:0.2rem 0.4rem">Estado de '+esc(healthTarget.n)+'</div>'+Object.keys(HS).map(k=>'<button class="menu-item" type="button" data-set="'+k+'" aria-checked="'+(k===healthTarget.hs)+'"><span class="dot '+HS[k][1]+'"></span>'+HS[k][0]+'</button>').join('')+
+        '<label class="muted" for="hp-note" style="font-size:var(--text-label); padding:0.3rem 0.4rem 0">Nota</label><input class="field" id="hp-note" value="'+esc(healthTarget.note)+'">';
+      pop.hidden=false; } });
+  $('#health-pop').addEventListener('click', e=>{ e.stopPropagation(); const b=e.target.closest('[data-set]'); if(!b||!healthTarget) return; healthTarget.hs=b.dataset.set; healthTarget.note=$('#hp-note').value; $('#health-pop').hidden=true; renderProjects(); toast('Estado cambiado', ' · '+healthTarget.n+': '+HS[healthTarget.hs][0]+'. Queda en la actividad del proyecto.'); });
+  renderProjects();
+  $$('.sw').forEach(s=>s.addEventListener('click', ()=>s.setAttribute('aria-checked', String(s.getAttribute('aria-checked')!=='true'))));
+  $$('#p-proyectos .sett-h + div .seg').forEach(sg=>sg.addEventListener('click', e=>{ const b=e.target.closest('button'); if(!b) return; $$('button',sg).forEach(x=>x.setAttribute('aria-pressed', String(x===b))); }));
+
+  /* ---------- Wiki ---------- */
+  function wikiMode(v){ const root=$('#w-root'); root.classList.toggle('editing', v!=='read'); $('#w-edbar').hidden = v==='read'; $('#w-conflict').hidden = v!=='conflict';
+    $('#w-actions').innerHTML = v==='read' ? '<button class="btn outline sm" type="button"><svg class="icn icn-s"><use href="#i-hist"/></svg>Historial</button><button class="btn sm" type="button">Editar</button>' : '<button class="btn ghost sm" type="button">Cancelar</button><button class="btn sm" type="button">Guardar</button>';
+    $('#w-step3').textContent = v==='read' ? 'Ir cerrando los circuitos de uno en uno y medir la tensión en la salida.' : 'Ir cerrando los circuitos de uno en uno, medir la tensión en la salida y anotarla en el acta.'; }
+  segBind($('#w-mode'), wikiMode); wikiMode('read');
+
+  /* ---------- Avisos y sesiones ---------- */
+  $('#ann-hide').addEventListener('click', ()=>{ $('#ann-banner').hidden=true; toast('Aviso oculto para ti', ' · Sigue en el tablón de avisos.'); });
+  let sessions = [
+    {ic:'#i-laptop', n:'Chrome en Windows', ip:'100.64.12.7', last:'Ahora', here:true},
+    {ic:'#i-phone', n:'Safari en iPhone', ip:'100.64.12.31', last:'hace 3 h'},
+    {ic:'#i-laptop', n:'Firefox en Ubuntu', ip:'100.64.12.9', last:'hace 6 días'},
+    {ic:'#i-laptop', n:'Edge en Windows', ip:'100.64.12.44', last:'hace 3 semanas · caduca en 4 días'}
+  ];
+  function renderSess(){ $('#sess-list').innerHTML = sessions.map((s,i)=>'<div class="sess"><span class="ic"><svg class="icn"><use href="'+s.ic+'"/></svg></span><div><b>'+esc(s.n)+'</b><small class="mono">'+s.ip+' · '+esc(s.last)+'</small></div>'+(s.here?'<span class="here"><span class="dot"></span>Esta sesión</span>':'<button class="btn outline sm" type="button" data-close="'+i+'">Cerrar</button>')+'</div>').join('');
+    $('#sess-all').disabled = sessions.length<2; }
+  $('#sess-list').addEventListener('click', e=>{ const b=e.target.closest('[data-close]'); if(!b) return; const s=sessions[+b.dataset.close]; sessions.splice(+b.dataset.close,1); renderSess(); toast('Sesión cerrada', ' · '+s.n+' tendrá que volver a entrar.'); });
+  $('#sess-all').addEventListener('click', ()=>{ const n=sessions.length-1; sessions=sessions.filter(s=>s.here); renderSess(); if(n>0) toast('Sesiones cerradas', ' · '+n+' dispositivos tendrán que volver a entrar.'); });
+  renderSess();
+
+  /* ---------- PDF ---------- */
+  const PH = '<div class="ph"><span class="brandmark"><i></i>riuna</span><span class="sub" style="text-align:right">Logística Henares / Reforma nave Alcalá<br>Generado el 12/10/2026 a las 13:40</span></div>';
+  const PF = p => '<div class="pf"><span>Riuna · ana.ruiz</span><span>Página 1 de '+p+'</span></div>';
+  const papers = {
+    task: PH+'<div><h1>ALC-5 · Fase 2 · Instalación eléctrica</h1><div class="sub">En curso · Prioridad alta · Electricidad</div></div>'+
+      '<dl class="meta-grid"><dt>Asignados</dt><dd>Marc Soler, Lucía Pérez</dd><dt>Fechas</dt><dd>26 oct – 30 oct (propias)</dd><dt>Partida</dt><dd>05.02</dd><dt>Presupuesto</dt><dd>18.400,00 €</dd><dt>Estimado</dt><dd>64 h</dd><dt>Registrado</dt><dd>20 h 15 min</dd></dl>'+
+      '<div><b>Descripción</b><p>Cableado de la nave y montaje del cuadro general según la memoria técnica rev. 3. El boletín lo firma el instalador autorizado al terminar las pruebas.</p></div>'+
+      '<table><thead><tr><th>Subtarea</th><th>Asignado</th><th>Fechas</th><th class="r">Estimado</th></tr></thead><tbody><tr><td>ALC-6 Tendido de cableado</td><td>Lucía Pérez</td><td>26–30 oct</td><td class="r">40 h</td></tr><tr><td>ALC-7 Montaje del cuadro general</td><td>Marc Soler</td><td>29 oct – 3 nov</td><td class="r">24 h</td></tr></tbody></table>'+
+      '<div style="display:grid; gap:0.4rem"><b>Comentarios</b><div class="cmt"><b>Marc Soler</b> · 9 oct<br>El cuadro llega el 28; lo dejo montado en dos días.</div><div class="cmt"><b>Ana Ruiz</b> · 10 oct<br>Ok. Que el boletín no pase del 4 de noviembre.</div></div>'+PF(1),
+    view: PH+'<div><h1>Tabla · Obra en curso</h1><div class="sub">Filtro: épica es Fase 1 o Fase 2 · 14 tareas · ordenadas por vencimiento</div></div>'+
+      '<table><thead><tr><th>ID</th><th>Título</th><th>Estado</th><th>Asignado</th><th>Vence</th><th class="r">Estimado</th><th class="r">Presupuesto</th></tr></thead><tbody>'+
+      [['ALC-15','Acta de replanteo','Hecha','LP','2 oct','2 h','—'],['ALC-19','Fotos del estado previo','Hecha','LP','5 oct','1 h','—'],['ALC-13','Presupuesto de luminarias','En revisión','AR','8 oct','4 h','—'],['ALC-2','Demolición de tabiques','Hecha','MS','9 oct','32 h','2.400,00 €'],['ALC-18','Plan de seguridad y salud','Hecha','AR','9 oct','6 h','0,00 €'],['ALC-14','Llamar a la distribuidora','Por hacer','AR','12 oct','30 min','—'],['ALC-16','Pedir contenedor de escombros','Por hacer','MS','13 oct','1 h','180,00 €'],['ALC-11','Revisar acometida','Por hacer','MS','14 oct','3 h','—'],['ALC-17','Señalización de obra','Por hacer','JG','15 oct','2 h','240,00 €'],['ALC-3','Zanja y canalización','En curso','JG','16 oct','32 h','3.100,00 €'],['ALC-4','Solera de hormigón','Por hacer','JG','23 oct','24 h','4.200,00 €'],['ALC-6','Tendido de cableado','En curso','LP','30 oct','40 h','5.200,00 €'],['ALC-7','Montaje del cuadro general','Por hacer','MS','3 nov','24 h','6.900,00 €'],['ALC-9','Pruebas y puesta en marcha','Por hacer','AR','10 nov','16 h','1.300,00 €']].map(r=>'<tr>'+r.map((c,i)=>'<td'+(i>4?' class="r"':'')+'>'+c+'</td>').join('')+'</tr>').join('')+
+      '</tbody><tfoot><tr><td colspan="5">Total del filtro · 14 tareas</td><td class="r">187 h 30 min</td><td class="r">23.520,00 €</td></tr></tfoot></table>'+PF(1),
+    time: PH+'<div><h1>Parte de horas · Ana Ruiz</h1><div class="sub">Del lunes 5 al viernes 9 de octubre de 2026 · agrupado por día</div></div>'+
+      '<table><thead><tr><th>Día</th><th>Tarea</th><th>Inicio</th><th>Fin</th><th class="r">Duración</th></tr></thead><tbody>'+
+      '<tr><td>lun 5 oct</td><td>ALC-13 Presupuesto de luminarias</td><td>8:30</td><td>11:00</td><td class="r">2 h 30 min</td></tr><tr><td></td><td>MNT-41 Revisión mensual de cuadros</td><td>11:30</td><td>14:00</td><td class="r">2 h 30 min</td></tr>'+
+      '<tr><td>mar 6 oct</td><td>ALC-2 Demolición de tabiques</td><td>8:00</td><td>14:00</td><td class="r">6 h</td></tr><tr><td>mié 7 oct</td><td>ALC-2 Demolición de tabiques</td><td>8:00</td><td>13:30</td><td class="r">5 h 30 min</td></tr>'+
+      '<tr><td>jue 8 oct</td><td>ALC-13 Presupuesto de luminarias</td><td>9:00</td><td>10:00</td><td class="r">1 h</td></tr><tr><td></td><td>PRL-3 Reunión de seguridad</td><td>10:00</td><td>11:00</td><td class="r">1 h</td></tr>'+
+      '<tr><td>vie 9 oct</td><td>ALC-2 Demolición de tabiques</td><td>8:00</td><td>12:00</td><td class="r">4 h</td></tr></tbody>'+
+      '<tfoot><tr><td colspan="4">Total de la semana</td><td class="r">22 h 30 min</td></tr></tfoot></table>'+
+      '<table><thead><tr><th>Resumen por día</th><th class="r">lun</th><th class="r">mar</th><th class="r">mié</th><th class="r">jue</th><th class="r">vie</th></tr></thead><tbody><tr><td>Registrado</td><td class="r">5 h</td><td class="r">6 h</td><td class="r">5 h 30 min</td><td class="r">2 h</td><td class="r">4 h</td></tr><tr><td>Jornada</td><td class="r">8 h</td><td class="r">8 h</td><td class="r">8 h</td><td class="r">8 h</td><td class="r">6 h</td></tr></tbody></table>'+
+      '<div class="sign"><div>Firma de la persona</div><div>Visto bueno del responsable</div></div>'+PF(1)
+  };
+  function showPaper(k){ $('#paper').innerHTML = papers[k]; $$('#pdf-menu [data-pdf]').forEach(b=>b.setAttribute('aria-checked', String(b.dataset.pdf===k))); }
+  $('#pdf-menu').addEventListener('click', e=>{ const b=e.target.closest('[data-pdf]'); if(b) showPaper(b.dataset.pdf); });
+  showPaper('task');
+
+  /* ---------- arranque ---------- */
+  showTab((location.hash||'').replace('#',''));
+})();
+</script>
+
+</body>
+</html>

@@ -3,7 +3,8 @@
 Maquetas HTML autónomas sobre las que se decide **antes** de tocar `apps/web`.
 Quedan aquí como referencia de qué se acordó y de cómo debe verse y comportarse.
 Las tres primeras son del rediseño visual previo a la Fase 6; `barra-lateral.html`
-es del interludio de espacio personal y administración.
+es del interludio de espacio personal y administración, e `ideas-openproject.html`,
+del interludio de ideas de OpenProject.
 
 | Fichero | Qué es | ADR que respalda |
 |---|---|---|
@@ -11,6 +12,7 @@ es del interludio de espacio personal y administración.
 | [`tablero.html`](tablero.html) | Maqueta viva del shell y el tablero con el sistema aplicado: rail de la barra lateral, arrastre real, resalte en tiempo real, paleta ⌘K, drawer de tarea. | [021](../adr/021-sistema-de-movimiento.md), [022](../adr/022-rail-de-barra-lateral.md) |
 | [`gantt.html`](gantt.html) | Maqueta viva del Gantt con el sistema aplicado —la única vista que el rediseño no tocó—: barras finas de teal suave sin texto (la identidad vive en el riel), jerarquía visible (orden de árbol + dos grosores de barra: tarea y subtarea), riel de una línea con color por prioridad, líneas de dependencia fin→inicio, columna del día actual sombreada, cabecera de dos bandas, zoom Día/Semana/Mes/Trimestre con `‹ Hoy ›`, arrastrar y redimensionar reales. | [018](../adr/018-escala-tipografica.md)–[021](../adr/021-sistema-de-movimiento.md); `023` (zoom y bandas, pendiente) |
 | [`barra-lateral.html`](barra-lateral.html) | La barra lateral partida en tres grupos —espacio personal, administración y proyectos—, con el grupo de administración sujeto a permisos. Conmuta entre quien administra y quien no, entre barra abierta y raíl, y entre tema claro y oscuro. Los rellenos de Hoy, Planificador y Cronograma enseñan el cronómetro por fila, el panel derecho de tarea, la capacidad por día y la proyección por horas. | [036](../adr/036-barra-lateral-en-tres-espacios.md) |
+| [`ideas-openproject.html`](ideas-openproject.html) | Los cambios visuales del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado), en siete pestañas. **Detalle de tarea:** observar, «Recuérdamelo», acciones de un clic, fechas propias o automáticas con el aviso de desviación, relaciones con desfase, y campos calculados con su ayuda. **Gantt:** hitos, barra de resumen que arrastra la rama entera, planificación automática que salta el festivo, desfases +2 y −2, corchete rojo de desviación y línea base en fantasma. **Tabla:** totales del filtro, colorear filas y línea base. **Proyectos:** cartera con estado de salud, campos de proyecto y subproyectos. Más la **wiki** con historial y conflicto, los **avisos** y las **sesiones**, y tres **PDF**. Las etiquetas negras son el número de cada punto del plan. | Las de cada tanda, desde la 076, al escribirse |
 
 ## Capturas de lo implementado
 

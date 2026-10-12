@@ -7,7 +7,8 @@
 > [auditoría de partida](auditoria-fase-0.md) ·
 > [decisiones (ADR)](adr/) · [copias de seguridad](copias-de-seguridad.md) ·
 > [actualizar la instancia](actualizar.md) ·
-> [plan de despliegue](plan-despliegue.md)
+> [plan de despliegue](plan-despliegue.md) ·
+> [comparativa con OpenProject](comparativa-openproject.md)
 
 ## Estado
 
@@ -29,6 +30,7 @@
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
 | **Total Bloque A** | **45** + 18 del interludio | |
+| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **Planificado** (2026-10-12) — cinco tandas · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -2870,10 +2872,175 @@ corregidos en la PR #59, un commit por hallazgo, y cada arreglo con una prueba q
 
 ---
 
+### Interludio — Ideas de OpenProject (antes de la Fase 10) · **planificado**
+
+*Nace de una [comparativa con OpenProject](comparativa-openproject.md) 17.9.1 hecha el
+2026-10-12. OpenProject es GPL-3.0, así que se usa solo como inspiración: la comparativa sale de
+su documentación pública y sus notas de versión, nunca de su código, y cada funcionalidad se
+diseña desde cero sobre los motores de Riuna. Las decisiones se tomaron preguntando
+funcionalidad por funcionalidad y son vinculantes para todo el interludio. Su aspecto está en la
+maqueta [`ideas-openproject.html`](design-previews/ideas-openproject.html), revisada y aprobada
+antes de cerrar este plan.*
+
+**Decisiones del usuario:**
+
+- **Entran** cinco tandas: lo pequeño de cada día, planificación, proyectos y cartera, campos e
+  informes, y una wiki.
+- **Las tareas resumen entran a petición propia**, tras ver la «summary task» de OpenProject:
+  fechas automáticas del padre, mover la rama entera, aviso de desviación y progreso ponderado.
+- **Los costes se anotan para el Bloque B**, no se hacen aquí: tipo de actividad y facturable,
+  tarifas, presupuesto y cierre de periodos. Ver la nota al principio del Bloque B.
+- **La wiki es de páginas simples**: el editor TipTap de siempre, historial y aviso si otro guardó
+  mientras editabas. La edición simultánea con Yjs sigue fuera de alcance.
+- **El interludio va antes del Bloque B.**
+
+**Tandas.** Tallas a ~8 h/semana: **S** unos días · **M** ≈ 1 semana · **L** 2+ semanas. Cada
+punto se entrega en su rama, con su ADR —desde la 076; la 058 sigue reservada—, sus migraciones
+—desde la 0084— y su verificación. Cada uno recorre las superficies de «Follow a change through»
+de `AGENTS.md`:
+- la API, con Valibot y OpenAPI;
+- el cliente tipado;
+- los eventos y el WebSocket;
+- los permisos;
+- el MCP, con la prueba de paridad;
+- i18n, con `en-US.json` como fuente;
+- la actividad;
+- la migración para las instalaciones que ya existen;
+- y `funcionalidades.md` al cerrar.
+
+**Tanda 1 — Lo pequeño de cada día** (≈ 3 semanas)
+
+- **1.1 Observadores** · S. Seguir una tarea sin estar asignado. Los comentarios y los cambios de
+  estado y de vencimiento avisan también a quien observa, con las reglas por espacio de sus
+  canales.
+  - En el detalle, un botón «Observar» con la lista de quién observa.
+  - En las automatizaciones, un destinatario nuevo, «observadores».
+  - Herramientas MCP para observar y dejar de observar.
+  - A decidir en la ADR: si comentar o ser mencionado hace observar.
+- **1.2 Recordatorio en la tarea** · S. «Recuérdamelo», en el detalle y en el menú de fila: mañana a
+  las 9:00, el lunes, en una semana, o un día y una hora, con una nota que solo ve quien lo pone.
+  Llega por la campana y por los canales, y lo corre el planificador de trabajos que ya existe. No
+  planifica la tarea: el plan del día sigue siendo otra cosa.
+- **1.3 Acciones de un clic** · S. Un disparador «manual» en el motor de automatizaciones. La regla
+  sale como botón en el detalle y en el menú contextual cuando la tarea cumple su «Si», y corre
+  sus «Entonces» con el historial de siempre. Amplía las ADR 066 y 067; a decidir en nombre de
+  quién actúa (quien pulsa, con su permiso de editar).
+- **1.4 Sesiones activas** · S. En Ajustes › Seguridad, las sesiones de Better Auth (navegador, IP y
+  última actividad), con cerrar una o todas menos esta.
+- **1.5 Totales y colores en la Tabla** · S. Una fila de totales (estimado, registrado, número y
+  moneda) que la API calcula sobre todo el filtro, no sobre la página. Colorear las filas por
+  prioridad o por vencimiento, guardado en la vista.
+- **1.6 Avisos del proyecto** · M. Un tablón de avisos por proyecto y por espacio, con el editor
+  TipTap. Se pueden fijar, y entonces salen en una franja de las vistas del proyecto. Avisan a
+  los miembros. Con el vocabulario de permisos que ya existe, si basta.
+
+**Tanda 2 — Planificación** (≈ 6 semanas)
+
+- **2.1 Hitos** · S. Una tarea marcada como hito, con una sola fecha, que sale como rombo en el
+  Gantt y el Calendario y se puede filtrar. Sin estimación ni cronómetro.
+- **2.2 Tareas resumen** · M. Parte de lo que ya existe: `apps/api/src/task/tree-aggregates.ts`
+  calcula al leer el inicio más temprano, el vencimiento más tardío, las sumas y el progreso de
+  la rama, y `gantt-task-bar.tsx` dibuja el corchete. Añade:
+  - **fechas automáticas del padre**: un padre puede pasar a «fechas automáticas». Deja de tener
+    fechas propias y las suyas son las de la rama en el detalle, las vistas, los filtros y la
+    exportación. En el Gantt se dibuja como barra de resumen, que no se redimensiona. Es el modo
+    que la 2.3 amplía a las dependencias;
+  - **mover la rama entera**: arrastrar un padre en el Gantt mueve toda su rama los mismos días
+    laborables, en una transacción, bajo el cerrojo por proyecto, con actividad y sin disparar
+    automatizaciones en cascada;
+  - **aviso de desviación**: si un padre con fechas propias queda desbordado por sus hijas, el
+    corchete sale en el tono de peligro y el detalle lo dice («las subtareas acaban 2 días
+    laborables después»);
+  - **progreso ponderado**: un ajuste de jerarquía por proyecto, junto a las cascadas, para que el
+    progreso de la rama pese por la estimación en vez de contar tareas hechas. Los paneles y la
+    exportación cuentan lo mismo.
+
+  A decidir en la ADR: si «fechas automáticas» es una marca en la tarea o se deduce de no tener
+  fechas propias, y cómo convive con la fecha heredada que hoy se anuncia.
+- **2.3 Precede/sigue con desfase y planificación automática** · L. Una relación `precedes` —«sigue
+  a» es su inversa— con un desfase en días laborables, también negativo para solapar.
+  - Con fechas automáticas, mover una predecesora desplaza a sus sucesoras en días laborables,
+    saltando los festivos del espacio; las ausencias, a decidir en la ADR.
+  - Todo en una transacción, bajo el cerrojo por proyecto, con anticiclo, actividad propia y sin
+    disparar automatizaciones en cascada.
+  - El Gantt dibuja las flechas con su desfase.
+  - Presupuesto de 300 ms con 50.000 tareas, medido con `EXPLAIN`.
+- **2.4 Línea base** · L. Comparar una vista con ayer, el último día laborable, hace una semana o
+  una fecha: qué tareas entran, salen o cambian, con el valor anterior tachado, y en el Gantt la
+  barra anterior en fantasma. Se reconstruye desde `activity`: antes se comprueba que guarda el
+  valor anterior de cada campo que se puede filtrar, y se cubren los huecos. Las tareas borradas
+  no salen.
+
+**Tanda 3 — Proyectos y cartera** (≈ 7 semanas)
+
+- **3.1 Estado de salud del proyecto** · S. Sin empezar, en plazo, en riesgo, desviado, terminado o
+  cancelado, con una nota y fechas de inicio y fin. Sale en la lista de proyectos, se puede
+  filtrar y queda en la actividad.
+- **3.2 Campos de proyecto y cartera** · L. Campos personalizados con alcance de proyecto, definidos
+  en el espacio. La lista de proyectos pasa por el motor de filtros
+  ([ADR 014](adr/014-motor-de-filtros.md)), con columnas, orden, vistas guardadas y exportación:
+  Excel ya, PDF cuando llegue la 4.2.
+- **3.3 Subproyectos** · L. Un proyecto padre con profundidad limitada.
+  - Las vistas del padre pueden incluir las tareas de los hijos.
+  - El progreso se agrega, y la lista de proyectos sale en árbol.
+  - La ADR comprueba que los permisos son del espacio y no hay herencia que diseñar.
+  - «Personal» no admite hijos.
+  - Nunca se une por prefijo de `path` (regla de `AGENTS.md`).
+
+**Tanda 4 — Campos e informes** (≈ 3 semanas)
+
+- **4.1 Campos calculados y textos de ayuda** · M. Un tipo `formula` sobre campos de número y
+  moneda, la estimación y lo registrado, con suma, resta, multiplicación, división, mínimo,
+  máximo y «si», evaluado por un analizador propio y pequeño, sin `eval`. La ADR decide si se
+  materializa para poder filtrar y ordenar. Cada definición de campo lleva un texto de ayuda, que
+  sale en el detalle, la Tabla y el importador.
+- **4.2 Exportar a PDF** · M. Tres documentos:
+  - una tarea, con sus campos, la descripción, las subtareas y los comentarios;
+  - cualquier vista con sus filtros, como ya hace el Excel;
+  - el parte de horas con sus totales.
+
+  Una dependencia nueva, con su justificación de una línea y licencia compatible: nada GPL.
+
+**Tanda 5 — Wiki de páginas** · L (≈ 4 semanas)
+
+- Páginas en árbol por proyecto y por espacio, con el editor TipTap actual: menciones, enlaces a
+  tareas, adjuntos y Mermaid.
+- Historial con diferencias y restaurar.
+- Bloqueo optimista: «Marc guardó mientras editabas», con ver diferencias, guardar encima o
+  descartar.
+- Búsqueda global y enlaces de la página a la tarea y de la tarea a la página.
+- Permisos con `@riuna/permissions` y MCP para leer, buscar y crear.
+- Sin dependencias nuevas. La edición simultánea con Yjs se reconsidera solo si la wiki se usa de
+  verdad.
+
+**Al cerrar el interludio**, antes de empezar el Bloque B: **montar la copia externa en Google
+Drive**, aplazada desde la Fase 9 el 2026-10-12. Es el servicio `offsite` de `compose.local.yml`
+con un remoto `crypt` de rclone ([ADR 072](adr/072-copias-fuera-de-la-maquina-y-simulacro.md));
+los pasos están en [copias de seguridad](copias-de-seguridad.md). Las dos contraseñas del cifrado
+se guardan fuera del PC. Hasta entonces, las copias viven solo en el disco del PC.
+
+**Fuera de alcance, declarado:** reacciones y citar comentarios, planificador de equipo, página de
+resumen del proyecto, reuniones, correo entrante, 2FA, resumen diario por correo, compartir una
+tarea con alguien de fuera y parte semanal en rejilla. Lo descartado sin preguntar, con su
+motivo, está en la [comparativa](comparativa-openproject.md#qué-se-decidió-2026-10-12).
+
+---
+
 # BLOQUE B — CRM y ERP ligero (posterior)
 
 Marco para que las decisiones de hoy no lo bloqueen. Modelo funcional guiado
 por Dolibarr, implementación propia sobre los motores de las Fases 2, 3 y 4.
+
+**Ideas de OpenProject anotadas para este bloque** (2026-10-12, ver la
+[comparativa](comparativa-openproject.md#4-tiempo-y-costes)):
+- tipo de actividad y marca de facturable en cada entrada de horas, para facturar horas en la
+  Fase 11;
+- tarifas por hora por persona y, si hace falta, por proyecto, que convierten lo registrado en
+  coste (Fases 11 y 12);
+- presupuesto de proyecto en horas, en dinero y en gastos, frente a lo real (Fases 10 y 11, con
+  el enlace deal ↔ proyecto);
+- cierre de periodos de imputación y topes por entrada y por día, para que lo facturado no
+  cambie (Fase 11).
 
 ### Fase 10 — CRM base
 `company` (tercero: cliente / proveedor / prospecto en la misma entidad, como
@@ -2902,9 +3069,10 @@ software contable o integrarse con él.
 
 ## Fuera de alcance
 
-Docs/wiki colaborativa con Yjs (primer candidato del backlog), pizarras, chat
-interno, formularios públicos, app móvil nativa, funciones de IA, facturación
-de suscripciones.
+Edición simultánea de la wiki con Yjs (la wiki de páginas entra en el
+[interludio de ideas de OpenProject](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado)),
+pizarras, chat interno, formularios públicos, app móvil nativa, funciones de IA,
+facturación de suscripciones.
 
 ---
 
@@ -3377,13 +3545,16 @@ La **Fase 9**, operación, está hecha (2026-10-11), en las PR apiladas #51 a #5
    los puertos a `tailscale serve` va antes del primer `deploy/actualizar.sh`.
 2. **En «Estado de la instancia»**, comprobar que la API te ve con tu IP de Tailscale y que ve
    las copias.
-3. **Montar la copia externa** en Google Drive ([copias de seguridad](copias-de-seguridad.md)) y
-   guardar las dos contraseñas del cifrado fuera del PC.
+3. ~~**Montar la copia externa** en Google Drive.~~ **Aplazado (2026-10-12):** se hace al cerrar
+   el [interludio de ideas de OpenProject](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado),
+   antes del Bloque B. Mientras tanto, las copias viven solo en el disco del PC.
 4. **`sh deploy/simulacro.sh --humo`**: el criterio de la fase con la copia real (7.2).
 5. **Unos días después, `sh scripts/ops/informe-bd.sh`**, y pasar el resultado para repasar
    los índices con el uso real (5.2).
 
-Con eso se cierra el Bloque A. El Bloque B (CRM y ERP ligero) empieza en la Fase 10.
+Con eso se cierra el Bloque A. Después viene el
+[interludio de ideas de OpenProject](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado),
+planificado el 2026-10-12, y el Bloque B (CRM y ERP ligero) empieza en la Fase 10.
 
 **Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
 seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.
