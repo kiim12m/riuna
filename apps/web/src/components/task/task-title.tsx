@@ -118,12 +118,15 @@ export default function TaskTitle({ taskId }: TaskTitleProps) {
             readOnly={!canEdit}
             className="block h-auto w-full resize-none appearance-none overflow-hidden border-0 bg-transparent p-0 font-heading text-display leading-[1.15] font-semibold tracking-[-0.02em] text-foreground outline-none placeholder:text-foreground/45"
             // Un titulo no lleva saltos de linea: Intro termina, como en el
-            // `input` de antes, y un salto pegado pasa a espacio.
+            // `input` de antes, y un salto pegado pasa a espacio. El Intro que
+            // confirma una composicion (japones, chino, coreano) no cuenta:
+            // cerraba el campo con la palabra a medias. Safari lo marca solo
+            // con el `keyCode` 229.
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                e.currentTarget.blur();
-              }
+              if (e.key !== "Enter") return;
+              if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+              e.preventDefault();
+              e.currentTarget.blur();
             }}
             onChange={(e) => {
               const value = e.target.value.replace(/\s*\n\s*/g, " ");
