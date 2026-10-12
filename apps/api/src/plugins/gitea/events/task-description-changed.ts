@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 import {
   findExternalLinksByTask,
   updateExternalLink,
@@ -48,7 +49,7 @@ export async function handleTaskDescriptionChanged(
       try {
         metadata = JSON.parse(issueLink.metadata) as LinkMetadata;
       } catch (error) {
-        console.warn(
+        log.warn(
           "Failed to parse Gitea issue link metadata for description sync",
           {
             issueLinkId: issueLink.id,
@@ -68,7 +69,7 @@ export async function handleTaskDescriptionChanged(
         lastDescSync.value === newDescNormalized &&
         lastDescSync.source === "gitea"
       ) {
-        console.log("Skipping description sync - already synced from Gitea");
+        log.info("Skipping description sync - already synced from Gitea");
         return;
       }
 
@@ -79,7 +80,7 @@ export async function handleTaskDescriptionChanged(
         lastDescSync.source === "gitea" &&
         newDescNormalized === lastDescSync.value
       ) {
-        console.log(
+        log.info(
           `Skipping description sync - recent sync detected (${timeSinceLastSync}ms ago)`,
         );
         return;
@@ -89,7 +90,7 @@ export async function handleTaskDescriptionChanged(
     const client = createGiteaClient(config);
     const issueNumber = Number.parseInt(issueLink.externalId, 10);
     if (Number.isNaN(issueNumber)) {
-      console.warn("Skipping Gitea description sync for invalid issue number", {
+      log.warn("Skipping Gitea description sync for invalid issue number", {
         issueLinkId: issueLink.id,
         externalId: issueLink.externalId,
         taskId: issueLink.taskId,
@@ -117,8 +118,8 @@ export async function handleTaskDescriptionChanged(
       },
     });
 
-    console.log(`Synced task description to Gitea issue #${issueNumber}`);
+    log.info(`Synced task description to Gitea issue #${issueNumber}`);
   } catch (error) {
-    console.error("Failed to update Gitea issue description:", error);
+    log.error("Failed to update Gitea issue description:", error);
   }
 }

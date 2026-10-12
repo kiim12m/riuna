@@ -1,4 +1,5 @@
 import type { Octokit } from "octokit";
+import { log } from "../../../utils/log";
 
 const labelColors: Record<string, string> = {
   "priority:low": "0EA5E9",
@@ -40,7 +41,7 @@ export async function ensureLabelsExist(
           color,
         });
       } catch (createError) {
-        console.error(`Failed to create label "${labelName}":`, createError);
+        log.error(`Failed to create label "${labelName}":`, createError);
       }
     }
   }
@@ -63,7 +64,7 @@ export async function addLabelsToIssue(
       labels,
     });
   } catch (error) {
-    console.error("Failed to add labels to issue:", error);
+    log.error("Failed to add labels to issue:", error);
   }
 }
 
@@ -91,7 +92,7 @@ export async function removeLabel(
       return;
     }
 
-    console.error(`Failed to remove label "${labelName}" from issue:`, error);
+    log.error(`Failed to remove label "${labelName}" from issue:`, error);
     throw error;
   }
 }

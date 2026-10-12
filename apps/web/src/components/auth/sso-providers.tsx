@@ -5,6 +5,7 @@ import { GithubIcon } from "@/components/icons/github-icon";
 import { Button } from "@/components/ui/button";
 import type { GetConfigResponse } from "@/fetchers/config/get-config";
 import { authClient } from "@/lib/auth-client";
+import { authErrorMessage } from "@/lib/auth-error";
 import { cn } from "@/lib/cn";
 import { toast } from "@/lib/toast";
 
@@ -37,7 +38,9 @@ export function SSOProviders({
         callbackURL,
         errorCallbackURL,
       });
-      if (result.error) throw new Error(result.error.message);
+      if (result.error) {
+        throw new Error(authErrorMessage(t, result.error, errorKey));
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t(errorKey));
     } finally {
@@ -53,7 +56,11 @@ export function SSOProviders({
         callbackURL,
         errorCallbackURL,
       });
-      if (result.error) throw new Error(result.error.message);
+      if (result.error) {
+        throw new Error(
+          authErrorMessage(t, result.error, "auth:signIn.oidcError"),
+        );
+      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : t("auth:signIn.oidcError"),

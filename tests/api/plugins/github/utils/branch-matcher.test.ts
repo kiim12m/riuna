@@ -8,6 +8,7 @@ import {
   extractTaskNumberFromPRTitle,
   generateBranchName,
 } from "../../../../../apps/api/src/plugins/github/utils/branch-matcher";
+import { log } from "../../../../../apps/api/src/utils/log";
 
 const baseConfig: GitHubConfig = {
   repositoryOwner: "riuna",
@@ -91,9 +92,7 @@ describe("extractTaskNumberFromBranch", () => {
   });
 
   it("returns null and logs when the custom regex is invalid", () => {
-    const consoleError = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
+    const logError = vi.spyOn(log, "error").mockImplementation(() => undefined);
 
     expect(
       extractTaskNumberFromBranch(
@@ -105,7 +104,7 @@ describe("extractTaskNumberFromBranch", () => {
         "KAN",
       ),
     ).toBeNull();
-    expect(consoleError).toHaveBeenCalledOnce();
+    expect(logError).toHaveBeenCalledOnce();
   });
 });
 

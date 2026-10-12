@@ -23,6 +23,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { authClient } from "@/lib/auth-client";
+import { authErrorMessage } from "@/lib/auth-error";
 import { toast } from "@/lib/toast";
 import { AuthLayout } from "../../components/auth/layout";
 
@@ -92,7 +93,11 @@ function VerifyOtp() {
 
         if (result.error) {
           toast.error(
-            result.error.message || t("auth:verifyOtp.toast.invalidCode"),
+            authErrorMessage(
+              t,
+              result.error,
+              "auth:verifyOtp.toast.invalidCode",
+            ),
           );
           return;
         }
@@ -137,7 +142,11 @@ function VerifyOtp() {
 
       if (result.error) {
         toast.error(
-          result.error.message || t("auth:verifyOtp.toast.resendFailed"),
+          authErrorMessage(
+            t,
+            result.error,
+            "auth:verifyOtp.toast.resendFailed",
+          ),
         );
         return;
       }

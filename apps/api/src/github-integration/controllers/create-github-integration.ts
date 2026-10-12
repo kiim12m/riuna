@@ -4,6 +4,7 @@ import db from "../../database";
 import { integrationTable, projectTable } from "../../database/schema";
 import { defaultGitHubConfig } from "../../plugins/github/config";
 import { getGithubApp } from "../../plugins/github/utils/github-app";
+import { log } from "../../utils/log";
 
 async function createGithubIntegration({
   projectId,
@@ -65,7 +66,7 @@ async function createGithubIntegration({
       });
     installationId = installation.id;
   } catch (error) {
-    console.warn("Could not get installation ID for repository:", error);
+    log.warn("Could not get installation ID for repository:", error);
   }
 
   const existingIntegration = await db.query.integrationTable.findFirst({

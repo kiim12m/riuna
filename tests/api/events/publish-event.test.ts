@@ -6,6 +6,7 @@ import {
   shutdownEventBus,
   subscribeToEvent,
 } from "../../../apps/api/src/events/index";
+import { log } from "../../../apps/api/src/utils/log";
 
 describe("publishEvent / subscribeToEvent", () => {
   afterEach(async () => {
@@ -135,7 +136,7 @@ describe("publishEventsPaced", () => {
     const { publishEventsPaced, subscribeToEvent } = await import(
       "../../../apps/api/src/events"
     );
-    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const errors = vi.spyOn(log, "error").mockImplementation(() => {});
     let ok = 0;
     await subscribeToEvent<{ fail: boolean }>("paced.fail", async (data) => {
       if (data.fail) throw new Error("boom");

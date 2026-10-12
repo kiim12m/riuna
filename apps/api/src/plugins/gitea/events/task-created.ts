@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 import {
   createExternalLink,
   findExternalLinkByTaskAndType,
@@ -61,6 +62,6 @@ export async function handleTaskCreated(
     const labels = getLabelsForIssue(event.priority, event.status);
     await addLabelsToIssueGitea(config, createdIssue.number, labels);
   } catch (error) {
-    console.error("Failed to create Gitea issue:", error);
+    log.error("Failed to create Gitea issue:", error);
   }
 }

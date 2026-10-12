@@ -7,6 +7,7 @@ import {
   userNotificationPreferenceTable,
 } from "../database/schema";
 import createNotification from "../notification/controllers/create-notification";
+import { log } from "../utils/log";
 import {
   MAX_REMINDER_LEAD_MINUTES,
   REMINDER_WINDOW_MINUTES,
@@ -146,7 +147,7 @@ async function processReminder(
 
     if (!inserted) return;
   } catch (error) {
-    console.error("Failed to record due date reminder", {
+    log.error("Failed to record due date reminder", {
       taskId: task.id,
       userId: task.userId,
       reminderType,
@@ -187,7 +188,7 @@ export async function checkDueDateReminders(): Promise<{ degraded: boolean }> {
           await processReminder(task, window.type, window.notificationType);
         } catch (error) {
           degraded = true;
-          console.error("Failed to process due date reminder", {
+          log.error("Failed to process due date reminder", {
             taskId: task.id,
             reminderType: window.type,
             error,
@@ -196,7 +197,7 @@ export async function checkDueDateReminders(): Promise<{ degraded: boolean }> {
       }
     } catch (error) {
       degraded = true;
-      console.error("Failed to query tasks for due date reminders", {
+      log.error("Failed to query tasks for due date reminders", {
         reminderType: window.type,
         error,
       });

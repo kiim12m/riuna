@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { log } from "../../../apps/api/src/utils/log";
 
 // Mock events to prevent side effects from ws/index.ts top-level subscriptions
 vi.mock("../../../apps/api/src/events", () => ({
@@ -153,7 +154,7 @@ describe("broadcastToProject", () => {
 
   it("warns when called before adapter initialization", async () => {
     await shutdownWebSocketAdapter();
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(log, "warn").mockImplementation(() => {});
 
     broadcastToProject("proj-1", {
       type: "TASK_CREATED",

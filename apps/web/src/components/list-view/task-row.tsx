@@ -275,15 +275,17 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
                 {getPriorityIcon(task.priority ?? "")}
               </div>
             )}
+            {/* En movil la clave le quitaba el sitio al titulo: se queda en el
+             * detalle y en pantallas anchas. */}
             {showTaskNumbers && (
-              <div className="text-xs font-mono text-muted-foreground flex-shrink-0">
+              <div className="hidden text-xs font-mono text-muted-foreground flex-shrink-0 sm:block">
                 {projectSlug}-{task.number}
               </div>
             )}
 
             <div className="flex-1 min-w-0 flex items-center gap-2">
               <div className="flex items-center gap-2 justify-between w-full">
-                <span className="text-sm text-foreground truncate">
+                <span className="line-clamp-2 text-sm text-foreground sm:truncate">
                   {task.title}
                 </span>
                 <div className="flex items-center gap-1">

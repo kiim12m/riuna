@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import db from "../../../database";
 import { projectTable } from "../../../database/schema";
+import { log } from "../../../utils/log";
 import type { PluginContext, TaskCreatedEvent } from "../../types";
 import type { GitHubConfig } from "../config";
 import {
@@ -97,6 +98,6 @@ export async function handleTaskCreated(
       }
     }
   } catch (error) {
-    console.error("Failed to create GitHub issue:", error);
+    log.error("Failed to create GitHub issue:", error);
   }
 }

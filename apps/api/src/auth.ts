@@ -45,6 +45,7 @@ import { publishEvent } from "./events";
 import deleteAccountData from "./user/controllers/delete-account-data";
 import { checkRegistrationAllowed } from "./utils/check-registration-allowed";
 import { checkWorkspaceName } from "./utils/check-workspace-name";
+import { CLIENT_IP_HEADER } from "./utils/client-ip";
 import { mapCustomOAuthProfileToUser } from "./utils/custom-oauth-profile";
 import { generateDemoName } from "./utils/generate-demo-name";
 import { getDefaultCookieAttributes } from "./utils/get-default-cookie-attributes";
@@ -56,6 +57,8 @@ import { isCloud } from "./utils/is-cloud";
 import { isDisposableEmail } from "./utils/is-disposable-email";
 import { isLocalSignInPath } from "./utils/is-local-sign-in-path";
 import { isLocalAccountEmail } from "./utils/local-account";
+import { log } from "./utils/log";
+import { rateLimitEnabled } from "./utils/rate-limit";
 import { verifyTurnstile } from "./utils/verify-turnstile";
 
 config();
@@ -105,7 +108,7 @@ const baseURLWithoutPath = (() => {
 })();
 
 if (process.env.AUTH_SECRET && process.env.AUTH_SECRET.length < 32) {
-  console.error(
+  log.error(
     "AUTH_SECRET is less than 32 characters, please generate a new one.",
   );
   process.exit(1);
@@ -164,31 +167,18 @@ function getDeviceAuthClientIds(): Set<string> {
   return new Set(["riuna-cli", "riuna-mcp"]);
 }
 
-const DEFAULT_TRUSTED_PROXIES = [
-  "127.0.0.0/8",
-  "::1/128",
-  "10.0.0.0/8",
-  "172.16.0.0/12",
-  "192.168.0.0/16",
-];
-
-function trustedProxies(): string[] {
-  const raw = process.env.TRUSTED_PROXIES?.trim();
-  if (!raw) {
-    return DEFAULT_TRUSTED_PROXIES;
-  }
-  return raw
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter(Boolean);
-}
-
 function getDeviceAuthVerificationUri(): string {
   const base = clientUrl.replace(/\/$/, "");
   return `${base}/device`;
 }
 
 export const auth = betterAuth({
+  // Sus avisos salen por el registro de la API (ADR 073): con nivel, en JSON y
+  // con el `requestId` de la peticion, en vez de en texto plano aparte.
+  logger: {
+    log: (level, message, ...args) =>
+      log[level](`[Better Auth] ${message}`, ...args),
+  },
   baseURL: baseURLWithoutPath,
   trustedOrigins,
   secret: process.env.AUTH_SECRET || "",
@@ -294,7 +284,7 @@ export const auth = betterAuth({
             locale,
           });
         } catch (error) {
-          console.error(error);
+          log.error(error);
         }
       },
     }),
@@ -443,7 +433,7 @@ export const auth = betterAuth({
               await db.insert(schema.workspaceRoleTable).values(rows);
             }
           } catch (error) {
-            console.error(
+            log.error(
               "Failed to seed default workspace roles for workspace",
               organization.id,
               error,
@@ -470,14 +460,14 @@ export const auth = betterAuth({
         afterAddMember: async ({ member }) => {
           if (member?.organizationId) {
             void syncWorkspaceSeats(member.organizationId).catch((error) => {
-              console.error("Seat sync after member add failed:", error);
+              log.error("Seat sync after member add failed:", error);
             });
           }
         },
         afterRemoveMember: async ({ member }) => {
           if (member?.organizationId) {
             void syncWorkspaceSeats(member.organizationId).catch((error) => {
-              console.error("Seat sync after member remove failed:", error);
+              log.error("Seat sync after member remove failed:", error);
             });
           }
         },
@@ -508,7 +498,7 @@ export const auth = betterAuth({
           result?.success === false &&
           result.reason === "SMTP_NOT_CONFIGURED"
         ) {
-          console.warn(
+          log.warn(
             "Invitation created but email not sent due to SMTP not being configured",
           );
           return;
@@ -567,16 +557,22 @@ export const auth = betterAuth({
       maxAge: 5 * 60,
     },
   },
+  // Siempre, y no solo en cloud (ADR 074): en autoalojado nada frenaba los
+  // intentos de contrasena. Better Auth ya trae 3 cada 10 s para entrar y
+  // registrarse, y 3 por minuto para recuperar la contrasena; estas reglas lo
+  // dejan por minuto. Cuenta por IP, la que resuelve `utils/client-ip.ts`.
   rateLimit: {
-    // Enable in cloud; self-hosted instances opt in by setting RIUNA_CLOUD.
-    // Default better-auth rate-limit only kicks in for production; we keep the
-    // global limits conservative and tighten signup/invite via customRules.
-    enabled: isCloud(),
+    enabled: rateLimitEnabled(),
     window: 10,
     max: 100,
     customRules: {
+      "/sign-in/email": { window: 60, max: 10 },
+      "/sign-in/username": { window: 60, max: 10 },
+      "/sign-in/email-otp": { window: 60, max: 10 },
+      "/sign-in/magic-link": { window: 60, max: 5 },
       "/sign-up/email": { window: 60, max: 3 },
       "/organization/invite-member": { window: 60, max: 5 },
+      "/device/code": { window: 60, max: 10 },
     },
   },
   databaseHooks: {
@@ -707,7 +703,7 @@ export const auth = betterAuth({
               auth.api.addMember({ body }),
             );
           } catch (error) {
-            console.error("Failed to grant pending invitations", {
+            log.error("Failed to grant pending invitations", {
               userId: user.id,
               error,
             });
@@ -848,9 +844,12 @@ export const auth = betterAuth({
     }),
   },
   advanced: {
+    // Solo la IP que ya resolvio `utils/client-ip.ts`, que mira de donde
+    // viene la conexion antes de fiarse de `X-Forwarded-For`. Leer aqui
+    // `cf-connecting-ip` o `X-Forwarded-For` directamente dejaba inventarse
+    // la IP, y con ella un cupo nuevo en cada intento.
     ipAddress: {
-      ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for"],
-      trustedProxies: trustedProxies(),
+      ipAddressHeaders: [CLIENT_IP_HEADER],
     },
     defaultCookieAttributes: getDefaultCookieAttributes({
       apiUrl,

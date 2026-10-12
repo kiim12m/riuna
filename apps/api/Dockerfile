@@ -74,6 +74,10 @@ ENV NODE_ENV=production
 # Mismo criterio que Dockerfile.riuna (ADR 049): la API vive en Madrid y
 # PostgreSQL en UTC; por eso no va en el `.env` que comparten.
 ENV TZ=Europe/Madrid
+# El commit con el que se construyo, para el estado de la instancia (ADR 075).
+# Lo pasa `deploy/actualizar.sh`; vacio si se construye a mano.
+ARG RIUNA_REVISION=""
+ENV RIUNA_REVISION=$RIUNA_REVISION
 
 # Production node_modules built natively on the build platform (pure JS, arch-independent)
 COPY --from=prod-deps --chown=appuser:appuser /app ./

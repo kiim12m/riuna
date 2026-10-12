@@ -3,6 +3,7 @@ import { isBillingEnabled } from "../billing/config";
 import { syncWorkspaceSeats } from "../billing/controllers/sync-seats";
 import db from "../database";
 import { workspaceBillingTable, workspaceUserTable } from "../database/schema";
+import { log } from "../utils/log";
 import { SEAT_RECONCILIATION_LEASE, withJobLease } from "./leader-lock";
 
 const BATCH_SIZE = 100;
@@ -47,7 +48,7 @@ async function runReconciliation(): Promise<{ degraded: boolean }> {
   try {
     drifted = await findDriftedWorkspaces();
   } catch (error) {
-    console.error("billing: seat reconciliation query failed", error);
+    log.error("billing: seat reconciliation query failed", error);
     return { degraded: true };
   }
 
@@ -63,14 +64,14 @@ async function runReconciliation(): Promise<{ degraded: boolean }> {
       repaired += 1;
     } catch (error) {
       degraded = true;
-      console.error(
+      log.error(
         `billing: seat reconciliation failed for workspace ${workspaceId}`,
         error,
       );
     }
   }
 
-  console.log(
+  log.info(
     `billing: seat reconciliation resynced ${repaired}/${drifted.length} workspaces`,
   );
   return { degraded };

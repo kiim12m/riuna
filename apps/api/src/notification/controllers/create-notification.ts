@@ -3,6 +3,7 @@ import db from "../../database";
 import { notificationTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { deliverNotification } from "../../notification-preferences/delivery";
+import { log } from "../../utils/log";
 
 async function createNotification({
   userId,
@@ -64,7 +65,7 @@ async function createNotification({
       userId,
     });
     void deliverNotification(notification.id).catch((error) => {
-      console.error("Failed to deliver notification", {
+      log.error("Failed to deliver notification", {
         notificationId: notification.id,
         error,
       });

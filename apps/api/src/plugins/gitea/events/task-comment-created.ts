@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 import { findExternalLinkByTaskAndType } from "../../github/services/link-manager";
 import type { PluginContext, TaskCommentCreatedEvent } from "../../types";
 import type { GiteaConfig } from "../config";
@@ -27,20 +28,17 @@ export async function handleTaskCommentCreated(
   try {
     const client = createGiteaClient(config);
     if (!/^\d+$/.test(existingLink.externalId)) {
-      console.error(
-        "Skipping Gitea comment sync for invalid external issue id",
-        {
-          taskId: event.taskId,
-          externalId: existingLink.externalId,
-        },
-      );
+      log.error("Skipping Gitea comment sync for invalid external issue id", {
+        taskId: event.taskId,
+        externalId: existingLink.externalId,
+      });
       return;
     }
 
     const issueNumber = Number(existingLink.externalId);
 
     if (!Number.isFinite(issueNumber) || issueNumber < 1) {
-      console.error("Skipping Gitea comment sync for invalid issue number", {
+      log.error("Skipping Gitea comment sync for invalid issue number", {
         taskId: event.taskId,
         externalId: existingLink.externalId,
         issueNumber,
@@ -55,6 +53,6 @@ export async function handleTaskCommentCreated(
       event.comment,
     );
   } catch (error) {
-    console.error("Failed to create Gitea comment:", error);
+    log.error("Failed to create Gitea comment:", error);
   }
 }

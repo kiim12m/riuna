@@ -15,6 +15,7 @@ import {
   resolveFieldValueChanges,
 } from "../../field/validate-field-values";
 import { filterAssignableUsers } from "../../utils/assert-assignable-user";
+import { log } from "../../utils/log";
 import {
   ensureEpics,
   nextProjectPosition,
@@ -188,7 +189,7 @@ export function publishImportEvents(
         content: "imported the task",
       },
     })),
-  ).catch((error) => console.error("Failed to publish import events:", error));
+  ).catch((error) => log.error("Failed to publish import events:", error));
 }
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];

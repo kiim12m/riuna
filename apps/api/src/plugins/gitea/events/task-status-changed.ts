@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 import {
   findExternalLinksByTask,
   updateExternalLink,
@@ -65,6 +66,6 @@ export async function handleTaskStatusChanged(
       });
     }
   } catch (error) {
-    console.error("Failed to update Gitea issue status:", error);
+    log.error("Failed to update Gitea issue status:", error);
   }
 }

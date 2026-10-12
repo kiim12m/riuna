@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import db from "../../database";
 import { integrationTable } from "../../database/schema";
+import { log } from "../../utils/log";
 import type { GiteaConfig } from "./config";
 import { verifyGiteaSignature } from "./utils/verify-signature";
 import { handleGiteaIssueClosed } from "./webhooks/issue-closed";
@@ -118,7 +119,7 @@ export async function handleGiteaWebhookRequest(
     await dispatchGiteaEvent(event, payload, integration.id);
     return { success: true };
   } catch (error) {
-    console.error("[Gitea Webhook] Handler error:", error);
+    log.error("[Gitea Webhook] Handler error:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Webhook handler failed",
@@ -131,7 +132,7 @@ async function dispatchGiteaEvent(
   payload: Record<string, unknown>,
   integrationId: string,
 ) {
-  console.log(`[Gitea Webhook] Event: ${event}`);
+  log.info(`[Gitea Webhook] Event: ${event}`);
 
   switch (event) {
     case "push":
@@ -207,6 +208,6 @@ async function dispatchGiteaEvent(
       return;
     }
     default:
-      console.log(`[Gitea Webhook] Ignored event: ${event}`);
+      log.info(`[Gitea Webhook] Ignored event: ${event}`);
   }
 }

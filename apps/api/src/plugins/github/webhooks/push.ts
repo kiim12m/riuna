@@ -1,4 +1,5 @@
 import { publishEvent } from "../../../events";
+import { log } from "../../../utils/log";
 import type { GitHubConfig } from "../config";
 import { createOrUpdateExternalLink } from "../services/link-manager";
 import {
@@ -37,10 +38,10 @@ export async function handlePush(payload: PushPayload) {
   const { ref, repository, head_commit } = payload;
 
   const branchName = ref.replace("refs/heads/", "");
-  console.log(`[Push] Processing branch: ${branchName}`);
+  log.info(`[Push] Processing branch: ${branchName}`);
 
   if (PROTECTED_BRANCHES.includes(branchName)) {
-    console.log(`[Push] Skipping protected branch: ${branchName}`);
+    log.info(`[Push] Skipping protected branch: ${branchName}`);
     return;
   }
 
@@ -50,15 +51,13 @@ export async function handlePush(payload: PushPayload) {
   );
 
   if (integrations.length === 0) {
-    console.log(
+    log.info(
       `[Push] No integrations found for ${repository.owner.login}/${repository.name}`,
     );
     return;
   }
 
-  console.log(
-    `[Push] Found ${integrations.length} integration(s) for this repo`,
-  );
+  log.info(`[Push] Found ${integrations.length} integration(s) for this repo`);
 
   for (const integration of integrations) {
     if (!integration.project) {
@@ -67,7 +66,7 @@ export async function handlePush(payload: PushPayload) {
 
     const config = JSON.parse(integration.config) as GitHubConfig;
     const projectSlug = integration.project.slug;
-    console.log(
+    log.info(
       `[Push] Trying project: ${projectSlug}, pattern: ${config.branchPattern}`,
     );
 
@@ -78,28 +77,26 @@ export async function handlePush(payload: PushPayload) {
     );
 
     if (!taskNumber) {
-      console.log(
+      log.info(
         `[Push] Could not extract task number from branch: ${branchName} (pattern: ${config.branchPattern}, slug: ${projectSlug})`,
       );
       continue;
     }
 
-    console.log(
+    log.info(
       `[Push] Extracted task number: ${taskNumber} for project ${projectSlug}`,
     );
 
     const task = await findTaskByNumber(integration.projectId, taskNumber);
 
     if (!task) {
-      console.log(
+      log.info(
         `[Push] Task #${taskNumber} not found in project ${integration.projectId}`,
       );
       continue;
     }
 
-    console.log(
-      `[Push] Found task: ${task.id}, current status: ${task.status}`,
-    );
+    log.info(`[Push] Found task: ${task.id}, current status: ${task.status}`);
 
     await createOrUpdateExternalLink({
       taskId: task.id,
@@ -125,14 +122,12 @@ export async function handlePush(payload: PushPayload) {
       "branch_push",
       config.statusTransitions?.onBranchPush || "in-progress",
     );
-    console.log(
-      `[Push] Target status: ${targetStatus}, current: ${task.status}`,
-    );
+    log.info(`[Push] Target status: ${targetStatus}, current: ${task.status}`);
 
     const isTaskFinal = await isTaskInFinalState(task);
 
     if (task.status !== targetStatus && !isTaskFinal) {
-      console.log(
+      log.info(
         `[Push] Updating task ${task.id} status from ${task.status} to ${targetStatus}`,
       );
       const statusResult = await updateTaskStatus(task.id, targetStatus);
@@ -152,13 +147,13 @@ export async function handlePush(payload: PushPayload) {
         });
       }
     } else {
-      console.log(`[Push] Skipping status update - already ${task.status}`);
+      log.info(`[Push] Skipping status update - already ${task.status}`);
     }
 
     return;
   }
 
-  console.log(
+  log.info(
     `[Push] No matching task found in any integrated project for branch: ${branchName}`,
   );
 }

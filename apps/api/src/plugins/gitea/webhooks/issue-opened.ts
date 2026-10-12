@@ -4,6 +4,7 @@ import { columnTable, projectTable, taskTable } from "../../../database/schema";
 import { publishEvent } from "../../../events";
 import { claimTaskNumber } from "../../../task/controllers/claim-task-numbers";
 import { rootTaskTreeFields } from "../../../task/tree";
+import { log } from "../../../utils/log";
 import {
   createExternalLink,
   findExternalLink,
@@ -68,7 +69,7 @@ export async function handleGiteaIssueOpened(
     try {
       config = JSON.parse(integration.config) as GiteaConfig;
     } catch (error) {
-      console.error("Invalid Gitea config for integration", {
+      log.error("Invalid Gitea config for integration", {
         integrationId: integration.id,
         error,
       });
@@ -122,7 +123,7 @@ export async function handleGiteaIssueOpened(
       .returning();
 
     if (!createdTask) {
-      console.error("Failed to create task from Gitea issue");
+      log.error("Failed to create task from Gitea issue");
       continue;
     }
 
@@ -196,7 +197,7 @@ export async function handleGiteaIssueOpened(
         );
       }
     } catch (error) {
-      console.error("Failed to process Gitea issue:", error);
+      log.error("Failed to process Gitea issue:", error);
     }
   }
 }

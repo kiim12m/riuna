@@ -12,7 +12,7 @@ Riuna es una plataforma de productividad **self-hosted**: gestión de proyectos
 y tareas primero, CRM y ERP ligero después. Es un fork duro de
 [Kaneo](https://github.com/usekaneo/kaneo) v2.22.0 mantenido como programa
 independiente. A fecha de este documento están cerradas las fases 0 a 8 del
-plan; la 9 (operación) sigue pendiente. De la 8, los importadores de Trello,
+plan, y la 9 (operación) está hecha salvo dos cosas que se lanzan en el PC. De la 8, los importadores de Trello,
 Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
 
 ---
@@ -37,8 +37,14 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
 - **API keys** por usuario, con alcance de permisos, caducidad (1/7/30/90 días
   o nunca) y límite de 100 peticiones por minuto.
 - **Device flow** para CLI y clientes MCP (`riuna-cli`, `riuna-mcp`).
-- Antiabuso, solo en modo cloud: Turnstile en el registro, bloqueo de correos
-  desechables y límites de tasa en el alta y en las invitaciones.
+- **Límites de tasa** ([ADR 074](adr/074-limites-de-tasa.md)):
+  - entrar, registrarse, invitar y recuperar la contraseña, por IP;
+  - toda la API, por persona o clave (600 por minuto);
+  - lo público, por IP: el calendario `.ics`, los webhooks y el proyecto público.
+  - La IP solo se toma de `X-Forwarded-For` si la conexión viene de un proxy de confianza.
+  - En la web, un 429 se explica en español.
+- Antiabuso, solo en modo cloud: Turnstile en el registro y bloqueo de correos
+  desechables.
 - Perfil: nombre, correo, **avatar con recorte**, idioma, y **borrado de
   cuenta** con purga de datos.
 
@@ -666,6 +672,13 @@ no lista los proyectos Personal.
   de «Ajustes», y solo sale lo que el papel de cada uno permite
   ([ADR 061](adr/061-la-administracion-en-el-menu-del-avatar.md)).
 - Navegación móvil propia para las vistas de proyecto.
+- **Para leer desde el móvil (390 px)**:
+  - Hoy, Mis tareas, el Planificador, Mi panel, el detalle de tarea, el Tablero y la Lista se
+    leen enteros;
+  - los títulos tienen dos líneas, y el del detalle crece con el texto;
+  - el Tablero y el Planificador van columna a columna, encajando al deslizar;
+  - las cabeceras pasan a dos líneas en vez de desbordarse.
+  - Una prueba recorre 26 pantallas a ese ancho y falla si alguna se sale.
 
 ## 15. Operación
 
@@ -679,10 +692,42 @@ no lista los proyectos Personal.
   renombrado al final. La **restauración está verificada**: comprueba el
   volcado antes de tocar nada y permite restaurar a una base de ensayo. Ver
   [copias de seguridad](copias-de-seguridad.md).
-- **Seis trabajos programados**: recordatorios de vencimiento, recordatorios
+- **Copia fuera de la máquina**: el servicio `offsite` sube las copias a Google Drive, cifradas
+  con rclone. Nunca sincroniza borrando, y no purga si las copias locales han dejado de llegar
+  ([ADR 072](adr/072-copias-fuera-de-la-maquina-y-simulacro.md)).
+- **Simulacro de restauración** (`deploy/simulacro.sh`), en el PC con la copia real y cada
+  noche en CI con datos sembrados.
+  - Restaura en un proyecto Compose aislado y compara los recuentos.
+  - Pasa el humo entero contra lo restaurado.
+  - Arranca sin planificador, sin correo y con una clave de cifrado nueva, así que nada de lo
+    restaurado puede salir.
+- **Actualizar con red** ([ADR 071](adr/071-la-instancia-del-pc-por-tailscale.md)):
+  `deploy/actualizar.sh` construye, copia, migra con la imagen nueva antes de cambiar la que
+  sirve (`node dist/migrate.js`), levanta y, si algo falla, dice cómo volver. La instancia del
+  PC solo escucha en localhost y se publica con `tailscale serve`.
+- **Siete trabajos programados**: recordatorios de vencimiento, recordatorios
   de webhook de proyecto, reconciliación de asientos, recordatorios de prueba,
-  generación de tareas recurrentes y automatizaciones (por fecha, el stand-up
-  programado y la purga de su historial a los 30 días).
+  generación de tareas recurrentes, automatizaciones (por fecha, el stand-up
+  programado y la purga de su historial a los 30 días) y la salud de la instancia.
+  Cada vuelta deja su resultado en `job_status`.
+- **Estado de la instancia** ([ADR 075](adr/075-estado-de-la-instancia-y-alertas.md)), para
+  el admin de instancia, en el menú del avatar. Enseña:
+  - versión y commit;
+  - la base y sus migraciones;
+  - los trabajos programados;
+  - las copias local y externa;
+  - el tiempo real;
+  - las rutas más lentas (p50 y p95);
+  - la IP con la que la API ve a quien pregunta.
+- **Alertas al admin de instancia** por sus canales (ntfy, Gotify, correo, webhook), cuando:
+  - la copia local se retrasa;
+  - la copia externa deja de subir;
+  - un trabajo programado falla tres veces seguidas.
+  Cada alerta avisa una vez y avisa de nuevo al resolverse.
+- **Logs estructurados** ([ADR 073](adr/073-logs-estructurados.md)):
+  - JSON por línea, con una por petición y un `requestId` que también sale en `X-Request-Id`;
+  - los secretos, tapados;
+  - todo 500, con su pila.
 - **«Hoy» es el día de Madrid** ([ADR 049](adr/049-la-api-vive-en-madrid.md)):
   la API corre en `Europe/Madrid` (fijado en su imagen) y PostgreSQL en UTC.
   Un vencimiento elegido en el calendario vence ese día, no el anterior.
@@ -696,8 +741,8 @@ no lista los proyectos Personal.
   niega a correr contra una base cuyo nombre no acabe en `_bench` o `_test`.
 - Almacenamiento **S3** para adjuntos, con URL prefirmadas y limpieza de
   huérfanos.
-- 86 variables de entorno documentadas en `.env.sample`, con una guarda en CI
-  que impide añadir una sin documentar.
+- Todas las variables de entorno que lee la API, documentadas en `.env.sample`, con una guarda
+  en CI que impide añadir una sin documentar.
 
 ---
 
@@ -724,7 +769,4 @@ Para que nadie busque lo que no existe:
 - **Las vistas no paginan.** El presupuesto de 300 ms se cruza en torno a las
   6.500 tareas en un mismo proyecto.
 - ~~**Cambiar un campo personalizado no deja rastro en la actividad.**~~ Ya lo deja (con el valor anterior y el nuevo).
-- **Límite de tasa general de la API.** Solo lo tienen las API keys y, en modo
-  cloud, el registro.
-- **Copias fuera de la máquina** y guía de actualización propia — fase 9.
 - **CRM y ERP** — bloque B del plan.

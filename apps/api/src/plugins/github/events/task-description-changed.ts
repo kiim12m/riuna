@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 import type { PluginContext, TaskDescriptionChangedEvent } from "../../types";
 import type { GitHubConfig } from "../config";
 import {
@@ -43,7 +44,7 @@ export async function handleTaskDescriptionChanged(
         lastDescSync.value === newDescNormalized &&
         lastDescSync.source === "github"
       ) {
-        console.log("Skipping description sync - already synced from GitHub");
+        log.info("Skipping description sync - already synced from GitHub");
         return;
       }
 
@@ -51,7 +52,7 @@ export async function handleTaskDescriptionChanged(
       const timeSinceLastSync =
         Date.now() - new Date(lastDescSync.timestamp).getTime();
       if (timeSinceLastSync < 2000) {
-        console.log(
+        log.info(
           `Skipping description sync - recent sync detected (${timeSinceLastSync}ms ago)`,
         );
         return;
@@ -94,8 +95,8 @@ export async function handleTaskDescriptionChanged(
       },
     });
 
-    console.log(`Synced task description to GitHub issue #${issueNumber}`);
+    log.info(`Synced task description to GitHub issue #${issueNumber}`);
   } catch (error) {
-    console.error("Failed to update GitHub issue description:", error);
+    log.error("Failed to update GitHub issue description:", error);
   }
 }

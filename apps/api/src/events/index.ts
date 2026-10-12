@@ -1,5 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { EventEmitter } from "node:events";
+import { log } from "../utils/log";
 
 const EVENTS = new EventEmitter();
 EVENTS.setMaxListeners(100);
@@ -100,7 +101,7 @@ export async function publishEvent(
   try {
     EVENTS.emit(eventType, payload);
   } catch (error) {
-    console.error("Failed to publish event:", error);
+    log.error("Failed to publish event:", error);
     throw error;
   }
 }
@@ -115,7 +116,7 @@ export async function subscribeToEvent<T>(
         try {
           await handler(payload.data);
         } catch (error) {
-          console.error(`Error processing event ${eventType}:`, error);
+          log.error(`Error processing event ${eventType}:`, error);
         }
       })();
       RUNNING.add(running);
@@ -123,11 +124,13 @@ export async function subscribeToEvent<T>(
       void running.finally(() => RUNNING.delete(running));
     });
   } catch (error) {
-    console.error("Failed to subscribe to event:", error);
+    log.error("Failed to subscribe to event:", error);
     throw error;
   }
 }
 
 process.on("SIGTERM", () => {
-  shutdownEventBus().catch(console.error);
+  shutdownEventBus().catch((error) =>
+    log.error("Event bus shutdown failed", error),
+  );
 });

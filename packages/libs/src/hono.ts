@@ -30,6 +30,30 @@ export function apiHeaders(init?: RequestInit): HeadersInit {
   };
 }
 
+type RateLimitListener = (retryAfterSeconds: number) => void;
+
+const rateLimitListeners = new Set<RateLimitListener>();
+
+/**
+ * Avisa cuando la API corta por exceso de peticiones (ADR 074). `libs` no sabe
+ * de traducciones ni de avisos en pantalla: la web se suscribe y lo explica.
+ * Devuelve la funcion que anula la suscripcion.
+ */
+export function onRateLimited(listener: RateLimitListener) {
+  rateLimitListeners.add(listener);
+  return () => {
+    rateLimitListeners.delete(listener);
+  };
+}
+
+function notifyRateLimited(response: Response) {
+  if (response.status !== 429) return;
+  const retryAfter = Number(response.headers.get("Retry-After"));
+  const seconds =
+    Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : 60;
+  for (const listener of rateLimitListeners) listener(seconds);
+}
+
 // Sin anotar, la declaracion emitida tendria que nombrar tipos internos de la
 // API que `libs` no puede alcanzar (TS2883); `AppType` si es publico.
 export const client: ReturnType<typeof hc<AppType>> = hc<AppType>(apiUrl, {
@@ -38,13 +62,18 @@ export const client: ReturnType<typeof hc<AppType>> = hc<AppType>(apiUrl, {
       ...init,
       headers: apiHeaders(init),
       credentials: "include",
-    }).catch((error) => {
-      if (error instanceof TypeError && error.message.includes("fetch")) {
-        throw new Error(
-          `Failed to connect to API server at ${apiUrl}. This might be due to CORS configuration issues or the server not running. Please check your environment variables and server status.`,
-        );
-      }
-      throw error;
-    });
+    })
+      .then((response) => {
+        notifyRateLimited(response);
+        return response;
+      })
+      .catch((error) => {
+        if (error instanceof TypeError && error.message.includes("fetch")) {
+          throw new Error(
+            `Failed to connect to API server at ${apiUrl}. This might be due to CORS configuration issues or the server not running. Please check your environment variables and server status.`,
+          );
+        }
+        throw error;
+      });
   },
 });

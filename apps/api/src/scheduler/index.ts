@@ -1,7 +1,10 @@
 import * as Sentry from "@sentry/node";
 import { Cron } from "croner";
 import { checkAutomations } from "../automation/scheduled";
+import { checkInstanceHealth } from "../instance/alerts";
+import { type JobRunStatus, recordJobRun } from "../instance/job-status";
 import { generateRecurringTasks } from "../recurrence/generate";
+import { log } from "../utils/log";
 import { checkDueDateReminders } from "./due-date-reminders";
 import { withJobLease } from "./leader-lock";
 import { checkProjectWebhookReminders } from "./project-webhook-reminders";
@@ -19,12 +22,22 @@ type JobOutcome = { degraded?: boolean };
 // up the monitor without aborting the rest of the work. Unexpected throws are
 // captured as exception events and swallowed so one bad tick can't take down
 // the scheduler via an unhandled rejection.
-function withCheckIn<T>(name: string, fn: () => Promise<T>) {
+//
+// Each run also leaves a log line (ADR 073): debug when it went well — every
+// five minutes that would be noise — and warn or error when it did not. And
+// its outcome goes to `job_status`, which the instance status page shows and
+// the "keeps failing" alert watches (ADR 075).
+export function withCheckIn<T>(name: string, fn: () => Promise<T>) {
   return async (): Promise<void> => {
     const checkInId = Sentry.captureCheckIn({
       monitorSlug: name,
       status: "in_progress",
     });
+    const startedAt = new Date();
+    const started = performance.now();
+    const elapsed = () => Math.round(performance.now() - started);
+    const record = (status: JobRunStatus, error?: unknown) =>
+      recordJobRun(name, { startedAt, finishedAt: new Date(), status, error });
     try {
       const result = await fn();
       const degraded = Boolean(
@@ -35,6 +48,18 @@ function withCheckIn<T>(name: string, fn: () => Promise<T>) {
         monitorSlug: name,
         status: degraded ? "error" : "ok",
       });
+      if (degraded) {
+        log.warn("Scheduled job degraded", {
+          job: name,
+          durationMs: elapsed(),
+        });
+      } else {
+        log.debug("Scheduled job finished", {
+          job: name,
+          durationMs: elapsed(),
+        });
+      }
+      await record(degraded ? "degraded" : "ok");
     } catch (error) {
       Sentry.captureException(error, { tags: { area: "cron", job: name } });
       Sentry.captureCheckIn({
@@ -42,12 +67,25 @@ function withCheckIn<T>(name: string, fn: () => Promise<T>) {
         monitorSlug: name,
         status: "error",
       });
-      console.error(`Cron job ${name} failed`, error);
+      log.error("Scheduled job failed", error, {
+        job: name,
+        durationMs: elapsed(),
+      });
+      await record("error", error);
     }
   };
 }
 
-export function initializeScheduler(): void {
+/** Arranca los trabajos programados y devuelve cuántos. */
+export function initializeScheduler(): number {
+  // Una instancia restaurada para un simulacro (ADR 072) trae las reglas, los
+  // stand-ups programados y los recordatorios de la de verdad: con el
+  // planificador en marcha, una copia mandaria mensajes reales a chats reales.
+  if (process.env.RIUNA_DISABLE_SCHEDULER === "true") {
+    log.warn("⏸️ Scheduler disabled (RIUNA_DISABLE_SCHEDULER=true)");
+    return 0;
+  }
+
   jobs.push(
     new Cron(
       "*/5 * * * *",
@@ -99,9 +137,25 @@ export function initializeScheduler(): void {
       ),
     ),
   );
-  console.log(
+  // La salud de la instancia (ADR 075): copias, copia externa y trabajos que
+  // fallan seguido. Con arrendamiento para que dos instancias no avisen dos
+  // veces de lo mismo.
+  jobs.push(
+    new Cron(
+      "*/15 * * * *",
+      withCheckIn("instance-health", () =>
+        withJobLease("instance-health", checkInstanceHealth, () => ({
+          degraded: false,
+          opened: 0,
+          resolved: 0,
+        })),
+      ),
+    ),
+  );
+  log.info(
     "⏰ Scheduler started (reminders every 5 minutes, seat reconciliation and trial reminders hourly)",
   );
+  return jobs.length;
 }
 
 export function shutdownScheduler(): void {

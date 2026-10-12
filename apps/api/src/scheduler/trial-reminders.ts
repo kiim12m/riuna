@@ -9,6 +9,7 @@ import {
   workspaceTable,
   workspaceUserTable,
 } from "../database/schema";
+import { log } from "../utils/log";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -136,7 +137,7 @@ export async function checkTrialReminders(): Promise<{ degraded: boolean }> {
     try {
       rows = await getWorkspacesNeedingReminder(reminder.type, now);
     } catch (error) {
-      console.error(`Failed to query ${reminder.type} reminders`, error);
+      log.error(`Failed to query ${reminder.type} reminders`, error);
       degraded = true;
       continue;
     }
@@ -191,7 +192,7 @@ export async function checkTrialReminders(): Promise<{ degraded: boolean }> {
   }
 
   if (sent > 0) {
-    console.log(`Sent ${sent} trial reminder email(s)`);
+    log.info(`Sent ${sent} trial reminder email(s)`);
   }
 
   return { degraded };

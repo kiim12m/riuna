@@ -113,10 +113,22 @@ export function useFocusRuntime(workspaceId: string) {
 
   useEffect(() => {
     if (session?.phase !== "work" || !timer) return;
-    if (Date.now() - session.phaseStartedAt < AUTHORITY_GRACE_MS) return;
-    if (timer.running?.task.id !== session.taskId) {
-      clear();
-      toast.info(t("focus:stoppedOutside"));
+    const check = () => {
+      if (timer.running?.task.id !== session.taskId) {
+        clear();
+        toast.info(t("focus:stoppedOutside"));
+      }
+    };
+    // Dentro del margen no se decide, pero se vuelve a mirar al acabar: antes
+    // se volvia sin mas, y una parada que llegaba en esos 15 s -otro
+    // dispositivo, rapido- no se notaba nunca. El modo foco seguia
+    // «Trabajando» con el cronometro parado (lo destapo el simulacro de
+    // restauracion de la Fase 9, con el build de produccion).
+    const wait = AUTHORITY_GRACE_MS - (Date.now() - session.phaseStartedAt);
+    if (wait > 0) {
+      const timeout = window.setTimeout(check, wait);
+      return () => window.clearTimeout(timeout);
     }
+    check();
   }, [session, timer, clear, t]);
 }

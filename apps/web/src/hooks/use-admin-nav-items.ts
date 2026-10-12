@@ -1,4 +1,5 @@
 import {
+  Activity,
   Building2,
   LayoutGrid,
   type LucideIcon,
@@ -6,6 +7,7 @@ import {
   Users,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/components/providers/auth-provider/hooks/use-auth";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
@@ -32,6 +34,7 @@ export function useAdminNavItems(): AdminNavItem[] {
   const { data: projects } = useGetProjects({
     workspaceId: workspace?.id ?? "",
   });
+  const { user } = useAuth();
 
   if (!workspace) return [];
 
@@ -69,6 +72,16 @@ export function useAdminNavItems(): AdminNavItem[] {
       title: t("navigation:sidebar.projectSettings"),
       url: `${base}/admin/project-settings`,
       icon: SlidersHorizontal,
+    });
+  }
+
+  // El estado de la instancia es del admin de instancia (ADR 075), que no es
+  // un rol del espacio sino de la cuenta.
+  if (user?.role === "admin") {
+    items.push({
+      title: t("navigation:sidebar.instanceStatus"),
+      url: `${base}/admin/instance`,
+      icon: Activity,
     });
   }
 

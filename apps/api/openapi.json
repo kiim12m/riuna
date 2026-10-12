@@ -24336,6 +24336,356 @@
         "summary": "List Automation Runs"
       }
     },
+    "/instance/report": {
+      "get": {
+        "operationId": "getInstanceReport",
+        "tags": [
+          "Instance"
+        ],
+        "description": "The health of this Riuna instance for its admin: version, database, scheduled jobs, backups, realtime, slow routes and open alerts. Session only",
+        "responses": {
+          "200": {
+            "description": "Instance report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "generatedAt": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "revision": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startedAt": {
+                      "type": "string"
+                    },
+                    "uptimeSeconds": {
+                      "type": "number"
+                    },
+                    "node": {
+                      "type": "string"
+                    },
+                    "timeZone": {
+                      "type": "string"
+                    },
+                    "schedulerEnabled": {
+                      "type": "boolean"
+                    },
+                    "rateLimitEnabled": {
+                      "type": "boolean"
+                    },
+                    "database": {
+                      "type": "object",
+                      "properties": {
+                        "sizeBytes": {
+                          "type": "number"
+                        },
+                        "version": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "appliedMigrations": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "bundledMigrations": {
+                          "type": "number",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "sizeBytes",
+                        "version",
+                        "appliedMigrations",
+                        "bundledMigrations"
+                      ]
+                    },
+                    "jobs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "job": {
+                            "type": "string"
+                          },
+                          "lastStatus": {
+                            "type": "string"
+                          },
+                          "lastStartedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "lastFinishedAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "lastDurationMs": {
+                            "type": "number"
+                          },
+                          "lastSuccessAt": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "consecutiveFailures": {
+                            "type": "number"
+                          },
+                          "lastError": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "job",
+                          "lastStatus",
+                          "lastStartedAt",
+                          "lastFinishedAt",
+                          "lastDurationMs",
+                          "lastSuccessAt",
+                          "consecutiveFailures",
+                          "lastError"
+                        ]
+                      }
+                    },
+                    "backups": {
+                      "type": "object",
+                      "properties": {
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "latest": {
+                          "type": "object",
+                          "properties": {
+                            "file": {
+                              "type": "string"
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            },
+                            "sizeBytes": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "file",
+                            "createdAt",
+                            "sizeBytes"
+                          ],
+                          "nullable": true
+                        },
+                        "count": {
+                          "type": "number"
+                        },
+                        "offsite": {
+                          "type": "object",
+                          "properties": {
+                            "status": {
+                              "type": "string"
+                            },
+                            "checkedAt": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "lastSuccessAt": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "latest": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "remoteCount": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "message": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          },
+                          "required": [
+                            "status",
+                            "checkedAt",
+                            "lastSuccessAt",
+                            "latest",
+                            "remoteCount",
+                            "message"
+                          ],
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "configured",
+                        "latest",
+                        "count",
+                        "offsite"
+                      ]
+                    },
+                    "realtime": {
+                      "type": "object",
+                      "properties": {
+                        "redis": {
+                          "type": "boolean"
+                        },
+                        "connections": {
+                          "type": "object",
+                          "properties": {
+                            "users": {
+                              "type": "number"
+                            },
+                            "projects": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "users",
+                            "projects"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "redis",
+                        "connections"
+                      ]
+                    },
+                    "requests": {
+                      "type": "object",
+                      "properties": {
+                        "serverErrors": {
+                          "type": "number"
+                        },
+                        "slowest": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "method": {
+                                "type": "string"
+                              },
+                              "route": {
+                                "type": "string"
+                              },
+                              "count": {
+                                "type": "number"
+                              },
+                              "errors": {
+                                "type": "number"
+                              },
+                              "p50": {
+                                "type": "number"
+                              },
+                              "p95": {
+                                "type": "number"
+                              }
+                            },
+                            "required": [
+                              "method",
+                              "route",
+                              "count",
+                              "errors",
+                              "p50",
+                              "p95"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "serverErrors",
+                        "slowest"
+                      ]
+                    },
+                    "problems": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "key",
+                          "label",
+                          "message"
+                        ]
+                      }
+                    },
+                    "alerts": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          },
+                          "openedAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "key",
+                          "message",
+                          "openedAt"
+                        ]
+                      }
+                    },
+                    "you": {
+                      "type": "object",
+                      "properties": {
+                        "ip": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "ip"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "generatedAt",
+                    "version",
+                    "revision",
+                    "startedAt",
+                    "uptimeSeconds",
+                    "node",
+                    "timeZone",
+                    "schedulerEnabled",
+                    "rateLimitEnabled",
+                    "database",
+                    "jobs",
+                    "backups",
+                    "realtime",
+                    "requests",
+                    "problems",
+                    "alerts",
+                    "you"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not the instance admin, or an API key"
+          }
+        },
+        "summary": "Get Instance Report"
+      }
+    },
     "/invitation/{id}": {
       "get": {
         "operationId": "getInvitationDetails",

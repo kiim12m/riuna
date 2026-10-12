@@ -55,8 +55,12 @@ test.describe("Mis tareas", () => {
 
     await page.getByRole("button", { name: "Gantt" }).click();
     await expect(page).toHaveURL(/\/my-tasks\/gantt$/);
+    // La barra, por su nombre: la etiqueta de la fila tambien es un boton con
+    // el titulo. Con el servidor de desarrollo la etiqueta salia un instante
+    // antes y la prueba pasaba; con el build de produccion (el simulacro de
+    // restauracion) salen a la vez y el localizador estricto encontraba dos.
     await expect(
-      page.getByRole("button", { name: /Enviar factura/ }),
+      page.getByRole("button", { name: /^Enviar factura: abrir/ }),
     ).toBeVisible({ timeout: FIRST_HIT_TIMEOUT });
   });
 

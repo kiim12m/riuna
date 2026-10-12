@@ -7,6 +7,7 @@ import {
 import { syncWorkspaceSeats } from "../../billing/controllers/sync-seats";
 import db from "../../database";
 import { workspaceTable, workspaceUserTable } from "../../database/schema";
+import { log } from "../../utils/log";
 import {
   formatBlockedWorkspacesMessage,
   hasOwnerRole,
@@ -96,7 +97,7 @@ export async function deleteAccountData(userId: string) {
 
     for (const workspaceId of plan.workspaceIdsToLeave) {
       await syncWorkspaceSeats(workspaceId).catch((error) => {
-        console.error(
+        log.error(
           "Seat sync after account deletion failed:",
           workspaceId,
           error,

@@ -1,6 +1,7 @@
 import type Redis from "ioredis";
 import * as v from "valibot";
 import { closeRedis, getRedisPub, getRedisSub } from "../redis";
+import { log } from "../utils/log";
 import type {
   BroadcastAdapter,
   BroadcastMessage,
@@ -77,12 +78,12 @@ export class RedisBroadcastAdapter implements BroadcastAdapter {
       try {
         const parsed = v.safeParse(broadcastMessageSchema, JSON.parse(data));
         if (!parsed.success) {
-          console.error("Invalid broadcast message:", parsed.issues);
+          log.error("Invalid broadcast message:", parsed.issues);
           return;
         }
         handler(parsed.output);
       } catch (err) {
-        console.error("Failed to parse broadcast message:", err);
+        log.error("Failed to parse broadcast message:", err);
       }
     };
     (getRedisSub() as Redis).on("pmessage", this._pmessageHandler);
@@ -102,16 +103,16 @@ export class RedisBroadcastAdapter implements BroadcastAdapter {
       try {
         const parsed = v.safeParse(userBroadcastSchema, JSON.parse(data));
         if (!parsed.success) {
-          console.error("Invalid user broadcast message:", parsed.issues);
+          log.error("Invalid user broadcast message:", parsed.issues);
           return;
         }
         if (channel !== this.channelForUser(parsed.output.userId)) {
-          console.error("User broadcast channel and payload disagree");
+          log.error("User broadcast channel and payload disagree");
           return;
         }
         handler(parsed.output as UserBroadcast);
       } catch (err) {
-        console.error("Failed to parse user broadcast message:", err);
+        log.error("Failed to parse user broadcast message:", err);
       }
     };
     (getRedisSub() as Redis).on("pmessage", this._userPmessageHandler);

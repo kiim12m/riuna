@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import db from "../database";
+import { log } from "../utils/log";
 
 const INSTANCE_ID = randomUUID();
 
@@ -37,7 +38,7 @@ export async function withJobLease<T>(
         sql`DELETE FROM job_lease WHERE "name" = ${name} AND "owner" = ${INSTANCE_ID};`,
       )
       .catch((error) => {
-        console.error(`Failed to release the ${name} lease`, error);
+        log.error(`Failed to release the ${name} lease`, error);
       });
   }
 }

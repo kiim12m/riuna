@@ -1,11 +1,38 @@
+# Los ficheros, puertos y directorios que cambian con RIUNA_ENV_FILE,
+# RIUNA_BACKUP_DIR y RIUNA_*_PORT valen lo de siempre si no se definen: solo
+# los usa el simulacro de restauracion, en su propio proyecto (ADR 072).
+#
+# Docker Desktop guarda los logs de cada contenedor sin limite. Con una linea
+# por peticion (ADR 073), el de la API crecia sin parar: se rotan a 5 x 10 MB.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   postgres:
+    logging: *logging
     image: postgres:16-alpine
+    # pg_stat_statements solo recoge si se carga al arrancar. Es lo que lee
+    # scripts/ops/informe-bd.sh para repasar indices con el uso real (Fase 9).
+    # La extension se crea en la base `postgres`, no en la de Riuna, para que
+    # no viaje en las copias. Sin las ordenes de utilidad (ALTER, CREATE...):
+    # esas no se normalizan, y una que llevara una contrasena la guardaria tal
+    # cual.
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - pg_stat_statements.track_utility=off
     env_file:
-      - .env
+      - ${RIUNA_ENV_FILE:-.env}
     ports:
       # 5433 en el host: el 5432 lo ocupa el Postgres de otro proyecto.
-      - "5433:5432"
+      # Solo en 127.0.0.1 (ADR 071): con 0.0.0.0, cualquiera de la red local
+      # llegaba a la base con solo la contrasena.
+      - "${RIUNA_BIND_ADDRESS:-127.0.0.1}:${RIUNA_DB_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -20,14 +47,15 @@ services:
   # ./backups del host. PGHOST se fija aqui: el .env compartido define
   # POSTGRES_HOST=localhost para la API, que corre fuera de Docker.
   backup:
+    logging: *logging
     image: postgres:16-alpine
     env_file:
-      - .env
+      - ${RIUNA_ENV_FILE:-.env}
     environment:
       PGHOST: postgres
       BACKUP_DIR: /backups
     volumes:
-      - ./backups:/backups
+      - ${RIUNA_BACKUP_DIR:-./backups}:/backups
       - ./scripts/backup:/scripts:ro
     entrypoint: ["/bin/sh", "-c"]
     command:
@@ -42,14 +70,58 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  # Copias fuera de la maquina (ADR 072): sube ./backups a un remoto de rclone
+  # cada OFFSITE_INTERVAL_HOURS. Va en un perfil porque sin remoto configurado
+  # solo fallaria: se enciende con COMPOSE_PROFILES=offsite en el .env, despues
+  # de crear el remoto (docs/copias-de-seguridad.md). No lee el .env entero: no
+  # necesita ni la contrasena de la base ni el secreto de sesiones.
+  offsite:
+    logging: *logging
+    image: rclone/rclone:1.68.2
+    profiles: ["offsite"]
+    environment:
+      BACKUP_DIR: /backups
+      OFFSITE_REMOTE: ${OFFSITE_REMOTE:-}
+      OFFSITE_RETENTION_DAYS: ${OFFSITE_RETENTION_DAYS:-90}
+      OFFSITE_KEEP_MIN: ${OFFSITE_KEEP_MIN:-5}
+    volumes:
+      # Escribe en ./backups su fichero de estado, que lee la API.
+      - ${RIUNA_BACKUP_DIR:-./backups}:/backups
+      - ./scripts/backup:/scripts:ro
+      # La configuracion de rclone, con el token de Drive y las claves del
+      # cifrado. De lectura y escritura: rclone renueva el token.
+      - ./deploy/rclone:/config/rclone
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        interval=$$(( ${OFFSITE_INTERVAL_HOURS:-6} * 3600 ))
+        while true; do
+          sh /scripts/offsite.sh || echo "[offsite] la subida ha fallado"
+          sleep "$$interval"
+        done
+    restart: unless-stopped
+
   api:
+    logging: *logging
+    # Nombre fijo: es el que Compose ya les daba en el proyecto `riuna`, y el
+    # simulacro de restauracion (deploy/simulacro.sh) las reutiliza desde otro
+    # proyecto sin volver a construirlas.
+    image: riuna-api
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+      # deploy/actualizar.sh sella aqui el commit construido: es lo que lee
+      # para saber que version sirve y a cual volver si la nueva no arranca.
+      labels:
+        org.opencontainers.image.revision: ${RIUNA_REVISION:-}
+      # Y dentro de la imagen, para que el estado de la instancia lo enseñe.
+      args:
+        RIUNA_REVISION: ${RIUNA_REVISION:-}
     ports:
-      - "1337:1337"
+      # Se entra por `tailscale serve`, que llega por localhost (ADR 071).
+      - "${RIUNA_BIND_ADDRESS:-127.0.0.1}:${RIUNA_API_PORT:-1337}:1337"
     env_file:
-      - .env
+      - ${RIUNA_ENV_FILE:-.env}
     # El .env compartido apunta a localhost:5433, que es como se alcanza
     # Postgres **desde fuera** de Docker. Dentro de la red de Compose el
     # servidor es `postgres:5432`, asi que sin esto el contenedor se buscaba a
@@ -57,6 +129,11 @@ services:
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
+      # Las copias, de solo lectura: el estado de la instancia y sus alertas
+      # miran la ultima y lo que dejo la copia externa (ADR 075).
+      BACKUP_DIR: /backups
+    volumes:
+      - ${RIUNA_BACKUP_DIR:-./backups}:/backups:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -69,13 +146,17 @@ services:
 #      - "6379:6379"
 
   web:
+    logging: *logging
+    image: riuna-web
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      labels:
+        org.opencontainers.image.revision: ${RIUNA_REVISION:-}
     ports:
-      - "5173:5173"
+      - "${RIUNA_BIND_ADDRESS:-127.0.0.1}:${RIUNA_WEB_PORT:-5173}:5173"
     env_file:
-      - .env
+      - ${RIUNA_ENV_FILE:-.env}
     depends_on:
       - api
     restart: unless-stopped

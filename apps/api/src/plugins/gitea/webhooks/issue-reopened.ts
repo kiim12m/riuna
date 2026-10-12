@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import db from "../../../database";
 import { externalLinkTable, taskTable } from "../../../database/schema";
 import { publishEvent } from "../../../events";
+import { log } from "../../../utils/log";
 import { updateExternalLink } from "../../github/services/link-manager";
 import { updateTaskStatus } from "../../github/services/task-service";
 import {
@@ -82,7 +83,7 @@ export async function handleGiteaIssueReopened(
             unknown
           >;
         } catch (error) {
-          console.warn("Failed to parse Gitea issue metadata for reopen sync", {
+          log.warn("Failed to parse Gitea issue metadata for reopen sync", {
             externalLinkId: externalLink.id,
             metadata: externalLink.metadata,
             error,
@@ -131,7 +132,7 @@ export async function handleGiteaIssueReopened(
         },
       });
     } catch (error) {
-      console.error("Gitea issue_reopened handler failed for integration", {
+      log.error("Gitea issue_reopened handler failed for integration", {
         integrationId: integration.id,
         issueNumber: issue.number,
         repository: `${owner}/${repository.name}`,

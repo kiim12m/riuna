@@ -1,5 +1,6 @@
 import { HTTPException } from "hono/http-exception";
 import { getGithubApp } from "../../plugins/github/utils/github-app";
+import { log } from "../../utils/log";
 
 async function listUserRepositories() {
   const githubApp = getGithubApp();
@@ -68,7 +69,7 @@ async function listUserRepositories() {
 
         allRepositories.push(...mappedRepos);
       } catch (error) {
-        console.warn(
+        log.warn(
           `Failed to get repositories for installation ${installation.id}:`,
           error,
         );
@@ -103,7 +104,7 @@ async function listUserRepositories() {
       total: uniqueRepositories.length,
     };
   } catch (error) {
-    console.error("Failed to list user repositories:", error);
+    log.error("Failed to list user repositories:", error);
     throw new HTTPException(500, {
       message: "Failed to fetch repositories from GitHub",
     });

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { parseLinkMetadata } from "../../../../../apps/api/src/plugins/github/utils/parse-link-metadata";
+import { log } from "../../../../../apps/api/src/utils/log";
 
 const context = { externalLinkId: "link-1", source: "issue_closed" };
 
@@ -24,7 +25,7 @@ describe("parseLinkMetadata", () => {
   });
 
   it("warns and carries on when the row cannot be parsed", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const warn = vi.spyOn(log, "warn").mockImplementation(() => undefined);
 
     // A row truncated by an older write, which used to throw out of the handler
     // and fail the whole webhook delivery.
@@ -37,7 +38,7 @@ describe("parseLinkMetadata", () => {
   });
 
   it("keeps the row out of the warning", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const warn = vi.spyOn(log, "warn").mockImplementation(() => undefined);
 
     // The row can hold a task description synced from Riuna, so the log gets
     // the link id to find it by and not the content itself.
@@ -51,7 +52,7 @@ describe("parseLinkMetadata", () => {
   });
 
   it("ignores a row that parses to something other than an object", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const warn = vi.spyOn(log, "warn").mockImplementation(() => undefined);
 
     // `JSON.parse` answers these without throwing, so they used to reach the
     // handlers typed as metadata. `null` is the one that bites: reading

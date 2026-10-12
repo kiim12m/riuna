@@ -80,7 +80,7 @@ export function TodayTaskRow({
       data-testid={`today-row-${id}`}
       aria-current={selected || undefined}
       className={cn(
-        "group flex items-center gap-2.5 rounded-md px-2.5 py-2 transition-colors duration-(--motion-fast) ease-out-quart hover:bg-accent",
+        "group flex items-start gap-2.5 rounded-md px-2.5 py-2 transition-colors duration-(--motion-fast) ease-out-quart hover:bg-accent sm:items-center",
         // En este orden: la seleccion tapa la cebra, y el cronometro en
         // marcha tapa las dos -es lo que mas importa ver de un vistazo-.
         shaded && "bg-muted",
@@ -107,72 +107,79 @@ export function TodayTaskRow({
         </span>
       )}
 
-      {/* El proyecto va dentro del boton y pegado al titulo, como en la
-       * maqueta, y no empujado a la derecha: asi toda la franja central
-       * sigue abriendo la tarea y el hueco final queda para la estimacion. */}
-      <button
-        type="button"
-        onClick={onOpen}
-        className="flex min-w-0 flex-1 items-center gap-1.5 rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        {keyRank != null && (
-          <Star
-            className="size-3.5 shrink-0 fill-current text-warning"
-            aria-label={t("taskActions:key")}
-          />
-        )}
-        <span className="shrink-0">{getPriorityIcon(priority)}</span>
-        <span
-          className={cn(
-            "min-w-0 truncate text-body",
-            isDone && "text-muted-foreground line-through",
-          )}
-        >
-          {title}
-        </span>
-        <ProjectPill
-          name={projectName}
-          icon={projectIcon}
-          className="ml-1 hidden sm:inline-flex"
-        />
-      </button>
-
-      {onEstimateChange ? (
-        <InlineEstimate
-          estimate={estimate}
-          loggedSeconds={loggedSeconds ?? 0}
-          onSave={onEstimateChange}
-          disabled={isDone}
-        />
-      ) : dueBadge ? (
-        <span
-          className={cn(
-            "shrink-0 rounded px-1.5 py-0.5 text-label",
-            dueBadge === "overdue"
-              ? "bg-destructive/10 text-destructive-foreground"
-              : "bg-warning/10 text-warning-foreground",
-          )}
-        >
-          {t(`today:row.due.${dueBadge}`)}
-        </span>
-      ) : loggedSeconds != null ? (
-        <span className="shrink-0 font-mono text-meta text-muted-foreground tabular-nums">
-          {formatDuration(loggedSeconds, i18n.language)}
-        </span>
-      ) : null}
-
-      {action && (
+      {/* En movil el titulo va arriba, entero, y lo demas debajo: en una sola
+       * linea, la etiqueta de vencimiento y la accion lo dejaban en dos
+       * letras. En escritorio `sm:contents` deshace la columna. */}
+      <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2.5">
+        {/* El proyecto va dentro del boton y pegado al titulo, como en la
+         * maqueta, y no empujado a la derecha: asi toda la franja central
+         * sigue abriendo la tarea y el hueco final queda para la estimacion. */}
         <button
           type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            action.onClick();
-          }}
-          className="shrink-0 rounded px-1.5 py-0.5 text-label text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100 touch:opacity-100"
+          onClick={onOpen}
+          className="flex min-w-0 flex-1 items-center gap-1.5 rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          {action.label}
+          {keyRank != null && (
+            <Star
+              className="size-3.5 shrink-0 fill-current text-warning"
+              aria-label={t("taskActions:key")}
+            />
+          )}
+          <span className="shrink-0">{getPriorityIcon(priority)}</span>
+          <span
+            className={cn(
+              "line-clamp-2 min-w-0 text-body sm:truncate",
+              isDone && "text-muted-foreground line-through",
+            )}
+          >
+            {title}
+          </span>
+          <ProjectPill
+            name={projectName}
+            icon={projectIcon}
+            className="ml-1 hidden sm:inline-flex"
+          />
         </button>
-      )}
+
+        <div className="flex items-center gap-2 empty:hidden sm:contents">
+          {onEstimateChange ? (
+            <InlineEstimate
+              estimate={estimate}
+              loggedSeconds={loggedSeconds ?? 0}
+              onSave={onEstimateChange}
+              disabled={isDone}
+            />
+          ) : dueBadge ? (
+            <span
+              className={cn(
+                "shrink-0 rounded px-1.5 py-0.5 text-label",
+                dueBadge === "overdue"
+                  ? "bg-destructive/10 text-destructive-foreground"
+                  : "bg-warning/10 text-warning-foreground",
+              )}
+            >
+              {t(`today:row.due.${dueBadge}`)}
+            </span>
+          ) : loggedSeconds != null ? (
+            <span className="shrink-0 font-mono text-meta text-muted-foreground tabular-nums">
+              {formatDuration(loggedSeconds, i18n.language)}
+            </span>
+          ) : null}
+
+          {action && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                action.onClick();
+              }}
+              className="shrink-0 rounded px-1.5 py-0.5 text-label text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100 touch:opacity-100"
+            >
+              {action.label}
+            </button>
+          )}
+        </div>
+      </div>
 
       {menu}
     </div>

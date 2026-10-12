@@ -1,3 +1,4 @@
+import { log } from "../utils/log";
 import { discordPlugin } from "./discord";
 import { genericWebhookPlugin } from "./generic-webhook";
 import { giteaPlugin } from "./gitea";
@@ -7,7 +8,7 @@ import { slackPlugin } from "./slack";
 import { telegramPlugin } from "./telegram";
 
 export function initializePlugins() {
-  console.log("Initializing plugins...");
+  log.info("Initializing plugins...");
 
   registerPlugin(githubPlugin);
   registerPlugin(giteaPlugin);
@@ -18,7 +19,7 @@ export function initializePlugins() {
   initializeGitHubPlugin();
   initializeEventSubscriptions();
 
-  console.log("✅ Plugins initialized");
+  log.info("✅ Plugins initialized");
 }
 
 export * from "./registry";

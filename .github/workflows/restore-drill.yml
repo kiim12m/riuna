@@ -1,0 +1,126 @@
+name: Restore drill
+
+# El criterio de la Fase 9, con datos sinteticos y cada noche (ADR 072): una
+# instancia construida como la del PC se siembra y se copia, y
+# deploy/simulacro.sh —el mismo guion que se lanza en el PC con la copia
+# real— la restaura en un proyecto aparte con un Postgres vacio, compara los
+# recuentos y pasa el humo entero contra lo restaurado.
+
+on:
+  schedule:
+    # 03:47 UTC, lejos del nightly (02:17) y de las horas en punto.
+    - cron: "47 3 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - compose.local.yml
+      - deploy/simulacro.sh
+      - deploy/simulacro.compose.yml
+      - scripts/backup/**
+      - apps/api/Dockerfile
+      - apps/api/drizzle/**
+      - apps/web/Dockerfile
+      - apps/web/env.sh
+      - apps/web/nginx.conf
+      - playwright.config.ts
+      - .github/workflows/restore-drill.yml
+
+concurrency:
+  group: restore-drill-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  drill:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+
+      # Solo para sembrar: dev-seed.mjs no importa nada. El humo corre dentro
+      # del contenedor de Playwright que levanta el simulacro.
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24.19.0
+
+      # La instancia «de verdad» del simulacro. POSTGRES_USER y _DB se quedan
+      # en `riuna` porque el healthcheck de compose.local.yml los da por
+      # hechos.
+      - name: Write the instance .env
+        run: |
+          {
+            echo "POSTGRES_DB=riuna"
+            echo "POSTGRES_USER=riuna"
+            echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)"
+            echo "AUTH_SECRET=$(openssl rand -hex 32)"
+            echo "NOTIFICATION_SECRET_ENCRYPTION_KEY=$(openssl rand -hex 32)"
+            echo "RIUNA_CLIENT_URL=http://localhost:5173"
+            echo "RIUNA_API_URL=http://localhost:1337"
+            echo "DISABLE_REGISTRATION=false"
+            echo "RIUNA_DISABLE_SCHEDULER=true"
+          } > .env
+          mkdir -p backups
+
+      - name: Build the images
+        run: docker compose -f compose.local.yml build api web
+
+      - name: Start the instance
+        run: docker compose -f compose.local.yml up -d --wait postgres api web
+
+      - name: Seed it
+        run: node scripts/dev-seed.mjs
+        env:
+          DEV_SEED_API: http://localhost:1337
+          DEV_SEED_ORIGIN: http://localhost:5173
+
+      - name: Back it up
+        run: |
+          docker compose -f compose.local.yml run --rm -T --entrypoint /bin/sh backup /scripts/backup.sh
+          dump=$(find backups -maxdepth 1 -name 'riuna_*.sql.gz' | sort | tail -n 1)
+          test -n "$dump"
+          echo "DUMP=$(basename "$dump")" >> "$GITHUB_ENV"
+
+      - name: A truncated dump is refused before touching anything
+        run: |
+          gunzip -c "backups/$DUMP" | head -n -50 | gzip > backups/truncated.sql.gz
+          if docker compose -f compose.local.yml run --rm -T --entrypoint /bin/sh backup \
+            /scripts/restore.sh /backups/truncated.sql.gz riuna_truncated_test; then
+            echo "restore.sh accepted a truncated dump" >&2
+            exit 1
+          fi
+          left=$(docker compose -f compose.local.yml exec -T postgres \
+            psql -U riuna -d postgres -tAc "select count(*) from pg_database where datname like 'riuna_truncated%'")
+          test "$left" = "0"
+          rm backups/truncated.sql.gz
+
+      - name: Drill - restore in a clean project and run the smoke against it
+        run: sh deploy/simulacro.sh --humo "backups/$DUMP"
+
+      # Nada cambio despues de la copia: los recuentos tienen que ser iguales.
+      - name: The restored database has the same rows
+        run: diff deploy/.simulacro/recuentos-instancia.txt deploy/.simulacro/recuentos-copia.txt
+
+      - name: Drill API log
+        if: failure()
+        run: |
+          docker compose -p riuna-simulacro --env-file deploy/.simulacro/simulacro.env \
+            -f compose.local.yml -f deploy/simulacro.compose.yml logs --tail=200 api || true
+
+      - name: Upload traces of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: restore-drill-traces
+          path: deploy/.simulacro/test-results/
+          retention-days: 7
+
+      - name: Clean up
+        if: always()
+        run: |
+          sh deploy/simulacro.sh --down || true
+          docker compose -f compose.local.yml down -v
+          sudo rm -rf deploy/.simulacro

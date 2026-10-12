@@ -5,6 +5,7 @@ import { dashboardTable, dashboardWidgetTable } from "../../database/schema";
 import { getFieldDefinitionsForProject } from "../../field/controllers/get-field-definitions";
 import getGoals from "../../goal/controllers/get-goals";
 import { startOfServerWeek } from "../../utils/day-boundaries";
+import { log } from "../../utils/log";
 import { buildFilter } from "../../view/build-filter";
 import {
   buildFieldRegistry,
@@ -139,7 +140,7 @@ export default async function getDashboardData(
       registryFor,
     });
   } catch (error) {
-    console.error("[dashboard] collapsed count scan failed", error);
+    log.error("[dashboard] collapsed count scan failed", error);
   }
 
   const payload: WidgetPayload[] = [];
@@ -258,7 +259,7 @@ export default async function getDashboardData(
         error instanceof HTTPException || error instanceof FilterError;
 
       if (!speakable) {
-        console.error(
+        log.error(
           `[dashboard] widget ${widget.id} (${widget.type}) failed`,
           error,
         );

@@ -1,3 +1,5 @@
+import { log } from "./log";
+
 const TURNSTILE_VERIFY_URL =
   "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
@@ -57,10 +59,10 @@ export async function verifyTurnstile(
       error instanceof DOMException &&
       (error.name === "TimeoutError" || error.name === "AbortError")
     ) {
-      console.error("Turnstile verification timed out", error);
+      log.error("Turnstile verification timed out", error);
       return { ok: false, reason: "Captcha verification timed out." };
     }
-    console.error("Turnstile verification request failed", error);
+    log.error("Turnstile verification request failed", error);
     return { ok: false, reason: "Captcha verification failed." };
   }
 }

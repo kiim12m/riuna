@@ -8,6 +8,7 @@ import {
   userTable,
   workspaceTable,
 } from "../../database/schema";
+import { log } from "../../utils/log";
 import type {
   PluginContext,
   TaskAssigneeChangedEvent,
@@ -140,7 +141,7 @@ async function persistWebhookHealth(
       })
       .where(eq(integrationTable.id, integration.id));
   } catch (error) {
-    console.error("persistWebhookHealth failed", {
+    log.error("persistWebhookHealth failed", {
       error,
       projectId,
     });
@@ -189,7 +190,7 @@ async function deliverWebhookEvent(
       },
     }));
 
-    console.error("postToGenericWebhook failed", {
+    log.error("postToGenericWebhook failed", {
       error,
       eventName,
       taskId,

@@ -6,8 +6,7 @@ import { serve } from "@hono/node-server";
 import { createNodeWebSocket } from "@hono/node-ws";
 import * as Sentry from "@sentry/node";
 import type { Session, User } from "better-auth/types";
-import { eq, sql } from "drizzle-orm";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { compress } from "hono/compress";
 import { cors } from "hono/cors";
@@ -32,9 +31,8 @@ import comment from "./comment";
 import config from "./config";
 import cycle from "./cycle";
 import dashboard from "./dashboard";
-import db, { getDatabase, schema } from "./database";
-import { prepareDatabaseStartup } from "./database/prepare-database-startup";
-import { waitForDatabase } from "./database/wait-for-database";
+import db, { schema } from "./database";
+import { runMigrations } from "./database/run-migrations";
 import discordIntegration from "./discord-integration";
 import epic from "./epic";
 import { eventContext } from "./events";
@@ -46,19 +44,18 @@ import githubIntegration, {
   handleGithubWebhookRoute,
 } from "./github-integration";
 import goal from "./goal";
+import instance from "./instance";
 import getInstanceStatus from "./instance/controllers/get-instance-status";
 import invitation from "./invitation";
 import label from "./label";
 import lead from "./lead";
 import mcpRoutes, { mcpWellKnownRoutes } from "./mcp";
-import { migrateColumns } from "./migrations/column-migration";
 import myWork from "./my-work";
 import notification from "./notification";
 import notificationPreferences from "./notification-preferences";
 import oauth from "./oauth";
 import planner from "./planner";
 import { initializePlugins } from "./plugins";
-import { migrateGitHubIntegration } from "./plugins/github/migration";
 import project from "./project";
 import { getPublicProject } from "./project/controllers/get-public-project";
 import recurrence from "./recurrence";
@@ -82,11 +79,9 @@ import userPreferences from "./user-preferences";
 import { authenticateApiRequest } from "./utils/authenticate-api-request";
 import { authorizeAssetAccess } from "./utils/authorize-asset-access";
 import { getInvitationDetails } from "./utils/check-registration-allowed";
+import { requestWithClientIp } from "./utils/client-ip";
 import { buildContentDisposition } from "./utils/content-disposition";
-import { migrateApiKeyReferenceId } from "./utils/migrate-apikey-reference-id";
-import { migrateNotificationPreferencesSchema } from "./utils/migrate-notification-preferences-schema";
-import { migrateSessionColumn } from "./utils/migrate-session-column";
-import { migrateWorkspaceUserEmail } from "./utils/migrate-workspace-user-email";
+import { log } from "./utils/log";
 import {
   dedupeOperationIds,
   ensureOperationSummaries,
@@ -99,9 +94,9 @@ import {
   normalizeNullableSchemasForOpenApi30,
   normalizeOrganizationAuthOperations,
 } from "./utils/openapi-spec";
-import { seedDefaultWorkspaceRoles } from "./utils/seed-default-workspace-roles";
+import { enforceUserLimit, limitByIp } from "./utils/rate-limit";
+import { requestLog, respondingRoute } from "./utils/request-log";
 import { validateWorkspaceAccess } from "./utils/validate-workspace-access";
-import { warnIfDatabaseIsNotUtc } from "./utils/warn-if-database-not-utc";
 import view from "./view";
 import workSchedule from "./work-schedule";
 import workflowRule from "./workflow-rule";
@@ -124,6 +119,7 @@ type ApiKey = {
 
 type AppVariables = {
   Variables: {
+    requestId: string;
     user: User | null;
     session: Session | null;
     userId: string;
@@ -133,6 +129,7 @@ type AppVariables = {
 
 type ApiVariables = {
   Variables: {
+    requestId: string;
     user: User | null;
     session: Session | null;
     userId: string;
@@ -156,18 +153,28 @@ const SAFE_INLINE_ASSET_TYPES = new Set([
 export function createApp() {
   const app = new Hono<AppVariables>();
 
+  // Antes de la Fase 9, un 500 solo iba a Sentry, que esta inactivo sin DSN:
+  // no dejaba ningun rastro. Ahora cada uno deja su pila en el log, con el
+  // `requestId` de la peticion (ADR 073).
   app.onError((err, c) => {
+    const where = {
+      method: c.req.method,
+      route: respondingRoute(c),
+    };
     if (err instanceof HTTPException) {
       // expected errors (401/404/...) are not reported; real failures are
       if (err.status >= 500) {
+        log.error("Request failed", err, { ...where, status: err.status });
         Sentry.captureException(err);
       }
       return err.getResponse();
     }
 
+    log.error("Unhandled error", err, where);
     Sentry.captureException(err);
     return c.json({ message: "Internal Server Error" }, 500);
   });
+  app.use("*", requestLog);
   const nodeWs = createNodeWebSocket({ app });
   const { upgradeWebSocket, injectWebSocket } = nodeWs;
   const corsOriginSource = [
@@ -182,7 +189,7 @@ export function createApp() {
   const reflectUnconfiguredOrigins = process.env.NODE_ENV !== "production";
 
   if (!corsOrigins && !reflectUnconfiguredOrigins) {
-    console.warn(
+    log.warn(
       "[cors] Neither CORS_ORIGINS nor RIUNA_CLIENT_URL is set, so cross-origin requests are refused. Same-origin deployments (the bundled image) are unaffected; set RIUNA_CLIENT_URL if the web app is served from another origin.",
     );
   }
@@ -192,8 +199,9 @@ export function createApp() {
     cors({
       credentials: true,
       // Downloads carry their filename here, and a separately hosted web app
-      // cannot read it unless the header is exposed.
-      exposeHeaders: ["Content-Disposition"],
+      // cannot read it unless the header is exposed. Same for how long to wait
+      // after a 429 and the id that ties a failure to its log lines.
+      exposeHeaders: ["Content-Disposition", "Retry-After", "X-Request-Id"],
       origin: (origin) => {
         // Reflecting an arbitrary origin alongside credentials lets any site
         // read authenticated responses, so it stays a development convenience.
@@ -220,6 +228,20 @@ export function createApp() {
   api.get("/health", (c) => {
     return c.json({ status: "ok" });
   });
+
+  // Lo que se sirve sin sesion se limita por IP (ADR 074), cada ruta con su
+  // cupo. Van antes que sus rutas porque Hono ejecuta en orden de registro.
+  // Los avatares y los adjuntos quedan fuera: un tablero carga decenas de
+  // golpe, el navegador los guarda y sus ids no se adivinan.
+  api.use("/instance/status", limitByIp("instance-status", 60));
+  api.use("/public-project/:id", limitByIp("public-project", 120));
+  api.use("/invitation/public/:id", limitByIp("invitation-public", 30));
+  api.use("/calendar/:file{.+\\.ics}", limitByIp("calendar-feed", 60));
+  api.use("/github-integration/webhook", limitByIp("github-webhook", 300));
+  api.use(
+    "/gitea-integration/webhook/:integrationId",
+    limitByIp("gitea-webhook", 300),
+  );
 
   api.get(
     "/instance/status",
@@ -323,7 +345,7 @@ export function createApp() {
       },
     }),
     async (c) => {
-      return auth.handler(c.req.raw);
+      return auth.handler(requestWithClientIp(c));
     },
   );
 
@@ -397,7 +419,7 @@ export function createApp() {
           },
         });
       } catch (error) {
-        console.error("Failed to stream asset:", error);
+        log.error("Failed to stream asset:", error);
         throw new HTTPException(404, { message: "Asset object not found" });
       }
     },
@@ -493,7 +515,7 @@ export function createApp() {
         unknown
       >;
     } catch (error) {
-      console.error("Failed to generate Better Auth OpenAPI schema:", error);
+      log.error("Failed to generate Better Auth OpenAPI schema:", error);
     }
 
     const normalizedAuthSpec = normalizeOrganizationAuthOperations(authSpec);
@@ -581,7 +603,7 @@ export function createApp() {
         }
         return c.redirect(deviceUrl.toString(), 302);
       }
-      return auth.handler(c.req.raw);
+      return auth.handler(requestWithClientIp(c));
     },
   );
 
@@ -597,22 +619,23 @@ export function createApp() {
 
       // Preserve Better Auth bearer session tokens on auth routes.
       if (session?.session && session.user) {
-        return auth.handler(c.req.raw);
+        return auth.handler(requestWithClientIp(c));
       }
 
-      const headers = new Headers(c.req.raw.headers);
+      const request = requestWithClientIp(c);
+      const headers = new Headers(request.headers);
 
       // Better Auth API key plugin validates from x-api-key by default.
       headers.set("x-api-key", bearerToken);
 
       return auth.handler(
-        new Request(c.req.raw, {
+        new Request(request, {
           headers,
         }),
       );
     }
 
-    return auth.handler(c.req.raw);
+    return auth.handler(requestWithClientIp(c));
   });
 
   api.route("/", mcpRoutes);
@@ -632,11 +655,12 @@ export function createApp() {
         await authenticateApiRequest(c);
         const windowId = c.req.header("X-Riuna-Window-Id");
         const userId = c.get("userId");
+        enforceUserLimit(c, userId);
         const initiatorId = windowId ? `${userId}:${windowId}` : userId;
         return await eventContext.run({ initiatorId }, next);
       } catch (error) {
         if (!(error instanceof HTTPException)) {
-          console.error("API authentication failed:", error);
+          log.error("API authentication failed:", error);
           throw new HTTPException(500, { message: "Internal Server Error" });
         }
         throw error;
@@ -705,6 +729,7 @@ export function createApp() {
   const externalLinkApi = api.route("/external-link", externalLink);
   const workflowRuleApi = api.route("/workflow-rule", workflowRule);
   const automationApi = api.route("/automation", automation);
+  const instanceApi = api.route("/instance", instance);
   const invitationApi = api.route("/invitation", invitation);
   const workspaceApi = api.route("/workspace", workspace);
   const userApi = api.route("/user", user);
@@ -730,7 +755,7 @@ export function createApp() {
         if (error instanceof HTTPException) {
           throw error;
         }
-        console.error("API authentication failed:", error);
+        log.error("API authentication failed:", error);
         throw new HTTPException(500, { message: "Internal Server Error" });
       }
 
@@ -781,7 +806,7 @@ export function createApp() {
         if (error instanceof HTTPException) {
           throw error;
         }
-        console.error("API authentication failed:", error);
+        log.error("API authentication failed:", error);
         throw new HTTPException(500, { message: "Internal Server Error" });
       }
 
@@ -894,6 +919,7 @@ export function createApp() {
     userApi,
     workflowRuleApi,
     automationApi,
+    instanceApi,
     workspaceApi,
     oauthApi,
   };
@@ -902,60 +928,7 @@ export function createApp() {
 export async function runStartupTasks() {
   const currentDir = dirname(fileURLToPath(import.meta.url));
 
-  await prepareDatabaseStartup({
-    waitForDatabase: async () => {
-      await waitForDatabase({
-        query: async () => {
-          await getDatabase().execute(sql`SELECT 1`);
-        },
-      });
-    },
-    runStartupMigrations: async () => {
-      await migrateWorkspaceUserEmail();
-      await migrateSessionColumn();
-
-      console.log("🔄 Migrating database...");
-
-      // Un cerrojo de sesion alrededor de las migraciones, por dos motivos.
-      //
-      // 1. Drizzle lee la ultima migracion aplicada **fuera** de la transaccion
-      //    y luego envuelve el bucle entero en una sola. Con mas de una replica
-      //    arrancando a la vez, las dos ven las mismas pendientes; la segunda
-      //    espera a la primera y despues reejecuta `ALTER TABLE ... ADD COLUMN`,
-      //    que falla con «column already exists» y tumba el proceso.
-      // 2. `lock_timeout` acota lo que se espera por un bloqueo de tabla: sin
-      //    el, un pod viejo que siga sirviendo durante un despliegue progresivo
-      //    se encola detras del `ALTER TABLE` y deja de responder, sin limite.
-      //
-      // El 1524 y el 1148 son los otros dos espacios de nombres de cerrojo del
-      // repositorio (ordenacion de proyectos y escrituras de arbol).
-      const database = getDatabase();
-
-      await database.execute(sql`SET lock_timeout = '30s'`);
-      await database.execute(sql`SELECT pg_advisory_lock(2051)`);
-
-      try {
-        await migrate(database, {
-          migrationsFolder: `${currentDir}/../drizzle`,
-        });
-      } finally {
-        await database.execute(sql`SELECT pg_advisory_unlock(2051)`);
-        await database.execute(sql`SET lock_timeout = DEFAULT`);
-      }
-
-      console.log("✅ Database migrated successfully!");
-    },
-  });
-
-  // After Drizzle migrations: apikey table must exist so we can align columns
-  // with Better Auth (reference_id + nullable user_id).
-  await migrateApiKeyReferenceId();
-
-  await migrateNotificationPreferencesSchema();
-  await migrateGitHubIntegration();
-  await migrateColumns();
-  await warnIfDatabaseIsNotUtc();
-  await seedDefaultWorkspaceRoles();
+  await runMigrations({ migrationsFolder: `${currentDir}/../drizzle` });
 
   initializePlugins();
   initializeScheduler();
@@ -969,7 +942,7 @@ export async function startServer(
   try {
     await runStartupTasks();
   } catch (error) {
-    console.error("❌ Database migration failed!", error);
+    log.error("❌ Database migration failed!", error);
     process.exit(1);
   }
 
@@ -981,7 +954,7 @@ export async function startServer(
       port,
     },
     () => {
-      console.log(
+      log.info(
         `⚡ API is running at ${process.env.RIUNA_API_URL || "http://localhost:1337"}`,
       );
     },
@@ -993,7 +966,7 @@ export async function startServer(
     if (shuttingDown) return;
     shuttingDown = true;
 
-    console.log("🛑 Shutting down gracefully...");
+    log.info("🛑 Shutting down gracefully...");
     shutdownScheduler();
     await shutdownWebSocketAdapter();
     server.close();
@@ -1060,6 +1033,7 @@ const {
   userApi,
   workflowRuleApi,
   automationApi,
+  instanceApi,
   workspaceApi,
   oauthApi,
 } = createdApp;
@@ -1123,6 +1097,7 @@ export type AppType =
   | typeof externalLinkApi
   | typeof workflowRuleApi
   | typeof automationApi
+  | typeof instanceApi
   | typeof invitationApi
   | typeof workspaceApi
   | typeof userApi

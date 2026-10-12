@@ -793,10 +793,18 @@ describe("cronograma", () => {
     const shifted = await (
       await getSchedule(app, workspaceId, 3, dateKey(inTwoWeeks))
     ).json();
+    // Dias de calendario y no 86.400.000 ms: el dia del cambio de hora dura 25
+    // horas, y sumar milisegundos repetia ese dia (fallo el 2026-10-11, cuando
+    // «dentro de dos semanas» era el domingo 25 de octubre).
+    const plusDays = (days: number) => {
+      const next = new Date(inTwoWeeks);
+      next.setDate(next.getDate() + days);
+      return next;
+    };
     expect(shifted.days.map((d: { dayDate: string }) => d.dayDate)).toEqual([
       dateKey(inTwoWeeks),
-      dateKey(new Date(inTwoWeeks.getTime() + 86400000)),
-      dateKey(new Date(inTwoWeeks.getTime() + 2 * 86400000)),
+      dateKey(plusDays(1)),
+      dateKey(plusDays(2)),
     ]);
   });
 

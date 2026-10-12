@@ -27,8 +27,8 @@
 | Interludio — Productividad personal y equipo | 18 | **Cerrado** — Bloques 0 a 5; el 4.2 (importar iCal), aplazado · [plan por bloques](#interludio--productividad-personal-y-equipo-antes-de-la-fase-8--cerrado) |
 | Cierre de la deuda de las fases cerradas | 18 | **Cerrado** — cinco tandas, en `main` el 2026-10-05 (PR #38–#45); la facturación heredada sigue abierta por decisión · [inventario](#cierre-de-la-deuda-de-las-fases-cerradas) |
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
-| 9 — Operación | 2 | Pendiente |
-| **Total Bloque A** | **41** + 18 del interludio | |
+| 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
+| **Total Bloque A** | **45** + 18 del interludio | |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -2505,16 +2505,335 @@ herramientas MCP de automatizaciones, WebSocket para la lista de reglas, reinten
 webhook, tope de ejecuciones por minuto, disparadores directos de eventos de GitHub o
 Gitea (se encadenan a través de `workflowRule`) y enviar la hoja de SERVITEC programada.
 
-### Fase 9 — Operación (≈2 semanas)
-Logs estructurados, métricas, límites de tasa, repaso de índices con datos
-reales, responsive de las pantallas de consulta móvil, Playwright de humo,
-**copias fuera de la máquina** y guía de actualización propia de Riuna.
-**Hecho cuando:** restauras un backup en limpio y la suite de humo pasa contra
-esa instancia.
+### Fase 9 — Operación
 
-La guía de actualización y las copias externas tienen ya un plan concreto,
-pendiente de aplicar: [plan de despliegue](plan-despliegue.md) (Oracle Always
-Free + Tailscale).
+*Planificada el 2026-10-10 preguntando antes de diseñar, como la 8. El texto original
+pedía logs estructurados, métricas, límites de tasa, repaso de índices con datos reales,
+las pantallas de consulta móvil, humo, copias fuera de la máquina y una guía de
+actualización propia, en ≈2 semanas. Con lo que el usuario eligió pasa a **≈6 semanas
+nominales**. Es la última fase del Bloque A.*
+
+**Hecho cuando:** restauras una copia en limpio y la suite de humo pasa contra esa
+instancia.
+
+**Decisiones del usuario:**
+
+- **Oracle se pospone.** La instancia sigue en el PC (Docker Desktop y
+  `compose.local.yml`) y se entra por Tailscale. Del [plan de despliegue](plan-despliegue.md)
+  se aprovecha lo que sirve en el PC, y el resto queda para cuando haya VM.
+- **Tailscale con `tailscale serve`.** Hoy se entra por la IP de Tailscale y los puertos.
+  Se pasa a HTTPS con una sola URL, y los puertos dejan de escuchar en la red local.
+- **Observabilidad:**
+  - logs estructurados;
+  - una página «Estado de la instancia» para el admin de instancia;
+  - alertas por los canales que ya existen (ntfy, Gotify, correo, webhook).
+  - **Sentry, pospuesto**, y sin endpoint `/metrics`.
+- **Restauración, por partida doble:**
+  - un simulacro sintético cada noche en CI;
+  - y el simulacro con la copia real, en el PC, en un proyecto Compose aislado. La copia real
+    nunca baja a desarrollo.
+- **Copia externa a Google Drive**, cifrada con un remoto `crypt` de rclone, desde un
+  contenedor más de `compose.local.yml`.
+- **Móvil a 390 px**:
+  - se rehacen Hoy y Mi trabajo (Hoy, Mis tareas, Planificador y Mi panel), el detalle de
+    tarea, el Tablero y la Lista;
+  - el resto solo se revisa para que no se desborde.
+
+**Lo que había al empezar**, comprobado en el código:
+
+- **Un 500 no dejaba rastro.** `app.onError` solo llamaba a `Sentry.captureException`, y
+  Sentry está inactivo.
+- No había logs de petición, sino unas 300 llamadas `console.*`.
+- Better Auth solo limitaba la tasa en modo cloud: en autoalojado nada frenaba los intentos de
+  contraseña.
+- `compose.local.yml` publicaba Postgres en todas las interfaces.
+- Las copias vivían en el mismo disco que la base.
+
+**Bloques.** Mismas tallas. ADR desde la 071 (la 058 sigue reservada); migraciones desde la
+0083.
+
+**Bloque 0 — El PC, solo por Tailscale, y actualizar con red** · S ·
+[ADR 071](adr/071-la-instancia-del-pc-por-tailscale.md) · **Hecho (2026-10-11)**
+- **0.0** ✔ Este plan.
+- **0.1** ✔ Puertos y `tailscale serve`.
+  - Los puertos de `compose.local.yml` escuchan en `127.0.0.1` (`RIUNA_BIND_ADDRESS`).
+  - Se publica con `tailscale serve`: `/` va a la web y `/api` a `http://127.0.0.1:1337/api`.
+    `serve` quita el prefijo del montaje y le añade la ruta del destino, así que hay que
+    repetirlo en ella.
+  - El paso único de la IP y los puertos a `serve` está en [actualizar](actualizar.md), y el
+    orden importa: cerrar los puertos antes de montar `serve` deja fuera a quien entraba por la
+    IP.
+- **0.2** ✔ Orden `migrate`.
+  - `node dist/migrate.js` migra y sale, con 0 o con 1.
+  - Lo común sale a `database/run-migrations.ts`, y el arranque normal sigue migrando.
+  - Tres pruebas de integración en un proceso aparte: base vacía, base ya migrada y una
+    migración que falla.
+- **0.3** ✔ `deploy/actualizar.sh`, en el orden de arriba.
+  - La versión que sirve se lee de la etiqueta `org.opencontainers.image.revision`, que
+    `compose.local.yml` sella al construir, y no de git.
+  - Fija `MSYS_NO_PATHCONV=1`: sin eso, Git Bash convierte `/scripts/backup.sh` en una ruta de
+    Windows.
+  - **Probado** con `shellcheck` y con un `docker` simulado en un clon desechable: worktree
+    sucio, al día, fallo al construir, al copiar, al migrar y al arrancar (con y sin migraciones
+    aplicadas) y primera vez sin etiqueta.
+  - **Sin probar aquí**: este devcontainer no tiene Docker. La primera ejecución real es en el
+    PC.
+- **0.4** ✔ `pg_stat_statements` se carga en el Postgres del PC. La extensión se creará en la
+  base `postgres`, así que no viaja en las copias.
+
+**Bloque 1 — Copias fuera de la máquina y simulacro en CI** · M ·
+[ADR 072](adr/072-copias-fuera-de-la-maquina-y-simulacro.md) · **Hecho (2026-10-11)**
+- **1.1** ✔ Servicio `offsite` (rclone 1.68) y `scripts/backup/offsite.sh`.
+  - `copy` y nunca `sync`, y solo copias terminadas.
+  - No purga si la última copia local tiene más de 48 h o está dañada.
+  - Retención de 90 días, conservando siempre las 5 más recientes.
+  - Deja `backups/.offsite-status.json`.
+  - Va en el perfil `offsite` (`COMPOSE_PROFILES`) y no lee el `.env` entero.
+  - **Probado** con el busybox y el rclone de la imagen contra un remoto local cifrado: sano
+    (sube cifrado, deja fuera el `.partial` y purga hasta dejar 5), copia vieja, copia dañada,
+    remoto inexistente y sin copias. Los cuatro fallos salen con 1 y no purgan.
+- **1.2** ✔ [Copias de seguridad](copias-de-seguridad.md) explica:
+  - cómo montar Drive cifrado (la autorización se hace con `rclone.exe` en Windows);
+  - que **las dos contraseñas del `crypt` se guardan fuera del PC**;
+  - cómo recuperar desde Drive en una máquina nueva.
+- **1.3** ✔ El humo puede correr contra una instancia en marcha (`E2E_BASE_URL` y `E2E_API_URL`).
+  - El único origen escrito a mano (`home.spec.ts`) pasa a leer `baseURL`.
+  - `RIUNA_DISABLE_SCHEDULER=true` no arranca ningún trabajo. Lo vigila una unitaria, que falla
+    quitando la guarda.
+- **1.4** ✔ `restore-drill.yml`, cada noche y en las PR que tocan copias, imágenes o
+  migraciones:
+  1. construye las imágenes de `compose.local.yml`, siembra y copia;
+  2. tira la instancia y levanta un Postgres vacío;
+  3. rechaza un volcado truncado sin crear nada;
+  4. restaura y compara los recuentos (`scripts/backup/counts.sh`);
+  5. pasa el humo entero contra lo restaurado.
+  - **Ensayado aquí sin Docker**: los mismos `backup.sh`, `restore.sh` y `counts.sh` contra el
+    Postgres local, y la API y la web sobre la base restaurada, con datos previos y sin
+    planificador. Recuentos iguales, el truncado rechazado y el humo **94 de 95**. Falló el
+    arrastre para redimensionar del Cronograma, que pasó 2 de 2 al repetirlo: es un gesto
+    sensible a los tiempos tras diez minutos de carga, y en CI las pruebas ya tienen un
+    reintento.
+  - El job de verdad corre por primera vez en la PR de este bloque.
+
+**Bloque 2 — Logs estructurados** · M · [ADR 073](adr/073-logs-estructurados.md) ·
+**Hecho (2026-10-11)**
+- **2.1** ✔ `utils/log.ts`, sin dependencia.
+  - JSON por línea en producción y legible en desarrollo (`LOG_FORMAT`), con `LOG_LEVEL`.
+  - Firma de `console`: texto, campos, `Error` con su pila y su causa.
+  - Tapa los secretos a cualquier profundidad.
+  - Doce unitarias. Una cazó que un campo llamado `level` o `msg` pisaba la cabecera.
+- **2.2** ✔ Una línea por petición (`utils/request-log.ts`):
+  - `requestId` (respeta uno entrante razonable y lo devuelve en `X-Request-Id`), método,
+    patrón de ruta, estado, duración y usuario;
+  - todo lo registrado durante la petición lleva su `requestId`, por `AsyncLocalStorage`;
+  - el patrón es el de la ruta que respondió, o el de la ruta pedida si cortó un middleware: un
+    401 sale como `/api/task/:id` y no como `/api/*`;
+  - **nunca la ruta cruda**: el token del `.ics` no aparece, y una prueba lo vigila;
+  - `/api/health` no se registra.
+- **2.3** ✔ Todo 500 deja su pila con la ruta y el `requestId` (**antes no dejaba nada**). Los
+  trabajos programados registran cómo acabaron (`debug`, `warn` o `error`), y Better Auth
+  escribe por el mismo registro.
+- **2.4** ✔ Los ~300 `console.*` de 87 ficheros pasan a `log.*`, con un cambio mecánico que la
+  firma permite. `tests/api/no-console.test.ts` impide que vuelvan, y salta con uno de prueba.
+  Las cinco pruebas que espiaban `console` espían ahora `log`.
+- **De paso**: `compose.local.yml` rota los logs de cada contenedor (5 × 10 MB). Docker Desktop no
+  los rota, y con una línea por petición crecerían sin límite.
+- **Visto en vivo**: la API empaquetada con `NODE_ENV=production` escribe JSON por línea, el `.ics`
+  sale como `/api/calendar/:file{.+\.ics}` y el token no aparece en el log.
+- **Pruebas**: 12 unitarias del logger, la guarda y 5 de integración del middleware (patrón sin
+  token, `/health` callado, `X-Request-Id` de ida y vuelta, id entrante descartado y la pila de un
+  500). Unitarias de la API: 804 de 804.
+
+**Bloque 3 — Límites de tasa** · S · [ADR 074](adr/074-limites-de-tasa.md) ·
+**Hecho (2026-10-11)**
+- **3.1** ✔ **La IP sale de un solo sitio** (`utils/client-ip.ts`).
+  - `X-Forwarded-For` solo cuenta si la conexión viene de un proxy de confianza
+    (`TRUSTED_PROXIES`, por defecto localhost y las redes privadas, con `net.BlockList`).
+  - Better Auth la recibe resuelta en una cabecera propia que se borra a la entrada.
+  - **Hallazgo heredado**: Better Auth leía `cf-connecting-ip` y `X-Forwarded-For` sin mirar de
+    dónde venía la conexión. Con los límites encendidos, inventarse la cabecera habría dado un cupo
+    nuevo en cada intento.
+  - En el PC no hay que configurar nada: la pasarela de Docker es una red privada.
+- **3.2** ✔ **Better Auth limita siempre**, no solo en cloud. Entrar: 10 por minuto. Enlace
+  mágico: 5. Registrarse: 3. Invitar: 5. *Device flow*: 10.
+- **3.3** ✔ **El resto de la API** (`utils/rate-limit.ts`, en memoria y con ventana fija):
+  - 600 por minuto por persona o clave (`RATE_LIMIT_USER_PER_MINUTE`);
+  - por IP, lo público: el `.ics`, el proyecto público, la invitación pública, el estado de la
+    instancia y los webhooks de GitHub y Gitea;
+  - 429 con `Retry-After`, que CORS expone igual que `X-Request-Id`;
+  - `/health`, los avatares y los adjuntos, sin límite.
+- **3.4** ✔ **En la web**, un 429 no se reintenta (ya no se reintentaba ningún 4xx).
+  - El cliente compartido avisa (`onRateLimited`), y la web enseña un aviso traducido por tanda.
+  - Los formularios de acceso explican en español el 429 de Better Auth, que llega en inglés.
+- `RATE_LIMIT_ENABLED=false` lo apaga: lo usan la integración, el humo y los simulacros.
+- **Pruebas**:
+  - cuatro de integración: el cupo por persona con `Retry-After` sin tocar a otra, lo público por
+    IP, `/health` libre y **once intentos de contraseña con una IP inventada en las tres
+    cabeceras: el undécimo es un 429**;
+  - comprobado quitando cada guarda: sin el límite por persona, y con la lectura antigua de la IP,
+    cae su prueba;
+  - ocho unitarias de la IP y del contador, y dos del aviso en `libs`;
+  - `session-client-ip.test.ts`, heredada, mandaba `X-Forwarded-For` sin socket y daba por
+    buena la cabecera. Ahora simula de dónde viene la conexión, y tiene un caso nuevo: si no viene
+    de un proxy de confianza, se ignora;
+  - con la API empaquetada en producción, diez 401 y el undécimo intento es un 429.
+
+**Bloque 4 — Estado de la instancia y alertas** · M–L ·
+[ADR 075](adr/075-estado-de-la-instancia-y-alertas.md) · **Hecho (2026-10-11)**
+- **4.1** ✔ Migración 0083, solo tablas nuevas:
+  - `job_status`: una fila por trabajo con la última vuelta, el estado, la duración, el último
+    éxito, los fallos seguidos y el último error, sin la consulta de las URL;
+  - `instance_alert`: con un índice único mientras está abierta.
+  - La escribe `withCheckIn`, así que vale para los siete trabajos sin tocarlos.
+  - Los tiempos por ruta (p50 y p95 de las últimas 200 peticiones) van en memoria y no cuentan
+    los preflight de CORS.
+- **4.2** ✔ `GET /api/instance/report`, solo para el admin de instancia y solo con sesión.
+  - Enseña:
+    - versión, commit (`RIUNA_REVISION`, que ahora se sella en la imagen) y tiempo en marcha;
+    - la base y sus migraciones;
+    - los trabajos;
+    - las copias, desde `BACKUP_DIR`, que `compose.local.yml` monta de solo lectura;
+    - Redis y WebSocket;
+    - rutas lentas, problemas y alertas;
+    - **la IP con la que la API ve a quien pregunta**.
+  - Con Valibot y OpenAPI.
+- **4.3** ✔ «Estado de la instancia» en el menú del avatar, solo para el admin de instancia.
+  Se refresca cada minuto.
+  - **Pasada visual** a 1440 y 390 px, en los dos temas: sin desbordamiento.
+  - De ella salieron el margen que faltaba, los preflight que llenaban la tabla de rutas y dos
+    plurales mal hechos.
+- **4.4** ✔ El trabajo `instance-health`, cada 15 minutos y con arrendamiento.
+  - Abre una alerta cuando la copia local se retrasa, la copia externa deja de subir o un
+    trabajo falla tres veces seguidas.
+  - Avisa al admin de instancia por sus canales una vez, y otra al resolverse.
+  - Sin `BACKUP_DIR` no alerta de copias.
+- **Pruebas**:
+  - 8 unitarias de las condiciones y 4 de los tiempos por ruta;
+  - 6 de integración: 403 a quien no es admin y a una clave de API, el informe completo (sin el
+    token del error), los fallos seguidos que se reinician y la alerta que se abre, no se
+    repite, no llega a quien no es admin y se cierra;
+  - un e2e que promueve al usuario por la base y abre la página desde el avatar; contra el
+    simulacro se salta;
+  - la entrada del menú, en la unitaria del hook.
+
+**Bloque 5 — Índices con datos reales y presupuesto** · S–M
+- **5.1** ✔ `scripts/ops/informe-bd.sh`, que corre en el PC y saca **solo estadísticas, ni una
+  fila**: tamaño y volumen, el recuento de los cinco proyectos más grandes, índices sin uso,
+  tablas con más barridos secuenciales, y las sentencias más caras de `pg_stat_statements`,
+  normalizadas.
+  - `compose.local.yml` deja de registrar las órdenes de utilidad: no se normalizan, y una que
+    llevara una contraseña la guardaría tal cual.
+  - Probado contra una base de pruebas, salvo crear la extensión: aquí no hay superusuario, y en
+    el contenedor del PC sí.
+- **5.2** ⏳ **Pendiente del informe real.** Se lanza en el PC tras actualizar
+  (`sh scripts/ops/informe-bd.sh > informe-bd.txt`), cuando `pg_stat_statements` lleve unos días
+  recogiendo. Cada candidato se mide en el banco con `EXPLAIN`, antes y después.
+- **5.3** ✔ **Presupuesto de las pantallas posteriores a la Fase 4.5**, medido con
+  `apps/api/scripts/bench-views.ts`:
+  - en el mismo proceso, con la app entera (middleware y autenticación incluidos);
+  - sobre el banco de 50.000 tareas;
+  - con la persona con más tareas asignadas, hecha responsable de un departamento;
+  - 30 vueltas tras 3 de calentamiento.
+
+  | Pantalla | p50 | p95 |
+  |---|---|---|
+  | Hoy | 74 ms | 83 ms |
+  | Planificador (7 días) | 114 ms | 146 ms |
+  | Cronograma (7 días) | 7 ms | 11 ms |
+  | Mis tareas: contadores | 41 ms | 73 ms |
+  | Mis tareas: asignadas | 36 ms | 49 ms |
+  | Mis tareas: del departamento | 11 ms | 16 ms |
+  | Mis tareas: esperando | 10 ms | 14 ms |
+  | Mi equipo: el día | 9 ms | 11 ms |
+  | Mi equipo: stand-up | 8 ms | 10 ms |
+  | Búsqueda | 129 ms | 138 ms |
+  | Mi panel (todos los widgets) | 79 ms | 104 ms |
+
+  **Todas por debajo de 300 ms p95**, y la más cara, la búsqueda, con más del doble de margen.
+  - El plan personal no se siembra: tiene decenas de entradas, no miles. Así que Hoy, el
+    Planificador y el Cronograma miden lo que sí crece con el volumen, lo vencido y lo sin
+    planificar.
+  - Las automatizaciones no están: su coste es el número de reglas, medido en la ADR 068.
+
+**Bloque 6 — Móvil a 390 px** · M · **Hecho (2026-10-11)**
+- **6.1** ✔ Proyecto `mobile` en Playwright (Chromium a 390×844, táctil) y
+  `tests/e2e/mobile/`.
+  - **`overflow.spec.ts`** recorre 26 rutas y falla si algo visible asoma por la derecha fuera
+    de un contenedor que se desplace en horizontal. También falla si el marco de la página se
+    desliza de lado: `SidebarInset` es `overflow-auto`, así que lo que lo desbordaba arrastraba la
+    página entera. La primera versión de la guarda lo daba por bueno; ahora salta con la
+    cabecera de antes, comprobado.
+  - **`screens.spec.ts`**: un gesto por pantalla elegida, y que el título se lea entero.
+- **6.2** ✔ Lo que se arregló:
+  - **La cabecera de las páginas** (`WorkspaceLayout`).
+    - En Mi panel y en Mis tareas, las acciones desbordaban y **la página entera se
+      deslizaba 450 px de lado**.
+    - Ahora crece en dos líneas: arriba el título, la tarea nueva y la campana; debajo, las
+      acciones, que se desplazan.
+    - El nombre del espacio sale desde `sm`.
+  - **Hoy y Mis tareas**: el título se quedaba en una o dos letras. Ahora va arriba, con hasta
+    dos líneas, y la etiqueta de vencimiento y la acción debajo. En escritorio, igual que antes.
+  - **El detalle de tarea**: el título era un `input` de una línea. Ahora es un `textarea` que
+    crece (ajustado en JS, porque Safari de iOS no tiene `field-sizing`). Intro guarda, y un
+    salto de línea pegado pasa a espacio.
+  - **Tablero y Planificador**: columnas al 85 % del ancho con `scroll-snap`. Se mueve de columna
+    manteniendo pulsada la tarjeta (menú «Estado»).
+  - **La Lista**: la clave se oculta por debajo de `sm`, y el título tiene dos líneas.
+- **6.3** ✔ Pasada visual a 390 px en los dos temas, y a 1440 para comprobar que el escritorio
+  no cambió.
+- **De paso, un fallo real del modo foco**, destapado por el simulacro de restauración con el
+  build de producción.
+  - Una parada del cronómetro desde otro dispositivo en los primeros 15 s de un bloque no se
+    notaba nunca: el modo foco seguía «Trabajando».
+  - Ahora se vuelve a mirar al acabar el margen.
+  - `focus.spec.ts` avanza el reloj de 2 en 2 s y cae con el código de antes.
+
+**Bloque 7 — Simulacro real y cierre** · S
+- **7.1** ✔ `deploy/simulacro.sh`.
+  - **Proyecto Compose aparte** (`riuna-simulacro`):
+    - un `.env` generado, sin SMTP y con claves nuevas;
+    - su directorio de copias y sus puertos (web 5183 y API 1347, solo en `127.0.0.1`);
+    - planificador apagado y sin límites de tasa.
+  - **Lo que hace:**
+    - restaura la copia;
+    - compara los recuentos con la instancia de verdad;
+    - arranca sobre las imágenes que ya sirven;
+    - con `--humo`, pasa el humo entero desde un contenedor de Playwright dentro de su red, así
+      que no hace falta Node en el PC;
+    - `--down` lo tira todo.
+  - `compose.local.yml` admite `RIUNA_ENV_FILE`, `RIUNA_BACKUP_DIR` y `RIUNA_*_PORT`, que por
+    defecto valen lo de siempre, y fija los nombres de imagen (`riuna-api`, `riuna-web`).
+  - **El simulacro nocturno de CI usa este mismo guion**, así que lo que se lanza en el PC se
+    prueba entero cada noche con Docker de verdad.
+  - **Primera vuelta real (2026-10-11):** restauró, los recuentos coincidieron y el humo pasó
+    contra la copia, **100 bien** (1 omitida, la que necesita la base, y 1 frágil que pasó al
+    reintentar y quedó reforzada), en 15 minutos.
+  - Antes falló entera: con los nombres de servicio (`web`, `api`), la web y la API eran dos
+    sitios para el navegador y la cookie de sesión no viajaba. El humo entra ahora por
+    `localhost`, como en el PC (`deploy/simulacro-proxy.mjs`).
+  - Probado aquí con `shellcheck` y un `docker` simulado: mirar, `--humo` bien y mal, sin
+    imágenes, sin copias, opción desconocida y `--down`.
+  - Una prueba vigila que la imagen de Playwright sea la de la versión instalada.
+- **7.2** ⏳ **Pendiente del PC: el criterio de la fase con la copia real.**
+  - `sh deploy/simulacro.sh --humo` tras actualizar.
+  - La fecha y los recuentos van a [copias de seguridad](copias-de-seguridad.md).
+- **7.3** ✔ Documentación:
+  - [actualizar](actualizar.md), como guía propia: Tailscale, `actualizar.sh`, `migrate`, logs,
+    el informe de la base y volver atrás;
+  - [copias de seguridad](copias-de-seguridad.md): la copia externa, recuperar desde Drive y el
+    simulacro;
+  - funcionalidades, las ADR 071 a 075, `AGENTS.md` y `.env.sample`;
+  - [plan de despliegue](plan-despliegue.md), pospuesto.
+- **7.4** Verificación final: integración, humo (escritorio y móvil), unitarias de todos los
+  paquetes, typecheck, `biome ci`, `i18n:check`, `check:env` y `openapi.json`.
+
+**Fuera de alcance, declarado:**
+- Oracle;
+- Sentry y `/metrics`;
+- avisar si la API entera cae, que necesita un vigilante externo;
+- paginar las vistas, cerrado por decisión;
+- la facturación heredada, abierta por decisión;
+- la zona horaria por persona.
 
 ---
 
@@ -3016,7 +3335,22 @@ La **Fase 8** está **cerrada** (2026-10-07):
 - los importadores externos, solo documentados (ADR 070).
 
 Ver su [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada).
-Lo siguiente es la **Fase 9**: operación.
+La **Fase 9**, operación, está hecha (2026-10-11), en las PR apiladas #51 a #58. Ver su
+[plan por bloques](#fase-9--operación).
+
+**Lo que queda se hace en el PC**, en este orden:
+
+1. **Fusionar las PR** y actualizar siguiendo [actualizar](actualizar.md). El paso de la IP y
+   los puertos a `tailscale serve` va antes del primer `deploy/actualizar.sh`.
+2. **En «Estado de la instancia»**, comprobar que la API te ve con tu IP de Tailscale y que ve
+   las copias.
+3. **Montar la copia externa** en Google Drive ([copias de seguridad](copias-de-seguridad.md)) y
+   guardar las dos contraseñas del cifrado fuera del PC.
+4. **`sh deploy/simulacro.sh --humo`**: el criterio de la fase con la copia real (7.2).
+5. **Unos días después, `sh scripts/ops/informe-bd.sh`**, y pasar el resultado para repasar
+   los índices con el uso real (5.2).
+
+Con eso se cierra el Bloque A. El Bloque B (CRM y ERP ligero) empieza en la Fase 10.
 
 **Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
 seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.

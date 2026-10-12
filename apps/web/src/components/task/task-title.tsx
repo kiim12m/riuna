@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -75,12 +75,30 @@ export default function TaskTitle({ taskId }: TaskTitleProps) {
     [debouncedUpdate],
   );
 
+  // Un `textarea` que crece con el texto, y no un `input`: en un movil un
+  // titulo de una sola linea se cortaba en la tercera palabra (Fase 9). Se
+  // ajusta en JS porque `field-sizing: content` no existe en Safari de iOS.
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const title = form.watch("title");
+  const fitHeight = useCallback(() => {
+    const element = textareaRef.current;
+    if (!element) return;
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  }, []);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: el alto depende del texto
+  useLayoutEffect(fitHeight, [fitHeight, title]);
+  useEffect(() => {
+    window.addEventListener("resize", fitHeight);
+    return () => window.removeEventListener("resize", fitHeight);
+  }, [fitHeight]);
+
   return (
     <Form {...form}>
-      {/* El titulo de la tarea es un `input` editable, asi que la pagina se
+      {/* El titulo de la tarea es un campo editable, asi que la pagina se
           quedaba sin encabezado de primer nivel que la nombrara: un lector de
           pantalla no tenia por donde entrar. Este `h1` lo da sin cambiar nada de
-          lo que se ve, y el input lo referencia como etiqueta. */}
+          lo que se ve, y el campo lo referencia como etiqueta. */}
       <h1 id={tituloId} className="sr-only">
         {form.getValues("title") || t("tasks:detail.titlePlaceholder")}
       </h1>
@@ -88,16 +106,29 @@ export default function TaskTitle({ taskId }: TaskTitleProps) {
         control={form.control}
         name="title"
         render={({ field }) => (
-          <input
+          <textarea
             {...field}
-            type="text"
+            ref={(element) => {
+              field.ref(element);
+              textareaRef.current = element;
+            }}
+            rows={1}
             aria-labelledby={tituloId}
             placeholder={t("tasks:detail.titlePlaceholder")}
             readOnly={!canEdit}
-            className="block h-auto w-full appearance-none border-0 bg-transparent p-0 font-heading text-display leading-[1.15] font-semibold tracking-[-0.02em] text-foreground outline-none placeholder:text-foreground/45"
+            className="block h-auto w-full resize-none appearance-none overflow-hidden border-0 bg-transparent p-0 font-heading text-display leading-[1.15] font-semibold tracking-[-0.02em] text-foreground outline-none placeholder:text-foreground/45"
+            // Un titulo no lleva saltos de linea: Intro termina, como en el
+            // `input` de antes, y un salto pegado pasa a espacio.
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                e.currentTarget.blur();
+              }
+            }}
             onChange={(e) => {
-              field.onChange(e);
-              handleTitleChange(e.target.value);
+              const value = e.target.value.replace(/\s*\n\s*/g, " ");
+              field.onChange(value);
+              handleTitleChange(value);
             }}
           />
         )}

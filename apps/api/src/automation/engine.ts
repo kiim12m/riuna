@@ -2,6 +2,7 @@ import { and, asc, eq, isNull, or } from "drizzle-orm";
 import db from "../database";
 import { automationTable, columnTable, projectTable } from "../database/schema";
 import { subscribeToEvent } from "../events";
+import { log } from "../utils/log";
 import type { EditableCondition } from "../view/filter-schema";
 import { taskMatchesConditions } from "./condition";
 import type { Trigger, TriggerType } from "./definition";
@@ -184,7 +185,7 @@ export async function handleAutomationEvent(
     try {
       await considerRule({ rule, task, eventType, data, move, chain });
     } catch (error) {
-      console.error(`Automation ${rule.id} failed on ${eventType}:`, error);
+      log.error(`Automation ${rule.id} failed on ${eventType}:`, error);
     }
   }
 }

@@ -80,6 +80,7 @@ Not every change touches every surface. Make the decision deliberately rather th
 - Generate migrations with `pnpm --filter @riuna/api db:generate`, inspect the SQL, and include it with the schema change.
 - **Inside a `sql` template, wrap arrays in `sql.param()`.** Drizzle expands a bare array into `($1, $2, …)` — which is what you want for `IN`, and silently wrong everywhere else: `${keys}::text[]` compiles to `($1, $2)::text[]`, and an empty array to `()`, a syntax error. It bit this codebase twice in one afternoon.
 - Prefer inferred TypeScript types and `type` over `interface` unless extension or declaration merging is required.
+- Log through `apps/api/src/utils/log.ts` (`log.info/warn/error`, console-shaped arguments), never `console.*`: the logger adds the level, the `requestId` and redacts secrets, and `tests/api/no-console.test.ts` enforces it. Log route patterns, never raw paths — some carry tokens (ADR 073).
 - Comments should explain constraints or surprising decisions, not narrate code.
 
 ## Safety and tooling
@@ -113,6 +114,7 @@ What survives in `.github/workflows/`:
 
 - `ci.yml` — lint, typecheck and tests on push and pull request. The safety net; keep it green.
 - `nightly.yml` — scheduled verification with a real PostgreSQL service.
+- `restore-drill.yml` — nightly (and on PRs touching backups, images or migrations): builds the `compose.local.yml` images, seeds and backs up, then runs `deploy/simulacro.sh --humo` — the same script used on the PC with the real backup — which restores into an isolated Compose project and runs the full smoke from a Playwright container (ADR 072).
 - `docker.yml` → `build-images.yml` — manual dispatch that builds and pushes images to `ghcr.io/<owner>/…` under **your** namespace.
 - `helm-chart.yml` → `helm-validate.yml` — packages and validates the Helm chart.
 

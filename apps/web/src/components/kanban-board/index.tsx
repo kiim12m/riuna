@@ -250,10 +250,15 @@ function KanbanBoard({ project, disableDragDrop = false }: KanbanBoardProps) {
       onDragEnd={handleDragEnd}
     >
       <div className="flex h-full w-full flex-col bg-linear-to-b from-muted/20 to-background">
-        <div className="min-h-0 flex-1 overflow-x-auto [-webkit-overflow-scrolling:touch]">
+        {/* En movil, una columna casi a todo lo ancho que encaja al
+         * deslizar: con 224 px se leia una y un trozo de la siguiente. */}
+        <div className="min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto [-webkit-overflow-scrolling:touch] sm:snap-none">
           <div className="flex h-full w-full gap-3 px-2 py-4 md:px-3">
             {project.columns?.map((column) => (
-              <div key={column.id} className="h-full min-w-56 max-w-96 flex-1">
+              <div
+                key={column.id}
+                className="h-full w-[85vw] max-w-96 shrink-0 snap-center sm:w-auto sm:min-w-56 sm:flex-1"
+              >
                 <Column column={column} disableDragDrop={disableDragDrop} />
               </div>
             ))}

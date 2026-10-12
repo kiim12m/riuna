@@ -98,6 +98,10 @@ process.env.CUSTOM_OAUTH_RESPONSE_TYPE = "";
 process.env.CUSTOM_OAUTH_DISCOVERY_URL = "";
 process.env.CUSTOM_OAUTH_AUTO_LOGIN = "";
 process.env.DEVICE_AUTH_CLIENT_IDS = "riuna-cli";
+// Las pruebas se registran y entran muchas veces por minuto desde la misma
+// "IP": con los limites de tasa (ADR 074) encendidos fallarian por eso y no por
+// lo que prueban. `rate-limit.test.ts` los vuelve a encender para si.
+process.env.RATE_LIMIT_ENABLED = "false";
 
 afterEach(() => {
   vi.restoreAllMocks();

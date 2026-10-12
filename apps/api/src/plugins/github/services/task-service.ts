@@ -6,6 +6,7 @@ import {
   integrationTable,
   taskTable,
 } from "../../../database/schema";
+import { log } from "../../../utils/log";
 
 export type TaskRow = InferSelectModel<typeof taskTable>;
 
@@ -54,7 +55,7 @@ export async function updateTaskStatus(
   if (column) {
     columnId = column.id;
   } else if (!NON_COLUMN_STATUSES.has(newStatus)) {
-    console.warn(
+    log.warn(
       `[GitHub] Skipping status update for task ${taskId}: column "${newStatus}" not found in project ${task.projectId}`,
     );
     return { applied: false };

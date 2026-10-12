@@ -16,6 +16,12 @@ vi.mock("@/hooks/queries/project/use-get-projects", () => ({
   default: () => ({ data: projects }),
 }));
 
+let role: string | null = null;
+
+vi.mock("@/components/providers/auth-provider/hooks/use-auth", () => ({
+  useAuth: () => ({ user: role ? { id: "u-1", role } : { id: "u-1" } }),
+}));
+
 const capabilities = {
   canManageWorkspace: false,
   canManageProjects: false,
@@ -39,6 +45,7 @@ function titles() {
 }
 
 beforeEach(() => {
+  role = null;
   projects = [{ id: "project-1" }];
   for (const key of Object.keys(capabilities) as Array<
     keyof typeof capabilities
@@ -74,6 +81,14 @@ describe("useAdminNavItems", () => {
       "navigation:sidebar.workspaceAdmin",
       "navigation:sidebar.projectSettings",
     ]);
+  });
+
+  // El estado de la instancia es del admin de instancia, tenga o no
+  // capacidades en este espacio (ADR 075).
+  it("da el estado de la instancia solo al admin de instancia", () => {
+    expect(titles()).not.toContain("navigation:sidebar.instanceStatus");
+    role = "admin";
+    expect(titles()).toEqual(["navigation:sidebar.instanceStatus"]);
   });
 
   // Sin proyectos no hay ajustes de proyecto que enseñar.

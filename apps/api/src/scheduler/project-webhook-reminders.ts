@@ -11,6 +11,7 @@ import {
   normalizeGenericWebhookConfig,
 } from "../plugins/generic-webhook/config";
 import { sendDueDateReminder } from "../plugins/generic-webhook/events";
+import { log } from "../utils/log";
 import { REMINDER_WINDOW_MINUTES } from "./reminder-timing";
 
 const MINUTE_MS = 60 * 1000;
@@ -99,7 +100,7 @@ export async function checkProjectWebhookReminders(): Promise<{
       }
     } catch (error) {
       degraded = true;
-      console.error("Failed to process project webhook reminder", {
+      log.error("Failed to process project webhook reminder", {
         integrationId: integration.id,
         projectId: integration.projectId,
         error,

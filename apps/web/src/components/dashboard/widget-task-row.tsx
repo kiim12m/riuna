@@ -77,32 +77,37 @@ export function WidgetTaskRow({
     >
       <span className="shrink-0">{getPriorityIcon(task.priority)}</span>
 
-      <span
-        className={cn(
-          "min-w-0 truncate text-body",
-          task.isDone && "text-muted-foreground line-through",
-        )}
-      >
-        {task.title}
-      </span>
-
-      <ProjectPill
-        name={task.projectName}
-        icon={task.projectIcon}
-        className="ml-1 hidden lg:inline-flex"
-      />
-
-      {task.dueDate && (
+      {/* En movil el chip de vencimiento baja bajo el titulo: en una linea,
+       * con el chip, el cronometro y el menu, el titulo se quedaba en dos
+       * palabras. En pantallas anchas, todo en una linea, como siempre. */}
+      <span className="flex min-w-0 flex-1 flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
         <span
           className={cn(
-            "ml-auto flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-label",
-            dueDateStatusColors[dueStatus],
+            "line-clamp-2 min-w-0 text-body sm:truncate",
+            task.isDone && "text-muted-foreground line-through",
           )}
         >
-          <DueIcon className="size-3" />
-          <span>{formatRelativeTime(task.dueDate)}</span>
+          {task.title}
         </span>
-      )}
+
+        <ProjectPill
+          name={task.projectName}
+          icon={task.projectIcon}
+          className="ml-1 hidden lg:inline-flex"
+        />
+
+        {task.dueDate && (
+          <span
+            className={cn(
+              "flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-label sm:ml-auto",
+              dueDateStatusColors[dueStatus],
+            )}
+          >
+            <DueIcon className="size-3" />
+            <span>{formatRelativeTime(task.dueDate)}</span>
+          </span>
+        )}
+      </span>
     </button>
   );
 

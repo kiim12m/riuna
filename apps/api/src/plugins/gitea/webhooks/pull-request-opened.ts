@@ -1,4 +1,5 @@
 import { publishEvent } from "../../../events";
+import { log } from "../../../utils/log";
 import {
   createExternalLink,
   findExternalLink,
@@ -65,7 +66,7 @@ export async function handleGiteaPullRequestOpened(
     try {
       config = JSON.parse(integration.config) as GiteaConfig;
     } catch (error) {
-      console.error("Invalid Gitea config for integration", {
+      log.error("Invalid Gitea config for integration", {
         integrationId: integration.id,
         error,
       });

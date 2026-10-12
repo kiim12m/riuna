@@ -1,12 +1,13 @@
 import { sql } from "drizzle-orm";
 import db from "../database";
+import { log } from "./log";
 
 /**
  * Repairs notification preference tables for instances where migration state
  * drift left the schema partially applied.
  */
 export async function migrateNotificationPreferencesSchema() {
-  console.log("🔄 Checking notification preference schema...");
+  log.info("🔄 Checking notification preference schema...");
 
   try {
     await db.execute(sql`
@@ -194,9 +195,9 @@ export async function migrateNotificationPreferencesSchema() {
       END $$;
     `);
 
-    console.log("✅ Notification preference schema check complete!");
+    log.info("✅ Notification preference schema check complete!");
   } catch (error) {
-    console.error("❌ Error during notification preference migration:", error);
+    log.error("❌ Error during notification preference migration:", error);
     throw error;
   }
 }

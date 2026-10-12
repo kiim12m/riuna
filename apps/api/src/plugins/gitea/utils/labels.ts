@@ -1,3 +1,4 @@
+import { log } from "../../../utils/log";
 import type { GiteaConfig } from "../config";
 import { createGiteaClient, type GiteaLabel } from "./gitea-api";
 
@@ -30,7 +31,7 @@ export async function ensureLabelsExistGitea(
   try {
     existingLabels = await client.listLabels(repositoryOwner, repositoryName);
   } catch (error) {
-    console.error("Failed to list Gitea labels for ensureLabelsExistGitea", {
+    log.error("Failed to list Gitea labels for ensureLabelsExistGitea", {
       repositoryOwner,
       repositoryName,
       error,
@@ -58,7 +59,7 @@ export async function ensureLabelsExistGitea(
       nameToId.set(name, created.id);
       map.set(name, created.id);
     } catch (error) {
-      console.error(`Failed to ensure Gitea label "${name}":`, error);
+      log.error(`Failed to ensure Gitea label "${name}":`, error);
     }
   }
   return map;
@@ -92,7 +93,7 @@ export async function addLabelsToIssueGitea(
       ids,
     );
   } catch (error) {
-    console.error("Failed to add labels to Gitea issue:", error);
+    log.error("Failed to add labels to Gitea issue:", error);
   }
 }
 
@@ -109,7 +110,7 @@ export async function removeLabelGitea(
       config.repositoryName,
     );
   } catch (error) {
-    console.error("Failed to list Gitea labels for removal:", {
+    log.error("Failed to list Gitea labels for removal:", {
       repositoryOwner: config.repositoryOwner,
       repositoryName: config.repositoryName,
       issueIndex,
@@ -130,7 +131,7 @@ export async function removeLabelGitea(
       label.id,
     );
   } catch (error) {
-    console.error("Failed to remove label from Gitea issue:", {
+    log.error("Failed to remove label from Gitea issue:", {
       repositoryOwner: config.repositoryOwner,
       repositoryName: config.repositoryName,
       issueIndex,

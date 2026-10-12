@@ -4,6 +4,7 @@ import db from "../../database";
 import { labelTable, projectTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { removeLabelFromGitHub } from "../../plugins/github/utils/sync-label-to-github";
+import { log } from "../../utils/log";
 
 async function unassignLabelFromTask(id: string, userId: string) {
   const label = await db.query.labelTable.findFirst({
@@ -53,7 +54,7 @@ async function unassignLabelFromTask(id: string, userId: string) {
   if (deletedLabel.taskId) {
     removeLabelFromGitHub(deletedLabel.taskId, deletedLabel.name).catch(
       (error) => {
-        console.error("Failed to remove label from GitHub:", error);
+        log.error("Failed to remove label from GitHub:", error);
       },
     );
   }

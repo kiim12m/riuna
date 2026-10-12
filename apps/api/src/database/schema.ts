@@ -1527,6 +1527,44 @@ export const jobLeaseTable = pgTable("job_lease", {
   expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
 });
 
+// Como acabo la ultima vuelta de cada trabajo programado (ADR 075). Una fila
+// por trabajo: es lo que enseña el estado de la instancia y lo que vigila la
+// alerta de «falla seguido». En la base y no en memoria porque sobrevive a un
+// reinicio y vale con varias instancias.
+export const jobStatusTable = pgTable("job_status", {
+  job: text("job").primaryKey(),
+  lastStartedAt: timestamp("last_started_at", { mode: "date" }).notNull(),
+  lastFinishedAt: timestamp("last_finished_at", { mode: "date" }).notNull(),
+  // ok | degraded | error
+  lastStatus: text("last_status").notNull(),
+  lastDurationMs: integer("last_duration_ms").notNull(),
+  lastSuccessAt: timestamp("last_success_at", { mode: "date" }),
+  consecutiveFailures: integer("consecutive_failures").notNull().default(0),
+  lastError: text("last_error"),
+});
+
+// Una alerta de la instancia mientras dura (ADR 075): se abre al cumplirse la
+// condicion, avisa una vez y se cierra, con otro aviso, cuando deja de
+// cumplirse. El indice unico parcial impide dos abiertas para lo mismo.
+export const instanceAlertTable = pgTable(
+  "instance_alert",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    // backup.stale, offsite.failing, job.failing:<trabajo>
+    key: text("key").notNull(),
+    message: text("message").notNull(),
+    openedAt: timestamp("opened_at", { mode: "date" }).defaultNow().notNull(),
+    resolvedAt: timestamp("resolved_at", { mode: "date" }),
+  },
+  (table) => [
+    uniqueIndex("instance_alert_one_open_per_key")
+      .on(table.key)
+      .where(sql`resolved_at IS NULL`),
+  ],
+);
+
 export const taskReminderSentTable = pgTable(
   "task_reminder_sent",
   {

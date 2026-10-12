@@ -290,9 +290,23 @@
 								},
 								"unknown": {
 									"type": "string"
+								},
+								"rateLimited": {
+									"type": "string"
+								},
+								"tooManyAttempts": {
+									"type": "string"
 								}
 							},
-							"required": ["cors", "network", "auth", "server", "unknown"]
+							"required": [
+								"cors",
+								"network",
+								"auth",
+								"server",
+								"unknown",
+								"rateLimited",
+								"tooManyAttempts"
+							]
 						},
 						"troubleshootingSteps": {
 							"type": "object",
@@ -6859,6 +6873,299 @@
 						"error",
 						"report"
 					]
+				},
+				"instance": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"pageTitle": {
+							"type": "string"
+						},
+						"refreshNote": {
+							"type": "string"
+						},
+						"allGood": {
+							"type": "string"
+						},
+						"problemsTitle_one": {
+							"type": "string"
+						},
+						"problemsTitle_other": {
+							"type": "string"
+						},
+						"notified": {
+							"type": "string"
+						},
+						"loadError": {
+							"type": "string"
+						},
+						"rateLimitOff": {
+							"type": "string"
+						},
+						"version": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"commit": {
+									"type": "string"
+								},
+								"noRevision": {
+									"type": "string"
+								},
+								"started": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "commit", "noRevision", "started"]
+						},
+						"database": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"postgres": {
+									"type": "string"
+								},
+								"migrations": {
+									"type": "string"
+								},
+								"pending": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "postgres", "migrations", "pending"]
+						},
+						"backups": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"notConfigured": {
+									"type": "string"
+								},
+								"none": {
+									"type": "string"
+								},
+								"latest": {
+									"type": "string"
+								},
+								"count": {
+									"type": "string"
+								},
+								"offsite": {
+									"type": "string"
+								},
+								"offsiteOff": {
+									"type": "string"
+								},
+								"offsiteOk": {
+									"type": "string"
+								},
+								"offsiteError": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"notConfigured",
+								"none",
+								"latest",
+								"count",
+								"offsite",
+								"offsiteOff",
+								"offsiteOk",
+								"offsiteError"
+							]
+						},
+						"realtime": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"redisOn": {
+									"type": "string"
+								},
+								"redisOff": {
+									"type": "string"
+								},
+								"connections": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "redisOn", "redisOff", "connections"]
+						},
+						"jobs": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"disabled": {
+									"type": "string"
+								},
+								"empty": {
+									"type": "string"
+								},
+								"job": {
+									"type": "string"
+								},
+								"status": {
+									"type": "string"
+								},
+								"lastRun": {
+									"type": "string"
+								},
+								"duration": {
+									"type": "string"
+								},
+								"failures": {
+									"type": "string"
+								},
+								"error": {
+									"type": "string"
+								},
+								"statusOk": {
+									"type": "string"
+								},
+								"statusDegraded": {
+									"type": "string"
+								},
+								"statusError": {
+									"type": "string"
+								},
+								"names": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"dueDateReminders": {
+											"type": "string"
+										},
+										"projectWebhookReminders": {
+											"type": "string"
+										},
+										"seatReconciliation": {
+											"type": "string"
+										},
+										"trialReminders": {
+											"type": "string"
+										},
+										"recurringTasks": {
+											"type": "string"
+										},
+										"automations": {
+											"type": "string"
+										},
+										"instanceHealth": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"dueDateReminders",
+										"projectWebhookReminders",
+										"seatReconciliation",
+										"trialReminders",
+										"recurringTasks",
+										"automations",
+										"instanceHealth"
+									]
+								}
+							},
+							"required": [
+								"title",
+								"disabled",
+								"empty",
+								"job",
+								"status",
+								"lastRun",
+								"duration",
+								"failures",
+								"error",
+								"statusOk",
+								"statusDegraded",
+								"statusError",
+								"names"
+							]
+						},
+						"routes": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"note": {
+									"type": "string"
+								},
+								"empty": {
+									"type": "string"
+								},
+								"route": {
+									"type": "string"
+								},
+								"requests": {
+									"type": "string"
+								},
+								"errors": {
+									"type": "string"
+								},
+								"serverErrors": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"note",
+								"empty",
+								"route",
+								"requests",
+								"errors",
+								"serverErrors"
+							]
+						},
+						"you": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"unknown": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "hint", "unknown"]
+						}
+					},
+					"required": [
+						"pageTitle",
+						"refreshNote",
+						"allGood",
+						"problemsTitle_one",
+						"problemsTitle_other",
+						"notified",
+						"loadError",
+						"rateLimitOff",
+						"version",
+						"database",
+						"backups",
+						"realtime",
+						"jobs",
+						"routes",
+						"you"
+					]
 				}
 			},
 			"required": [
@@ -6901,7 +7208,8 @@
 				"projectFields",
 				"workspaceFields",
 				"automations",
-				"servitecImport"
+				"servitecImport",
+				"instance"
 			]
 		},
 		"navigation": {
@@ -7057,6 +7365,9 @@
 						},
 						"team": {
 							"type": "string"
+						},
+						"instanceStatus": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -7077,7 +7388,8 @@
 						"projectSettings",
 						"more",
 						"backToBoard",
-						"team"
+						"team",
+						"instanceStatus"
 					]
 				},
 				"projectList": {

@@ -1,0 +1,36 @@
+# Solo para deploy/simulacro.sh (ADR 072): el humo, dentro de la red del
+# simulacro, para que no haga falta Node en el PC ni exponer nada fuera.
+#
+# La etiqueta de la imagen tiene que ser la version de @playwright/test que
+# instala el repositorio: el navegador va dentro de la imagen y la libreria
+# solo habla con el suyo. tests/api/simulacro-playwright.test.ts lo vigila.
+services:
+  smoke:
+    image: mcr.microsoft.com/playwright:v1.62.1-noble
+    profiles: ["smoke"]
+    working_dir: /work
+    environment:
+      CI: "1"
+      # Las mismas URL que en el navegador del PC: deploy/simulacro-proxy.mjs
+      # las lleva a la web y a la API dentro de la red del simulacro.
+      E2E_BASE_URL: http://localhost:5183
+      E2E_API_URL: http://localhost:1347
+    volumes:
+      # El repositorio, de solo lectura: se copia dentro sin node_modules ni
+      # copias, y se instala aparte, para no dejar nada de Linux en el PC.
+      - .:/src:ro
+      # Las trazas de lo que falle, fuera, para mirarlas (o subirlas en CI).
+      - ./deploy/.simulacro/test-results:/work/test-results
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        cd /src
+        tar --exclude=node_modules --exclude=.git --exclude=./backups \
+          --exclude=./deploy/.simulacro --exclude=./deploy/rclone -cf - . \
+          | tar -xf - -C /work
+        cd /work
+        node deploy/simulacro-proxy.mjs &
+        corepack enable
+        pnpm install --frozen-lockfile
+        pnpm exec playwright test --reporter=list

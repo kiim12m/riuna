@@ -13,6 +13,7 @@ import { publishEvent } from "../../events";
 import { removeLabelFromGitea } from "../../plugins/gitea/utils/sync-label-to-gitea";
 import { removeLabelFromGitHub } from "../../plugins/github/utils/sync-label-to-github";
 import { assertAssignableUser } from "../../utils/assert-assignable-user";
+import { log } from "../../utils/log";
 import {
   assertValidPriority,
   assertValidTaskStatus,
@@ -326,12 +327,12 @@ async function bulkUpdateTasks({
 
         removeLabelFromGitHub(deletedLabel.taskId, deletedLabel.name).catch(
           (error) => {
-            console.error("Failed to remove label from GitHub:", error);
+            log.error("Failed to remove label from GitHub:", error);
           },
         );
         removeLabelFromGitea(deletedLabel.taskId, deletedLabel.name).catch(
           (error) => {
-            console.error("Failed to remove label from Gitea:", error);
+            log.error("Failed to remove label from Gitea:", error);
           },
         );
 
