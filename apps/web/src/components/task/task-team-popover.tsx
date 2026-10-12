@@ -11,7 +11,7 @@ import { ShortcutNumber } from "@/components/ui/shortcut-number";
 import { useUpdateTaskTeam } from "@/hooks/mutations/task/use-update-task-team";
 import useGetTeams from "@/hooks/queries/team/use-get-teams";
 import { useNumberedShortcuts } from "@/hooks/use-numbered-shortcuts";
-import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { useEditableUntilKnown } from "@/hooks/use-workspace-permission";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
 
@@ -32,8 +32,7 @@ export default function TaskTeamPopover({
   const [open, setOpen] = useState(false);
   const { mutateAsync: updateTaskTeam } = useUpdateTaskTeam();
   const { data: teams } = useGetTeams({ workspaceId });
-  const { canAssignTasks } = useWorkspacePermission();
-  const canAssign = canAssignTasks();
+  const canAssign = useEditableUntilKnown("assignTasks");
 
   const handleTeamChange = useCallback(
     async (newTeamId: string) => {

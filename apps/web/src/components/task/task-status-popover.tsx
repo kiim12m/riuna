@@ -12,7 +12,7 @@ import { useUpdateTaskStatus } from "@/hooks/mutations/task/use-update-task-stat
 import { useGetColumns } from "@/hooks/queries/column/use-get-columns";
 import { useControllableOpen } from "@/hooks/use-controllable-open";
 import { useNumberedShortcuts } from "@/hooks/use-numbered-shortcuts";
-import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { useEditableUntilKnown } from "@/hooks/use-workspace-permission";
 import { getColumnIcon } from "@/lib/column";
 import { getStatusDisplayLabel } from "@/lib/i18n/domain";
 import { toast } from "@/lib/toast";
@@ -49,8 +49,7 @@ export default function TaskStatusPopover({
     [columns],
   );
   const { mutateAsync: updateTaskStatus } = useUpdateTaskStatus();
-  const { canUpdateTasks } = useWorkspacePermission();
-  const canEdit = canUpdateTasks();
+  const canEdit = useEditableUntilKnown("updateTasks");
 
   const handleStatusChange = useCallback(
     async (newStatus: string) => {

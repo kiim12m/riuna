@@ -14,7 +14,10 @@ import useDetachLabelFromTask from "@/hooks/mutations/label/use-detach-label-fro
 import useGetLabelsByTask from "@/hooks/queries/label/use-get-labels-by-task";
 import useGetLabelsByWorkspace from "@/hooks/queries/label/use-get-labels-by-workspace";
 import { useControllableOpen } from "@/hooks/use-controllable-open";
-import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import {
+  useEditableUntilKnown,
+  useWorkspacePermission,
+} from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
 import { getTaskLabelOptions } from "@/lib/get-task-label-options";
 import { toast } from "@/lib/toast";
@@ -79,9 +82,9 @@ export default function TaskLabelsPopover({
   const { mutateAsync: attachLabel } = useAttachLabelToTask();
   const { mutateAsync: createLabel } = useCreateLabel();
   const { mutateAsync: detachLabel } = useDetachLabelFromTask();
-  const { canCreateLabels, canUpdateLabels } = useWorkspacePermission();
+  const { canCreateLabels } = useWorkspacePermission();
   const canCreate = canCreateLabels();
-  const canEdit = canUpdateLabels();
+  const canEdit = useEditableUntilKnown("updateLabels");
 
   const { data: taskLabels = [] } = useGetLabelsByTask(task.id);
   const { data: workspaceLabels = [] } = useGetLabelsByWorkspace(workspaceId);

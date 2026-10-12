@@ -13,7 +13,7 @@ import { useUpdateTaskAssignees } from "@/hooks/mutations/task/use-update-task-a
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { useControllableOpen } from "@/hooks/use-controllable-open";
 import { useNumberedShortcuts } from "@/hooks/use-numbered-shortcuts";
-import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { useEditableUntilKnown } from "@/hooks/use-workspace-permission";
 import { getInitials } from "@/lib/get-initials";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
@@ -47,8 +47,7 @@ export default function TaskAssigneePopover({
   );
   const { mutateAsync: updateTaskAssignees } = useUpdateTaskAssignees();
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
-  const { canAssignTasks } = useWorkspacePermission();
-  const canAssign = canAssignTasks();
+  const canAssign = useEditableUntilKnown("assignTasks");
 
   const usersOptions = useMemo(() => {
     return workspaceUsers?.members?.map((member) => ({

@@ -34,7 +34,7 @@ const CAPABILITIES = {
   removeMembers: { member: ["delete"] },
 } as const satisfies Record<string, Record<string, string[]>>;
 
-type Capability = keyof typeof CAPABILITIES;
+export type Capability = keyof typeof CAPABILITIES;
 
 type CapabilityMap = Record<Capability, boolean>;
 
@@ -114,6 +114,7 @@ export function useWorkspacePermission() {
       canInviteUsers: () => can.inviteUsers,
       canManageTeam: () => can.manageTeam,
       canRemoveMembers: () => can.removeMembers,
+      hasCapability: (capability: Capability) => can[capability],
       // Escape hatch for ad-hoc permission checks (uncached). Prefer adding
       // a capability above.
       hasPermission: async (permissions: Record<string, string[]>) => {
@@ -144,5 +145,24 @@ export function useWorkspacePermission() {
     isCheckingPermissions:
       Boolean(workspaceId && role) && (isLoading || !capabilities),
     isRefetchingPermissions: isFetching,
+    // Si ya se sabe lo que puede hacer. Hasta entonces, todas las capacidades
+    // valen `false`, se cargue lo que se cargue antes (espacio, rol o las
+    // comprobaciones).
+    permissionsKnown: Boolean(capabilities),
   };
+}
+
+/**
+ * Si un control de edición se deja abrir. Mientras no se saben los permisos,
+ * sí: es optimista, y la API sigue decidiendo al guardar. A quien no puede
+ * editar, el control se le quita en cuanto llegan.
+ *
+ * Los desplegables del detalle de una tarea devuelven solo su botón si no se
+ * puede editar. Con `canUpdateTasks()` a secas, el primer toque en «Por
+ * hacer» o «Sin fecha» no abría nada si llegaba antes que el espacio, el rol y
+ * las 17 comprobaciones (revisión de la Fase 9).
+ */
+export function useEditableUntilKnown(capability: Capability) {
+  const { permissionsKnown, hasCapability } = useWorkspacePermission();
+  return !permissionsKnown || hasCapability(capability);
 }

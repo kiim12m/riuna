@@ -11,7 +11,7 @@ import {
   useGetCycles,
   useUpdateTaskCycle,
 } from "@/hooks/queries/cycle/use-cycles";
-import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { useEditableUntilKnown } from "@/hooks/use-workspace-permission";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
 
@@ -37,9 +37,9 @@ export default function TaskCyclePopover({
   const [open, setOpen] = useState(false);
   const { data: cycles = [] } = useGetCycles(projectId, false);
   const { mutateAsync: updateTaskCycle } = useUpdateTaskCycle(projectId);
-  const { canUpdateTasks } = useWorkspacePermission();
+  const canEdit = useEditableUntilKnown("updateTasks");
 
-  if (!canUpdateTasks()) return <>{children}</>;
+  if (!canEdit) return <>{children}</>;
 
   const select = async (cycleId: string | null) => {
     try {

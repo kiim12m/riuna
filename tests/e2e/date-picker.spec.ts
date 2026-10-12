@@ -11,20 +11,14 @@ test("el selector de fecha habla castellano", async ({ page, riuna }) => {
   await page.goto(
     `/dashboard/workspace/${riuna.workspaceId}/project/${riuna.projectId}/task/${taskId}`,
   );
-  // Con la tarea ya cargada: con el build de produccion (el simulacro de
-  // restauracion) el clic llegaba antes y el selector no se abria.
   await expect(
     page.getByRole("textbox", { name: "Revisar acometida" }),
   ).toBeVisible({
     timeout: 30_000,
   });
+  await page.getByRole("button", { name: "Sin fecha" }).first().click();
   const grid = page.getByRole("grid").first();
-  await expect(async () => {
-    if (!(await grid.isVisible())) {
-      await page.getByRole("button", { name: "Sin fecha" }).first().click();
-    }
-    await expect(grid).toBeVisible({ timeout: 2_000 });
-  }).toPass({ timeout: 30_000 });
+  await expect(grid).toBeVisible();
 
   const month = new Intl.DateTimeFormat("es-ES", { month: "long" }).format(
     new Date(),
