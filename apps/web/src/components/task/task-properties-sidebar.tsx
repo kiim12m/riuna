@@ -53,6 +53,7 @@ import TaskEpicsPopover, { TaskEpicsTrigger } from "./task-epics-popover";
 import TaskLabelsPopover from "./task-labels-popover";
 import TaskMovePopover from "./task-move-popover";
 import TaskPriorityPopover from "./task-priority-popover";
+import TaskReminderButton from "./task-reminder-button";
 import TaskStartDatePopover from "./task-start-date-popover";
 import TaskStatusPopover from "./task-status-popover";
 import TaskTeamPopover from "./task-team-popover";
@@ -211,11 +212,14 @@ export default function TaskPropertiesSidebar({
           <div className="flex flex-row-reverse gap-2 w-full border-b border-border">
             <div className="flex px-3 py-2">
               {task && (
-                <TaskWatchersButton
-                  taskId={task.id}
-                  workspaceId={workspaceId}
-                  className="mr-2"
-                />
+                <>
+                  <TaskReminderButton taskId={task.id} className="mr-2" />
+                  <TaskWatchersButton
+                    taskId={task.id}
+                    workspaceId={workspaceId}
+                    className="mr-2"
+                  />
+                </>
               )}
               {task && canMoveTask && (
                 <TaskMovePopover
@@ -451,11 +455,14 @@ export default function TaskPropertiesSidebar({
             <div className="flex flex-row-reverse gap-2 w-full border-b border-border lg:hidden">
               <div className="flex px-3 py-2">
                 {task && (
-                  <TaskWatchersButton
-                    taskId={task.id}
-                    workspaceId={workspaceId}
-                    className="mr-2"
-                  />
+                  <>
+                    <TaskReminderButton taskId={task.id} className="mr-2" />
+                    <TaskWatchersButton
+                      taskId={task.id}
+                      workspaceId={workspaceId}
+                      className="mr-2"
+                    />
+                  </>
                 )}
                 {task && canMoveTask && (
                   <TaskMovePopover
@@ -692,11 +699,19 @@ export default function TaskPropertiesSidebar({
                 </p>
                 <div className="flex">
                   {task && (
-                    <TaskWatchersButton
-                      taskId={task.id}
-                      workspaceId={workspaceId}
-                      className="mr-2"
-                    />
+                    <>
+                      <TaskReminderButton
+                        taskId={task.id}
+                        iconOnly
+                        className="mr-1"
+                      />
+                      <TaskWatchersButton
+                        taskId={task.id}
+                        workspaceId={workspaceId}
+                        iconOnly
+                        className="mr-2"
+                      />
+                    </>
                   )}
                   {task && canMoveTask && (
                     <TaskMovePopover

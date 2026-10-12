@@ -1803,7 +1803,8 @@
 					"trialReminders": "Avisos de prueba",
 					"recurringTasks": "Tareas recurrentes",
 					"automations": "Automatizaciones",
-					"instanceHealth": "Salud de la instancia"
+					"instanceHealth": "Salud de la instancia",
+					"taskReminders": "Recordatorios de tarea"
 				}
 			},
 			"routes": {
@@ -2050,6 +2051,11 @@
 				"title": "Ha cambiado el vencimiento",
 				"content": "{{taskTitle}} vence ahora el {{dueDate}}",
 				"contentCleared": "{{taskTitle}} ya no tiene vencimiento"
+			},
+			"task_reminder": {
+				"title": "Recordatorio: {{taskTitle}}",
+				"content": "{{note}}",
+				"contentWithoutNote": "Pediste que te recordara esta tarea."
 			}
 		},
 		"reminderLeadTime": {
@@ -2816,6 +2822,29 @@
 			"startWatching": "Observar esta tarea",
 			"add": "Añadir a alguien",
 			"updateError": "No se pudo cambiar quién observa"
+		},
+		"reminder": {
+			"button": "Recuérdamelo",
+			"change": "Cambiar el recordatorio",
+			"current": "Te lo recuerda el {{when}}",
+			"noNote": "Sin nota",
+			"clear": "Quitar el recordatorio",
+			"presets": {
+				"tomorrow": "Mañana",
+				"nextMonday": "El próximo lunes",
+				"inAWeek": "En una semana",
+				"custom": "Elegir día y hora…"
+			},
+			"day": "Día",
+			"time": "Hora",
+			"inPast": "Esa hora ya ha pasado.",
+			"save": "Guardar recordatorio",
+			"note": "Nota (opcional)",
+			"notePlaceholder": "Lo que quieres recordar",
+			"help": "Solo lo ves tú. Llega por la campana y por tus canales. No planifica la tarea en tu día.",
+			"saved": "Te lo recordará el {{when}}",
+			"cleared": "Recordatorio quitado",
+			"saveError": "No se pudo guardar el recordatorio"
 		}
 	},
 	"invitations": {

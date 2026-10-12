@@ -19,6 +19,7 @@ import { useUpdateTaskDueDate } from "@/hooks/mutations/task/use-update-task-due
 import { useUpdateTaskStatus } from "@/hooks/mutations/task/use-update-task-status";
 import { useUpdateTaskPriority } from "@/hooks/mutations/task/use-update-task-status-priority";
 import { useUpdateTaskTitle } from "@/hooks/mutations/task/use-update-task-title";
+import { useSetTaskReminder } from "@/hooks/mutations/task-reminder/use-set-task-reminder";
 import { useGetColumns } from "@/hooks/queries/column/use-get-columns";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
@@ -27,6 +28,12 @@ import { generateLink } from "@/lib/generate-link";
 import { getInitials } from "@/lib/get-initials";
 import { getPriorityLabel } from "@/lib/i18n/domain";
 import { getPriorityIcon } from "@/lib/priority";
+import {
+  formatReminderTime,
+  REMINDER_PRESETS,
+  type ReminderPreset,
+  reminderPresetDate,
+} from "@/lib/reminders/task-reminder-presets";
 import { toast } from "@/lib/toast";
 import useProjectStore from "@/store/project";
 import type Task from "@/types/task";
@@ -74,6 +81,7 @@ export default function TaskCardContextMenuContent({
   const { mutateAsync: updateTaskTitle } = useUpdateTaskTitle();
   const { mutateAsync: updateTaskDescription } = useUpdateTaskDescription();
   const { mutateAsync: updateTaskDueDate } = useUpdateTaskDueDate();
+  const { mutateAsync: setReminder } = useSetTaskReminder(task.id);
   const { canUpdateTasks, canDeleteTasks, canAssignTasks } =
     useWorkspacePermission();
   const canEdit = canUpdateTasks();
@@ -95,6 +103,22 @@ export default function TaskCardContextMenuContent({
 
     navigator.clipboard.writeText(taskLink);
     toast.success(t("tasks:contextMenu.copyLinkSuccess"));
+  };
+
+  // El atajo cambia la hora del recordatorio pero conserva su nota, que solo
+  // se escribe desde el detalle (ADR 077).
+  const handleRemind = async (preset: ReminderPreset) => {
+    const remindAt = reminderPresetDate(preset);
+    try {
+      await setReminder({ remindAt });
+      toast.success(
+        t("tasks:reminder.saved", { when: formatReminderTime(remindAt) }),
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : t("tasks:reminder.saveError"),
+      );
+    }
   };
 
   const handleChange = async (field: keyof Task, value: string | Date) => {
@@ -138,6 +162,26 @@ export default function TaskCardContextMenuContent({
       <ContextMenuItem onClick={handleCopyTaskLink}>
         <span>{t("tasks:contextMenu.copyLink")}</span>
       </ContextMenuItem>
+
+      <ContextMenuSub>
+        <ContextMenuSubTrigger>
+          <span>{t("tasks:reminder.button")}</span>
+        </ContextMenuSubTrigger>
+        <ContextMenuSubContent className="w-60">
+          {REMINDER_PRESETS.map((preset) => (
+            <ContextMenuItem
+              key={preset}
+              className="justify-between gap-3"
+              onClick={() => handleRemind(preset)}
+            >
+              <span>{t(`tasks:reminder.presets.${preset}`)}</span>
+              <span className="text-meta text-muted-foreground">
+                {formatReminderTime(reminderPresetDate(preset))}
+              </span>
+            </ContextMenuItem>
+          ))}
+        </ContextMenuSubContent>
+      </ContextMenuSub>
 
       {(canEdit || canAssign) && <ContextMenuSeparator />}
 

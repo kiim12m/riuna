@@ -22,6 +22,9 @@ vi.mock("framer-motion", () => ({
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
+  // El menu contextual de la fila trae el formateador de fechas, que arranca
+  // i18n al importarse.
+  initReactI18next: { type: "3rdParty", init: () => {} },
 }));
 vi.mock("@/hooks/mutations/task/use-create-task", () => ({
   default: () => ({ mutateAsync: mocks.createTask, isPending: false }),

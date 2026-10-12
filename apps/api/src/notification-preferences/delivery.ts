@@ -241,6 +241,14 @@ function buildDeliveryContent(notification: {
             : `"${taskTitle}" no longer has a due date.`,
       };
     }
+    case "task_reminder": {
+      const taskTitle = getStringValue(notification.eventData, "taskTitle");
+      const note = getStringValue(notification.eventData, "note");
+      return {
+        title: taskTitle ? `Reminder: ${taskTitle}` : "Task reminder",
+        body: note || "You asked to be reminded about this task.",
+      };
+    }
     default:
       return {
         title: notification.title ?? "New Riuna notification",

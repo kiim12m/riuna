@@ -26,8 +26,10 @@ export const DEBOUNCED_USER_MESSAGES: ReadonlySet<string> = new Set([
  */
 export function userMessageInvalidations(message: UserWsMessage): QueryKey[] {
   switch (message.type) {
+    // Un recordatorio de tarea se borra al avisar (ADR 077): el detalle
+    // abierto deja de enseñarlo.
     case "NOTIFICATION_CREATED":
-      return [["notifications"]];
+      return [["notifications"], ["task-reminder"]];
     // Cambia **si una tarea es tuya** -asignar, desasignar, el equipo, el
     // estado o borrarla-, que es lo que decide si sale en Hoy (urgente,
     // hechas), en "Sin planificar" del Planificador y en el Cronograma, ademas

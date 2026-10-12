@@ -67,6 +67,7 @@ import slackIntegration from "./slack-integration";
 import { getPrivateObject } from "./storage/s3";
 import task from "./task";
 import taskRelation from "./task-relation";
+import taskReminder from "./task-reminder";
 import taskWatcher from "./task-watcher";
 import teamLead from "./team-lead";
 import telegramIntegration from "./telegram-integration";
@@ -729,6 +730,7 @@ export function createApp() {
   );
   const taskRelationApi = api.route("/task-relation", taskRelation);
   const taskWatcherApi = api.route("/task-watcher", taskWatcher);
+  const taskReminderApi = api.route("/task-reminder", taskReminder);
   const externalLinkApi = api.route("/external-link", externalLink);
   const workflowRuleApi = api.route("/workflow-rule", workflowRule);
   const automationApi = api.route("/automation", automation);
@@ -916,6 +918,7 @@ export function createApp() {
     taskApi,
     taskRelationApi,
     taskWatcherApi,
+    taskReminderApi,
     telegramIntegrationApi,
     timeEntryApi,
     timeSheetApi,
@@ -1032,6 +1035,7 @@ const {
   taskApi,
   taskRelationApi,
   taskWatcherApi,
+  taskReminderApi,
   telegramIntegrationApi,
   timeEntryApi,
   timeSheetApi,
@@ -1101,6 +1105,7 @@ export type AppType =
   | typeof telegramIntegrationApi
   | typeof taskRelationApi
   | typeof taskWatcherApi
+  | typeof taskReminderApi
   | typeof externalLinkApi
   | typeof workflowRuleApi
   | typeof automationApi

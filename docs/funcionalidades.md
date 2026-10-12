@@ -138,6 +138,27 @@ horas, etiquetas, épicas, ciclo, campos personalizados y número de ticket.
 - **Épicas**: grupos transversales dentro del proyecto, muchos a muchos con las
   tareas, con fechas, orden y archivado.
 - **Relaciones entre tareas**: bloquea, bloqueada por, relacionada con.
+- **Observadores** ([ADR 076](adr/076-observadores.md)): seguir una tarea sin
+  estar asignado, con el botón «Observar» del detalle, que enseña quién observa.
+  - Los asignados observan siempre, sin poder dejarlo mientras lo sean.
+  - Se observa solo al crear la tarea —desde la interfaz, la captura rápida o la
+    API—, al comentarla y al salir mencionado. No observa quien aplica una
+    plantilla, importa, una recurrencia ni una automatización.
+  - Observarse a uno mismo basta con ver la tarea; añadir o quitar a otra persona
+    pide poder asignar.
+  - Observar no deja rastro en la actividad.
+- **Recordatorio en la tarea** ([ADR 077](adr/077-recordatorio-en-la-tarea.md)):
+  «Recuérdamelo» en el detalle y en el menú contextual.
+  - Mañana a las 9:00, el próximo lunes, en una semana, o un día y una hora, con
+    una nota que solo ve quien lo pone.
+  - Llega una vez, por la campana y los canales, y pinchar abre la tarea.
+  - Uno por persona y tarea. No planifica la tarea en el día.
+- **Acciones de un clic** ([ADR 078](adr/078-acciones-de-un-clic.md)): las
+  automatizaciones con «Cuando: se pulsa el botón» salen como botones en el detalle
+  y en el menú contextual de la tarea mientras esta cumpla su «Si».
+  - Actúan en nombre de quien pulsa, que tiene que poder editar la tarea, y
+    asignar si la regla reparte.
+  - La actividad lo firma: «Ana con «Enviar a revisión»».
 - **Operaciones masivas** sobre una selección: estado, prioridad, asignado,
   etiqueta, fecha de vencimiento, mover al backlog o al tablero, archivar y
   eliminar.
@@ -515,7 +536,8 @@ la tarea y en la propia tabla.
   actividad, más búsqueda por ID corto de tarea (`DEP-23`).
 - **Notificaciones in-app** con campana, contador de no leídas, marcar todas
   como leídas y borrar todas. Eventos: tarea creada, asignación, mención,
-  comentario, cambio de estado, recordatorio de vencimiento, tarea vencida,
+  comentario, cambio de estado, cambio de vencimiento, recordatorio de
+  vencimiento, tarea vencida, recordatorio pedido en la tarea, aviso publicado,
   espacio creado y alta en un espacio de trabajo.
 - **Comentarios, cambios de estado y cambios de vencimiento llegan a todos los
   asignados y a quien observa**, nunca a quien hizo el cambio ni a quien ya no es
@@ -659,8 +681,10 @@ cronómetro.
   una ruta JSON propia, y autenticación por device flow o `RIUNA_API_KEY`.
 
 Las herramientas cubren identidad y espacios, proyectos, tareas, comentarios,
-etiquetas, épicas, relaciones, miembros, búsqueda, columnas, registro de
-tiempo, actividad y notificaciones, además del plan personal, el cronómetro,
+etiquetas, épicas, relaciones, observadores, recordatorios, acciones de un clic,
+totales de un filtro, avisos, miembros, búsqueda, columnas, registro de tiempo,
+actividad y notificaciones, además del plan personal, el
+cronómetro,
 Hoy (`get_today`) y la captura a Personal (`capture_task`). `list_projects`
 no lista los proyectos Personal.
 
@@ -738,10 +762,11 @@ no lista los proyectos Personal.
   `deploy/actualizar.sh` construye, copia, migra con la imagen nueva antes de cambiar la que
   sirve (`node dist/migrate.js`), levanta y, si algo falla, dice cómo volver. La instancia del
   PC solo escucha en localhost y se publica con `tailscale serve`.
-- **Siete trabajos programados**: recordatorios de vencimiento, recordatorios
+- **Ocho trabajos programados**: recordatorios de vencimiento, recordatorios
   de webhook de proyecto, reconciliación de asientos, recordatorios de prueba,
   generación de tareas recurrentes, automatizaciones (por fecha, el stand-up
-  programado y la purga de su historial a los 30 días) y la salud de la instancia.
+  programado y la purga de su historial a los 30 días), la salud de la instancia
+  y, cada minuto, los recordatorios pedidos en una tarea.
   Cada vuelta deja su resultado en `job_status`.
 - **Estado de la instancia** ([ADR 075](adr/075-estado-de-la-instancia-y-alertas.md)), para
   el admin de instancia, en el menú del avatar. Enseña:

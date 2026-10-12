@@ -615,6 +615,31 @@ export const taskWatcherTable = pgTable(
   ],
 );
 
+// Recordatorio personal en una tarea (ADR 077): uno por persona y tarea. Se
+// borra al avisar, asi que la tabla solo guarda los pendientes; el indice de
+// `remind_at` es el que recorre el planificador cada minuto.
+export const taskReminderTable = pgTable(
+  "task_reminder",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => taskTable.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, { onDelete: "cascade" }),
+    remindAt: timestamp("remind_at", { mode: "date" }).notNull(),
+    note: text("note"),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("taskReminder_remindAt_idx").on(table.remindAt),
+    unique("task_reminder_unique").on(table.taskId, table.userId),
+  ],
+);
+
 // Las epicas cortan el proyecto en vertical: agrupan tareas de cualquier rama
 // del arbol y de cualquier columna. Son entidad propia y no una etiqueta
 // porque tienen fechas, orden y un ciclo de vida —se archivan— que una

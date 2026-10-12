@@ -93,6 +93,11 @@ export function getNotificationTitle(notification: Notification, t: Translate) {
           ...eventData,
           defaultValue: notification.title ?? notification.type,
         });
+      case "task_reminder":
+        return t("notifications:events.task_reminder.title", {
+          ...eventData,
+          defaultValue: notification.title ?? notification.type,
+        });
       case "due_date_reminder":
         return t("notifications:events.due_date_reminder.title", {
           ...eventData,
@@ -194,6 +199,15 @@ export function getNotificationContent(
             })
           : t("notifications:events.task_due_date_changed.contentCleared", {
               ...eventData,
+              defaultValue: notification.content ?? "",
+            });
+      case "task_reminder":
+        return typeof eventData.note === "string" && eventData.note
+          ? t("notifications:events.task_reminder.content", {
+              note: eventData.note,
+              defaultValue: notification.content ?? "",
+            })
+          : t("notifications:events.task_reminder.contentWithoutNote", {
               defaultValue: notification.content ?? "",
             });
       case "due_date_reminder":

@@ -7075,6 +7075,9 @@
 										},
 										"instanceHealth": {
 											"type": "string"
+										},
+										"taskReminders": {
+											"type": "string"
 										}
 									},
 									"required": [
@@ -7084,7 +7087,8 @@
 										"trialReminders",
 										"recurringTasks",
 										"automations",
-										"instanceHealth"
+										"instanceHealth",
+										"taskReminders"
 									]
 								}
 							},
@@ -8115,6 +8119,22 @@
 								}
 							},
 							"required": ["title", "resolvedTitle", "resolvedContent"]
+						},
+						"task_reminder": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"content": {
+									"type": "string"
+								},
+								"contentWithoutNote": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "content", "contentWithoutNote"]
 						}
 					},
 					"required": [
@@ -8129,7 +8149,8 @@
 						"task_due_date_changed",
 						"task_overdue",
 						"time_entry_created",
-						"instance_alert"
+						"instance_alert",
+						"task_reminder"
 					]
 				},
 				"loadMore": {
@@ -11076,6 +11097,94 @@
 						"add",
 						"updateError"
 					]
+				},
+				"reminder": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"button": {
+							"type": "string"
+						},
+						"change": {
+							"type": "string"
+						},
+						"current": {
+							"type": "string"
+						},
+						"noNote": {
+							"type": "string"
+						},
+						"clear": {
+							"type": "string"
+						},
+						"presets": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"tomorrow": {
+									"type": "string"
+								},
+								"nextMonday": {
+									"type": "string"
+								},
+								"inAWeek": {
+									"type": "string"
+								},
+								"custom": {
+									"type": "string"
+								}
+							},
+							"required": ["tomorrow", "nextMonday", "inAWeek", "custom"]
+						},
+						"day": {
+							"type": "string"
+						},
+						"time": {
+							"type": "string"
+						},
+						"inPast": {
+							"type": "string"
+						},
+						"save": {
+							"type": "string"
+						},
+						"note": {
+							"type": "string"
+						},
+						"notePlaceholder": {
+							"type": "string"
+						},
+						"help": {
+							"type": "string"
+						},
+						"saved": {
+							"type": "string"
+						},
+						"cleared": {
+							"type": "string"
+						},
+						"saveError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"button",
+						"change",
+						"current",
+						"noNote",
+						"clear",
+						"presets",
+						"day",
+						"time",
+						"inPast",
+						"save",
+						"note",
+						"notePlaceholder",
+						"help",
+						"saved",
+						"cleared",
+						"saveError"
+					]
 				}
 			},
 			"required": [
@@ -11119,7 +11228,8 @@
 				"view",
 				"composer",
 				"archiveModal",
-				"watchers"
+				"watchers",
+				"reminder"
 			]
 		},
 		"invitations": {

@@ -9161,7 +9161,8 @@
                           "task_overdue",
                           "task_mention",
                           "task_comment",
-                          "task_due_date_changed"
+                          "task_due_date_changed",
+                          "task_reminder"
                         ],
                         "type": "string"
                       },
@@ -9290,7 +9291,8 @@
                         "task_overdue",
                         "task_mention",
                         "task_comment",
-                        "task_due_date_changed"
+                        "task_due_date_changed",
+                        "task_reminder"
                       ],
                       "type": "string"
                     },
@@ -9448,7 +9450,8 @@
                         "task_overdue",
                         "task_mention",
                         "task_comment",
-                        "task_due_date_changed"
+                        "task_due_date_changed",
+                        "task_reminder"
                       ],
                       "type": "string"
                     },
@@ -22154,6 +22157,188 @@
           }
         ],
         "summary": "Unwatch Task"
+      }
+    },
+    "/task-reminder/{taskId}": {
+      "get": {
+        "operationId": "getTaskReminder",
+        "tags": [
+          "Task Reminders"
+        ],
+        "description": "Your private reminder on a task. Nobody else sees it, and it does not plan the task into your day",
+        "responses": {
+          "200": {
+            "description": "Your reminder on this task, or null when you have none",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "remindAt": {
+                          "type": "string"
+                        },
+                        "note": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "remindAt",
+                        "note"
+                      ],
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "reminder"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Get Task Reminder"
+      },
+      "put": {
+        "operationId": "setTaskReminder",
+        "tags": [
+          "Task Reminders"
+        ],
+        "description": "Remind me about this task at `remindAt` (an ISO instant, within a year), with an optional private note. It arrives once, through the bell and your channels. Replaces any reminder you already had on the task; leaving `note` out keeps its note, `null` clears it",
+        "responses": {
+          "200": {
+            "description": "Your reminder on this task, or null when you have none",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "remindAt": {
+                          "type": "string"
+                        },
+                        "note": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "remindAt",
+                        "note"
+                      ],
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "reminder"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "remindAt": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 280,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "remindAt"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Set Task Reminder"
+      },
+      "delete": {
+        "operationId": "clearTaskReminder",
+        "tags": [
+          "Task Reminders"
+        ],
+        "description": "Remove your reminder on this task, if you had one",
+        "responses": {
+          "200": {
+            "description": "Your reminder on this task, or null when you have none",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "remindAt": {
+                          "type": "string"
+                        },
+                        "note": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "remindAt",
+                        "note"
+                      ],
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "reminder"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Clear Task Reminder"
       }
     },
     "/external-link/task/{taskId}": {

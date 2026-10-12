@@ -86,8 +86,10 @@ describe("userMessageInvalidations", () => {
   });
 
   it("refreshes notifications and ignores unknown messages", () => {
+    // Tambien el recordatorio de la tarea abierta: avisar lo borra (ADR 077).
     expect(userMessageInvalidations({ type: "NOTIFICATION_CREATED" })).toEqual([
       ["notifications"],
+      ["task-reminder"],
     ]);
     expect(userMessageInvalidations({ type: "SOMETHING_ELSE" })).toEqual([]);
     expect(userMessageInvalidations({})).toEqual([]);

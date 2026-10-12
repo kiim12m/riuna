@@ -18,6 +18,7 @@ export const JOB_NAME_KEYS = {
   "recurring-tasks": "settings:instance.jobs.names.recurringTasks",
   automations: "settings:instance.jobs.names.automations",
   "instance-health": "settings:instance.jobs.names.instanceHealth",
+  "task-reminders": "settings:instance.jobs.names.taskReminders",
 } as const;
 
 const PROBLEM_KEYS = {

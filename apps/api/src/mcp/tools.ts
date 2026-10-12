@@ -923,6 +923,43 @@ export function registerMcpTools(
   );
 
   registerTool(
+    "set_task_reminder",
+    {
+      description:
+        "Remind the current user about a task at remindAt (an ISO date-time within a year), once, through the bell and their channels, with an optional private note. Replaces any reminder they already had on the task; leaving note out keeps its note. It does not plan the task into their day.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        remindAt: isoDateTimeSchema,
+        note: z.string().max(280).nullable().optional(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/task-reminder/${encodeURIComponent(args.taskId)}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            remindAt: args.remindAt,
+            ...(args.note !== undefined ? { note: args.note } : {}),
+          }),
+        }),
+      ),
+  );
+
+  registerTool(
+    "clear_task_reminder",
+    {
+      description: "Remove the current user's reminder on a task, if any.",
+      inputSchema: z.object({ taskId: nonEmptyString }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/task-reminder/${encodeURIComponent(args.taskId)}`, {
+          method: "DELETE",
+        }),
+      ),
+  );
+
+  registerTool(
     "delete_label",
     {
       description:

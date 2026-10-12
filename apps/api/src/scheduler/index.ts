@@ -4,6 +4,7 @@ import { checkAutomations } from "../automation/scheduled";
 import { checkInstanceHealth } from "../instance/alerts";
 import { type JobRunStatus, recordJobRun } from "../instance/job-status";
 import { generateRecurringTasks } from "../recurrence/generate";
+import { sendDueTaskReminders } from "../task-reminder/send-due";
 import { log } from "../utils/log";
 import { checkDueDateReminders } from "./due-date-reminders";
 import { HELD_ELSEWHERE, withJobLease } from "./leader-lock";
@@ -106,6 +107,12 @@ export function initializeScheduler(): number {
       "*/5 * * * *",
       withCheckIn("project-webhook-reminders", checkProjectWebhookReminders),
     ),
+  );
+  // Cada minuto: quien pide «mañana a las 9:00» espera el aviso a las 9:00 y
+  // no a las 9:04. Sin arrendamiento, porque cada recordatorio se reclama
+  // borrandolo con `SKIP LOCKED` (ADR 077).
+  jobs.push(
+    new Cron("* * * * *", withCheckIn("task-reminders", sendDueTaskReminders)),
   );
   jobs.push(
     new Cron(

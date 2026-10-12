@@ -1803,7 +1803,8 @@
 					"trialReminders": "Trial reminders",
 					"recurringTasks": "Recurring tasks",
 					"automations": "Automations",
-					"instanceHealth": "Instance health"
+					"instanceHealth": "Instance health",
+					"taskReminders": "Task reminders"
 				}
 			},
 			"routes": {
@@ -2058,6 +2059,11 @@
 				"title": "Riuna · {{area}}",
 				"resolvedTitle": "Riuna · resolved",
 				"resolvedContent": "Back to normal: {{area}}."
+			},
+			"task_reminder": {
+				"title": "Reminder: {{taskTitle}}",
+				"content": "{{note}}",
+				"contentWithoutNote": "You asked to be reminded about this task."
 			}
 		},
 		"loadMore": "Load older notifications",
@@ -2816,6 +2822,29 @@
 			"startWatching": "Watch this task",
 			"add": "Add someone",
 			"updateError": "Could not change who watches"
+		},
+		"reminder": {
+			"button": "Remind me",
+			"change": "Change the reminder",
+			"current": "Reminding you {{when}}",
+			"noNote": "No note",
+			"clear": "Remove the reminder",
+			"presets": {
+				"tomorrow": "Tomorrow",
+				"nextMonday": "Next Monday",
+				"inAWeek": "In a week",
+				"custom": "Pick a day and time…"
+			},
+			"day": "Day",
+			"time": "Time",
+			"inPast": "That time has already passed.",
+			"save": "Save reminder",
+			"note": "Note (optional)",
+			"notePlaceholder": "What you want to remember",
+			"help": "Only you see it. It reaches you through the bell and your channels. It does not plan the task into your day.",
+			"saved": "Reminder set for {{when}}",
+			"cleared": "Reminder removed",
+			"saveError": "Could not save the reminder"
 		}
 	},
 	"invitations": {
