@@ -1,7 +1,7 @@
 import { mkdtemp, rm, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import db, { schema } from "../../apps/api/src/database";
 import { createApp } from "../../apps/api/src/index";
@@ -198,6 +198,27 @@ describe("instance alerts", () => {
     expect(all.map((n) => n.title)).toContain("Riuna · resuelto");
     const [alert] = await db.select().from(schema.instanceAlertTable);
     expect(alert?.resolvedAt).toBeInstanceOf(Date);
+  });
+
+  // Revision de la Fase 9, hallazgo 6.
+  it("keeps a backup alert open while the backup directory cannot be read", async () => {
+    await instanceAdmin();
+    await writeBackup("riuna_2026-10-01_030000.sql.gz", 200);
+    expect(await checkInstanceHealth()).toMatchObject({ opened: 1 });
+
+    // El montaje se pierde: la API ya no sabe nada de las copias.
+    vi.stubEnv("BACKUP_DIR", join(backupDir, "no-existe"));
+    const lost = await checkInstanceHealth();
+
+    expect(lost).toMatchObject({ opened: 1, resolved: 0 });
+    const open = await db
+      .select()
+      .from(schema.instanceAlertTable)
+      .where(isNull(schema.instanceAlertTable.resolvedAt));
+    expect(open.map((alert) => alert.key).sort()).toEqual([
+      "backup.stale",
+      "backup.unreadable",
+    ]);
   });
 
   it("does not alert about backups it cannot see", async () => {

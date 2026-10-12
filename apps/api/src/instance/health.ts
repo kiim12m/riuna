@@ -34,6 +34,16 @@ function hoursAgo(iso: string, now: Date) {
   return Math.floor((now.getTime() - new Date(iso).getTime()) / HOUR);
 }
 
+/**
+ * Las claves que ahora no se pueden comprobar. Su alerta abierta sigue abierta:
+ * no saber si una copia es reciente no es saber que lo es.
+ */
+export function uncheckedKeys(backups: BackupState) {
+  return backups.configured && !backups.readable
+    ? ["backup.stale", "offsite.failing"]
+    : [];
+}
+
 export function findProblems({
   backups,
   jobs,
@@ -45,7 +55,14 @@ export function findProblems({
 }): HealthProblem[] {
   const problems: HealthProblem[] = [];
 
-  if (backups.configured) {
+  if (backups.configured && !backups.readable) {
+    problems.push({
+      key: "backup.unreadable",
+      label: "copias locales",
+      message:
+        "La API no puede leer el directorio de copias (BACKUP_DIR): no sabe si se están haciendo.",
+    });
+  } else if (backups.configured) {
     // Una copia por intervalo, con dos horas de margen para el volcado.
     const every = hours(process.env.BACKUP_INTERVAL_HOURS, 24);
     if (!backups.latest) {

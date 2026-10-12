@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { BackupState } from "../../../apps/api/src/instance/backups";
-import { findProblems } from "../../../apps/api/src/instance/health";
+import {
+  findProblems,
+  uncheckedKeys,
+} from "../../../apps/api/src/instance/health";
 
 const NOW = new Date("2026-10-11T12:00:00Z");
 const hoursBefore = (h: number) =>
@@ -9,6 +12,7 @@ const hoursBefore = (h: number) =>
 function backups(overrides: Partial<BackupState> = {}): BackupState {
   return {
     configured: true,
+    readable: true,
     latest: {
       file: "riuna_2026-10-11_030000.sql.gz",
       createdAt: hoursBefore(9),
@@ -35,12 +39,38 @@ describe("findProblems (ADR 075)", () => {
 
   it("says nothing about backups it cannot see", () => {
     const problems = findProblems({
-      backups: { configured: false, latest: null, count: 0, offsite: null },
+      backups: {
+        configured: false,
+        readable: false,
+        latest: null,
+        count: 0,
+        offsite: null,
+      },
       jobs: [],
       now: NOW,
     });
 
     expect(problems).toEqual([]);
+  });
+
+  // Revision de la Fase 9, hallazgo 6: antes un directorio ilegible contaba
+  // como «no configurado», y la alerta de copias abierta se daba por resuelta.
+  it("flags a backup directory it cannot read, and does not judge the backups in it", () => {
+    const unreadable = backups({
+      readable: false,
+      latest: null,
+      count: 0,
+      offsite: null,
+    });
+
+    expect(
+      keys(findProblems({ backups: unreadable, jobs: [], now: NOW })),
+    ).toEqual(["backup.unreadable"]);
+    expect(uncheckedKeys(unreadable)).toEqual([
+      "backup.stale",
+      "offsite.failing",
+    ]);
+    expect(uncheckedKeys(backups())).toEqual([]);
   });
 
   it("flags a local backup older than the interval plus two hours", () => {

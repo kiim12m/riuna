@@ -176,6 +176,10 @@ function Facts({ report, locale }: { report: InstanceReport; locale: string }) {
           <span className="text-meta text-muted-foreground">
             {t("settings:instance.backups.notConfigured")}
           </span>
+        ) : !backups.readable ? (
+          <span className="text-destructive">
+            {t("settings:instance.backups.unreadable")}
+          </span>
         ) : (
           <>
             <span>

@@ -8,7 +8,7 @@ import {
 import createNotification from "../notification/controllers/create-notification";
 import { log } from "../utils/log";
 import { readBackupState } from "./backups";
-import { findProblems } from "./health";
+import { findProblems, uncheckedKeys } from "./health";
 
 async function instanceAdmins() {
   const rows = await db
@@ -71,7 +71,9 @@ export async function checkInstanceHealth() {
     );
   }
 
+  const unchecked = new Set(uncheckedKeys(backups));
   for (const alert of open) {
+    if (unchecked.has(alert.key)) continue;
     const still = problems.find((problem) => problem.key === alert.key);
     if (still) continue;
     const [closed] = await db

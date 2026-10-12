@@ -37,8 +37,10 @@ const instanceReportSchema = v.object({
     }),
   ),
   backups: v.object({
-    /** Si la API ve el directorio de copias (`BACKUP_DIR`). */
+    /** Si hay directorio de copias (`BACKUP_DIR`). */
     configured: v.boolean(),
+    /** Si la API lo puede leer. Definido e ilegible es un problema. */
+    readable: v.boolean(),
     latest: v.nullable(
       v.object({
         file: v.string(),

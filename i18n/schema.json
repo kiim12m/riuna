@@ -6950,6 +6950,9 @@
 								"notConfigured": {
 									"type": "string"
 								},
+								"unreadable": {
+									"type": "string"
+								},
 								"none": {
 									"type": "string"
 								},
@@ -6975,6 +6978,7 @@
 							"required": [
 								"title",
 								"notConfigured",
+								"unreadable",
 								"none",
 								"latest",
 								"count",

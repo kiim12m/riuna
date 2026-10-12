@@ -1767,6 +1767,7 @@
 			"backups": {
 				"title": "Copias",
 				"notConfigured": "La API no ve el directorio de copias (BACKUP_DIR).",
+				"unreadable": "BACKUP_DIR está definido, pero la API no lo puede leer",
 				"none": "Todavía no hay copias",
 				"latest": "La última, {{when}} · {{size}}",
 				"count": "Copias locales: {{count}}",
