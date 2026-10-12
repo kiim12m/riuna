@@ -1837,6 +1837,27 @@
 					"job": "job “{{job}}”"
 				}
 			}
+		},
+		"security": "Security",
+		"securityPage": {
+			"pageTitle": "Security",
+			"title": "Security",
+			"subtitle": "Where your account is signed in.",
+			"sessionsTitle": "Active sessions",
+			"sessionsDescription": "Where you have Riuna open right now. Closing a session makes that device sign in again.",
+			"loading": "Loading sessions…",
+			"browserOn": "{{browser}} on {{os}}",
+			"unknownDevice": "Unknown device",
+			"signedIn": "signed in {{when}}",
+			"expires": "expires {{when}}",
+			"impersonated": "An administrator signed in as you.",
+			"thisSession": "This session",
+			"revoke": "Close",
+			"revokeOthers": "Close all but this one",
+			"delayNote": "A closed device stops working within five minutes, when its cached session runs out. The IP is the one the API sees: through Tailscale, a 100.x address.",
+			"revoked": "Session closed",
+			"revokedOthers": "Sessions closed: {{total}}",
+			"revokeError": "Could not close the session"
 		}
 	},
 	"navigation": {

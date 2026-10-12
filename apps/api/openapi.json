@@ -22341,6 +22341,140 @@
         "summary": "Clear Task Reminder"
       }
     },
+    "/session": {
+      "get": {
+        "operationId": "listMySessions",
+        "tags": [
+          "Sessions"
+        ],
+        "description": "Where you are signed in: your unexpired sessions, the current one first and then by last refresh. Never includes session tokens",
+        "responses": {
+          "200": {
+            "description": "Your sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "current": {
+                        "type": "boolean"
+                      },
+                      "userAgent": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "ipAddress": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      },
+                      "expiresAt": {
+                        "type": "string"
+                      },
+                      "impersonated": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "current",
+                      "userAgent",
+                      "ipAddress",
+                      "createdAt",
+                      "updatedAt",
+                      "expiresAt",
+                      "impersonated"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List My Sessions"
+      }
+    },
+    "/session/others": {
+      "delete": {
+        "operationId": "revokeMyOtherSessions",
+        "tags": [
+          "Sessions"
+        ],
+        "description": "Sign out everywhere but here. Each device has to sign in again within a few minutes, once its cached session expires",
+        "responses": {
+          "200": {
+            "description": "How many sessions were closed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "revoked": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "revoked"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Revoke My Other Sessions"
+      }
+    },
+    "/session/{id}": {
+      "delete": {
+        "operationId": "revokeMySession",
+        "tags": [
+          "Sessions"
+        ],
+        "description": "Close one of your other sessions. The current one is closed by signing out",
+        "responses": {
+          "200": {
+            "description": "The session was closed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "revoked": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "revoked"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true
+          }
+        ],
+        "summary": "Revoke My Session"
+      }
+    },
     "/external-link/task/{taskId}": {
       "get": {
         "operationId": "getExternalLinksByTask",

@@ -1837,6 +1837,27 @@
 					"job": "trabajo «{{job}}»"
 				}
 			}
+		},
+		"security": "Seguridad",
+		"securityPage": {
+			"pageTitle": "Seguridad",
+			"title": "Seguridad",
+			"subtitle": "Dónde está abierta tu cuenta.",
+			"sessionsTitle": "Sesiones activas",
+			"sessionsDescription": "Dónde tienes Riuna abierto ahora. Cerrar una sesión obliga a volver a entrar en ese dispositivo.",
+			"loading": "Cargando sesiones…",
+			"browserOn": "{{browser}} en {{os}}",
+			"unknownDevice": "Dispositivo desconocido",
+			"signedIn": "entró {{when}}",
+			"expires": "caduca {{when}}",
+			"impersonated": "Un administrador entró como tú.",
+			"thisSession": "Esta sesión",
+			"revoke": "Cerrar",
+			"revokeOthers": "Cerrar todas menos esta",
+			"delayNote": "Un dispositivo cerrado deja de funcionar en cinco minutos como mucho, cuando caduca su sesión en caché. La IP es la que ve la API: por Tailscale, una 100.x.",
+			"revoked": "Sesión cerrada",
+			"revokedOthers": "Sesiones cerradas: {{total}}",
+			"revokeError": "No se pudo cerrar la sesión"
 		}
 	},
 	"navigation": {

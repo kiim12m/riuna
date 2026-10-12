@@ -7240,6 +7240,89 @@
 						"you",
 						"problems"
 					]
+				},
+				"security": {
+					"type": "string"
+				},
+				"securityPage": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"pageTitle": {
+							"type": "string"
+						},
+						"title": {
+							"type": "string"
+						},
+						"subtitle": {
+							"type": "string"
+						},
+						"sessionsTitle": {
+							"type": "string"
+						},
+						"sessionsDescription": {
+							"type": "string"
+						},
+						"loading": {
+							"type": "string"
+						},
+						"browserOn": {
+							"type": "string"
+						},
+						"unknownDevice": {
+							"type": "string"
+						},
+						"signedIn": {
+							"type": "string"
+						},
+						"expires": {
+							"type": "string"
+						},
+						"impersonated": {
+							"type": "string"
+						},
+						"thisSession": {
+							"type": "string"
+						},
+						"revoke": {
+							"type": "string"
+						},
+						"revokeOthers": {
+							"type": "string"
+						},
+						"delayNote": {
+							"type": "string"
+						},
+						"revoked": {
+							"type": "string"
+						},
+						"revokedOthers": {
+							"type": "string"
+						},
+						"revokeError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"pageTitle",
+						"title",
+						"subtitle",
+						"sessionsTitle",
+						"sessionsDescription",
+						"loading",
+						"browserOn",
+						"unknownDevice",
+						"signedIn",
+						"expires",
+						"impersonated",
+						"thisSession",
+						"revoke",
+						"revokeOthers",
+						"delayNote",
+						"revoked",
+						"revokedOthers",
+						"revokeError"
+					]
 				}
 			},
 			"required": [
@@ -7283,7 +7366,9 @@
 				"workspaceFields",
 				"automations",
 				"servitecImport",
-				"instance"
+				"instance",
+				"security",
+				"securityPage"
 			]
 		},
 		"navigation": {
