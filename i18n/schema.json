@@ -6206,6 +6206,9 @@
 								},
 								"schedule": {
 									"type": "string"
+								},
+								"manual": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -6218,7 +6221,8 @@
 								"task_labeled",
 								"task_due_in",
 								"task_overdue",
-								"schedule"
+								"schedule",
+								"manual"
 							]
 						},
 						"actions": {
@@ -6583,6 +6587,9 @@
 								},
 								"threadId": {
 									"type": "string"
+								},
+								"manualHint": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -6646,7 +6653,8 @@
 								"webhookUrl",
 								"botToken",
 								"chatId",
-								"threadId"
+								"threadId",
+								"manualHint"
 							]
 						},
 						"standup": {
@@ -8643,6 +8651,9 @@
 				},
 				"automationActor": {
 					"type": "string"
+				},
+				"manualAutomationActor": {
+					"type": "string"
 				}
 			},
 			"required": [
@@ -8668,7 +8679,8 @@
 				"customFieldChanged",
 				"customFieldChangedPlain",
 				"emptyValue",
-				"automationActor"
+				"automationActor",
+				"manualAutomationActor"
 			]
 		},
 		"tasks": {
@@ -11185,6 +11197,28 @@
 						"cleared",
 						"saveError"
 					]
+				},
+				"manualActions": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"menu": {
+							"type": "string"
+						},
+						"hint": {
+							"type": "string"
+						},
+						"done": {
+							"type": "string"
+						},
+						"failed": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						}
+					},
+					"required": ["menu", "hint", "done", "failed", "error"]
 				}
 			},
 			"required": [
@@ -11229,7 +11263,8 @@
 				"composer",
 				"archiveModal",
 				"watchers",
-				"reminder"
+				"reminder",
+				"manualActions"
 			]
 		},
 		"invitations": {

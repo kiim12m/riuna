@@ -94,6 +94,9 @@ export function matchesTrigger(
     case "schedule":
       // No vienen del bus: los mira el planificador.
       return false;
+    case "manual":
+      // Tampoco: los corre quien pulsa el boton (`manual.ts`).
+      return false;
     case "task.labeled": {
       if (!trigger.labelName) return true;
       const label = data.label as { name?: unknown } | undefined;

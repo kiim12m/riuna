@@ -1582,7 +1582,8 @@
 				"task_labeled": "Se le pone una etiqueta",
 				"task_due_in": "Vence pronto",
 				"task_overdue": "Está vencida",
-				"schedule": "A una hora fija"
+				"schedule": "A una hora fija",
+				"manual": "Se pulsa el botón"
 			},
 			"actions": {
 				"move": "Mover a una columna",
@@ -1692,7 +1693,8 @@
 				"webhookUrl": "URL del webhook",
 				"botToken": "Token del bot",
 				"chatId": "ID del chat",
-				"threadId": "ID del hilo (opcional)"
+				"threadId": "ID del hilo (opcional)",
+				"manualHint": "La regla sale como botón en la tarea, y en su menú contextual, mientras la tarea cumpla las condiciones. Actúa en nombre de quien la pulsa, que tiene que poder editar tareas."
 			},
 			"standup": {
 				"sectionTitle": "Enviar el stand-up a un chat",
@@ -2190,7 +2192,8 @@
 		"customFieldChanged": "changed “{{name}}” from {{from}} to {{to}}",
 		"customFieldChangedPlain": "changed “{{name}}”",
 		"emptyValue": "empty",
-		"automationActor": "Automatización «{{name}}»"
+		"automationActor": "Automatización «{{name}}»",
+		"manualAutomationActor": "{{user}} con «{{name}}»"
 	},
 	"tasks": {
 		"actions": {
@@ -2845,6 +2848,13 @@
 			"saved": "Te lo recordará el {{when}}",
 			"cleared": "Recordatorio quitado",
 			"saveError": "No se pudo guardar el recordatorio"
+		},
+		"manualActions": {
+			"menu": "Acciones",
+			"hint": "Acción de un clic: corre esta automatización sobre la tarea",
+			"done": "«{{name}}» hecho",
+			"failed": "«{{name}}» se quedó a medias: {{error}}",
+			"error": "No se pudo correr la acción"
 		}
 	},
 	"invitations": {

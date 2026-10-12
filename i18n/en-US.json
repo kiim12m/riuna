@@ -1582,7 +1582,8 @@
 				"task_labeled": "A label is added",
 				"task_due_in": "It is due soon",
 				"task_overdue": "It is overdue",
-				"schedule": "On a schedule"
+				"schedule": "On a schedule",
+				"manual": "The button is pressed"
 			},
 			"actions": {
 				"move": "Move to a column",
@@ -1692,7 +1693,8 @@
 				"webhookUrl": "Webhook URL",
 				"botToken": "Bot token",
 				"chatId": "Chat ID",
-				"threadId": "Thread ID (optional)"
+				"threadId": "Thread ID (optional)",
+				"manualHint": "The rule shows as a button on the task, and in its context menu, while the task meets the conditions. It runs on behalf of whoever presses it, who needs to be able to edit tasks."
 			},
 			"standup": {
 				"sectionTitle": "Send the stand-up to a chat",
@@ -2190,7 +2192,8 @@
 		"customFieldChanged": "changed “{{name}}” from {{from}} to {{to}}",
 		"customFieldChangedPlain": "changed “{{name}}”",
 		"emptyValue": "empty",
-		"automationActor": "Automation “{{name}}”"
+		"automationActor": "Automation “{{name}}”",
+		"manualAutomationActor": "{{user}} via “{{name}}”"
 	},
 	"tasks": {
 		"actions": {
@@ -2845,6 +2848,13 @@
 			"saved": "Reminder set for {{when}}",
 			"cleared": "Reminder removed",
 			"saveError": "Could not save the reminder"
+		},
+		"manualActions": {
+			"menu": "Actions",
+			"hint": "One-click action: runs this automation on the task",
+			"done": "“{{name}}” done",
+			"failed": "“{{name}}” stopped halfway: {{error}}",
+			"error": "Could not run the action"
 		}
 	},
 	"invitations": {

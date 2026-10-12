@@ -960,6 +960,44 @@ export function registerMcpTools(
   );
 
   registerTool(
+    "list_task_actions",
+    {
+      description:
+        "The one-click actions a task offers right now: automations with the manual trigger whose conditions the task meets. Empty for whoever cannot edit tasks.",
+      inputSchema: z.object({ taskId: nonEmptyString }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/automation/manual/task/${encodeURIComponent(args.taskId)}`,
+          { method: "GET" },
+        ),
+      ),
+  );
+
+  registerTool(
+    "run_task_action",
+    {
+      description:
+        "Press a one-click action (from list_task_actions) on a task. Its actions run on behalf of the current user. Returns ok, or failed with the action that stopped it.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        automationId: nonEmptyString,
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/automation/manual/task/${encodeURIComponent(args.taskId)}`,
+          {
+            method: "POST",
+            body: JSON.stringify({ automationId: args.automationId }),
+          },
+        ),
+      ),
+  );
+
+  registerTool(
     "delete_label",
     {
       description:

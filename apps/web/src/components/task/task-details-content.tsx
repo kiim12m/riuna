@@ -16,6 +16,7 @@ import useGetTask from "@/hooks/queries/task/use-get-task";
 import type { ExternalLink } from "@/types/external-link";
 import type { FieldDefinition } from "../table-view/custom-field-cell";
 import TaskDescription from "./task-description";
+import TaskManualActions from "./task-manual-actions";
 import TaskRelations from "./task-relations";
 import TaskSubtasks from "./task-subtasks";
 import TaskTime from "./task-time";
@@ -79,7 +80,7 @@ export default function TaskDetailsContent({
             </span>
           </button>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <p className="text-xs font-semibold text-foreground/70">
             {project?.slug}-{task?.number}
           </p>
@@ -96,6 +97,7 @@ export default function TaskDetailsContent({
               }}
             />
           )}
+          {task && <TaskManualActions taskId={task.id} />}
         </div>
         <TaskTitle taskId={taskId} />
         <TaskDescription taskId={taskId} />

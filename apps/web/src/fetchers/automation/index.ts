@@ -23,6 +23,8 @@ export type Trigger =
   | { type: "task.labeled"; labelName?: string }
   | { type: "task.due_in"; days: number }
   | { type: "task.overdue" }
+  // Un boton en la tarea (ADR 078): corre al pulsarlo, si cumple el «Si».
+  | { type: "manual" }
   | { type: "schedule"; weekdays: number[]; time: string };
 
 export type TriggerType = Trigger["type"];
@@ -225,3 +227,29 @@ export async function getAutomationRuns(
     }),
   )) as AutomationRun[];
 }
+
+/** Las acciones de un clic que la tarea ofrece ahora mismo (ADR 078). */
+export async function getManualActions(taskId: string) {
+  return unwrap(
+    await client.automation.manual.task[":taskId"].$get({
+      param: { taskId },
+    }),
+  );
+}
+
+export async function runManualAction({
+  taskId,
+  automationId,
+}: {
+  taskId: string;
+  automationId: string;
+}) {
+  return unwrap(
+    await client.automation.manual.task[":taskId"].$post({
+      param: { taskId },
+      json: { automationId },
+    }),
+  );
+}
+
+export type ManualAction = Awaited<ReturnType<typeof getManualActions>>[number];

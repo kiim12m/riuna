@@ -26,7 +26,7 @@ const MAX_CHAIN = 3;
  * espacio, salvo en un proyecto «Personal» o archivado. Va por el indice
  * parcial `(workspace_id, trigger_type)`.
  */
-function candidateRules(projectId: string, triggerType: TriggerType) {
+export function candidateRules(projectId: string, triggerType: TriggerType) {
   return db
     .select({ rule: automationTable })
     .from(automationTable)

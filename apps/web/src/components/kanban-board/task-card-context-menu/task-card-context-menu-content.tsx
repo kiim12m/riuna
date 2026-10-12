@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { TaskManualActionsMenu } from "@/components/task/task-manual-actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -162,6 +163,8 @@ export default function TaskCardContextMenuContent({
       <ContextMenuItem onClick={handleCopyTaskLink}>
         <span>{t("tasks:contextMenu.copyLink")}</span>
       </ContextMenuItem>
+
+      <TaskManualActionsMenu taskId={task.id} />
 
       <ContextMenuSub>
         <ContextMenuSubTrigger>

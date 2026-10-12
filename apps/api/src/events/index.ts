@@ -12,7 +12,13 @@ EVENTS.setMaxListeners(100);
  */
 export type EventContext = {
   initiatorId: string;
-  automation?: { id: string; name: string; chain: string[] };
+  automation?: {
+    id: string;
+    name: string;
+    chain: string[];
+    /** Quien pulso una accion de un clic (ADR 078). */
+    pressedBy?: string;
+  };
 };
 
 export const eventContext = new AsyncLocalStorage<EventContext>();

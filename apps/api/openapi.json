@@ -22544,6 +22544,145 @@
         "summary": "Delete Workflow Rule"
       }
     },
+    "/automation/manual/task/{taskId}": {
+      "get": {
+        "operationId": "listTaskManualAutomations",
+        "tags": [
+          "Automations"
+        ],
+        "description": "The one-click actions a task offers right now: active rules with the `manual` trigger, of its project or its workspace, whose conditions it meets. Empty for whoever cannot edit tasks",
+        "responses": {
+          "200": {
+            "description": "The actions, in rule order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "List Task Manual Automations"
+      },
+      "post": {
+        "operationId": "runTaskManualAutomation",
+        "tags": [
+          "Automations"
+        ],
+        "description": "Press a one-click action on a task. Runs the rule's actions on your behalf: it needs task:update, and task:assign when the rule assigns. 409 when the task no longer meets its conditions",
+        "responses": {
+          "200": {
+            "description": "How the run went: `ok`, or `failed` with the action that stopped it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "enum": [
+                        "ok",
+                        "failed",
+                        "skipped"
+                      ],
+                      "type": "string"
+                    },
+                    "actions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "enum": [
+                              "ok",
+                              "failed"
+                            ],
+                            "type": "string"
+                          },
+                          "error": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "status"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "actions"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "automationId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "automationId"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Run Task Manual Automation"
+      }
+    },
     "/automation/project/{projectId}": {
       "get": {
         "operationId": "listProjectAutomations",

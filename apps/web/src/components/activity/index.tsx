@@ -575,14 +575,22 @@ function Activity({
 
   const isExternalComment = Boolean(activity.externalSource);
   // Un cambio que hizo una automatizacion (ADR 067) es de la regla, no de
-  // quien la guardo: se nombra a ella y no se pinta a nadie.
+  // quien la guardo: se nombra a ella y no se pinta a nadie. Una accion de un
+  // clic (ADR 078) es de quien la pulso, a traves de la regla.
   const automation = getEventDataRecord(
     getEventDataRecord(activity.eventData)?.automation,
   );
-  const actor = automation ? null : user;
-  const actorName = automation
-    ? t("activity:automationActor", { name: String(automation.name ?? "") })
-    : user?.user?.name || t("common:people.someone");
+  const pressed = Boolean(automation?.pressedBy);
+  const actor = automation && !pressed ? null : user;
+  const personName = user?.user?.name || t("common:people.someone");
+  const actorName = !automation
+    ? personName
+    : pressed
+      ? t("activity:manualAutomationActor", {
+          user: personName,
+          name: String(automation.name ?? ""),
+        })
+      : t("activity:automationActor", { name: String(automation.name ?? "") });
 
   if (isCommentActivity(activity)) {
     const commentUser = isExternalComment

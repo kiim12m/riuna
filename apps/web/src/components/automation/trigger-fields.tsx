@@ -196,6 +196,12 @@ export function TriggerFields({
           {t("settings:automations.editor.overdueHint")}
         </p>
       );
+    case "manual":
+      return (
+        <p className="text-muted-foreground text-xs">
+          {t("settings:automations.editor.manualHint")}
+        </p>
+      );
     default:
       return null;
   }
