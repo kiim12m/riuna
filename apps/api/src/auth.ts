@@ -787,10 +787,9 @@ export const auth = betterAuth({
             (ctx.body?.turnstileToken as string | undefined) ??
             ctx.headers?.get("x-turnstile-token") ??
             null;
-          const remoteIp =
-            ctx.headers?.get("cf-connecting-ip") ??
-            ctx.headers?.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-            null;
+          // La IP ya resuelta (ADR 074): `cf-connecting-ip` y el primer
+          // `X-Forwarded-For` los escribe quien llama.
+          const remoteIp = ctx.headers?.get(CLIENT_IP_HEADER) ?? null;
           const verdict = await verifyTurnstile(turnstileToken, remoteIp);
           if (!verdict.ok) {
             throw new APIError("FORBIDDEN", { message: verdict.reason });
