@@ -1,5 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { resolveClientIp } from "../../../apps/api/src/utils/client-ip";
+import {
+  ipBucket,
+  resolveClientIp,
+} from "../../../apps/api/src/utils/client-ip";
 import { log } from "../../../apps/api/src/utils/log";
 import { hit } from "../../../apps/api/src/utils/rate-limit";
 
@@ -98,6 +101,37 @@ describe("TRUSTED_PROXIES validation", () => {
     for (let i = 0; i < 5; i += 1) resolveClientIp(undefined, "10.9.9.9");
 
     expect(warn).toHaveBeenCalledTimes(1);
+  });
+});
+
+// Revision de la Fase 9, hallazgo 8.
+describe("ipBucket", () => {
+  it("puts every address of one IPv6 /64 in the same bucket", () => {
+    const key = `prueba-${Math.random()}`;
+    const first = ipBucket("2001:db8:abcd:12::1");
+    const second = ipBucket("2001:0db8:abcd:0012:ffff:1:2:3");
+
+    expect(first).toBe("2001:db8:abcd:12::/64");
+    expect(second).toBe(first);
+    expect(hit(`${key}:${first}`, 1, 60_000, 0)).toBeNull();
+    expect(hit(`${key}:${second}`, 1, 60_000, 1)).not.toBeNull();
+  });
+
+  it("keeps different /64 apart", () => {
+    expect(ipBucket("2001:db8:abcd:13::1")).not.toBe(
+      ipBucket("2001:db8:abcd:12::1"),
+    );
+  });
+
+  it("expands :: wherever it is", () => {
+    expect(ipBucket("::1")).toBe("0:0:0:0::/64");
+    expect(ipBucket("fe80::1%eth0")).toBe("fe80:0:0:0::/64");
+    expect(ipBucket("2001:db8::")).toBe("2001:db8:0:0::/64");
+    expect(ipBucket("64:ff9b:1::1.2.3.4")).toBe("64:ff9b:1:0::/64");
+  });
+
+  it("leaves IPv4 alone", () => {
+    expect(ipBucket("198.51.100.7")).toBe("198.51.100.7");
   });
 });
 

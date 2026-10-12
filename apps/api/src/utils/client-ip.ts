@@ -123,6 +123,32 @@ export function resolveClientIp(
   return peer;
 }
 
+// Los cuatro primeros grupos de una IPv6, con los `::` ya expandidos. Una IPv4
+// al final (`64:ff9b::1.2.3.4`) ocupa dos grupos.
+function ipv6Prefix64(ip: string) {
+  const address = ip.split("%")[0] ?? ip;
+  const [head = "", tail] = address.split("::");
+  const left = head ? head.split(":") : [];
+  const right = tail ? tail.split(":") : [];
+  const width = (groups: string[]) =>
+    groups.reduce((total, group) => total + (group.includes(".") ? 2 : 1), 0);
+  const zeros =
+    tail === undefined ? [] : Array(8 - width(left) - width(right)).fill("0");
+  return [...left, ...zeros, ...right]
+    .slice(0, 4)
+    .map((group) => Number.parseInt(group, 16).toString(16))
+    .join(":");
+}
+
+/**
+ * La clave de cupo de una IP. Una IPv6 cuenta por su /64, como hace Better
+ * Auth (`ipv6Subnet`): una sola conexión doméstica tiene la /64 entera, y
+ * contar por dirección daba un cupo nuevo con solo cambiar de dirección.
+ */
+export function ipBucket(ip: string) {
+  return isIP(ip) === 6 ? `${ipv6Prefix64(ip)}::/64` : ip;
+}
+
 export function clientIp(c: Context): string | null {
   return resolveClientIp(c.req.header("x-forwarded-for"), socketAddress(c));
 }
