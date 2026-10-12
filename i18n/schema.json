@@ -7151,6 +7151,59 @@
 								}
 							},
 							"required": ["title", "hint", "unknown"]
+						},
+						"problems": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"backupMissing": {
+									"type": "string"
+								},
+								"backupStale": {
+									"type": "string"
+								},
+								"backupUnreadable": {
+									"type": "string"
+								},
+								"offsiteNever": {
+									"type": "string"
+								},
+								"offsiteStale": {
+									"type": "string"
+								},
+								"jobFailing": {
+									"type": "string"
+								},
+								"lastError": {
+									"type": "string"
+								},
+								"areas": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"backups": {
+											"type": "string"
+										},
+										"offsite": {
+											"type": "string"
+										},
+										"job": {
+											"type": "string"
+										}
+									},
+									"required": ["backups", "offsite", "job"]
+								}
+							},
+							"required": [
+								"backupMissing",
+								"backupStale",
+								"backupUnreadable",
+								"offsiteNever",
+								"offsiteStale",
+								"jobFailing",
+								"lastError",
+								"areas"
+							]
 						}
 					},
 					"required": [
@@ -7168,7 +7221,8 @@
 						"realtime",
 						"jobs",
 						"routes",
-						"you"
+						"you",
+						"problems"
 					]
 				}
 			},
@@ -8019,6 +8073,22 @@
 								}
 							},
 							"required": ["title", "contentWithTask", "contentWithoutTask"]
+						},
+						"instance_alert": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"resolvedTitle": {
+									"type": "string"
+								},
+								"resolvedContent": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "resolvedTitle", "resolvedContent"]
 						}
 					},
 					"required": [
@@ -8031,7 +8101,8 @@
 						"task_comment",
 						"due_date_reminder",
 						"task_overdue",
-						"time_entry_created"
+						"time_entry_created",
+						"instance_alert"
 					]
 				},
 				"loadMore": {

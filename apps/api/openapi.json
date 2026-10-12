@@ -24611,8 +24611,29 @@
                           "key": {
                             "type": "string"
                           },
-                          "label": {
+                          "kind": {
+                            "enum": [
+                              "backupMissing",
+                              "backupStale",
+                              "backupUnreadable",
+                              "offsiteNever",
+                              "offsiteStale",
+                              "jobFailing"
+                            ],
                             "type": "string"
+                          },
+                          "params": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "number"
+                                }
+                              ]
+                            }
                           },
                           "message": {
                             "type": "string"
@@ -24620,7 +24641,8 @@
                         },
                         "required": [
                           "key",
-                          "label",
+                          "kind",
+                          "params",
                           "message"
                         ]
                       }

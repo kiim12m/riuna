@@ -1,4 +1,5 @@
 import { getStatusLabel } from "@/lib/i18n/domain";
+import { instanceAlertArea, instanceProblemText } from "@/lib/instance-alert";
 import type { Notification } from "@/types/notification";
 
 type Translate = (key: string, options?: Record<string, unknown>) => string;
@@ -90,6 +91,20 @@ export function getNotificationTitle(notification: Notification, t: Translate) {
           ...eventData,
           defaultValue: notification.title ?? notification.type,
         });
+      // Las de antes de la revisión de la Fase 9 solo traen la clave: salen
+      // con el texto que guardó la API.
+      case "instance_alert": {
+        const area = instanceAlertArea(eventData, t);
+        if (!area) break;
+        return eventData.resolved
+          ? t("notifications:events.instance_alert.resolvedTitle", {
+              defaultValue: notification.title ?? notification.type,
+            })
+          : t("notifications:events.instance_alert.title", {
+              area,
+              defaultValue: notification.title ?? notification.type,
+            });
+      }
       default:
         break;
     }
@@ -163,6 +178,17 @@ export function getNotificationContent(
           ...eventData,
           defaultValue: notification.content ?? "",
         });
+      case "instance_alert": {
+        if (!eventData.resolved) {
+          return instanceProblemText(eventData, notification.content ?? "", t);
+        }
+        const area = instanceAlertArea(eventData, t);
+        if (!area) break;
+        return t("notifications:events.instance_alert.resolvedContent", {
+          area,
+          defaultValue: notification.content ?? "",
+        });
+      }
       default:
         break;
     }

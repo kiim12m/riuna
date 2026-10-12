@@ -134,6 +134,14 @@ describe("instance report", () => {
       "backup.stale",
       "job.failing:due-date-reminders",
     ]);
+    // Para que la web lo traduzca (revision de la Fase 9, hallazgo 13).
+    expect(report.problems).toContainEqual(
+      expect.objectContaining({
+        key: "backup.stale",
+        kind: "backupStale",
+        params: { hours: 30, every: 24 },
+      }),
+    );
   });
 });
 
@@ -187,6 +195,13 @@ describe("instance alerts", () => {
     const opened = await alertsFor(admin.id);
     expect(opened).toHaveLength(1);
     expect(opened[0]?.content).toContain("recurring-tasks");
+    expect(opened[0]?.eventData).toMatchObject({
+      key: "job.failing:recurring-tasks",
+      area: "job",
+      job: "recurring-tasks",
+      kind: "jobFailing",
+      params: { job: "recurring-tasks", failures: 3 },
+    });
     expect(await alertsFor(bystander.user.id)).toHaveLength(0);
 
     await withCheckIn("recurring-tasks", async () => ({ degraded: false }))();
@@ -196,6 +211,12 @@ describe("instance alerts", () => {
     const all = await alertsFor(admin.id);
     expect(all).toHaveLength(2);
     expect(all.map((n) => n.title)).toContain("Riuna · resuelto");
+    expect(all.map((n) => n.eventData)).toContainEqual({
+      key: "job.failing:recurring-tasks",
+      area: "job",
+      job: "recurring-tasks",
+      resolved: true,
+    });
     const [alert] = await db.select().from(schema.instanceAlertTable);
     expect(alert?.resolvedAt).toBeInstanceOf(Date);
   });

@@ -6,11 +6,54 @@ import type { BackupState } from "./backups";
  * cerrar avisos. Una clave por condición; mientras la condición siga, la clave
  * es la misma y el aviso no se repite.
  *
- * Los textos van en español y ya montados: llegan tal cual por ntfy, Gotify,
- * correo o webhook, que no pasan por las traducciones de la web.
+ * Cada problema va dos veces:
+ * - `kind` y `params`, para que la página y la campana lo traduzcan;
+ * - `message`, en español y ya montado, para ntfy, Gotify, correo o webhook,
+ *   que no pasan por las traducciones de la web.
  */
 
-export type HealthProblem = { key: string; label: string; message: string };
+export const HEALTH_PROBLEM_KINDS = [
+  "backupMissing",
+  "backupStale",
+  "backupUnreadable",
+  "offsiteNever",
+  "offsiteStale",
+  "jobFailing",
+] as const;
+
+export type HealthProblem = {
+  key: string;
+  kind: (typeof HEALTH_PROBLEM_KINDS)[number];
+  params: Record<string, string | number>;
+  message: string;
+};
+
+/**
+ * De qué es una alerta, sacado de su clave. Lo necesita el aviso de
+ * «resuelto», que solo tiene la clave de la alerta que cierra.
+ */
+export function alertArea(key: string): {
+  area: "backups" | "offsite" | "job";
+  job?: string;
+} {
+  if (key.startsWith("job.failing:")) {
+    return { area: "job", job: key.slice("job.failing:".length) };
+  }
+  if (key.startsWith("offsite.")) return { area: "offsite" };
+  return { area: "backups" };
+}
+
+/** El nombre del área en español, para el título de los canales externos. */
+export function alertAreaLabel(key: string) {
+  const { area, job } = alertArea(key);
+  if (area === "job") return `trabajo «${job}»`;
+  return area === "offsite" ? "copia externa" : "copias locales";
+}
+
+// El último error va aparte en `params`: la web lo añade con su propia frase.
+function withError(error: string | null | undefined): Record<string, string> {
+  return error ? { error } : {};
+}
 
 export type JobState = {
   job: string;
@@ -58,7 +101,8 @@ export function findProblems({
   if (backups.configured && !backups.readable) {
     problems.push({
       key: "backup.unreadable",
-      label: "copias locales",
+      kind: "backupUnreadable",
+      params: {},
       message:
         "La API no puede leer el directorio de copias (BACKUP_DIR): no sabe si se están haciendo.",
     });
@@ -68,17 +112,20 @@ export function findProblems({
     if (!backups.latest) {
       problems.push({
         key: "backup.stale",
-        label: "copias locales",
+        kind: "backupMissing",
+        params: {},
         message: "No hay ninguna copia de la base en el directorio de copias.",
       });
     } else if (
       now.getTime() - new Date(backups.latest.createdAt).getTime() >
       (every + 2) * HOUR
     ) {
+      const ago = hoursAgo(backups.latest.createdAt, now);
       problems.push({
         key: "backup.stale",
-        label: "copias locales",
-        message: `La última copia de la base es de hace ${hoursAgo(backups.latest.createdAt, now)} h, y se espera una cada ${every} h.`,
+        kind: "backupStale",
+        params: { hours: ago, every },
+        message: `La última copia de la base es de hace ${ago} h, y se espera una cada ${every} h.`,
       });
     }
   }
@@ -92,7 +139,8 @@ export function findProblems({
       if (offsite.status === "error") {
         problems.push({
           key: "offsite.failing",
-          label: "copia externa",
+          kind: "offsiteNever",
+          params: withError(offsite.message),
           message: `La copia externa no ha subido nunca.${detail}`,
         });
       }
@@ -100,10 +148,12 @@ export function findProblems({
       now.getTime() - new Date(offsite.lastSuccessAt).getTime() >
       (2 * every + 1) * HOUR
     ) {
+      const ago = hoursAgo(offsite.lastSuccessAt, now);
       problems.push({
         key: "offsite.failing",
-        label: "copia externa",
-        message: `La copia externa no sube desde hace ${hoursAgo(offsite.lastSuccessAt, now)} h.${detail}`,
+        kind: "offsiteStale",
+        params: { hours: ago, ...withError(offsite.message) },
+        message: `La copia externa no sube desde hace ${ago} h.${detail}`,
       });
     }
   }
@@ -113,7 +163,12 @@ export function findProblems({
       const detail = job.lastError ? ` Último error: ${job.lastError}` : "";
       problems.push({
         key: `job.failing:${job.job}`,
-        label: `trabajo «${job.job}»`,
+        kind: "jobFailing",
+        params: {
+          job: job.job,
+          failures: job.consecutiveFailures,
+          ...withError(job.lastError),
+        },
         message: `El trabajo programado «${job.job}» ha fallado ${job.consecutiveFailures} veces seguidas.${detail}`,
       });
     }

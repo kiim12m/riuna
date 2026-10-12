@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import { describeRoute, resolver } from "hono-openapi";
 import * as v from "valibot";
 import { assertInstanceAdmin } from "../utils/instance-admin";
+import { HEALTH_PROBLEM_KINDS } from "./health";
 import { buildInstanceReport } from "./report";
 
 const isoOrNull = v.nullable(v.string());
@@ -79,9 +80,17 @@ const instanceReportSchema = v.object({
       }),
     ),
   }),
-  /** Lo que está mal ahora mismo, se haya avisado ya o no. */
+  /**
+   * Lo que está mal ahora mismo, se haya avisado ya o no. `kind` y `params`
+   * son para traducirlo; `message` es el mismo texto, en español.
+   */
   problems: v.array(
-    v.object({ key: v.string(), label: v.string(), message: v.string() }),
+    v.object({
+      key: v.string(),
+      kind: v.picklist(HEALTH_PROBLEM_KINDS),
+      params: v.record(v.string(), v.union([v.string(), v.number()])),
+      message: v.string(),
+    }),
   ),
   /** Las alertas abiertas, de las que ya se avisó. */
   alerts: v.array(
