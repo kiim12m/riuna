@@ -1,6 +1,7 @@
 import { BlockList, isIP } from "node:net";
 import { getConnInfo } from "@hono/node-server/conninfo";
 import type { Context } from "hono";
+import { log } from "./log";
 
 /**
  * La IP de quien llama, para los límites de tasa (ADR 074). Se calcula aquí y
@@ -27,8 +28,32 @@ const DEFAULT_TRUSTED_PROXIES = [
   "192.168.0.0/16",
 ];
 
-function trustedProxyList() {
-  const raw = process.env.TRUSTED_PROXIES?.trim();
+/**
+ * Una entrada de `TRUSTED_PROXIES` en la lista. Devuelve `false` si no vale.
+ *
+ * El prefijo se comprueba antes de llegar a `BlockList`: `/33` hacía lanzar a
+ * `addSubnet` en cada petición, y `10.0.0.0/` acababa en `Number("") === 0`, o
+ * sea, en confiar en todo internet (revisión de la Fase 9). Un `/0` escrito a
+ * propósito sí vale.
+ */
+function addTrustedEntry(list: BlockList, entry: string) {
+  const [network = "", prefix, ...rest] = entry.split("/");
+  const family = isIP(network);
+  if (family === 0 || rest.length > 0) return false;
+  const type = family === 6 ? "ipv6" : "ipv4";
+  if (prefix === undefined) {
+    list.addAddress(network, type);
+    return true;
+  }
+  const bits = Number(prefix);
+  if (!/^\d{1,3}$/.test(prefix) || bits > (family === 6 ? 128 : 32)) {
+    return false;
+  }
+  list.addSubnet(network, bits, type);
+  return true;
+}
+
+function buildTrustedProxyList(raw: string) {
   const entries = raw
     ? raw
         .split(",")
@@ -37,17 +62,23 @@ function trustedProxyList() {
     : DEFAULT_TRUSTED_PROXIES;
   const list = new BlockList();
   for (const entry of entries) {
-    const [network = "", prefix] = entry.split("/");
-    const family = isIP(network);
-    if (family === 0) continue;
-    const type = family === 6 ? "ipv6" : "ipv4";
-    if (prefix === undefined) {
-      list.addAddress(network, type);
-    } else {
-      list.addSubnet(network, Number(prefix), type);
+    if (!addTrustedEntry(list, entry)) {
+      log.warn("Ignoring an invalid TRUSTED_PROXIES entry", { entry });
     }
   }
   return list;
+}
+
+// Se construye una vez por valor de la variable, no en cada petición. Por
+// valor, y no una sola vez, para que las pruebas puedan cambiarla.
+let cached: { raw: string; list: BlockList } | null = null;
+
+function trustedProxyList() {
+  const raw = process.env.TRUSTED_PROXIES?.trim() ?? "";
+  if (cached?.raw !== raw) {
+    cached = { raw, list: buildTrustedProxyList(raw) };
+  }
+  return cached.list;
 }
 
 // `::ffff:172.17.0.1` es una IPv4 vista por un socket de doble pila.
