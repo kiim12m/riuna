@@ -34,8 +34,8 @@ async function fetchWithTimeout(
 }
 
 type ResolvedNotificationContext = {
-  workspaceId: string;
-  workspaceName: string;
+  workspaceId: string | null;
+  workspaceName: string | null;
   projectId: string | null;
   projectName: string | null;
   taskId: string | null;
@@ -216,6 +216,76 @@ function buildDeliveryContent(notification: {
         body: notification.content ?? "You have a new notification in Riuna.",
       };
   }
+}
+
+/**
+ * Las alertas de la instancia (ADR 075) no son de ningún espacio: no tienen
+ * recurso, ni regla de espacio que las deje pasar. Van por los canales que la
+ * persona tenga encendidos en sus preferencias generales. Antes se quedaban
+ * en la campana, porque sin contexto la entrega se saltaba (revisión de la
+ * Fase 9).
+ */
+const INSTANCE_WIDE_TYPES = new Set(["instance_alert"]);
+
+const INSTANCE_CONTEXT: ResolvedNotificationContext = {
+  workspaceId: null,
+  workspaceName: null,
+  projectId: null,
+  projectName: null,
+  taskId: null,
+  taskTitle: null,
+  taskUrl: null,
+};
+
+type ChannelSwitches = {
+  emailEnabled: boolean;
+  ntfyEnabled: boolean;
+  gotifyEnabled: boolean;
+  webhookEnabled: boolean;
+};
+
+const ALL_CHANNELS: ChannelSwitches = {
+  emailEnabled: true,
+  ntfyEnabled: true,
+  gotifyEnabled: true,
+  webhookEnabled: true,
+};
+
+/**
+ * Los canales que la regla del espacio deja abiertos para esta notificación,
+ * o `null` si la regla no la deja pasar.
+ */
+async function workspaceChannels(
+  userId: string,
+  context: ResolvedNotificationContext,
+): Promise<ChannelSwitches | null> {
+  if (!context.workspaceId) return null;
+
+  const rule = await db.query.userNotificationWorkspaceRuleTable.findFirst({
+    where: and(
+      eq(userNotificationWorkspaceRuleTable.userId, userId),
+      eq(userNotificationWorkspaceRuleTable.workspaceId, context.workspaceId),
+    ),
+    with: {
+      selectedProjects: true,
+    },
+  });
+
+  if (!rule?.isActive) {
+    return null;
+  }
+
+  if (
+    rule.projectMode === "selected" &&
+    (!context.projectId ||
+      !rule.selectedProjects.some(
+        (project) => project.projectId === context.projectId,
+      ))
+  ) {
+    return null;
+  }
+
+  return rule;
 }
 
 async function resolveNotificationContext(notification: {
@@ -406,7 +476,10 @@ export async function deliverNotification(
     return;
   }
 
-  const context = await resolveNotificationContext(notification);
+  const instanceWide = INSTANCE_WIDE_TYPES.has(notification.type);
+  const context = instanceWide
+    ? INSTANCE_CONTEXT
+    : await resolveNotificationContext(notification);
   if (!context) {
     log.info("Notification delivery skipped: unresolved context", {
       notificationId,
@@ -448,27 +521,10 @@ export async function deliverNotification(
     webhookSecret: decryptSecret(preference.webhookSecret),
   };
 
-  const rule = await db.query.userNotificationWorkspaceRuleTable.findFirst({
-    where: and(
-      eq(userNotificationWorkspaceRuleTable.userId, notification.userId),
-      eq(userNotificationWorkspaceRuleTable.workspaceId, context.workspaceId),
-    ),
-    with: {
-      selectedProjects: true,
-    },
-  });
-
-  if (!rule?.isActive) {
-    return;
-  }
-
-  if (
-    rule.projectMode === "selected" &&
-    (!context.projectId ||
-      !rule.selectedProjects.some(
-        (project) => project.projectId === context.projectId,
-      ))
-  ) {
+  const channels = instanceWide
+    ? ALL_CHANNELS
+    : await workspaceChannels(notification.userId, context);
+  if (!channels) {
     return;
   }
 
@@ -493,10 +549,12 @@ export async function deliverNotification(
       resourceId: notification.resourceId,
       resourceType: notification.resourceType,
     },
-    workspace: {
-      id: context.workspaceId,
-      name: context.workspaceName,
-    },
+    workspace: context.workspaceId
+      ? {
+          id: context.workspaceId,
+          name: context.workspaceName,
+        }
+      : null,
     project: context.projectId
       ? {
           id: context.projectId,
@@ -523,7 +581,7 @@ export async function deliverNotification(
   // columna: intentar la entrega solo produciria rebotes.
   if (
     decryptedPreference.emailEnabled &&
-    rule.emailEnabled &&
+    channels.emailEnabled &&
     user.email &&
     !isLocalAccountEmail(user.email)
   ) {
@@ -542,7 +600,7 @@ export async function deliverNotification(
     decryptedPreference.ntfyEnabled &&
     decryptedPreference.ntfyServerUrl &&
     decryptedPreference.ntfyTopic &&
-    rule.ntfyEnabled
+    channels.ntfyEnabled
   ) {
     deliveries.push(
       sendNtfyNotification({
@@ -560,7 +618,7 @@ export async function deliverNotification(
     decryptedPreference.gotifyEnabled &&
     decryptedPreference.gotifyServerUrl &&
     decryptedPreference.gotifyToken &&
-    rule.gotifyEnabled
+    channels.gotifyEnabled
   ) {
     deliveries.push(
       sendGotifyNotification({
@@ -576,7 +634,7 @@ export async function deliverNotification(
   if (
     decryptedPreference.webhookEnabled &&
     decryptedPreference.webhookUrl &&
-    rule.webhookEnabled
+    channels.webhookEnabled
   ) {
     deliveries.push(
       sendWebhookNotification({

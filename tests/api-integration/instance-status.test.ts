@@ -25,6 +25,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   vi.unstubAllEnvs();
+  vi.restoreAllMocks();
   await rm(backupDir, { recursive: true, force: true });
 });
 
@@ -240,6 +241,42 @@ describe("instance alerts", () => {
       "backup.stale",
       "backup.unreadable",
     ]);
+  });
+
+  // Revision de la Fase 9, hallazgo 1: sin recurso ni regla de espacio, la
+  // entrega se saltaba y la alerta solo llegaba a la campana.
+  it("reaches the admin through the channels in their general preferences", async () => {
+    const admin = await instanceAdmin();
+    vi.stubEnv("RIUNA_ALLOW_PRIVATE_WEBHOOK_DESTINATIONS", "true");
+    await db.insert(schema.userNotificationPreferenceTable).values({
+      userId: admin.id,
+      ntfyEnabled: true,
+      ntfyServerUrl: "https://ntfy.example.com",
+      ntfyTopic: "riuna-instancia",
+      webhookEnabled: true,
+      webhookUrl: "https://hooks.example.com/riuna",
+    });
+    // Solo el trabajo que falla: con las copias al dia no hay otra alerta.
+    await writeBackup("riuna_2026-10-11_030000.sql.gz", 1);
+    await failThreeTimes("automations");
+    const sent: { url: string; body: string }[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+      sent.push({ url: String(input), body: String(init?.body ?? "") });
+      return new Response("ok");
+    });
+
+    await checkInstanceHealth();
+
+    await vi.waitFor(() => expect(sent).toHaveLength(2));
+    const ntfy = sent.find((call) => call.url.startsWith("https://ntfy."));
+    expect(ntfy?.url).toBe("https://ntfy.example.com/riuna-instancia");
+    expect(ntfy?.body).toContain("automations");
+    const webhook = sent.find((call) => call.url.startsWith("https://hooks."));
+    expect(JSON.parse(webhook?.body ?? "{}")).toMatchObject({
+      notification: { type: "instance_alert" },
+      workspace: null,
+      user: { id: admin.id },
+    });
   });
 
   it("does not alert about backups it cannot see", async () => {
