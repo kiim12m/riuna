@@ -13,6 +13,8 @@ import { Fragment, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import type { TaskTotals } from "@/fetchers/task/get-task-totals";
+import { cn } from "@/lib/cn";
 import { formatDuration } from "@/lib/duration";
 import { resolveEpicColor } from "@/lib/epic-color";
 import { getInitials } from "@/lib/get-initials";
@@ -24,6 +26,7 @@ import CustomFieldCell, {
   type FieldMember,
   formatForDisplay,
 } from "./custom-field-cell";
+import { ROW_TINT_CLASS, type RowColoring, rowTint } from "./row-tint";
 import {
   buildRows,
   type EpicGroup,
@@ -64,6 +67,10 @@ type Props = {
   visibleColumns?: ReadonlySet<string>;
   /** Reparte las filas de primer nivel en grupos (hoy, por epica). */
   groupBy?: "epic";
+  /** Colorea las filas por prioridad o por vencimiento (ADR 080). */
+  coloring?: RowColoring;
+  /** Los totales de todo el filtro, calculados por la API (ADR 080). */
+  totals?: TaskTotals | null;
   canEdit: boolean;
   onOpenTask: (taskId: string) => void;
   onSetCustomField: (taskId: string, key: string, value: unknown) => void;
@@ -77,6 +84,14 @@ function formatDate(value: string | null) {
 }
 
 type TableColumns = ReturnType<typeof helper.columns>;
+
+function rowClassName(row: TableRow, coloring: RowColoring | undefined) {
+  const tint = rowTint(row, coloring);
+  return cn(
+    "border-border/50 border-b hover:bg-accent/30",
+    tint && ROW_TINT_CLASS[tint],
+  );
+}
 
 /**
  * Un grupo de la tabla: su cabecera y sus filas. Cada grupo lleva su propia
@@ -92,6 +107,7 @@ function GroupRows({
   collapsed,
   onToggle,
   noEpicLabel,
+  coloring,
 }: {
   group: EpicGroup;
   columns: TableColumns;
@@ -101,6 +117,7 @@ function GroupRows({
   collapsed: boolean;
   onToggle: () => void;
   noEpicLabel: string;
+  coloring?: RowColoring;
 }) {
   const table = useTable({
     features,
@@ -145,10 +162,7 @@ function GroupRows({
       </tr>
       {!collapsed &&
         table.getRowModel().rows.map((row) => (
-          <tr
-            key={row.id}
-            className="border-border/50 border-b hover:bg-accent/30"
-          >
+          <tr key={row.id} className={rowClassName(row.original, coloring)}>
             {row.getAllCells().map((cell) => (
               <td key={cell.id} className="px-3 py-1.5 align-middle">
                 <table.FlexRender cell={cell} />
@@ -171,6 +185,8 @@ function TableView({
   flatten = false,
   visibleColumns,
   groupBy,
+  coloring,
+  totals,
   canEdit,
   onOpenTask,
   onSetCustomField,
@@ -508,12 +524,13 @@ function TableView({
                     })
                   }
                   noEpicLabel={t("tasks:table.noEpic")}
+                  coloring={coloring}
                 />
               ))
             : table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="border-border/50 border-b hover:bg-accent/30"
+                  className={rowClassName(row.original, coloring)}
                 >
                   {row.getAllCells().map((cell) => (
                     <td key={cell.id} className="px-3 py-1.5 align-middle">
@@ -531,6 +548,65 @@ function TableView({
           {t("tasks:table.empty")}
         </div>
       )}
+
+      {totals && totals.count > 0 && (
+        <TableTotals totals={totals} definitions={definitions} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * La fila de totales: todo lo que casa con el filtro, sumado por la API. Va
+ * pegada abajo y no alineada con las columnas: el tiempo registrado no tiene
+ * columna, y las sumas de rama de las columnas no son lo mismo que sumar cada
+ * tarea una vez.
+ */
+function TableTotals({
+  totals,
+  definitions,
+}: {
+  totals: TaskTotals;
+  definitions: FieldDefinition[];
+}) {
+  const { t, i18n } = useTranslation();
+  const numeric = definitions.filter(
+    (definition) =>
+      (definition.type === "number" || definition.type === "currency") &&
+      totals.fields[definition.key] !== undefined,
+  );
+
+  const items: Array<[string, string]> = [
+    [
+      t("tasks:table.totals.estimate"),
+      formatDuration(totals.estimateSeconds, i18n.language),
+    ],
+    [
+      t("tasks:table.totals.logged"),
+      formatDuration(totals.loggedSeconds, i18n.language),
+    ],
+    ...numeric.map((definition): [string, string] => [
+      definition.name,
+      formatForDisplay(definition, totals.fields[definition.key] ?? 0),
+    ]),
+  ];
+
+  return (
+    <div
+      className="sticky bottom-0 flex flex-wrap items-center gap-x-4 gap-y-1 border-border border-t bg-card px-3 py-2 text-xs"
+      data-testid="table-totals"
+    >
+      <span className="font-medium">
+        {t("tasks:table.totals.label", { total: totals.count })}
+      </span>
+      {items.map(([label, value]) => (
+        <span key={label} className="text-muted-foreground">
+          {label}{" "}
+          <span className="font-medium text-foreground tabular-nums">
+            {value}
+          </span>
+        </span>
+      ))}
     </div>
   );
 }

@@ -827,6 +827,31 @@ export function registerTools(
   );
 
   server.registerTool(
+    "get_task_totals",
+    {
+      description:
+        "Totals over every task of a project that matches a filter (the same filter and treeScope as list_tasks): how many, their own estimate and logged time in seconds, and the sum of each number or currency field by key.",
+      inputSchema: z.object({
+        projectId: nonEmptyString,
+        filter: z.string().optional(),
+        treeScope: z.enum(["matching", "roots", "withDescendants"]).optional(),
+      }),
+    },
+    async (args) => {
+      const qs = new URLSearchParams();
+      if (args.filter) qs.set("filter", args.filter);
+      if (args.treeScope) qs.set("treeScope", args.treeScope);
+      const q = qs.toString();
+      return run(() =>
+        client.json(
+          `/api/task/tasks/${encodeURIComponent(args.projectId)}/totals${q ? `?${q}` : ""}`,
+          { method: "GET" },
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
     "delete_label",
     {
       description:

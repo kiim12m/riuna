@@ -2101,6 +2101,80 @@
         "summary": "List Tasks"
       }
     },
+    "/task/tasks/{projectId}/totals": {
+      "get": {
+        "operationId": "getTaskTotals",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Totals over every task the list would return with the same `filter` and `treeScope`: how many, their own estimate and logged time, and the sum of each number or currency field. Each task counts once, not its branch",
+        "responses": {
+          "200": {
+            "description": "The totals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "number"
+                    },
+                    "estimateSeconds": {
+                      "type": "number"
+                    },
+                    "loggedSeconds": {
+                      "type": "number"
+                    },
+                    "fields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "estimateSeconds",
+                    "loggedSeconds",
+                    "fields"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "treeScope",
+            "schema": {
+              "enum": [
+                "matching",
+                "roots",
+                "withDescendants"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Get Task Totals"
+      }
+    },
     "/task/bulk": {
       "patch": {
         "operationId": "bulkUpdateTasks",

@@ -43,6 +43,7 @@ import exportTaskSheet from "./controllers/export-task-sheet";
 import exportTasks from "./controllers/export-tasks";
 import exportWorkspaceTasks from "./controllers/export-workspace-tasks";
 import getTask from "./controllers/get-task";
+import { getTaskTotals } from "./controllers/get-task-totals";
 import getTasks from "./controllers/get-tasks";
 import { importServitec } from "./controllers/import-servitec";
 import importTasks from "./controllers/import-tasks";
@@ -163,6 +164,70 @@ const task = new Hono<{
         });
 
         return c.json(tasks);
+      } catch (error) {
+        if (error instanceof FilterError) {
+          throw new HTTPException(400, { message: error.message });
+        }
+        throw error;
+      }
+    },
+  )
+  .get(
+    "/tasks/:projectId/totals",
+    describeRoute({
+      operationId: "getTaskTotals",
+      tags: ["Tasks"],
+      description:
+        "Totals over every task the list would return with the same `filter` and `treeScope`: how many, their own estimate and logged time, and the sum of each number or currency field. Each task counts once, not its branch",
+      responses: {
+        200: {
+          description: "The totals",
+          content: {
+            "application/json": {
+              schema: resolver(
+                v.object({
+                  count: v.number(),
+                  estimateSeconds: v.number(),
+                  loggedSeconds: v.number(),
+                  fields: v.record(v.string(), v.number()),
+                }),
+              ),
+            },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ projectId: v.string() })),
+    validator(
+      "query",
+      v.object({
+        filter: v.optional(v.string()),
+        treeScope: v.optional(
+          v.picklist(["matching", "roots", "withDescendants"]),
+        ),
+      }),
+    ),
+    workspaceAccess.fromProject("projectId"),
+    async (c) => {
+      const { projectId } = c.req.valid("param");
+      const query = c.req.valid("query");
+
+      let filter: FilterNode | null = null;
+      try {
+        filter = parseFilterParam(query.filter);
+      } catch (error) {
+        throw new HTTPException(400, {
+          message: error instanceof Error ? error.message : "Invalid filter",
+        });
+      }
+
+      try {
+        return c.json(
+          await getTaskTotals(projectId, {
+            treeScope: query.treeScope,
+            filter,
+          }),
+        );
       } catch (error) {
         if (error instanceof FilterError) {
           throw new HTTPException(400, { message: error.message });

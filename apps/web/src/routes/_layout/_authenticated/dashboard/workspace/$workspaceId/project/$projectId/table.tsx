@@ -15,6 +15,10 @@ import {
 } from "@/components/table-view/columns";
 import type { FieldDefinition } from "@/components/table-view/custom-field-cell";
 import FilterBar from "@/components/table-view/filter-bar";
+import {
+  ROW_COLORINGS,
+  type RowColoring,
+} from "@/components/table-view/row-tint";
 import ViewPicker, {
   type SavedView,
 } from "@/components/table-view/view-picker";
@@ -36,6 +40,7 @@ import {
 } from "@/hooks/mutations/view/use-view-mutations";
 import useGetFieldDefinitions from "@/hooks/queries/field/use-get-field-definitions";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
+import { useTaskTotals } from "@/hooks/queries/task/use-task-totals";
 import useGetViews from "@/hooks/queries/view/use-get-views";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { useFilterableFields } from "@/hooks/use-filterable-fields";
@@ -66,6 +71,8 @@ type TableSearchParams = {
   columns?: string[];
   /** Por que se agrupan las filas. Sin dato, sin agrupar. */
   groupBy?: GroupBy;
+  /** Como se colorean las filas (ADR 080). Sin dato, sin color. */
+  color?: RowColoring;
 };
 
 const GROUP_BYS = ["epic"] as const;
@@ -95,6 +102,9 @@ export const Route = createFileRoute(
     groupBy: GROUP_BYS.includes(search.groupBy as GroupBy)
       ? (search.groupBy as GroupBy)
       : undefined,
+    color: ROW_COLORINGS.includes(search.color as RowColoring)
+      ? (search.color as RowColoring)
+      : undefined,
   }),
 });
 
@@ -108,6 +118,7 @@ function RouteComponent() {
     viewId,
     columns: columnsParam,
     groupBy,
+    color,
   } = Route.useSearch();
   const navigate = useNavigate();
 
@@ -135,14 +146,28 @@ function RouteComponent() {
 
   const filter = useMemo(() => buildFilter(conditions), [conditions]);
 
-  const { data: project, error } = useGetTasks(projectId, filter, {
-    treeScope:
-      treeMode === "roots"
-        ? "roots"
-        : treeMode === "withDescendants"
-          ? "withDescendants"
-          : "matching",
-  });
+  const queryOptions = useMemo(
+    () => ({
+      treeScope:
+        treeMode === "roots"
+          ? ("roots" as const)
+          : treeMode === "withDescendants"
+            ? ("withDescendants" as const)
+            : ("matching" as const),
+    }),
+    [treeMode],
+  );
+  const {
+    data: project,
+    error,
+    dataUpdatedAt,
+  } = useGetTasks(projectId, filter, queryOptions);
+  const { data: totals } = useTaskTotals(
+    projectId,
+    filter,
+    queryOptions,
+    dataUpdatedAt,
+  );
   const { data: definitions = [] } = useGetFieldDefinitions(projectId);
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
   const { data: views = [] } = useGetViews(projectId, "table");
@@ -211,6 +236,9 @@ function RouteComponent() {
           groupBy: GROUP_BYS.includes(view.config.groupBy as GroupBy)
             ? (view.config.groupBy as GroupBy)
             : undefined,
+          color: ROW_COLORINGS.includes(view.config.color as RowColoring)
+            ? (view.config.color as RowColoring)
+            : undefined,
           viewId: view.id,
         },
         replace: true,
@@ -232,6 +260,7 @@ function RouteComponent() {
             ...(treeMode !== "tree" ? { treeMode } : {}),
             ...(columnsParam ? { columns: columnsParam } : {}),
             ...(groupBy ? { groupBy } : {}),
+            ...(color ? { color } : {}),
           },
         },
         {
@@ -248,7 +277,7 @@ function RouteComponent() {
         },
       );
     },
-    [saveView, conditions, treeMode, columnsParam, groupBy, t],
+    [saveView, conditions, treeMode, columnsParam, groupBy, color, t],
   );
 
   const handleOpenTask = useCallback(
@@ -322,7 +351,7 @@ function RouteComponent() {
       <PageTitle title={t("tasks:table.pageTitle", { name: project?.name })} />
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-card">
         <div className="border-border/80 border-b">
-          <div className="flex items-center gap-1 px-3 pt-2">
+          <div className="flex flex-wrap items-center gap-1 px-3 pt-2">
             <ColumnPicker
               options={columnOptions}
               visible={visibleColumns}
@@ -369,6 +398,44 @@ function RouteComponent() {
                 </SelectItem>
               </SelectContent>
             </Select>
+            <Select
+              value={color ?? "none"}
+              onValueChange={(next) =>
+                navigate({
+                  to: ".",
+                  search: (previous: TableSearchParams) => ({
+                    ...previous,
+                    color: ROW_COLORINGS.includes(next as RowColoring)
+                      ? (next as RowColoring)
+                      : undefined,
+                  }),
+                  replace: true,
+                })
+              }
+            >
+              <SelectTrigger
+                size="sm"
+                className="h-6 w-auto gap-1.5 border-0 bg-transparent px-2 text-xs shadow-none"
+                aria-label={t("tasks:table.color.label")}
+                data-testid="table-color"
+              >
+                <SelectValue>
+                  {t("tasks:table.color.label")}:{" "}
+                  {t(`tasks:table.color.${color ?? "none"}`)}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  {t("tasks:table.color.none")}
+                </SelectItem>
+                <SelectItem value="priority">
+                  {t("tasks:table.color.priority")}
+                </SelectItem>
+                <SelectItem value="due">
+                  {t("tasks:table.color.due")}
+                </SelectItem>
+              </SelectContent>
+            </Select>
             <ViewPicker
               views={views as SavedView[]}
               activeViewId={viewId}
@@ -377,7 +444,8 @@ function RouteComponent() {
                 conditions.length > 0 ||
                 treeMode !== "tree" ||
                 Boolean(columnsParam) ||
-                Boolean(groupBy)
+                Boolean(groupBy) ||
+                Boolean(color)
               }
               saving={isSavingView}
               onApply={handleApplyView}
@@ -425,6 +493,8 @@ function RouteComponent() {
           flatten={treeMode === "flat"}
           visibleColumns={visibleColumns}
           groupBy={groupBy}
+          coloring={color}
+          totals={totals}
           canEdit={canEditValues}
           onOpenTask={handleOpenTask}
           onSetCustomField={handleSetCustomField}

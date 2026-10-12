@@ -10888,6 +10888,41 @@
 								}
 							},
 							"required": ["label", "none", "epic"]
+						},
+						"color": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"none": {
+									"type": "string"
+								},
+								"priority": {
+									"type": "string"
+								},
+								"due": {
+									"type": "string"
+								}
+							},
+							"required": ["label", "none", "priority", "due"]
+						},
+						"totals": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"estimate": {
+									"type": "string"
+								},
+								"logged": {
+									"type": "string"
+								}
+							},
+							"required": ["label", "estimate", "logged"]
 						}
 					},
 					"required": [
@@ -10922,7 +10957,9 @@
 						"aggregates",
 						"noEpic",
 						"columnsPicker",
-						"groupBy"
+						"groupBy",
+						"color",
+						"totals"
 					]
 				},
 				"team": {

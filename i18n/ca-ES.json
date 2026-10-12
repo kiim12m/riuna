@@ -2773,6 +2773,17 @@
 				"label": "Group by",
 				"none": "No grouping",
 				"epic": "Epic"
+			},
+			"color": {
+				"label": "Colorear filas",
+				"none": "No",
+				"priority": "Prioridad",
+				"due": "Vencimiento"
+			},
+			"totals": {
+				"label": "Total del filtro · {{total}} tareas",
+				"estimate": "Estimado",
+				"logged": "Registrado"
 			}
 		},
 		"team": {

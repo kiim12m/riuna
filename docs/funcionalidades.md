@@ -205,7 +205,8 @@ asignado, observador). El filtro vive en la URL, así que se comparte pegando el
 enlace.
 
 **Vistas guardadas** ([ADR 015](adr/015-vistas-guardadas.md)): guardar el
-filtro y el modo de jerarquía con un nombre, compartirlo con el espacio de
+filtro, el modo de jerarquía y, en la Tabla, las columnas, la agrupación y el color
+de las filas con un nombre, compartirlo con el espacio de
 trabajo, y eliminarlo.
 
 **Orden**: manual, fecha de creación, prioridad, vencimiento, título o número.

@@ -50,6 +50,9 @@ type Task = {
   position: number | null;
   createdAt: string;
   updatedAt?: string;
+  // «Hecha» es `completed_at` (ADR 030). La lista la manda; opcional porque
+  // hay tareas que se construyen en el cliente sin ella.
+  completedAt?: string | null;
   userId: string | null;
   assigneeId: string | null;
   assigneeName: string | null;
