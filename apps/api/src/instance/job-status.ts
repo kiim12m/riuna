@@ -7,13 +7,27 @@ export type JobRunStatus = "ok" | "degraded" | "error";
 
 const MAX_ERROR_LENGTH = 500;
 
-// Un error de un trabajo puede citar la URL de un webhook o de un chat, y la
-// consulta de esas URL lleva a veces el token. El texto lo lee el admin de
-// instancia, pero un secreto no sale de la API nunca (`AGENTS.md`).
-function errorText(error: unknown) {
+/**
+ * El texto de un error, sin lo que pueda ser secreto (`AGENTS.md`). Lo lee el
+ * admin de instancia, y va en el texto de la alerta que sale por sus canales.
+ *
+ * - Un error de Drizzle acaba en `params: <valores>`, y esos valores son
+ *   cualquier dato de la consulta: se corta ahi.
+ * - Una URL se queda en su origen: el token de un chat o de un webhook va a
+ *   veces en la consulta y a veces en la ruta (`/bot<token>/` de Telegram, las
+ *   de Discord y Slack). Quitar solo la consulta no bastaba (revision de la
+ *   Fase 9).
+ */
+export function errorText(error: unknown) {
   const text = error instanceof Error ? error.message : String(error);
-  return text
-    .replace(/(https?:\/\/[^\s?#]+)[?#]\S*/g, "$1?…")
+  return (text.split(/\s*params:/)[0] ?? "")
+    .replace(/https?:\/\/[^\s"'<>]+/g, (url) => {
+      try {
+        return `${new URL(url).origin}/…`;
+      } catch {
+        return "[url]";
+      }
+    })
     .slice(0, MAX_ERROR_LENGTH);
 }
 
