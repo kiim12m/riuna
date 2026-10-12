@@ -1,8 +1,9 @@
-import { useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   CalendarDays,
   CalendarRange,
   Info,
+  Megaphone,
   SquareKanban,
   SquircleDashed,
   Table2,
@@ -10,6 +11,7 @@ import {
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { PinnedAnnouncementBanner } from "@/components/announcement/pinned-announcement-banner";
 import MobileProjectNav from "@/components/common/header/mobile-project-nav";
 import { NewTaskButton } from "@/components/common/header/new-task-button";
 import ProjectCrumbSelect from "@/components/common/header/project-crumb-select";
@@ -45,7 +47,14 @@ type ProjectLayoutProps = {
   headerActions?: ReactNode;
   children: ReactNode;
   showViewSwitcher?: boolean;
-  activeView?: "backlog" | "board" | "calendar" | "gantt" | "table" | "cycles";
+  activeView?:
+    | "backlog"
+    | "board"
+    | "calendar"
+    | "gantt"
+    | "table"
+    | "cycles"
+    | "announcements";
 };
 
 // La vista activa se marca con el tinte de --accent y un raíl de 2 px en River
@@ -93,7 +102,9 @@ export default function ProjectLayout({
             ? "table"
             : location.pathname.includes("/cycles")
               ? "cycles"
-              : "board");
+              : location.pathname.includes("/announcements")
+                ? "announcements"
+                : "board");
 
   const handleNavigateToBacklog = () => {
     navigate({
@@ -295,6 +306,28 @@ export default function ProjectLayout({
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
+            {project && !project.ownerUserId && (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className={cn(
+                  "size-7 text-muted-foreground",
+                  resolvedView === "announcements" &&
+                    "bg-accent text-foreground",
+                )}
+                aria-label={t("announcements:projectTitle")}
+                title={t("announcements:projectTitle")}
+                data-testid="project-announcements-link"
+                render={
+                  <Link
+                    to="/dashboard/workspace/$workspaceId/project/$projectId/announcements"
+                    params={{ workspaceId, projectId }}
+                  />
+                }
+              >
+                <Megaphone className="size-3.5" />
+              </Button>
+            )}
             <NewTaskButton />
             {headerActions}
             <MobileHeaderBell />
@@ -306,6 +339,13 @@ export default function ProjectLayout({
         <div className="shrink-0 border-border/80 border-b px-3 py-2">
           <QuickAddInput workspaceId={workspaceId} showHint={false} />
         </div>
+      )}
+
+      {project && !project.ownerUserId && resolvedView !== "announcements" && (
+        <PinnedAnnouncementBanner
+          workspaceId={workspaceId}
+          projectId={projectId}
+        />
       )}
 
       <Layout.Content>{children}</Layout.Content>

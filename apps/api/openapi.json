@@ -9236,7 +9236,8 @@
                           "task_mention",
                           "task_comment",
                           "task_due_date_changed",
-                          "task_reminder"
+                          "task_reminder",
+                          "announcement_published"
                         ],
                         "type": "string"
                       },
@@ -9366,7 +9367,8 @@
                         "task_mention",
                         "task_comment",
                         "task_due_date_changed",
-                        "task_reminder"
+                        "task_reminder",
+                        "announcement_published"
                       ],
                       "type": "string"
                     },
@@ -9525,7 +9527,8 @@
                         "task_mention",
                         "task_comment",
                         "task_due_date_changed",
-                        "task_reminder"
+                        "task_reminder",
+                        "announcement_published"
                       ],
                       "type": "string"
                     },
@@ -22547,6 +22550,787 @@
           }
         ],
         "summary": "Revoke My Session"
+      }
+    },
+    "/announcement/workspace/{workspaceId}": {
+      "get": {
+        "operationId": "listWorkspaceAnnouncements",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "The workspace's own announcements (not its projects'): pinned ones first, then newest first, up to 50",
+        "responses": {
+          "200": {
+            "description": "Workspace announcements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "type": "string"
+                      },
+                      "projectId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "pinned": {
+                        "type": "boolean"
+                      },
+                      "pinnedUntil": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "pinnedNow": {
+                        "type": "boolean"
+                      },
+                      "notified": {
+                        "type": "boolean"
+                      },
+                      "author": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "image": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "image"
+                        ],
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "workspaceId",
+                      "projectId",
+                      "title",
+                      "content",
+                      "pinned",
+                      "pinnedUntil",
+                      "pinnedNow",
+                      "notified",
+                      "author",
+                      "createdAt",
+                      "updatedAt"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "List Workspace Announcements"
+      },
+      "post": {
+        "operationId": "createWorkspaceAnnouncement",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "Publish a workspace announcement. Needs workspace:manage_settings. With `notify` (the default) every member but you gets a notification",
+        "responses": {
+          "200": {
+            "description": "The announcement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "pinned": {
+                      "type": "boolean"
+                    },
+                    "pinnedUntil": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "pinnedNow": {
+                      "type": "boolean"
+                    },
+                    "notified": {
+                      "type": "boolean"
+                    },
+                    "author": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "image": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "image"
+                      ],
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "projectId",
+                    "title",
+                    "content",
+                    "pinned",
+                    "pinnedUntil",
+                    "pinnedNow",
+                    "notified",
+                    "author",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 20000,
+                    "default": ""
+                  },
+                  "pinned": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "pinnedUntil": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "notify": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Create Workspace Announcement"
+      }
+    },
+    "/announcement/project/{projectId}": {
+      "get": {
+        "operationId": "listProjectAnnouncements",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "A project's announcements: pinned ones first, then newest first, up to 50",
+        "responses": {
+          "200": {
+            "description": "Project announcements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "type": "string"
+                      },
+                      "projectId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "pinned": {
+                        "type": "boolean"
+                      },
+                      "pinnedUntil": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "pinnedNow": {
+                        "type": "boolean"
+                      },
+                      "notified": {
+                        "type": "boolean"
+                      },
+                      "author": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "image": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "image"
+                        ],
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "workspaceId",
+                      "projectId",
+                      "title",
+                      "content",
+                      "pinned",
+                      "pinnedUntil",
+                      "pinnedNow",
+                      "notified",
+                      "author",
+                      "createdAt",
+                      "updatedAt"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "List Project Announcements"
+      },
+      "post": {
+        "operationId": "createProjectAnnouncement",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "Publish a project announcement. Needs project:update; a personal project has none. With `notify` (the default) every workspace member but you gets a notification",
+        "responses": {
+          "200": {
+            "description": "The announcement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "pinned": {
+                      "type": "boolean"
+                    },
+                    "pinnedUntil": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "pinnedNow": {
+                      "type": "boolean"
+                    },
+                    "notified": {
+                      "type": "boolean"
+                    },
+                    "author": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "image": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "image"
+                      ],
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "projectId",
+                    "title",
+                    "content",
+                    "pinned",
+                    "pinnedUntil",
+                    "pinnedNow",
+                    "notified",
+                    "author",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 20000,
+                    "default": ""
+                  },
+                  "pinned": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "pinnedUntil": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "notify": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Create Project Announcement"
+      }
+    },
+    "/announcement/project/{projectId}/pinned": {
+      "get": {
+        "operationId": "getPinnedAnnouncement",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "The banner of a project's views: its most recent pinned announcement still in force, or the workspace's, or null",
+        "responses": {
+          "200": {
+            "description": "The pinned announcement, or null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "pinned": {
+                      "type": "boolean"
+                    },
+                    "pinnedUntil": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "pinnedNow": {
+                      "type": "boolean"
+                    },
+                    "notified": {
+                      "type": "boolean"
+                    },
+                    "author": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "image": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "image"
+                      ],
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "projectId",
+                    "title",
+                    "content",
+                    "pinned",
+                    "pinnedUntil",
+                    "pinnedNow",
+                    "notified",
+                    "author",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "nullable": true
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Get Pinned Announcement"
+      }
+    },
+    "/announcement/{id}": {
+      "put": {
+        "operationId": "updateAnnouncement",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "Edit an announcement: its text, and whether and until when it is pinned. Does not notify again",
+        "responses": {
+          "200": {
+            "description": "The announcement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "pinned": {
+                      "type": "boolean"
+                    },
+                    "pinnedUntil": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "pinnedNow": {
+                      "type": "boolean"
+                    },
+                    "notified": {
+                      "type": "boolean"
+                    },
+                    "author": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "image": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "image"
+                      ],
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "projectId",
+                    "title",
+                    "content",
+                    "pinned",
+                    "pinnedUntil",
+                    "pinnedNow",
+                    "notified",
+                    "author",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 20000,
+                    "default": ""
+                  },
+                  "pinned": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "pinnedUntil": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Announcement"
+      },
+      "delete": {
+        "operationId": "deleteAnnouncement",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "Delete an announcement",
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Delete Announcement"
       }
     },
     "/external-link/task/{taskId}": {

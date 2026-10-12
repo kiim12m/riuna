@@ -640,6 +640,47 @@ export const taskReminderTable = pgTable(
   ],
 );
 
+// Avisos de proyecto y de espacio (ADR 081). `project_id` nulo es un aviso
+// del espacio. Fijar lo saca como franja en las vistas del proyecto hasta
+// `pinned_until`, o sin fin.
+export const announcementTable = pgTable(
+  "announcement",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, { onDelete: "cascade" }),
+    projectId: text("project_id").references(() => projectTable.id, {
+      onDelete: "cascade",
+    }),
+    title: text("title").notNull(),
+    content: text("content").notNull().default(""),
+    pinned: boolean("pinned").notNull().default(false),
+    pinnedUntil: timestamp("pinned_until", { mode: "date" }),
+    notified: boolean("notified").notNull().default(false),
+    authorId: text("author_id").references(() => userTable.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("announcement_workspace_created_idx").on(
+      table.workspaceId,
+      table.createdAt,
+    ),
+    index("announcement_project_created_idx").on(
+      table.projectId,
+      table.createdAt,
+    ),
+  ],
+);
+
 // Las epicas cortan el proyecto en vertical: agrupan tareas de cualquier rama
 // del arbol y de cualquier columna. Son entidad propia y no una etiqueta
 // porque tienen fechas, orden y un ciclo de vida —se archivan— que una

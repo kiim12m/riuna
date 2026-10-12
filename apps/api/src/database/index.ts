@@ -54,6 +54,7 @@ import { resolveDatabaseConnectionString } from "./resolve-database-url";
 import {
   accountTable,
   activityTable,
+  announcementTable,
   apikeyTable,
   assetTable,
   automationRunTable,
@@ -168,6 +169,7 @@ export const schema = {
   taskTable,
   taskWatcherTable,
   taskReminderTable,
+  announcementTable,
   teamMemberTable,
   teamTable,
   templateTable,

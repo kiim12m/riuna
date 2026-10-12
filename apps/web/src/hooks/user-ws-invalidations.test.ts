@@ -85,6 +85,18 @@ describe("userMessageInvalidations", () => {
     expect(userMessageInvalidations({ type: "VIEW_UPDATED" })).toEqual([]);
   });
 
+  it("refreshes a workspace's announcements", () => {
+    expect(
+      userMessageInvalidations({
+        type: "ANNOUNCEMENTS_INVALIDATED",
+        workspaceId: "ws-1",
+      }),
+    ).toEqual([["announcements", "ws-1"]]);
+    expect(
+      userMessageInvalidations({ type: "ANNOUNCEMENTS_INVALIDATED" }),
+    ).toEqual([]);
+  });
+
   it("refreshes notifications and ignores unknown messages", () => {
     // Tambien el recordatorio de la tarea abierta: avisar lo borra (ADR 077).
     expect(userMessageInvalidations({ type: "NOTIFICATION_CREATED" })).toEqual([

@@ -19,6 +19,7 @@ import {
 } from "hono-openapi";
 import * as v from "valibot";
 import activity from "./activity";
+import announcement from "./announcement";
 import { auth } from "./auth";
 import automation from "./automation";
 import availability from "./availability";
@@ -733,6 +734,7 @@ export function createApp() {
   const taskWatcherApi = api.route("/task-watcher", taskWatcher);
   const taskReminderApi = api.route("/task-reminder", taskReminder);
   const sessionApi = api.route("/session", sessions);
+  const announcementApi = api.route("/announcement", announcement);
   const externalLinkApi = api.route("/external-link", externalLink);
   const workflowRuleApi = api.route("/workflow-rule", workflowRule);
   const automationApi = api.route("/automation", automation);
@@ -922,6 +924,7 @@ export function createApp() {
     taskWatcherApi,
     taskReminderApi,
     sessionApi,
+    announcementApi,
     telegramIntegrationApi,
     timeEntryApi,
     timeSheetApi,
@@ -1040,6 +1043,7 @@ const {
   taskWatcherApi,
   taskReminderApi,
   sessionApi,
+  announcementApi,
   telegramIntegrationApi,
   timeEntryApi,
   timeSheetApi,
@@ -1111,6 +1115,7 @@ export type AppType =
   | typeof taskWatcherApi
   | typeof taskReminderApi
   | typeof sessionApi
+  | typeof announcementApi
   | typeof externalLinkApi
   | typeof workflowRuleApi
   | typeof automationApi

@@ -396,6 +396,21 @@ async function membersOfWorkspace(workspaceId: string): Promise<string[]> {
   return rows.map((row) => row.userId);
 }
 
+// Un aviso de proyecto o de espacio (ADR 081) se ve en el tablon y en la
+// franja de las vistas de todo el espacio, asi que va a todos sus miembros
+// por el canal de usuario.
+subscribeToEvent<{ workspaceId: string }>(
+  "announcement.changed",
+  async ({ workspaceId }) => {
+    for (const userId of await membersOfWorkspace(workspaceId)) {
+      broadcastToUser(userId, {
+        type: "ANNOUNCEMENTS_INVALIDATED",
+        workspaceId,
+      });
+    }
+  },
+);
+
 subscribeToEvent<{
   workspaceId: string;
   projectId: string | null;

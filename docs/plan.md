@@ -2910,29 +2910,94 @@ de `AGENTS.md`:
 
 **Tanda 1 — Lo pequeño de cada día** (≈ 3 semanas)
 
-- **1.1 Observadores** · S. Seguir una tarea sin estar asignado. Los comentarios y los cambios de
-  estado y de vencimiento avisan también a quien observa, con las reglas por espacio de sus
-  canales.
-  - En el detalle, un botón «Observar» con la lista de quién observa.
-  - En las automatizaciones, un destinatario nuevo, «observadores».
-  - Herramientas MCP para observar y dejar de observar.
-  - A decidir en la ADR: si comentar o ser mencionado hace observar.
-- **1.2 Recordatorio en la tarea** · S. «Recuérdamelo», en el detalle y en el menú de fila: mañana a
-  las 9:00, el lunes, en una semana, o un día y una hora, con una nota que solo ve quien lo pone.
-  Llega por la campana y por los canales, y lo corre el planificador de trabajos que ya existe. No
-  planifica la tarea: el plan del día sigue siendo otra cosa.
-- **1.3 Acciones de un clic** · S. Un disparador «manual» en el motor de automatizaciones. La regla
-  sale como botón en el detalle y en el menú contextual cuando la tarea cumple su «Si», y corre
-  sus «Entonces» con el historial de siempre. Amplía las ADR 066 y 067; a decidir en nombre de
-  quién actúa (quien pulsa, con su permiso de editar).
-- **1.4 Sesiones activas** · S. En Ajustes › Seguridad, las sesiones de Better Auth (navegador, IP y
-  última actividad), con cerrar una o todas menos esta.
-- **1.5 Totales y colores en la Tabla** · S. Una fila de totales (estimado, registrado, número y
-  moneda) que la API calcula sobre todo el filtro, no sobre la página. Colorear las filas por
-  prioridad o por vencimiento, guardado en la vista.
-- **1.6 Avisos del proyecto** · M. Un tablón de avisos por proyecto y por espacio, con el editor
-  TipTap. Se pueden fijar, y entonces salen en una franja de las vistas del proyecto. Avisan a
-  los miembros. Con el vocabulario de permisos que ya existe, si basta.
+- **1.1 Observadores** ✔ · M · [ADR 076](adr/076-observadores.md). Seguir una tarea sin estar
+  asignado. **Hecho (2026-10-12).** Pasó de S a M con las decisiones del usuario, tomadas al
+  empezarla:
+  - se observa solo al crear la tarea, al comentarla y al salir mencionado;
+  - añadir o quitar a otra persona pide `task:assign`; observarse a uno mismo, `task:read`;
+  - todos los asignados avisan y cuentan como observadores implícitos;
+  - lo observado se ve en un filtro `watchers` del motor y en la pestaña «Observando» de Mis
+    tareas.
+
+  Lo construido:
+  - tabla `task_watcher` (migración 0084) y el módulo `task-watcher`;
+  - comentarios, cambios de estado y un tipo nuevo, `task_due_date_changed`, que avisan a toda
+    la audiencia;
+  - el botón del detalle, la pestaña, el filtro «Observada por», el destinatario de las
+    automatizaciones y tres herramientas MCP (49 en total).
+
+  Lo que salió por el camino, ya arreglado:
+  - comentar y cambiar el estado solo avisaban al responsable principal;
+  - la edición completa de una tarea cambiaba el vencimiento sin publicar
+    `task.due_date_changed`, así que ni la actividad ni las automatizaciones se enteraban;
+  - la edición en bloque publicaba el cambio de estado de todas las tareas, cambiaran o no, y
+    sin el estado anterior.
+
+  Pruebas: 16 de integración en `task-watchers.test.ts`, el filtro y los destinatarios en las
+  unitarias, y `watchers.spec.ts` de extremo a extremo.
+- **1.2 Recordatorio en la tarea** ✔ · S · [ADR 077](adr/077-recordatorio-en-la-tarea.md).
+  **Hecho (2026-10-12).** «Recuérdamelo» en el detalle (mañana a las 9:00, el próximo lunes, en
+  una semana, o día y hora, con una nota privada) y en el menú contextual de filas y tarjetas.
+  - Tabla `task_reminder` (migración 0085): uno por persona y tarea, privado; basta con poder ver
+    la tarea.
+  - El planificador lo manda cada minuto (`task-reminders`). Cada fila se reclama borrándola con
+    `SKIP LOCKED`, así que con dos instancias no se avisa dos veces.
+  - Llega como `task_reminder` por la campana y los canales, y pinchar abre la tarea.
+  - MCP: `set_task_reminder` y `clear_task_reminder`.
+- **1.3 Acciones de un clic** ✔ · S · [ADR 078](adr/078-acciones-de-un-clic.md). **Hecho
+  (2026-10-12).** Un disparador nuevo, «Se pulsa el botón» (`manual`).
+  - La regla sale como botón en el detalle, junto al cronómetro, y en «Acciones» del menú
+    contextual, mientras la tarea cumpla su «Si».
+  - Actúa en nombre de quien pulsa, con `task:update` (y `task:assign` si reparte).
+  - La actividad la firma «Ana con «Enviar a revisión»», y la ejecución apunta quién pulsó.
+  - MCP: `list_task_actions` y `run_task_action`.
+- **1.4 Sesiones activas** ✔ · S · [ADR 079](adr/079-sesiones-activas.md). **Hecho
+  (2026-10-12).** Ajustes › Seguridad: navegador y sistema, IP, cuándo entró y cuándo caduca;
+  cerrar una o todas menos esta.
+  - Rutas propias en `/api/session`, porque las de Better Auth devuelven el token de cada
+    sesión.
+  - No se gestionan con una clave de API.
+  - No enseña la «última actividad»: Better Auth no la guarda con esa precisión.
+  - Un dispositivo cerrado sigue hasta cinco minutos, lo que dura la caché de sesión en cookie.
+- **1.5 Totales y colores en la Tabla** ✔ · S · [ADR 080](adr/080-totales-y-colores-en-la-tabla.md).
+  **Hecho (2026-10-12).**
+  - **Totales**: cuántas tareas, estimado, registrado y cada campo de número o moneda, sobre todo
+    el filtro.
+    - Los calcula `GET /task/tasks/:projectId/totals` con la misma cláusula que la lista
+      (`taskListWhere`, sacada de `get-tasks.ts`).
+    - Cada tarea cuenta una vez.
+    - Medido con 50.000 tareas: p95 de 21 a 35 ms, y 111 ms con la rama entera.
+  - **Colores**: colorear filas por prioridad o por vencimiento, guardado en la vista.
+  - MCP: `get_task_totals`.
+- **1.6 Avisos del proyecto** ✔ · M · [ADR 081](adr/081-avisos-de-proyecto-y-espacio.md).
+  **Hecho (2026-10-12).** Tablón de avisos por proyecto (el megáfono de su cabecera) y por
+  espacio (paleta de comandos, franja y enlace), con el editor de siempre.
+  - Tabla `announcement` (migración 0086).
+  - Permisos con el vocabulario que ya existe: `project:update` en un proyecto y
+    `workspace:manage_settings` en el espacio.
+  - Avisar a los miembros se elige al publicar.
+  - Uno fijado sale como franja en las vistas del proyecto, hasta una fecha o sin fin. Cada uno
+    la oculta en su navegador.
+  - Tiempo real por el canal de usuario.
+  - MCP: `list_announcements` y `post_announcement`.
+
+  Lo que salió por el camino, ya arreglado:
+  - `i18n:check` fallaba desde la 1.1 porque al catalán le faltaban las claves nuevas; se copian
+    del castellano, como el resto del fichero;
+  - con «Colorear filas», la barra de la Tabla se salía de ancho en el móvil (lo cazó
+    `mobile/overflow`); ahora salta de línea.
+
+Pruebas de los puntos 1.2 a 1.6:
+- 22 de integración: `task-reminders`, `manual-automations`, `sessions`, `task-totals` y
+  `announcements`;
+- unitarias de los atajos del recordatorio, el color de las filas, el navegador de cada sesión y
+  los destinos de las notificaciones;
+- de extremo a extremo: `task-reminder`, `manual-actions`, `sessions`, `table-totals` y
+  `announcements`.
+
+Verificación de la tanda entera (2026-10-12): la batería de integración completa (886 pruebas),
+las unitarias de la API y de la web, y las de extremo a extremo (107 pasan y 2 se saltan, como
+siempre), incluida `watchers.spec.ts` de la 1.1.
 
 **Tanda 2 — Planificación** (≈ 6 semanas)
 

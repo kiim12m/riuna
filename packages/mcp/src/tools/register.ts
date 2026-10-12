@@ -18,6 +18,19 @@ const optionalNonEmptyString = nonEmptyString.optional();
 const nullableOptionalNonEmptyString = nonEmptyString.nullable().optional();
 const isoDateTimeSchema = z.string().datetime({ offset: true });
 const optionalIsoDateTimeSchema = isoDateTimeSchema.optional();
+
+/** El tablon de un aviso: el de un proyecto o el del espacio, uno de los dos. */
+function announcementScopePath(args: {
+  projectId?: string;
+  workspaceId?: string;
+}) {
+  if (Boolean(args.projectId) === Boolean(args.workspaceId)) {
+    throw new Error("Pass either projectId or workspaceId");
+  }
+  return args.projectId
+    ? `/api/announcement/project/${encodeURIComponent(args.projectId)}`
+    : `/api/announcement/workspace/${encodeURIComponent(args.workspaceId ?? "")}`;
+}
 const nullableOptionalIsoDateTimeSchema = isoDateTimeSchema
   .nullable()
   .optional();
@@ -847,6 +860,46 @@ export function registerTools(
           `/api/task/tasks/${encodeURIComponent(args.projectId)}/totals${q ? `?${q}` : ""}`,
           { method: "GET" },
         ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "list_announcements",
+    {
+      description:
+        "Announcements of a project (projectId) or of the workspace itself (workspaceId): pinned ones first, then newest first.",
+      inputSchema: z.object({
+        projectId: nonEmptyString.optional(),
+        workspaceId: nonEmptyString.optional(),
+      }),
+    },
+    async (args) =>
+      run(() => client.json(announcementScopePath(args), { method: "GET" })),
+  );
+
+  server.registerTool(
+    "post_announcement",
+    {
+      description:
+        "Publish an announcement in a project (needs project:update) or in the workspace (needs workspace:manage_settings). Content is Markdown. pinned shows it as a banner in the project's views, until pinnedUntil if given. With notify (the default) every workspace member gets a notification.",
+      inputSchema: z.object({
+        projectId: nonEmptyString.optional(),
+        workspaceId: nonEmptyString.optional(),
+        title: z.string().min(1).max(200),
+        content: z.string().max(20_000).optional(),
+        pinned: z.boolean().optional(),
+        pinnedUntil: optionalIsoDateTimeSchema,
+        notify: z.boolean().optional(),
+      }),
+    },
+    async (args) => {
+      const { projectId, workspaceId, ...body } = args;
+      return run(() =>
+        client.json(announcementScopePath({ projectId, workspaceId }), {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
       );
     },
   );

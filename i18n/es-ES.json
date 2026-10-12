@@ -2079,6 +2079,11 @@
 				"title": "Recordatorio: {{taskTitle}}",
 				"content": "{{note}}",
 				"contentWithoutNote": "Pediste que te recordara esta tarea."
+			},
+			"announcement_published": {
+				"title": "Aviso: {{announcementTitle}}",
+				"content": "{{authorName}} publicó un aviso en {{projectName}}",
+				"contentWorkspace": "{{authorName}} publicó un aviso del espacio"
 			}
 		},
 		"reminderLeadTime": {
@@ -3905,6 +3910,47 @@
 				"title": "Nadie a tu cargo",
 				"description": "Cuando seas responsable de un equipo, aquí verás el día de tu gente."
 			}
+		}
+	},
+	"announcements": {
+		"projectTitle": "Avisos del proyecto",
+		"workspaceTitle": "Avisos del espacio",
+		"projectSubtitle": "Novedades para quien trabaja en este proyecto. Uno fijado sale como franja en sus vistas.",
+		"workspaceSubtitle": "Novedades para todo el espacio. Uno fijado sale como franja en las vistas de todos los proyectos.",
+		"seeWorkspace": "Ver los avisos del espacio",
+		"new": "Nuevo aviso",
+		"loading": "Cargando avisos…",
+		"empty": "Todavía no hay avisos",
+		"emptyCanPublish": "Publica el primero: puede avisar a todos los miembros y quedarse fijado como franja.",
+		"emptyReadOnly": "Cuando alguien publique uno, saldrá aquí.",
+		"edit": "Editar aviso",
+		"delete": "Borrar aviso",
+		"deleteConfirm": "¿Borrar este aviso? Desaparece para todos.",
+		"deleted": "Aviso borrado",
+		"published": "Aviso publicado",
+		"saved": "Aviso guardado",
+		"saveError": "No se pudo guardar el aviso",
+		"pinned": "Fijado",
+		"pinnedUntil": "Fijado hasta el {{date}}",
+		"notified": "Avisó a los miembros",
+		"dialog": {
+			"newTitle": "Nuevo aviso",
+			"editTitle": "Editar aviso",
+			"description": "Lo ve todo el espacio.",
+			"title": "Título",
+			"titlePlaceholder": "Corte de luz el jueves de 8:00 a 10:00",
+			"contentPlaceholder": "Los detalles, enlaces a tareas, lo que haga falta saber…",
+			"pin": "Fijar como franja",
+			"pinUntil": "hasta (opcional)",
+			"notify": "Avisar a los miembros",
+			"publish": "Publicar",
+			"save": "Guardar"
+		},
+		"banner": {
+			"project": "Aviso fijado:",
+			"workspace": "Aviso del espacio:",
+			"open": "Ver avisos",
+			"hide": "Ocultar para mí"
 		}
 	}
 }

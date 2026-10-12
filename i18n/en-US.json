@@ -2087,6 +2087,11 @@
 				"title": "Reminder: {{taskTitle}}",
 				"content": "{{note}}",
 				"contentWithoutNote": "You asked to be reminded about this task."
+			},
+			"announcement_published": {
+				"title": "Announcement: {{announcementTitle}}",
+				"content": "{{authorName}} posted an announcement in {{projectName}}",
+				"contentWorkspace": "{{authorName}} posted a workspace announcement"
 			}
 		},
 		"loadMore": "Load older notifications",
@@ -3905,6 +3910,47 @@
 				"title": "Nobody to lead",
 				"description": "When you lead a team, you will see your people’s day here."
 			}
+		}
+	},
+	"announcements": {
+		"projectTitle": "Project announcements",
+		"workspaceTitle": "Workspace announcements",
+		"projectSubtitle": "News for everyone working on this project. A pinned one shows as a banner in its views.",
+		"workspaceSubtitle": "News for the whole workspace. A pinned one shows as a banner in every project's views.",
+		"seeWorkspace": "See the workspace announcements",
+		"new": "New announcement",
+		"loading": "Loading announcements…",
+		"empty": "No announcements yet",
+		"emptyCanPublish": "Post the first one: it can notify every member and stay pinned as a banner.",
+		"emptyReadOnly": "When someone posts one, it will appear here.",
+		"edit": "Edit announcement",
+		"delete": "Delete announcement",
+		"deleteConfirm": "Delete this announcement? It disappears for everyone.",
+		"deleted": "Announcement deleted",
+		"published": "Announcement published",
+		"saved": "Announcement saved",
+		"saveError": "Could not save the announcement",
+		"pinned": "Pinned",
+		"pinnedUntil": "Pinned until {{date}}",
+		"notified": "Members were notified",
+		"dialog": {
+			"newTitle": "New announcement",
+			"editTitle": "Edit announcement",
+			"description": "It is shown to everyone in the workspace.",
+			"title": "Title",
+			"titlePlaceholder": "Power cut on Thursday from 8:00 to 10:00",
+			"contentPlaceholder": "Details, links to tasks, whatever people need to know…",
+			"pin": "Pin as a banner",
+			"pinUntil": "until (optional)",
+			"notify": "Notify the members",
+			"publish": "Publish",
+			"save": "Save"
+		},
+		"banner": {
+			"project": "Pinned:",
+			"workspace": "Workspace:",
+			"open": "See announcements",
+			"hide": "Hide for me"
 		}
 	}
 }

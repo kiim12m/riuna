@@ -8228,6 +8228,22 @@
 								}
 							},
 							"required": ["title", "content", "contentWithoutNote"]
+						},
+						"announcement_published": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"content": {
+									"type": "string"
+								},
+								"contentWorkspace": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "content", "contentWorkspace"]
 						}
 					},
 					"required": [
@@ -8243,7 +8259,8 @@
 						"task_overdue",
 						"time_entry_created",
 						"instance_alert",
-						"task_reminder"
+						"task_reminder",
+						"announcement_published"
 					]
 				},
 				"loadMore": {
@@ -15287,6 +15304,167 @@
 				}
 			},
 			"required": ["notice_one", "notice_other", "teams", "team"]
+		},
+		"announcements": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"projectTitle": {
+					"type": "string"
+				},
+				"workspaceTitle": {
+					"type": "string"
+				},
+				"projectSubtitle": {
+					"type": "string"
+				},
+				"workspaceSubtitle": {
+					"type": "string"
+				},
+				"seeWorkspace": {
+					"type": "string"
+				},
+				"new": {
+					"type": "string"
+				},
+				"loading": {
+					"type": "string"
+				},
+				"empty": {
+					"type": "string"
+				},
+				"emptyCanPublish": {
+					"type": "string"
+				},
+				"emptyReadOnly": {
+					"type": "string"
+				},
+				"edit": {
+					"type": "string"
+				},
+				"delete": {
+					"type": "string"
+				},
+				"deleteConfirm": {
+					"type": "string"
+				},
+				"deleted": {
+					"type": "string"
+				},
+				"published": {
+					"type": "string"
+				},
+				"saved": {
+					"type": "string"
+				},
+				"saveError": {
+					"type": "string"
+				},
+				"pinned": {
+					"type": "string"
+				},
+				"pinnedUntil": {
+					"type": "string"
+				},
+				"notified": {
+					"type": "string"
+				},
+				"dialog": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"newTitle": {
+							"type": "string"
+						},
+						"editTitle": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"title": {
+							"type": "string"
+						},
+						"titlePlaceholder": {
+							"type": "string"
+						},
+						"contentPlaceholder": {
+							"type": "string"
+						},
+						"pin": {
+							"type": "string"
+						},
+						"pinUntil": {
+							"type": "string"
+						},
+						"notify": {
+							"type": "string"
+						},
+						"publish": {
+							"type": "string"
+						},
+						"save": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"newTitle",
+						"editTitle",
+						"description",
+						"title",
+						"titlePlaceholder",
+						"contentPlaceholder",
+						"pin",
+						"pinUntil",
+						"notify",
+						"publish",
+						"save"
+					]
+				},
+				"banner": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"project": {
+							"type": "string"
+						},
+						"workspace": {
+							"type": "string"
+						},
+						"open": {
+							"type": "string"
+						},
+						"hide": {
+							"type": "string"
+						}
+					},
+					"required": ["project", "workspace", "open", "hide"]
+				}
+			},
+			"required": [
+				"projectTitle",
+				"workspaceTitle",
+				"projectSubtitle",
+				"workspaceSubtitle",
+				"seeWorkspace",
+				"new",
+				"loading",
+				"empty",
+				"emptyCanPublish",
+				"emptyReadOnly",
+				"edit",
+				"delete",
+				"deleteConfirm",
+				"deleted",
+				"published",
+				"saved",
+				"saveError",
+				"pinned",
+				"pinnedUntil",
+				"notified",
+				"dialog",
+				"banner"
+			]
 		}
 	},
 	"required": [
@@ -15317,6 +15495,7 @@
 		"focus",
 		"calendar",
 		"availability",
-		"lead"
+		"lead",
+		"announcements"
 	]
 }

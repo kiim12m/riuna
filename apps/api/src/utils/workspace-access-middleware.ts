@@ -21,6 +21,7 @@ type WorkspaceIdSource =
         | "column"
         | "workflowRule"
         | "automation"
+        | "announcement"
         | "cycle"
         | "recurrence"
         | "template"
@@ -151,6 +152,7 @@ async function lookupWorkspaceId(
     | "column"
     | "workflowRule"
     | "automation"
+    | "announcement"
     | "cycle"
     | "recurrence"
     | "template"
@@ -397,6 +399,15 @@ async function lookupWorkspaceId(
         return automation?.workspaceId || null;
       }
 
+      case "announcement": {
+        const [announcement] = await db
+          .select({ workspaceId: schema.announcementTable.workspaceId })
+          .from(schema.announcementTable)
+          .where(eq(schema.announcementTable.id, id))
+          .limit(1);
+        return announcement?.workspaceId || null;
+      }
+
       case "workflowRule": {
         const [workflowRule] = await db
           .select({
@@ -536,6 +547,11 @@ export const workspaceAccess = {
   fromAutomation: (idKey = "id") =>
     workspaceAccessMiddleware({
       sources: [{ type: "lookup", resource: "automation", idKey }],
+    }),
+
+  fromAnnouncement: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [{ type: "lookup", resource: "announcement", idKey }],
     }),
 
   fromWorkflowRule: (idKey = "id") =>

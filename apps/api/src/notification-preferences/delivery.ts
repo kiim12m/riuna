@@ -3,6 +3,7 @@ import { sendNotificationEmail } from "@riuna/email";
 import { and, eq } from "drizzle-orm";
 import db from "../database";
 import {
+  announcementTable,
   notificationTable,
   projectTable,
   taskTable,
@@ -249,6 +250,17 @@ function buildDeliveryContent(notification: {
         body: note || "You asked to be reminded about this task.",
       };
     }
+    case "announcement_published": {
+      const title = getStringValue(notification.eventData, "announcementTitle");
+      const authorName = getStringValue(notification.eventData, "authorName");
+      const projectName = getStringValue(notification.eventData, "projectName");
+      return {
+        title: title ? `Announcement: ${title}` : "New announcement",
+        body: `${authorName ?? "Someone"} posted an announcement${
+          projectName ? ` in ${projectName}` : ""
+        }.`,
+      };
+    }
     default:
       return {
         title: notification.title ?? "New Riuna notification",
@@ -366,6 +378,44 @@ async function resolveNotificationContext(notification: {
       taskId: task.taskId,
       taskTitle: task.taskTitle,
       taskUrl: buildTaskUrl(task.workspaceId, task.projectId, task.taskId),
+    };
+  }
+
+  // Un aviso (ADR 081) lleva al tablon donde se publico: el del proyecto o el
+  // del espacio. Va en `taskUrl` porque es el enlace que abre cada canal.
+  if (notification.resourceType === "announcement") {
+    const [announcement] = await db
+      .select({
+        workspaceId: workspaceTable.id,
+        workspaceName: workspaceTable.name,
+        projectId: projectTable.id,
+        projectName: projectTable.name,
+      })
+      .from(announcementTable)
+      .innerJoin(
+        workspaceTable,
+        eq(announcementTable.workspaceId, workspaceTable.id),
+      )
+      .leftJoin(projectTable, eq(announcementTable.projectId, projectTable.id))
+      .where(eq(announcementTable.id, notification.resourceId))
+      .limit(1);
+
+    if (!announcement) {
+      return null;
+    }
+
+    const clientUrl = process.env.RIUNA_CLIENT_URL || "http://localhost:5173";
+    const base = `${clientUrl}/dashboard/workspace/${announcement.workspaceId}`;
+    return {
+      workspaceId: announcement.workspaceId,
+      workspaceName: announcement.workspaceName,
+      projectId: announcement.projectId,
+      projectName: announcement.projectName,
+      taskId: null,
+      taskTitle: null,
+      taskUrl: announcement.projectId
+        ? `${base}/project/${announcement.projectId}/announcements`
+        : `${base}/announcements`,
     };
   }
 

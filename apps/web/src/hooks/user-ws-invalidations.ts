@@ -78,6 +78,12 @@ export function userMessageInvalidations(message: UserWsMessage): QueryKey[] {
         ["planner"],
         ["my-work", "counts"],
       ];
+    // Cualquier aviso del espacio (ADR 081): el tablon y la franja fijada de
+    // todos sus proyectos.
+    case "ANNOUNCEMENTS_INVALIDATED":
+      return message.workspaceId
+        ? [["announcements", message.workspaceId]]
+        : [];
     // Una vista de espacio sin proyecto no tiene socket de proyecto que la
     // escuche. El prefijo cubre `["workspace-views", workspaceId, type]`.
     case "VIEW_UPDATED":

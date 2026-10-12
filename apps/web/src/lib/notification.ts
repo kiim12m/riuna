@@ -93,6 +93,11 @@ export function getNotificationTitle(notification: Notification, t: Translate) {
           ...eventData,
           defaultValue: notification.title ?? notification.type,
         });
+      case "announcement_published":
+        return t("notifications:events.announcement_published.title", {
+          ...eventData,
+          defaultValue: notification.title ?? notification.type,
+        });
       case "task_reminder":
         return t("notifications:events.task_reminder.title", {
           ...eventData,
@@ -201,6 +206,16 @@ export function getNotificationContent(
               ...eventData,
               defaultValue: notification.content ?? "",
             });
+      case "announcement_published":
+        return typeof eventData.projectName === "string"
+          ? t("notifications:events.announcement_published.content", {
+              ...eventData,
+              defaultValue: notification.content ?? "",
+            })
+          : t("notifications:events.announcement_published.contentWorkspace", {
+              ...eventData,
+              defaultValue: notification.content ?? "",
+            });
       case "task_reminder":
         return typeof eventData.note === "string" && eventData.note
           ? t("notifications:events.task_reminder.content", {
@@ -262,4 +277,28 @@ export function getNotificationTarget(
   if (!workspaceId || !projectId || !taskId) return null;
 
   return { workspaceId, projectId, taskId };
+}
+
+export type AnnouncementTarget = {
+  workspaceId: string;
+  /** Nulo: un aviso del espacio. */
+  projectId: string | null;
+};
+
+/** El tablon donde se publico un aviso (ADR 081), o `null`. */
+export function getAnnouncementTarget(
+  notification: Notification,
+): AnnouncementTarget | null {
+  if (notification.resourceType !== "announcement") return null;
+
+  const eventData = getEventDataRecord(notification.eventData);
+  const workspaceId =
+    typeof eventData?.workspaceId === "string" ? eventData.workspaceId : null;
+  if (!workspaceId) return null;
+
+  return {
+    workspaceId,
+    projectId:
+      typeof eventData?.projectId === "string" ? eventData.projectId : null,
+  };
 }
