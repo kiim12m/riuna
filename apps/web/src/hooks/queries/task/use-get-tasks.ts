@@ -17,6 +17,7 @@ export function useGetTasks(
       projectId,
       filter ? JSON.stringify(filter) : null,
       options?.treeScope ?? "matching",
+      options?.includeSubprojects ? "subprojects" : null,
     ],
     queryFn: () => getTasks(projectId, filter, options),
     // Al teclear en el buscador o marcar un menu la clave cambia en cada paso:

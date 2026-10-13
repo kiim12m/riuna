@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { columnTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { scheduleAfter } from "../schedule/reschedule";
 import { assertValidTaskStatus } from "../validate-task-fields";
 import { cascadeStatusToSubtree } from "./cascade-status";
 
@@ -67,6 +68,16 @@ async function updateTaskStatus({
     projectId: updatedTask.projectId,
     userId: currentUserId,
   });
+
+  // Archivar saca a la tarea —y a la rama que arrastre— de las fechas
+  // automaticas de sus ancestros, y desarchivar la devuelve (ADR 083).
+  if (existingTask.status === "archived" || status === "archived") {
+    await scheduleAfter({
+      projectId: updatedTask.projectId,
+      taskIds: [updatedTask.id],
+      actorId: currentUserId,
+    });
+  }
 
   return { ...updatedTask, cascadedCount };
 }

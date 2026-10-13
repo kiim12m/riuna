@@ -1,15 +1,14 @@
-import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import useMarkAllNotificationsAsRead from "@/hooks/mutations/notification/use-mark-all-notifications-as-read";
 import useMarkNotificationAsRead from "@/hooks/mutations/notification/use-mark-notification-as-read";
 import useGetNotifications from "@/hooks/queries/notification/use-get-notifications";
+import { useOpenNotification } from "@/hooks/use-open-notification";
 import { cn } from "@/lib/cn";
 import { formatRelativeTime } from "@/lib/format";
 import {
   getNotificationContent,
-  getNotificationTarget,
   getNotificationTitle,
 } from "@/lib/notification";
 import type { Notification } from "@/types/notification";
@@ -31,7 +30,7 @@ const VISIBLE = 8;
  */
 export function InboxWidget() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const openNotification = useOpenNotification();
   const { data: notifications, isPending, isError } = useGetNotifications();
   const { mutate: markAsRead } = useMarkNotificationAsRead();
   const { mutate: markAllAsRead } = useMarkAllNotificationsAsRead();
@@ -68,13 +67,7 @@ export function InboxWidget() {
   function open(notification: Notification) {
     if (!notification.isRead) markAsRead(notification.id);
 
-    const target = getNotificationTarget(notification);
-    if (target) {
-      navigate({
-        to: "/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId",
-        params: target,
-      });
-    }
+    openNotification(notification);
   }
 
   return (

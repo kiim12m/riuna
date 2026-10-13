@@ -22,7 +22,14 @@ import { cn } from "@/lib/cn";
 type MobileProjectNavProps = {
   workspaceId: string;
   projectId: string;
-  activeView: "backlog" | "board" | "calendar" | "gantt" | "table" | "cycles";
+  activeView:
+    | "backlog"
+    | "board"
+    | "calendar"
+    | "gantt"
+    | "table"
+    | "cycles"
+    | "announcements";
   onSelectBoard: () => void;
   onSelectBacklog: () => void;
   onSelectCalendar: () => void;

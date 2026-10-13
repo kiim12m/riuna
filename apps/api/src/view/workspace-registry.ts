@@ -38,6 +38,7 @@ export async function getWorkspaceFieldRegistry(
         and(
           eq(fieldDefinitionTable.workspaceId, workspaceId),
           isNull(fieldDefinitionTable.projectId),
+          eq(fieldDefinitionTable.entity, "task"),
         ),
       ),
     db

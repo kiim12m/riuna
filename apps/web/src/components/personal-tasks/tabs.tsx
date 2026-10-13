@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import {
   CalendarRange,
+  Eye,
   Hourglass,
   List,
   SquareKanban,
@@ -18,6 +19,7 @@ const TABS = [
   { view: "gantt", icon: CalendarRange },
   { view: "table", icon: Table2 },
   { view: "waiting", icon: Hourglass },
+  { view: "watching", icon: Eye },
 ] as const;
 
 export type PersonalTasksView = (typeof TABS)[number]["view"];
@@ -36,7 +38,7 @@ function tabClass(isActive: boolean) {
 
 /**
  * Cabecera compartida de "Mis tareas": el conmutador entre Lista, Tablero,
- * Gantt, Tabla y «Esperando a», mas el ambito (asignadas a mi / de mis
+ * Gantt, Tabla, «Esperando a» y «Observando», mas el ambito (asignadas a mi / de mis
  * equipos). Vive en `headerActions` de `WorkspaceLayout` en las cinco rutas,
  * igual que el selector de vista de un proyecto vive en `ProjectLayout`.
  */
@@ -48,7 +50,7 @@ export function PersonalTasksTabs({
 }: {
   workspaceId: string;
   active: PersonalTasksView;
-  /** Ausente en «Esperando a», que no tiene ambito de equipo. */
+  /** Ausente en «Esperando a» y «Observando», sin ambito de equipo. */
   scope?: PersonalScope;
   onScopeChange?: (scope: PersonalScope) => void;
 }) {

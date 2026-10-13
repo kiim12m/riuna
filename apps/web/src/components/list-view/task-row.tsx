@@ -52,6 +52,8 @@ import SubtaskBadge from "../task/subtask-badge";
 import { ContextMenu, ContextMenuTrigger } from "../ui/context-menu";
 
 type TaskRowProps = {
+  /** Sin arrastre: las tareas de un subproyecto en la lista del padre. */
+  sortable?: boolean;
   task: Task;
   projectSlug: string;
   // Solo llega cuando la lista no esta agrupada por estado: entonces la
@@ -77,7 +79,13 @@ type TaskRowProps = {
 // del titulo, que es lo que pasa cuando se sangra por tabulador entero.
 const TREE_INDENT_PX = 18;
 
-function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
+function TaskRow({
+  task,
+  projectSlug,
+  statusColumn,
+  tree,
+  sortable = true,
+}: TaskRowProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const {
@@ -87,7 +95,7 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: task.id });
+  } = useSortable({ id: task.id, disabled: !sortable });
 
   const { project } = useProjectStore();
   const taskIsCompleted = isTaskCompleted(task.status, project?.columns);
@@ -177,12 +185,19 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
     if (currentTaskId === task.id) {
       navigate({
         to: ".",
-        search: {},
+        search: (previous: Record<string, unknown>) => ({
+          ...previous,
+          taskId: undefined,
+        }),
       });
     } else {
+      // Sin perder el resto de la busqueda (los subproyectos, ADR 089).
       navigate({
         to: ".",
-        search: { taskId: task.id },
+        search: (previous: Record<string, unknown>) => ({
+          ...previous,
+          taskId: task.id,
+        }),
       });
     }
   };
@@ -286,6 +301,11 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
             <div className="flex-1 min-w-0 flex items-center gap-2">
               <div className="flex items-center gap-2 justify-between w-full">
                 <span className="line-clamp-2 text-sm text-foreground sm:truncate">
+                  {task.isMilestone && (
+                    <span aria-hidden="true" className="mr-1 text-brand-strong">
+                      ◆
+                    </span>
+                  )}
                   {task.title}
                 </span>
                 <div className="flex items-center gap-1">

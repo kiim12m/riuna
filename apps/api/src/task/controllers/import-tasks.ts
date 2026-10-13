@@ -46,6 +46,11 @@ import {
 } from "../exchange/resolve-row";
 import { planSiblingOrder } from "../exchange/sibling-order";
 import { type TaskUpdate, updateTaskRows } from "../exchange/write-tasks";
+import type { ScheduleChange } from "../schedule/compute-schedule";
+import {
+  publishScheduleChanges,
+  rescheduleProject,
+} from "../schedule/reschedule";
 import {
   childTaskTreeFields,
   rootTaskTreeFields,
@@ -135,7 +140,7 @@ async function importTasks(input: ImportInput): Promise<ImportReport> {
     throw new HTTPException(404, { message: "Project not found" });
   }
 
-  let outcome: { report: ImportReport; created: Task[] };
+  let outcome: Awaited<ReturnType<typeof importTasksInTransaction>>;
 
   try {
     outcome = await db.transaction(async (tx) => {
@@ -153,6 +158,11 @@ async function importTasks(input: ImportInput): Promise<ImportReport> {
   }
 
   publishImportEvents(outcome.created, input.currentUserId);
+  await publishScheduleChanges(outcome.scheduled, {
+    projectId: input.projectId,
+    actorId: input.currentUserId,
+    origin: "import",
+  });
 
   return outcome.report;
 }
@@ -207,7 +217,11 @@ export async function importTasksInTransaction(
   tx: Tx,
   input: ImportInput,
   project: Project,
-): Promise<{ report: ImportReport; created: Task[] }> {
+): Promise<{
+  report: ImportReport;
+  created: Task[];
+  scheduled: ScheduleChange[];
+}> {
   await lockProjectTree(tx, input.projectId);
 
   const lookups = await loadImportLookups(input.projectId, project.workspaceId);
@@ -609,6 +623,13 @@ export async function importTasksInTransaction(
     tx,
   );
 
+  // Lo importado puede cambiar las fechas automaticas de sus ramas (ADR 083).
+  // Dentro de la misma transaccion, que ya tiene el cerrojo del proyecto.
+  const scheduled = await rescheduleProject(tx, input.projectId, [
+    ...created.map((task) => task.id),
+    ...[...existingByRow.values()].map((task) => task.id),
+  ]);
+
   const report: ImportReport = {
     importedAt: new Date().toISOString(),
     dryRun: Boolean(input.dryRun),
@@ -629,7 +650,7 @@ export async function importTasksInTransaction(
     },
   };
 
-  return { report, created };
+  return { report, created, scheduled };
 }
 
 export default importTasks;

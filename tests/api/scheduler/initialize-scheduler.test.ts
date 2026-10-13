@@ -25,6 +25,9 @@ vi.mock("../../../apps/api/src/scheduler/seat-reconciliation", () => ({
 vi.mock("../../../apps/api/src/scheduler/trial-reminders", () => ({
   checkTrialReminders: vi.fn(),
 }));
+vi.mock("../../../apps/api/src/task-reminder/send-due", () => ({
+  sendDueTaskReminders: vi.fn(),
+}));
 
 const { initializeScheduler, shutdownScheduler } = await import(
   "../../../apps/api/src/scheduler"

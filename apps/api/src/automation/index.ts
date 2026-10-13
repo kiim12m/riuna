@@ -20,6 +20,7 @@ import {
   updateAutomation,
 } from "./controllers/save-automation";
 import { type Action, automationInputSchema } from "./definition";
+import { assignsWork, listManualActions, runManualAction } from "./manual";
 import {
   leadManagesStandup,
   onlySendsStandups,
@@ -94,6 +95,103 @@ async function loadAutomation(c: Context, id: string) {
 const idParam = v.object({ id: v.string() });
 
 const automation = new Hono<{ Variables: Variables }>()
+  .get(
+    "/manual/task/:taskId",
+    describeRoute({
+      operationId: "listTaskManualAutomations",
+      tags: ["Automations"],
+      description:
+        "The one-click actions a task offers right now: active rules with the `manual` trigger, of its project or its workspace, whose conditions it meets. Empty for whoever cannot edit tasks",
+      responses: {
+        200: {
+          description: "The actions, in rule order",
+          content: {
+            "application/json": {
+              schema: resolver(
+                v.array(v.object({ id: v.string(), name: v.string() })),
+              ),
+            },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ taskId: v.string() })),
+    workspaceAccess.fromTaskId("taskId"),
+    requireWorkspacePermission({ task: ["read"] }),
+    async (c) => {
+      // Pulsar actua en nombre de quien pulsa: sin poder editar, no hay boton.
+      if (!(await hasWorkspacePermission(c, { task: ["update"] }))) {
+        return c.json([]);
+      }
+      return c.json(await listManualActions(c.req.valid("param").taskId));
+    },
+  )
+  .post(
+    "/manual/task/:taskId",
+    describeRoute({
+      operationId: "runTaskManualAutomation",
+      tags: ["Automations"],
+      description:
+        "Press a one-click action on a task. Runs the rule's actions on your behalf: it needs task:update, and task:assign when the rule assigns. 409 when the task no longer meets its conditions",
+      responses: {
+        200: {
+          description:
+            "How the run went: `ok`, or `failed` with the action that stopped it",
+          content: {
+            "application/json": {
+              schema: resolver(
+                v.object({
+                  status: v.picklist(["ok", "failed", "skipped"]),
+                  actions: v.array(
+                    v.object({
+                      id: v.string(),
+                      type: v.string(),
+                      status: v.picklist(["ok", "failed"]),
+                      error: v.optional(v.string()),
+                    }),
+                  ),
+                }),
+              ),
+            },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ taskId: v.string() })),
+    validator(
+      "json",
+      v.object({ automationId: v.pipe(v.string(), v.minLength(1)) }),
+    ),
+    workspaceAccess.fromTaskId("taskId"),
+    requireWorkspacePermission({ task: ["update"] }),
+    async (c) => {
+      const { taskId } = c.req.valid("param");
+      const { automationId } = c.req.valid("json");
+      const [rule] = await db
+        .select({ actions: automationTable.actions })
+        .from(automationTable)
+        .where(
+          and(
+            eq(automationTable.id, automationId),
+            eq(automationTable.workspaceId, c.get("workspaceId")),
+          ),
+        )
+        .limit(1);
+      if (
+        rule &&
+        assignsWork(rule) &&
+        !(await hasWorkspacePermission(c, { task: ["assign"] }))
+      ) {
+        throw new HTTPException(403, { message: "Insufficient permissions" });
+      }
+      const result = await runManualAction({
+        automationId,
+        taskId,
+        userId: c.get("userId"),
+      });
+      return c.json(result);
+    },
+  )
   .get(
     "/project/:projectId",
     describeRoute({

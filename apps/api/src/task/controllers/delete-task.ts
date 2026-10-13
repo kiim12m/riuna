@@ -4,6 +4,7 @@ import db from "../../database";
 import { taskRelationTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { deleteS3Keys, getTaskAssetKeys } from "../../storage/cleanup-assets";
+import { scheduleAfter } from "../schedule/reschedule";
 import { subtreePattern, TASK_PATH_SEPARATOR } from "../tree";
 import getTask from "./get-task";
 import { lockProjectTree } from "./lock-project-tree";
@@ -104,6 +105,14 @@ async function deleteTask(taskId: string, currentUserId: string) {
     // en que se puede saber a quien hay que refrescarle "Mi trabajo".
     assigneeIds: task.assignees.map((assignee) => assignee.id),
     teamId: task.teamId,
+  });
+
+  // Sin ella, la rama de su padre puede encoger (ADR 083).
+  await scheduleAfter({
+    projectId: task.projectId,
+    taskIds: [deletedTask.parentId],
+    actorId: currentUserId,
+    origin: task.id,
   });
 
   for (const relation of relations) {

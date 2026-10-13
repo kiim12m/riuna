@@ -21,6 +21,8 @@ const viewTypeSchema = v.picklist([
   "list",
   "calendar",
   "gantt",
+  // La lista de proyectos como cartera (ADR 088), siempre de espacio.
+  "portfolio",
 ]);
 
 // El `config` de una vista es lo que la barra de filtros tiene en pantalla
@@ -46,6 +48,22 @@ const configSchema = v.object({
   ),
   // Agrupar por: hoy solo por epica.
   groupBy: v.optional(v.picklist(["epic"])),
+  // Con las tareas de los subproyectos, en las vistas de un padre (ADR 089).
+  subprojects: v.optional(v.boolean()),
+  // El filtro rapido de la cartera (ADR 087): en riesgo o desviados, o los
+  // que lleva quien mira.
+  show: v.optional(v.picklist(["attention", "mine"])),
+  // Como se colorean las filas (ADR 080). Sin declararlo, `v.object` lo
+  // descartaba en silencio y la vista guardada volvia sin color.
+  color: v.optional(v.picklist(["priority", "due"])),
+  // Con que momento se compara (ADR 085): un relativo, que se recalcula cada
+  // dia, o un dia fijo.
+  baseline: v.optional(
+    v.union([
+      v.picklist(["yesterday", "lastWorkDay", "week"]),
+      v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),
+    ]),
+  ),
 });
 
 const view = new Hono<{

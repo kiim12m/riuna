@@ -23,8 +23,28 @@ export const projectSchema = v.object({
   cascadeClose: v.boolean(),
   cascadeArchive: v.boolean(),
   maxTaskDepth: v.number(),
+  weightedProgress: v.optional(v.boolean()),
   /** Con valor, es la Bandeja de esa persona (ADR 051). */
   ownerUserId: v.nullable(v.string()),
+  /** El estado del proyecto (ADR 087). */
+  health: v.optional(
+    v.picklist([
+      "not_started",
+      "on_track",
+      "at_risk",
+      "off_track",
+      "finished",
+      "cancelled",
+    ] as const),
+  ),
+  healthNote: v.optional(v.nullable(v.string())),
+  startDate: v.optional(v.nullable(v.date())),
+  endDate: v.optional(v.nullable(v.date())),
+  leadUserId: v.optional(v.nullable(v.string())),
+  /** Los valores de los campos de proyecto (ADR 088). */
+  customFields: v.optional(v.record(v.string(), v.unknown())),
+  /** El proyecto padre (ADR 089). */
+  parentId: v.optional(v.nullable(v.string())),
 });
 
 export const taskSchema = v.object({
@@ -45,6 +65,8 @@ export const taskSchema = v.object({
   ] as const),
   startDate: v.optional(v.date()),
   dueDate: v.optional(v.date()),
+  isMilestone: v.optional(v.boolean()),
+  autoDates: v.optional(v.boolean()),
   customFields: v.record(v.string(), v.unknown()),
   createdAt: v.date(),
 });
@@ -105,6 +127,10 @@ export const notificationSchema = v.object({
     "task_overdue",
     "task_mention",
     "task_comment",
+    "task_due_date_changed",
+    "task_reminder",
+    "announcement_published",
+    "project_health_changed",
   ] as const),
   eventData: v.nullable(v.record(v.string(), v.unknown())),
   isRead: v.optional(v.boolean()),

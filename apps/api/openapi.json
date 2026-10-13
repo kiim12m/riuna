@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://100.87.147.114:1337/api",
+      "url": "http://localhost:1337/api",
       "description": "Riuna API Server"
     }
   ],
@@ -972,7 +972,7 @@
         "tags": [
           "Projects"
         ],
-        "description": "Get all projects in a workspace",
+        "description": "Get all projects in a workspace, with their statistics. `filter` narrows the list with the same filter tree as the task views, over the project's own fields (name, key, health, lead, startDate, endDate, createdAt, progress) and its project fields as `custom.<key>`.",
         "responses": {
           "200": {
             "description": "List of projects with statistics",
@@ -1026,7 +1026,43 @@
                       "maxTaskDepth": {
                         "type": "number"
                       },
+                      "weightedProgress": {
+                        "type": "boolean"
+                      },
                       "ownerUserId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "health": {
+                        "enum": [
+                          "not_started",
+                          "on_track",
+                          "at_risk",
+                          "off_track",
+                          "finished",
+                          "cancelled"
+                        ],
+                        "type": "string"
+                      },
+                      "healthNote": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "startDate": {
+                        "nullable": true
+                      },
+                      "endDate": {
+                        "nullable": true
+                      },
+                      "leadUserId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "customFields": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "parentId": {
                         "type": "string",
                         "nullable": true
                       }
@@ -1065,6 +1101,13 @@
           {
             "in": "query",
             "name": "includeArchived",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter",
             "schema": {
               "type": "string"
             }
@@ -1129,7 +1172,43 @@
                     "maxTaskDepth": {
                       "type": "number"
                     },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
                     "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "parentId": {
                       "type": "string",
                       "nullable": true
                     }
@@ -1191,6 +1270,46 @@
         "summary": "Create Project"
       }
     },
+    "/project/export": {
+      "get": {
+        "operationId": "exportProjects",
+        "tags": [
+          "Projects"
+        ],
+        "description": "Export the project list as a spreadsheet (ADR 088): the projects that match `filter`, with their status, dates, progress and one column per project field.",
+        "responses": {
+          "200": {
+            "description": "Spreadsheet file",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Export Projects"
+      }
+    },
     "/project/{id}": {
       "get": {
         "operationId": "getProject",
@@ -1249,7 +1368,43 @@
                     "maxTaskDepth": {
                       "type": "number"
                     },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
                     "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "parentId": {
                       "type": "string",
                       "nullable": true
                     }
@@ -1344,7 +1499,43 @@
                     "maxTaskDepth": {
                       "type": "number"
                     },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
                     "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "parentId": {
                       "type": "string",
                       "nullable": true
                     }
@@ -1473,7 +1664,43 @@
                     "maxTaskDepth": {
                       "type": "number"
                     },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
                     "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "parentId": {
                       "type": "string",
                       "nullable": true
                     }
@@ -1572,7 +1799,43 @@
                       "maxTaskDepth": {
                         "type": "number"
                       },
+                      "weightedProgress": {
+                        "type": "boolean"
+                      },
                       "ownerUserId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "health": {
+                        "enum": [
+                          "not_started",
+                          "on_track",
+                          "at_risk",
+                          "off_track",
+                          "finished",
+                          "cancelled"
+                        ],
+                        "type": "string"
+                      },
+                      "healthNote": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "startDate": {
+                        "nullable": true
+                      },
+                      "endDate": {
+                        "nullable": true
+                      },
+                      "leadUserId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "customFields": {
+                        "type": "object",
+                        "additionalProperties": true
+                      },
+                      "parentId": {
                         "type": "string",
                         "nullable": true
                       }
@@ -1653,7 +1916,7 @@
         "tags": [
           "Projects"
         ],
-        "description": "Update how the task tree behaves in this project: whether closing or archiving cascades down the branch, and how deep the tree may go.",
+        "description": "Update how the task tree behaves in this project: whether closing or archiving cascades down the branch, how deep the tree may go, and whether a branch's progress weighs each task by its estimate.",
         "responses": {
           "200": {
             "description": "Project tree settings updated successfully",
@@ -1705,7 +1968,43 @@
                     "maxTaskDepth": {
                       "type": "number"
                     },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
                     "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "parentId": {
                       "type": "string",
                       "nullable": true
                     }
@@ -1758,6 +2057,9 @@
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 10
+                  },
+                  "weightedProgress": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -1765,6 +2067,520 @@
           }
         },
         "summary": "Update Project Tree Settings"
+      }
+    },
+    "/project/{id}/status": {
+      "patch": {
+        "operationId": "updateProjectStatus",
+        "tags": [
+          "Projects"
+        ],
+        "description": "Update a project's status: its health (not started, on track, at risk, off track, finished or cancelled) with a short note, its own start and end dates, and its lead, a member of the workspace. Only what is sent changes, and each change is kept in the project's activity. With `notify`, a change of health is announced to the whole workspace.",
+        "responses": {
+          "200": {
+            "description": "Project status updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "icon": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "isPublic": {
+                      "type": "boolean",
+                      "nullable": true
+                    },
+                    "archivedAt": {
+                      "nullable": true
+                    },
+                    "position": {
+                      "type": "number"
+                    },
+                    "cascadeClose": {
+                      "type": "boolean"
+                    },
+                    "cascadeArchive": {
+                      "type": "boolean"
+                    },
+                    "maxTaskDepth": {
+                      "type": "number"
+                    },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
+                    "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "parentId": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "slug",
+                    "icon",
+                    "name",
+                    "description",
+                    "createdAt",
+                    "isPublic",
+                    "archivedAt",
+                    "position",
+                    "cascadeClose",
+                    "cascadeArchive",
+                    "maxTaskDepth",
+                    "ownerUserId"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "health": {
+                    "enum": [
+                      "not_started",
+                      "on_track",
+                      "at_risk",
+                      "off_track",
+                      "finished",
+                      "cancelled"
+                    ],
+                    "type": "string"
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "nullable": true
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "leadUserId": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "notify": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update Project Status"
+      }
+    },
+    "/project/{id}/parent": {
+      "patch": {
+        "operationId": "updateProjectParent",
+        "tags": [
+          "Projects"
+        ],
+        "description": "Make a project a subproject of another, or release it with `parentId: null` (ADR 089). One level only: the parent cannot have a parent and a project with subprojects cannot become one. Personal inboxes take no part.",
+        "responses": {
+          "200": {
+            "description": "Project with its new parent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "icon": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "isPublic": {
+                      "type": "boolean",
+                      "nullable": true
+                    },
+                    "archivedAt": {
+                      "nullable": true
+                    },
+                    "position": {
+                      "type": "number"
+                    },
+                    "cascadeClose": {
+                      "type": "boolean"
+                    },
+                    "cascadeArchive": {
+                      "type": "boolean"
+                    },
+                    "maxTaskDepth": {
+                      "type": "number"
+                    },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
+                    "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "parentId": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "slug",
+                    "icon",
+                    "name",
+                    "description",
+                    "createdAt",
+                    "isPublic",
+                    "archivedAt",
+                    "position",
+                    "cascadeClose",
+                    "cascadeArchive",
+                    "maxTaskDepth",
+                    "ownerUserId"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "parentId": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "parentId"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Project Parent"
+      }
+    },
+    "/project/{id}/custom-fields": {
+      "put": {
+        "operationId": "updateProjectCustomFields",
+        "tags": [
+          "Projects"
+        ],
+        "description": "Write values of the workspace's project fields on a project (ADR 088). `values` is partial: what is not sent is kept, and an empty value clears the key. Each value is validated against its field definition.",
+        "responses": {
+          "200": {
+            "description": "Project with its updated field values",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "icon": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "isPublic": {
+                      "type": "boolean",
+                      "nullable": true
+                    },
+                    "archivedAt": {
+                      "nullable": true
+                    },
+                    "position": {
+                      "type": "number"
+                    },
+                    "cascadeClose": {
+                      "type": "boolean"
+                    },
+                    "cascadeArchive": {
+                      "type": "boolean"
+                    },
+                    "maxTaskDepth": {
+                      "type": "number"
+                    },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
+                    "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "parentId": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "slug",
+                    "icon",
+                    "name",
+                    "description",
+                    "createdAt",
+                    "isPublic",
+                    "archivedAt",
+                    "position",
+                    "cascadeClose",
+                    "cascadeArchive",
+                    "maxTaskDepth",
+                    "ownerUserId"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "values": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                },
+                "required": [
+                  "values"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Project Custom Fields"
+      }
+    },
+    "/project/{id}/activity": {
+      "get": {
+        "operationId": "getProjectActivity",
+        "tags": [
+          "Projects"
+        ],
+        "description": "The history of a project's status, newest first: changes of health (with their note), of dates and of lead, with who made them.",
+        "responses": {
+          "200": {
+            "description": "Project activity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Get Project Activity"
       }
     },
     "/project/{id}/archive": {
@@ -1825,7 +2641,43 @@
                     "maxTaskDepth": {
                       "type": "number"
                     },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
                     "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "parentId": {
                       "type": "string",
                       "nullable": true
                     }
@@ -1922,7 +2774,43 @@
                     "maxTaskDepth": {
                       "type": "number"
                     },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
                     "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "parentId": {
                       "type": "string",
                       "nullable": true
                     }
@@ -2096,9 +2984,176 @@
               ],
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "includeSubprojects",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
           }
         ],
         "summary": "List Tasks"
+      }
+    },
+    "/task/tasks/{projectId}/totals": {
+      "get": {
+        "operationId": "getTaskTotals",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Totals over every task the list would return with the same `filter` and `treeScope`: how many, their own estimate and logged time, and the sum of each number or currency field. Each task counts once, not its branch",
+        "responses": {
+          "200": {
+            "description": "The totals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "number"
+                    },
+                    "estimateSeconds": {
+                      "type": "number"
+                    },
+                    "loggedSeconds": {
+                      "type": "number"
+                    },
+                    "fields": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "estimateSeconds",
+                    "loggedSeconds",
+                    "fields"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "treeScope",
+            "schema": {
+              "enum": [
+                "matching",
+                "roots",
+                "withDescendants"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "includeSubprojects",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Get Task Totals"
+      }
+    },
+    "/task/tasks/{projectId}/baseline": {
+      "get": {
+        "operationId": "getTaskBaseline",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Compare a project view with a moment in the past (`at`, an ISO instant): which tasks matched the same `filter` and `treeScope` then and not now (removed, with their past values), which match now and did not then (added), and what changed in the ones that match both (their previous title, status, priority, assignee, dates and estimate). Rebuilt from the activity: memberships are evaluated as they are now, and deleted tasks do not appear",
+        "responses": {
+          "200": {
+            "description": "The comparison",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "at",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "treeScope",
+            "schema": {
+              "enum": [
+                "matching",
+                "roots",
+                "withDescendants"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "includeSubprojects",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Get Task Baseline"
       }
     },
     "/task/bulk": {
@@ -2235,6 +3290,12 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -2305,6 +3366,9 @@
                     "type": "number",
                     "minimum": 0,
                     "nullable": true
+                  },
+                  "isMilestone": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -2390,6 +3454,12 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -2489,6 +3559,12 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -2643,6 +3719,12 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -2746,6 +3828,12 @@
                         "dueDate": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "isMilestone": {
+                          "type": "boolean"
+                        },
+                        "autoDates": {
+                          "type": "boolean"
                         },
                         "customFields": {
                           "type": "object",
@@ -3201,6 +4289,12 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -3319,6 +4413,12 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -3441,6 +4541,12 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -3567,6 +4673,12 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -3741,6 +4853,12 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -3803,6 +4921,316 @@
         "summary": "Update Task Parent"
       }
     },
+    "/task/auto-dates/{id}": {
+      "put": {
+        "operationId": "updateTaskAutoDates",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Own or automatic dates. With automatic dates a parent takes its start and due date from its branch and they stop being editable by hand; switching back to own dates keeps the ones it had",
+        "responses": {
+          "200": {
+            "description": "The task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string"
+                    },
+                    "position": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "number": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "userId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "enum": [
+                        "no-priority",
+                        "low",
+                        "medium",
+                        "high",
+                        "urgent"
+                      ],
+                      "type": "string"
+                    },
+                    "startDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "position",
+                    "number",
+                    "userId",
+                    "title",
+                    "description",
+                    "status",
+                    "priority",
+                    "customFields",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "autoDates": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "autoDates"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Task Auto Dates"
+      }
+    },
+    "/task/shift-branch/{id}": {
+      "post": {
+        "operationId": "shiftTaskBranch",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Move a task and its whole branch the same number of working days (Monday to Friday, skipping the workspace holidays); negative moves it earlier. Instead of `workDays`, `startDate` moves it so the task starts that day. What dragging a parent does in the Gantt",
+        "responses": {
+          "200": {
+            "description": "How many tasks moved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "moved": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "moved"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "workDays": {
+                    "type": "integer",
+                    "minimum": -365,
+                    "maximum": 365
+                  },
+                  "startDate": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Shift Task Branch"
+      }
+    },
+    "/task/milestone/{id}": {
+      "put": {
+        "operationId": "updateTaskMilestone",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Mark or unmark a task as a milestone: a single date (its start becomes its due date), no estimate and no subtasks. A task with subtasks cannot be one",
+        "responses": {
+          "200": {
+            "description": "The task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string"
+                    },
+                    "position": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "number": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "userId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "enum": [
+                        "no-priority",
+                        "low",
+                        "medium",
+                        "high",
+                        "urgent"
+                      ],
+                      "type": "string"
+                    },
+                    "startDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "position",
+                    "number",
+                    "userId",
+                    "title",
+                    "description",
+                    "status",
+                    "priority",
+                    "customFields",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "isMilestone": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "isMilestone"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Task Milestone"
+      }
+    },
     "/task/estimate/{id}": {
       "put": {
         "operationId": "updateTaskEstimate",
@@ -3863,6 +5291,12 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -3985,6 +5419,12 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -4104,6 +5544,12 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -4225,6 +5671,12 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -4340,6 +5792,12 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -4595,6 +6053,12 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -5274,7 +6738,7 @@
         "tags": [
           "Fields"
         ],
-        "description": "List the workspace-wide custom fields. `filterable` says whether a view across projects can filter by the field: it is false when some project redefines the key with another way of comparing it",
+        "description": "List the workspace-wide custom fields: those of tasks or, with `entity=project`, those of projects. `filterable` says whether a view across projects can filter by a task field: it is false when some project redefines the key with another way of comparing it",
         "responses": {
           "200": {
             "description": "Field definitions ordered by position",
@@ -5302,6 +6766,17 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "entity",
+            "schema": {
+              "enum": [
+                "task",
+                "project"
+              ],
+              "type": "string"
+            }
           }
         ],
         "summary": "List Workspace Field Definitions"
@@ -5311,7 +6786,7 @@
         "tags": [
           "Fields"
         ],
-        "description": "Define a custom field for every project in the workspace at once",
+        "description": "Define a custom field for every project in the workspace at once: a field of their tasks or, with `entity: \"project\"`, a field of the projects themselves (ADR 088), which cannot be a relation",
         "responses": {
           "200": {
             "description": "Field definition created successfully",
@@ -5371,6 +6846,13 @@
                   },
                   "required": {
                     "type": "boolean"
+                  },
+                  "entity": {
+                    "enum": [
+                      "task",
+                      "project"
+                    ],
+                    "type": "string"
                   }
                 },
                 "required": [
@@ -5517,7 +6999,8 @@
                 "board",
                 "list",
                 "calendar",
-                "gantt"
+                "gantt",
+                "portfolio"
               ],
               "type": "string"
             }
@@ -5571,7 +7054,8 @@
                       "board",
                       "list",
                       "calendar",
-                      "gantt"
+                      "gantt",
+                      "portfolio"
                     ],
                     "type": "string"
                   },
@@ -5644,6 +7128,39 @@
                           "epic"
                         ],
                         "type": "string"
+                      },
+                      "subprojects": {
+                        "type": "boolean"
+                      },
+                      "show": {
+                        "enum": [
+                          "attention",
+                          "mine"
+                        ],
+                        "type": "string"
+                      },
+                      "color": {
+                        "enum": [
+                          "priority",
+                          "due"
+                        ],
+                        "type": "string"
+                      },
+                      "baseline": {
+                        "anyOf": [
+                          {
+                            "enum": [
+                              "yesterday",
+                              "lastWorkDay",
+                              "week"
+                            ],
+                            "type": "string"
+                          },
+                          {
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                          }
+                        ]
                       }
                     }
                   },
@@ -5700,7 +7217,8 @@
                 "board",
                 "list",
                 "calendar",
-                "gantt"
+                "gantt",
+                "portfolio"
               ],
               "type": "string"
             }
@@ -5755,7 +7273,8 @@
                       "board",
                       "list",
                       "calendar",
-                      "gantt"
+                      "gantt",
+                      "portfolio"
                     ],
                     "type": "string"
                   },
@@ -5828,6 +7347,39 @@
                           "epic"
                         ],
                         "type": "string"
+                      },
+                      "subprojects": {
+                        "type": "boolean"
+                      },
+                      "show": {
+                        "enum": [
+                          "attention",
+                          "mine"
+                        ],
+                        "type": "string"
+                      },
+                      "color": {
+                        "enum": [
+                          "priority",
+                          "due"
+                        ],
+                        "type": "string"
+                      },
+                      "baseline": {
+                        "anyOf": [
+                          {
+                            "enum": [
+                              "yesterday",
+                              "lastWorkDay",
+                              "week"
+                            ],
+                            "type": "string"
+                          },
+                          {
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                          }
+                        ]
                       }
                     }
                   },
@@ -5956,6 +7508,39 @@
                           "epic"
                         ],
                         "type": "string"
+                      },
+                      "subprojects": {
+                        "type": "boolean"
+                      },
+                      "show": {
+                        "enum": [
+                          "attention",
+                          "mine"
+                        ],
+                        "type": "string"
+                      },
+                      "color": {
+                        "enum": [
+                          "priority",
+                          "due"
+                        ],
+                        "type": "string"
+                      },
+                      "baseline": {
+                        "anyOf": [
+                          {
+                            "enum": [
+                              "yesterday",
+                              "lastWorkDay",
+                              "week"
+                            ],
+                            "type": "string"
+                          },
+                          {
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                          }
+                        ]
                       }
                     }
                   },
@@ -9160,7 +10745,11 @@
                           "due_date_reminder",
                           "task_overdue",
                           "task_mention",
-                          "task_comment"
+                          "task_comment",
+                          "task_due_date_changed",
+                          "task_reminder",
+                          "announcement_published",
+                          "project_health_changed"
                         ],
                         "type": "string"
                       },
@@ -9288,7 +10877,11 @@
                         "due_date_reminder",
                         "task_overdue",
                         "task_mention",
-                        "task_comment"
+                        "task_comment",
+                        "task_due_date_changed",
+                        "task_reminder",
+                        "announcement_published",
+                        "project_health_changed"
                       ],
                       "type": "string"
                     },
@@ -9445,7 +11038,11 @@
                         "due_date_reminder",
                         "task_overdue",
                         "task_mention",
-                        "task_comment"
+                        "task_comment",
+                        "task_due_date_changed",
+                        "task_reminder",
+                        "announcement_published",
+                        "project_health_changed"
                       ],
                       "type": "string"
                     },
@@ -13163,6 +14760,205 @@
         "summary": "List My Work Waiting"
       }
     },
+    "/my-work/watching": {
+      "get": {
+        "operationId": "listMyWorkWatching",
+        "tags": [
+          "My work"
+        ],
+        "description": "Open tasks the current user watches on purpose and isn't assigned to, most recently updated first. Capped at 100",
+        "responses": {
+          "200": {
+            "description": "The watched tasks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tasks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "number": {
+                            "type": "number"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "priority": {
+                            "type": "string"
+                          },
+                          "startDate": {
+                            "nullable": true
+                          },
+                          "dueDate": {
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "userId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "parentId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "depth": {
+                            "type": "number"
+                          },
+                          "projectId": {
+                            "type": "string"
+                          },
+                          "projectName": {
+                            "type": "string"
+                          },
+                          "projectSlug": {
+                            "type": "string"
+                          },
+                          "projectIcon": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "teamId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "teamName": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "statusColumn": {
+                            "type": "object",
+                            "properties": {
+                              "slug": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "icon": {
+                                "type": "string",
+                                "nullable": true
+                              },
+                              "isFinal": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "slug",
+                              "name",
+                              "icon",
+                              "isFinal"
+                            ],
+                            "nullable": true
+                          },
+                          "isDone": {
+                            "type": "boolean"
+                          },
+                          "labels": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "color": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "color"
+                              ]
+                            }
+                          },
+                          "assignees": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
+                                  "type": "string"
+                                },
+                                "name": {
+                                  "type": "string"
+                                },
+                                "image": {
+                                  "type": "string",
+                                  "nullable": true
+                                }
+                              },
+                              "required": [
+                                "id",
+                                "name",
+                                "image"
+                              ]
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "number",
+                          "title",
+                          "status",
+                          "priority",
+                          "startDate",
+                          "dueDate",
+                          "createdAt",
+                          "userId",
+                          "parentId",
+                          "depth",
+                          "projectId",
+                          "projectName",
+                          "projectSlug",
+                          "projectIcon",
+                          "teamId",
+                          "teamName",
+                          "statusColumn",
+                          "isDone",
+                          "labels",
+                          "assignees"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "tasks"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true
+          }
+        ],
+        "summary": "List My Work Watching"
+      }
+    },
     "/my-work/tasks": {
       "get": {
         "operationId": "listMyWork",
@@ -15038,7 +16834,43 @@
                         "maxTaskDepth": {
                           "type": "number"
                         },
+                        "weightedProgress": {
+                          "type": "boolean"
+                        },
                         "ownerUserId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "health": {
+                          "enum": [
+                            "not_started",
+                            "on_track",
+                            "at_risk",
+                            "off_track",
+                            "finished",
+                            "cancelled"
+                          ],
+                          "type": "string"
+                        },
+                        "healthNote": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "startDate": {
+                          "nullable": true
+                        },
+                        "endDate": {
+                          "nullable": true
+                        },
+                        "leadUserId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "customFields": {
+                          "type": "object",
+                          "additionalProperties": true
+                        },
+                        "parentId": {
                           "type": "string",
                           "nullable": true
                         }
@@ -15143,7 +16975,43 @@
                         "maxTaskDepth": {
                           "type": "number"
                         },
+                        "weightedProgress": {
+                          "type": "boolean"
+                        },
                         "ownerUserId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "health": {
+                          "enum": [
+                            "not_started",
+                            "on_track",
+                            "at_risk",
+                            "off_track",
+                            "finished",
+                            "cancelled"
+                          ],
+                          "type": "string"
+                        },
+                        "healthNote": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "startDate": {
+                          "nullable": true
+                        },
+                        "endDate": {
+                          "nullable": true
+                        },
+                        "leadUserId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "customFields": {
+                          "type": "object",
+                          "additionalProperties": true
+                        },
+                        "parentId": {
                           "type": "string",
                           "nullable": true
                         }
@@ -15260,6 +17128,12 @@
                         "dueDate": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "isMilestone": {
+                          "type": "boolean"
+                        },
+                        "autoDates": {
+                          "type": "boolean"
                         },
                         "customFields": {
                           "type": "object",
@@ -17994,6 +19868,12 @@
                             "type": "string",
                             "format": "date-time"
                           },
+                          "isMilestone": {
+                            "type": "boolean"
+                          },
+                          "autoDates": {
+                            "type": "boolean"
+                          },
                           "customFields": {
                             "type": "object",
                             "additionalProperties": true
@@ -18066,7 +19946,43 @@
                           "maxTaskDepth": {
                             "type": "number"
                           },
+                          "weightedProgress": {
+                            "type": "boolean"
+                          },
                           "ownerUserId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "health": {
+                            "enum": [
+                              "not_started",
+                              "on_track",
+                              "at_risk",
+                              "off_track",
+                              "finished",
+                              "cancelled"
+                            ],
+                            "type": "string"
+                          },
+                          "healthNote": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "startDate": {
+                            "nullable": true
+                          },
+                          "endDate": {
+                            "nullable": true
+                          },
+                          "leadUserId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "customFields": {
+                            "type": "object",
+                            "additionalProperties": true
+                          },
+                          "parentId": {
                             "type": "string",
                             "nullable": true
                           }
@@ -21558,13 +23474,18 @@
                       },
                       "relationType": {
                         "type": "string"
+                      },
+                      "lag": {
+                        "type": "number",
+                        "nullable": true
                       }
                     },
                     "required": [
                       "id",
                       "sourceTaskId",
                       "targetTaskId",
-                      "relationType"
+                      "relationType",
+                      "lag"
                     ]
                   }
                 }
@@ -21644,6 +23565,10 @@
                     "relationType": {
                       "type": "string"
                     },
+                    "lag": {
+                      "type": "number",
+                      "nullable": true
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -21654,6 +23579,7 @@
                     "sourceTaskId",
                     "targetTaskId",
                     "relationType",
+                    "lag",
                     "createdAt"
                   ]
                 }
@@ -21677,9 +23603,15 @@
                   "relationType": {
                     "enum": [
                       "blocks",
-                      "related"
+                      "related",
+                      "precedes"
                     ],
                     "type": "string"
+                  },
+                  "lag": {
+                    "type": "integer",
+                    "minimum": -365,
+                    "maximum": 365
                   }
                 },
                 "required": [
@@ -21692,6 +23624,88 @@
           }
         },
         "summary": "Create Task Relation"
+      }
+    },
+    "/task-relation/{id}/lag": {
+      "patch": {
+        "operationId": "updateTaskRelationLag",
+        "tags": [
+          "Task Relations"
+        ],
+        "description": "Change the lag of a `precedes` relation, in working days (negative to overlap), and reschedule its successor",
+        "responses": {
+          "200": {
+            "description": "The relation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "sourceTaskId": {
+                      "type": "string"
+                    },
+                    "targetTaskId": {
+                      "type": "string"
+                    },
+                    "relationType": {
+                      "type": "string"
+                    },
+                    "lag": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "sourceTaskId",
+                    "targetTaskId",
+                    "relationType",
+                    "lag",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "lag": {
+                    "type": "integer",
+                    "minimum": -365,
+                    "maximum": 365
+                  }
+                },
+                "required": [
+                  "lag"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Task Relation Lag"
       }
     },
     "/task-relation/{id}": {
@@ -21721,6 +23735,10 @@
                     "relationType": {
                       "type": "string"
                     },
+                    "lag": {
+                      "type": "number",
+                      "nullable": true
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -21731,6 +23749,7 @@
                     "sourceTaskId",
                     "targetTaskId",
                     "relationType",
+                    "lag",
                     "createdAt"
                   ]
                 }
@@ -21749,6 +23768,1306 @@
           }
         ],
         "summary": "Delete Task Relation"
+      }
+    },
+    "/task-watcher/{taskId}": {
+      "get": {
+        "operationId": "listTaskWatchers",
+        "tags": [
+          "Task Watchers"
+        ],
+        "description": "Who watches a task. Assignees always do and are flagged `assignee`; `watching` means a row of its own, which is what unwatching removes",
+        "responses": {
+          "200": {
+            "description": "Who watches the task: its assignees, who always do, and whoever watches it on purpose",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "userId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "image": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "watching": {
+                        "type": "boolean"
+                      },
+                      "assignee": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "userId",
+                      "name",
+                      "image",
+                      "watching",
+                      "assignee"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "List Task Watchers"
+      },
+      "post": {
+        "operationId": "watchTask",
+        "tags": [
+          "Task Watchers"
+        ],
+        "description": "Watch a task: its comments and its status and due date changes reach you as notifications. Without `userId` it is you; adding someone else needs task:assign and a member of the workspace",
+        "responses": {
+          "200": {
+            "description": "Who watches the task: its assignees, who always do, and whoever watches it on purpose",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "userId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "image": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "watching": {
+                        "type": "boolean"
+                      },
+                      "assignee": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "userId",
+                      "name",
+                      "image",
+                      "watching",
+                      "assignee"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Watch Task"
+      },
+      "delete": {
+        "operationId": "unwatchTask",
+        "tags": [
+          "Task Watchers"
+        ],
+        "description": "Stop watching a task. Without `userId` it is you; removing someone else needs task:assign. An assignee keeps being notified while assigned",
+        "responses": {
+          "200": {
+            "description": "Who watches the task: its assignees, who always do, and whoever watches it on purpose",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "userId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "image": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "watching": {
+                        "type": "boolean"
+                      },
+                      "assignee": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "userId",
+                      "name",
+                      "image",
+                      "watching",
+                      "assignee"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "userId",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "summary": "Unwatch Task"
+      }
+    },
+    "/task-reminder/{taskId}": {
+      "get": {
+        "operationId": "getTaskReminder",
+        "tags": [
+          "Task Reminders"
+        ],
+        "description": "Your private reminder on a task. Nobody else sees it, and it does not plan the task into your day",
+        "responses": {
+          "200": {
+            "description": "Your reminder on this task, or null when you have none",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "remindAt": {
+                          "type": "string"
+                        },
+                        "note": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "remindAt",
+                        "note"
+                      ],
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "reminder"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Get Task Reminder"
+      },
+      "put": {
+        "operationId": "setTaskReminder",
+        "tags": [
+          "Task Reminders"
+        ],
+        "description": "Remind me about this task at `remindAt` (an ISO instant, within a year), with an optional private note. It arrives once, through the bell and your channels. Replaces any reminder you already had on the task; leaving `note` out keeps its note, `null` clears it",
+        "responses": {
+          "200": {
+            "description": "Your reminder on this task, or null when you have none",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "remindAt": {
+                          "type": "string"
+                        },
+                        "note": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "remindAt",
+                        "note"
+                      ],
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "reminder"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "remindAt": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 280,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "remindAt"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Set Task Reminder"
+      },
+      "delete": {
+        "operationId": "clearTaskReminder",
+        "tags": [
+          "Task Reminders"
+        ],
+        "description": "Remove your reminder on this task, if you had one",
+        "responses": {
+          "200": {
+            "description": "Your reminder on this task, or null when you have none",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "reminder": {
+                      "type": "object",
+                      "properties": {
+                        "remindAt": {
+                          "type": "string"
+                        },
+                        "note": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "remindAt",
+                        "note"
+                      ],
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "reminder"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Clear Task Reminder"
+      }
+    },
+    "/session": {
+      "get": {
+        "operationId": "listMySessions",
+        "tags": [
+          "Sessions"
+        ],
+        "description": "Where you are signed in: your unexpired sessions, the current one first and then by last refresh. Never includes session tokens",
+        "responses": {
+          "200": {
+            "description": "Your sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "current": {
+                        "type": "boolean"
+                      },
+                      "userAgent": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "ipAddress": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      },
+                      "expiresAt": {
+                        "type": "string"
+                      },
+                      "impersonated": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "current",
+                      "userAgent",
+                      "ipAddress",
+                      "createdAt",
+                      "updatedAt",
+                      "expiresAt",
+                      "impersonated"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List My Sessions"
+      }
+    },
+    "/session/others": {
+      "delete": {
+        "operationId": "revokeMyOtherSessions",
+        "tags": [
+          "Sessions"
+        ],
+        "description": "Sign out everywhere but here. Each device has to sign in again within a few minutes, once its cached session expires",
+        "responses": {
+          "200": {
+            "description": "How many sessions were closed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "revoked": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "revoked"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Revoke My Other Sessions"
+      }
+    },
+    "/session/{id}": {
+      "delete": {
+        "operationId": "revokeMySession",
+        "tags": [
+          "Sessions"
+        ],
+        "description": "Close one of your other sessions. The current one is closed by signing out",
+        "responses": {
+          "200": {
+            "description": "The session was closed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "revoked": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "revoked"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "required": true
+          }
+        ],
+        "summary": "Revoke My Session"
+      }
+    },
+    "/announcement/workspace/{workspaceId}": {
+      "get": {
+        "operationId": "listWorkspaceAnnouncements",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "The workspace's own announcements (not its projects'): pinned ones first, then newest first, up to 50",
+        "responses": {
+          "200": {
+            "description": "Workspace announcements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "type": "string"
+                      },
+                      "projectId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "pinned": {
+                        "type": "boolean"
+                      },
+                      "pinnedUntil": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "pinnedNow": {
+                        "type": "boolean"
+                      },
+                      "notified": {
+                        "type": "boolean"
+                      },
+                      "author": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "image": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "image"
+                        ],
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "workspaceId",
+                      "projectId",
+                      "title",
+                      "content",
+                      "pinned",
+                      "pinnedUntil",
+                      "pinnedNow",
+                      "notified",
+                      "author",
+                      "createdAt",
+                      "updatedAt"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "List Workspace Announcements"
+      },
+      "post": {
+        "operationId": "createWorkspaceAnnouncement",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "Publish a workspace announcement. Needs workspace:manage_settings. With `notify` (the default) every member but you gets a notification",
+        "responses": {
+          "200": {
+            "description": "The announcement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "pinned": {
+                      "type": "boolean"
+                    },
+                    "pinnedUntil": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "pinnedNow": {
+                      "type": "boolean"
+                    },
+                    "notified": {
+                      "type": "boolean"
+                    },
+                    "author": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "image": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "image"
+                      ],
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "projectId",
+                    "title",
+                    "content",
+                    "pinned",
+                    "pinnedUntil",
+                    "pinnedNow",
+                    "notified",
+                    "author",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 20000,
+                    "default": ""
+                  },
+                  "pinned": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "pinnedUntil": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "notify": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Create Workspace Announcement"
+      }
+    },
+    "/announcement/project/{projectId}": {
+      "get": {
+        "operationId": "listProjectAnnouncements",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "A project's announcements: pinned ones first, then newest first, up to 50",
+        "responses": {
+          "200": {
+            "description": "Project announcements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "workspaceId": {
+                        "type": "string"
+                      },
+                      "projectId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "content": {
+                        "type": "string"
+                      },
+                      "pinned": {
+                        "type": "boolean"
+                      },
+                      "pinnedUntil": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "pinnedNow": {
+                        "type": "boolean"
+                      },
+                      "notified": {
+                        "type": "boolean"
+                      },
+                      "author": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "image": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "image"
+                        ],
+                        "nullable": true
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "workspaceId",
+                      "projectId",
+                      "title",
+                      "content",
+                      "pinned",
+                      "pinnedUntil",
+                      "pinnedNow",
+                      "notified",
+                      "author",
+                      "createdAt",
+                      "updatedAt"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "List Project Announcements"
+      },
+      "post": {
+        "operationId": "createProjectAnnouncement",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "Publish a project announcement. Needs project:update; a personal project has none. With `notify` (the default) every workspace member but you gets a notification",
+        "responses": {
+          "200": {
+            "description": "The announcement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "pinned": {
+                      "type": "boolean"
+                    },
+                    "pinnedUntil": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "pinnedNow": {
+                      "type": "boolean"
+                    },
+                    "notified": {
+                      "type": "boolean"
+                    },
+                    "author": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "image": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "image"
+                      ],
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "projectId",
+                    "title",
+                    "content",
+                    "pinned",
+                    "pinnedUntil",
+                    "pinnedNow",
+                    "notified",
+                    "author",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 20000,
+                    "default": ""
+                  },
+                  "pinned": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "pinnedUntil": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "notify": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Create Project Announcement"
+      }
+    },
+    "/announcement/project/{projectId}/pinned": {
+      "get": {
+        "operationId": "getPinnedAnnouncement",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "The banner of a project's views: its most recent pinned announcement still in force, or the workspace's, or null",
+        "responses": {
+          "200": {
+            "description": "The pinned announcement, or null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "pinned": {
+                      "type": "boolean"
+                    },
+                    "pinnedUntil": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "pinnedNow": {
+                      "type": "boolean"
+                    },
+                    "notified": {
+                      "type": "boolean"
+                    },
+                    "author": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "image": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "image"
+                      ],
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "projectId",
+                    "title",
+                    "content",
+                    "pinned",
+                    "pinnedUntil",
+                    "pinnedNow",
+                    "notified",
+                    "author",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "nullable": true
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Get Pinned Announcement"
+      }
+    },
+    "/announcement/{id}": {
+      "put": {
+        "operationId": "updateAnnouncement",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "Edit an announcement: its text, and whether and until when it is pinned. Does not notify again",
+        "responses": {
+          "200": {
+            "description": "The announcement",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "pinned": {
+                      "type": "boolean"
+                    },
+                    "pinnedUntil": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "pinnedNow": {
+                      "type": "boolean"
+                    },
+                    "notified": {
+                      "type": "boolean"
+                    },
+                    "author": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "image": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "image"
+                      ],
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "projectId",
+                    "title",
+                    "content",
+                    "pinned",
+                    "pinnedUntil",
+                    "pinnedNow",
+                    "notified",
+                    "author",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 20000,
+                    "default": ""
+                  },
+                  "pinned": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "pinnedUntil": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Announcement"
+      },
+      "delete": {
+        "operationId": "deleteAnnouncement",
+        "tags": [
+          "Announcements"
+        ],
+        "description": "Delete an announcement",
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Delete Announcement"
       }
     },
     "/external-link/task/{taskId}": {
@@ -21952,6 +25271,145 @@
           }
         ],
         "summary": "Delete Workflow Rule"
+      }
+    },
+    "/automation/manual/task/{taskId}": {
+      "get": {
+        "operationId": "listTaskManualAutomations",
+        "tags": [
+          "Automations"
+        ],
+        "description": "The one-click actions a task offers right now: active rules with the `manual` trigger, of its project or its workspace, whose conditions it meets. Empty for whoever cannot edit tasks",
+        "responses": {
+          "200": {
+            "description": "The actions, in rule order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "List Task Manual Automations"
+      },
+      "post": {
+        "operationId": "runTaskManualAutomation",
+        "tags": [
+          "Automations"
+        ],
+        "description": "Press a one-click action on a task. Runs the rule's actions on your behalf: it needs task:update, and task:assign when the rule assigns. 409 when the task no longer meets its conditions",
+        "responses": {
+          "200": {
+            "description": "How the run went: `ok`, or `failed` with the action that stopped it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "enum": [
+                        "ok",
+                        "failed",
+                        "skipped"
+                      ],
+                      "type": "string"
+                    },
+                    "actions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "enum": [
+                              "ok",
+                              "failed"
+                            ],
+                            "type": "string"
+                          },
+                          "error": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "type",
+                          "status"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "actions"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "automationId": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "automationId"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Run Task Manual Automation"
       }
     },
     "/automation/project/{projectId}": {
@@ -22199,6 +25657,17 @@
                             "type": "string",
                             "minLength": 1,
                             "maxLength": 120
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "manual"
                           }
                         },
                         "required": [
@@ -22527,6 +25996,9 @@
                                   "type": "boolean"
                                 },
                                 "teamLeads": {
+                                  "type": "boolean"
+                                },
+                                "watchers": {
                                   "type": "boolean"
                                 },
                                 "userIds": {
@@ -22949,6 +26421,17 @@
                         "required": [
                           "type"
                         ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "manual"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
                       }
                     ]
                   },
@@ -23272,6 +26755,9 @@
                                   "type": "boolean"
                                 },
                                 "teamLeads": {
+                                  "type": "boolean"
+                                },
+                                "watchers": {
                                   "type": "boolean"
                                 },
                                 "userIds": {
@@ -23704,6 +27190,17 @@
                         "required": [
                           "type"
                         ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "const": "manual"
+                          }
+                        },
+                        "required": [
+                          "type"
+                        ]
                       }
                     ]
                   },
@@ -24027,6 +27524,9 @@
                                   "type": "boolean"
                                 },
                                 "teamLeads": {
+                                  "type": "boolean"
+                                },
+                                "watchers": {
                                   "type": "boolean"
                                 },
                                 "userIds": {

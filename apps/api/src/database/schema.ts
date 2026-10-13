@@ -348,6 +348,9 @@ export const projectTable = pgTable(
     cascadeClose: boolean("cascade_close").notNull().default(false),
     cascadeArchive: boolean("cascade_archive").notNull().default(false),
     maxTaskDepth: integer("max_task_depth").notNull().default(5),
+    // El progreso de una rama pesa por la estimacion en vez de contar tareas
+    // hechas (ADR 083).
+    weightedProgress: boolean("weighted_progress").notNull().default(false),
     // Con valor, el proyecto es la Bandeja de esa persona (ADR 051): no sale
     // en las listas de proyectos, pero sus tareas no son privadas. Al borrar
     // a la persona, o al salir ella del espacio, vuelve a ser un proyecto
@@ -355,9 +358,39 @@ export const projectTable = pgTable(
     ownerUserId: text("owner_user_id").references(() => userTable.id, {
       onDelete: "set null",
     }),
+    // El estado del proyecto (ADR 087): su salud, con una nota, sus fechas
+    // propias y quien lo lleva. La lista de proyectos filtra y ordena por
+    // todo menos la nota, que va siempre con la salud.
+    health: text("health").notNull().default("not_started"),
+    healthNote: text("health_note"),
+    startDate: timestamp("start_date", { mode: "date" }),
+    endDate: timestamp("end_date", { mode: "date" }),
+    leadUserId: text("lead_user_id").references(() => userTable.id, {
+      onDelete: "set null",
+    }),
+    // Los valores de los campos de proyecto (ADR 088), como los de una tarea.
+    customFields: jsonb("custom_fields")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    // El proyecto padre (ADR 089), de un solo nivel: un subproyecto no tiene
+    // hijos. Al borrar el padre, sus hijos vuelven a ser proyectos sueltos.
+    parentId: text("parent_id").references((): AnyPgColumn => projectTable.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     unique("project_workspace_id_id_unique").on(table.workspaceId, table.id),
+    check(
+      "project_health_valid",
+      sql`${table.health} IN ('not_started', 'on_track', 'at_risk', 'off_track', 'finished', 'cancelled')`,
+    ),
+    index("project_parent_id_idx").on(table.parentId),
+    check("project_not_own_parent", sql`${table.parentId} <> ${table.id}`),
+    check(
+      "project_dates_ordered",
+      sql`${table.endDate} IS NULL OR ${table.startDate} IS NULL OR ${table.endDate} >= ${table.startDate}`,
+    ),
     index("project_workspaceId_position_idx").on(
       table.workspaceId,
       table.position,
@@ -470,6 +503,13 @@ export const taskTable = pgTable(
     priority: text("priority").default("low").notNull(),
     startDate: timestamp("start_date", { mode: "date" }),
     dueDate: timestamp("due_date", { mode: "date" }),
+    // Un hito (ADR 082): una sola fecha —el inicio es el vencimiento—, sin
+    // estimacion ni subtareas. Columna propia porque se filtra.
+    isMilestone: boolean("is_milestone").notNull().default(false),
+    // Fechas automaticas (ADR 083): las de un padre salen de su rama y se
+    // guardan aqui mismo, para que filtros, orden y exportacion las vean. La
+    // 2.3 lo amplia a las sucesoras de una precedencia.
+    autoDates: boolean("auto_dates").notNull().default(false),
     // El arbol. `parent_id` es la verdad; `path` y `depth` son su forma
     // materializada, que es lo que permite contestar "todo el subarbol" con un
     // prefijo en vez de una recursiva por consulta. `path` incluye la propia
@@ -590,6 +630,123 @@ export const taskAssigneeTable = pgTable(
     index("taskAssignee_taskId_idx").on(table.taskId),
     index("taskAssignee_userId_idx").on(table.userId),
     unique("task_assignee_unique").on(table.taskId, table.userId),
+  ],
+);
+
+// Quien sigue una tarea a proposito (ADR 076). Los asignados no se copian aqui:
+// son observadores implicitos y los avisos los suman al leer.
+export const taskWatcherTable = pgTable(
+  "task_watcher",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => taskTable.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("taskWatcher_userId_idx").on(table.userId),
+    unique("task_watcher_unique").on(table.taskId, table.userId),
+  ],
+);
+
+// Recordatorio personal en una tarea (ADR 077): uno por persona y tarea. Se
+// borra al avisar, asi que la tabla solo guarda los pendientes; el indice de
+// `remind_at` es el que recorre el planificador cada minuto.
+export const taskReminderTable = pgTable(
+  "task_reminder",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => taskTable.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, { onDelete: "cascade" }),
+    remindAt: timestamp("remind_at", { mode: "date" }).notNull(),
+    note: text("note"),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("taskReminder_remindAt_idx").on(table.remindAt),
+    unique("task_reminder_unique").on(table.taskId, table.userId),
+  ],
+);
+
+// Avisos de proyecto y de espacio (ADR 081). `project_id` nulo es un aviso
+// del espacio. Fijar lo saca como franja en las vistas del proyecto hasta
+// `pinned_until`, o sin fin.
+// La historia de un proyecto (ADR 087): `activity` es de tareas —su
+// `task_id` es obligatorio— y el estado de un proyecto no tiene tarea.
+export const projectActivityTable = pgTable(
+  "project_activity",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projectTable.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    userId: text("user_id").references(() => userTable.id, {
+      onDelete: "set null",
+    }),
+    eventData: jsonb("event_data")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("project_activity_project_created_idx").on(
+      table.projectId,
+      table.createdAt,
+    ),
+  ],
+);
+
+export const announcementTable = pgTable(
+  "announcement",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, { onDelete: "cascade" }),
+    projectId: text("project_id").references(() => projectTable.id, {
+      onDelete: "cascade",
+    }),
+    title: text("title").notNull(),
+    content: text("content").notNull().default(""),
+    pinned: boolean("pinned").notNull().default(false),
+    pinnedUntil: timestamp("pinned_until", { mode: "date" }),
+    notified: boolean("notified").notNull().default(false),
+    authorId: text("author_id").references(() => userTable.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("announcement_workspace_created_idx").on(
+      table.workspaceId,
+      table.createdAt,
+    ),
+    index("announcement_project_created_idx").on(
+      table.projectId,
+      table.createdAt,
+    ),
   ],
 );
 
@@ -1094,6 +1251,9 @@ export const fieldDefinitionTable = pgTable(
     // Borrado suave, como en `epic`: archivar una definicion la retira de los
     // formularios sin borrar el valor que miles de tareas ya tienen guardado.
     archivedAt: timestamp("archived_at", { mode: "date" }),
+    // A que se pone el campo: a las tareas o, definido en el espacio, a los
+    // proyectos (ADR 088). Sus valores van en `project.custom_fields`.
+    entity: text("entity").notNull().default("task"),
   },
   (table) => [
     index("field_definition_workspaceId_idx").on(table.workspaceId),
@@ -1103,8 +1263,9 @@ export const fieldDefinitionTable = pgTable(
     // es igual a NULL—, asi que un `unique(workspace_id, project_id, key)`
     // dejaria repetir la clave de todos los campos de espacio. `NULLS NOT
     // DISTINCT` lo arreglaria pero solo existe desde Postgres 15.
+    // Con `entity`: un «presupuesto» de tarea y otro de proyecto conviven.
     uniqueIndex("field_definition_workspace_key_unique")
-      .on(table.workspaceId, table.key)
+      .on(table.workspaceId, table.entity, table.key)
       .where(sql`project_id IS NULL`),
     uniqueIndex("field_definition_project_key_unique")
       .on(table.projectId, table.key)
@@ -1115,6 +1276,11 @@ export const fieldDefinitionTable = pgTable(
     check(
       "field_definition_type_valid",
       sql`${table.type} IN ('text', 'number', 'currency', 'select', 'multi_select', 'date', 'checkbox', 'user', 'url', 'relation')`,
+    ),
+    // Un campo de proyecto se define en el espacio, nunca en un proyecto.
+    check(
+      "field_definition_entity_valid",
+      sql`${table.entity} = 'task' OR (${table.entity} = 'project' AND ${table.projectId} IS NULL)`,
     ),
   ],
 );
@@ -1422,7 +1588,7 @@ export const viewTable = pgTable(
     index("view_workspace_shared_idx").on(table.workspaceId, table.isShared),
     check(
       "view_type_valid",
-      sql`${table.type} IN ('table', 'board', 'list', 'calendar', 'gantt')`,
+      sql`${table.type} IN ('table', 'board', 'list', 'calendar', 'gantt', 'portfolio')`,
     ),
   ],
 );
@@ -2383,6 +2549,9 @@ export const taskRelationTable = pgTable(
         onUpdate: "cascade",
       }),
     relationType: text("relation_type").notNull(),
+    // Solo en `precedes` (ADR 084): dias laborables entre el fin de la
+    // predecesora y el inicio de la sucesora. Negativo, para solapar.
+    lag: integer("lag"),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   },
   (table) => [

@@ -61,10 +61,13 @@ export default function FieldEditor({
   projectId,
   workspaceId,
   canEdit = true,
+  entity = "task",
 }: {
   projectId?: string;
   workspaceId: string;
   canEdit?: boolean;
+  /** `project`: los campos de los proyectos del espacio (ADR 088). */
+  entity?: "task" | "project";
 }) {
   const { t } = useTranslation();
   const projectQuery = useGetFieldDefinitions(projectId ?? "", {
@@ -72,7 +75,7 @@ export default function FieldEditor({
   });
   const workspaceQuery = useGetWorkspaceFieldDefinitions(
     projectId ? "" : workspaceId,
-    { includeArchived: true },
+    { includeArchived: true, entity },
   );
   const definitions = (
     (projectId ? projectQuery.data : workspaceQuery.data) ?? []
@@ -82,7 +85,7 @@ export default function FieldEditor({
     : workspaceQuery.isLoading;
 
   const { mutateAsync: create, isPending: isCreating } =
-    useCreateFieldDefinition({ projectId, workspaceId });
+    useCreateFieldDefinition({ projectId, workspaceId, entity });
   const { mutateAsync: update } = useUpdateFieldDefinition();
   const { mutateAsync: remove } = useDeleteFieldDefinition();
 
@@ -179,7 +182,11 @@ export default function FieldEditor({
         <div className="flex justify-end">
           <Button size="sm" onClick={() => setAdding(true)}>
             <Plus className="size-3.5" />
-            {t("tasks:table.addField")}
+            {/* En los ajustes del espacio conviven los dos editores: cada
+                boton dice cual es el suyo. */}
+            {entity === "project"
+              ? t("settings:workspaceFields.addProjectField")
+              : t("tasks:table.addField")}
           </Button>
         </div>
       )}

@@ -3,6 +3,7 @@ import { sendNotificationEmail } from "@riuna/email";
 import { and, eq } from "drizzle-orm";
 import db from "../database";
 import {
+  announcementTable,
   notificationTable,
   projectTable,
   taskTable,
@@ -53,6 +54,16 @@ function buildTaskUrl(workspaceId: string, projectId: string, taskId: string) {
   return `${clientUrl}/dashboard/workspace/${workspaceId}/project/${projectId}/task/${taskId}`;
 }
 
+// Los canales externos hablan en ingles, como el resto de este fichero.
+const PROJECT_HEALTH_LABELS: Record<string, string> = {
+  not_started: "not started",
+  on_track: "on track",
+  at_risk: "at risk",
+  off_track: "off track",
+  finished: "finished",
+  cancelled: "cancelled",
+};
+
 function getStringValue(
   data: Record<string, unknown> | null | undefined,
   key: string,
@@ -67,6 +78,19 @@ function getNumberValue(
 ) {
   const value = data?.[key];
   return typeof value === "number" ? value : null;
+}
+
+// Un vencimiento es un dia de Madrid guardado como su medianoche (ADR 049):
+// cortar el ISO daria el dia anterior.
+function formatDay(iso: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Madrid",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
 }
 
 function formatLeadTime(minutes: number | null) {
@@ -138,7 +162,9 @@ function buildDeliveryContent(notification: {
         body:
           taskTitle && oldStatus && newStatus
             ? `${taskTitle} moved from ${oldStatus} to ${newStatus}.`
-            : "A task status changed in Riuna.",
+            : taskTitle && newStatus
+              ? `${taskTitle} moved to ${newStatus}.`
+              : "A task status changed in Riuna.",
       };
     }
     case "task_assignee_changed": {
@@ -201,13 +227,58 @@ function buildDeliveryContent(notification: {
         notification.eventData,
         "commenterName",
       );
+      const watching =
+        getStringValue(notification.eventData, "reason") === "watcher";
       return {
         title: commenterName
-          ? `${commenterName} commented on your task`
+          ? watching
+            ? `${commenterName} commented on a task you watch`
+            : `${commenterName} commented on your task`
           : "New task comment",
         body: taskTitle
           ? `A new comment was added to ${taskTitle}.`
           : "A new comment was added to a Riuna task.",
+      };
+    }
+    case "task_due_date_changed": {
+      const taskTitle = getStringValue(notification.eventData, "taskTitle");
+      const newDueDate = getStringValue(notification.eventData, "newDueDate");
+      return {
+        title: "Due date changed",
+        body: !taskTitle
+          ? "A task due date changed in Riuna."
+          : newDueDate
+            ? `"${taskTitle}" is now due ${formatDay(newDueDate)}.`
+            : `"${taskTitle}" no longer has a due date.`,
+      };
+    }
+    case "task_reminder": {
+      const taskTitle = getStringValue(notification.eventData, "taskTitle");
+      const note = getStringValue(notification.eventData, "note");
+      return {
+        title: taskTitle ? `Reminder: ${taskTitle}` : "Task reminder",
+        body: note || "You asked to be reminded about this task.",
+      };
+    }
+    case "project_health_changed": {
+      const projectName = getStringValue(notification.eventData, "projectName");
+      const health = getStringValue(notification.eventData, "health");
+      const note = getStringValue(notification.eventData, "note");
+      const authorName = getStringValue(notification.eventData, "authorName");
+      return {
+        title: `${projectName ?? "A project"}: ${PROJECT_HEALTH_LABELS[health ?? ""] ?? health ?? "status changed"}`,
+        body: `${authorName ?? "Someone"} changed the project's health${note ? `: ${note}` : "."}`,
+      };
+    }
+    case "announcement_published": {
+      const title = getStringValue(notification.eventData, "announcementTitle");
+      const authorName = getStringValue(notification.eventData, "authorName");
+      const projectName = getStringValue(notification.eventData, "projectName");
+      return {
+        title: title ? `Announcement: ${title}` : "New announcement",
+        body: `${authorName ?? "Someone"} posted an announcement${
+          projectName ? ` in ${projectName}` : ""
+        }.`,
       };
     }
     default:
@@ -327,6 +398,44 @@ async function resolveNotificationContext(notification: {
       taskId: task.taskId,
       taskTitle: task.taskTitle,
       taskUrl: buildTaskUrl(task.workspaceId, task.projectId, task.taskId),
+    };
+  }
+
+  // Un aviso (ADR 081) lleva al tablon donde se publico: el del proyecto o el
+  // del espacio. Va en `taskUrl` porque es el enlace que abre cada canal.
+  if (notification.resourceType === "announcement") {
+    const [announcement] = await db
+      .select({
+        workspaceId: workspaceTable.id,
+        workspaceName: workspaceTable.name,
+        projectId: projectTable.id,
+        projectName: projectTable.name,
+      })
+      .from(announcementTable)
+      .innerJoin(
+        workspaceTable,
+        eq(announcementTable.workspaceId, workspaceTable.id),
+      )
+      .leftJoin(projectTable, eq(announcementTable.projectId, projectTable.id))
+      .where(eq(announcementTable.id, notification.resourceId))
+      .limit(1);
+
+    if (!announcement) {
+      return null;
+    }
+
+    const clientUrl = process.env.RIUNA_CLIENT_URL || "http://localhost:5173";
+    const base = `${clientUrl}/dashboard/workspace/${announcement.workspaceId}`;
+    return {
+      workspaceId: announcement.workspaceId,
+      workspaceName: announcement.workspaceName,
+      projectId: announcement.projectId,
+      projectName: announcement.projectName,
+      taskId: null,
+      taskTitle: null,
+      taskUrl: announcement.projectId
+        ? `${base}/project/${announcement.projectId}/announcements`
+        : `${base}/announcements`,
     };
   }
 

@@ -141,6 +141,12 @@ function CommandPalette() {
       },
       { value: "home", to: "home", label: t("navigation:sidebar.home") },
       { value: "goals", to: "goals", label: t("navigation:sidebar.goals") },
+      // Los avisos del espacio no tienen hueco en la barra (ADR 061, 081).
+      {
+        value: "announcements",
+        to: "announcements",
+        label: t("announcements:workspaceTitle"),
+      },
       // Los rituales solo se abren a peticion (ADR 054): un boton o esto.
       {
         value: "plan-day",

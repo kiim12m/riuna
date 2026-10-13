@@ -48,16 +48,33 @@ import CreateTaskModal from "../shared/modals/create-task-modal";
 import TaskRow from "./task-row";
 import TreeSection, { NEST_DROPPABLE_PREFIX } from "./tree-section";
 
+type Subproject = {
+  id: string;
+  name: string;
+  slug: string;
+  icon?: string | null;
+  columns: Array<{
+    slug: string;
+    name: string;
+    icon?: string | null;
+    isFinal?: boolean;
+  }>;
+  tasks: Task[];
+};
+
 type ListViewProps = {
   project: ProjectWithTasks;
   disableDragDrop?: boolean;
   groupBy?: GroupByField;
+  /** Las tareas de los subproyectos (ADR 089), una seccion por cada uno. */
+  subprojects?: Subproject[];
 };
 
 function ListView({
   project,
   disableDragDrop = false,
   groupBy = "status",
+  subprojects,
 }: ListViewProps) {
   const { t } = useTranslation();
   const isGroupedByTeam = groupBy === "team";
@@ -632,6 +649,73 @@ function ListView({
     );
   }
 
+  // Una seccion por subproyecto, al final: sus estados son sus columnas, asi
+  // que no caben en las del padre, y sus filas no se arrastran entre ellas.
+  function SubprojectSection({ subproject }: { subproject: Subproject }) {
+    const sectionId = `subproject:${subproject.id}`;
+    const columnOf = new Map(
+      subproject.columns.map((column) => [
+        column.slug,
+        { id: column.slug, ...column },
+      ]),
+    );
+    return (
+      <div
+        className="border-b border-border/50 overflow-auto"
+        data-testid="list-subproject"
+      >
+        <div className="flex items-center justify-between py-2 px-4 bg-muted/60 border-b border-border/50">
+          <button
+            type="button"
+            onClick={() => toggleSection(sectionId)}
+            className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronRight
+              className={cn(
+                "w-3 h-3 transition-transform",
+                isSectionExpanded(sectionId) && "rotate-90",
+              )}
+            />
+            <span className="rounded bg-muted px-1 font-mono text-label text-muted-foreground">
+              {subproject.slug}
+            </span>
+            <span className="mt-0.5">{subproject.name}</span>
+            <span className="text-xs text-muted-foreground mt-0.5">
+              {subproject.tasks.length}
+            </span>
+          </button>
+        </div>
+        {isSectionExpanded(sectionId) && (
+          <div className="bg-card">
+            <SortableContext
+              items={subproject.tasks}
+              strategy={verticalListSortingStrategy}
+            >
+              {subproject.tasks.map((task) => (
+                <TaskRow
+                  key={task.id}
+                  task={{
+                    ...task,
+                    projectSlug: subproject.slug,
+                    projectName: subproject.name,
+                  }}
+                  projectSlug={subproject.slug}
+                  statusColumn={columnOf.get(task.status)}
+                  sortable={false}
+                />
+              ))}
+            </SortableContext>
+            {subproject.tasks.length === 0 && (
+              <div className="py-6 px-4 text-center text-xs text-muted-foreground">
+                {t("tasks:listView.noTasks")}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (!project?.columns) {
     return null;
   }
@@ -682,6 +766,9 @@ function ListView({
               {t("tasks:listView.noTasks")}
             </div>
           )}
+          {subprojects?.map((subproject) => (
+            <SubprojectSection key={subproject.id} subproject={subproject} />
+          ))}
         </div>
       </div>
 

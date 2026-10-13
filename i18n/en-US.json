@@ -944,7 +944,13 @@
 				"iconRequired": "Icon is required"
 			},
 			"importExportTasks": "Import/Export",
-			"importExportTasksDescription": "Import and export tasks."
+			"importExportTasksDescription": "Import and export tasks.",
+			"parentLabel": "Subproject of",
+			"parentHint": "A project can hang from another, one level deep. The parent's views can include its tasks, and its progress counts the whole branch.",
+			"parentHasChildren": "It has subprojects, so it cannot hang from another project.",
+			"noParent": "None",
+			"parentSaved": "Parent project saved",
+			"parentError": "The parent project could not be changed"
 		},
 		"projectIntegrations": {
 			"pageTitle": "Project Integrations",
@@ -1432,7 +1438,9 @@
 			"cascadeArchiveHint": "Archiving a task archives every task below it too.",
 			"depthLabel": "Depth limit",
 			"depthHint": "How many levels a branch may have. Past five, indentation eats the list.",
-			"updateError": "Failed to update the hierarchy settings"
+			"updateError": "Failed to update the hierarchy settings",
+			"weightedProgressLabel": "Weigh progress by the estimate",
+			"weightedProgressHint": "A branch's progress counts each subtask by its estimate instead of counting finished tasks. One without an estimate weighs the branch average; a milestone weighs nothing."
 		},
 		"projectEpics": {
 			"title": "Epics",
@@ -1521,7 +1529,10 @@
 		"workspaceFields": {
 			"title": "Custom fields",
 			"pageTitle": "Custom fields",
-			"description": "Fields that apply to every project of the workspace. A project can define its own on top of these."
+			"description": "Fields that apply to every project of the workspace. A project can define its own on top of these.",
+			"projectTitle": "Project fields",
+			"projectDescription": "Attributes of the projects themselves, such as the client or the budget. They are columns, filters and export of the project list, and each project fills them in from its settings or right in the list.",
+			"addProjectField": "New project field"
 		},
 		"automations": {
 			"title": "Automations",
@@ -1582,7 +1593,8 @@
 				"task_labeled": "A label is added",
 				"task_due_in": "It is due soon",
 				"task_overdue": "It is overdue",
-				"schedule": "On a schedule"
+				"schedule": "On a schedule",
+				"manual": "The button is pressed"
 			},
 			"actions": {
 				"move": "Move to a column",
@@ -1679,7 +1691,8 @@
 					"assignees": "Its assignees",
 					"creator": "Whoever created it",
 					"teamMembers": "Its team",
-					"teamLeads": "Its team lead"
+					"teamLeads": "Its team lead",
+					"watchers": "Its watchers"
 				},
 				"alsoPeople": "Also these people",
 				"message": "Message",
@@ -1691,7 +1704,8 @@
 				"webhookUrl": "Webhook URL",
 				"botToken": "Bot token",
 				"chatId": "Chat ID",
-				"threadId": "Thread ID (optional)"
+				"threadId": "Thread ID (optional)",
+				"manualHint": "The rule shows as a button on the task, and in its context menu, while the task meets the conditions. It runs on behalf of whoever presses it, who needs to be able to edit tasks."
 			},
 			"standup": {
 				"sectionTitle": "Send the stand-up to a chat",
@@ -1802,7 +1816,8 @@
 					"trialReminders": "Trial reminders",
 					"recurringTasks": "Recurring tasks",
 					"automations": "Automations",
-					"instanceHealth": "Instance health"
+					"instanceHealth": "Instance health",
+					"taskReminders": "Task reminders"
 				}
 			},
 			"routes": {
@@ -1833,6 +1848,49 @@
 					"job": "job “{{job}}”"
 				}
 			}
+		},
+		"security": "Security",
+		"securityPage": {
+			"pageTitle": "Security",
+			"title": "Security",
+			"subtitle": "Where your account is signed in.",
+			"sessionsTitle": "Active sessions",
+			"sessionsDescription": "Where you have Riuna open right now. Closing a session makes that device sign in again.",
+			"loading": "Loading sessions…",
+			"browserOn": "{{browser}} on {{os}}",
+			"unknownDevice": "Unknown device",
+			"signedIn": "signed in {{when}}",
+			"expires": "expires {{when}}",
+			"impersonated": "An administrator signed in as you.",
+			"thisSession": "This session",
+			"revoke": "Close",
+			"revokeOthers": "Close all but this one",
+			"delayNote": "A closed device stops working within five minutes, when its cached session runs out. The IP is the one the API sees: through Tailscale, a 100.x address.",
+			"revoked": "Session closed",
+			"revokedOthers": "Sessions closed: {{total}}",
+			"revokeError": "Could not close the session"
+		},
+		"projectStatus": {
+			"pageTitle": "Status and dates",
+			"title": "Status and dates",
+			"subtitle": "How the project is going, its own dates and who leads it. The whole workspace sees it in the project list and in the project header.",
+			"health": "Health",
+			"noLead": "No lead",
+			"invalidDates": "The end cannot be before the start",
+			"history": {
+				"title": "History",
+				"empty": "Nothing has changed yet.",
+				"someone": "Someone",
+				"health": "set the health to {{health}}",
+				"dates": "set the dates to {{start}} – {{end}}",
+				"lead": "made {{name}} the lead",
+				"leadRemoved": "removed the lead",
+				"fields": "changed {{names}}",
+				"parent": "became a subproject",
+				"parentRemoved": "stopped being a subproject"
+			},
+			"fieldsTitle": "Project fields",
+			"fieldsEmpty": "The workspace has no project fields yet. They are defined in the workspace settings, under Custom fields."
 		}
 	},
 	"navigation": {
@@ -2019,7 +2077,8 @@
 			},
 			"task_status_changed": {
 				"title": "Task status changed",
-				"content": "Task \"{{taskTitle}}\" status changed from \"{{oldStatus}}\" to \"{{newStatus}}\""
+				"content": "Task \"{{taskTitle}}\" status changed from \"{{oldStatus}}\" to \"{{newStatus}}\"",
+				"contentWithoutOld": "Task \"{{taskTitle}}\" moved to \"{{newStatus}}\""
 			},
 			"task_assignee_changed": {
 				"title": "Task assigned to you",
@@ -2031,11 +2090,17 @@
 			},
 			"task_comment": {
 				"title": "{{commenterName}} commented on your task",
-				"content": "New comment on {{taskTitle}}: {{commentPreview}}"
+				"content": "New comment on {{taskTitle}}: {{commentPreview}}",
+				"titleWatching": "{{commenterName}} commented on a task you watch"
 			},
 			"due_date_reminder": {
 				"title": "Task due soon",
 				"content": "{{taskTitle}} is due in {{leadTime}}"
+			},
+			"task_due_date_changed": {
+				"title": "Due date changed",
+				"content": "{{taskTitle}} is now due {{dueDate}}",
+				"contentCleared": "{{taskTitle}} no longer has a due date"
 			},
 			"task_overdue": {
 				"title": "Task overdue",
@@ -2050,6 +2115,21 @@
 				"title": "Riuna · {{area}}",
 				"resolvedTitle": "Riuna · resolved",
 				"resolvedContent": "Back to normal: {{area}}."
+			},
+			"task_reminder": {
+				"title": "Reminder: {{taskTitle}}",
+				"content": "{{note}}",
+				"contentWithoutNote": "You asked to be reminded about this task."
+			},
+			"announcement_published": {
+				"title": "Announcement: {{announcementTitle}}",
+				"content": "{{authorName}} posted an announcement in {{projectName}}",
+				"contentWorkspace": "{{authorName}} posted a workspace announcement"
+			},
+			"project_health_changed": {
+				"title": "{{projectName}}: {{health}}",
+				"content": "{{authorName}}: {{note}}",
+				"contentWithoutNote": "{{authorName}} changed the project's health"
 			}
 		},
 		"loadMore": "Load older notifications",
@@ -2176,7 +2256,24 @@
 		"customFieldChanged": "changed “{{name}}” from {{from}} to {{to}}",
 		"customFieldChangedPlain": "changed “{{name}}”",
 		"emptyValue": "empty",
-		"automationActor": "Automation “{{name}}”"
+		"automationActor": "Automation “{{name}}”",
+		"manualAutomationActor": "{{user}} via “{{name}}”",
+		"markedMilestone": "marked it as a milestone",
+		"unmarkedMilestone": "made it a regular task again",
+		"bySchedule": "(automatic scheduling)",
+		"changedStartDate": "changed the start date from {{from}} to {{to}}",
+		"setStartDate": "set the start date to {{date}}",
+		"clearedStartDate": "cleared the start date",
+		"switchedToAutoDates": "switched to automatic dates",
+		"switchedToOwnDates": "switched to its own dates",
+		"shiftedBranch_one": "moved its branch ({{count}} task) {{days}} working days",
+		"shiftedBranch_other": "moved its branch ({{count}} tasks) {{days}} working days",
+		"precedenceAdded": "started following another task (lag {{lag}} working days)",
+		"precedenceLagChanged": "changed the lag of a predecessor to {{lag}} working days",
+		"precedenceRemoved": "stopped following a task",
+		"changedEstimate": "changed the estimate from {{from}} to {{to}}",
+		"setEstimate": "estimated it at {{estimate}}",
+		"clearedEstimate": "removed the estimate"
 	},
 	"tasks": {
 		"actions": {
@@ -2469,7 +2566,11 @@
 			"previousRange": "Scroll back",
 			"nextRange": "Scroll forward",
 			"quarterShort": "Q{{n}}",
-			"dependencyBlocks": "{{source}} blocks {{target}}"
+			"dependencyBlocks": "{{source}} blocks {{target}}",
+			"milestoneAriaLabel": "Milestone {{title}}: drag to change its date or press Enter to open it",
+			"milestoneAriaLabelReadOnly": "Milestone {{title}}: press Enter to open it",
+			"branchOverflow": "The subtasks run past this task's own dates",
+			"dependencyPrecedes": "{{source}} precedes {{target}} (lag {{lag}} working days)"
 		},
 		"group": {
 			"label": "Group",
@@ -2598,8 +2699,17 @@
 			"types": {
 				"blocks": "blocks",
 				"blocked_by": "blocked by",
-				"related": "relates to"
-			}
+				"related": "relates to",
+				"precedes": "precedes",
+				"follows": "follows"
+			},
+			"precedes": "Precedes",
+			"follows": "Follows",
+			"lag": "Lag (working days)",
+			"lagChip": "lag {{lag}} d",
+			"lagHint": "Working days between the predecessor's end and the successor's start; negative to overlap. Click to change it.",
+			"lagError": "Could not change the lag",
+			"add": "Add relation"
 		},
 		"sort": {
 			"label": "Sort",
@@ -2652,7 +2762,9 @@
 				"assignee": "Assignee",
 				"dueDate": "Due date",
 				"done": "Done",
-				"completedAt": "Completed on"
+				"completedAt": "Completed on",
+				"watchers": "Watched by",
+				"milestone": "Milestone"
 			},
 			"addField": "Add a field",
 			"addFieldTitle": "New custom field",
@@ -2734,6 +2846,17 @@
 				"label": "Group by",
 				"none": "No grouping",
 				"epic": "Epic"
+			},
+			"color": {
+				"label": "Colour rows",
+				"none": "No",
+				"priority": "Priority",
+				"due": "Due date"
+			},
+			"totals": {
+				"label": "Whole filter · {{total}} tasks",
+				"estimate": "Estimated",
+				"logged": "Logged"
 			}
 		},
 		"team": {
@@ -2792,6 +2915,93 @@
 			"title": "Archive Tasks",
 			"description_one": "Are you sure you want to archive the completed task? It will move from the active board to your archive.",
 			"description_other": "Are you sure you want to archive all {{count}} completed tasks? They will move from the active board to your archive."
+		},
+		"watchers": {
+			"watch": "Watch",
+			"watching": "Watching",
+			"title": "Watching this task",
+			"empty": "Nobody watches this task yet.",
+			"you": "(you)",
+			"assignee": "assignee",
+			"remove": "Remove {{name}}",
+			"help": "Watchers get its comments and its status and due date changes. Assignees always do.",
+			"assignedHint": "You're assigned, so it reaches you anyway.",
+			"stopWatching": "Stop watching",
+			"startWatching": "Watch this task",
+			"add": "Add someone",
+			"updateError": "Could not change who watches"
+		},
+		"reminder": {
+			"button": "Remind me",
+			"change": "Change the reminder",
+			"current": "Reminding you {{when}}",
+			"noNote": "No note",
+			"clear": "Remove the reminder",
+			"presets": {
+				"tomorrow": "Tomorrow",
+				"nextMonday": "Next Monday",
+				"inAWeek": "In a week",
+				"custom": "Pick a day and time…"
+			},
+			"day": "Day",
+			"time": "Time",
+			"inPast": "That time has already passed.",
+			"save": "Save reminder",
+			"note": "Note (optional)",
+			"notePlaceholder": "What you want to remember",
+			"help": "Only you see it. It reaches you through the bell and your channels. It does not plan the task into your day.",
+			"saved": "Reminder set for {{when}}",
+			"cleared": "Reminder removed",
+			"saveError": "Could not save the reminder"
+		},
+		"manualActions": {
+			"menu": "Actions",
+			"hint": "One-click action: runs this automation on the task",
+			"done": "“{{name}}” done",
+			"failed": "“{{name}}” stopped halfway: {{error}}",
+			"error": "Could not run the action"
+		},
+		"milestone": {
+			"mark": "Milestone",
+			"is": "Milestone",
+			"hint": "A milestone is a single date, with no estimate, timer or subtasks.",
+			"notWithSubtasks": "A task with subtasks cannot be a milestone.",
+			"marked": "Marked as a milestone",
+			"unmarked": "No longer a milestone",
+			"error": "Could not change the milestone"
+		},
+		"dates": {
+			"modeOwn": "Dates: own",
+			"modeAuto": "Dates: automatic",
+			"own": "Own",
+			"ownHint": "You set them. If the subtasks run past them, you get a warning.",
+			"auto": "Automatic",
+			"autoHint": "They come from the subtasks: from the first start to the last end. They cannot be edited by hand.",
+			"error": "Could not change the dates",
+			"overflow_one": "The subtasks end on {{date}}, {{count}} working day after the due date.",
+			"overflow_other": "The subtasks end on {{date}}, {{count}} working days after the due date.",
+			"moveDue": "Move the due date to {{date}}",
+			"switchToAuto": "Switch to automatic dates"
+		},
+		"baseline": {
+			"label": "Baseline",
+			"none": "None",
+			"yesterday": "Yesterday",
+			"lastWorkDay": "Last working day",
+			"week": "A week ago",
+			"date": "Date…",
+			"dateLabel": "Baseline date",
+			"added": "Matches now and did not then",
+			"changed": "Changed since then",
+			"unassigned": "Unassigned",
+			"removedTitle_one": "{{count}} task no longer matches",
+			"removedTitle_other": "{{count}} tasks no longer match",
+			"summary": "Since {{since}}: {{added}} in · {{removed}} out · {{changed}} changed",
+			"ghost": "Then: {{start}} – {{end}}"
+		},
+		"subprojects": {
+			"include_one": "Include its {{count}} subproject",
+			"include_other": "Include its {{count}} subprojects"
 		}
 	},
 	"invitations": {
@@ -2825,7 +3035,54 @@
 			},
 			"noDueDate": "No due date",
 			"reorderHandle": "Reorder project",
-			"reorderError": "Failed to reorder projects"
+			"reorderError": "Failed to reorder projects",
+			"lead": "Lead",
+			"startDate": "Start",
+			"endDate": "End",
+			"overflow_one": "Its tasks end on {{date}}, {{count}} working day after the end date",
+			"overflow_other": "Its tasks end on {{date}}, {{count}} working days after the end date",
+			"quick": {
+				"label": "Show",
+				"all": "All",
+				"attention": "At risk or off track",
+				"mine": "Mine"
+			},
+			"health": {
+				"not_started": "Not started",
+				"on_track": "On track",
+				"at_risk": "At risk",
+				"off_track": "Off track",
+				"finished": "Finished",
+				"cancelled": "Cancelled",
+				"titleFor": "Health of {{name}}",
+				"note": "Note",
+				"notePlaceholder": "What is going on, in a line",
+				"noNote": "No note",
+				"notify": "Tell the workspace",
+				"save": "Save",
+				"saved": "Project status saved",
+				"error": "The project status could not be saved"
+			},
+			"key": "Key",
+			"createdAt": "Created",
+			"columns": {
+				"title": "Project",
+				"health": "Status",
+				"lead": "Lead",
+				"startDate": "Start",
+				"endDate": "End",
+				"progress": "Progress",
+				"tasks": "Tasks"
+			},
+			"columnsGroup": {
+				"base": "Of the project",
+				"custom": "Project fields"
+			},
+			"export": "Export",
+			"exportError": "The project list could not be exported",
+			"noMatches": "No project matches the filter",
+			"subprojectCount_one": "{{count}} subproject",
+			"subprojectCount_other": "{{count}} subprojects"
 		},
 		"search": {
 			"pageTitle": "Search",
@@ -3279,7 +3536,8 @@
 			"board": "Board",
 			"gantt": "Gantt",
 			"table": "Table",
-			"waiting": "Waiting on"
+			"waiting": "Waiting on",
+			"watching": "Watching"
 		},
 		"table": {
 			"moreResults": "Showing {{shown}} of {{total}}. Narrow it down with a filter to see the rest."
@@ -3304,6 +3562,17 @@
 			"empty": {
 				"title": "Not waiting on anyone",
 				"description": "Tasks you assign to others, and yours blocked by someone else’s, show up here."
+			}
+		},
+		"watching": {
+			"title": "Watching",
+			"description": "Open tasks you watch and aren't assigned to, latest change first.",
+			"assignedTo": "Assigned to {{names}}",
+			"unassigned": "Unassigned",
+			"capped": "Showing the first {{limit}}.",
+			"empty": {
+				"title": "You're not watching anything",
+				"description": "Watch a task from its detail, or comment on it, and it shows up here."
 			}
 		}
 	},
@@ -3798,6 +4067,47 @@
 				"title": "Nobody to lead",
 				"description": "When you lead a team, you will see your people’s day here."
 			}
+		}
+	},
+	"announcements": {
+		"projectTitle": "Project announcements",
+		"workspaceTitle": "Workspace announcements",
+		"projectSubtitle": "News for everyone working on this project. A pinned one shows as a banner in its views.",
+		"workspaceSubtitle": "News for the whole workspace. A pinned one shows as a banner in every project's views.",
+		"seeWorkspace": "See the workspace announcements",
+		"new": "New announcement",
+		"loading": "Loading announcements…",
+		"empty": "No announcements yet",
+		"emptyCanPublish": "Post the first one: it can notify every member and stay pinned as a banner.",
+		"emptyReadOnly": "When someone posts one, it will appear here.",
+		"edit": "Edit announcement",
+		"delete": "Delete announcement",
+		"deleteConfirm": "Delete this announcement? It disappears for everyone.",
+		"deleted": "Announcement deleted",
+		"published": "Announcement published",
+		"saved": "Announcement saved",
+		"saveError": "Could not save the announcement",
+		"pinned": "Pinned",
+		"pinnedUntil": "Pinned until {{date}}",
+		"notified": "Members were notified",
+		"dialog": {
+			"newTitle": "New announcement",
+			"editTitle": "Edit announcement",
+			"description": "It is shown to everyone in the workspace.",
+			"title": "Title",
+			"titlePlaceholder": "Power cut on Thursday from 8:00 to 10:00",
+			"contentPlaceholder": "Details, links to tasks, whatever people need to know…",
+			"pin": "Pin as a banner",
+			"pinUntil": "until (optional)",
+			"notify": "Notify the members",
+			"publish": "Publish",
+			"save": "Save"
+		},
+		"banner": {
+			"project": "Pinned:",
+			"workspace": "Workspace:",
+			"open": "See announcements",
+			"hide": "Hide for me"
 		}
 	}
 }

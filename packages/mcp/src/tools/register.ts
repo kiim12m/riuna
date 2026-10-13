@@ -18,6 +18,19 @@ const optionalNonEmptyString = nonEmptyString.optional();
 const nullableOptionalNonEmptyString = nonEmptyString.nullable().optional();
 const isoDateTimeSchema = z.string().datetime({ offset: true });
 const optionalIsoDateTimeSchema = isoDateTimeSchema.optional();
+
+/** El tablon de un aviso: el de un proyecto o el del espacio, uno de los dos. */
+function announcementScopePath(args: {
+  projectId?: string;
+  workspaceId?: string;
+}) {
+  if (Boolean(args.projectId) === Boolean(args.workspaceId)) {
+    throw new Error("Pass either projectId or workspaceId");
+  }
+  return args.projectId
+    ? `/api/announcement/project/${encodeURIComponent(args.projectId)}`
+    : `/api/announcement/workspace/${encodeURIComponent(args.workspaceId ?? "")}`;
+}
 const nullableOptionalIsoDateTimeSchema = isoDateTimeSchema
   .nullable()
   .optional();
@@ -146,14 +159,21 @@ export function registerTools(
           .boolean()
           .optional()
           .describe("Include archived projects"),
+        filter: z
+          .string()
+          .optional()
+          .describe(
+            'A filter as JSON, the same tree the views use, over the project: name, key, health (not_started, on_track, at_risk, off_track, finished, cancelled), lead (user id), startDate, endDate, createdAt, progress (0-100) and custom.<key> for the workspace\'s project fields. Example: {"type":"condition","field":"health","operator":"in","value":["at_risk","off_track"]}.',
+          ),
       }),
     },
     async (args) => {
-      const { workspaceId, includeArchived } = args;
+      const { workspaceId, includeArchived, filter } = args;
       const qs = new URLSearchParams({ workspaceId });
       if (includeArchived === true) {
         qs.set("includeArchived", "true");
       }
+      if (filter) qs.set("filter", filter);
       return run(() =>
         client.json(`/api/project?${qs.toString()}`, { method: "GET" }),
       );
@@ -274,7 +294,7 @@ export function registerTools(
       .string()
       .optional()
       .describe(
-        'A filter as JSON, the same the views use: {"type":"condition","field":"custom.presupuesto","operator":"gt","value":1000}, or several combined with {"type":"and","children":[…]} or {"type":"or","children":[…]}, and negated with {"type":"not","child":…}. Fields: title, description, status, priority, number, dueDate, assignee, team, done, completedAt, epic and assignees (by id), label (by name) and custom.<key>.',
+        'A filter as JSON, the same the views use: {"type":"condition","field":"custom.presupuesto","operator":"gt","value":1000}, or several combined with {"type":"and","children":[…]} or {"type":"or","children":[…]}, and negated with {"type":"not","child":…}. Fields: title, description, status, priority, number, dueDate, assignee, team, done, completedAt, epic, assignees and watchers (by id), label (by name) and custom.<key>.',
       ),
     treeScope: z
       .enum(["matching", "roots", "withDescendants"])
@@ -332,18 +352,25 @@ export function registerTools(
         startDate: optionalIsoDateTimeSchema,
         dueDate: optionalIsoDateTimeSchema,
         userId: optionalNonEmptyString,
+        isMilestone: z
+          .boolean()
+          .optional()
+          .describe(
+            "A milestone: a single date (its due date), no estimate and no subtasks.",
+          ),
         ...taskExtrasShape,
       }),
     },
     async (args) => {
       const { customFields, assigneeIds, teamId } = args;
       const extras: TaskExtras = { customFields, assigneeIds, teamId };
-      const body: Record<string, string | undefined> = {
+      const body: Record<string, string | boolean | undefined> = {
         title: args.title,
         description: args.description,
         priority: args.priority,
         status: args.status,
       };
+      if (args.isMilestone !== undefined) body.isMilestone = args.isMilestone;
       if (args.startDate !== undefined) {
         body.startDate = args.startDate;
       }
@@ -648,11 +675,12 @@ export function registerTools(
     "create_task_relation",
     {
       description:
-        "Create a relation between two tasks. relationType: 'blocks' (sourceTaskId blocks targetTaskId) or 'related' (bidirectional). Parent/child hierarchy is not a relation: use update_task_parent.",
+        "Create a relation between two tasks. relationType: 'blocks' (sourceTaskId blocks targetTaskId), 'related' (bidirectional) or 'precedes' (sourceTaskId precedes targetTaskId: the target switches to automatic dates and starts the working day after the source ends, plus lag working days, negative to overlap; same project only). Parent/child hierarchy is not a relation: use update_task_parent.",
       inputSchema: z.object({
         sourceTaskId: nonEmptyString,
         targetTaskId: nonEmptyString,
-        relationType: z.enum(["blocks", "related"]),
+        relationType: z.enum(["blocks", "related", "precedes"]),
+        lag: z.number().int().min(-365).max(365).optional(),
       }),
     },
     async (args) =>
@@ -663,6 +691,7 @@ export function registerTools(
             sourceTaskId: args.sourceTaskId,
             targetTaskId: args.targetTaskId,
             relationType: args.relationType,
+            ...(args.lag !== undefined ? { lag: args.lag } : {}),
           }),
         }),
       ),
@@ -671,7 +700,8 @@ export function registerTools(
   server.registerTool(
     "get_task_relations",
     {
-      description: "List all relations (blocks/related) involving a task.",
+      description:
+        "List all relations (blocks, related, precedes with its lag) involving a task.",
       inputSchema: z.object({ taskId: nonEmptyString }),
     },
     async (args) =>
@@ -693,6 +723,380 @@ export function registerTools(
         client.json(`/api/task-relation/${encodeURIComponent(args.id)}`, {
           method: "DELETE",
         }),
+      ),
+  );
+
+  server.registerTool(
+    "get_task_watchers",
+    {
+      description:
+        "Who watches a task. Assignees always do (assignee: true); watching: true means the person watches it on purpose, which is what unwatch_task removes. Watchers get the task's comments and status and due date changes as notifications.",
+      inputSchema: z.object({ taskId: nonEmptyString }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/task-watcher/${encodeURIComponent(args.taskId)}`, {
+          method: "GET",
+        }),
+      ),
+  );
+
+  server.registerTool(
+    "watch_task",
+    {
+      description:
+        "Watch a task so its comments and status and due date changes arrive as notifications. Without userId it is the current user; adding someone else needs the task:assign permission and a workspace member. Returns the watchers.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        userId: nonEmptyString.optional(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/task-watcher/${encodeURIComponent(args.taskId)}`, {
+          method: "POST",
+          body: JSON.stringify(args.userId ? { userId: args.userId } : {}),
+        }),
+      ),
+  );
+
+  server.registerTool(
+    "unwatch_task",
+    {
+      description:
+        "Stop watching a task. Without userId it is the current user; removing someone else needs task:assign. An assignee keeps getting notified while assigned. Returns the watchers.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        userId: nonEmptyString.optional(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/task-watcher/${encodeURIComponent(args.taskId)}${
+            args.userId ? `?userId=${encodeURIComponent(args.userId)}` : ""
+          }`,
+          { method: "DELETE" },
+        ),
+      ),
+  );
+
+  server.registerTool(
+    "set_task_reminder",
+    {
+      description:
+        "Remind the current user about a task at remindAt (an ISO date-time within a year), once, through the bell and their channels, with an optional private note. Replaces any reminder they already had on the task; leaving note out keeps its note. It does not plan the task into their day.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        remindAt: isoDateTimeSchema,
+        note: z.string().max(280).nullable().optional(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/task-reminder/${encodeURIComponent(args.taskId)}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            remindAt: args.remindAt,
+            ...(args.note !== undefined ? { note: args.note } : {}),
+          }),
+        }),
+      ),
+  );
+
+  server.registerTool(
+    "clear_task_reminder",
+    {
+      description: "Remove the current user's reminder on a task, if any.",
+      inputSchema: z.object({ taskId: nonEmptyString }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/task-reminder/${encodeURIComponent(args.taskId)}`, {
+          method: "DELETE",
+        }),
+      ),
+  );
+
+  server.registerTool(
+    "list_task_actions",
+    {
+      description:
+        "The one-click actions a task offers right now: automations with the manual trigger whose conditions the task meets. Empty for whoever cannot edit tasks.",
+      inputSchema: z.object({ taskId: nonEmptyString }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/automation/manual/task/${encodeURIComponent(args.taskId)}`,
+          { method: "GET" },
+        ),
+      ),
+  );
+
+  server.registerTool(
+    "run_task_action",
+    {
+      description:
+        "Press a one-click action (from list_task_actions) on a task. Its actions run on behalf of the current user. Returns ok, or failed with the action that stopped it.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        automationId: nonEmptyString,
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/automation/manual/task/${encodeURIComponent(args.taskId)}`,
+          {
+            method: "POST",
+            body: JSON.stringify({ automationId: args.automationId }),
+          },
+        ),
+      ),
+  );
+
+  server.registerTool(
+    "get_task_totals",
+    {
+      description:
+        "Totals over every task of a project that matches a filter (the same filter and treeScope as list_tasks): how many, their own estimate and logged time in seconds, and the sum of each number or currency field by key.",
+      inputSchema: z.object({
+        projectId: nonEmptyString,
+        filter: z.string().optional(),
+        treeScope: z.enum(["matching", "roots", "withDescendants"]).optional(),
+      }),
+    },
+    async (args) => {
+      const qs = new URLSearchParams();
+      if (args.filter) qs.set("filter", args.filter);
+      if (args.treeScope) qs.set("treeScope", args.treeScope);
+      const q = qs.toString();
+      return run(() =>
+        client.json(
+          `/api/task/tasks/${encodeURIComponent(args.projectId)}/totals${q ? `?${q}` : ""}`,
+          { method: "GET" },
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "list_announcements",
+    {
+      description:
+        "Announcements of a project (projectId) or of the workspace itself (workspaceId): pinned ones first, then newest first.",
+      inputSchema: z.object({
+        projectId: nonEmptyString.optional(),
+        workspaceId: nonEmptyString.optional(),
+      }),
+    },
+    async (args) =>
+      run(() => client.json(announcementScopePath(args), { method: "GET" })),
+  );
+
+  server.registerTool(
+    "post_announcement",
+    {
+      description:
+        "Publish an announcement in a project (needs project:update) or in the workspace (needs workspace:manage_settings). Content is Markdown. pinned shows it as a banner in the project's views, until pinnedUntil if given. With notify (the default) every workspace member gets a notification.",
+      inputSchema: z.object({
+        projectId: nonEmptyString.optional(),
+        workspaceId: nonEmptyString.optional(),
+        title: z.string().min(1).max(200),
+        content: z.string().max(20_000).optional(),
+        pinned: z.boolean().optional(),
+        pinnedUntil: optionalIsoDateTimeSchema,
+        notify: z.boolean().optional(),
+      }),
+    },
+    async (args) => {
+      const { projectId, workspaceId, ...body } = args;
+      return run(() =>
+        client.json(announcementScopePath({ projectId, workspaceId }), {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      );
+    },
+  );
+
+  server.registerTool(
+    "set_task_milestone",
+    {
+      description:
+        "Mark or unmark a task as a milestone: a single date (its start becomes its due date), no estimate and no subtasks. A task with subtasks cannot be one.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        isMilestone: z.boolean(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/task/milestone/${encodeURIComponent(args.taskId)}`, {
+          method: "PUT",
+          body: JSON.stringify({ isMilestone: args.isMilestone }),
+        }),
+      ),
+  );
+  server.registerTool(
+    "set_task_auto_dates",
+    {
+      description:
+        "Own or automatic dates for a task. With automatic dates a parent takes its start and due date from its branch and they stop being editable by hand; switching back keeps the ones it had.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        autoDates: z.boolean(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/task/auto-dates/${encodeURIComponent(args.taskId)}`, {
+          method: "PUT",
+          body: JSON.stringify({ autoDates: args.autoDates }),
+        }),
+      ),
+  );
+
+  server.registerTool(
+    "shift_task_branch",
+    {
+      description:
+        "Move a task and its whole branch the same number of working days (Monday to Friday, skipping the workspace holidays); negative moves it earlier.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        workDays: z.number().int().min(-365).max(365),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/task/shift-branch/${encodeURIComponent(args.taskId)}`,
+          {
+            method: "POST",
+            body: JSON.stringify({ workDays: args.workDays }),
+          },
+        ),
+      ),
+  );
+
+  server.registerTool(
+    "set_task_relation_lag",
+    {
+      description:
+        "Change the lag of a 'precedes' relation, in working days (negative to overlap), and reschedule its successor.",
+      inputSchema: z.object({
+        relationId: nonEmptyString,
+        lag: z.number().int().min(-365).max(365),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/task-relation/${encodeURIComponent(args.relationId)}/lag`,
+          { method: "PATCH", body: JSON.stringify({ lag: args.lag }) },
+        ),
+      ),
+  );
+
+  server.registerTool(
+    "compare_task_baseline",
+    {
+      description:
+        "Compare a project's tasks (optionally a filter and treeScope, as in list_tasks) with how they were at an earlier moment `at` (ISO date-time): which entered or left the filter and the previous title, status, priority, assignee, dates and estimate of the ones that changed. Rebuilt from the activity; memberships count as they are now.",
+      inputSchema: z.object({
+        projectId: nonEmptyString,
+        at: isoDateTimeSchema,
+        filter: z.string().optional(),
+        treeScope: z.enum(["matching", "roots", "withDescendants"]).optional(),
+      }),
+    },
+    async (args) => {
+      const qs = new URLSearchParams({ at: args.at });
+      if (args.filter) qs.set("filter", args.filter);
+      if (args.treeScope) qs.set("treeScope", args.treeScope);
+      return run(() =>
+        client.json(
+          `/api/task/tasks/${encodeURIComponent(args.projectId)}/baseline?${qs}`,
+          { method: "GET" },
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "set_project_status",
+    {
+      description:
+        "Set a project's status: its health (not_started, on_track, at_risk, off_track, finished or cancelled) with a short note, its own start and end dates (ISO, or null to clear) and its lead (a workspace member's user id, or null). Only what is sent changes. With notify, a change of health is announced to the whole workspace.",
+      inputSchema: z.object({
+        projectId: nonEmptyString,
+        health: z
+          .enum([
+            "not_started",
+            "on_track",
+            "at_risk",
+            "off_track",
+            "finished",
+            "cancelled",
+          ])
+          .optional(),
+        note: z.string().max(500).nullable().optional(),
+        startDate: z.string().nullable().optional(),
+        endDate: z.string().nullable().optional(),
+        leadUserId: z.string().nullable().optional(),
+        notify: z.boolean().optional(),
+      }),
+    },
+    async (args) => {
+      const { projectId, ...body } = args;
+      return run(() =>
+        client.json(`/api/project/${encodeURIComponent(projectId)}/status`, {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        }),
+      );
+    },
+  );
+
+  server.registerTool(
+    "set_project_fields",
+    {
+      description:
+        "Write values of the workspace's project fields on a project (custom fields defined for projects, not tasks). Partial: only the keys sent change, and an empty value clears one.",
+      inputSchema: z.object({
+        projectId: nonEmptyString,
+        values: z.record(z.string(), z.unknown()),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/project/${encodeURIComponent(args.projectId)}/custom-fields`,
+          { method: "PUT", body: JSON.stringify({ values: args.values }) },
+        ),
+      ),
+  );
+
+  server.registerTool(
+    "set_project_parent",
+    {
+      description:
+        "Make a project a subproject of another (parentId), or release it (parentId null). One level only: the parent cannot have a parent, and a project with subprojects cannot become one. Personal inboxes take no part.",
+      inputSchema: z.object({
+        projectId: nonEmptyString,
+        parentId: z.string().nullable(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/project/${encodeURIComponent(args.projectId)}/parent`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({ parentId: args.parentId }),
+          },
+        ),
       ),
   );
 

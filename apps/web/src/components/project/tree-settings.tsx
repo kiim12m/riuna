@@ -83,6 +83,28 @@ export default function TreeSettings({ projectId }: TreeSettingsProps) {
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-0.5">
           <Label className="text-sm font-medium">
+            {t("settings:projectTree.weightedProgressLabel")}
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            {t("settings:projectTree.weightedProgressHint")}
+          </p>
+        </div>
+        <Switch
+          checked={Boolean(project.weightedProgress)}
+          disabled={isPending}
+          data-testid="weighted-progress"
+          onCheckedChange={(checked: boolean) =>
+            apply(
+              { weightedProgress: checked },
+              "settings:projectTree.updateError",
+            )
+          }
+        />
+      </div>
+
+      <div className="flex items-center justify-between gap-4">
+        <div className="space-y-0.5">
+          <Label className="text-sm font-medium">
             {t("settings:projectTree.depthLabel")}
           </Label>
           <p className="text-xs text-muted-foreground">

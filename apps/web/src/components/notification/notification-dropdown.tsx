@@ -1,4 +1,3 @@
-import { useNavigate } from "@tanstack/react-router";
 import { Bell } from "lucide-react";
 import {
   forwardRef,
@@ -39,11 +38,11 @@ import useMarkNotificationAsRead from "@/hooks/mutations/notification/use-mark-n
 import useGetNotifications from "@/hooks/queries/notification/use-get-notifications";
 import useUnreadNotificationCount from "@/hooks/queries/notification/use-unread-notification-count";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useOpenNotification } from "@/hooks/use-open-notification";
 import { cn } from "@/lib/cn";
 import { formatRelativeTime } from "@/lib/format";
 import {
   getNotificationContent,
-  getNotificationTarget,
   getNotificationTitle,
 } from "@/lib/notification";
 import type { Notification } from "@/types/notification";
@@ -68,7 +67,6 @@ type Props = {
 const NotificationDropdown = forwardRef<NotificationDropdownRef, Props>(
   ({ registerShortcut = true }, ref) => {
     const { t } = useTranslation();
-    const navigate = useNavigate();
     const {
       data: firstPage,
       dataUpdatedAt,
@@ -122,6 +120,7 @@ const NotificationDropdown = forwardRef<NotificationDropdownRef, Props>(
     const { mutate: markAllAsRead } = useMarkAllNotificationsAsRead();
     const { mutate: clearAll } = useClearNotifications();
     const { mutate: markAsRead } = useMarkNotificationAsRead();
+    const openNotification = useOpenNotification();
 
     const handleNotificationClick = useCallback(
       (notification: Notification) => {
@@ -129,16 +128,9 @@ const NotificationDropdown = forwardRef<NotificationDropdownRef, Props>(
           markAsRead(notification.id);
         }
 
-        const target = getNotificationTarget(notification);
-
-        if (target) {
-          navigate({
-            to: "/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId",
-            params: target,
-          });
-        }
+        openNotification(notification);
       },
-      [markAsRead, navigate],
+      [markAsRead, openNotification],
     );
 
     // El total viene del servidor: contar las que se ven ocultaba todas las

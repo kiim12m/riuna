@@ -15,7 +15,7 @@ import { assignedCondition } from "../scope";
 /** Tope de cada lista: es una pantalla de repaso, no un listado completo. */
 export const WAITING_LIMIT = 100;
 
-const columns = {
+export const columns = {
   id: taskTable.id,
   number: taskTable.number,
   title: taskTable.title,
@@ -36,7 +36,7 @@ const columns = {
 };
 
 /** Sin terminar (ADR 030), sin archivar y en un proyecto vivo del espacio. */
-function openInWorkspace(workspaceId: string): SQL[] {
+export function openInWorkspace(workspaceId: string): SQL[] {
   return [
     eq(projectTable.workspaceId, workspaceId),
     isNull(projectTable.archivedAt),
@@ -45,7 +45,7 @@ function openInWorkspace(workspaceId: string): SQL[] {
   ];
 }
 
-function assignedTo(taskId: SQL | typeof taskTable.id, userId: string) {
+export function assignedTo(taskId: SQL | typeof taskTable.id, userId: string) {
   return sql`EXISTS (SELECT 1 FROM ${taskAssigneeTable} WHERE ${taskAssigneeTable.taskId} = ${taskId} AND ${taskAssigneeTable.userId} = ${userId})`;
 }
 

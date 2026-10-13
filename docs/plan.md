@@ -30,7 +30,7 @@
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
 | **Total Bloque A** | **45** + 18 del interludio | |
-| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **Planificado** (2026-10-12) — cinco tandas · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
+| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hechas la tanda 1 (1.1-1.6) y la tanda 2 (2.1-2.4), y la tanda 3 (3.1-3.3) · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -2910,82 +2910,194 @@ de `AGENTS.md`:
 
 **Tanda 1 — Lo pequeño de cada día** (≈ 3 semanas)
 
-- **1.1 Observadores** · S. Seguir una tarea sin estar asignado. Los comentarios y los cambios de
-  estado y de vencimiento avisan también a quien observa, con las reglas por espacio de sus
-  canales.
-  - En el detalle, un botón «Observar» con la lista de quién observa.
-  - En las automatizaciones, un destinatario nuevo, «observadores».
-  - Herramientas MCP para observar y dejar de observar.
-  - A decidir en la ADR: si comentar o ser mencionado hace observar.
-- **1.2 Recordatorio en la tarea** · S. «Recuérdamelo», en el detalle y en el menú de fila: mañana a
-  las 9:00, el lunes, en una semana, o un día y una hora, con una nota que solo ve quien lo pone.
-  Llega por la campana y por los canales, y lo corre el planificador de trabajos que ya existe. No
-  planifica la tarea: el plan del día sigue siendo otra cosa.
-- **1.3 Acciones de un clic** · S. Un disparador «manual» en el motor de automatizaciones. La regla
-  sale como botón en el detalle y en el menú contextual cuando la tarea cumple su «Si», y corre
-  sus «Entonces» con el historial de siempre. Amplía las ADR 066 y 067; a decidir en nombre de
-  quién actúa (quien pulsa, con su permiso de editar).
-- **1.4 Sesiones activas** · S. En Ajustes › Seguridad, las sesiones de Better Auth (navegador, IP y
-  última actividad), con cerrar una o todas menos esta.
-- **1.5 Totales y colores en la Tabla** · S. Una fila de totales (estimado, registrado, número y
-  moneda) que la API calcula sobre todo el filtro, no sobre la página. Colorear las filas por
-  prioridad o por vencimiento, guardado en la vista.
-- **1.6 Avisos del proyecto** · M. Un tablón de avisos por proyecto y por espacio, con el editor
-  TipTap. Se pueden fijar, y entonces salen en una franja de las vistas del proyecto. Avisan a
-  los miembros. Con el vocabulario de permisos que ya existe, si basta.
+- **1.1 Observadores** ✔ · M · [ADR 076](adr/076-observadores.md). Seguir una tarea sin estar
+  asignado. **Hecho (2026-10-12).** Pasó de S a M con las decisiones del usuario, tomadas al
+  empezarla:
+  - se observa solo al crear la tarea, al comentarla y al salir mencionado;
+  - añadir o quitar a otra persona pide `task:assign`; observarse a uno mismo, `task:read`;
+  - todos los asignados avisan y cuentan como observadores implícitos;
+  - lo observado se ve en un filtro `watchers` del motor y en la pestaña «Observando» de Mis
+    tareas.
+
+  Lo construido:
+  - tabla `task_watcher` (migración 0084) y el módulo `task-watcher`;
+  - comentarios, cambios de estado y un tipo nuevo, `task_due_date_changed`, que avisan a toda
+    la audiencia;
+  - el botón del detalle, la pestaña, el filtro «Observada por», el destinatario de las
+    automatizaciones y tres herramientas MCP (49 en total).
+
+  Lo que salió por el camino, ya arreglado:
+  - comentar y cambiar el estado solo avisaban al responsable principal;
+  - la edición completa de una tarea cambiaba el vencimiento sin publicar
+    `task.due_date_changed`, así que ni la actividad ni las automatizaciones se enteraban;
+  - la edición en bloque publicaba el cambio de estado de todas las tareas, cambiaran o no, y
+    sin el estado anterior.
+
+  Pruebas: 16 de integración en `task-watchers.test.ts`, el filtro y los destinatarios en las
+  unitarias, y `watchers.spec.ts` de extremo a extremo.
+- **1.2 Recordatorio en la tarea** ✔ · S · [ADR 077](adr/077-recordatorio-en-la-tarea.md).
+  **Hecho (2026-10-12).** «Recuérdamelo» en el detalle (mañana a las 9:00, el próximo lunes, en
+  una semana, o día y hora, con una nota privada) y en el menú contextual de filas y tarjetas.
+  - Tabla `task_reminder` (migración 0085): uno por persona y tarea, privado; basta con poder ver
+    la tarea.
+  - El planificador lo manda cada minuto (`task-reminders`). Cada fila se reclama borrándola con
+    `SKIP LOCKED`, así que con dos instancias no se avisa dos veces.
+  - Llega como `task_reminder` por la campana y los canales, y pinchar abre la tarea.
+  - MCP: `set_task_reminder` y `clear_task_reminder`.
+- **1.3 Acciones de un clic** ✔ · S · [ADR 078](adr/078-acciones-de-un-clic.md). **Hecho
+  (2026-10-12).** Un disparador nuevo, «Se pulsa el botón» (`manual`).
+  - La regla sale como botón en el detalle, junto al cronómetro, y en «Acciones» del menú
+    contextual, mientras la tarea cumpla su «Si».
+  - Actúa en nombre de quien pulsa, con `task:update` (y `task:assign` si reparte).
+  - La actividad la firma «Ana con «Enviar a revisión»», y la ejecución apunta quién pulsó.
+  - MCP: `list_task_actions` y `run_task_action`.
+- **1.4 Sesiones activas** ✔ · S · [ADR 079](adr/079-sesiones-activas.md). **Hecho
+  (2026-10-12).** Ajustes › Seguridad: navegador y sistema, IP, cuándo entró y cuándo caduca;
+  cerrar una o todas menos esta.
+  - Rutas propias en `/api/session`, porque las de Better Auth devuelven el token de cada
+    sesión.
+  - No se gestionan con una clave de API.
+  - No enseña la «última actividad»: Better Auth no la guarda con esa precisión.
+  - Un dispositivo cerrado sigue hasta cinco minutos, lo que dura la caché de sesión en cookie.
+- **1.5 Totales y colores en la Tabla** ✔ · S · [ADR 080](adr/080-totales-y-colores-en-la-tabla.md).
+  **Hecho (2026-10-12).**
+  - **Totales**: cuántas tareas, estimado, registrado y cada campo de número o moneda, sobre todo
+    el filtro.
+    - Los calcula `GET /task/tasks/:projectId/totals` con la misma cláusula que la lista
+      (`taskListWhere`, sacada de `get-tasks.ts`).
+    - Cada tarea cuenta una vez.
+    - Medido con 50.000 tareas: p95 de 21 a 35 ms, y 111 ms con la rama entera.
+  - **Colores**: colorear filas por prioridad o por vencimiento, guardado en la vista.
+  - MCP: `get_task_totals`.
+- **1.6 Avisos del proyecto** ✔ · M · [ADR 081](adr/081-avisos-de-proyecto-y-espacio.md).
+  **Hecho (2026-10-12).** Tablón de avisos por proyecto (el megáfono de su cabecera) y por
+  espacio (paleta de comandos, franja y enlace), con el editor de siempre.
+  - Tabla `announcement` (migración 0086).
+  - Permisos con el vocabulario que ya existe: `project:update` en un proyecto y
+    `workspace:manage_settings` en el espacio.
+  - Avisar a los miembros se elige al publicar.
+  - Uno fijado sale como franja en las vistas del proyecto, hasta una fecha o sin fin. Cada uno
+    la oculta en su navegador.
+  - Tiempo real por el canal de usuario.
+  - MCP: `list_announcements` y `post_announcement`.
+
+  Lo que salió por el camino, ya arreglado:
+  - `i18n:check` fallaba desde la 1.1 porque al catalán le faltaban las claves nuevas; se copian
+    del castellano, como el resto del fichero;
+  - con «Colorear filas», la barra de la Tabla se salía de ancho en el móvil (lo cazó
+    `mobile/overflow`); ahora salta de línea.
+
+Pruebas de los puntos 1.2 a 1.6:
+- 22 de integración: `task-reminders`, `manual-automations`, `sessions`, `task-totals` y
+  `announcements`;
+- unitarias de los atajos del recordatorio, el color de las filas, el navegador de cada sesión y
+  los destinos de las notificaciones;
+- de extremo a extremo: `task-reminder`, `manual-actions`, `sessions`, `table-totals` y
+  `announcements`.
+
+Verificación de la tanda entera (2026-10-12): la batería de integración completa (886 pruebas),
+las unitarias de la API y de la web, y las de extremo a extremo (107 pasan y 2 se saltan, como
+siempre), incluida `watchers.spec.ts` de la 1.1.
 
 **Tanda 2 — Planificación** (≈ 6 semanas)
 
-- **2.1 Hitos** · S. Una tarea marcada como hito, con una sola fecha, que sale como rombo en el
-  Gantt y el Calendario y se puede filtrar. Sin estimación ni cronómetro.
-- **2.2 Tareas resumen** · M. Parte de lo que ya existe: `apps/api/src/task/tree-aggregates.ts`
-  calcula al leer el inicio más temprano, el vencimiento más tardío, las sumas y el progreso de
-  la rama, y `gantt-task-bar.tsx` dibuja el corchete. Añade:
-  - **fechas automáticas del padre**: un padre puede pasar a «fechas automáticas». Deja de tener
-    fechas propias y las suyas son las de la rama en el detalle, las vistas, los filtros y la
-    exportación. En el Gantt se dibuja como barra de resumen, que no se redimensiona. Es el modo
-    que la 2.3 amplía a las dependencias;
-  - **mover la rama entera**: arrastrar un padre en el Gantt mueve toda su rama los mismos días
-    laborables, en una transacción, bajo el cerrojo por proyecto, con actividad y sin disparar
-    automatizaciones en cascada;
-  - **aviso de desviación**: si un padre con fechas propias queda desbordado por sus hijas, el
-    corchete sale en el tono de peligro y el detalle lo dice («las subtareas acaban 2 días
-    laborables después»);
-  - **progreso ponderado**: un ajuste de jerarquía por proyecto, junto a las cascadas, para que el
-    progreso de la rama pese por la estimación en vez de contar tareas hechas. Los paneles y la
-    exportación cuentan lo mismo.
-
-  A decidir en la ADR: si «fechas automáticas» es una marca en la tarea o se deduce de no tener
-  fechas propias, y cómo convive con la fecha heredada que hoy se anuncia.
-- **2.3 Precede/sigue con desfase y planificación automática** · L. Una relación `precedes` —«sigue
-  a» es su inversa— con un desfase en días laborables, también negativo para solapar.
-  - Con fechas automáticas, mover una predecesora desplaza a sus sucesoras en días laborables,
-    saltando los festivos del espacio; las ausencias, a decidir en la ADR.
-  - Todo en una transacción, bajo el cerrojo por proyecto, con anticiclo, actividad propia y sin
-    disparar automatizaciones en cascada.
-  - El Gantt dibuja las flechas con su desfase.
-  - Presupuesto de 300 ms con 50.000 tareas, medido con `EXPLAIN`.
-- **2.4 Línea base** · L. Comparar una vista con ayer, el último día laborable, hace una semana o
-  una fecha: qué tareas entran, salen o cambian, con el valor anterior tachado, y en el Gantt la
-  barra anterior en fantasma. Se reconstruye desde `activity`: antes se comprueba que guarda el
-  valor anterior de cada campo que se puede filtrar, y se cubren los huecos. Las tareas borradas
-  no salen.
+- **2.1 Hitos** ✔ · S · [ADR 082](adr/082-hitos.md). **Hecho (2026-10-13).** Una tarea marcada
+  como hito, con una sola fecha, que sale como rombo en el Gantt y con `◆` en el Calendario, el
+  tablero, la lista y la Tabla, y se puede filtrar.
+  - Columna `is_milestone` (migración 0087).
+  - El inicio es siempre el vencimiento, en cualquier camino que cambie fechas.
+  - Sin estimación, cronómetro ni subtareas: la API rechaza cada una.
+  - Interruptor «Hito» en el detalle, actividad propia y MCP (`set_task_milestone`).
+  - La hoja CSV/Excel de ida y vuelta no lleva todavía la marca.
+- **2.2 Tareas resumen** ✔ · M · [ADR 083](adr/083-tareas-resumen.md). **Hecho (2026-10-13).**
+  Decisiones del usuario: los padres sin fechas propias pasan solos a automáticas; una subtarea
+  sin estimar pesa la media de la rama; los días laborables son de lunes a viernes sin los
+  festivos del espacio.
+  - **Fechas automáticas**: marca `auto_dates` y fechas guardadas en la fila (migración 0088,
+    que convierte los padres sin fechas y les escribe las de su rama). Se recalculan al escribir
+    en `task/schedule`, bajo el cerrojo del proyecto, desde cada camino que mueve fechas, estados
+    o el árbol.
+  - **Mover la rama entera**: `POST /task/shift-branch/:id`, que usa arrastrar un padre en el
+    Gantt. La barra de resumen no se estira.
+  - **Aviso de desviación** en el detalle y corchete en tono de peligro.
+  - **Progreso ponderado**, ajuste de jerarquía del proyecto. Un hito no pesa.
+  - La fecha de inicio pasa a dejar actividad. Lo que mueve la planificación deja actividad,
+    pero no avisa ni dispara automatizaciones. MCP: `set_task_auto_dates` y
+    `shift_task_branch`.
+- **2.3 Precede/sigue con desfase y planificación automática** ✔ · L ·
+  [ADR 084](adr/084-precedencias-y-planificacion-automatica.md). **Hecho (2026-10-13).**
+  Decisiones del usuario: las sucesoras van **atadas** (se mueven en los dos sentidos) y los días
+  laborables son de lunes a viernes sin los festivos del espacio, sin ausencias.
+  - Relación `precedes` con `lag` en días laborables (migración 0089); «sigue a» es su vista
+    desde la otra punta. Crearla pone a la sucesora en fechas automáticas.
+  - El mismo motor de la 2.2: cada cambio despierta a sucesoras y ancestros, en una transacción
+    bajo el cerrojo del proyecto. Lo que mueve deja actividad, pero no avisa.
+  - Se rechaza lo que no se puede planificar: entre proyectos, con un resumen como sucesora,
+    dentro de la propia rama, o si cerraría un ciclo (409). Mover una tarea de proyecto rompe
+    las precedencias que crucen.
+  - El inicio de una sucesora atada no se edita a mano; su fin, que es su duración, sí.
+  - Gantt con flechas y desfase; «Precede a» y «Sigue a» en las relaciones del detalle, con el
+    desfase editable.
+  - MCP: `precedes` y `lag` en `create_task_relation`, y `set_task_relation_lag`.
+  - Medido con 50.000 tareas: una cadena de 200 precedencias que arrastra unas 240 tareas, p95
+    de 167 ms (299 ms con la batería de integración a la vez). Un cambio sin nada automático
+    encima, 1,4 ms. Los planes, revisados con `EXPLAIN`.
+- **2.4 Línea base** ✔ · L · [ADR 085](adr/085-linea-base.md). **Hecho (2026-10-13).** Comparar
+  una vista con ayer, el último día laborable, hace una semana o una fecha: qué tareas entran,
+  salen o cambian, con el valor anterior tachado, y en el Gantt la barra anterior en fantasma.
+  - Se reconstruye desde `activity`, sin instantáneas ni migración. El filtro se evalúa contra el
+    pasado con el motor de siempre.
+  - Huecos cubiertos de aquí en adelante: asignado y equipo anteriores, la estimación, y el título
+    y la prioridad de la edición completa. Una fila antigua sin el valor anterior se da por igual
+    que ahora.
+  - Las pertenencias se evalúan como están ahora. Las tareas borradas no salen.
+  - Selector en la Tabla (en la URL y en la vista guardada) y en el Gantt. MCP:
+    `compare_task_baseline`.
+  - Medido con 50.000 tareas: ayer y una semana, menos de 155 ms de p95; dos meses con el
+    proyecto entero cambiado, 295 ms en el peor caso. Revisado con `EXPLAIN`: un índice nuevo en
+    `activity` se probó y no se usaba.
+  - De paso: la vista guardada perdía el color de las filas de la 1.5. Ya no.
 
 **Tanda 3 — Proyectos y cartera** (≈ 7 semanas)
 
-- **3.1 Estado de salud del proyecto** · S. Sin empezar, en plazo, en riesgo, desviado, terminado o
-  cancelado, con una nota y fechas de inicio y fin. Sale en la lista de proyectos, se puede
-  filtrar y queda en la actividad.
-- **3.2 Campos de proyecto y cartera** · L. Campos personalizados con alcance de proyecto, definidos
-  en el espacio. La lista de proyectos pasa por el motor de filtros
-  ([ADR 014](adr/014-motor-de-filtros.md)), con columnas, orden, vistas guardadas y exportación:
-  Excel ya, PDF cuando llegue la 4.2.
-- **3.3 Subproyectos** · L. Un proyecto padre con profundidad limitada.
-  - Las vistas del padre pueden incluir las tareas de los hijos.
-  - El progreso se agrega, y la lista de proyectos sale en árbol.
-  - La ADR comprueba que los permisos son del espacio y no hay herencia que diseñar.
-  - «Personal» no admite hijos.
-  - Nunca se une por prefijo de `path` (regla de `AGENTS.md`).
+- **3.1 Estado de salud del proyecto** ✔ · S · [ADR 087](adr/087-estado-del-proyecto.md).
+  **Hecho (2026-10-13).** Sin empezar, en plazo, en riesgo, desviado, terminado o cancelado, con
+  una nota. Decisiones del usuario: el responsable es una columna propia; las fechas son propias,
+  con aviso si las tareas acaban después del fin.
+  - Columnas en `project` (migración 0090) y una actividad de proyecto nueva, `project_activity`.
+  - `PATCH /project/:id/status` con `project:update`; «Avisar al espacio» al cambiar la salud.
+  - En la lista de proyectos: salud, responsable, fechas con aviso, resumen por estados y los
+    filtros «Todos», «En riesgo o desviados» y «Los míos». También en la cabecera del proyecto y en
+    sus ajustes, con el historial.
+  - MCP: `set_project_status`.
+- **3.2 Campos de proyecto y cartera** ✔ · L · [ADR 088](adr/088-campos-de-proyecto-y-cartera.md).
+  **Hecho (2026-10-13).** Campos personalizados de los propios proyectos, definidos en el espacio.
+  La lista de proyectos pasa por el motor de filtros ([ADR 014](adr/014-motor-de-filtros.md)), con
+  columnas, orden, vistas guardadas y exportación a Excel; el PDF, cuando llegue la 4.2.
+  - `field_definition.entity` (`task` o `project`) y `project.custom_fields` (migración 0091). Los
+    campos de tarea nunca ven uno de proyecto.
+  - `PUT /project/:id/custom-fields` con `project:update`; deja rastro en la actividad del
+    proyecto.
+  - El registro de la cartera filtra por nombre, clave, salud, responsable, fechas, progreso y cada
+    campo de proyecto.
+  - Edición en la celda; vistas guardadas de tipo `portfolio`; `GET /project/export`.
+  - MCP: `filter` en `list_projects` y `set_project_fields`.
+- **3.3 Subproyectos** ✔ · L · [ADR 089](adr/089-subproyectos.md). **Hecho (2026-10-13).**
+  Decisiones del usuario: un solo nivel (padre e hijos), y las vistas del padre que incluyen las
+  tareas de los hijos son todas salvo el tablero.
+  - `project.parent_id` (migración 0092) y `PATCH /project/:id/parent` con `project:update`, bajo
+    un cerrojo del espacio. «Personal» no entra; al borrar el padre, los hijos quedan sueltos.
+  - Los permisos son del espacio: no hay herencia que diseñar.
+  - Un padre resume su rama en la lista: progreso, tareas y aviso de desviación. La lista sale en
+    árbol.
+  - Lista, Tabla, Gantt y Calendario del padre pueden incluir las tareas de los hijos, con su
+    clave; los totales y la línea base, también. El detalle se abre con el proyecto de la tarea.
+  - Lo que cambia en un hijo se reenvía al canal de su padre. MCP: `set_project_parent`.
+  - Nunca se une por prefijo de `path`: un nivel es `parent_id` con su índice.
+
+Pruebas de la tanda 3: 17 de integración (`project-status`, `project-fields` y `subprojects`),
+unitarias del orden y el árbol de la cartera y del aviso nuevo, y de extremo a extremo
+`project-health`, `portfolio` y `subprojects`.
 
 **Tanda 4 — Campos e informes** (≈ 3 semanas)
 
@@ -3554,7 +3666,8 @@ La **Fase 9**, operación, está hecha (2026-10-11), en las PR apiladas #51 a #5
 
 Con eso se cierra el Bloque A. Después viene el
 [interludio de ideas de OpenProject](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado),
-planificado el 2026-10-12, y el Bloque B (CRM y ERP ligero) empieza en la Fase 10.
+planificado el 2026-10-12, y el Bloque B (CRM y ERP ligero) empieza en la Fase 10. Del
+interludio está hecha la tanda 1 (2026-10-12); la siguiente es la tanda 2, planificación.
 
 **Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
 seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.

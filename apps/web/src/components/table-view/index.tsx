@@ -9,10 +9,19 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  BaselineMark,
+  BaselineSummary,
+  RemovedRows,
+  type ViewBaseline,
+  Was,
+} from "@/components/baseline/baseline-view";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import type { TaskTotals } from "@/fetchers/task/get-task-totals";
+import { cn } from "@/lib/cn";
 import { formatDuration } from "@/lib/duration";
 import { resolveEpicColor } from "@/lib/epic-color";
 import { getInitials } from "@/lib/get-initials";
@@ -24,6 +33,7 @@ import CustomFieldCell, {
   type FieldMember,
   formatForDisplay,
 } from "./custom-field-cell";
+import { ROW_TINT_CLASS, type RowColoring, rowTint } from "./row-tint";
 import {
   buildRows,
   type EpicGroup,
@@ -64,6 +74,12 @@ type Props = {
   visibleColumns?: ReadonlySet<string>;
   /** Reparte las filas de primer nivel en grupos (hoy, por epica). */
   groupBy?: "epic";
+  /** Colorea las filas por prioridad o por vencimiento (ADR 080). */
+  coloring?: RowColoring;
+  /** Los totales de todo el filtro, calculados por la API (ADR 080). */
+  totals?: TaskTotals | null;
+  /** La comparacion con un momento pasado (ADR 085). */
+  baseline?: ViewBaseline | null;
   canEdit: boolean;
   onOpenTask: (taskId: string) => void;
   onSetCustomField: (taskId: string, key: string, value: unknown) => void;
@@ -77,6 +93,18 @@ function formatDate(value: string | null) {
 }
 
 type TableColumns = ReturnType<typeof helper.columns>;
+
+function beforeOf(baseline: ViewBaseline | null | undefined, taskId: string) {
+  return baseline?.changed.get(taskId);
+}
+
+function rowClassName(row: TableRow, coloring: RowColoring | undefined) {
+  const tint = rowTint(row, coloring);
+  return cn(
+    "border-border/50 border-b hover:bg-accent/30",
+    tint && ROW_TINT_CLASS[tint],
+  );
+}
 
 /**
  * Un grupo de la tabla: su cabecera y sus filas. Cada grupo lleva su propia
@@ -92,6 +120,7 @@ function GroupRows({
   collapsed,
   onToggle,
   noEpicLabel,
+  coloring,
 }: {
   group: EpicGroup;
   columns: TableColumns;
@@ -101,6 +130,7 @@ function GroupRows({
   collapsed: boolean;
   onToggle: () => void;
   noEpicLabel: string;
+  coloring?: RowColoring;
 }) {
   const table = useTable({
     features,
@@ -145,10 +175,7 @@ function GroupRows({
       </tr>
       {!collapsed &&
         table.getRowModel().rows.map((row) => (
-          <tr
-            key={row.id}
-            className="border-border/50 border-b hover:bg-accent/30"
-          >
+          <tr key={row.id} className={rowClassName(row.original, coloring)}>
             {row.getAllCells().map((cell) => (
               <td key={cell.id} className="px-3 py-1.5 align-middle">
                 <table.FlexRender cell={cell} />
@@ -171,6 +198,9 @@ function TableView({
   flatten = false,
   visibleColumns,
   groupBy,
+  coloring,
+  totals,
+  baseline,
   canEdit,
   onOpenTask,
   onSetCustomField,
@@ -208,6 +238,26 @@ function TableView({
     () => new Map(projectColumns.map((column) => [column.slug, column.name])),
     [projectColumns],
   );
+  const statusName = useCallback(
+    (slug: string) => columnNames.get(slug) ?? slug,
+    [columnNames],
+  );
+  const memberName = useCallback(
+    (id: string | null) =>
+      id
+        ? (members.find((member) => member.id === id)?.name ?? "?")
+        : t("tasks:baseline.unassigned"),
+    [members, t],
+  );
+  // El valor de entonces de un campo que cambio, envuelto para distinguir
+  // «era vacio» de «no cambio».
+  const wasOf = useCallback(
+    (taskId: string, key: keyof NonNullable<ReturnType<typeof beforeOf>>) => {
+      const before = beforeOf(baseline, taskId);
+      return before && key in before ? { value: before[key] } : undefined;
+    },
+    [baseline],
+  );
 
   const columns = useMemo(() => {
     const all = helper.columns([
@@ -241,11 +291,28 @@ function TableView({
             ) : (
               <span className="w-4.5" />
             )}
+            <BaselineMark baseline={baseline} taskId={row.original.id} />
+            {wasOf(row.original.id, "title") && (
+              <Was>{String(wasOf(row.original.id, "title")?.value ?? "")}</Was>
+            )}
             <button
               type="button"
               onClick={() => onOpenTask(row.original.id)}
               className="truncate text-left text-xs hover:underline"
             >
+              {row.original.projectSlug && (
+                <span
+                  className="mr-1.5 rounded bg-muted px-1 font-mono text-label text-muted-foreground"
+                  title={row.original.projectName}
+                >
+                  {row.original.projectSlug}
+                </span>
+              )}
+              {row.original.isMilestone && (
+                <span aria-hidden="true" className="mr-1 text-brand-strong">
+                  ◆
+                </span>
+              )}
               {row.original.title}
             </button>
             {row.original.subRows.length > 0 && (
@@ -264,23 +331,29 @@ function TableView({
         // prioridad de al lado si resuelve icono y etiqueta. Si la columna ya
         // no existe —se archivo— se cae al slug antes que dejar la celda
         // vacia: un dato feo dice mas que ninguno.
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
           const slug = String(getValue() ?? "");
           if (!slug) return null;
+          const was = wasOf(row.original.id, "status");
 
           return (
-            <span className="text-meta">{columnNames.get(slug) ?? slug}</span>
+            <span className="text-meta">
+              {was && <Was>{statusName(String(was.value ?? ""))}</Was>}
+              {statusName(slug)}
+            </span>
           );
         },
       }),
       helper.accessor("priority", {
         id: "priority",
         header: t("tasks:table.columns.priority"),
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
           const priority = getValue();
           if (!priority) return null;
+          const was = wasOf(row.original.id, "priority");
           return (
             <span className="flex items-center gap-1 text-xs">
+              {was && <Was>{getPriorityLabel(String(was.value ?? ""))}</Was>}
               {getPriorityIcon(priority)}
               {getPriorityLabel(priority)}
             </span>
@@ -290,9 +363,14 @@ function TableView({
       helper.accessor((row) => row.assigneeName ?? "", {
         id: "assignee",
         header: t("tasks:table.columns.assignee"),
-        cell: ({ row }) =>
-          row.original.assigneeName ? (
+        cell: ({ row }) => {
+          const was = wasOf(row.original.id, "userId");
+          const past = was && (
+            <Was>{memberName((was.value as string | null) ?? null)}</Was>
+          );
+          return row.original.assigneeName ? (
             <span className="flex items-center gap-1.5 text-xs">
+              {past}
               <Avatar className="size-5">
                 <AvatarImage src={row.original.assigneeImage ?? ""} alt="" />
                 <AvatarFallback className="text-label">
@@ -301,14 +379,27 @@ function TableView({
               </Avatar>
               <span className="truncate">{row.original.assigneeName}</span>
             </span>
-          ) : null,
+          ) : past ? (
+            <span className="text-xs">{past}</span>
+          ) : null;
+        },
       }),
       helper.accessor((row) => row.dueDate ?? "", {
         id: "dueDate",
         header: t("tasks:table.columns.dueDate"),
-        cell: ({ row }) => (
-          <span className="text-xs">{formatDate(row.original.dueDate)}</span>
-        ),
+        cell: ({ row }) => {
+          const was = wasOf(row.original.id, "dueDate");
+          return (
+            <span className="text-xs">
+              {was && (
+                <Was>
+                  {formatDate((was.value as string | null) ?? null) || "—"}
+                </Was>
+              )}
+              {formatDate(row.original.dueDate)}
+            </span>
+          );
+        },
       }),
       ...definitions.map((definition) =>
         helper.accessor(
@@ -373,9 +464,22 @@ function TableView({
           cell: ({ row }) => {
             const seconds =
               row.original.subtree?.estimateSeconds ?? row.original.estimate;
-            return seconds ? (
+            // La estimacion de entonces es la propia: en una rama, la columna
+            // suma, y tachar un valor que no es el que se ve confundiria.
+            const was =
+              row.original.subtree?.estimateSeconds === undefined
+                ? wasOf(row.original.id, "estimate")
+                : undefined;
+            return seconds || was ? (
               <span className="text-xs tabular-nums">
-                {formatDuration(seconds, i18n.language)}
+                {was && (
+                  <Was>
+                    {was.value
+                      ? formatDuration(Number(was.value), i18n.language)
+                      : "—"}
+                  </Was>
+                )}
+                {seconds ? formatDuration(seconds, i18n.language) : null}
               </span>
             ) : null;
           },
@@ -425,7 +529,10 @@ function TableView({
     canEdit,
     onOpenTask,
     onSetCustomField,
-    columnNames,
+    statusName,
+    memberName,
+    wasOf,
+    baseline,
     t,
   ]);
 
@@ -451,6 +558,7 @@ function TableView({
 
   return (
     <div className="h-full overflow-auto">
+      {baseline && <BaselineSummary baseline={baseline} />}
       <table className="w-full border-collapse text-sm">
         <thead className="sticky top-0 z-10 bg-card">
           {table.getHeaderGroups().map((headerGroup) => (
@@ -508,12 +616,13 @@ function TableView({
                     })
                   }
                   noEpicLabel={t("tasks:table.noEpic")}
+                  coloring={coloring}
                 />
               ))
             : table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className="border-border/50 border-b hover:bg-accent/30"
+                  className={rowClassName(row.original, coloring)}
                 >
                   {row.getAllCells().map((cell) => (
                     <td key={cell.id} className="px-3 py-1.5 align-middle">
@@ -531,6 +640,74 @@ function TableView({
           {t("tasks:table.empty")}
         </div>
       )}
+
+      {baseline && (
+        <RemovedRows
+          removed={baseline.removed}
+          statusName={statusName}
+          memberName={memberName}
+          formatDate={formatDate}
+        />
+      )}
+
+      {totals && totals.count > 0 && (
+        <TableTotals totals={totals} definitions={definitions} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * La fila de totales: todo lo que casa con el filtro, sumado por la API. Va
+ * pegada abajo y no alineada con las columnas: el tiempo registrado no tiene
+ * columna, y las sumas de rama de las columnas no son lo mismo que sumar cada
+ * tarea una vez.
+ */
+function TableTotals({
+  totals,
+  definitions,
+}: {
+  totals: TaskTotals;
+  definitions: FieldDefinition[];
+}) {
+  const { t, i18n } = useTranslation();
+  const numeric = definitions.filter(
+    (definition) =>
+      (definition.type === "number" || definition.type === "currency") &&
+      totals.fields[definition.key] !== undefined,
+  );
+
+  const items: Array<[string, string]> = [
+    [
+      t("tasks:table.totals.estimate"),
+      formatDuration(totals.estimateSeconds, i18n.language),
+    ],
+    [
+      t("tasks:table.totals.logged"),
+      formatDuration(totals.loggedSeconds, i18n.language),
+    ],
+    ...numeric.map((definition): [string, string] => [
+      definition.name,
+      formatForDisplay(definition, totals.fields[definition.key] ?? 0),
+    ]),
+  ];
+
+  return (
+    <div
+      className="sticky bottom-0 flex flex-wrap items-center gap-x-4 gap-y-1 border-border border-t bg-card px-3 py-2 text-xs"
+      data-testid="table-totals"
+    >
+      <span className="font-medium">
+        {t("tasks:table.totals.label", { total: totals.count })}
+      </span>
+      {items.map(([label, value]) => (
+        <span key={label} className="text-muted-foreground">
+          {label}{" "}
+          <span className="font-medium text-foreground tabular-nums">
+            {value}
+          </span>
+        </span>
+      ))}
     </div>
   );
 }

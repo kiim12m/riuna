@@ -24,6 +24,7 @@ export function triggerTypesFor(_scope: EditorScope): TriggerType[] {
     "task.labeled",
     "task.due_in",
     "task.overdue",
+    "manual",
   ];
 }
 

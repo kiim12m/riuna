@@ -13,6 +13,7 @@ import {
   workspaceTable,
 } from "../database/schema";
 import { buildImportSource } from "../external-ref";
+import { forProjectAndSubprojects } from "../project/subprojects";
 import { taskSchema } from "../schemas";
 import {
   assertTaskImageKeyMatchesContext,
@@ -43,6 +44,8 @@ import exportTaskSheet from "./controllers/export-task-sheet";
 import exportTasks from "./controllers/export-tasks";
 import exportWorkspaceTasks from "./controllers/export-workspace-tasks";
 import getTask from "./controllers/get-task";
+import { getTaskBaseline } from "./controllers/get-task-baseline";
+import { getTaskTotals, sumTotals } from "./controllers/get-task-totals";
 import getTasks from "./controllers/get-tasks";
 import { importServitec } from "./controllers/import-servitec";
 import importTasks from "./controllers/import-tasks";
@@ -52,13 +55,16 @@ import {
   requireBulkTaskPermission,
   requireTaskAssigneePermission,
 } from "./controllers/require-task-permission";
+import shiftTaskBranch from "./controllers/shift-task-branch";
 import updateTask from "./controllers/update-task";
 import updateTaskAssignee from "./controllers/update-task-assignee";
 import updateTaskAssignees from "./controllers/update-task-assignees";
+import updateTaskAutoDates from "./controllers/update-task-auto-dates";
 import updateTaskCustomFields from "./controllers/update-task-custom-fields";
 import updateTaskDescription from "./controllers/update-task-description";
 import updateTaskDueDate from "./controllers/update-task-due-date";
 import updateTaskEstimate from "./controllers/update-task-estimate";
+import updateTaskMilestone from "./controllers/update-task-milestone";
 import updateTaskParent from "./controllers/update-task-parent";
 import updateTaskPriority from "./controllers/update-task-priority";
 import updateTaskStatus from "./controllers/update-task-status";
@@ -135,6 +141,8 @@ const task = new Hono<{
           treeScope: v.optional(
             v.picklist(["matching", "roots", "withDescendants"]),
           ),
+          // Con las tareas de los subproyectos, cada uno aparte (ADR 089).
+          includeSubprojects: v.optional(v.picklist(["true", "false"])),
         }),
       ),
     ),
@@ -160,9 +168,142 @@ const task = new Hono<{
           rootsOnly: filters.rootsOnly === "true",
           treeScope: filters.treeScope,
           filter,
+          includeSubprojects: filters.includeSubprojects === "true",
         });
 
         return c.json(tasks);
+      } catch (error) {
+        if (error instanceof FilterError) {
+          throw new HTTPException(400, { message: error.message });
+        }
+        throw error;
+      }
+    },
+  )
+  .get(
+    "/tasks/:projectId/totals",
+    describeRoute({
+      operationId: "getTaskTotals",
+      tags: ["Tasks"],
+      description:
+        "Totals over every task the list would return with the same `filter` and `treeScope`: how many, their own estimate and logged time, and the sum of each number or currency field. Each task counts once, not its branch",
+      responses: {
+        200: {
+          description: "The totals",
+          content: {
+            "application/json": {
+              schema: resolver(
+                v.object({
+                  count: v.number(),
+                  estimateSeconds: v.number(),
+                  loggedSeconds: v.number(),
+                  fields: v.record(v.string(), v.number()),
+                }),
+              ),
+            },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ projectId: v.string() })),
+    validator(
+      "query",
+      v.object({
+        filter: v.optional(v.string()),
+        treeScope: v.optional(
+          v.picklist(["matching", "roots", "withDescendants"]),
+        ),
+        includeSubprojects: v.optional(v.picklist(["true", "false"])),
+      }),
+    ),
+    workspaceAccess.fromProject("projectId"),
+    async (c) => {
+      const { projectId } = c.req.valid("param");
+      const query = c.req.valid("query");
+
+      let filter: FilterNode | null = null;
+      try {
+        filter = parseFilterParam(query.filter);
+      } catch (error) {
+        throw new HTTPException(400, {
+          message: error instanceof Error ? error.message : "Invalid filter",
+        });
+      }
+
+      try {
+        // Con los subproyectos (ADR 089), la suma de cada uno.
+        const parts = await forProjectAndSubprojects(
+          projectId,
+          query.includeSubprojects === "true",
+          (id) => getTaskTotals(id, { treeScope: query.treeScope, filter }),
+        );
+        return c.json(sumTotals(parts));
+      } catch (error) {
+        if (error instanceof FilterError) {
+          throw new HTTPException(400, { message: error.message });
+        }
+        throw error;
+      }
+    },
+  )
+  .get(
+    "/tasks/:projectId/baseline",
+    describeRoute({
+      operationId: "getTaskBaseline",
+      tags: ["Tasks"],
+      description:
+        "Compare a project view with a moment in the past (`at`, an ISO instant): which tasks matched the same `filter` and `treeScope` then and not now (removed, with their past values), which match now and did not then (added), and what changed in the ones that match both (their previous title, status, priority, assignee, dates and estimate). Rebuilt from the activity: memberships are evaluated as they are now, and deleted tasks do not appear",
+      responses: {
+        200: {
+          description: "The comparison",
+          content: { "application/json": { schema: resolver(v.any()) } },
+        },
+      },
+    }),
+    validator("param", v.object({ projectId: v.string() })),
+    validator(
+      "query",
+      v.object({
+        at: v.pipe(v.string(), v.isoTimestamp()),
+        filter: v.optional(v.string()),
+        treeScope: v.optional(
+          v.picklist(["matching", "roots", "withDescendants"]),
+        ),
+        includeSubprojects: v.optional(v.picklist(["true", "false"])),
+      }),
+    ),
+    workspaceAccess.fromProject("projectId"),
+    async (c) => {
+      const { projectId } = c.req.valid("param");
+      const query = c.req.valid("query");
+
+      let filter: FilterNode | null = null;
+      try {
+        filter = parseFilterParam(query.filter);
+      } catch (error) {
+        throw new HTTPException(400, {
+          message: error instanceof Error ? error.message : "Invalid filter",
+        });
+      }
+
+      try {
+        // Con los subproyectos (ADR 089), lo de cada uno junto.
+        const parts = await forProjectAndSubprojects(
+          projectId,
+          query.includeSubprojects === "true",
+          (id) =>
+            getTaskBaseline(id, new Date(query.at), {
+              treeScope: query.treeScope,
+              filter,
+            }),
+        );
+        const [own] = parts;
+        return c.json({
+          at: own?.at ?? new Date(query.at).toISOString(),
+          added: parts.flatMap((part) => part.added),
+          removed: parts.flatMap((part) => part.removed),
+          changed: parts.flatMap((part) => part.changed),
+        });
       } catch (error) {
         if (error instanceof FilterError) {
           throw new HTTPException(400, { message: error.message });
@@ -267,6 +408,7 @@ const task = new Hono<{
         userId: v.optional(v.string()),
         parentId: v.optional(v.nullable(v.string())),
         estimate: v.optional(v.nullable(v.pipe(v.number(), v.minValue(0)))),
+        isMilestone: v.optional(v.boolean()),
       }),
     ),
     workspaceAccess.fromProject("projectId"),
@@ -284,6 +426,7 @@ const task = new Hono<{
         userId,
         parentId,
         estimate,
+        isMilestone,
       } = c.req.valid("json");
 
       const parsedStartDate =
@@ -309,6 +452,8 @@ const task = new Hono<{
         status,
         parentId,
         estimate,
+        isMilestone,
+        creatorWatches: true,
       });
 
       return c.json(task);
@@ -989,6 +1134,121 @@ const task = new Hono<{
       });
 
       return c.json(task);
+    },
+  )
+  .put(
+    "/auto-dates/:id",
+    describeRoute({
+      operationId: "updateTaskAutoDates",
+      tags: ["Tasks"],
+      description:
+        "Own or automatic dates. With automatic dates a parent takes its start and due date from its branch and they stop being editable by hand; switching back to own dates keeps the ones it had",
+      responses: {
+        200: {
+          description: "The task",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ autoDates: v.boolean() })),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { autoDates } = c.req.valid("json");
+      return c.json(
+        await updateTaskAutoDates({
+          id,
+          autoDates,
+          currentUserId: c.get("userId"),
+        }),
+      );
+    },
+  )
+  .post(
+    "/shift-branch/:id",
+    describeRoute({
+      operationId: "shiftTaskBranch",
+      tags: ["Tasks"],
+      description:
+        "Move a task and its whole branch the same number of working days (Monday to Friday, skipping the workspace holidays); negative moves it earlier. Instead of `workDays`, `startDate` moves it so the task starts that day. What dragging a parent does in the Gantt",
+      responses: {
+        200: {
+          description: "How many tasks moved",
+          content: {
+            "application/json": {
+              schema: resolver(v.object({ moved: v.number() })),
+            },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator(
+      "json",
+      v.object({
+        workDays: v.optional(
+          v.pipe(v.number(), v.integer(), v.minValue(-365), v.maxValue(365)),
+        ),
+        // O el dia en que tiene que empezar: la API cuenta los laborables.
+        startDate: v.optional(v.string()),
+      }),
+    ),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { workDays, startDate } = c.req.valid("json");
+      if (workDays === undefined && !startDate) {
+        throw new HTTPException(400, {
+          message: "Send workDays or the startDate to move the branch to",
+        });
+      }
+      return c.json(
+        await shiftTaskBranch({
+          id,
+          workDays,
+          toStartDate: startDate
+            ? validateAndParseDate(startDate, "startDate")
+            : undefined,
+          currentUserId: c.get("userId"),
+        }),
+      );
+    },
+  )
+  .put(
+    "/milestone/:id",
+    describeRoute({
+      operationId: "updateTaskMilestone",
+      tags: ["Tasks"],
+      description:
+        "Mark or unmark a task as a milestone: a single date (its start becomes its due date), no estimate and no subtasks. A task with subtasks cannot be one",
+      responses: {
+        200: {
+          description: "The task",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ isMilestone: v.boolean() })),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { isMilestone } = c.req.valid("json");
+      return c.json(
+        await updateTaskMilestone({
+          id,
+          isMilestone,
+          currentUserId: c.get("userId"),
+        }),
+      );
     },
   )
   .put(

@@ -1,3 +1,4 @@
+import { formatDateShort } from "@/lib/format";
 import { getStatusLabel } from "@/lib/i18n/domain";
 import { instanceAlertArea, instanceProblemText } from "@/lib/instance-alert";
 import type { Notification } from "@/types/notification";
@@ -76,8 +77,37 @@ export function getNotificationTitle(notification: Notification, t: Translate) {
           ...eventData,
           defaultValue: notification.title ?? notification.type,
         });
+      // A quien solo observa no se le dice «tu tarea» (ADR 076).
       case "task_comment":
-        return t("notifications:events.task_comment.title", {
+        return t(
+          eventData.reason === "watcher"
+            ? "notifications:events.task_comment.titleWatching"
+            : "notifications:events.task_comment.title",
+          {
+            ...eventData,
+            defaultValue: notification.title ?? notification.type,
+          },
+        );
+      case "task_due_date_changed":
+        return t("notifications:events.task_due_date_changed.title", {
+          ...eventData,
+          defaultValue: notification.title ?? notification.type,
+        });
+      case "announcement_published":
+        return t("notifications:events.announcement_published.title", {
+          ...eventData,
+          defaultValue: notification.title ?? notification.type,
+        });
+      case "project_health_changed":
+        return t("notifications:events.project_health_changed.title", {
+          ...eventData,
+          health: t(`workspace:projects.health.${String(eventData.health)}`, {
+            defaultValue: String(eventData.health ?? ""),
+          }),
+          defaultValue: notification.title ?? notification.type,
+        });
+      case "task_reminder":
+        return t("notifications:events.task_reminder.title", {
           ...eventData,
           defaultValue: notification.title ?? notification.type,
         });
@@ -135,13 +165,19 @@ export function getNotificationContent(
           ...eventData,
           defaultValue: notification.content ?? "",
         });
+      // La edicion en bloque de antes no mandaba el estado anterior.
       case "task_status_changed":
-        return t("notifications:events.task_status_changed.content", {
-          ...eventData,
-          oldStatus: getStatusLabel(String(eventData.oldStatus ?? "")),
-          newStatus: getStatusLabel(String(eventData.newStatus ?? "")),
-          defaultValue: notification.content ?? "",
-        });
+        return t(
+          eventData.oldStatus
+            ? "notifications:events.task_status_changed.content"
+            : "notifications:events.task_status_changed.contentWithoutOld",
+          {
+            ...eventData,
+            oldStatus: getStatusLabel(String(eventData.oldStatus ?? "")),
+            newStatus: getStatusLabel(String(eventData.newStatus ?? "")),
+            defaultValue: notification.content ?? "",
+          },
+        );
       case "task_assignee_changed":
         return t("notifications:events.task_assignee_changed.content", {
           ...eventData,
@@ -167,6 +203,49 @@ export function getNotificationContent(
           ...eventData,
           defaultValue: notification.content ?? "",
         });
+      case "task_due_date_changed":
+        return typeof eventData.newDueDate === "string"
+          ? t("notifications:events.task_due_date_changed.content", {
+              ...eventData,
+              dueDate: formatDateShort(eventData.newDueDate),
+              defaultValue: notification.content ?? "",
+            })
+          : t("notifications:events.task_due_date_changed.contentCleared", {
+              ...eventData,
+              defaultValue: notification.content ?? "",
+            });
+      case "project_health_changed":
+        return typeof eventData.note === "string" && eventData.note
+          ? t("notifications:events.project_health_changed.content", {
+              ...eventData,
+              defaultValue: notification.content ?? "",
+            })
+          : t(
+              "notifications:events.project_health_changed.contentWithoutNote",
+              {
+                ...eventData,
+                defaultValue: notification.content ?? "",
+              },
+            );
+      case "announcement_published":
+        return typeof eventData.projectName === "string"
+          ? t("notifications:events.announcement_published.content", {
+              ...eventData,
+              defaultValue: notification.content ?? "",
+            })
+          : t("notifications:events.announcement_published.contentWorkspace", {
+              ...eventData,
+              defaultValue: notification.content ?? "",
+            });
+      case "task_reminder":
+        return typeof eventData.note === "string" && eventData.note
+          ? t("notifications:events.task_reminder.content", {
+              note: eventData.note,
+              defaultValue: notification.content ?? "",
+            })
+          : t("notifications:events.task_reminder.contentWithoutNote", {
+              defaultValue: notification.content ?? "",
+            });
       case "due_date_reminder":
         return t("notifications:events.due_date_reminder.content", {
           ...eventData,
@@ -219,4 +298,43 @@ export function getNotificationTarget(
   if (!workspaceId || !projectId || !taskId) return null;
 
   return { workspaceId, projectId, taskId };
+}
+
+/** El proyecto cuyo estado cambio (ADR 087), o `null`. */
+export function getProjectTarget(
+  notification: Notification,
+): { workspaceId: string; projectId: string } | null {
+  if (notification.resourceType !== "project") return null;
+
+  const eventData = getEventDataRecord(notification.eventData);
+  const workspaceId =
+    typeof eventData?.workspaceId === "string" ? eventData.workspaceId : null;
+  const projectId = notification.resourceId ?? null;
+  if (!workspaceId || !projectId) return null;
+
+  return { workspaceId, projectId };
+}
+
+export type AnnouncementTarget = {
+  workspaceId: string;
+  /** Nulo: un aviso del espacio. */
+  projectId: string | null;
+};
+
+/** El tablon donde se publico un aviso (ADR 081), o `null`. */
+export function getAnnouncementTarget(
+  notification: Notification,
+): AnnouncementTarget | null {
+  if (notification.resourceType !== "announcement") return null;
+
+  const eventData = getEventDataRecord(notification.eventData);
+  const workspaceId =
+    typeof eventData?.workspaceId === "string" ? eventData.workspaceId : null;
+  if (!workspaceId) return null;
+
+  return {
+    workspaceId,
+    projectId:
+      typeof eventData?.projectId === "string" ? eventData.projectId : null,
+  };
 }

@@ -36,13 +36,22 @@ async function startTimer({
   }
 
   const [task] = await db
-    .select({ completedAt: taskTable.completedAt })
+    .select({
+      completedAt: taskTable.completedAt,
+      isMilestone: taskTable.isMilestone,
+    })
     .from(taskTable)
     .where(eq(taskTable.id, taskId))
     .limit(1);
 
   if (!task) {
     throw new HTTPException(404, { message: "Task not found" });
+  }
+
+  if (task.isMilestone) {
+    throw new HTTPException(409, {
+      message: "A milestone does not take time: it has no timer",
+    });
   }
 
   if (task.completedAt) {

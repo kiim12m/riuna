@@ -10,6 +10,7 @@ import {
 import { useUpdateTaskDueDate } from "@/hooks/mutations/task/use-update-task-due-date";
 import { useControllableOpen } from "@/hooks/use-controllable-open";
 import { useEditableUntilKnown } from "@/hooks/use-workspace-permission";
+import { hasDerivedDue } from "@/lib/task-dates";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
 
@@ -52,7 +53,8 @@ export default function TaskDueDatePopover({
     }
   };
 
-  if (!canEdit) return <>{children}</>;
+  // Las fechas automaticas de un padre salen de su rama (ADR 083).
+  if (!canEdit || hasDerivedDue(task)) return <>{children}</>;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

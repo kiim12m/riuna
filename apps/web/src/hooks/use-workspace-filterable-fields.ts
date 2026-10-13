@@ -1,9 +1,13 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/components/providers/auth-provider/hooks/use-auth";
 import type { FieldDefinition } from "@/components/table-view/custom-field-cell";
 import { useGetWorkspaceFieldDefinitions } from "@/hooks/queries/field/use-get-field-definitions";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
-import { customFieldsToFilterable } from "@/hooks/use-filterable-fields";
+import {
+  customFieldsToFilterable,
+  watchersFilterField,
+} from "@/hooks/use-filterable-fields";
 import { getPriorityLabel } from "@/lib/i18n/domain";
 import type { FilterableField } from "@/types/task-filter";
 
@@ -18,6 +22,7 @@ export function useWorkspaceFilterableFields(workspaceId: string) {
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
   const { data: workspaceFields = [] } =
     useGetWorkspaceFieldDefinitions(workspaceId);
+  const { user } = useAuth();
 
   return useMemo<FilterableField[]>(() => {
     const members = workspaceUsers?.members ?? [];
@@ -57,6 +62,7 @@ export function useWorkspaceFilterableFields(workspaceId: string) {
           label: member.user?.name ?? "",
         })),
       },
+      watchersFilterField(members, user?.id, t),
       {
         key: "done",
         label: t("tasks:table.columns.done"),
@@ -71,9 +77,18 @@ export function useWorkspaceFilterableFields(workspaceId: string) {
         label: t("tasks:table.columns.completedAt"),
         valueType: "date",
       },
+      {
+        key: "milestone",
+        label: t("tasks:table.columns.milestone"),
+        valueType: "boolean",
+        options: [
+          { value: "true", label: t("common:boolean.yes") },
+          { value: "false", label: t("common:boolean.no") },
+        ],
+      },
       ...custom,
     ];
-  }, [workspaceUsers, workspaceFields, t]);
+  }, [workspaceUsers, workspaceFields, user?.id, t]);
 }
 
 export default useWorkspaceFilterableFields;

@@ -14,6 +14,7 @@ async function getTaskRelations(taskId: string, workspaceId: string) {
       sourceTaskId: taskRelationTable.sourceTaskId,
       targetTaskId: taskRelationTable.targetTaskId,
       relationType: taskRelationTable.relationType,
+      lag: taskRelationTable.lag,
       createdAt: taskRelationTable.createdAt,
     })
     .from(taskRelationTable)

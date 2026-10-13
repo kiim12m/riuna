@@ -50,6 +50,9 @@ type Task = {
   position: number | null;
   createdAt: string;
   updatedAt?: string;
+  // «Hecha» es `completed_at` (ADR 030). La lista la manda; opcional porque
+  // hay tareas que se construyen en el cliente sin ella.
+  completedAt?: string | null;
   userId: string | null;
   assigneeId: string | null;
   assigneeName: string | null;
@@ -63,6 +66,10 @@ type Task = {
   teamId?: string | null;
   teamName?: string | null;
   projectId: string;
+  // De un subproyecto, en una vista de su padre (ADR 089): su clave y su
+  // nombre, para pintar `ALC-12` y no la clave del padre.
+  projectSlug?: string;
+  projectName?: string;
   columnId?: string | null;
   labels?: TaskLabel[];
   externalLinks?: TaskExternalLink[];
@@ -74,6 +81,15 @@ type Task = {
   depth?: number;
   // Estimacion en segundos, la misma unidad que el tiempo registrado.
   estimate?: number | null;
+  // Un hito: una sola fecha, sin estimacion ni subtareas (ADR 082).
+  isMilestone?: boolean;
+  // Fechas automaticas (ADR 083): las de un padre salen de su rama, y el
+  // inicio de una sucesora, de sus predecesoras (ADR 084).
+  autoDates?: boolean;
+  // Si sigue a alguna otra tarea (ADR 084).
+  hasPredecessors?: boolean;
+  // Solo en el detalle: un padre con fechas propias desbordado por su rama.
+  schedule?: { branchDueDate: string; overflowWorkDays: number } | null;
   epics?: TaskEpic[];
   // Los valores de los campos personalizados, indexados por la `key` de su
   // definicion. Siempre viene, aunque sea vacio: la columna es NOT NULL.

@@ -31,6 +31,21 @@ function RouteComponent() {
           </p>
         </div>
         <FieldEditor workspaceId={workspaceId} canEdit={canManageSettings()} />
+
+        {/* Los de los proyectos (ADR 088): columnas y filtros de la cartera. */}
+        <div className="space-y-2 pt-4">
+          <h2 className="font-medium text-md">
+            {t("settings:workspaceFields.projectTitle")}
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            {t("settings:workspaceFields.projectDescription")}
+          </p>
+        </div>
+        <FieldEditor
+          workspaceId={workspaceId}
+          canEdit={canManageSettings()}
+          entity="project"
+        />
       </div>
     </>
   );

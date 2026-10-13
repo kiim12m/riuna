@@ -7,6 +7,8 @@ import type { PackableTask, WeekSegment } from "./month-grid-model";
 export type CalendarTask = PackableTask & {
   title: string;
   number: number | null;
+  /** Un hito sale con su rombo (ADR 082). */
+  isMilestone?: boolean;
 };
 
 type CalendarTaskBarProps = {
@@ -31,8 +33,8 @@ export default function CalendarTaskBar({
   } = segment;
 
   const taskKey =
-    projectSlug && task.number != null
-      ? `${projectSlug}-${task.number}`
+    (task.projectSlug ?? projectSlug) && task.number != null
+      ? `${task.projectSlug ?? projectSlug}-${task.number}`
       : undefined;
 
   const range = `${formatDateShort(task.scheduleStart)} – ${formatDateShort(
@@ -65,6 +67,11 @@ export default function CalendarTaskBar({
         continuesAfter ? "rounded-r-none border-r-0" : "mr-1 rounded-r-md",
       )}
     >
+      {task.isMilestone && (
+        <span aria-hidden="true" className="mr-1 shrink-0 text-brand-strong">
+          ◆
+        </span>
+      )}
       <span className="truncate">{task.title}</span>
     </button>
   );

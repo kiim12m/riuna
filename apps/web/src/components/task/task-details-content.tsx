@@ -16,7 +16,9 @@ import useGetTask from "@/hooks/queries/task/use-get-task";
 import type { ExternalLink } from "@/types/external-link";
 import type { FieldDefinition } from "../table-view/custom-field-cell";
 import TaskDescription from "./task-description";
+import TaskManualActions from "./task-manual-actions";
 import TaskRelations from "./task-relations";
+import TaskScheduleAlert from "./task-schedule-alert";
 import TaskSubtasks from "./task-subtasks";
 import TaskTime from "./task-time";
 import TaskTitle from "./task-title";
@@ -79,11 +81,12 @@ export default function TaskDetailsContent({
             </span>
           </button>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <p className="text-xs font-semibold text-foreground/70">
             {project?.slug}-{task?.number}
           </p>
-          {task && (
+          {/* Un hito no dura, asi que ni cronometro ni estimacion (ADR 082). */}
+          {task && !task.isMilestone && (
             <TaskTimerButton
               task={{
                 id: task.id,
@@ -96,8 +99,10 @@ export default function TaskDetailsContent({
               }}
             />
           )}
+          {task && <TaskManualActions taskId={task.id} />}
         </div>
         <TaskTitle taskId={taskId} />
+        {task && <TaskScheduleAlert task={task} />}
         <TaskDescription taskId={taskId} />
       </div>
       {!isLoadingExternalLinks && externalLinks.length > 0 && (
@@ -113,7 +118,7 @@ export default function TaskDetailsContent({
           <TaskTree taskId={taskId} projectId={projectId} />
         </div>
       )}
-      {task && (
+      {task && !task.isMilestone && (
         <div className="mt-4">
           <TaskTime
             taskId={taskId}
@@ -123,7 +128,7 @@ export default function TaskDetailsContent({
         </div>
       )}
       <div className="mt-4">
-        {task && (
+        {task && !task.isMilestone && (
           <TaskSubtasks
             taskId={taskId}
             projectId={projectId}

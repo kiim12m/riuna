@@ -26,8 +26,10 @@ export const DEBOUNCED_USER_MESSAGES: ReadonlySet<string> = new Set([
  */
 export function userMessageInvalidations(message: UserWsMessage): QueryKey[] {
   switch (message.type) {
+    // Un recordatorio de tarea se borra al avisar (ADR 077): el detalle
+    // abierto deja de enseñarlo.
     case "NOTIFICATION_CREATED":
-      return [["notifications"]];
+      return [["notifications"], ["task-reminder"]];
     // Cambia **si una tarea es tuya** -asignar, desasignar, el equipo, el
     // estado o borrarla-, que es lo que decide si sale en Hoy (urgente,
     // hechas), en "Sin planificar" del Planificador y en el Cronograma, ademas
@@ -47,6 +49,10 @@ export function userMessageInvalidations(message: UserWsMessage): QueryKey[] {
       return [["planner"], ["schedule"], ["today"], ["my-work", "counts"]];
     // Un bloque fijo o la jornada cambian la capacidad y los bloques que el
     // Planificador y Hoy tambien leen (ADR 045).
+    // El estado de un proyecto (ADR 087): la lista de proyectos, su cabecera
+    // y su historia.
+    case "PROJECTS_INVALIDATED":
+      return [["projects"], ["project-activity"]];
     case "SCHEDULE_INVALIDATED":
       return [["schedule"], ["planner"], ["today"]];
     // Un festivo, una ausencia o marcar a un responsable (ADR 060, ADR 059):
@@ -76,6 +82,12 @@ export function userMessageInvalidations(message: UserWsMessage): QueryKey[] {
         ["planner"],
         ["my-work", "counts"],
       ];
+    // Cualquier aviso del espacio (ADR 081): el tablon y la franja fijada de
+    // todos sus proyectos.
+    case "ANNOUNCEMENTS_INVALIDATED":
+      return message.workspaceId
+        ? [["announcements", message.workspaceId]]
+        : [];
     // Una vista de espacio sin proyecto no tiene socket de proyecto que la
     // escuche. El prefijo cubre `["workspace-views", workspaceId, type]`.
     case "VIEW_UPDATED":

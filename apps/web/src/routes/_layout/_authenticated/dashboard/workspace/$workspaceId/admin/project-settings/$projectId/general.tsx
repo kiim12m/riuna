@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import PageTitle from "@/components/page-title";
+import ProjectParentSetting from "@/components/project/project-parent-setting";
 import { TasksImportExport } from "@/components/project/tasks-import-export.tsx";
 import {
   AlertDialog,
@@ -548,6 +549,14 @@ function RouteComponent() {
               </div>
               {project && <TasksImportExport project={project} />}
             </div>
+            <Separator />
+            {workspace?.id && (
+              <ProjectParentSetting
+                projectId={projectId}
+                workspaceId={workspace.id}
+                canEdit={canEdit}
+              />
+            )}
           </div>
         </div>
 

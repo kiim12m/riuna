@@ -6,10 +6,12 @@ import {
   columnTable,
   projectTable,
   taskEpicTable,
+  taskRelationTable,
   taskTable,
 } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { getFieldDefinitionsForProject } from "../../field/controllers/get-field-definitions";
+import { scheduleAfter } from "../schedule/reschedule";
 import { rebasePath, rootPath, subtreePattern } from "../tree";
 import claimTaskNumbers from "./claim-task-numbers";
 import { lockProjectTree } from "./lock-project-tree";
@@ -311,7 +313,26 @@ async function moveTask({
       .set({ projectId: destinationProjectId })
       .where(inArray(assetTable.taskId, subtreeIds));
 
+    // Una precedencia solo vale dentro de un proyecto (ADR 084): las que
+    // quedarian cruzando de uno a otro se rompen. Las de dentro de la rama
+    // viajan con ella.
+    await tx.delete(taskRelationTable).where(
+      and(
+        eq(taskRelationTable.relationType, "precedes"),
+        sql`(${taskRelationTable.sourceTaskId} = ANY(${sql.param(subtreeIds)}::text[]))
+          <> (${taskRelationTable.targetTaskId} = ANY(${sql.param(subtreeIds)}::text[]))`,
+      ),
+    );
+
     return updatedTask;
+  });
+
+  // La rama de origen pierde una hija y puede encoger (ADR 083).
+  await scheduleAfter({
+    projectId: sourceProject.id,
+    taskIds: [existingTask.parentId],
+    actorId: currentUserId,
+    origin: taskId,
   });
 
   await publishEvent("task.moved", {

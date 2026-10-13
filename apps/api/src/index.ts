@@ -19,6 +19,7 @@ import {
 } from "hono-openapi";
 import * as v from "valibot";
 import activity from "./activity";
+import announcement from "./announcement";
 import { auth } from "./auth";
 import automation from "./automation";
 import availability from "./availability";
@@ -63,10 +64,13 @@ import review from "./review";
 import schedule from "./schedule";
 import { initializeScheduler, shutdownScheduler } from "./scheduler";
 import search from "./search";
+import sessions from "./session";
 import slackIntegration from "./slack-integration";
 import { getPrivateObject } from "./storage/s3";
 import task from "./task";
 import taskRelation from "./task-relation";
+import taskReminder from "./task-reminder";
+import taskWatcher from "./task-watcher";
 import teamLead from "./team-lead";
 import telegramIntegration from "./telegram-integration";
 import template from "./template";
@@ -727,6 +731,10 @@ export function createApp() {
     telegramIntegration,
   );
   const taskRelationApi = api.route("/task-relation", taskRelation);
+  const taskWatcherApi = api.route("/task-watcher", taskWatcher);
+  const taskReminderApi = api.route("/task-reminder", taskReminder);
+  const sessionApi = api.route("/session", sessions);
+  const announcementApi = api.route("/announcement", announcement);
   const externalLinkApi = api.route("/external-link", externalLink);
   const workflowRuleApi = api.route("/workflow-rule", workflowRule);
   const automationApi = api.route("/automation", automation);
@@ -913,6 +921,10 @@ export function createApp() {
     slackIntegrationApi,
     taskApi,
     taskRelationApi,
+    taskWatcherApi,
+    taskReminderApi,
+    sessionApi,
+    announcementApi,
     telegramIntegrationApi,
     timeEntryApi,
     timeSheetApi,
@@ -1028,6 +1040,10 @@ const {
   slackIntegrationApi,
   taskApi,
   taskRelationApi,
+  taskWatcherApi,
+  taskReminderApi,
+  sessionApi,
+  announcementApi,
   telegramIntegrationApi,
   timeEntryApi,
   timeSheetApi,
@@ -1096,6 +1112,10 @@ export type AppType =
   | typeof slackIntegrationApi
   | typeof telegramIntegrationApi
   | typeof taskRelationApi
+  | typeof taskWatcherApi
+  | typeof taskReminderApi
+  | typeof sessionApi
+  | typeof announcementApi
   | typeof externalLinkApi
   | typeof workflowRuleApi
   | typeof automationApi

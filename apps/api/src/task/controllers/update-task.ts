@@ -1,13 +1,15 @@
 import { and, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
-import { columnTable, taskTable } from "../../database/schema";
+import { activityTable, columnTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { deleteOrphanedAssets } from "../../storage/cleanup-assets";
 import {
   assertAssignableUser,
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
+import { hasChildren, hasPredecessors } from "../schedule/children";
+import { scheduleAfter } from "../schedule/reschedule";
 import { assertValidTaskStatus } from "../validate-task-fields";
 import { syncPrimaryAssignee } from "./assignees";
 import { cascadeStatusToSubtree } from "./cascade-status";
@@ -30,8 +32,14 @@ async function updateTask(
       id: taskTable.id,
       description: taskTable.description,
       status: taskTable.status,
+      dueDate: taskTable.dueDate,
       projectId: taskTable.projectId,
       userId: taskTable.userId,
+      isMilestone: taskTable.isMilestone,
+      autoDates: taskTable.autoDates,
+      startDate: taskTable.startDate,
+      title: taskTable.title,
+      priority: taskTable.priority,
     })
     .from(taskTable)
     .where(eq(taskTable.id, id))
@@ -60,6 +68,33 @@ async function updateTask(
     );
   }
 
+  // Un hito tiene una sola fecha (ADR 082): el Gantt manda las dos al
+  // arrastrarlo, y manda la del final.
+  const milestoneDay = existingTask.isMilestone
+    ? (dueDate ?? startDate)
+    : undefined;
+  // Las de un padre con fechas automaticas salen de su rama (ADR 083): la
+  // edicion completa manda las que tenia el navegador, que pueden ser viejas,
+  // asi que se ignoran en vez de rechazar el cambio de titulo que venia con
+  // ellas.
+  // Una sucesora automatica (ADR 084) tampoco elige su inicio: sale de sus
+  // predecesoras. Su fin si, que es su duracion, salvo en un hito.
+  const derived = existingTask.autoDates && (await hasChildren(id));
+  const tied =
+    !derived && existingTask.autoDates && (await hasPredecessors(id));
+  const nextStartDate =
+    derived || tied
+      ? existingTask.startDate
+      : existingTask.isMilestone
+        ? milestoneDay
+        : startDate;
+  const nextDueDate =
+    derived || (tied && existingTask.isMilestone)
+      ? existingTask.dueDate
+      : existingTask.isMilestone
+        ? milestoneDay
+        : dueDate;
+
   const column = await db.query.columnTable.findFirst({
     where: and(
       eq(columnTable.projectId, projectId),
@@ -77,8 +112,8 @@ async function updateTask(
         title,
         status,
         columnId: column?.id ?? null,
-        startDate: startDate || null,
-        dueDate: dueDate || null,
+        startDate: nextStartDate || null,
+        dueDate: nextDueDate || null,
         projectId,
         description,
         priority,
@@ -90,6 +125,17 @@ async function updateTask(
 
     if (rows[0]) {
       await syncPrimaryAssignee(id, existingTask.userId, rows[0].userId, tx);
+    }
+    // El rastro del titulo va en la misma transaccion, como en
+    // `update-task-title.ts`: la historia no es un efecto secundario.
+    if (rows[0] && rows[0].title !== existingTask.title) {
+      await tx.insert(activityTable).values({
+        taskId: id,
+        type: "title_changed",
+        userId: currentUserId,
+        content: null,
+        eventData: { oldTitle: existingTask.title, newTitle: rows[0].title },
+      });
     }
 
     return rows;
@@ -125,6 +171,62 @@ async function updateTask(
     });
   }
 
+  // La edicion completa tambien mueve el vencimiento, y sin este evento ni los
+  // avisos de quien observa (ADR 076) ni las automatizaciones se enteraban.
+  if (
+    (existingTask.dueDate?.getTime() ?? null) !==
+    (updatedTask.dueDate?.getTime() ?? null)
+  ) {
+    await publishEvent("task.due_date_changed", {
+      taskId: updatedTask.id,
+      projectId: updatedTask.projectId,
+      userId: currentUserId,
+      oldDueDate: existingTask.dueDate,
+      newDueDate: updatedTask.dueDate,
+      title: updatedTask.title,
+      type: "due_date_changed",
+    });
+  }
+
+  // La edicion completa tambien cambia titulo y prioridad: sin estos eventos,
+  // las integraciones no se enteraban, y sin la actividad de la prioridad, la
+  // linea base (ADR 085) tampoco.
+  if (existingTask.title !== updatedTask.title) {
+    await publishEvent("task.title_changed", {
+      taskId: updatedTask.id,
+      projectId: updatedTask.projectId,
+      userId: currentUserId,
+      oldTitle: existingTask.title,
+      newTitle: updatedTask.title,
+      type: "title_changed",
+    });
+  }
+  if (existingTask.priority !== updatedTask.priority) {
+    await publishEvent("task.priority_changed", {
+      taskId: updatedTask.id,
+      projectId: updatedTask.projectId,
+      userId: currentUserId,
+      oldPriority: existingTask.priority,
+      newPriority: updatedTask.priority,
+      title: updatedTask.title,
+      type: "priority_changed",
+    });
+  }
+
+  if (
+    (existingTask.startDate?.getTime() ?? null) !==
+    (updatedTask.startDate?.getTime() ?? null)
+  ) {
+    await publishEvent("task.start_date_changed", {
+      taskId: updatedTask.id,
+      projectId: updatedTask.projectId,
+      userId: currentUserId,
+      oldStartDate: existingTask.startDate,
+      newStartDate: updatedTask.startDate,
+      type: "start_date_changed",
+    });
+  }
+
   await publishEvent("task.updated", {
     taskId: updatedTask.id,
     projectId: updatedTask.projectId,
@@ -132,6 +234,21 @@ async function updateTask(
     status: updatedTask.status,
     userId: currentUserId,
   });
+
+  // Fechas o estado (archivar saca de la rama): lo que mueve las fechas
+  // automaticas (ADR 083). Un cambio de titulo no paga la replanificacion.
+  const datesChanged =
+    (existingTask.startDate?.getTime() ?? null) !==
+      (updatedTask.startDate?.getTime() ?? null) ||
+    (existingTask.dueDate?.getTime() ?? null) !==
+      (updatedTask.dueDate?.getTime() ?? null);
+  if (datesChanged || existingTask.status !== status) {
+    await scheduleAfter({
+      projectId: updatedTask.projectId,
+      taskIds: [updatedTask.id],
+      actorId: currentUserId ?? "",
+    });
+  }
 
   if (existingTask.description !== description) {
     deleteOrphanedAssets(existingTask.description, description, {

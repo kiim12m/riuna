@@ -19,6 +19,8 @@ function useFieldInvalidation() {
 export function useCreateFieldDefinition(scope: {
   projectId?: string;
   workspaceId: string;
+  /** Un campo de los proyectos del espacio (ADR 088). */
+  entity?: "task" | "project";
 }) {
   const invalidate = useFieldInvalidation();
 
@@ -28,7 +30,10 @@ export function useCreateFieldDefinition(scope: {
     ) =>
       scope.projectId
         ? createProjectFieldDefinition(scope.projectId, field)
-        : createWorkspaceFieldDefinition(scope.workspaceId, field),
+        : createWorkspaceFieldDefinition(scope.workspaceId, {
+            ...field,
+            ...(scope.entity === "project" ? { entity: "project" } : {}),
+          }),
     onSuccess: invalidate,
   });
 }

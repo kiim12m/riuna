@@ -1,12 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { BaselinePicker } from "@/components/baseline/baseline-picker";
+import { toViewBaseline } from "@/components/baseline/baseline-view";
 import ProjectLayout from "@/components/common/project-layout";
 import PageTitle from "@/components/page-title";
 import { ProjectSizeWarning } from "@/components/project/project-size-warning";
+import { SubprojectToggle } from "@/components/project/subproject-toggle";
 import TableView from "@/components/table-view";
 import type { AddFieldPayload } from "@/components/table-view/add-field-dialog";
 import AddFieldDialog from "@/components/table-view/add-field-dialog";
+
 import ColumnPicker from "@/components/table-view/column-picker";
 import {
   availableColumns,
@@ -15,6 +19,10 @@ import {
 } from "@/components/table-view/columns";
 import type { FieldDefinition } from "@/components/table-view/custom-field-cell";
 import FilterBar from "@/components/table-view/filter-bar";
+import {
+  ROW_COLORINGS,
+  type RowColoring,
+} from "@/components/table-view/row-tint";
 import ViewPicker, {
   type SavedView,
 } from "@/components/table-view/view-picker";
@@ -36,11 +44,15 @@ import {
 } from "@/hooks/mutations/view/use-view-mutations";
 import useGetFieldDefinitions from "@/hooks/queries/field/use-get-field-definitions";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
+import { useTaskBaseline } from "@/hooks/queries/task/use-task-baseline";
+import { useTaskTotals } from "@/hooks/queries/task/use-task-totals";
 import useGetViews from "@/hooks/queries/view/use-get-views";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { useFilterableFields } from "@/hooks/use-filterable-fields";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { authClient } from "@/lib/auth-client";
+import { type BaselineChoice, isBaselineChoice } from "@/lib/baseline";
+import { subprojectColumns, subprojectTasks } from "@/lib/subproject-tasks";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
 import { buildFilter, type EditableCondition } from "@/types/task-filter";
@@ -66,6 +78,12 @@ type TableSearchParams = {
   columns?: string[];
   /** Por que se agrupan las filas. Sin dato, sin agrupar. */
   groupBy?: GroupBy;
+  /** Como se colorean las filas (ADR 080). Sin dato, sin color. */
+  color?: RowColoring;
+  /** Con que momento se compara (ADR 085). Sin dato, con ninguno. */
+  baseline?: BaselineChoice;
+  /** Con las tareas de los subproyectos (ADR 089). */
+  subprojects?: boolean;
 };
 
 const GROUP_BYS = ["epic"] as const;
@@ -95,6 +113,11 @@ export const Route = createFileRoute(
     groupBy: GROUP_BYS.includes(search.groupBy as GroupBy)
       ? (search.groupBy as GroupBy)
       : undefined,
+    color: ROW_COLORINGS.includes(search.color as RowColoring)
+      ? (search.color as RowColoring)
+      : undefined,
+    baseline: isBaselineChoice(search.baseline) ? search.baseline : undefined,
+    subprojects: search.subprojects === true ? true : undefined,
   }),
 });
 
@@ -108,6 +131,9 @@ function RouteComponent() {
     viewId,
     columns: columnsParam,
     groupBy,
+    color,
+    baseline: baselineChoice,
+    subprojects,
   } = Route.useSearch();
   const navigate = useNavigate();
 
@@ -135,14 +161,42 @@ function RouteComponent() {
 
   const filter = useMemo(() => buildFilter(conditions), [conditions]);
 
-  const { data: project, error } = useGetTasks(projectId, filter, {
-    treeScope:
-      treeMode === "roots"
-        ? "roots"
-        : treeMode === "withDescendants"
-          ? "withDescendants"
-          : "matching",
+  const queryOptions = useMemo(
+    () => ({
+      treeScope:
+        treeMode === "roots"
+          ? ("roots" as const)
+          : treeMode === "withDescendants"
+            ? ("withDescendants" as const)
+            : ("matching" as const),
+      includeSubprojects: Boolean(subprojects),
+    }),
+    [treeMode, subprojects],
+  );
+  const {
+    data: project,
+    error,
+    dataUpdatedAt,
+  } = useGetTasks(projectId, filter, queryOptions);
+  const { data: totals } = useTaskTotals(
+    projectId,
+    filter,
+    queryOptions,
+    dataUpdatedAt,
+  );
+  const { data: baselineData } = useTaskBaseline({
+    projectId,
+    workspaceId,
+    choice: baselineChoice,
+    filter,
+    options: queryOptions,
+    listUpdatedAt: dataUpdatedAt,
   });
+  const baseline = useMemo(
+    () =>
+      baselineChoice && baselineData ? toViewBaseline(baselineData) : null,
+    [baselineChoice, baselineData],
+  );
   const { data: definitions = [] } = useGetFieldDefinitions(projectId);
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
   const { data: views = [] } = useGetViews(projectId, "table");
@@ -179,8 +233,14 @@ function RouteComponent() {
     return [
       ...(project.columns ?? []).flatMap((column) => column.tasks ?? []),
       ...(project.plannedTasks ?? []),
+      ...subprojectTasks(project),
     ];
   }, [project]);
+  // Los estados de un subproyecto son sus columnas, no las del padre.
+  const statusColumns = useMemo(
+    () => [...(project?.columns ?? []), ...subprojectColumns(project)],
+    [project],
+  );
 
   // Los campos de tipo `usuario` eligen de aqui. Se aplanan a lo minimo que la
   // celda necesita para no acoplarla a la forma de la respuesta.
@@ -211,6 +271,13 @@ function RouteComponent() {
           groupBy: GROUP_BYS.includes(view.config.groupBy as GroupBy)
             ? (view.config.groupBy as GroupBy)
             : undefined,
+          color: ROW_COLORINGS.includes(view.config.color as RowColoring)
+            ? (view.config.color as RowColoring)
+            : undefined,
+          baseline: isBaselineChoice(view.config.baseline)
+            ? view.config.baseline
+            : undefined,
+          subprojects: view.config.subprojects === true ? true : undefined,
           viewId: view.id,
         },
         replace: true,
@@ -232,6 +299,9 @@ function RouteComponent() {
             ...(treeMode !== "tree" ? { treeMode } : {}),
             ...(columnsParam ? { columns: columnsParam } : {}),
             ...(groupBy ? { groupBy } : {}),
+            ...(color ? { color } : {}),
+            ...(baselineChoice ? { baseline: baselineChoice } : {}),
+            ...(subprojects ? { subprojects: true } : {}),
           },
         },
         {
@@ -248,7 +318,17 @@ function RouteComponent() {
         },
       );
     },
-    [saveView, conditions, treeMode, columnsParam, groupBy, t],
+    [
+      saveView,
+      conditions,
+      treeMode,
+      columnsParam,
+      groupBy,
+      color,
+      baselineChoice,
+      subprojects,
+      t,
+    ],
   );
 
   const handleOpenTask = useCallback(
@@ -322,7 +402,7 @@ function RouteComponent() {
       <PageTitle title={t("tasks:table.pageTitle", { name: project?.name })} />
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-card">
         <div className="border-border/80 border-b">
-          <div className="flex items-center gap-1 px-3 pt-2">
+          <div className="flex flex-wrap items-center gap-1 px-3 pt-2">
             <ColumnPicker
               options={columnOptions}
               visible={visibleColumns}
@@ -369,6 +449,71 @@ function RouteComponent() {
                 </SelectItem>
               </SelectContent>
             </Select>
+            <Select
+              value={color ?? "none"}
+              onValueChange={(next) =>
+                navigate({
+                  to: ".",
+                  search: (previous: TableSearchParams) => ({
+                    ...previous,
+                    color: ROW_COLORINGS.includes(next as RowColoring)
+                      ? (next as RowColoring)
+                      : undefined,
+                  }),
+                  replace: true,
+                })
+              }
+            >
+              <SelectTrigger
+                size="sm"
+                className="h-6 w-auto gap-1.5 border-0 bg-transparent px-2 text-xs shadow-none"
+                aria-label={t("tasks:table.color.label")}
+                data-testid="table-color"
+              >
+                <SelectValue>
+                  {t("tasks:table.color.label")}:{" "}
+                  {t(`tasks:table.color.${color ?? "none"}`)}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">
+                  {t("tasks:table.color.none")}
+                </SelectItem>
+                <SelectItem value="priority">
+                  {t("tasks:table.color.priority")}
+                </SelectItem>
+                <SelectItem value="due">
+                  {t("tasks:table.color.due")}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <SubprojectToggle
+              count={project?.subprojectCount ?? 0}
+              checked={Boolean(subprojects)}
+              onChange={(next) =>
+                navigate({
+                  to: ".",
+                  search: (previous: TableSearchParams) => ({
+                    ...previous,
+                    subprojects: next ? true : undefined,
+                  }),
+                  replace: true,
+                })
+              }
+            />
+            <BaselinePicker
+              value={baselineChoice}
+              onChange={(next) =>
+                navigate({
+                  to: ".",
+                  search: (previous: TableSearchParams) => ({
+                    ...previous,
+                    baseline: next,
+                  }),
+                  replace: true,
+                })
+              }
+            />
             <ViewPicker
               views={views as SavedView[]}
               activeViewId={viewId}
@@ -377,7 +522,10 @@ function RouteComponent() {
                 conditions.length > 0 ||
                 treeMode !== "tree" ||
                 Boolean(columnsParam) ||
-                Boolean(groupBy)
+                Boolean(groupBy) ||
+                Boolean(color) ||
+                Boolean(baselineChoice) ||
+                Boolean(subprojects)
               }
               saving={isSavingView}
               onApply={handleApplyView}
@@ -421,10 +569,13 @@ function RouteComponent() {
           tasks={tasks}
           definitions={definitions as FieldDefinition[]}
           members={members}
-          columns={project?.columns ?? []}
+          columns={statusColumns}
           flatten={treeMode === "flat"}
           visibleColumns={visibleColumns}
           groupBy={groupBy}
+          coloring={color}
+          totals={totals}
+          baseline={baseline}
           canEdit={canEditValues}
           onOpenTask={handleOpenTask}
           onSetCustomField={handleSetCustomField}

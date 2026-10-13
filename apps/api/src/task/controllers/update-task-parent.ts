@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { projectTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { scheduleAfter } from "../schedule/reschedule";
 import {
   childPath,
   DEFAULT_MAX_TASK_DEPTH,
@@ -18,6 +19,8 @@ export type TaskNode = {
   parentId: string | null;
   path: string;
   depth: number;
+  // Opcional: el importador arma nodos sin leer la fila entera.
+  isMilestone?: boolean;
 };
 
 export const REJECTION_MESSAGES: Record<string, string> = {
@@ -25,6 +28,8 @@ export const REJECTION_MESSAGES: Record<string, string> = {
   cycle: "A task cannot be moved inside its own subtree",
   "cross-project": "Parent and child must belong to the same project",
   "too-deep": "The resulting subtree would exceed the project's depth limit",
+  // Un hito es un punto en el tiempo, no un trabajo que se reparte (ADR 082).
+  "milestone-parent": "A milestone cannot have subtasks",
 };
 
 type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -40,6 +45,7 @@ export async function loadTask(
       parentId: taskTable.parentId,
       path: taskTable.path,
       depth: taskTable.depth,
+      isMilestone: taskTable.isMilestone,
     })
     .from(taskTable)
     .where(eq(taskTable.id, taskId))
@@ -104,6 +110,12 @@ export async function resolveParentForNewTask(
   if (parent.projectId !== projectId) {
     throw new HTTPException(400, {
       message: REJECTION_MESSAGES["cross-project"],
+    });
+  }
+
+  if (parent.isMilestone) {
+    throw new HTTPException(400, {
+      message: REJECTION_MESSAGES["milestone-parent"],
     });
   }
 
@@ -241,7 +253,9 @@ async function updateTaskParent({
       getSubtreeHeight(task, tx),
     ]);
 
-    const rejection = rejectReparent({ task, parent, subtreeHeight, maxDepth });
+    const rejection = parent?.isMilestone
+      ? "milestone-parent"
+      : rejectReparent({ task, parent, subtreeHeight, maxDepth });
 
     if (rejection) {
       throw new HTTPException(400, { message: REJECTION_MESSAGES[rejection] });
@@ -269,6 +283,13 @@ async function updateTaskParent({
     type: "parent_changed",
     oldParentId: result.oldParentId,
     newParentId: result.newParentId,
+  });
+
+  // Cambian dos ramas: la que la pierde y la que la gana (ADR 083).
+  await scheduleAfter({
+    projectId: result.projectId,
+    taskIds: [taskId, result.oldParentId],
+    actorId: currentUserId,
   });
 
   return result.task;

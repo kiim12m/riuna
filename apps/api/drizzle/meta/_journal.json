@@ -589,6 +589,69 @@
 			"when": 1791732948766,
 			"tag": "0083_instance_status",
 			"breakpoints": true
+		},
+		{
+			"idx": 84,
+			"version": "7",
+			"when": 1791821970000,
+			"tag": "0084_task_watcher",
+			"breakpoints": true
+		},
+		{
+			"idx": 85,
+			"version": "7",
+			"when": 1791835756800,
+			"tag": "0085_task_reminder",
+			"breakpoints": true
+		},
+		{
+			"idx": 86,
+			"version": "7",
+			"when": 1791835764823,
+			"tag": "0086_announcement",
+			"breakpoints": true
+		},
+		{
+			"idx": 87,
+			"version": "7",
+			"when": 1791881640816,
+			"tag": "0087_task_milestone",
+			"breakpoints": true
+		},
+		{
+			"idx": 88,
+			"version": "7",
+			"when": 1791882482363,
+			"tag": "0088_summary_tasks",
+			"breakpoints": true
+		},
+		{
+			"idx": 89,
+			"version": "7",
+			"when": 1791883777374,
+			"tag": "0089_precedes",
+			"breakpoints": true
+		},
+		{
+			"idx": 90,
+			"version": "7",
+			"when": 1791900768310,
+			"tag": "0090_project_status",
+			"breakpoints": true
+		},
+		{
+			"idx": 91,
+			"version": "7",
+			"when": 1791902125416,
+			"tag": "0091_project_fields",
+			"breakpoints": true
+		},
+		{
+			"idx": 92,
+			"version": "7",
+			"when": 1791906151021,
+			"tag": "0092_subprojects",
+			"breakpoints": true
 		}
 	]
 }

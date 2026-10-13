@@ -59,12 +59,17 @@ export default function DayOverflowPopover({
                 onClick={() => handleSelectTask(task.id)}
                 className="flex w-full min-w-0 flex-col items-start gap-0.5 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                {projectSlug && task.number != null ? (
+                {(task.projectSlug ?? projectSlug) && task.number != null ? (
                   <span className="truncate text-meta text-muted-foreground">
-                    {projectSlug}-{task.number}
+                    {task.projectSlug ?? projectSlug}-{task.number}
                   </span>
                 ) : null}
                 <span className="w-full truncate text-xs font-medium text-foreground">
+                  {task.isMilestone && (
+                    <span aria-hidden="true" className="mr-1 text-brand-strong">
+                      ◆
+                    </span>
+                  )}
                   {task.title}
                 </span>
                 <span className="w-full truncate text-label text-muted-foreground">

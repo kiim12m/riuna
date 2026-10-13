@@ -10,6 +10,13 @@ type AutomationRow = typeof automationTable.$inferSelect;
 
 export type RunStatus = "ok" | "failed" | "skipped";
 
+export type RunActionResult = {
+  id: string;
+  type: string;
+  status: "ok" | "failed";
+  error?: string;
+} & Record<string, unknown>;
+
 export async function recordRun({
   rule,
   taskId,
@@ -61,21 +68,29 @@ export async function executeRule({
   actorId,
   chain,
   eventType,
+  pressedBy,
 }: {
   rule: AutomationRow;
   task: TaskInfo;
   actorId: string;
   chain: string[];
   eventType: string;
-}) {
+  /** Quien pulso, en una accion de un clic (ADR 078). */
+  pressedBy?: string;
+}): Promise<{ status: RunStatus; actions: RunActionResult[] }> {
   const startedAt = new Date();
-  const results: Record<string, unknown>[] = [];
+  const results: RunActionResult[] = [];
   let status: RunStatus = "ok";
 
   await eventContext.run(
     {
       initiatorId: `automation:${rule.id}`,
-      automation: { id: rule.id, name: rule.name, chain },
+      automation: {
+        id: rule.id,
+        name: rule.name,
+        chain,
+        ...(pressedBy ? { pressedBy } : {}),
+      },
     },
     async () => {
       let current = task;
@@ -91,10 +106,10 @@ export async function executeRule({
           // con la columna nueva en `{estado}`.
           current = (await loadTaskInfo(task.id)) ?? current;
           results.push({
+            ...outcome,
             id: action.id,
             type: action.type,
             status: "ok",
-            ...outcome,
           });
         } catch (error) {
           status = "failed";
@@ -114,7 +129,13 @@ export async function executeRule({
     rule,
     taskId: task.id,
     status,
-    detail: { event: eventType, actions: results },
+    detail: {
+      event: eventType,
+      ...(pressedBy ? { pressedBy } : {}),
+      actions: results,
+    },
     startedAt,
   });
+
+  return { status, actions: results };
 }

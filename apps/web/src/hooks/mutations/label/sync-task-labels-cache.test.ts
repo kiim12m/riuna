@@ -16,6 +16,7 @@ describe("updateTaskLabelsInProject", () => {
       cascadeClose: false,
       cascadeArchive: false,
       maxTaskDepth: 5,
+      weightedProgress: false,
       columns: [
         {
           id: "todo",
@@ -108,6 +109,7 @@ describe("updateTaskLabelsInProject", () => {
       cascadeClose: false,
       cascadeArchive: false,
       maxTaskDepth: 5,
+      weightedProgress: false,
       columns: [],
       plannedTasks: [
         {

@@ -1,5 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import {
+  ArrowLeftToLine,
+  ArrowRightToLine,
   ChevronDown,
   ChevronRight,
   Link2,
@@ -40,6 +42,7 @@ import {
 } from "@/components/ui/context-menu";
 import useCreateTaskRelation from "@/hooks/mutations/task-relation/use-create-task-relation";
 import useDeleteTaskRelation from "@/hooks/mutations/task-relation/use-delete-task-relation";
+import { useUpdateTaskRelationLag } from "@/hooks/mutations/task-relation/use-update-task-relation-lag";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
 import useGetTaskRelations from "@/hooks/queries/task-relation/use-get-task-relations";
@@ -82,9 +85,14 @@ export default function TaskRelations({
   const [isOpen, setIsOpen] = useState(true);
   const [commandOpen, setCommandOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  // «Precede a» y «sigue a» son la misma relacion vista desde cada punta
+  // (ADR 084): planifican la sucesora con un desfase en dias laborables.
   const [selectedRelationType, setSelectedRelationType] = useState<
-    "blocks" | "related"
+    "blocks" | "related" | "precedes" | "follows"
   >("related");
+  const [lag, setLag] = useState(0);
+  const [editingLag, setEditingLag] = useState<string | null>(null);
+  const updateLag = useUpdateTaskRelationLag();
 
   const { data: relations = [] } = useGetTaskRelations(taskId);
   const { data: projectData } = useGetTasks(projectId);
@@ -110,6 +118,7 @@ export default function TaskRelations({
       Array<{
         id: string;
         relationType: string;
+        lag: number | null;
         task: NonNullable<(typeof relations)[number]["sourceTask"]>;
       }>
     > = {};
@@ -124,13 +133,16 @@ export default function TaskRelations({
       const type =
         rel.relationType === "blocks" && !isSource
           ? "blocked_by"
-          : rel.relationType;
+          : rel.relationType === "precedes" && !isSource
+            ? "follows"
+            : rel.relationType;
       if (!groups[type]) {
         groups[type] = [];
       }
       groups[type].push({
         id: rel.id,
         relationType: rel.relationType,
+        lag: rel.lag ?? null,
         task: linkedTask,
       });
     }
@@ -202,18 +214,41 @@ export default function TaskRelations({
     ];
   }, [filteredTasks, t]);
 
-  const handleLinkTask = async (targetTaskId: string) => {
+  const handleLinkTask = async (otherTaskId: string) => {
+    const follows = selectedRelationType === "follows";
     try {
       await createRelation.mutateAsync({
-        sourceTaskId: taskId,
-        targetTaskId,
-        relationType: selectedRelationType,
+        sourceTaskId: follows ? otherTaskId : taskId,
+        targetTaskId: follows ? taskId : otherTaskId,
+        relationType: follows ? "precedes" : selectedRelationType,
+        lag,
       });
       setCommandOpen(false);
       setSearchQuery("");
-    } catch {
-      toast.error(t("tasks:relations.linkError"));
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : t("tasks:relations.linkError"),
+      );
     }
+  };
+
+  const saveLag = (relationId: string, value: string) => {
+    setEditingLag(null);
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isNaN(parsed)) return;
+    updateLag.mutate(
+      { id: relationId, lag: Math.max(-365, Math.min(365, parsed)) },
+      {
+        onError: (error) =>
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : t("tasks:relations.lagError"),
+          ),
+      },
+    );
   };
 
   const handleRemoveRelation = (relationId: string) => {
@@ -284,6 +319,8 @@ export default function TaskRelations({
               variant="ghost"
               size="xs"
               className="text-muted-foreground"
+              aria-label={t("tasks:relations.add")}
+              title={t("tasks:relations.add")}
               onClick={() => setCommandOpen(true)}
             >
               <Plus className="size-3.5" />
@@ -335,6 +372,43 @@ export default function TaskRelations({
                               {item.task.title}
                             </span>
                           </button>
+
+                          {item.relationType === "precedes" &&
+                            (editingLag === item.id ? (
+                              <input
+                                type="number"
+                                min={-365}
+                                max={365}
+                                defaultValue={item.lag ?? 0}
+                                aria-label={t("tasks:relations.lag")}
+                                className="h-6 w-14 shrink-0 rounded border border-border bg-background px-1 text-xs font-mono"
+                                // biome-ignore lint/a11y/noAutofocus: se abre al pulsar el chip
+                                autoFocus
+                                onBlur={(event) =>
+                                  saveLag(item.id, event.target.value)
+                                }
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter") {
+                                    saveLag(item.id, event.currentTarget.value);
+                                  }
+                                  if (event.key === "Escape")
+                                    setEditingLag(null);
+                                }}
+                              />
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={!canEdit}
+                                title={t("tasks:relations.lagHint")}
+                                data-testid="relation-lag"
+                                className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-label text-muted-foreground hover:text-foreground"
+                                onClick={() => setEditingLag(item.id)}
+                              >
+                                {t("tasks:relations.lagChip", {
+                                  lag: item.lag ?? 0,
+                                })}
+                              </button>
+                            ))}
 
                           <SubtaskAssigneePopover
                             tasks={[taskObj]}
@@ -472,6 +546,39 @@ export default function TaskRelations({
                   <X className="size-3" />
                   {t("tasks:relations.blocks")}
                 </button>
+                <button
+                  type="button"
+                  data-testid="relation-type-follows"
+                  className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-colors ${selectedRelationType === "follows" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={() => setSelectedRelationType("follows")}
+                >
+                  <ArrowLeftToLine className="size-3" />
+                  {t("tasks:relations.follows")}
+                </button>
+                <button
+                  type="button"
+                  className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-colors ${selectedRelationType === "precedes" ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={() => setSelectedRelationType("precedes")}
+                >
+                  <ArrowRightToLine className="size-3" />
+                  {t("tasks:relations.precedes")}
+                </button>
+                {(selectedRelationType === "precedes" ||
+                  selectedRelationType === "follows") && (
+                  <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    {t("tasks:relations.lag")}
+                    <input
+                      type="number"
+                      min={-365}
+                      max={365}
+                      value={lag}
+                      className="h-6 w-14 rounded border border-border bg-background px-1 font-mono"
+                      onChange={(event) =>
+                        setLag(Number.parseInt(event.target.value, 10) || 0)
+                      }
+                    />
+                  </label>
+                )}
               </div>
               <span className="text-muted-foreground/60">
                 {t("tasks:relations.selectTask")}

@@ -651,7 +651,13 @@
 				"iconRequired": "El icono es obligatorio"
 			},
 			"importExportTasks": "Importar/Exportar",
-			"importExportTasksDescription": "Importar/Exportar Tareas"
+			"importExportTasksDescription": "Importar/Exportar Tareas",
+			"parentLabel": "Subproyecto de",
+			"parentHint": "Un proyecto puede colgar de otro, de un solo nivel. Las vistas del padre pueden incluir sus tareas, y su progreso cuenta la rama entera.",
+			"parentHasChildren": "Tiene subproyectos, así que no puede colgar de otro proyecto.",
+			"noParent": "Ninguno",
+			"parentSaved": "Proyecto padre guardado",
+			"parentError": "No se pudo cambiar el proyecto padre"
 		},
 		"projectIntegrations": {
 			"pageTitle": "Integraciones del Proyecto",
@@ -1432,7 +1438,9 @@
 			"cascadeArchiveHint": "Archivar una tarea archiva también todo lo que cuelga de ella.",
 			"depthLabel": "Profundidad máxima",
 			"depthHint": "Cuántos niveles puede tener una rama. Más allá de cinco, la sangría se come la lista.",
-			"updateError": "No se han podido guardar los ajustes de jerarquía"
+			"updateError": "No se han podido guardar los ajustes de jerarquía",
+			"weightedProgressLabel": "Progreso ponderado por la estimación",
+			"weightedProgressHint": "El progreso de una rama cuenta cada subtarea por su estimación en vez de contar tareas hechas. Una sin estimar pesa la media de la rama; un hito no pesa."
 		},
 		"projectEpics": {
 			"title": "Épicas",
@@ -1521,7 +1529,10 @@
 		"workspaceFields": {
 			"title": "Custom fields",
 			"pageTitle": "Custom fields",
-			"description": "Fields that apply to every project of the workspace. A project can define its own on top of these."
+			"description": "Fields that apply to every project of the workspace. A project can define its own on top of these.",
+			"projectTitle": "Campos de proyecto",
+			"projectDescription": "Atributos de los propios proyectos, como el cliente o el presupuesto. Son columnas, filtros y exportación de la lista de proyectos, y cada proyecto los rellena desde sus ajustes o en la propia lista.",
+			"addProjectField": "Nuevo campo de proyecto"
 		},
 		"automations": {
 			"title": "Automatizaciones",
@@ -1582,7 +1593,8 @@
 				"task_labeled": "Se le pone una etiqueta",
 				"task_due_in": "Vence pronto",
 				"task_overdue": "Está vencida",
-				"schedule": "A una hora fija"
+				"schedule": "A una hora fija",
+				"manual": "Se pulsa el botón"
 			},
 			"actions": {
 				"move": "Mover a una columna",
@@ -1679,7 +1691,8 @@
 					"assignees": "Sus asignados",
 					"creator": "Quien la creó",
 					"teamMembers": "Su departamento",
-					"teamLeads": "El responsable de su departamento"
+					"teamLeads": "El responsable de su departamento",
+					"watchers": "Quien la observa"
 				},
 				"alsoPeople": "También a estas personas",
 				"message": "Mensaje",
@@ -1691,7 +1704,8 @@
 				"webhookUrl": "URL del webhook",
 				"botToken": "Token del bot",
 				"chatId": "ID del chat",
-				"threadId": "ID del hilo (opcional)"
+				"threadId": "ID del hilo (opcional)",
+				"manualHint": "La regla sale como botón en la tarea, y en su menú contextual, mientras la tarea cumpla las condiciones. Actúa en nombre de quien la pulsa, que tiene que poder editar tareas."
 			},
 			"standup": {
 				"sectionTitle": "Enviar el stand-up a un chat",
@@ -1802,7 +1816,8 @@
 					"trialReminders": "Avisos de prueba",
 					"recurringTasks": "Tareas recurrentes",
 					"automations": "Automatizaciones",
-					"instanceHealth": "Salud de la instancia"
+					"instanceHealth": "Salud de la instancia",
+					"taskReminders": "Recordatorios de tarea"
 				}
 			},
 			"routes": {
@@ -1833,6 +1848,49 @@
 					"job": "trabajo «{{job}}»"
 				}
 			}
+		},
+		"security": "Seguridad",
+		"securityPage": {
+			"pageTitle": "Seguridad",
+			"title": "Seguridad",
+			"subtitle": "Dónde está abierta tu cuenta.",
+			"sessionsTitle": "Sesiones activas",
+			"sessionsDescription": "Dónde tienes Riuna abierto ahora. Cerrar una sesión obliga a volver a entrar en ese dispositivo.",
+			"loading": "Cargando sesiones…",
+			"browserOn": "{{browser}} en {{os}}",
+			"unknownDevice": "Dispositivo desconocido",
+			"signedIn": "entró {{when}}",
+			"expires": "caduca {{when}}",
+			"impersonated": "Un administrador entró como tú.",
+			"thisSession": "Esta sesión",
+			"revoke": "Cerrar",
+			"revokeOthers": "Cerrar todas menos esta",
+			"delayNote": "Un dispositivo cerrado deja de funcionar en cinco minutos como mucho, cuando caduca su sesión en caché. La IP es la que ve la API: por Tailscale, una 100.x.",
+			"revoked": "Sesión cerrada",
+			"revokedOthers": "Sesiones cerradas: {{total}}",
+			"revokeError": "No se pudo cerrar la sesión"
+		},
+		"projectStatus": {
+			"pageTitle": "Estado y fechas",
+			"title": "Estado y fechas",
+			"subtitle": "Cómo va el proyecto, sus fechas propias y quién lo lleva. Lo ve todo el espacio en la lista de proyectos y en la cabecera del proyecto.",
+			"health": "Salud",
+			"noLead": "Sin responsable",
+			"invalidDates": "El fin no puede ser anterior al inicio",
+			"history": {
+				"title": "Historial",
+				"empty": "Todavía no ha cambiado nada.",
+				"someone": "Alguien",
+				"health": "puso el estado en {{health}}",
+				"dates": "puso las fechas {{start}} – {{end}}",
+				"lead": "puso de responsable a {{name}}",
+				"leadRemoved": "quitó el responsable",
+				"fields": "cambió {{names}}",
+				"parent": "pasó a ser un subproyecto",
+				"parentRemoved": "dejó de ser un subproyecto"
+			},
+			"fieldsTitle": "Campos del proyecto",
+			"fieldsEmpty": "El espacio aún no tiene campos de proyecto. Se definen en los ajustes del espacio, en Campos personalizados."
 		}
 	},
 	"navigation": {
@@ -2011,7 +2069,8 @@
 			},
 			"task_status_changed": {
 				"title": "El estado de una tarea ha cambiado",
-				"content": "El estado de la tarea \"{{taskTitle}}\" ha cambiado de \"{{oldStatus}}\" a \"{{newStatus}}\""
+				"content": "El estado de la tarea \"{{taskTitle}}\" ha cambiado de \"{{oldStatus}}\" a \"{{newStatus}}\"",
+				"contentWithoutOld": "La tarea \"{{taskTitle}}\" ha pasado a \"{{newStatus}}\""
 			},
 			"task_assignee_changed": {
 				"title": "Se te ha asignado una tarea",
@@ -2028,7 +2087,8 @@
 			},
 			"task_comment": {
 				"title": "{{commenterName}} ha comentado en tu tarea",
-				"content": "Nuevo comentario en {{taskTitle}}: {{commentPreview}}"
+				"content": "Nuevo comentario en {{taskTitle}}: {{commentPreview}}",
+				"titleWatching": "{{commenterName}} ha comentado en una tarea que observas"
 			},
 			"due_date_reminder": {
 				"title": "Tarea próxima a vencer",
@@ -2042,6 +2102,26 @@
 				"title": "Riuna · {{area}}",
 				"resolvedTitle": "Riuna · resuelto",
 				"resolvedContent": "Resuelto: {{area}}."
+			},
+			"task_due_date_changed": {
+				"title": "Ha cambiado el vencimiento",
+				"content": "{{taskTitle}} vence ahora el {{dueDate}}",
+				"contentCleared": "{{taskTitle}} ya no tiene vencimiento"
+			},
+			"task_reminder": {
+				"title": "Recordatorio: {{taskTitle}}",
+				"content": "{{note}}",
+				"contentWithoutNote": "Pediste que te recordara esta tarea."
+			},
+			"announcement_published": {
+				"title": "Aviso: {{announcementTitle}}",
+				"content": "{{authorName}} publicó un aviso en {{projectName}}",
+				"contentWorkspace": "{{authorName}} publicó un aviso del espacio"
+			},
+			"project_health_changed": {
+				"title": "{{projectName}}: {{health}}",
+				"content": "{{authorName}}: {{note}}",
+				"contentWithoutNote": "{{authorName}} cambió el estado del proyecto"
 			}
 		},
 		"reminderLeadTime": {
@@ -2176,7 +2256,24 @@
 		"customFieldChanged": "changed “{{name}}” from {{from}} to {{to}}",
 		"customFieldChangedPlain": "changed “{{name}}”",
 		"emptyValue": "empty",
-		"automationActor": "Automatización «{{name}}»"
+		"automationActor": "Automatización «{{name}}»",
+		"manualAutomationActor": "{{user}} con «{{name}}»",
+		"markedMilestone": "la marcó como hito",
+		"unmarkedMilestone": "la volvió a dejar como tarea",
+		"bySchedule": "(planificación automática)",
+		"changedStartDate": "cambió el inicio del {{from}} al {{to}}",
+		"setStartDate": "puso el inicio el {{date}}",
+		"clearedStartDate": "quitó la fecha de inicio",
+		"switchedToAutoDates": "pasó a fechas automáticas",
+		"switchedToOwnDates": "pasó a fechas propias",
+		"shiftedBranch_one": "movió su rama ({{count}} tarea) {{days}} días laborables",
+		"shiftedBranch_other": "movió su rama ({{count}} tareas) {{days}} días laborables",
+		"precedenceAdded": "pasó a seguir a otra tarea (desfase de {{lag}} días laborables)",
+		"precedenceLagChanged": "cambió el desfase de una predecesora a {{lag}} días laborables",
+		"precedenceRemoved": "dejó de seguir a una tarea",
+		"changedEstimate": "cambió la estimación de {{from}} a {{to}}",
+		"setEstimate": "la estimó en {{estimate}}",
+		"clearedEstimate": "quitó la estimación"
 	},
 	"tasks": {
 		"actions": {
@@ -2469,7 +2566,11 @@
 			"previousRange": "Retroceder",
 			"nextRange": "Avanzar",
 			"quarterShort": "T{{n}}",
-			"dependencyBlocks": "{{source}} bloquea a {{target}}"
+			"dependencyBlocks": "{{source}} bloquea a {{target}}",
+			"milestoneAriaLabel": "Hito {{title}}: arrastra para cambiar su fecha o pulsa Intro para abrirlo",
+			"milestoneAriaLabelReadOnly": "Hito {{title}}: pulsa Intro para abrirlo",
+			"branchOverflow": "Las subtareas se salen de las fechas propias de esta tarea",
+			"dependencyPrecedes": "{{source}} precede a {{target}} (desfase de {{lag}} días laborables)"
 		},
 		"group": {
 			"label": "Agrupar",
@@ -2598,8 +2699,17 @@
 			"types": {
 				"blocks": "bloquea",
 				"related": "relacionada con",
-				"blocked_by": "bloqueada por"
-			}
+				"blocked_by": "bloqueada por",
+				"precedes": "precede a",
+				"follows": "sigue a"
+			},
+			"precedes": "Precede a",
+			"follows": "Sigue a",
+			"lag": "Desfase (días lab.)",
+			"lagChip": "desfase {{lag}} d",
+			"lagHint": "Días laborables entre el fin de la predecesora y el inicio de la sucesora; negativo para solapar. Pulsa para cambiarlo.",
+			"lagError": "No se pudo cambiar el desfase",
+			"add": "Añadir relación"
 		},
 		"sort": {
 			"label": "Ordenar",
@@ -2652,7 +2762,9 @@
 				"assignee": "Responsable",
 				"dueDate": "Fecha límite",
 				"done": "Hecha",
-				"completedAt": "Fecha de cierre"
+				"completedAt": "Fecha de cierre",
+				"watchers": "Observada por",
+				"milestone": "Hito"
 			},
 			"addField": "Añadir un campo",
 			"addFieldTitle": "Campo personalizado nuevo",
@@ -2734,6 +2846,17 @@
 				"label": "Group by",
 				"none": "No grouping",
 				"epic": "Epic"
+			},
+			"color": {
+				"label": "Colorear filas",
+				"none": "No",
+				"priority": "Prioridad",
+				"due": "Vencimiento"
+			},
+			"totals": {
+				"label": "Total del filtro · {{total}} tareas",
+				"estimate": "Estimado",
+				"logged": "Registrado"
 			}
 		},
 		"team": {
@@ -2792,6 +2915,93 @@
 			"title": "Archivar tareas",
 			"description_one": "¿Seguro que quieres archivar la tarea completada? Saldrá del tablero activo y pasará al archivo.",
 			"description_other": "¿Seguro que quieres archivar las {{count}} tareas completadas? Saldrán del tablero activo y pasarán al archivo."
+		},
+		"watchers": {
+			"watch": "Observar",
+			"watching": "Observando",
+			"title": "Observan esta tarea",
+			"empty": "Nadie observa esta tarea todavía.",
+			"you": "(tú)",
+			"assignee": "asignado",
+			"remove": "Quitar a {{name}}",
+			"help": "Quien observa recibe los comentarios y los cambios de estado y de vencimiento. Los asignados, siempre.",
+			"assignedHint": "Estás asignado: te llega igualmente.",
+			"stopWatching": "Dejar de observar",
+			"startWatching": "Observar esta tarea",
+			"add": "Añadir a alguien",
+			"updateError": "No se pudo cambiar quién observa"
+		},
+		"reminder": {
+			"button": "Recuérdamelo",
+			"change": "Cambiar el recordatorio",
+			"current": "Te lo recuerda el {{when}}",
+			"noNote": "Sin nota",
+			"clear": "Quitar el recordatorio",
+			"presets": {
+				"tomorrow": "Mañana",
+				"nextMonday": "El próximo lunes",
+				"inAWeek": "En una semana",
+				"custom": "Elegir día y hora…"
+			},
+			"day": "Día",
+			"time": "Hora",
+			"inPast": "Esa hora ya ha pasado.",
+			"save": "Guardar recordatorio",
+			"note": "Nota (opcional)",
+			"notePlaceholder": "Lo que quieres recordar",
+			"help": "Solo lo ves tú. Llega por la campana y por tus canales. No planifica la tarea en tu día.",
+			"saved": "Te lo recordará el {{when}}",
+			"cleared": "Recordatorio quitado",
+			"saveError": "No se pudo guardar el recordatorio"
+		},
+		"manualActions": {
+			"menu": "Acciones",
+			"hint": "Acción de un clic: corre esta automatización sobre la tarea",
+			"done": "«{{name}}» hecho",
+			"failed": "«{{name}}» se quedó a medias: {{error}}",
+			"error": "No se pudo correr la acción"
+		},
+		"milestone": {
+			"mark": "Hito",
+			"is": "Hito",
+			"hint": "Un hito es una sola fecha, sin estimación, cronómetro ni subtareas.",
+			"notWithSubtasks": "Una tarea con subtareas no puede ser un hito.",
+			"marked": "Marcada como hito",
+			"unmarked": "Ya no es un hito",
+			"error": "No se pudo cambiar el hito"
+		},
+		"dates": {
+			"modeOwn": "Fechas: propias",
+			"modeAuto": "Fechas: automáticas",
+			"own": "Propias",
+			"ownHint": "Las pones tú. Si las subtareas se salen, te avisa.",
+			"auto": "Automáticas",
+			"autoHint": "Salen de las subtareas: del primer inicio al último fin. No se editan a mano.",
+			"error": "No se pudieron cambiar las fechas",
+			"overflow_one": "Las subtareas acaban el {{date}}, {{count}} día laborable después del vencimiento.",
+			"overflow_other": "Las subtareas acaban el {{date}}, {{count}} días laborables después del vencimiento.",
+			"moveDue": "Mover el vencimiento al {{date}}",
+			"switchToAuto": "Pasar a fechas automáticas"
+		},
+		"baseline": {
+			"label": "Línea base",
+			"none": "Ninguna",
+			"yesterday": "Ayer",
+			"lastWorkDay": "Último día laborable",
+			"week": "Hace una semana",
+			"date": "Fecha…",
+			"dateLabel": "Fecha de la línea base",
+			"added": "Cumple el filtro ahora y entonces no",
+			"changed": "Cambió desde entonces",
+			"unassigned": "Sin asignar",
+			"removedTitle_one": "{{count}} tarea ya no cumple el filtro",
+			"removedTitle_other": "{{count}} tareas ya no cumplen el filtro",
+			"summary": "Desde el {{since}}: {{added}} entran · {{removed}} salen · {{changed}} cambian",
+			"ghost": "Entonces: {{start}} – {{end}}"
+		},
+		"subprojects": {
+			"include_one": "Incluir su subproyecto",
+			"include_other": "Incluir sus {{count}} subproyectos"
 		}
 	},
 	"invitations": {
@@ -2825,7 +3035,54 @@
 			"noDueDate": "Sin fecha de vencimiento",
 			"reorderHandle": "Reordenar proyecto",
 			"reorderError": "No se pudieron reordenar los proyectos",
-			"emptyDescriptionReadOnly": "Todavía no hay proyectos en este espacio de trabajo. Pide a un admin que cree uno."
+			"emptyDescriptionReadOnly": "Todavía no hay proyectos en este espacio de trabajo. Pide a un admin que cree uno.",
+			"lead": "Responsable",
+			"startDate": "Inicio",
+			"endDate": "Fin",
+			"overflow_one": "Sus tareas acaban el {{date}}, {{count}} día laborable después del fin",
+			"overflow_other": "Sus tareas acaban el {{date}}, {{count}} días laborables después del fin",
+			"quick": {
+				"label": "Mostrar",
+				"all": "Todos",
+				"attention": "En riesgo o desviados",
+				"mine": "Los míos"
+			},
+			"health": {
+				"not_started": "Sin empezar",
+				"on_track": "En plazo",
+				"at_risk": "En riesgo",
+				"off_track": "Desviado",
+				"finished": "Terminado",
+				"cancelled": "Cancelado",
+				"titleFor": "Estado de {{name}}",
+				"note": "Nota",
+				"notePlaceholder": "Qué pasa, en una línea",
+				"noNote": "Sin nota",
+				"notify": "Avisar al espacio",
+				"save": "Guardar",
+				"saved": "Estado del proyecto guardado",
+				"error": "No se pudo guardar el estado del proyecto"
+			},
+			"key": "Clave",
+			"createdAt": "Creado",
+			"columns": {
+				"title": "Proyecto",
+				"health": "Estado",
+				"lead": "Responsable",
+				"startDate": "Inicio",
+				"endDate": "Fin",
+				"progress": "Progreso",
+				"tasks": "Tareas"
+			},
+			"columnsGroup": {
+				"base": "Del proyecto",
+				"custom": "Campos de proyecto"
+			},
+			"export": "Exportar",
+			"exportError": "No se pudo exportar la lista de proyectos",
+			"noMatches": "Ningún proyecto cumple el filtro",
+			"subprojectCount_one": "{{count}} subproyecto",
+			"subprojectCount_other": "{{count}} subproyectos"
 		},
 		"search": {
 			"pageTitle": "Buscar",
@@ -3279,7 +3536,8 @@
 			"board": "Tablero",
 			"gantt": "Gantt",
 			"table": "Tabla",
-			"waiting": "Esperando a"
+			"waiting": "Esperando a",
+			"watching": "Observando"
 		},
 		"table": {
 			"moreResults": "Mostrando {{shown}} de {{total}}. Acota con un filtro para ver el resto."
@@ -3304,6 +3562,17 @@
 			"empty": {
 				"title": "No esperas a nadie",
 				"description": "Aquí salen las tareas que asignas a otras personas y las tuyas bloqueadas por tareas ajenas."
+			}
+		},
+		"watching": {
+			"title": "Observando",
+			"description": "Lo que observas, sigue abierto y no tienes asignado; lo último que se movió, primero.",
+			"assignedTo": "La tiene {{names}}",
+			"unassigned": "Sin asignar",
+			"capped": "Se enseñan las {{limit}} primeras.",
+			"empty": {
+				"title": "No observas nada",
+				"description": "Observa una tarea desde su detalle, o coméntala, y aparecerá aquí."
 			}
 		}
 	},
@@ -3798,6 +4067,47 @@
 				"title": "Nadie a tu cargo",
 				"description": "Cuando seas responsable de un equipo, aquí verás el día de tu gente."
 			}
+		}
+	},
+	"announcements": {
+		"projectTitle": "Avisos del proyecto",
+		"workspaceTitle": "Avisos del espacio",
+		"projectSubtitle": "Novedades para quien trabaja en este proyecto. Uno fijado sale como franja en sus vistas.",
+		"workspaceSubtitle": "Novedades para todo el espacio. Uno fijado sale como franja en las vistas de todos los proyectos.",
+		"seeWorkspace": "Ver los avisos del espacio",
+		"new": "Nuevo aviso",
+		"loading": "Cargando avisos…",
+		"empty": "Todavía no hay avisos",
+		"emptyCanPublish": "Publica el primero: puede avisar a todos los miembros y quedarse fijado como franja.",
+		"emptyReadOnly": "Cuando alguien publique uno, saldrá aquí.",
+		"edit": "Editar aviso",
+		"delete": "Borrar aviso",
+		"deleteConfirm": "¿Borrar este aviso? Desaparece para todos.",
+		"deleted": "Aviso borrado",
+		"published": "Aviso publicado",
+		"saved": "Aviso guardado",
+		"saveError": "No se pudo guardar el aviso",
+		"pinned": "Fijado",
+		"pinnedUntil": "Fijado hasta el {{date}}",
+		"notified": "Avisó a los miembros",
+		"dialog": {
+			"newTitle": "Nuevo aviso",
+			"editTitle": "Editar aviso",
+			"description": "Lo ve todo el espacio.",
+			"title": "Título",
+			"titlePlaceholder": "Corte de luz el jueves de 8:00 a 10:00",
+			"contentPlaceholder": "Los detalles, enlaces a tareas, lo que haga falta saber…",
+			"pin": "Fijar como franja",
+			"pinUntil": "hasta (opcional)",
+			"notify": "Avisar a los miembros",
+			"publish": "Publicar",
+			"save": "Guardar"
+		},
+		"banner": {
+			"project": "Aviso fijado:",
+			"workspace": "Aviso del espacio:",
+			"open": "Ver avisos",
+			"hide": "Ocultar para mí"
 		}
 	}
 }

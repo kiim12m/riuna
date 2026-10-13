@@ -47,6 +47,14 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
   desechables.
 - Perfil: nombre, correo, **avatar con recorte**, idioma, y **borrado de
   cuenta** con purga de datos.
+- **Sesiones activas** en *Ajustes › Seguridad*
+  ([ADR 079](adr/079-sesiones-activas.md)):
+  - dónde está abierta la cuenta: navegador y sistema, IP, cuándo entró y cuándo
+    caduca, y si un administrador entró como tú;
+  - cerrar una sesión o todas menos esta. El dispositivo cerrado deja de
+    funcionar en cinco minutos como mucho;
+  - la API nunca devuelve el token de una sesión, y una clave de API no puede
+    cerrarlas.
 
 ## 2. Espacios de trabajo, equipos y permisos
 
@@ -87,15 +95,56 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
 - Crear, renombrar, icono (selector buscable), descripción, **clave de ticket**
   (`PRO-123`, máximo 8 caracteres), archivar y eliminar.
 - **Reordenar proyectos** arrastrándolos en la barra lateral.
-- Lista de proyectos con progreso, fecha objetivo y estado.
+- **Lista de proyectos como cartera**
+  ([ADR 088](adr/088-campos-de-proyecto-y-cartera.md)):
+  - columnas elegibles (estado, responsable, inicio y fin, progreso, tareas y
+    cada campo de proyecto), orden por cabecera y edición de los campos en la
+    propia celda;
+  - filtros compuestos con el motor de las vistas, también por progreso y por
+    campos de proyecto, en la URL;
+  - vistas guardadas de espacio, privadas o compartidas, y exportación a Excel
+    con el filtro que se ve.
+- **Subproyectos** ([ADR 089](adr/089-subproyectos.md)): un proyecto puede
+  colgar de otro, de un solo nivel, desde «Subproyecto de» en sus ajustes.
+  - En la lista de proyectos, el padre resume su rama (progreso, tareas y aviso
+    de desviación) y sus hijos salen debajo, plegables.
+  - Lista, Tabla, Gantt y Calendario del padre pueden incluir las tareas de sus
+    subproyectos, cada una con su clave; los totales y la línea base las
+    cuentan. El tablero no, porque las columnas son de cada proyecto.
+  - Los permisos son los del espacio, como en cualquier proyecto.
+- **Campos de proyecto**: campos personalizados de los propios proyectos
+  (cliente, tipo de obra, presupuesto…), con los mismos tipos que los de
+  tarea, definidos en los ajustes del espacio y rellenados en «Estado y
+  fechas» de cada proyecto o en la lista.
+- **Estado del proyecto** ([ADR 087](adr/087-estado-del-proyecto.md)):
+  - salud (sin empezar, en plazo, en riesgo, desviado, terminado o cancelado)
+    con una nota, fechas propias y un responsable del espacio;
+  - si las tareas acaban después del fin, la lista y la cabecera lo avisan con
+    los días laborables de más;
+  - la lista resume cuántos hay en cada estado y filtra «En riesgo o desviados»
+    y «Los míos»;
+  - lo cambia quien puede configurar el proyecto, desde la lista, la cabecera o
+    «Estado y fechas» en sus ajustes, donde queda el historial;
+  - al cambiar la salud se puede avisar a todo el espacio.
 - **Proyecto público**: URL de solo lectura sin sesión, con tablero y lista,
   detalle de tarea, tema claro/oscuro y copia del enlace.
 - **Columnas del tablero** configurables: crear, renombrar, reordenar
   arrastrando, icono, color y marca de **columna final**, que es la que define
   «hecho».
 - **Ajustes de jerarquía por proyecto**: cascada al cerrar, cascada al
-  archivar y profundidad máxima.
+  archivar, profundidad máxima y progreso ponderado por la estimación.
 - Aviso automático cuando el proyecto pasa de 5.000 tareas.
+- **Avisos del proyecto y del espacio**
+  ([ADR 081](adr/081-avisos-de-proyecto-y-espacio.md)):
+  - un tablón con el editor de siempre, el del proyecto en el megáfono de su
+    cabecera y el del espacio en la paleta de comandos;
+  - publican quien puede configurar el proyecto (`project:update`) o el espacio
+    (`workspace:manage_settings`);
+  - al publicar se puede avisar a todos los miembros, por la campana y los
+    canales; editar no vuelve a avisar;
+  - uno fijado sale como franja en las vistas del proyecto, hasta una fecha o
+    sin fin, y cada uno puede ocultarla en su navegador;
+  - un proyecto «Personal» no tiene avisos.
 
 ## 4. Tareas
 
@@ -118,7 +167,54 @@ horas, etiquetas, épicas, ciclo, campos personalizados y número de ticket.
   números nuevos allí.
 - **Épicas**: grupos transversales dentro del proyecto, muchos a muchos con las
   tareas, con fechas, orden y archivado.
-- **Relaciones entre tareas**: bloquea, bloqueada por, relacionada con.
+- **Relaciones entre tareas**: bloquea, bloqueada por, relacionada con, y **precede a / sigue
+  a** con un desfase en días laborables, negativo para solapar
+  ([ADR 084](adr/084-precedencias-y-planificacion-automatica.md)).
+  - **Planificación automática**: una sucesora con fechas automáticas va atada. Empieza el día
+    laborable siguiente al fin de su última predecesora, más el desfase, y conserva su
+    duración. Si la predecesora se mueve, en cualquier sentido, la sigue.
+  - Su inicio no se edita a mano; su fin sí.
+  - No se admiten entre proyectos, hacia un resumen, dentro de la propia rama ni si cerrarían
+    un ciclo.
+  - El Gantt las dibuja con su desfase.
+- **Observadores** ([ADR 076](adr/076-observadores.md)): seguir una tarea sin
+  estar asignado, con el botón «Observar» del detalle, que enseña quién observa.
+  - Los asignados observan siempre, sin poder dejarlo mientras lo sean.
+  - Se observa solo al crear la tarea —desde la interfaz, la captura rápida o la
+    API—, al comentarla y al salir mencionado. No observa quien aplica una
+    plantilla, importa, una recurrencia ni una automatización.
+  - Observarse a uno mismo basta con ver la tarea; añadir o quitar a otra persona
+    pide poder asignar.
+  - Observar no deja rastro en la actividad.
+- **Tareas resumen** ([ADR 083](adr/083-tareas-resumen.md)):
+  - **Fechas automáticas**: un padre las toma de su rama, del primer inicio al último fin, y no
+    se editan a mano. Un padre sin fechas propias pasa solo a automáticas.
+  - Se cambia entre «propias» y «automáticas» desde el lateral.
+  - **Mover la rama entera** arrastrando el padre en el Gantt: toda la rama se mueve los
+    mismos días laborables, de lunes a viernes y sin los festivos del espacio.
+  - **Aviso de desviación**: un padre con fechas propias desbordado por sus subtareas lo dice en
+    el detalle, con cuántos días laborables, y ofrece mover el vencimiento o pasar a
+    automáticas. En el Gantt, el corchete sale en rojo.
+  - **Progreso ponderado** por la estimación, ajuste de jerarquía del proyecto. Una subtarea
+    sin estimar pesa la media de la rama; un hito no pesa.
+- **Hitos** ([ADR 082](adr/082-hitos.md)): una tarea marcada como hito es un punto en el
+  tiempo.
+  - Tiene una sola fecha: el inicio es siempre el vencimiento.
+  - No lleva estimación, cronómetro ni subtareas.
+  - Sale como rombo en el Gantt y con `◆` en el Calendario, el tablero, la lista y la Tabla.
+  - Se filtra con «Hito».
+- **Recordatorio en la tarea** ([ADR 077](adr/077-recordatorio-en-la-tarea.md)):
+  «Recuérdamelo» en el detalle y en el menú contextual.
+  - Mañana a las 9:00, el próximo lunes, en una semana, o un día y una hora, con
+    una nota que solo ve quien lo pone.
+  - Llega una vez, por la campana y los canales, y pinchar abre la tarea.
+  - Uno por persona y tarea. No planifica la tarea en el día.
+- **Acciones de un clic** ([ADR 078](adr/078-acciones-de-un-clic.md)): las
+  automatizaciones con «Cuando: se pulsa el botón» salen como botones en el detalle
+  y en el menú contextual de la tarea mientras esta cumpla su «Si».
+  - Actúan en nombre de quien pulsa, que tiene que poder editar la tarea, y
+    asignar si la regla reparte.
+  - La actividad lo firma: «Ana con «Enviar a revisión»».
 - **Operaciones masivas** sobre una selección: estado, prioridad, asignado,
   etiqueta, fecha de vencimiento, mover al backlog o al tablero, archivar y
   eliminar.
@@ -152,19 +248,21 @@ prioridad, título, fechas, asignaciones de persona y de equipo, anidado,
 | **Tablero (Kanban)** | Arrastrar entre columnas y dentro de una columna, filtros y búsqueda rápida resueltos en el servidor (el mismo motor que la Tabla), orden y añadir tarea por columna |
 | **Lista** | Agrupación por estado, equipo o **jerarquía**; secciones plegables; arrastrar para reparentar; archivar todas las completadas |
 | **Backlog** | Secciones *planificadas* y *archivadas*, filtros del servidor, agrupación, orden y «mover todo» al tablero |
-| **Tabla** | Hoja de cálculo con edición en línea, **campos personalizados como columnas**, filtros compuestos, cuatro modos de jerarquía y **vistas guardadas** |
+| **Tabla** | Hoja de cálculo con edición en línea, **campos personalizados como columnas**, filtros compuestos, cuatro modos de jerarquía, **vistas guardadas**, **totales de todo el filtro** (cuántas, estimado, registrado y cada campo de número o moneda), **colorear filas** por prioridad o vencimiento ([ADR 080](adr/080-totales-y-colores-en-la-tabla.md)) y **línea base**: lo que entra, sale o cambió desde ayer, el último día laborable, hace una semana o una fecha, con el valor anterior tachado ([ADR 085](adr/085-linea-base.md)) |
 | **Calendario** | Rejilla mensual, barras multi-día por fecha de inicio y de vencimiento, desbordamiento por día y filtros |
-| **Gantt** | Zoom día/semana/mes/trimestre, arrastrar y redimensionar barras para cambiar fechas, **capa de dependencias**, rango de rama y filtros |
+| **Gantt** | Zoom día/semana/mes/trimestre, arrastrar y redimensionar barras para cambiar fechas, **capa de dependencias** (bloquea y precede a, con su desfase), hitos como rombos, **barras de resumen** de las fechas automáticas, arrastrar un padre con toda su rama, corchete rojo si la rama desborda al padre, **línea base** con la barra de entonces en fantasma, y filtros |
 | **Ciclos** | Panel de sprint con métricas y gráficas |
 
 **Motor de filtros** común a todas ([ADR 014](adr/014-motor-de-filtros.md)):
 árbol `and`/`or`/`not` con los operadores `eq`, `neq`, `gt`, `gte`, `lt`,
 `lte`, `contains`, `startsWith`, `in`, `notIn`, `isEmpty` y `isNotEmpty`, sobre
-campos nativos, campos personalizados y pertenencia (épica, etiqueta,
-asignado). El filtro vive en la URL, así que se comparte pegando el enlace.
+campos nativos (también «Hito»), campos personalizados y pertenencia (épica,
+etiqueta, asignado, observador). El filtro vive en la URL, así que se comparte pegando el
+enlace.
 
 **Vistas guardadas** ([ADR 015](adr/015-vistas-guardadas.md)): guardar el
-filtro y el modo de jerarquía con un nombre, compartirlo con el espacio de
+filtro, el modo de jerarquía y, en la Tabla, las columnas, la agrupación, el color
+de las filas y la línea base con un nombre, compartirlo con el espacio de
 trabajo, y eliminarlo.
 
 **Orden**: manual, fecha de creación, prioridad, vencimiento, título o número.
@@ -372,6 +470,10 @@ la tarea y en la propia tabla.
   - lo que creaste y asignaste a otra persona, y sigue abierto, con a quién
     esperas;
   - lo tuyo bloqueado por una tarea abierta que no es tuya, con cuál.
+
+  La pestaña **«Observando»** ([ADR 076](adr/076-observadores.md)) enseña lo que
+  observas, sigue abierto y no tienes asignado, lo último que se movió primero y
+  con quién lo tiene.
 - **Planificador** ([ADR 040](adr/040-planificador.md),
   [ADR 046](adr/046-planificador-en-tres-secciones.md)): ventana rodante de
   15 días para decidir qué día se piensa hacer cada tarea, sin tocar su
@@ -481,7 +583,7 @@ la tarea y en la propia tabla.
   tarea.
 - **Paleta de comandos** con `Ctrl/Cmd+K`:
   - ir a las pantallas personales (Hoy, Planificador, Cronograma, Mis tareas,
-    Parte de horas, Mi panel, Objetivos) o a cualquier proyecto del espacio
+    Parte de horas, Mi panel, Objetivos, Avisos del espacio) o a cualquier proyecto del espacio
     (`p`+`l` abre la paleta en esa lista);
   - parar el cronómetro o reanudar la última tarea;
   - crear tarea, proyecto o espacio. Fuera de un proyecto, la tarea nace
@@ -491,8 +593,14 @@ la tarea y en la propia tabla.
   actividad, más búsqueda por ID corto de tarea (`DEP-23`).
 - **Notificaciones in-app** con campana, contador de no leídas, marcar todas
   como leídas y borrar todas. Eventos: tarea creada, asignación, mención,
-  comentario, cambio de estado, recordatorio de vencimiento, tarea vencida,
+  comentario, cambio de estado, cambio de vencimiento, recordatorio de
+  vencimiento, tarea vencida, recordatorio pedido en la tarea, aviso publicado,
   espacio creado y alta en un espacio de trabajo.
+- **Comentarios, cambios de estado y cambios de vencimiento llegan a todos los
+  asignados y a quien observa**, nunca a quien hizo el cambio ni a quien ya no es
+  del espacio ([ADR 076](adr/076-observadores.md)). A quien solo observa no se le
+  dice «tu tarea». Quien sale mencionado recibe la mención y no también el
+  comentario. Lo que arrastra una cascada y lo importado no avisan.
 - **Canales de entrega externos** por usuario: **email (SMTP)**, **ntfy**,
   **Gotify** y **webhook propio firmado**, con reglas por espacio de trabajo
   —qué canales y qué proyectos, todos o una selección— y **antelación
@@ -574,7 +682,9 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
   - cambia la prioridad o un campo personalizado;
   - alguien comenta;
   - se le pone una etiqueta;
-  - **vence en N días**, o **está vencida**.
+  - **vence en N días**, o **está vencida**;
+  - **se pulsa el botón**: la regla sale como acción de un clic en la tarea
+    ([ADR 078](adr/078-acciones-de-un-clic.md)).
 - **Si:** los mismos filtros que las vistas, campos personalizados incluidos.
 - **Entonces**, en orden; si una falla, las siguientes no se hacen:
   - mover a una columna;
@@ -585,7 +695,8 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
   - una etiqueta;
   - asignar personas o un departamento;
   - crear una tarea o subtarea;
-  - **avisar** a asignados, a quien la creó, al departamento o a su responsable;
+  - **avisar** a asignados, a quien la creó, a quien la observa, al departamento
+    o a su responsable;
   - **webhook firmado**;
   - **mensaje a Slack, Discord o Telegram**.
 
@@ -614,7 +725,7 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 46 herramientas**. Una prueba de paridad
+Dos caminos con **las mismas 64 herramientas**. Una prueba de paridad
 (`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
 antes el paquete stdio se había quedado sin las cinco del plan personal y el
 cronómetro.
@@ -626,9 +737,11 @@ cronómetro.
   instalador interactivo para Cursor —global y por proyecto—, Claude Desktop o
   una ruta JSON propia, y autenticación por device flow o `RIUNA_API_KEY`.
 
-Las herramientas cubren identidad y espacios, proyectos, tareas, comentarios,
-etiquetas, épicas, relaciones, miembros, búsqueda, columnas, registro de
-tiempo, actividad y notificaciones, además del plan personal, el cronómetro,
+Las herramientas cubren identidad y espacios, proyectos con su estado, sus campos y sus subproyectos, tareas, comentarios,
+etiquetas, épicas, relaciones, observadores, recordatorios, acciones de un clic,
+totales de un filtro, línea base, avisos, miembros, búsqueda, columnas, registro de tiempo,
+actividad y notificaciones, además del plan personal, el
+cronómetro,
 Hoy (`get_today`) y la captura a Personal (`capture_task`). `list_projects`
 no lista los proyectos Personal.
 
@@ -637,7 +750,8 @@ no lista los proyectos Personal.
 - **WebSockets** por proyecto y por usuario, con lotes de 100 ms y
   deduplicación, que empujan creación, actualización, borrado y movimiento de
   tareas, además de relaciones, etiquetas, comentarios, ciclos, épicas, vistas,
-  campos y notificaciones.
+  campos, notificaciones y avisos (estos, a todo el espacio por el canal de
+  usuario).
 - **El canal de usuario no depende de la barra lateral**
   ([ADR 048](adr/048-frescura-de-las-pantallas-personales.md)): sigue conectado
   al cambiar de pantalla, en los ajustes de cuenta y en móvil con la barra
@@ -705,10 +819,11 @@ no lista los proyectos Personal.
   `deploy/actualizar.sh` construye, copia, migra con la imagen nueva antes de cambiar la que
   sirve (`node dist/migrate.js`), levanta y, si algo falla, dice cómo volver. La instancia del
   PC solo escucha en localhost y se publica con `tailscale serve`.
-- **Siete trabajos programados**: recordatorios de vencimiento, recordatorios
+- **Ocho trabajos programados**: recordatorios de vencimiento, recordatorios
   de webhook de proyecto, reconciliación de asientos, recordatorios de prueba,
   generación de tareas recurrentes, automatizaciones (por fecha, el stand-up
-  programado y la purga de su historial a los 30 días) y la salud de la instancia.
+  programado y la purga de su historial a los 30 días), la salud de la instancia
+  y, cada minuto, los recordatorios pedidos en una tarea.
   Cada vuelta deja su resultado en `job_status`.
 - **Estado de la instancia** ([ADR 075](adr/075-estado-de-la-instancia-y-alertas.md)), para
   el admin de instancia, en el menú del avatar. Enseña:

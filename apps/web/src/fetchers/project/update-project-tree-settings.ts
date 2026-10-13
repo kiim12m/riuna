@@ -4,6 +4,8 @@ type TreeSettings = {
   cascadeClose?: boolean;
   cascadeArchive?: boolean;
   maxTaskDepth?: number;
+  /** El progreso de rama pesa por la estimacion (ADR 083). */
+  weightedProgress?: boolean;
 };
 
 async function updateProjectTreeSettings(

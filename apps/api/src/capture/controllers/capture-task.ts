@@ -133,6 +133,7 @@ export default async function captureTask(input: CaptureInput) {
     dueDate,
     priority: input.priority,
     estimate: input.estimate ?? null,
+    creatorWatches: true,
   });
 
   if (plannedDate) {

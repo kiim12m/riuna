@@ -14,7 +14,15 @@ async function createActivity(
   // gestores corren en el contexto de quien publico, asi que se lee de ahi.
   const automation = eventContext.getStore()?.automation;
   const data = automation
-    ? { ...eventData, automation: { id: automation.id, name: automation.name } }
+    ? {
+        ...eventData,
+        automation: {
+          id: automation.id,
+          name: automation.name,
+          // Una accion de un clic es de quien la pulso (ADR 078).
+          ...(automation.pressedBy ? { pressedBy: automation.pressedBy } : {}),
+        },
+      }
     : (eventData ?? null);
 
   const [activity] = await db

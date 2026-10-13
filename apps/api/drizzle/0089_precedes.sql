@@ -1,0 +1,1 @@
+ALTER TABLE "task_relation" ADD COLUMN "lag" integer;

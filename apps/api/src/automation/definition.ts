@@ -75,6 +75,9 @@ export const triggerSchema = v.variant("type", [
     type: v.literal("task.labeled"),
     labelName: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(120))),
   }),
+  // Un boton en la tarea (ADR 078): corre al pulsarlo, si la tarea cumple las
+  // condiciones, en nombre de quien pulsa.
+  v.object({ type: v.literal("manual") }),
 ]);
 
 export type Trigger = v.InferOutput<typeof triggerSchema>;
@@ -141,6 +144,8 @@ export const actionSchema = v.variant("type", [
       creator: v.optional(v.boolean()),
       teamMembers: v.optional(v.boolean()),
       teamLeads: v.optional(v.boolean()),
+      // Quien la observa a proposito (ADR 076); los asignados van aparte.
+      watchers: v.optional(v.boolean()),
       userIds: v.optional(ids),
     }),
     message: template,

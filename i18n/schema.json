@@ -3675,6 +3675,24 @@
 						},
 						"importExportTasksDescription": {
 							"type": "string"
+						},
+						"parentLabel": {
+							"type": "string"
+						},
+						"parentHint": {
+							"type": "string"
+						},
+						"parentHasChildren": {
+							"type": "string"
+						},
+						"noParent": {
+							"type": "string"
+						},
+						"parentSaved": {
+							"type": "string"
+						},
+						"parentError": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -3709,7 +3727,13 @@
 						"toastDeleteError",
 						"validation",
 						"importExportTasks",
-						"importExportTasksDescription"
+						"importExportTasksDescription",
+						"parentLabel",
+						"parentHint",
+						"parentHasChildren",
+						"noParent",
+						"parentSaved",
+						"parentError"
 					]
 				},
 				"projectIntegrations": {
@@ -5660,6 +5684,12 @@
 						},
 						"updateError": {
 							"type": "string"
+						},
+						"weightedProgressLabel": {
+							"type": "string"
+						},
+						"weightedProgressHint": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -5671,7 +5701,9 @@
 						"cascadeArchiveHint",
 						"depthLabel",
 						"depthHint",
-						"updateError"
+						"updateError",
+						"weightedProgressLabel",
+						"weightedProgressHint"
 					]
 				},
 				"projectEpics": {
@@ -6010,9 +6042,25 @@
 						},
 						"description": {
 							"type": "string"
+						},
+						"projectTitle": {
+							"type": "string"
+						},
+						"projectDescription": {
+							"type": "string"
+						},
+						"addProjectField": {
+							"type": "string"
 						}
 					},
-					"required": ["title", "pageTitle", "description"]
+					"required": [
+						"title",
+						"pageTitle",
+						"description",
+						"projectTitle",
+						"projectDescription",
+						"addProjectField"
+					]
 				},
 				"automations": {
 					"type": "object",
@@ -6206,6 +6254,9 @@
 								},
 								"schedule": {
 									"type": "string"
+								},
+								"manual": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -6218,7 +6269,8 @@
 								"task_labeled",
 								"task_due_in",
 								"task_overdue",
-								"schedule"
+								"schedule",
+								"manual"
 							]
 						},
 						"actions": {
@@ -6538,13 +6590,17 @@
 										},
 										"teamLeads": {
 											"type": "string"
+										},
+										"watchers": {
+											"type": "string"
 										}
 									},
 									"required": [
 										"assignees",
 										"creator",
 										"teamMembers",
-										"teamLeads"
+										"teamLeads",
+										"watchers"
 									]
 								},
 								"alsoPeople": {
@@ -6578,6 +6634,9 @@
 									"type": "string"
 								},
 								"threadId": {
+									"type": "string"
+								},
+								"manualHint": {
 									"type": "string"
 								}
 							},
@@ -6642,7 +6701,8 @@
 								"webhookUrl",
 								"botToken",
 								"chatId",
-								"threadId"
+								"threadId",
+								"manualHint"
 							]
 						},
 						"standup": {
@@ -7071,6 +7131,9 @@
 										},
 										"instanceHealth": {
 											"type": "string"
+										},
+										"taskReminders": {
+											"type": "string"
 										}
 									},
 									"required": [
@@ -7080,7 +7143,8 @@
 										"trialReminders",
 										"recurringTasks",
 										"automations",
-										"instanceHealth"
+										"instanceHealth",
+										"taskReminders"
 									]
 								}
 							},
@@ -7224,6 +7288,178 @@
 						"you",
 						"problems"
 					]
+				},
+				"security": {
+					"type": "string"
+				},
+				"securityPage": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"pageTitle": {
+							"type": "string"
+						},
+						"title": {
+							"type": "string"
+						},
+						"subtitle": {
+							"type": "string"
+						},
+						"sessionsTitle": {
+							"type": "string"
+						},
+						"sessionsDescription": {
+							"type": "string"
+						},
+						"loading": {
+							"type": "string"
+						},
+						"browserOn": {
+							"type": "string"
+						},
+						"unknownDevice": {
+							"type": "string"
+						},
+						"signedIn": {
+							"type": "string"
+						},
+						"expires": {
+							"type": "string"
+						},
+						"impersonated": {
+							"type": "string"
+						},
+						"thisSession": {
+							"type": "string"
+						},
+						"revoke": {
+							"type": "string"
+						},
+						"revokeOthers": {
+							"type": "string"
+						},
+						"delayNote": {
+							"type": "string"
+						},
+						"revoked": {
+							"type": "string"
+						},
+						"revokedOthers": {
+							"type": "string"
+						},
+						"revokeError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"pageTitle",
+						"title",
+						"subtitle",
+						"sessionsTitle",
+						"sessionsDescription",
+						"loading",
+						"browserOn",
+						"unknownDevice",
+						"signedIn",
+						"expires",
+						"impersonated",
+						"thisSession",
+						"revoke",
+						"revokeOthers",
+						"delayNote",
+						"revoked",
+						"revokedOthers",
+						"revokeError"
+					]
+				},
+				"projectStatus": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"pageTitle": {
+							"type": "string"
+						},
+						"title": {
+							"type": "string"
+						},
+						"subtitle": {
+							"type": "string"
+						},
+						"health": {
+							"type": "string"
+						},
+						"noLead": {
+							"type": "string"
+						},
+						"invalidDates": {
+							"type": "string"
+						},
+						"history": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"empty": {
+									"type": "string"
+								},
+								"someone": {
+									"type": "string"
+								},
+								"health": {
+									"type": "string"
+								},
+								"dates": {
+									"type": "string"
+								},
+								"lead": {
+									"type": "string"
+								},
+								"leadRemoved": {
+									"type": "string"
+								},
+								"fields": {
+									"type": "string"
+								},
+								"parent": {
+									"type": "string"
+								},
+								"parentRemoved": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"empty",
+								"someone",
+								"health",
+								"dates",
+								"lead",
+								"leadRemoved",
+								"fields",
+								"parent",
+								"parentRemoved"
+							]
+						},
+						"fieldsTitle": {
+							"type": "string"
+						},
+						"fieldsEmpty": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"pageTitle",
+						"title",
+						"subtitle",
+						"health",
+						"noLead",
+						"invalidDates",
+						"history",
+						"fieldsTitle",
+						"fieldsEmpty"
+					]
 				}
 			},
 			"required": [
@@ -7267,7 +7503,10 @@
 				"workspaceFields",
 				"automations",
 				"servitecImport",
-				"instance"
+				"instance",
+				"security",
+				"securityPage",
+				"projectStatus"
 			]
 		},
 		"navigation": {
@@ -7989,9 +8228,12 @@
 								},
 								"content": {
 									"type": "string"
+								},
+								"contentWithoutOld": {
+									"type": "string"
 								}
 							},
-							"required": ["title", "content"]
+							"required": ["title", "content", "contentWithoutOld"]
 						},
 						"task_assignee_changed": {
 							"type": "object",
@@ -8028,9 +8270,12 @@
 								},
 								"content": {
 									"type": "string"
+								},
+								"titleWatching": {
+									"type": "string"
 								}
 							},
-							"required": ["title", "content"]
+							"required": ["title", "content", "titleWatching"]
 						},
 						"due_date_reminder": {
 							"type": "object",
@@ -8044,6 +8289,22 @@
 								}
 							},
 							"required": ["title", "content"]
+						},
+						"task_due_date_changed": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"content": {
+									"type": "string"
+								},
+								"contentCleared": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "content", "contentCleared"]
 						},
 						"task_overdue": {
 							"type": "object",
@@ -8089,6 +8350,54 @@
 								}
 							},
 							"required": ["title", "resolvedTitle", "resolvedContent"]
+						},
+						"task_reminder": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"content": {
+									"type": "string"
+								},
+								"contentWithoutNote": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "content", "contentWithoutNote"]
+						},
+						"announcement_published": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"content": {
+									"type": "string"
+								},
+								"contentWorkspace": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "content", "contentWorkspace"]
+						},
+						"project_health_changed": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"content": {
+									"type": "string"
+								},
+								"contentWithoutNote": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "content", "contentWithoutNote"]
 						}
 					},
 					"required": [
@@ -8100,9 +8409,13 @@
 						"task_mention",
 						"task_comment",
 						"due_date_reminder",
+						"task_due_date_changed",
 						"task_overdue",
 						"time_entry_created",
-						"instance_alert"
+						"instance_alert",
+						"task_reminder",
+						"announcement_published",
+						"project_health_changed"
 					]
 				},
 				"loadMore": {
@@ -8595,6 +8908,57 @@
 				},
 				"automationActor": {
 					"type": "string"
+				},
+				"manualAutomationActor": {
+					"type": "string"
+				},
+				"markedMilestone": {
+					"type": "string"
+				},
+				"unmarkedMilestone": {
+					"type": "string"
+				},
+				"bySchedule": {
+					"type": "string"
+				},
+				"changedStartDate": {
+					"type": "string"
+				},
+				"setStartDate": {
+					"type": "string"
+				},
+				"clearedStartDate": {
+					"type": "string"
+				},
+				"switchedToAutoDates": {
+					"type": "string"
+				},
+				"switchedToOwnDates": {
+					"type": "string"
+				},
+				"shiftedBranch_one": {
+					"type": "string"
+				},
+				"shiftedBranch_other": {
+					"type": "string"
+				},
+				"precedenceAdded": {
+					"type": "string"
+				},
+				"precedenceLagChanged": {
+					"type": "string"
+				},
+				"precedenceRemoved": {
+					"type": "string"
+				},
+				"changedEstimate": {
+					"type": "string"
+				},
+				"setEstimate": {
+					"type": "string"
+				},
+				"clearedEstimate": {
+					"type": "string"
 				}
 			},
 			"required": [
@@ -8620,7 +8984,24 @@
 				"customFieldChanged",
 				"customFieldChangedPlain",
 				"emptyValue",
-				"automationActor"
+				"automationActor",
+				"manualAutomationActor",
+				"markedMilestone",
+				"unmarkedMilestone",
+				"bySchedule",
+				"changedStartDate",
+				"setStartDate",
+				"clearedStartDate",
+				"switchedToAutoDates",
+				"switchedToOwnDates",
+				"shiftedBranch_one",
+				"shiftedBranch_other",
+				"precedenceAdded",
+				"precedenceLagChanged",
+				"precedenceRemoved",
+				"changedEstimate",
+				"setEstimate",
+				"clearedEstimate"
 			]
 		},
 		"tasks": {
@@ -9730,6 +10111,18 @@
 						},
 						"dependencyBlocks": {
 							"type": "string"
+						},
+						"milestoneAriaLabel": {
+							"type": "string"
+						},
+						"milestoneAriaLabelReadOnly": {
+							"type": "string"
+						},
+						"branchOverflow": {
+							"type": "string"
+						},
+						"dependencyPrecedes": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -9758,7 +10151,11 @@
 						"previousRange",
 						"nextRange",
 						"quarterShort",
-						"dependencyBlocks"
+						"dependencyBlocks",
+						"milestoneAriaLabel",
+						"milestoneAriaLabelReadOnly",
+						"branchOverflow",
+						"dependencyPrecedes"
 					]
 				},
 				"group": {
@@ -10227,9 +10624,42 @@
 								},
 								"related": {
 									"type": "string"
+								},
+								"precedes": {
+									"type": "string"
+								},
+								"follows": {
+									"type": "string"
 								}
 							},
-							"required": ["blocks", "blocked_by", "related"]
+							"required": [
+								"blocks",
+								"blocked_by",
+								"related",
+								"precedes",
+								"follows"
+							]
+						},
+						"precedes": {
+							"type": "string"
+						},
+						"follows": {
+							"type": "string"
+						},
+						"lag": {
+							"type": "string"
+						},
+						"lagChip": {
+							"type": "string"
+						},
+						"lagHint": {
+							"type": "string"
+						},
+						"lagError": {
+							"type": "string"
+						},
+						"add": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -10244,7 +10674,14 @@
 						"related",
 						"blocks",
 						"selectTask",
-						"types"
+						"types",
+						"precedes",
+						"follows",
+						"lag",
+						"lagChip",
+						"lagHint",
+						"lagError",
+						"add"
 					]
 				},
 				"sort": {
@@ -10442,6 +10879,12 @@
 								},
 								"completedAt": {
 									"type": "string"
+								},
+								"watchers": {
+									"type": "string"
+								},
+								"milestone": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -10451,7 +10894,9 @@
 								"assignee",
 								"dueDate",
 								"done",
-								"completedAt"
+								"completedAt",
+								"watchers",
+								"milestone"
 							]
 						},
 						"addField": {
@@ -10739,6 +11184,41 @@
 								}
 							},
 							"required": ["label", "none", "epic"]
+						},
+						"color": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"none": {
+									"type": "string"
+								},
+								"priority": {
+									"type": "string"
+								},
+								"due": {
+									"type": "string"
+								}
+							},
+							"required": ["label", "none", "priority", "due"]
+						},
+						"totals": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"estimate": {
+									"type": "string"
+								},
+								"logged": {
+									"type": "string"
+								}
+							},
+							"required": ["label", "estimate", "logged"]
 						}
 					},
 					"required": [
@@ -10773,7 +11253,9 @@
 						"aggregates",
 						"noEpic",
 						"columnsPicker",
-						"groupBy"
+						"groupBy",
+						"color",
+						"totals"
 					]
 				},
 				"team": {
@@ -10985,6 +11467,341 @@
 						}
 					},
 					"required": ["title", "description_one", "description_other"]
+				},
+				"watchers": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"watch": {
+							"type": "string"
+						},
+						"watching": {
+							"type": "string"
+						},
+						"title": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"you": {
+							"type": "string"
+						},
+						"assignee": {
+							"type": "string"
+						},
+						"remove": {
+							"type": "string"
+						},
+						"help": {
+							"type": "string"
+						},
+						"assignedHint": {
+							"type": "string"
+						},
+						"stopWatching": {
+							"type": "string"
+						},
+						"startWatching": {
+							"type": "string"
+						},
+						"add": {
+							"type": "string"
+						},
+						"updateError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"watch",
+						"watching",
+						"title",
+						"empty",
+						"you",
+						"assignee",
+						"remove",
+						"help",
+						"assignedHint",
+						"stopWatching",
+						"startWatching",
+						"add",
+						"updateError"
+					]
+				},
+				"reminder": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"button": {
+							"type": "string"
+						},
+						"change": {
+							"type": "string"
+						},
+						"current": {
+							"type": "string"
+						},
+						"noNote": {
+							"type": "string"
+						},
+						"clear": {
+							"type": "string"
+						},
+						"presets": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"tomorrow": {
+									"type": "string"
+								},
+								"nextMonday": {
+									"type": "string"
+								},
+								"inAWeek": {
+									"type": "string"
+								},
+								"custom": {
+									"type": "string"
+								}
+							},
+							"required": ["tomorrow", "nextMonday", "inAWeek", "custom"]
+						},
+						"day": {
+							"type": "string"
+						},
+						"time": {
+							"type": "string"
+						},
+						"inPast": {
+							"type": "string"
+						},
+						"save": {
+							"type": "string"
+						},
+						"note": {
+							"type": "string"
+						},
+						"notePlaceholder": {
+							"type": "string"
+						},
+						"help": {
+							"type": "string"
+						},
+						"saved": {
+							"type": "string"
+						},
+						"cleared": {
+							"type": "string"
+						},
+						"saveError": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"button",
+						"change",
+						"current",
+						"noNote",
+						"clear",
+						"presets",
+						"day",
+						"time",
+						"inPast",
+						"save",
+						"note",
+						"notePlaceholder",
+						"help",
+						"saved",
+						"cleared",
+						"saveError"
+					]
+				},
+				"manualActions": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"menu": {
+							"type": "string"
+						},
+						"hint": {
+							"type": "string"
+						},
+						"done": {
+							"type": "string"
+						},
+						"failed": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						}
+					},
+					"required": ["menu", "hint", "done", "failed", "error"]
+				},
+				"milestone": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"mark": {
+							"type": "string"
+						},
+						"is": {
+							"type": "string"
+						},
+						"hint": {
+							"type": "string"
+						},
+						"notWithSubtasks": {
+							"type": "string"
+						},
+						"marked": {
+							"type": "string"
+						},
+						"unmarked": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"mark",
+						"is",
+						"hint",
+						"notWithSubtasks",
+						"marked",
+						"unmarked",
+						"error"
+					]
+				},
+				"dates": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"modeOwn": {
+							"type": "string"
+						},
+						"modeAuto": {
+							"type": "string"
+						},
+						"own": {
+							"type": "string"
+						},
+						"ownHint": {
+							"type": "string"
+						},
+						"auto": {
+							"type": "string"
+						},
+						"autoHint": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						},
+						"overflow_one": {
+							"type": "string"
+						},
+						"overflow_other": {
+							"type": "string"
+						},
+						"moveDue": {
+							"type": "string"
+						},
+						"switchToAuto": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"modeOwn",
+						"modeAuto",
+						"own",
+						"ownHint",
+						"auto",
+						"autoHint",
+						"error",
+						"overflow_one",
+						"overflow_other",
+						"moveDue",
+						"switchToAuto"
+					]
+				},
+				"baseline": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"label": {
+							"type": "string"
+						},
+						"none": {
+							"type": "string"
+						},
+						"yesterday": {
+							"type": "string"
+						},
+						"lastWorkDay": {
+							"type": "string"
+						},
+						"week": {
+							"type": "string"
+						},
+						"date": {
+							"type": "string"
+						},
+						"dateLabel": {
+							"type": "string"
+						},
+						"added": {
+							"type": "string"
+						},
+						"changed": {
+							"type": "string"
+						},
+						"unassigned": {
+							"type": "string"
+						},
+						"removedTitle_one": {
+							"type": "string"
+						},
+						"removedTitle_other": {
+							"type": "string"
+						},
+						"summary": {
+							"type": "string"
+						},
+						"ghost": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"label",
+						"none",
+						"yesterday",
+						"lastWorkDay",
+						"week",
+						"date",
+						"dateLabel",
+						"added",
+						"changed",
+						"unassigned",
+						"removedTitle_one",
+						"removedTitle_other",
+						"summary",
+						"ghost"
+					]
+				},
+				"subprojects": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"include_one": {
+							"type": "string"
+						},
+						"include_other": {
+							"type": "string"
+						}
+					},
+					"required": ["include_one", "include_other"]
 				}
 			},
 			"required": [
@@ -11027,7 +11844,14 @@
 				"update",
 				"view",
 				"composer",
-				"archiveModal"
+				"archiveModal",
+				"watchers",
+				"reminder",
+				"manualActions",
+				"milestone",
+				"dates",
+				"baseline",
+				"subprojects"
 			]
 		},
 		"invitations": {
@@ -11139,6 +11963,174 @@
 						},
 						"reorderError": {
 							"type": "string"
+						},
+						"lead": {
+							"type": "string"
+						},
+						"startDate": {
+							"type": "string"
+						},
+						"endDate": {
+							"type": "string"
+						},
+						"overflow_one": {
+							"type": "string"
+						},
+						"overflow_other": {
+							"type": "string"
+						},
+						"quick": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"all": {
+									"type": "string"
+								},
+								"attention": {
+									"type": "string"
+								},
+								"mine": {
+									"type": "string"
+								}
+							},
+							"required": ["label", "all", "attention", "mine"]
+						},
+						"health": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"not_started": {
+									"type": "string"
+								},
+								"on_track": {
+									"type": "string"
+								},
+								"at_risk": {
+									"type": "string"
+								},
+								"off_track": {
+									"type": "string"
+								},
+								"finished": {
+									"type": "string"
+								},
+								"cancelled": {
+									"type": "string"
+								},
+								"titleFor": {
+									"type": "string"
+								},
+								"note": {
+									"type": "string"
+								},
+								"notePlaceholder": {
+									"type": "string"
+								},
+								"noNote": {
+									"type": "string"
+								},
+								"notify": {
+									"type": "string"
+								},
+								"save": {
+									"type": "string"
+								},
+								"saved": {
+									"type": "string"
+								},
+								"error": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"not_started",
+								"on_track",
+								"at_risk",
+								"off_track",
+								"finished",
+								"cancelled",
+								"titleFor",
+								"note",
+								"notePlaceholder",
+								"noNote",
+								"notify",
+								"save",
+								"saved",
+								"error"
+							]
+						},
+						"key": {
+							"type": "string"
+						},
+						"createdAt": {
+							"type": "string"
+						},
+						"columns": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"health": {
+									"type": "string"
+								},
+								"lead": {
+									"type": "string"
+								},
+								"startDate": {
+									"type": "string"
+								},
+								"endDate": {
+									"type": "string"
+								},
+								"progress": {
+									"type": "string"
+								},
+								"tasks": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"health",
+								"lead",
+								"startDate",
+								"endDate",
+								"progress",
+								"tasks"
+							]
+						},
+						"columnsGroup": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"base": {
+									"type": "string"
+								},
+								"custom": {
+									"type": "string"
+								}
+							},
+							"required": ["base", "custom"]
+						},
+						"export": {
+							"type": "string"
+						},
+						"exportError": {
+							"type": "string"
+						},
+						"noMatches": {
+							"type": "string"
+						},
+						"subprojectCount_one": {
+							"type": "string"
+						},
+						"subprojectCount_other": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -11155,7 +12147,23 @@
 						"projectStatus",
 						"noDueDate",
 						"reorderHandle",
-						"reorderError"
+						"reorderError",
+						"lead",
+						"startDate",
+						"endDate",
+						"overflow_one",
+						"overflow_other",
+						"quick",
+						"health",
+						"key",
+						"createdAt",
+						"columns",
+						"columnsGroup",
+						"export",
+						"exportError",
+						"noMatches",
+						"subprojectCount_one",
+						"subprojectCount_other"
 					]
 				},
 				"search": {
@@ -12895,9 +13903,12 @@
 						},
 						"waiting": {
 							"type": "string"
+						},
+						"watching": {
+							"type": "string"
 						}
 					},
-					"required": ["list", "board", "gantt", "table", "waiting"]
+					"required": ["list", "board", "gantt", "table", "waiting", "watching"]
 				},
 				"table": {
 					"type": "object",
@@ -12988,6 +13999,48 @@
 						"capped",
 						"empty"
 					]
+				},
+				"watching": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"assignedTo": {
+							"type": "string"
+						},
+						"unassigned": {
+							"type": "string"
+						},
+						"capped": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"description": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "description"]
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"assignedTo",
+						"unassigned",
+						"capped",
+						"empty"
+					]
 				}
 			},
 			"required": [
@@ -12998,7 +14051,8 @@
 				"description",
 				"shownOf",
 				"loadMore",
-				"waiting"
+				"waiting",
+				"watching"
 			]
 		},
 		"planner": {
@@ -14882,6 +15936,167 @@
 				}
 			},
 			"required": ["notice_one", "notice_other", "teams", "team"]
+		},
+		"announcements": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"projectTitle": {
+					"type": "string"
+				},
+				"workspaceTitle": {
+					"type": "string"
+				},
+				"projectSubtitle": {
+					"type": "string"
+				},
+				"workspaceSubtitle": {
+					"type": "string"
+				},
+				"seeWorkspace": {
+					"type": "string"
+				},
+				"new": {
+					"type": "string"
+				},
+				"loading": {
+					"type": "string"
+				},
+				"empty": {
+					"type": "string"
+				},
+				"emptyCanPublish": {
+					"type": "string"
+				},
+				"emptyReadOnly": {
+					"type": "string"
+				},
+				"edit": {
+					"type": "string"
+				},
+				"delete": {
+					"type": "string"
+				},
+				"deleteConfirm": {
+					"type": "string"
+				},
+				"deleted": {
+					"type": "string"
+				},
+				"published": {
+					"type": "string"
+				},
+				"saved": {
+					"type": "string"
+				},
+				"saveError": {
+					"type": "string"
+				},
+				"pinned": {
+					"type": "string"
+				},
+				"pinnedUntil": {
+					"type": "string"
+				},
+				"notified": {
+					"type": "string"
+				},
+				"dialog": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"newTitle": {
+							"type": "string"
+						},
+						"editTitle": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"title": {
+							"type": "string"
+						},
+						"titlePlaceholder": {
+							"type": "string"
+						},
+						"contentPlaceholder": {
+							"type": "string"
+						},
+						"pin": {
+							"type": "string"
+						},
+						"pinUntil": {
+							"type": "string"
+						},
+						"notify": {
+							"type": "string"
+						},
+						"publish": {
+							"type": "string"
+						},
+						"save": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"newTitle",
+						"editTitle",
+						"description",
+						"title",
+						"titlePlaceholder",
+						"contentPlaceholder",
+						"pin",
+						"pinUntil",
+						"notify",
+						"publish",
+						"save"
+					]
+				},
+				"banner": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"project": {
+							"type": "string"
+						},
+						"workspace": {
+							"type": "string"
+						},
+						"open": {
+							"type": "string"
+						},
+						"hide": {
+							"type": "string"
+						}
+					},
+					"required": ["project", "workspace", "open", "hide"]
+				}
+			},
+			"required": [
+				"projectTitle",
+				"workspaceTitle",
+				"projectSubtitle",
+				"workspaceSubtitle",
+				"seeWorkspace",
+				"new",
+				"loading",
+				"empty",
+				"emptyCanPublish",
+				"emptyReadOnly",
+				"edit",
+				"delete",
+				"deleteConfirm",
+				"deleted",
+				"published",
+				"saved",
+				"saveError",
+				"pinned",
+				"pinnedUntil",
+				"notified",
+				"dialog",
+				"banner"
+			]
 		}
 	},
 	"required": [
@@ -14912,6 +16127,7 @@
 		"focus",
 		"calendar",
 		"availability",
-		"lead"
+		"lead",
+		"announcements"
 	]
 }

@@ -21,6 +21,19 @@ async function updateTaskEstimate({
     });
   }
 
+  const [existing] = await db
+    .select({
+      isMilestone: taskTable.isMilestone,
+      estimate: taskTable.estimate,
+    })
+    .from(taskTable)
+    .where(eq(taskTable.id, id))
+    .limit(1);
+  // Un hito no se estima (ADR 082): no dura.
+  if (estimate != null && existing?.isMilestone) {
+    throw new HTTPException(400, { message: "A milestone has no estimate" });
+  }
+
   const [updatedTask] = await db
     .update(taskTable)
     .set({ estimate })
@@ -29,6 +42,17 @@ async function updateTaskEstimate({
 
   if (!updatedTask) {
     throw new HTTPException(404, { message: "Task not found" });
+  }
+
+  if ((existing?.estimate ?? null) !== (updatedTask.estimate ?? null)) {
+    await publishEvent("task.estimate_changed", {
+      taskId: updatedTask.id,
+      projectId: updatedTask.projectId,
+      userId: currentUserId,
+      oldEstimate: existing?.estimate ?? null,
+      newEstimate: updatedTask.estimate ?? null,
+      type: "estimate_changed",
+    });
   }
 
   await publishEvent("task.updated", {

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
 import { parseDayKey } from "@/lib/day-key";
+import { formatDuration } from "@/lib/duration";
 import { formatDateMedium, formatRelativeTime } from "@/lib/format";
 import { getInitials } from "@/lib/get-initials";
 import { getPriorityLabel, getStatusLabel } from "@/lib/i18n/domain";
@@ -208,11 +209,13 @@ function renderActivityContent({
   workspaceUsers,
   fieldDefinitions,
   t,
+  language,
 }: {
   activity: ActivityItem;
   workspaceUsers: WorkspaceUser[] | undefined;
   fieldDefinitions: readonly FieldDefinition[] | undefined;
   t: (key: string, options?: Record<string, unknown>) => string;
+  language: string;
 }) {
   const content = activity.content || "";
   const eventData = getEventDataRecord(activity.eventData);
@@ -292,6 +295,7 @@ function renderActivityContent({
                 })
               : t("activity:setDueDate", { date: newDueDate })
             : t("activity:clearedDueDate")}
+          {eventData.cascadedFrom ? ` ${t("activity:bySchedule")}` : null}
         </span>
       );
     }
@@ -470,6 +474,92 @@ function renderActivityContent({
     );
   }
 
+  // La fecha de inicio, las fechas automaticas y mover la rama (ADR 083).
+  if (activity.type === "start_date_changed" && eventData) {
+    const oldStart = eventData.oldStartDate
+      ? formatActivityDateText(String(eventData.oldStartDate))
+      : null;
+    const newStart = eventData.newStartDate
+      ? formatActivityDateText(String(eventData.newStartDate))
+      : null;
+    return (
+      <span className="text-sm text-muted-foreground">
+        {newStart
+          ? oldStart
+            ? t("activity:changedStartDate", { from: oldStart, to: newStart })
+            : t("activity:setStartDate", { date: newStart })
+          : t("activity:clearedStartDate")}
+        {eventData.cascadedFrom ? ` ${t("activity:bySchedule")}` : null}
+      </span>
+    );
+  }
+
+  // Seguir a otra tarea, cambiar el desfase o dejar de seguirla (ADR 084).
+  if (activity.type === "precedence_changed" && eventData) {
+    const lag = Number(eventData.lag ?? 0);
+    return (
+      <span className="text-sm text-muted-foreground">
+        {eventData.action === "removed"
+          ? t("activity:precedenceRemoved")
+          : eventData.action === "updated"
+            ? t("activity:precedenceLagChanged", { lag })
+            : t("activity:precedenceAdded", { lag })}
+      </span>
+    );
+  }
+
+  if (activity.type === "auto_dates_changed" && eventData) {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {eventData.autoDates
+          ? t("activity:switchedToAutoDates")
+          : t("activity:switchedToOwnDates")}
+      </span>
+    );
+  }
+
+  if (activity.type === "branch_shifted" && eventData) {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {t("activity:shiftedBranch", {
+          count: Number(eventData.moved ?? 0),
+          days: Number(eventData.workDays ?? 0),
+        })}
+      </span>
+    );
+  }
+
+  // Hacerla hito o dejar de serlo (ADR 082).
+  if (activity.type === "milestone_changed" && eventData) {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {eventData.isMilestone
+          ? t("activity:markedMilestone")
+          : t("activity:unmarkedMilestone")}
+      </span>
+    );
+  }
+
+  // La estimacion, en segundos en la base (ADR 085).
+  if (activity.type === "estimate_changed" && eventData) {
+    const from = Number(eventData.oldEstimate ?? 0);
+    const to = Number(eventData.newEstimate ?? 0);
+    return (
+      <span className="text-sm text-muted-foreground">
+        {to > 0
+          ? from > 0
+            ? t("activity:changedEstimate", {
+                from: formatDuration(from, language),
+                to: formatDuration(to, language),
+              })
+            : t("activity:setEstimate", {
+                estimate: formatDuration(to, language),
+              })
+          : t("activity:clearedEstimate")}
+      </span>
+    );
+  }
+
   if (activity.type === "parent_changed" && eventData) {
     return (
       <span className="text-sm text-muted-foreground">
@@ -561,7 +651,7 @@ function Activity({
   /** Los campos del proyecto, para leer los cambios de campo con sus etiquetas. */
   fieldDefinitions?: readonly FieldDefinition[];
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: workspace } = useActiveWorkspace();
   const { data: workspaceUsers } = useGetWorkspaceUsers({
     workspaceId: workspace?.id,
@@ -575,14 +665,22 @@ function Activity({
 
   const isExternalComment = Boolean(activity.externalSource);
   // Un cambio que hizo una automatizacion (ADR 067) es de la regla, no de
-  // quien la guardo: se nombra a ella y no se pinta a nadie.
+  // quien la guardo: se nombra a ella y no se pinta a nadie. Una accion de un
+  // clic (ADR 078) es de quien la pulso, a traves de la regla.
   const automation = getEventDataRecord(
     getEventDataRecord(activity.eventData)?.automation,
   );
-  const actor = automation ? null : user;
-  const actorName = automation
-    ? t("activity:automationActor", { name: String(automation.name ?? "") })
-    : user?.user?.name || t("common:people.someone");
+  const pressed = Boolean(automation?.pressedBy);
+  const actor = automation && !pressed ? null : user;
+  const personName = user?.user?.name || t("common:people.someone");
+  const actorName = !automation
+    ? personName
+    : pressed
+      ? t("activity:manualAutomationActor", {
+          user: personName,
+          name: String(automation.name ?? ""),
+        })
+      : t("activity:automationActor", { name: String(automation.name ?? "") });
 
   if (isCommentActivity(activity)) {
     const commentUser = isExternalComment
@@ -637,6 +735,7 @@ function Activity({
           workspaceUsers: workspaceUsers as WorkspaceUser[] | undefined,
           fieldDefinitions,
           t,
+          language: i18n.language,
         })}{" "}
         <span className="whitespace-nowrap text-muted-foreground/70 text-xs">
           {formatRelativeTime(activity.createdAt)}

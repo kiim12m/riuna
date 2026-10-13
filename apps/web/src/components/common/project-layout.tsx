@@ -1,8 +1,9 @@
-import { useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   CalendarDays,
   CalendarRange,
   Info,
+  Megaphone,
   SquareKanban,
   SquircleDashed,
   Table2,
@@ -10,12 +11,17 @@ import {
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { PinnedAnnouncementBanner } from "@/components/announcement/pinned-announcement-banner";
 import MobileProjectNav from "@/components/common/header/mobile-project-nav";
 import { NewTaskButton } from "@/components/common/header/new-task-button";
 import ProjectCrumbSelect from "@/components/common/header/project-crumb-select";
 import WorkspaceCrumbSelect from "@/components/common/header/workspace-crumb-select";
 import Layout from "@/components/common/layout";
 import { MobileHeaderBell } from "@/components/notification/mobile-header-bell";
+import {
+  ProjectHealthChip,
+  ProjectScheduleWarning,
+} from "@/components/project/project-health";
 import { useAuth } from "@/components/providers/auth-provider/hooks/use-auth";
 import { QuickAddInput } from "@/components/quick-add/quick-add-input";
 import CreateProjectModal from "@/components/shared/modals/create-project-modal";
@@ -45,7 +51,14 @@ type ProjectLayoutProps = {
   headerActions?: ReactNode;
   children: ReactNode;
   showViewSwitcher?: boolean;
-  activeView?: "backlog" | "board" | "calendar" | "gantt" | "table" | "cycles";
+  activeView?:
+    | "backlog"
+    | "board"
+    | "calendar"
+    | "gantt"
+    | "table"
+    | "cycles"
+    | "announcements";
 };
 
 // La vista activa se marca con el tinte de --accent y un raíl de 2 px en River
@@ -72,7 +85,7 @@ export default function ProjectLayout({
   const location = useLocation();
   const { data: project } = useGetProject({ id: projectId, workspaceId });
   const { user } = useAuth();
-  const { canCreateTasks } = useWorkspacePermission();
+  const { canCreateTasks, canUpdateProjects } = useWorkspacePermission();
   // En la Bandeja propia, la captura rapida a mano: es a lo que se viene.
   const isOwnInbox =
     Boolean(project?.ownerUserId) && project?.ownerUserId === user?.id;
@@ -93,7 +106,9 @@ export default function ProjectLayout({
             ? "table"
             : location.pathname.includes("/cycles")
               ? "cycles"
-              : "board");
+              : location.pathname.includes("/announcements")
+                ? "announcements"
+                : "board");
 
   const handleNavigateToBacklog = () => {
     navigate({
@@ -212,6 +227,18 @@ export default function ProjectLayout({
               />
             </div>
 
+            {/* El estado del proyecto (ADR 087): lo ve todo el espacio. */}
+            {project && !project.ownerUserId && (
+              <span className="hidden items-center gap-1 sm:inline-flex">
+                <ProjectHealthChip
+                  project={project}
+                  workspaceId={workspaceId}
+                  canEdit={canUpdateProjects()}
+                />
+                <ProjectScheduleWarning schedule={project.schedule} />
+              </span>
+            )}
+
             {/* Oculta, no privada (ADR 051): que nadie la tome por privada. Un
                 popover y no un tooltip, para que tambien se lea en tactil. */}
             {project?.ownerUserId && (
@@ -295,6 +322,28 @@ export default function ProjectLayout({
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
+            {project && !project.ownerUserId && (
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                className={cn(
+                  "size-7 text-muted-foreground",
+                  resolvedView === "announcements" &&
+                    "bg-accent text-foreground",
+                )}
+                aria-label={t("announcements:projectTitle")}
+                title={t("announcements:projectTitle")}
+                data-testid="project-announcements-link"
+                render={
+                  <Link
+                    to="/dashboard/workspace/$workspaceId/project/$projectId/announcements"
+                    params={{ workspaceId, projectId }}
+                  />
+                }
+              >
+                <Megaphone className="size-3.5" />
+              </Button>
+            )}
             <NewTaskButton />
             {headerActions}
             <MobileHeaderBell />
@@ -306,6 +355,13 @@ export default function ProjectLayout({
         <div className="shrink-0 border-border/80 border-b px-3 py-2">
           <QuickAddInput workspaceId={workspaceId} showHint={false} />
         </div>
+      )}
+
+      {project && !project.ownerUserId && resolvedView !== "announcements" && (
+        <PinnedAnnouncementBanner
+          workspaceId={workspaceId}
+          projectId={projectId}
+        />
       )}
 
       <Layout.Content>{children}</Layout.Content>

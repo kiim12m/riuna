@@ -53,9 +53,12 @@ import TaskEpicsPopover, { TaskEpicsTrigger } from "./task-epics-popover";
 import TaskLabelsPopover from "./task-labels-popover";
 import TaskMovePopover from "./task-move-popover";
 import TaskPriorityPopover from "./task-priority-popover";
+import TaskReminderButton from "./task-reminder-button";
+import TaskScheduleProperty from "./task-schedule-property";
 import TaskStartDatePopover from "./task-start-date-popover";
 import TaskStatusPopover from "./task-status-popover";
 import TaskTeamPopover from "./task-team-popover";
+import TaskWatchersButton from "./task-watchers-button";
 
 function slugify(text: string | undefined): string {
   if (!text) return "";
@@ -209,6 +212,16 @@ export default function TaskPropertiesSidebar({
         {compact && (
           <div className="flex flex-row-reverse gap-2 w-full border-b border-border">
             <div className="flex px-3 py-2">
+              {task && (
+                <>
+                  <TaskReminderButton taskId={task.id} className="mr-2" />
+                  <TaskWatchersButton
+                    taskId={task.id}
+                    workspaceId={workspaceId}
+                    className="mr-2"
+                  />
+                </>
+              )}
               {task && canMoveTask && (
                 <TaskMovePopover
                   task={task}
@@ -368,7 +381,7 @@ export default function TaskPropertiesSidebar({
                   />
                 </>
               )}
-              {task && (
+              {task && !task.isMilestone && (
                 <TaskStartDatePopover task={task}>
                   <Button
                     variant="ghost"
@@ -433,6 +446,7 @@ export default function TaskPropertiesSidebar({
                   </Button>
                 </TaskDueDatePopover>
               )}
+              {task && <TaskScheduleProperty task={task} />}
             </div>
           </div>
         )}
@@ -442,6 +456,16 @@ export default function TaskPropertiesSidebar({
             {/* Mobile: Compact-style layout */}
             <div className="flex flex-row-reverse gap-2 w-full border-b border-border lg:hidden">
               <div className="flex px-3 py-2">
+                {task && (
+                  <>
+                    <TaskReminderButton taskId={task.id} className="mr-2" />
+                    <TaskWatchersButton
+                      taskId={task.id}
+                      workspaceId={workspaceId}
+                      className="mr-2"
+                    />
+                  </>
+                )}
                 {task && canMoveTask && (
                   <TaskMovePopover
                     task={task}
@@ -601,7 +625,7 @@ export default function TaskPropertiesSidebar({
                     />
                   </>
                 )}
-                {task && (
+                {task && !task.isMilestone && (
                   <TaskStartDatePopover task={task}>
                     <Button
                       variant="ghost"
@@ -666,6 +690,7 @@ export default function TaskPropertiesSidebar({
                     </Button>
                   </TaskDueDatePopover>
                 )}
+                {task && <TaskScheduleProperty task={task} />}
               </div>
             </div>
 
@@ -676,6 +701,21 @@ export default function TaskPropertiesSidebar({
                   {t("tasks:properties.title")}
                 </p>
                 <div className="flex">
+                  {task && (
+                    <>
+                      <TaskReminderButton
+                        taskId={task.id}
+                        iconOnly
+                        className="mr-1"
+                      />
+                      <TaskWatchersButton
+                        taskId={task.id}
+                        workspaceId={workspaceId}
+                        iconOnly
+                        className="mr-2"
+                      />
+                    </>
+                  )}
                   {task && canMoveTask && (
                     <TaskMovePopover
                       task={task}
@@ -836,7 +876,7 @@ export default function TaskPropertiesSidebar({
                     />
                   </>
                 )}
-                {task && (
+                {task && !task.isMilestone && (
                   <TaskStartDatePopover task={task}>
                     <Button
                       variant="ghost"
@@ -901,6 +941,7 @@ export default function TaskPropertiesSidebar({
                     </Button>
                   </TaskDueDatePopover>
                 )}
+                {task && <TaskScheduleProperty task={task} />}
               </div>
             </div>
           </>

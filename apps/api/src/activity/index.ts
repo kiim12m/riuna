@@ -247,8 +247,12 @@ subscribeToEvent<{
   userId: string;
   title: string;
   type: string;
+  previousAssigneeId?: string | null;
 }>("task.unassigned", async (data) => {
-  await createActivity(data.taskId, data.type, data.userId, null, {});
+  // Quien lo tenia, para la linea base (ADR 085).
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    previousAssigneeId: data.previousAssigneeId ?? null,
+  });
 });
 
 subscribeToEvent<{
@@ -264,6 +268,8 @@ subscribeToEvent<{
     newAssigneeId: data.newAssigneeId,
     newAssignee: data.newAssignee,
     isSelfAssigned: data.userId === data.newAssigneeId,
+    // `oldAssignee` es el id anterior pese al nombre (ADR 085).
+    oldAssigneeId: data.oldAssignee ?? null,
   });
 });
 
@@ -272,8 +278,11 @@ subscribeToEvent<{
   userId: string;
   title: string;
   type: string;
+  oldTeamId?: string | null;
 }>("task.team_unassigned", async (data) => {
-  await createActivity(data.taskId, data.type, data.userId, null, {});
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    oldTeamId: data.oldTeamId ?? null,
+  });
 });
 
 subscribeToEvent<{
@@ -288,6 +297,7 @@ subscribeToEvent<{
   await createActivity(data.taskId, data.type, data.userId, null, {
     newTeamId: data.newTeamId,
     newTeam: data.newTeam,
+    oldTeamId: data.oldTeamId ?? null,
   });
 });
 
@@ -386,6 +396,36 @@ subscribeToEvent<{
   });
 });
 
+// La estimacion no dejaba rastro: la linea base lo necesita (ADR 085). El
+// titulo si lo deja, pero lo escribe su controlador en su transaccion.
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  oldEstimate: number | null;
+  newEstimate: number | null;
+  type: string;
+}>("task.estimate_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    oldEstimate: data.oldEstimate,
+    newEstimate: data.newEstimate,
+  });
+});
+
+// Hacerla hito, o dejar de serlo (ADR 082).
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  isMilestone: boolean;
+  type: string;
+}>("task.milestone_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    isMilestone: data.isMilestone,
+  });
+});
+
+const isoOf = (value: Date | string | null | undefined) =>
+  value instanceof Date ? value.toISOString() : (value ?? null);
+
 subscribeToEvent<{
   taskId: string;
   userId: string;
@@ -393,16 +433,75 @@ subscribeToEvent<{
   newDueDate: Date;
   title: string;
   type: string;
+  cascadedFrom?: string;
 }>("task.due_date_changed", async (data) => {
   await createActivity(data.taskId, data.type, data.userId, null, {
-    oldDueDate:
-      data.oldDueDate instanceof Date
-        ? data.oldDueDate.toISOString()
-        : data.oldDueDate,
-    newDueDate:
-      data.newDueDate instanceof Date
-        ? data.newDueDate.toISOString()
-        : data.newDueDate,
+    oldDueDate: isoOf(data.oldDueDate),
+    newDueDate: isoOf(data.newDueDate),
+    // Lo movio la planificacion por un cambio en otra tarea (ADR 083).
+    ...(data.cascadedFrom ? { cascadedFrom: data.cascadedFrom } : {}),
+  });
+});
+
+// La fecha de inicio no dejaba rastro: la linea base la necesita (ADR 083).
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  oldStartDate: Date | null;
+  newStartDate: Date | null;
+  type: string;
+  cascadedFrom?: string;
+}>("task.start_date_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    oldStartDate: isoOf(data.oldStartDate),
+    newStartDate: isoOf(data.newStartDate),
+    ...(data.cascadedFrom ? { cascadedFrom: data.cascadedFrom } : {}),
+  });
+});
+
+// Fechas propias o automaticas, a mano o porque un padre se quedo sin
+// fechas (ADR 083).
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  autoDates: boolean;
+  type: string;
+  cascadedFrom?: string;
+}>("task.auto_dates_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    autoDates: data.autoDates,
+    ...(data.cascadedFrom ? { cascadedFrom: data.cascadedFrom } : {}),
+  });
+});
+
+// Empezar a seguir a otra tarea, cambiar el desfase o dejar de seguirla
+// (ADR 084). Se apunta en la sucesora, que es la que se mueve.
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  predecessorId: string;
+  lag?: number;
+  action: "added" | "updated" | "removed";
+  type: string;
+}>("task.precedence_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    predecessorId: data.predecessorId,
+    action: data.action,
+    ...(data.lag !== undefined ? { lag: data.lag } : {}),
+  });
+});
+
+// Mover la rama entera desde el Gantt (ADR 083).
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  workDays: number;
+  moved: number;
+  type: string;
+}>("task.branch_shifted", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    workDays: data.workDays,
+    moved: data.moved,
   });
 });
 
