@@ -7,6 +7,7 @@ import MonthGrid from "@/components/calendar/month-grid";
 import { buildMonthWeeks } from "@/components/calendar/month-grid-model";
 import ProjectLayout from "@/components/common/project-layout";
 import PageTitle from "@/components/page-title";
+import { SubprojectToggle } from "@/components/project/subproject-toggle";
 import FilterBar from "@/components/table-view/filter-bar";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import { shortcuts } from "@/constants/shortcuts";
@@ -15,6 +16,7 @@ import { useFilterableFields } from "@/hooks/use-filterable-fields";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { readFilterParam, useUrlFilter } from "@/hooks/use-url-filter";
+import { subprojectTasks } from "@/lib/subproject-tasks";
 import { toScheduledTasks } from "@/lib/task-schedule";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import type { EditableCondition } from "@/types/task-filter";
@@ -23,6 +25,8 @@ type CalendarSearchParams = {
   taskId?: string;
   /** Las condiciones del filtro. Ver `useUrlFilter`. */
   filter?: EditableCondition[];
+  /** Con las tareas de los subproyectos (ADR 089). */
+  subprojects?: boolean;
 };
 
 export const Route = createFileRoute(
@@ -32,6 +36,7 @@ export const Route = createFileRoute(
   validateSearch: (search: Record<string, unknown>): CalendarSearchParams => ({
     taskId: typeof search.taskId === "string" ? search.taskId : undefined,
     filter: readFilterParam(search.filter),
+    subprojects: search.subprojects === true ? true : undefined,
   }),
 });
 
@@ -43,11 +48,19 @@ const MAX_LANES_MOBILE = 2;
 function RouteComponent() {
   const { t } = useTranslation();
   const { projectId, workspaceId } = Route.useParams();
-  const { taskId, filter: filterParam } = Route.useSearch();
+  const { taskId, filter: filterParam, subprojects } = Route.useSearch();
   const navigate = useNavigate();
   const { conditions, setConditions, filter } = useUrlFilter(filterParam);
   const filterableFields = useFilterableFields(projectId, workspaceId);
-  const { data: project, isLoading, isError } = useGetTasks(projectId, filter);
+  const taskOptions = useMemo(
+    () => ({ includeSubprojects: Boolean(subprojects) }),
+    [subprojects],
+  );
+  const {
+    data: project,
+    isLoading,
+    isError,
+  } = useGetTasks(projectId, filter, taskOptions);
   const weekStartsOn = useUserPreferencesStore((state) => state.weekStartsOn);
   const setViewMode = useUserPreferencesStore((state) => state.setViewMode);
   const isMobile = useIsMobile();
@@ -55,7 +68,16 @@ function RouteComponent() {
     startOfMonth(new Date()),
   );
 
-  const scheduledTasks = useMemo(() => toScheduledTasks(project), [project]);
+  const scheduledTasks = useMemo(
+    () =>
+      toScheduledTasks(
+        project && {
+          columns: project.columns,
+          plannedTasks: [...project.plannedTasks, ...subprojectTasks(project)],
+        },
+      ),
+    [project],
+  );
 
   const weeks = useMemo(
     () => buildMonthWeeks(visibleMonth, weekStartsOn),
@@ -76,13 +98,28 @@ function RouteComponent() {
 
   const handleOpenTask = useCallback(
     (nextTaskId: string) => {
-      navigate({ to: ".", search: { taskId: nextTaskId }, replace: true });
+      // Sin perder el filtro ni los subproyectos al abrir una tarea.
+      navigate({
+        to: ".",
+        search: (previous: CalendarSearchParams) => ({
+          ...previous,
+          taskId: nextTaskId,
+        }),
+        replace: true,
+      });
     },
     [navigate],
   );
 
   const handleCloseTaskSheet = useCallback(() => {
-    navigate({ to: ".", search: {}, replace: true });
+    navigate({
+      to: ".",
+      search: (previous: CalendarSearchParams) => ({
+        ...previous,
+        taskId: undefined,
+      }),
+      replace: true,
+    });
   }, [navigate]);
 
   useRegisterShortcuts({
@@ -140,11 +177,27 @@ function RouteComponent() {
         {/* Hasta ahora el calendario no filtraba por nada: la deuda que el
             plan arrastra desde la Fase 1. Usa el mismo motor que la tabla, asi
             que un filtro escrito aqui vale igual alla. */}
-        <div className="border-border/80 border-b">
-          <FilterBar
-            fields={filterableFields}
-            conditions={conditions}
-            onChange={setConditions}
+        <div className="flex flex-wrap items-center border-border/80 border-b">
+          <div className="min-w-0 flex-1">
+            <FilterBar
+              fields={filterableFields}
+              conditions={conditions}
+              onChange={setConditions}
+            />
+          </div>
+          <SubprojectToggle
+            count={project?.subprojectCount ?? 0}
+            checked={Boolean(subprojects)}
+            onChange={(next) =>
+              navigate({
+                to: ".",
+                search: (previous: CalendarSearchParams) => ({
+                  ...previous,
+                  subprojects: next ? true : undefined,
+                }),
+                replace: true,
+              })
+            }
           />
         </div>
 

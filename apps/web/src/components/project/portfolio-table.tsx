@@ -17,6 +17,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -37,10 +38,20 @@ import CustomFieldCell, {
   type FieldDefinition,
   type FieldMember,
 } from "../table-view/custom-field-cell";
-import { type PortfolioProject, parseSort } from "./portfolio";
+import {
+  type PortfolioProject,
+  type PortfolioTreeRow,
+  parseSort,
+} from "./portfolio";
 import { ProjectHealthChip, ProjectScheduleWarning } from "./project-health";
 
 export type PortfolioRow = PortfolioProject & {
+  /** El resumen de su rama, si tiene subproyectos (ADR 089). */
+  aggregate?: {
+    childCount: number;
+    totalTasks: number;
+    completionPercentage: number;
+  } | null;
   icon?: string | null;
   healthNote?: string | null;
   schedule?: { tasksDueDate: string; overflowWorkDays: number } | null;
@@ -103,7 +114,9 @@ function SortableRow({
  * arrastrando. Los campos de proyecto se editan en la propia celda.
  */
 export default function PortfolioTable({
-  projects,
+  rows,
+  collapsed,
+  onToggle,
   workspaceId,
   visibleColumns,
   definitions,
@@ -116,7 +129,10 @@ export default function PortfolioTable({
   onOpen,
   onSetField,
 }: {
-  projects: PortfolioRow[];
+  /** Las filas ya en arbol (ADR 089): padre y, debajo, sus subproyectos. */
+  rows: PortfolioTreeRow<PortfolioRow>[];
+  collapsed: ReadonlySet<string>;
+  onToggle: (projectId: string) => void;
   workspaceId: string;
   visibleColumns: ReadonlySet<string>;
   definitions: FieldDefinition[];
@@ -197,10 +213,12 @@ export default function PortfolioTable({
         </TableHeader>
         <TableBody>
           <SortableContext
-            items={projects.map((project) => project.id)}
+            items={rows.map((row) => row.project.id)}
             strategy={verticalListSortingStrategy}
           >
-            {projects.map((project) => {
+            {rows.map(({ project, depth, childCount }) => {
+              // Un padre resume su rama: sus tareas y las de sus hijos.
+              const progress = project.aggregate ?? project.statistics;
               const Icon =
                 icons[project.icon as keyof typeof icons] || icons.Layout;
               const lead = project.leadUserId
@@ -216,9 +234,44 @@ export default function PortfolioTable({
                 >
                   {shown("title") && (
                     <TableCell className="py-3">
-                      <div className="flex items-center gap-3">
+                      <div
+                        className="flex items-center gap-2"
+                        style={{ paddingLeft: `${depth * 1.5}rem` }}
+                      >
+                        {childCount > 0 ? (
+                          <button
+                            type="button"
+                            aria-expanded={!collapsed.has(project.id)}
+                            aria-label={t(
+                              collapsed.has(project.id)
+                                ? "tasks:table.expand"
+                                : "tasks:table.collapse",
+                            )}
+                            className="rounded p-0.5 hover:bg-accent"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onToggle(project.id);
+                            }}
+                            onPointerDown={(event) => event.stopPropagation()}
+                          >
+                            {collapsed.has(project.id) ? (
+                              <ChevronRight className="size-3.5" />
+                            ) : (
+                              <ChevronDown className="size-3.5" />
+                            )}
+                          </button>
+                        ) : (
+                          <span className="w-4.5" />
+                        )}
                         <Icon className="size-5 text-muted-foreground" />
                         <span className="font-medium">{project.name}</span>
+                        {project.aggregate && (
+                          <span className="text-label text-muted-foreground">
+                            {t("workspace:projects.subprojectCount", {
+                              count: project.aggregate.childCount,
+                            })}
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                   )}
@@ -267,18 +320,18 @@ export default function PortfolioTable({
                     <TableCell className="py-3">
                       <div className="flex items-center gap-2">
                         <Progress
-                          value={project.statistics.completionPercentage}
+                          value={progress.completionPercentage}
                           className="h-2 w-16"
                         />
                         <span className="text-muted-foreground text-sm">
-                          {project.statistics.completionPercentage}%
+                          {progress.completionPercentage}%
                         </span>
                       </div>
                     </TableCell>
                   )}
                   {shown("tasks") && (
                     <TableCell className="py-3 text-right text-muted-foreground text-sm tabular-nums">
-                      {project.statistics.totalTasks}
+                      {progress.totalTasks}
                     </TableCell>
                   )}
                   {fields.map((definition) => (

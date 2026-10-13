@@ -39,6 +39,7 @@ export function portfolioColumns(
 export type PortfolioProject = {
   id: string;
   name: string;
+  parentId?: string | null;
   health?: string | null;
   leadUserId?: string | null;
   startDate?: string | null;
@@ -120,4 +121,46 @@ export function sortProjects<T extends PortfolioProject>(
     if (left > right) return direction;
     return 0;
   });
+}
+
+export type PortfolioTreeRow<T> = {
+  project: T;
+  depth: 0 | 1;
+  /** Cuantos hijos suyos hay en la lista, para el boton de plegar. */
+  childCount: number;
+};
+
+/**
+ * La cartera en arbol (ADR 089): cada subproyecto bajo su padre, en el orden
+ * que ya traigan las filas. Un hijo cuyo padre no esta en la lista —el filtro
+ * lo dejo fuera— sale como raiz, para que no desaparezca con el.
+ */
+export function portfolioTree<T extends PortfolioProject>(
+  rows: T[],
+  collapsed: ReadonlySet<string>,
+): PortfolioTreeRow<T>[] {
+  const present = new Set(rows.map((row) => row.id));
+  const childrenOf = new Map<string, T[]>();
+  const roots: T[] = [];
+  for (const row of rows) {
+    if (row.parentId && present.has(row.parentId)) {
+      childrenOf.set(row.parentId, [
+        ...(childrenOf.get(row.parentId) ?? []),
+        row,
+      ]);
+    } else {
+      roots.push(row);
+    }
+  }
+
+  const out: PortfolioTreeRow<T>[] = [];
+  for (const root of roots) {
+    const children = childrenOf.get(root.id) ?? [];
+    out.push({ project: root, depth: 0, childCount: children.length });
+    if (collapsed.has(root.id)) continue;
+    for (const child of children) {
+      out.push({ project: child, depth: 1, childCount: 0 });
+    }
+  }
+  return out;
 }

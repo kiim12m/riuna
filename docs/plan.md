@@ -30,7 +30,7 @@
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
 | **Total Bloque A** | **45** + 18 del interludio | |
-| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hechas la tanda 1 (1.1-1.6) y la tanda 2 (2.1-2.4), y de la tanda 3 la 3.1 y la 3.2 · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
+| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hechas la tanda 1 (1.1-1.6) y la tanda 2 (2.1-2.4), y la tanda 3 (3.1-3.3) · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -3082,12 +3082,22 @@ siempre), incluida `watchers.spec.ts` de la 1.1.
     campo de proyecto.
   - Edición en la celda; vistas guardadas de tipo `portfolio`; `GET /project/export`.
   - MCP: `filter` en `list_projects` y `set_project_fields`.
-- **3.3 Subproyectos** · L. Un proyecto padre con profundidad limitada.
-  - Las vistas del padre pueden incluir las tareas de los hijos.
-  - El progreso se agrega, y la lista de proyectos sale en árbol.
-  - La ADR comprueba que los permisos son del espacio y no hay herencia que diseñar.
-  - «Personal» no admite hijos.
-  - Nunca se une por prefijo de `path` (regla de `AGENTS.md`).
+- **3.3 Subproyectos** ✔ · L · [ADR 089](adr/089-subproyectos.md). **Hecho (2026-10-13).**
+  Decisiones del usuario: un solo nivel (padre e hijos), y las vistas del padre que incluyen las
+  tareas de los hijos son todas salvo el tablero.
+  - `project.parent_id` (migración 0092) y `PATCH /project/:id/parent` con `project:update`, bajo
+    un cerrojo del espacio. «Personal» no entra; al borrar el padre, los hijos quedan sueltos.
+  - Los permisos son del espacio: no hay herencia que diseñar.
+  - Un padre resume su rama en la lista: progreso, tareas y aviso de desviación. La lista sale en
+    árbol.
+  - Lista, Tabla, Gantt y Calendario del padre pueden incluir las tareas de los hijos, con su
+    clave; los totales y la línea base, también. El detalle se abre con el proyecto de la tarea.
+  - Lo que cambia en un hijo se reenvía al canal de su padre. MCP: `set_project_parent`.
+  - Nunca se une por prefijo de `path`: un nivel es `parent_id` con su índice.
+
+Pruebas de la tanda 3: 17 de integración (`project-status`, `project-fields` y `subprojects`),
+unitarias del orden y el árbol de la cartera y del aviso nuevo, y de extremo a extremo
+`project-health`, `portfolio` y `subprojects`.
 
 **Tanda 4 — Campos e informes** (≈ 3 semanas)
 

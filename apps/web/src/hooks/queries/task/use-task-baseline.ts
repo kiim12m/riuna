@@ -45,6 +45,7 @@ export function useTaskBaseline({
       at,
       filter ? JSON.stringify(filter) : null,
       options?.treeScope ?? "matching",
+      options?.includeSubprojects ? "subprojects" : null,
       listUpdatedAt,
     ],
     queryFn: () => getTaskBaseline(projectId, at as string, filter, options),

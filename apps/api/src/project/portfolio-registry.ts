@@ -13,8 +13,9 @@ import {
 
 /**
  * El progreso de un proyecto como numero, para filtrar la cartera por el: el
- * mismo calculo que la lista (`get-projects.ts`), hechas sobre no archivadas.
- * Correlacionado con la fila: una cartera son decenas de proyectos.
+ * mismo calculo que la lista (`get-projects.ts`), hechas sobre no archivadas,
+ * y en un padre el de su rama (ADR 089). Correlacionado con la fila: una
+ * cartera son decenas de proyectos.
  */
 const progressExpression = sql<number>`(
   SELECT CASE WHEN count(*) FILTER (WHERE t.status <> 'archived') = 0 THEN 0
@@ -22,6 +23,10 @@ const progressExpression = sql<number>`(
       / count(*) FILTER (WHERE t.status <> 'archived')) END
   FROM ${taskTable} t
   WHERE t.project_id = ${projectTable.id}
+    OR t.project_id IN (
+      SELECT c.id FROM ${projectTable} c
+      WHERE c.parent_id = ${projectTable.id} AND c.archived_at IS NULL
+    )
 )`;
 
 // Lo que toda cartera conoce, existan o no campos de proyecto (ADR 088).

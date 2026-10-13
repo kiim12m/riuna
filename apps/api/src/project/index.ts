@@ -21,6 +21,7 @@ import reorderProjectsCtrl from "./controllers/reorder-projects";
 import unarchiveProjectCtrl from "./controllers/unarchive-project";
 import updateProjectCtrl from "./controllers/update-project";
 import updateProjectCustomFields from "./controllers/update-project-custom-fields";
+import updateProjectParent from "./controllers/update-project-parent";
 import updateProjectStatus, {
   PROJECT_HEALTHS,
 } from "./controllers/update-project-status";
@@ -386,6 +387,39 @@ const project = new Hono<{
             endDate: toDate(endDate),
           },
           notify,
+        }),
+      );
+    },
+  )
+  .patch(
+    "/:id/parent",
+    describeRoute({
+      operationId: "updateProjectParent",
+      tags: ["Projects"],
+      description:
+        "Make a project a subproject of another, or release it with `parentId: null` (ADR 089). One level only: the parent cannot have a parent and a project with subprojects cannot become one. Personal inboxes take no part.",
+      responses: {
+        200: {
+          description: "Project with its new parent",
+          content: {
+            "application/json": { schema: resolver(projectSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ parentId: v.nullable(v.string()) })),
+    workspaceAccess.fromProject(),
+    requireWorkspacePermission({ project: ["update"] }),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { parentId } = c.req.valid("json");
+      return c.json(
+        await updateProjectParent({
+          projectId: id,
+          workspaceId: c.get("workspaceId"),
+          parentId,
+          userId: c.get("userId"),
         }),
       );
     },

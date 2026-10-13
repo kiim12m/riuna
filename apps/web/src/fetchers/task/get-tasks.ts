@@ -5,6 +5,8 @@ import type { TaskFilter } from "@/types/task-filter";
 export type TaskQueryOptions = {
   /** Que hace el filtro con la jerarquia. Ver `GetTasksOptions` en la API. */
   treeScope?: "matching" | "roots" | "withDescendants";
+  /** Con las tareas de los subproyectos (ADR 089). */
+  includeSubprojects?: boolean;
 };
 
 async function getTasks(
@@ -22,6 +24,7 @@ async function getTasks(
       ...(options?.treeScope && options.treeScope !== "matching"
         ? { treeScope: options.treeScope }
         : {}),
+      ...(options?.includeSubprojects ? { includeSubprojects: "true" } : {}),
     },
   });
 

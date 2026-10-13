@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { nextSort, type PortfolioProject, sortProjects } from "./portfolio";
+import {
+  nextSort,
+  type PortfolioProject,
+  portfolioTree,
+  sortProjects,
+} from "./portfolio";
 
 const project = (
   id: string,
@@ -66,5 +71,29 @@ describe("nextSort", () => {
     expect(nextSort("endDate", "endDate")).toBe("-endDate");
     expect(nextSort("-endDate", "endDate")).toBeUndefined();
     expect(nextSort("-endDate", "progress")).toBe("progress");
+  });
+});
+
+describe("portfolioTree", () => {
+  const rows = [
+    project("alcala", { parentId: "henares" }),
+    project("henares"),
+    project("prl"),
+    project("mnt", { parentId: "henares" }),
+    project("ceip", { parentId: "coslada" }),
+  ];
+
+  it("hangs each subproject under its parent, in the order it came", () => {
+    expect(
+      portfolioTree(rows, new Set()).map(
+        (row) => `${row.depth}:${row.project.id}:${row.childCount}`,
+      ),
+    ).toEqual(["0:henares:2", "1:alcala:0", "1:mnt:0", "0:prl:0", "0:ceip:0"]);
+  });
+
+  it("hides a collapsed parent's children, and keeps an orphan as a root", () => {
+    expect(
+      portfolioTree(rows, new Set(["henares"])).map((row) => row.project.id),
+    ).toEqual(["henares", "prl", "ceip"]);
   });
 });

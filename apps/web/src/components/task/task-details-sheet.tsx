@@ -24,7 +24,7 @@ type TaskDetailsSheetProps = {
 
 export default function TaskDetailsSheet({
   taskId,
-  projectId,
+  projectId: routeProjectId,
   workspaceId,
   onClose,
 }: TaskDetailsSheetProps) {
@@ -35,6 +35,9 @@ export default function TaskDetailsSheet({
   );
 
   const { data: task } = useGetTask(currentTaskId ?? "");
+  // El proyecto de la propia tarea: en la vista de un padre puede ser de un
+  // subproyecto (ADR 089), con sus columnas y sus campos.
+  const projectId = task?.projectId ?? routeProjectId;
   const { data: project } = useGetProject({ id: projectId, workspaceId });
 
   useEffect(() => {

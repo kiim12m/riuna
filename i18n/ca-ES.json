@@ -651,7 +651,13 @@
 				"iconRequired": "El icono es obligatorio"
 			},
 			"importExportTasks": "Importar/Exportar",
-			"importExportTasksDescription": "Importar/Exportar Tareas"
+			"importExportTasksDescription": "Importar/Exportar Tareas",
+			"parentLabel": "Subproyecto de",
+			"parentHint": "Un proyecto puede colgar de otro, de un solo nivel. Las vistas del padre pueden incluir sus tareas, y su progreso cuenta la rama entera.",
+			"parentHasChildren": "Tiene subproyectos, así que no puede colgar de otro proyecto.",
+			"noParent": "Ninguno",
+			"parentSaved": "Proyecto padre guardado",
+			"parentError": "No se pudo cambiar el proyecto padre"
 		},
 		"projectIntegrations": {
 			"pageTitle": "Integraciones del Proyecto",
@@ -1879,7 +1885,9 @@
 				"dates": "puso las fechas {{start}} – {{end}}",
 				"lead": "puso de responsable a {{name}}",
 				"leadRemoved": "quitó el responsable",
-				"fields": "cambió {{names}}"
+				"fields": "cambió {{names}}",
+				"parent": "pasó a ser un subproyecto",
+				"parentRemoved": "dejó de ser un subproyecto"
 			},
 			"fieldsTitle": "Campos del proyecto",
 			"fieldsEmpty": "El espacio aún no tiene campos de proyecto. Se definen en los ajustes del espacio, en Campos personalizados."
@@ -2990,6 +2998,10 @@
 			"removedTitle_other": "{{count}} tareas ya no cumplen el filtro",
 			"summary": "Desde el {{since}}: {{added}} entran · {{removed}} salen · {{changed}} cambian",
 			"ghost": "Entonces: {{start}} – {{end}}"
+		},
+		"subprojects": {
+			"include_one": "Incluir su subproyecto",
+			"include_other": "Incluir sus {{count}} subproyectos"
 		}
 	},
 	"invitations": {
@@ -3068,7 +3080,9 @@
 			},
 			"export": "Exportar",
 			"exportError": "No se pudo exportar la lista de proyectos",
-			"noMatches": "Ningún proyecto cumple el filtro"
+			"noMatches": "Ningún proyecto cumple el filtro",
+			"subprojectCount_one": "{{count}} subproyecto",
+			"subprojectCount_other": "{{count}} subproyectos"
 		},
 		"search": {
 			"pageTitle": "Buscar",

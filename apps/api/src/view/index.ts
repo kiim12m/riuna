@@ -48,6 +48,8 @@ const configSchema = v.object({
   ),
   // Agrupar por: hoy solo por epica.
   groupBy: v.optional(v.picklist(["epic"])),
+  // Con las tareas de los subproyectos, en las vistas de un padre (ADR 089).
+  subprojects: v.optional(v.boolean()),
   // El filtro rapido de la cartera (ADR 087): en riesgo o desviados, o los
   // que lleva quien mira.
   show: v.optional(v.picklist(["attention", "mine"])),

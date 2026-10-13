@@ -9,6 +9,7 @@ import { projectScheduleWarning } from "../schedule-warning";
 type ProjectStatistics = {
   completionPercentage: number;
   totalTasks: number;
+  completedTasks: number;
   dueDate: Date | null;
   /** El vencimiento mas tardio de sus tareas, para el aviso de la ADR 087. */
   latestDueDate: Date | null;
@@ -17,6 +18,7 @@ type ProjectStatistics = {
 const EMPTY_STATISTICS: ProjectStatistics = {
   completionPercentage: 0,
   totalTasks: 0,
+  completedTasks: 0,
   dueDate: null,
   latestDueDate: null,
 };
@@ -84,6 +86,7 @@ async function getProjectStatistics(
 
     statisticsByProject.set(row.projectId, {
       totalTasks,
+      completedTasks,
       completionPercentage:
         totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
       dueDate: row.dueDate ?? null,
@@ -121,14 +124,58 @@ async function getProjects(
 
   const calendar = await loadWorkCalendar(workspaceId);
 
+  // Los hijos de cada padre (ADR 089), de entre todos los listados y no solo
+  // los que deja el filtro: el progreso de un padre es el de su rama entera.
+  const tree = await db
+    .select({ id: projectTable.id, parentId: projectTable.parentId })
+    .from(projectTable)
+    .where(listedProjects(workspaceId, includeArchived));
+  const childrenOf = new Map<string, string[]>();
+  for (const row of tree) {
+    if (!row.parentId) continue;
+    childrenOf.set(row.parentId, [
+      ...(childrenOf.get(row.parentId) ?? []),
+      row.id,
+    ]);
+  }
+
   return projects.map((project) => {
     const statistics = statisticsByProject.get(project.id) ?? EMPTY_STATISTICS;
+    const children = childrenOf.get(project.id) ?? [];
+    const branch = [
+      statistics,
+      ...children.map((id) => statisticsByProject.get(id) ?? EMPTY_STATISTICS),
+    ];
+    const totalTasks = branch.reduce((sum, entry) => sum + entry.totalTasks, 0);
+    const completedTasks = branch.reduce(
+      (sum, entry) => sum + entry.completedTasks,
+      0,
+    );
+    const latestDueDate = branch.reduce<Date | null>(
+      (latest, entry) =>
+        entry.latestDueDate && (!latest || entry.latestDueDate > latest)
+          ? entry.latestDueDate
+          : latest,
+      null,
+    );
     return {
       ...project,
       statistics,
+      // Un padre resume su rama: sus tareas y las de sus subproyectos.
+      aggregate:
+        children.length > 0
+          ? {
+              childCount: children.length,
+              totalTasks,
+              completionPercentage:
+                totalTasks > 0
+                  ? Math.round((completedTasks / totalTasks) * 100)
+                  : 0,
+            }
+          : null,
       schedule: projectScheduleWarning(
         project.endDate,
-        statistics.latestDueDate,
+        latestDueDate,
         calendar,
       ),
       archivedTasks: [],

@@ -31,6 +31,7 @@ import {
   type ZoomLevel,
 } from "@/components/gantt/gantt-timeline";
 import PageTitle from "@/components/page-title";
+import { SubprojectToggle } from "@/components/project/subproject-toggle";
 import FilterBar from "@/components/table-view/filter-bar";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,7 @@ import { type BaselineChoice, isBaselineChoice } from "@/lib/baseline";
 import { cn } from "@/lib/cn";
 import { formatDateShort } from "@/lib/format";
 import { getStatusLabel } from "@/lib/i18n/domain";
+import { subprojectDoneIds, subprojectTasks } from "@/lib/subproject-tasks";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import type { EditableCondition } from "@/types/task-filter";
 
@@ -64,6 +66,8 @@ type GanttSearchParams = {
   zoom?: ZoomLevel;
   /** Con que momento se compara (ADR 085). Sin dato, con ninguno. */
   baseline?: BaselineChoice;
+  /** Con las tareas de los subproyectos (ADR 089). */
+  subprojects?: boolean;
 };
 
 export const Route = createFileRoute(
@@ -75,6 +79,7 @@ export const Route = createFileRoute(
     filter: readFilterParam(search.filter),
     zoom: isZoomLevel(search.zoom) ? search.zoom : undefined,
     baseline: isBaselineChoice(search.baseline) ? search.baseline : undefined,
+    subprojects: search.subprojects === true ? true : undefined,
   }),
 });
 
@@ -152,16 +157,26 @@ function RouteComponent() {
     filter: filterParam,
     zoom: zoomParam,
     baseline: baselineChoice,
+    subprojects,
   } = Route.useSearch();
   const navigate = useNavigate();
   const { conditions, setConditions, filter } = useUrlFilter(filterParam);
   const filterableFields = useFilterableFields(projectId, workspaceId);
-  const { data: project, dataUpdatedAt } = useGetTasks(projectId, filter);
+  const taskOptions = useMemo(
+    () => ({ includeSubprojects: Boolean(subprojects) }),
+    [subprojects],
+  );
+  const { data: project, dataUpdatedAt } = useGetTasks(
+    projectId,
+    filter,
+    taskOptions,
+  );
   const { data: baselineData } = useTaskBaseline({
     projectId,
     workspaceId,
     choice: baselineChoice,
     filter,
+    options: taskOptions,
     listUpdatedAt: dataUpdatedAt,
   });
   const baseline = useMemo(
@@ -205,12 +220,13 @@ function RouteComponent() {
     () => [
       ...(project?.columns.flatMap((column) => column.tasks) ?? []),
       ...(project?.plannedTasks ?? []),
+      ...subprojectTasks(project),
     ],
     [project],
   );
 
   const doneIds = useMemo(() => {
-    const set = new Set<string>();
+    const set = subprojectDoneIds(project);
     for (const column of project?.columns ?? []) {
       if (column.isFinal) {
         for (const task of column.tasks) set.add(task.id);
@@ -430,6 +446,21 @@ function RouteComponent() {
               </Button>
             </div>
 
+            <SubprojectToggle
+              count={project?.subprojectCount ?? 0}
+              checked={Boolean(subprojects)}
+              onChange={(next) =>
+                navigate({
+                  to: ".",
+                  search: (previous: Record<string, unknown>) => ({
+                    ...previous,
+                    subprojects: next ? true : undefined,
+                  }),
+                  replace: true,
+                })
+              }
+            />
+
             <BaselinePicker
               value={baselineChoice}
               onChange={(next) =>
@@ -610,7 +641,7 @@ function RouteComponent() {
                           ? task.subtree.progress
                           : null;
                       const rowTitle = [
-                        `${project?.slug}-${task.number}`,
+                        `${task.projectSlug ?? project?.slug}-${task.number}`,
                         getStatusLabel(task.status),
                         `${formatDateShort(task.scheduleStart)} – ${formatDateShort(
                           task.scheduleEnd,
@@ -661,7 +692,8 @@ function RouteComponent() {
                                   />
                                 )}
                                 <span className="shrink-0 font-mono text-label text-muted-foreground tabular-nums">
-                                  {project?.slug}-{task.number}
+                                  {task.projectSlug ?? project?.slug}-
+                                  {task.number}
                                 </span>
                                 <span className="min-w-0 flex-1 truncate font-medium text-foreground text-xs">
                                   <BaselineMark

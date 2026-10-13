@@ -9,6 +9,7 @@ import PageTitle from "@/components/page-title";
 import {
   nextSort,
   portfolioColumns,
+  portfolioTree,
   sortProjects,
 } from "@/components/project/portfolio";
 import PortfolioTable, {
@@ -207,13 +208,23 @@ function RouteComponent() {
     return counts;
   }, [projects]);
 
+  // Los padres plegados de la cartera en arbol (ADR 089), en esta pestana.
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+  const tree = useMemo(() => portfolioTree(rows, collapsed), [rows, collapsed]);
+  const nested = tree.some((row) => row.depth > 0 || row.childCount > 0);
+
   const { canCreateProjects, canUpdateProjects } = useWorkspacePermission();
   const canCreate = canCreateProjects();
   const canEditProjects = canUpdateProjects();
   // Reordenar a mano solo con la lista entera y en su orden: arrastrar en un
   // subconjunto filtrado u ordenado no diria donde caen los demas.
+  // Ni con subproyectos: el orden manual es de una lista plana.
   const canReorder =
-    canEditProjects && show === "all" && !sort && conditions.length === 0;
+    canEditProjects &&
+    show === "all" &&
+    !sort &&
+    conditions.length === 0 &&
+    !nested;
 
   const handleReorder = (activeId: string, overId: string) => {
     if (!projects) return;
@@ -463,7 +474,16 @@ function RouteComponent() {
               </p>
             ) : (
               <PortfolioTable
-                projects={rows}
+                rows={tree}
+                collapsed={collapsed}
+                onToggle={(projectId) =>
+                  setCollapsed((current) => {
+                    const next = new Set(current);
+                    if (next.has(projectId)) next.delete(projectId);
+                    else next.add(projectId);
+                    return next;
+                  })
+                }
                 workspaceId={workspaceId}
                 visibleColumns={visibleColumns}
                 definitions={definitions}

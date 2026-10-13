@@ -33,8 +33,8 @@ export default function CalendarTaskBar({
   } = segment;
 
   const taskKey =
-    projectSlug && task.number != null
-      ? `${projectSlug}-${task.number}`
+    (task.projectSlug ?? projectSlug) && task.number != null
+      ? `${task.projectSlug ?? projectSlug}-${task.number}`
       : undefined;
 
   const range = `${formatDateShort(task.scheduleStart)} – ${formatDateShort(

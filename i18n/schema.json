@@ -3675,6 +3675,24 @@
 						},
 						"importExportTasksDescription": {
 							"type": "string"
+						},
+						"parentLabel": {
+							"type": "string"
+						},
+						"parentHint": {
+							"type": "string"
+						},
+						"parentHasChildren": {
+							"type": "string"
+						},
+						"noParent": {
+							"type": "string"
+						},
+						"parentSaved": {
+							"type": "string"
+						},
+						"parentError": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -3709,7 +3727,13 @@
 						"toastDeleteError",
 						"validation",
 						"importExportTasks",
-						"importExportTasksDescription"
+						"importExportTasksDescription",
+						"parentLabel",
+						"parentHint",
+						"parentHasChildren",
+						"noParent",
+						"parentSaved",
+						"parentError"
 					]
 				},
 				"projectIntegrations": {
@@ -7397,6 +7421,12 @@
 								},
 								"fields": {
 									"type": "string"
+								},
+								"parent": {
+									"type": "string"
+								},
+								"parentRemoved": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -7407,7 +7437,9 @@
 								"dates",
 								"lead",
 								"leadRemoved",
-								"fields"
+								"fields",
+								"parent",
+								"parentRemoved"
 							]
 						},
 						"fieldsTitle": {
@@ -11757,6 +11789,19 @@
 						"summary",
 						"ghost"
 					]
+				},
+				"subprojects": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"include_one": {
+							"type": "string"
+						},
+						"include_other": {
+							"type": "string"
+						}
+					},
+					"required": ["include_one", "include_other"]
 				}
 			},
 			"required": [
@@ -11805,7 +11850,8 @@
 				"manualActions",
 				"milestone",
 				"dates",
-				"baseline"
+				"baseline",
+				"subprojects"
 			]
 		},
 		"invitations": {
@@ -12079,6 +12125,12 @@
 						},
 						"noMatches": {
 							"type": "string"
+						},
+						"subprojectCount_one": {
+							"type": "string"
+						},
+						"subprojectCount_other": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -12109,7 +12161,9 @@
 						"columnsGroup",
 						"export",
 						"exportError",
-						"noMatches"
+						"noMatches",
+						"subprojectCount_one",
+						"subprojectCount_other"
 					]
 				},
 				"search": {

@@ -303,6 +303,11 @@ function ProjectStatusHistory({
         ? t("settings:projectStatus.history.lead", { name: name ?? "?" })
         : t("settings:projectStatus.history.leadRemoved");
     }
+    if (entry.type === "parent_changed") {
+      return data.to
+        ? t("settings:projectStatus.history.parent")
+        : t("settings:projectStatus.history.parentRemoved");
+    }
     if (entry.type === "fields_changed") {
       const changes = Array.isArray(data.changes)
         ? (data.changes as Array<{ name?: string }>)

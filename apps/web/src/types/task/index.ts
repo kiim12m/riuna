@@ -66,6 +66,10 @@ type Task = {
   teamId?: string | null;
   teamName?: string | null;
   projectId: string;
+  // De un subproyecto, en una vista de su padre (ADR 089): su clave y su
+  // nombre, para pintar `ALC-12` y no la clave del padre.
+  projectSlug?: string;
+  projectName?: string;
   columnId?: string | null;
   labels?: TaskLabel[];
   externalLinks?: TaskExternalLink[];

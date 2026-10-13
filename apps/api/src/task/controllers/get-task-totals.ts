@@ -83,3 +83,22 @@ export async function getTaskTotals(
     ),
   };
 }
+
+/**
+ * Los totales de varios proyectos juntos: los de un padre con sus
+ * subproyectos (ADR 089). Un campo que solo tiene uno suma solo el suyo.
+ */
+export function sumTotals(parts: TaskTotals[]): TaskTotals {
+  const fields: Record<string, number> = {};
+  for (const part of parts) {
+    for (const [key, value] of Object.entries(part.fields)) {
+      fields[key] = (fields[key] ?? 0) + value;
+    }
+  }
+  return {
+    count: parts.reduce((sum, part) => sum + part.count, 0),
+    estimateSeconds: parts.reduce((sum, part) => sum + part.estimateSeconds, 0),
+    loggedSeconds: parts.reduce((sum, part) => sum + part.loggedSeconds, 0),
+    fields,
+  };
+}

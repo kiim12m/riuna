@@ -22,6 +22,7 @@ export function useTaskTotals(
       projectId,
       filter ? JSON.stringify(filter) : null,
       options?.treeScope ?? "matching",
+      options?.includeSubprojects ? "subprojects" : null,
       listUpdatedAt,
     ],
     queryFn: () => getTaskTotals(projectId, filter, options),

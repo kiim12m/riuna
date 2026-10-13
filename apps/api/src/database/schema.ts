@@ -373,6 +373,11 @@ export const projectTable = pgTable(
       .$type<Record<string, unknown>>()
       .notNull()
       .default({}),
+    // El proyecto padre (ADR 089), de un solo nivel: un subproyecto no tiene
+    // hijos. Al borrar el padre, sus hijos vuelven a ser proyectos sueltos.
+    parentId: text("parent_id").references((): AnyPgColumn => projectTable.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     unique("project_workspace_id_id_unique").on(table.workspaceId, table.id),
@@ -380,6 +385,8 @@ export const projectTable = pgTable(
       "project_health_valid",
       sql`${table.health} IN ('not_started', 'on_track', 'at_risk', 'off_track', 'finished', 'cancelled')`,
     ),
+    index("project_parent_id_idx").on(table.parentId),
+    check("project_not_own_parent", sql`${table.parentId} <> ${table.id}`),
     check(
       "project_dates_ordered",
       sql`${table.endDate} IS NULL OR ${table.startDate} IS NULL OR ${table.endDate} >= ${table.startDate}`,

@@ -225,6 +225,49 @@ export function openConnectionCounts() {
   return { users, projects };
 }
 
+// Lo que cambia en las tareas de un subproyecto tambien cambia lo que ensena
+// su padre con «incluir subproyectos» (ADR 089). Se reenvia al canal del padre
+// con su `projectId`, que es lo que el cliente invalida, y sin excluir a quien
+// lo hizo: su vista del padre no sabe que la tarea era de un hijo.
+const FORWARDED_TYPES = new Set([
+  "TASK_CREATED",
+  "TASK_UPDATED",
+  "TASK_DELETED",
+  "TASK_MOVED",
+  "TASK_LABEL_UPDATED",
+  "TASK_RELATION_UPDATED",
+  "COMMENT_UPDATED",
+]);
+
+async function forwardToParent(
+  projectId: string,
+  messages: ProjectBroadcastMessage[],
+) {
+  const forwarded = messages.filter((message) =>
+    FORWARDED_TYPES.has(message.type),
+  );
+  if (forwarded.length === 0 || !adapter) return;
+  try {
+    const [row] = await db
+      .select({ parentId: schema.projectTable.parentId })
+      .from(schema.projectTable)
+      .where(eq(schema.projectTable.id, projectId))
+      .limit(1);
+    if (!row?.parentId) return;
+    for (const message of forwarded) {
+      await adapter.publish({
+        projectId: row.parentId,
+        message: { ...message, projectId: row.parentId },
+      });
+    }
+  } catch (err) {
+    log.error(
+      `Failed to forward a broadcast to the parent of ${projectId}:`,
+      err,
+    );
+  }
+}
+
 export function broadcastToProject(
   projectId: string,
   message: ProjectBroadcastMessage,
@@ -270,6 +313,11 @@ export function broadcastToProject(
           );
         });
     }
+
+    void forwardToParent(
+      projectId,
+      [...queue.values()].map(({ message }) => message),
+    );
   }, 100);
 
   projectBroadcastTimeouts.set(projectId, timeout);
@@ -413,7 +461,11 @@ subscribeToEvent<{ workspaceId: string }>(
 
 // El estado de un proyecto (ADR 087) sale en la lista de proyectos y en su
 // cabecera, que mira todo el espacio: por el canal de usuario de cada miembro.
-for (const event of ["project.status_changed", "project.fields_changed"]) {
+for (const event of [
+  "project.status_changed",
+  "project.fields_changed",
+  "project.parent_changed",
+]) {
   subscribeToEvent<{ workspaceId: string }>(event, async ({ workspaceId }) => {
     for (const userId of await membersOfWorkspace(workspaceId)) {
       broadcastToUser(userId, { type: "PROJECTS_INVALIDATED", workspaceId });

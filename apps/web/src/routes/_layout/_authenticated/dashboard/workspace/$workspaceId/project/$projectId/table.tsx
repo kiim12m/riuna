@@ -6,6 +6,7 @@ import { toViewBaseline } from "@/components/baseline/baseline-view";
 import ProjectLayout from "@/components/common/project-layout";
 import PageTitle from "@/components/page-title";
 import { ProjectSizeWarning } from "@/components/project/project-size-warning";
+import { SubprojectToggle } from "@/components/project/subproject-toggle";
 import TableView from "@/components/table-view";
 import type { AddFieldPayload } from "@/components/table-view/add-field-dialog";
 import AddFieldDialog from "@/components/table-view/add-field-dialog";
@@ -51,6 +52,7 @@ import { useFilterableFields } from "@/hooks/use-filterable-fields";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { authClient } from "@/lib/auth-client";
 import { type BaselineChoice, isBaselineChoice } from "@/lib/baseline";
+import { subprojectColumns, subprojectTasks } from "@/lib/subproject-tasks";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
 import { buildFilter, type EditableCondition } from "@/types/task-filter";
@@ -80,6 +82,8 @@ type TableSearchParams = {
   color?: RowColoring;
   /** Con que momento se compara (ADR 085). Sin dato, con ninguno. */
   baseline?: BaselineChoice;
+  /** Con las tareas de los subproyectos (ADR 089). */
+  subprojects?: boolean;
 };
 
 const GROUP_BYS = ["epic"] as const;
@@ -113,6 +117,7 @@ export const Route = createFileRoute(
       ? (search.color as RowColoring)
       : undefined,
     baseline: isBaselineChoice(search.baseline) ? search.baseline : undefined,
+    subprojects: search.subprojects === true ? true : undefined,
   }),
 });
 
@@ -128,6 +133,7 @@ function RouteComponent() {
     groupBy,
     color,
     baseline: baselineChoice,
+    subprojects,
   } = Route.useSearch();
   const navigate = useNavigate();
 
@@ -163,8 +169,9 @@ function RouteComponent() {
           : treeMode === "withDescendants"
             ? ("withDescendants" as const)
             : ("matching" as const),
+      includeSubprojects: Boolean(subprojects),
     }),
-    [treeMode],
+    [treeMode, subprojects],
   );
   const {
     data: project,
@@ -226,8 +233,14 @@ function RouteComponent() {
     return [
       ...(project.columns ?? []).flatMap((column) => column.tasks ?? []),
       ...(project.plannedTasks ?? []),
+      ...subprojectTasks(project),
     ];
   }, [project]);
+  // Los estados de un subproyecto son sus columnas, no las del padre.
+  const statusColumns = useMemo(
+    () => [...(project?.columns ?? []), ...subprojectColumns(project)],
+    [project],
+  );
 
   // Los campos de tipo `usuario` eligen de aqui. Se aplanan a lo minimo que la
   // celda necesita para no acoplarla a la forma de la respuesta.
@@ -264,6 +277,7 @@ function RouteComponent() {
           baseline: isBaselineChoice(view.config.baseline)
             ? view.config.baseline
             : undefined,
+          subprojects: view.config.subprojects === true ? true : undefined,
           viewId: view.id,
         },
         replace: true,
@@ -287,6 +301,7 @@ function RouteComponent() {
             ...(groupBy ? { groupBy } : {}),
             ...(color ? { color } : {}),
             ...(baselineChoice ? { baseline: baselineChoice } : {}),
+            ...(subprojects ? { subprojects: true } : {}),
           },
         },
         {
@@ -311,6 +326,7 @@ function RouteComponent() {
       groupBy,
       color,
       baselineChoice,
+      subprojects,
       t,
     ],
   );
@@ -471,6 +487,20 @@ function RouteComponent() {
                 </SelectItem>
               </SelectContent>
             </Select>
+            <SubprojectToggle
+              count={project?.subprojectCount ?? 0}
+              checked={Boolean(subprojects)}
+              onChange={(next) =>
+                navigate({
+                  to: ".",
+                  search: (previous: TableSearchParams) => ({
+                    ...previous,
+                    subprojects: next ? true : undefined,
+                  }),
+                  replace: true,
+                })
+              }
+            />
             <BaselinePicker
               value={baselineChoice}
               onChange={(next) =>
@@ -494,7 +524,8 @@ function RouteComponent() {
                 Boolean(columnsParam) ||
                 Boolean(groupBy) ||
                 Boolean(color) ||
-                Boolean(baselineChoice)
+                Boolean(baselineChoice) ||
+                Boolean(subprojects)
               }
               saving={isSavingView}
               onApply={handleApplyView}
@@ -538,7 +569,7 @@ function RouteComponent() {
           tasks={tasks}
           definitions={definitions as FieldDefinition[]}
           members={members}
-          columns={project?.columns ?? []}
+          columns={statusColumns}
           flatten={treeMode === "flat"}
           visibleColumns={visibleColumns}
           groupBy={groupBy}

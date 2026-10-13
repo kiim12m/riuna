@@ -1250,6 +1250,28 @@ export function registerMcpTools(
   );
 
   registerTool(
+    "set_project_parent",
+    {
+      description:
+        "Make a project a subproject of another (parentId), or release it (parentId null). One level only: the parent cannot have a parent, and a project with subprojects cannot become one. Personal inboxes take no part.",
+      inputSchema: z.object({
+        projectId: nonEmptyString,
+        parentId: z.string().nullable(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/project/${encodeURIComponent(args.projectId)}/parent`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({ parentId: args.parentId }),
+          },
+        ),
+      ),
+  );
+
+  registerTool(
     "delete_label",
     {
       description:

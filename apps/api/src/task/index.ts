@@ -13,6 +13,7 @@ import {
   workspaceTable,
 } from "../database/schema";
 import { buildImportSource } from "../external-ref";
+import { forProjectAndSubprojects } from "../project/subprojects";
 import { taskSchema } from "../schemas";
 import {
   assertTaskImageKeyMatchesContext,
@@ -44,7 +45,7 @@ import exportTasks from "./controllers/export-tasks";
 import exportWorkspaceTasks from "./controllers/export-workspace-tasks";
 import getTask from "./controllers/get-task";
 import { getTaskBaseline } from "./controllers/get-task-baseline";
-import { getTaskTotals } from "./controllers/get-task-totals";
+import { getTaskTotals, sumTotals } from "./controllers/get-task-totals";
 import getTasks from "./controllers/get-tasks";
 import { importServitec } from "./controllers/import-servitec";
 import importTasks from "./controllers/import-tasks";
@@ -140,6 +141,8 @@ const task = new Hono<{
           treeScope: v.optional(
             v.picklist(["matching", "roots", "withDescendants"]),
           ),
+          // Con las tareas de los subproyectos, cada uno aparte (ADR 089).
+          includeSubprojects: v.optional(v.picklist(["true", "false"])),
         }),
       ),
     ),
@@ -165,6 +168,7 @@ const task = new Hono<{
           rootsOnly: filters.rootsOnly === "true",
           treeScope: filters.treeScope,
           filter,
+          includeSubprojects: filters.includeSubprojects === "true",
         });
 
         return c.json(tasks);
@@ -209,6 +213,7 @@ const task = new Hono<{
         treeScope: v.optional(
           v.picklist(["matching", "roots", "withDescendants"]),
         ),
+        includeSubprojects: v.optional(v.picklist(["true", "false"])),
       }),
     ),
     workspaceAccess.fromProject("projectId"),
@@ -226,12 +231,13 @@ const task = new Hono<{
       }
 
       try {
-        return c.json(
-          await getTaskTotals(projectId, {
-            treeScope: query.treeScope,
-            filter,
-          }),
+        // Con los subproyectos (ADR 089), la suma de cada uno.
+        const parts = await forProjectAndSubprojects(
+          projectId,
+          query.includeSubprojects === "true",
+          (id) => getTaskTotals(id, { treeScope: query.treeScope, filter }),
         );
+        return c.json(sumTotals(parts));
       } catch (error) {
         if (error instanceof FilterError) {
           throw new HTTPException(400, { message: error.message });
@@ -263,6 +269,7 @@ const task = new Hono<{
         treeScope: v.optional(
           v.picklist(["matching", "roots", "withDescendants"]),
         ),
+        includeSubprojects: v.optional(v.picklist(["true", "false"])),
       }),
     ),
     workspaceAccess.fromProject("projectId"),
@@ -280,12 +287,23 @@ const task = new Hono<{
       }
 
       try {
-        return c.json(
-          await getTaskBaseline(projectId, new Date(query.at), {
-            treeScope: query.treeScope,
-            filter,
-          }),
+        // Con los subproyectos (ADR 089), lo de cada uno junto.
+        const parts = await forProjectAndSubprojects(
+          projectId,
+          query.includeSubprojects === "true",
+          (id) =>
+            getTaskBaseline(id, new Date(query.at), {
+              treeScope: query.treeScope,
+              filter,
+            }),
         );
+        const [own] = parts;
+        return c.json({
+          at: own?.at ?? new Date(query.at).toISOString(),
+          added: parts.flatMap((part) => part.added),
+          removed: parts.flatMap((part) => part.removed),
+          changed: parts.flatMap((part) => part.changed),
+        });
       } catch (error) {
         if (error instanceof FilterError) {
           throw new HTTPException(400, { message: error.message });

@@ -8,6 +8,7 @@ import KanbanBoard from "@/components/kanban-board";
 import ListView from "@/components/list-view";
 import PageTitle from "@/components/page-title";
 import { ProjectSizeWarning } from "@/components/project/project-size-warning";
+import { SubprojectToggle } from "@/components/project/subproject-toggle";
 import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,8 @@ import { useUserPreferencesStore } from "@/store/user-preferences";
 
 type BoardSearchParams = {
   taskId?: string;
+  /** En la Lista, con las tareas de los subproyectos (ADR 089). */
+  subprojects?: boolean;
 };
 
 export const Route = createFileRoute(
@@ -35,6 +38,7 @@ export const Route = createFileRoute(
   component: RouteComponent,
   validateSearch: (search: Record<string, unknown>): BoardSearchParams => ({
     taskId: typeof search.taskId === "string" ? search.taskId : undefined,
+    subprojects: search.subprojects === true ? true : undefined,
   }),
 });
 
@@ -81,7 +85,7 @@ function BoardSkeleton() {
 function RouteComponent() {
   const { t } = useTranslation();
   const { projectId, workspaceId } = Route.useParams();
-  const { taskId } = Route.useSearch();
+  const { taskId, subprojects } = Route.useSearch();
   const navigate = useNavigate();
   const { project, setProject } = useProjectStore();
   const { viewMode, setViewMode } = useUserPreferencesStore();
@@ -111,12 +115,21 @@ function RouteComponent() {
     textQuery: boardSearchQuery,
     workspaceLabels,
   });
-  const { data } = useGetTasks(projectId, filter);
+  // Solo la Lista los incluye: el tablero tiene las columnas del proyecto.
+  const includeSubprojects = viewMode === "list" && Boolean(subprojects);
+  const taskOptions = useMemo(
+    () => ({ includeSubprojects }),
+    [includeSubprojects],
+  );
+  const { data } = useGetTasks(projectId, filter, taskOptions);
 
   const handleCloseTaskSheet = useCallback(() => {
     navigate({
       to: ".",
-      search: {},
+      search: (previous: BoardSearchParams) => ({
+        ...previous,
+        taskId: undefined,
+      }),
       replace: true,
     });
   }, [navigate]);
@@ -253,6 +266,24 @@ function RouteComponent() {
           onSortChange={setSort}
           groupBy={groupBy}
           onGroupByChange={setGroupBy}
+          trailing={
+            viewMode === "list" ? (
+              <SubprojectToggle
+                count={data?.subprojectCount ?? 0}
+                checked={Boolean(subprojects)}
+                onChange={(next) =>
+                  navigate({
+                    to: ".",
+                    search: (previous: BoardSearchParams) => ({
+                      ...previous,
+                      subprojects: next ? true : undefined,
+                    }),
+                    replace: true,
+                  })
+                }
+              />
+            ) : null
+          }
         />
 
         <ProjectSizeWarning project={project} />
@@ -269,6 +300,7 @@ function RouteComponent() {
                 project={sortedProject}
                 disableDragDrop={sort.field !== "position"}
                 groupBy={groupBy}
+                subprojects={includeSubprojects ? data?.subprojects : undefined}
               />
             )
           ) : (

@@ -91,6 +91,21 @@ export async function notifyProjectHealth(data: ProjectStatusChanged) {
   }
 }
 
+// Entrar o salir de un proyecto padre (ADR 089), en la actividad del hijo.
+void subscribeToEvent<{
+  projectId: string;
+  userId: string;
+  from: string | null;
+  to: string | null;
+}>("project.parent_changed", async (data) => {
+  await db.insert(projectActivityTable).values({
+    projectId: data.projectId,
+    userId: data.userId,
+    type: "parent_changed",
+    eventData: { from: data.from, to: data.to },
+  });
+});
+
 // Los campos de proyecto (ADR 088) tambien dejan rastro en su actividad.
 void subscribeToEvent<{
   projectId: string;

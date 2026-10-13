@@ -71,6 +71,8 @@ type BoardToolbarProps = {
   onSortChange: (sort: SortConfig) => void;
   groupBy: GroupByField;
   onGroupByChange: (groupBy: GroupByField) => void;
+  /** Lo que va antes del cambio de vista (los subproyectos de la Lista). */
+  trailing?: ReactNode;
 };
 
 // Indicador visual; el estado real va en aria-checked del botón que lo envuelve.
@@ -160,6 +162,7 @@ export default function BoardToolbar({
   onSortChange,
   groupBy,
   onGroupByChange,
+  trailing,
 }: BoardToolbarProps) {
   const { t } = useTranslation();
   const { data: epics = [] } = useGetEpics(project?.id ?? "");
@@ -815,6 +818,7 @@ export default function BoardToolbar({
           </div>
 
           <div className="inline-flex items-center gap-1">
+            {trailing}
             <button
               type="button"
               className={`inline-flex h-6 items-center gap-1 rounded-md px-2 text-xs font-medium transition-colors ${

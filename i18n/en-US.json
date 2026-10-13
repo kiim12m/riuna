@@ -944,7 +944,13 @@
 				"iconRequired": "Icon is required"
 			},
 			"importExportTasks": "Import/Export",
-			"importExportTasksDescription": "Import and export tasks."
+			"importExportTasksDescription": "Import and export tasks.",
+			"parentLabel": "Subproject of",
+			"parentHint": "A project can hang from another, one level deep. The parent's views can include its tasks, and its progress counts the whole branch.",
+			"parentHasChildren": "It has subprojects, so it cannot hang from another project.",
+			"noParent": "None",
+			"parentSaved": "Parent project saved",
+			"parentError": "The parent project could not be changed"
 		},
 		"projectIntegrations": {
 			"pageTitle": "Project Integrations",
@@ -1879,7 +1885,9 @@
 				"dates": "set the dates to {{start}} – {{end}}",
 				"lead": "made {{name}} the lead",
 				"leadRemoved": "removed the lead",
-				"fields": "changed {{names}}"
+				"fields": "changed {{names}}",
+				"parent": "became a subproject",
+				"parentRemoved": "stopped being a subproject"
 			},
 			"fieldsTitle": "Project fields",
 			"fieldsEmpty": "The workspace has no project fields yet. They are defined in the workspace settings, under Custom fields."
@@ -2990,6 +2998,10 @@
 			"removedTitle_other": "{{count}} tasks no longer match",
 			"summary": "Since {{since}}: {{added}} in · {{removed}} out · {{changed}} changed",
 			"ghost": "Then: {{start}} – {{end}}"
+		},
+		"subprojects": {
+			"include_one": "Include its {{count}} subproject",
+			"include_other": "Include its {{count}} subprojects"
 		}
 	},
 	"invitations": {
@@ -3068,7 +3080,9 @@
 			},
 			"export": "Export",
 			"exportError": "The project list could not be exported",
-			"noMatches": "No project matches the filter"
+			"noMatches": "No project matches the filter",
+			"subprojectCount_one": "{{count}} subproject",
+			"subprojectCount_other": "{{count}} subprojects"
 		},
 		"search": {
 			"pageTitle": "Search",

@@ -1061,6 +1061,10 @@
                       "customFields": {
                         "type": "object",
                         "additionalProperties": true
+                      },
+                      "parentId": {
+                        "type": "string",
+                        "nullable": true
                       }
                     },
                     "required": [
@@ -1203,6 +1207,10 @@
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
+                    },
+                    "parentId": {
+                      "type": "string",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -1395,6 +1403,10 @@
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
+                    },
+                    "parentId": {
+                      "type": "string",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -1522,6 +1534,10 @@
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
+                    },
+                    "parentId": {
+                      "type": "string",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -1683,6 +1699,10 @@
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
+                    },
+                    "parentId": {
+                      "type": "string",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -1814,6 +1834,10 @@
                       "customFields": {
                         "type": "object",
                         "additionalProperties": true
+                      },
+                      "parentId": {
+                        "type": "string",
+                        "nullable": true
                       }
                     },
                     "required": [
@@ -1979,6 +2003,10 @@
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
+                    },
+                    "parentId": {
+                      "type": "string",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -2134,6 +2162,10 @@
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
+                    },
+                    "parentId": {
+                      "type": "string",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -2213,6 +2245,158 @@
           }
         },
         "summary": "Update Project Status"
+      }
+    },
+    "/project/{id}/parent": {
+      "patch": {
+        "operationId": "updateProjectParent",
+        "tags": [
+          "Projects"
+        ],
+        "description": "Make a project a subproject of another, or release it with `parentId: null` (ADR 089). One level only: the parent cannot have a parent and a project with subprojects cannot become one. Personal inboxes take no part.",
+        "responses": {
+          "200": {
+            "description": "Project with its new parent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "icon": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "isPublic": {
+                      "type": "boolean",
+                      "nullable": true
+                    },
+                    "archivedAt": {
+                      "nullable": true
+                    },
+                    "position": {
+                      "type": "number"
+                    },
+                    "cascadeClose": {
+                      "type": "boolean"
+                    },
+                    "cascadeArchive": {
+                      "type": "boolean"
+                    },
+                    "maxTaskDepth": {
+                      "type": "number"
+                    },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
+                    "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "parentId": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "slug",
+                    "icon",
+                    "name",
+                    "description",
+                    "createdAt",
+                    "isPublic",
+                    "archivedAt",
+                    "position",
+                    "cascadeClose",
+                    "cascadeArchive",
+                    "maxTaskDepth",
+                    "ownerUserId"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "parentId": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "parentId"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Project Parent"
       }
     },
     "/project/{id}/custom-fields": {
@@ -2308,6 +2492,10 @@
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
+                    },
+                    "parentId": {
+                      "type": "string",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -2488,6 +2676,10 @@
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
+                    },
+                    "parentId": {
+                      "type": "string",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -2617,6 +2809,10 @@
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
+                    },
+                    "parentId": {
+                      "type": "string",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -2788,6 +2984,17 @@
               ],
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "includeSubprojects",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
           }
         ],
         "summary": "List Tasks"
@@ -2862,6 +3069,17 @@
               ],
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "includeSubprojects",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
+              ],
+              "type": "string"
+            }
           }
         ],
         "summary": "Get Task Totals"
@@ -2919,6 +3137,17 @@
                 "matching",
                 "roots",
                 "withDescendants"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "includeSubprojects",
+            "schema": {
+              "enum": [
+                "true",
+                "false"
               ],
               "type": "string"
             }
@@ -6900,6 +7129,9 @@
                         ],
                         "type": "string"
                       },
+                      "subprojects": {
+                        "type": "boolean"
+                      },
                       "show": {
                         "enum": [
                           "attention",
@@ -7116,6 +7348,9 @@
                         ],
                         "type": "string"
                       },
+                      "subprojects": {
+                        "type": "boolean"
+                      },
                       "show": {
                         "enum": [
                           "attention",
@@ -7273,6 +7508,9 @@
                           "epic"
                         ],
                         "type": "string"
+                      },
+                      "subprojects": {
+                        "type": "boolean"
                       },
                       "show": {
                         "enum": [
@@ -16631,6 +16869,10 @@
                         "customFields": {
                           "type": "object",
                           "additionalProperties": true
+                        },
+                        "parentId": {
+                          "type": "string",
+                          "nullable": true
                         }
                       },
                       "required": [
@@ -16768,6 +17010,10 @@
                         "customFields": {
                           "type": "object",
                           "additionalProperties": true
+                        },
+                        "parentId": {
+                          "type": "string",
+                          "nullable": true
                         }
                       },
                       "required": [
@@ -19735,6 +19981,10 @@
                           "customFields": {
                             "type": "object",
                             "additionalProperties": true
+                          },
+                          "parentId": {
+                            "type": "string",
+                            "nullable": true
                           }
                         },
                         "required": [

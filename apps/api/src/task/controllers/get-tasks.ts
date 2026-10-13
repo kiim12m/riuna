@@ -1,4 +1,13 @@
-import { and, asc, desc, eq, inArray, type SQL, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  type SQL,
+  sql,
+} from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import {
@@ -12,6 +21,7 @@ import {
   userTable,
 } from "../../database/schema";
 import { getEpicsByTask } from "../../epic/controllers/get-epics";
+import { FilterError } from "../../view/filter-to-sql";
 import { type TaskListFilters, taskListWhere } from "../list-conditions";
 import { getMultiAssigneesByTask } from "../multi-assignees";
 import {
@@ -30,6 +40,11 @@ type GetTasksOptions = TaskListFilters & {
     | "title"
     | "number";
   sortOrder?: "asc" | "desc";
+  /**
+   * Con las tareas de sus subproyectos (ADR 089), cada uno aparte y con sus
+   * columnas: las de un hijo no son las del padre.
+   */
+  includeSubprojects?: boolean;
 };
 
 const priorityCaseExpr = sql<number>`CASE
@@ -62,7 +77,11 @@ function buildOrderBy(
   }
 }
 
-async function getTasks(projectId: string, options: GetTasksOptions = {}) {
+/** Las tareas de un solo proyecto, repartidas por sus columnas. */
+async function getProjectTasks(
+  projectId: string,
+  options: GetTasksOptions = {},
+) {
   const project = await db.query.projectTable.findFirst({
     where: eq(projectTable.id, projectId),
   });
@@ -328,6 +347,63 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
           pageSize: paginatedTasks.length,
           totalPages: 1,
         },
+  };
+}
+
+async function getTasks(projectId: string, options: GetTasksOptions = {}) {
+  const result = await getProjectTasks(projectId, options);
+
+  // Los subproyectos (ADR 089): cuantos hay siempre, para que la vista sepa si
+  // ofrecer incluirlos, y sus tareas cuando se piden.
+  const children = await db
+    .select({
+      id: projectTable.id,
+      name: projectTable.name,
+      slug: projectTable.slug,
+      icon: projectTable.icon,
+    })
+    .from(projectTable)
+    .where(
+      and(
+        eq(projectTable.parentId, projectId),
+        isNull(projectTable.archivedAt),
+      ),
+    )
+    .orderBy(asc(projectTable.position), asc(projectTable.name));
+  const subprojects = options.includeSubprojects
+    ? await Promise.all(
+        children.map(async (child) => {
+          try {
+            const { data } = await getProjectTasks(child.id, {
+              ...options,
+              page: undefined,
+              limit: undefined,
+            });
+            return {
+              ...child,
+              columns: data.columns.map(
+                ({ tasks: _tasks, ...column }) => column,
+              ),
+              tasks: [
+                ...data.columns.flatMap((column) => column.tasks),
+                ...data.plannedTasks,
+              ],
+            };
+          } catch (error) {
+            // Un filtro por un campo que el hijo no tiene no casa con ninguna
+            // de sus tareas: no tumba la vista del padre.
+            if (error instanceof FilterError) {
+              return { ...child, columns: [], tasks: [] };
+            }
+            throw error;
+          }
+        }),
+      )
+    : [];
+
+  return {
+    ...result,
+    data: { ...result.data, subprojectCount: children.length, subprojects },
   };
 }
 

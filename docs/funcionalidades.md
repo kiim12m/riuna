@@ -104,6 +104,14 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
     campos de proyecto, en la URL;
   - vistas guardadas de espacio, privadas o compartidas, y exportación a Excel
     con el filtro que se ve.
+- **Subproyectos** ([ADR 089](adr/089-subproyectos.md)): un proyecto puede
+  colgar de otro, de un solo nivel, desde «Subproyecto de» en sus ajustes.
+  - En la lista de proyectos, el padre resume su rama (progreso, tareas y aviso
+    de desviación) y sus hijos salen debajo, plegables.
+  - Lista, Tabla, Gantt y Calendario del padre pueden incluir las tareas de sus
+    subproyectos, cada una con su clave; los totales y la línea base las
+    cuentan. El tablero no, porque las columnas son de cada proyecto.
+  - Los permisos son los del espacio, como en cualquier proyecto.
 - **Campos de proyecto**: campos personalizados de los propios proyectos
   (cliente, tipo de obra, presupuesto…), con los mismos tipos que los de
   tarea, definidos en los ajustes del espacio y rellenados en «Estado y
@@ -717,7 +725,7 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 63 herramientas**. Una prueba de paridad
+Dos caminos con **las mismas 64 herramientas**. Una prueba de paridad
 (`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
 antes el paquete stdio se había quedado sin las cinco del plan personal y el
 cronómetro.
@@ -729,7 +737,7 @@ cronómetro.
   instalador interactivo para Cursor —global y por proyecto—, Claude Desktop o
   una ruta JSON propia, y autenticación por device flow o `RIUNA_API_KEY`.
 
-Las herramientas cubren identidad y espacios, proyectos con su estado y sus campos, tareas, comentarios,
+Las herramientas cubren identidad y espacios, proyectos con su estado, sus campos y sus subproyectos, tareas, comentarios,
 etiquetas, épicas, relaciones, observadores, recordatorios, acciones de un clic,
 totales de un filtro, línea base, avisos, miembros, búsqueda, columnas, registro de tiempo,
 actividad y notificaciones, además del plan personal, el

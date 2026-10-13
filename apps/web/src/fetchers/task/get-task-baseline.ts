@@ -18,6 +18,9 @@ async function getTaskBaseline(
       ...(options?.treeScope && options.treeScope !== "matching"
         ? { treeScope: options.treeScope }
         : {}),
+      ...(options?.includeSubprojects
+        ? { includeSubprojects: "true" as const }
+        : {}),
     },
   });
 
