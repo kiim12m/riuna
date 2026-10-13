@@ -2231,7 +2231,10 @@
 		"switchedToAutoDates": "pasó a fechas automáticas",
 		"switchedToOwnDates": "pasó a fechas propias",
 		"shiftedBranch_one": "movió su rama ({{count}} tarea) {{days}} días laborables",
-		"shiftedBranch_other": "movió su rama ({{count}} tareas) {{days}} días laborables"
+		"shiftedBranch_other": "movió su rama ({{count}} tareas) {{days}} días laborables",
+		"precedenceAdded": "pasó a seguir a otra tarea (desfase de {{lag}} días laborables)",
+		"precedenceLagChanged": "cambió el desfase de una predecesora a {{lag}} días laborables",
+		"precedenceRemoved": "dejó de seguir a una tarea"
 	},
 	"tasks": {
 		"actions": {
@@ -2527,7 +2530,8 @@
 			"dependencyBlocks": "{{source}} bloquea a {{target}}",
 			"milestoneAriaLabel": "Hito {{title}}: arrastra para cambiar su fecha o pulsa Intro para abrirlo",
 			"milestoneAriaLabelReadOnly": "Hito {{title}}: pulsa Intro para abrirlo",
-			"branchOverflow": "Las subtareas se salen de las fechas propias de esta tarea"
+			"branchOverflow": "Las subtareas se salen de las fechas propias de esta tarea",
+			"dependencyPrecedes": "{{source}} precede a {{target}} (desfase de {{lag}} días laborables)"
 		},
 		"group": {
 			"label": "Agrupar",
@@ -2656,8 +2660,16 @@
 			"types": {
 				"blocks": "bloquea",
 				"related": "relacionada con",
-				"blocked_by": "bloqueada por"
-			}
+				"blocked_by": "bloqueada por",
+				"precedes": "precede a",
+				"follows": "sigue a"
+			},
+			"precedes": "Precede a",
+			"follows": "Sigue a",
+			"lag": "Desfase (días lab.)",
+			"lagChip": "desfase {{lag}} d",
+			"lagHint": "Días laborables entre el fin de la predecesora y el inicio de la sucesora; negativo para solapar. Pulsa para cambiarlo.",
+			"lagError": "No se pudo cambiar el desfase"
 		},
 		"sort": {
 			"label": "Ordenar",

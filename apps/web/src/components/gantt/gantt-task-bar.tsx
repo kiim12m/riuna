@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useShiftTaskBranch } from "@/hooks/mutations/task/use-task-schedule";
 import { useUpdateTask } from "@/hooks/mutations/task/use-update-task";
 import { cn } from "@/lib/cn";
-import { hasDerivedDates } from "@/lib/task-dates";
+import { hasDerivedDates, hasDerivedStart } from "@/lib/task-dates";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
 import { barHeightRem, barMetrics, type GanttTimeline } from "./gantt-timeline";
@@ -56,6 +56,9 @@ export function GanttTaskBar({
   // automaticas no se estira: salen de las subtareas.
   const isParent = (task.subtree?.childCount ?? 0) > 0;
   const derived = hasDerivedDates(task);
+  // Una sucesora atada (ADR 084) no se arrastra: su inicio sale de sus
+  // predecesoras. Su fin si se estira, salvo en un hito.
+  const tied = !isParent && hasDerivedStart(task);
   const [dragDisplay, setDragDisplay] = useState<{
     start: Date;
     end: Date;
@@ -267,8 +270,8 @@ export function GanttTaskBar({
           { title: task.title },
         )}
         data-testid="gantt-milestone"
-        onPointerDown={readOnly ? undefined : handleMove}
-        onClick={readOnly ? onOpenTask : undefined}
+        onPointerDown={readOnly || tied ? undefined : handleMove}
+        onClick={readOnly || tied ? onOpenTask : undefined}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
@@ -277,7 +280,9 @@ export function GanttTaskBar({
         }}
         className={cn(
           "pointer-events-auto absolute top-1/2 z-[2] rotate-45 rounded-[2px] border-[1.5px] border-brand-strong bg-brand/70 outline-none transition-shadow hover:shadow-e2 focus-visible:ring-2 focus-visible:ring-ring",
-          readOnly ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
+          readOnly || tied
+            ? "cursor-pointer"
+            : "cursor-grab active:cursor-grabbing",
           isDone && "opacity-50",
         )}
         style={{
@@ -341,7 +346,7 @@ export function GanttTaskBar({
             style={{ width: `${subtree?.progress ?? 0}%` }}
           />
         )}
-        {!readOnly && !derived && (
+        {!readOnly && !derived && !tied && (
           <button
             type="button"
             aria-label={t("tasks:gantt.resizeStart")}
@@ -357,8 +362,8 @@ export function GanttTaskBar({
               : "tasks:gantt.taskAriaLabel",
             { title: task.title },
           )}
-          onPointerDown={readOnly ? undefined : handleMove}
-          onClick={readOnly ? onOpenTask : undefined}
+          onPointerDown={readOnly || tied ? undefined : handleMove}
+          onClick={readOnly || tied ? onOpenTask : undefined}
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();
@@ -367,7 +372,9 @@ export function GanttTaskBar({
           }}
           className={cn(
             "relative z-[1] min-w-0 flex-1 touch-manipulation rounded-full outline-none before:absolute before:inset-x-0 before:-inset-y-2 before:content-[''] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-            readOnly ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
+            readOnly || tied
+              ? "cursor-pointer"
+              : "cursor-grab active:cursor-grabbing",
           )}
         />
         {!readOnly && !derived && (

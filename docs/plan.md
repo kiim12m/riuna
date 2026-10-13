@@ -30,7 +30,7 @@
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
 | **Total Bloque A** | **45** + 18 del interludio | |
-| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hecha la tanda 1 (1.1-1.6) y de la tanda 2, la 2.1 y la 2.2 · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
+| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hecha la tanda 1 (1.1-1.6) y de la tanda 2, de la 2.1 a la 2.3 · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -3024,14 +3024,24 @@ siempre), incluida `watchers.spec.ts` de la 1.1.
   - La fecha de inicio pasa a dejar actividad. Lo que mueve la planificación deja actividad,
     pero no avisa ni dispara automatizaciones. MCP: `set_task_auto_dates` y
     `shift_task_branch`.
-- **2.3 Precede/sigue con desfase y planificación automática** · L. Una relación `precedes` —«sigue
-  a» es su inversa— con un desfase en días laborables, también negativo para solapar.
-  - Con fechas automáticas, mover una predecesora desplaza a sus sucesoras en días laborables,
-    saltando los festivos del espacio; las ausencias, a decidir en la ADR.
-  - Todo en una transacción, bajo el cerrojo por proyecto, con anticiclo, actividad propia y sin
-    disparar automatizaciones en cascada.
-  - El Gantt dibuja las flechas con su desfase.
-  - Presupuesto de 300 ms con 50.000 tareas, medido con `EXPLAIN`.
+- **2.3 Precede/sigue con desfase y planificación automática** ✔ · L ·
+  [ADR 084](adr/084-precedencias-y-planificacion-automatica.md). **Hecho (2026-10-13).**
+  Decisiones del usuario: las sucesoras van **atadas** (se mueven en los dos sentidos) y los días
+  laborables son de lunes a viernes sin los festivos del espacio, sin ausencias.
+  - Relación `precedes` con `lag` en días laborables (migración 0089); «sigue a» es su vista
+    desde la otra punta. Crearla pone a la sucesora en fechas automáticas.
+  - El mismo motor de la 2.2: cada cambio despierta a sucesoras y ancestros, en una transacción
+    bajo el cerrojo del proyecto. Lo que mueve deja actividad, pero no avisa.
+  - Se rechaza lo que no se puede planificar: entre proyectos, con un resumen como sucesora,
+    dentro de la propia rama, o si cerraría un ciclo (409). Mover una tarea de proyecto rompe
+    las precedencias que crucen.
+  - El inicio de una sucesora atada no se edita a mano; su fin, que es su duración, sí.
+  - Gantt con flechas y desfase; «Precede a» y «Sigue a» en las relaciones del detalle, con el
+    desfase editable.
+  - MCP: `precedes` y `lag` en `create_task_relation`, y `set_task_relation_lag`.
+  - Medido con 50.000 tareas: una cadena de 200 precedencias que arrastra unas 240 tareas, p95
+    de 167 ms (299 ms con la batería de integración a la vez). Un cambio sin nada automático
+    encima, 1,4 ms. Los planes, revisados con `EXPLAIN`.
 - **2.4 Línea base** · L. Comparar una vista con ayer, el último día laborable, hace una semana o
   una fecha: qué tareas entran, salen o cambian, con el valor anterior tachado, y en el Gantt la
   barra anterior en fantasma. Se reconstruye desde `activity`: antes se comprueba que guarda el

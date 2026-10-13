@@ -1,18 +1,53 @@
-import { eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
-import { projectTable, taskTable } from "../../database/schema";
+import {
+  projectTable,
+  taskRelationTable,
+  taskTable,
+} from "../../database/schema";
 import { publishEvent } from "../../events";
 import type { DbOrTx } from "../controllers/assignees";
 import { lockProjectTree } from "../controllers/lock-project-tree";
 import {
   computeSchedule,
+  type Precedence,
   type ScheduleChange,
   ScheduleCycleError,
 } from "./compute-schedule";
 import { loadWorkCalendar } from "./work-calendar";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/** La relacion que planifica: `source` precede a `target` (ADR 084). */
+export const PRECEDES = "precedes";
+
+/** Las precedencias con las dos puntas en el proyecto (ADR 084). */
+export async function loadPrecedences(
+  executor: DbOrTx,
+  projectId: string,
+): Promise<Precedence[]> {
+  const source = alias(taskTable, "source_task");
+  const target = alias(taskTable, "target_task");
+  const rows = await executor
+    .select({
+      predecessorId: taskRelationTable.sourceTaskId,
+      successorId: taskRelationTable.targetTaskId,
+      lag: taskRelationTable.lag,
+    })
+    .from(taskRelationTable)
+    .innerJoin(source, eq(source.id, taskRelationTable.sourceTaskId))
+    .innerJoin(target, eq(target.id, taskRelationTable.targetTaskId))
+    .where(
+      and(
+        eq(taskRelationTable.relationType, PRECEDES),
+        eq(source.projectId, projectId),
+        eq(target.projectId, projectId),
+      ),
+    );
+  return rows.map((row) => ({ ...row, lag: row.lag ?? 0 }));
+}
 
 async function loadProject(executor: DbOrTx, projectId: string) {
   const [project] = await executor
@@ -24,12 +59,24 @@ async function loadProject(executor: DbOrTx, projectId: string) {
 }
 
 /**
- * Si algun ancestro de las tareas que cambiaron —ellas incluidas— tiene fechas
- * automaticas o no tiene ninguna fecha. Si no, no hay nada que recalcular y
- * se ahorra cargar el proyecto entero. Los ancestros son los segmentos del
- * propio `path`: se cruzan por igualdad de ids, nunca por prefijo.
+ * Si alguna de las tareas que cambiaron precede o sigue a otra (ADR 084), o
+ * algun ancestro suyo —ellas incluidas— tiene fechas automaticas o no tiene
+ * ninguna fecha. Si no, no hay nada que recalcular y se ahorra cargar el
+ * proyecto entero. Los ancestros son los segmentos del propio `path`: se
+ * cruzan por igualdad de ids, nunca por prefijo.
  */
 async function anythingToSchedule(executor: DbOrTx, seeds: string[]) {
+  const linked = await executor.execute(sql`
+    SELECT 1 FROM "task_relation" r
+    WHERE r."relation_type" = ${PRECEDES}
+      AND (
+        r."source_task_id" = ANY(${sql.param(seeds)}::text[])
+        OR r."target_task_id" = ANY(${sql.param(seeds)}::text[])
+      )
+    LIMIT 1
+  `);
+  if (linked.rows.length > 0) return true;
+
   const result = await executor.execute(sql`
     SELECT 1
     FROM "task" t
@@ -48,6 +95,36 @@ async function anythingToSchedule(executor: DbOrTx, seeds: string[]) {
 }
 
 /**
+ * Un `timestamp` sin zona con el convenio de drizzle: la hora UTC. Enlazar el
+ * `Date` tal cual lo serializaria node-postgres en hora local, y la fecha
+ * guardada no coincidiria con la que escribe el resto de la aplicacion.
+ */
+const asTimestamp = (date: Date | null) =>
+  date ? date.toISOString().replace("T", " ").replace("Z", "") : null;
+
+/**
+ * Todo lo que cambio, en una sola sentencia y con cuatro arrays: una cadena
+ * de doscientas sucesoras eran doscientos `UPDATE`, y una lista `VALUES`
+ * pide cuatro parametros por fila.
+ */
+async function writeChanges(tx: Tx, changes: ScheduleChange[]) {
+  if (changes.length === 0) return;
+  await tx.execute(sql`
+    UPDATE "task" AS t
+    SET "start_date" = v.start_date,
+        "due_date" = v.due_date,
+        "auto_dates" = v.auto_dates
+    FROM unnest(
+      ${sql.param(changes.map((change) => change.id))}::text[],
+      ${sql.param(changes.map((change) => asTimestamp(change.after.startDate)))}::timestamp[],
+      ${sql.param(changes.map((change) => asTimestamp(change.after.dueDate)))}::timestamp[],
+      ${sql.param(changes.map((change) => change.after.autoDates))}::boolean[]
+    ) AS v(id, start_date, due_date, auto_dates)
+    WHERE t."id" = v.id
+  `);
+}
+
+/**
  * Recalcula las fechas automaticas de un proyecto a partir de las tareas que
  * cambiaron (`seeds`) y las escribe. Da por hecho que quien llama tiene el
  * cerrojo del proyecto: lee el estado ya dentro de la transaccion.
@@ -62,7 +139,7 @@ export async function rescheduleProject(
   const project = await loadProject(tx, projectId);
   if (!project) return [];
 
-  const [rows, calendar] = await Promise.all([
+  const [rows, precedences, calendar] = await Promise.all([
     tx
       .select({
         id: taskTable.id,
@@ -75,6 +152,7 @@ export async function rescheduleProject(
       })
       .from(taskTable)
       .where(eq(taskTable.projectId, projectId)),
+    loadPrecedences(tx, projectId),
     loadWorkCalendar(project.workspaceId, tx),
   ]);
 
@@ -90,6 +168,7 @@ export async function rescheduleProject(
         isMilestone: row.isMilestone,
         archived: row.status === "archived",
       })),
+      precedences,
       calendar,
       seeds,
     });
@@ -100,12 +179,7 @@ export async function rescheduleProject(
     throw error;
   }
 
-  for (const change of changes) {
-    await tx
-      .update(taskTable)
-      .set(change.after)
-      .where(eq(taskTable.id, change.id));
-  }
+  await writeChanges(tx, changes);
   return changes;
 }
 

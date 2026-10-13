@@ -13,6 +13,14 @@ function useCreateTaskRelation() {
       queryClient.invalidateQueries({
         queryKey: ["task-relations", variables.targetTaskId],
       });
+      // Una precedencia mueve fechas (ADR 084): la sucesora y lo que arrastre.
+      if (variables.relationType === "precedes") {
+        queryClient.invalidateQueries({ queryKey: ["task"] });
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
+        queryClient.invalidateQueries({
+          queryKey: ["task-relations", "project"],
+        });
+      }
     },
   });
 }

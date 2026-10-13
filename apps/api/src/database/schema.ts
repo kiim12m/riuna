@@ -2481,6 +2481,9 @@ export const taskRelationTable = pgTable(
         onUpdate: "cascade",
       }),
     relationType: text("relation_type").notNull(),
+    // Solo en `precedes` (ADR 084): dias laborables entre el fin de la
+    // predecesora y el inicio de la sucesora. Negativo, para solapar.
+    lag: integer("lag"),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
   },
   (table) => [

@@ -2231,7 +2231,10 @@
 		"switchedToAutoDates": "switched to automatic dates",
 		"switchedToOwnDates": "switched to its own dates",
 		"shiftedBranch_one": "moved its branch ({{count}} task) {{days}} working days",
-		"shiftedBranch_other": "moved its branch ({{count}} tasks) {{days}} working days"
+		"shiftedBranch_other": "moved its branch ({{count}} tasks) {{days}} working days",
+		"precedenceAdded": "started following another task (lag {{lag}} working days)",
+		"precedenceLagChanged": "changed the lag of a predecessor to {{lag}} working days",
+		"precedenceRemoved": "stopped following a task"
 	},
 	"tasks": {
 		"actions": {
@@ -2527,7 +2530,8 @@
 			"dependencyBlocks": "{{source}} blocks {{target}}",
 			"milestoneAriaLabel": "Milestone {{title}}: drag to change its date or press Enter to open it",
 			"milestoneAriaLabelReadOnly": "Milestone {{title}}: press Enter to open it",
-			"branchOverflow": "The subtasks run past this task's own dates"
+			"branchOverflow": "The subtasks run past this task's own dates",
+			"dependencyPrecedes": "{{source}} precedes {{target}} (lag {{lag}} working days)"
 		},
 		"group": {
 			"label": "Group",
@@ -2656,8 +2660,16 @@
 			"types": {
 				"blocks": "blocks",
 				"blocked_by": "blocked by",
-				"related": "relates to"
-			}
+				"related": "relates to",
+				"precedes": "precedes",
+				"follows": "follows"
+			},
+			"precedes": "Precedes",
+			"follows": "Follows",
+			"lag": "Lag (working days)",
+			"lagChip": "lag {{lag}} d",
+			"lagHint": "Working days between the predecessor's end and the successor's start; negative to overlap. Click to change it.",
+			"lagError": "Could not change the lag"
 		},
 		"sort": {
 			"label": "Sort",

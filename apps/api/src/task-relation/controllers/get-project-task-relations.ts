@@ -23,6 +23,7 @@ async function getProjectTaskRelations(projectId: string, workspaceId: string) {
       sourceTaskId: taskRelationTable.sourceTaskId,
       targetTaskId: taskRelationTable.targetTaskId,
       relationType: taskRelationTable.relationType,
+      lag: taskRelationTable.lag,
     })
     .from(taskRelationTable)
     .innerJoin(taskTable, eq(taskRelationTable.sourceTaskId, taskTable.id))

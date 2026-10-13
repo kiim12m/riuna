@@ -11,12 +11,14 @@ import { useUpdateTaskAutoDates } from "@/hooks/mutations/task/use-task-schedule
 import { useUpdateTaskMilestone } from "@/hooks/mutations/task/use-update-task-milestone";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
+import { canHaveAutoDates } from "@/lib/task-dates";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
 
 /**
- * «Fechas: propias o automáticas» (ADR 083), solo para quien tiene de dónde
- * sacarlas: un padre las toma de su rama.
+ * «Fechas: propias o automáticas» (ADR 083 y 084), solo para quien tiene de
+ * dónde sacarlas: un padre las toma de su rama y una sucesora, su inicio, de
+ * sus predecesoras.
  */
 function DatesModeProperty({ task }: { task: Task }) {
   const { t } = useTranslation();
@@ -106,7 +108,7 @@ export default function TaskScheduleProperty({ task }: { task: Task }) {
   const hasChildren = (task.subtree?.childCount ?? 0) > 0;
   return (
     <>
-      {hasChildren && <DatesModeProperty task={task} />}
+      {canHaveAutoDates(task) && <DatesModeProperty task={task} />}
       {(!hasChildren || task.isMilestone) && <MilestoneProperty task={task} />}
     </>
   );

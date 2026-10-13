@@ -491,6 +491,20 @@ function renderActivityContent({
     );
   }
 
+  // Seguir a otra tarea, cambiar el desfase o dejar de seguirla (ADR 084).
+  if (activity.type === "precedence_changed" && eventData) {
+    const lag = Number(eventData.lag ?? 0);
+    return (
+      <span className="text-sm text-muted-foreground">
+        {eventData.action === "removed"
+          ? t("activity:precedenceRemoved")
+          : eventData.action === "updated"
+            ? t("activity:precedenceLagChanged", { lag })
+            : t("activity:precedenceAdded", { lag })}
+      </span>
+    );
+  }
+
   if (activity.type === "auto_dates_changed" && eventData) {
     return (
       <span className="text-sm text-muted-foreground">

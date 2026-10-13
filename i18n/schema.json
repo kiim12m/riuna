@@ -8794,6 +8794,15 @@
 				},
 				"shiftedBranch_other": {
 					"type": "string"
+				},
+				"precedenceAdded": {
+					"type": "string"
+				},
+				"precedenceLagChanged": {
+					"type": "string"
+				},
+				"precedenceRemoved": {
+					"type": "string"
 				}
 			},
 			"required": [
@@ -8830,7 +8839,10 @@
 				"switchedToAutoDates",
 				"switchedToOwnDates",
 				"shiftedBranch_one",
-				"shiftedBranch_other"
+				"shiftedBranch_other",
+				"precedenceAdded",
+				"precedenceLagChanged",
+				"precedenceRemoved"
 			]
 		},
 		"tasks": {
@@ -9949,6 +9961,9 @@
 						},
 						"branchOverflow": {
 							"type": "string"
+						},
+						"dependencyPrecedes": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -9980,7 +9995,8 @@
 						"dependencyBlocks",
 						"milestoneAriaLabel",
 						"milestoneAriaLabelReadOnly",
-						"branchOverflow"
+						"branchOverflow",
+						"dependencyPrecedes"
 					]
 				},
 				"group": {
@@ -10449,9 +10465,39 @@
 								},
 								"related": {
 									"type": "string"
+								},
+								"precedes": {
+									"type": "string"
+								},
+								"follows": {
+									"type": "string"
 								}
 							},
-							"required": ["blocks", "blocked_by", "related"]
+							"required": [
+								"blocks",
+								"blocked_by",
+								"related",
+								"precedes",
+								"follows"
+							]
+						},
+						"precedes": {
+							"type": "string"
+						},
+						"follows": {
+							"type": "string"
+						},
+						"lag": {
+							"type": "string"
+						},
+						"lagChip": {
+							"type": "string"
+						},
+						"lagHint": {
+							"type": "string"
+						},
+						"lagError": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -10466,7 +10512,13 @@
 						"related",
 						"blocks",
 						"selectTask",
-						"types"
+						"types",
+						"precedes",
+						"follows",
+						"lag",
+						"lagChip",
+						"lagHint",
+						"lagError"
 					]
 				},
 				"sort": {

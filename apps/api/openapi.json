@@ -22300,13 +22300,18 @@
                       },
                       "relationType": {
                         "type": "string"
+                      },
+                      "lag": {
+                        "type": "number",
+                        "nullable": true
                       }
                     },
                     "required": [
                       "id",
                       "sourceTaskId",
                       "targetTaskId",
-                      "relationType"
+                      "relationType",
+                      "lag"
                     ]
                   }
                 }
@@ -22386,6 +22391,10 @@
                     "relationType": {
                       "type": "string"
                     },
+                    "lag": {
+                      "type": "number",
+                      "nullable": true
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -22396,6 +22405,7 @@
                     "sourceTaskId",
                     "targetTaskId",
                     "relationType",
+                    "lag",
                     "createdAt"
                   ]
                 }
@@ -22419,9 +22429,15 @@
                   "relationType": {
                     "enum": [
                       "blocks",
-                      "related"
+                      "related",
+                      "precedes"
                     ],
                     "type": "string"
+                  },
+                  "lag": {
+                    "type": "integer",
+                    "minimum": -365,
+                    "maximum": 365
                   }
                 },
                 "required": [
@@ -22434,6 +22450,88 @@
           }
         },
         "summary": "Create Task Relation"
+      }
+    },
+    "/task-relation/{id}/lag": {
+      "patch": {
+        "operationId": "updateTaskRelationLag",
+        "tags": [
+          "Task Relations"
+        ],
+        "description": "Change the lag of a `precedes` relation, in working days (negative to overlap), and reschedule its successor",
+        "responses": {
+          "200": {
+            "description": "The relation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "sourceTaskId": {
+                      "type": "string"
+                    },
+                    "targetTaskId": {
+                      "type": "string"
+                    },
+                    "relationType": {
+                      "type": "string"
+                    },
+                    "lag": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "sourceTaskId",
+                    "targetTaskId",
+                    "relationType",
+                    "lag",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "lag": {
+                    "type": "integer",
+                    "minimum": -365,
+                    "maximum": 365
+                  }
+                },
+                "required": [
+                  "lag"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Task Relation Lag"
       }
     },
     "/task-relation/{id}": {
@@ -22463,6 +22561,10 @@
                     "relationType": {
                       "type": "string"
                     },
+                    "lag": {
+                      "type": "number",
+                      "nullable": true
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time"
@@ -22473,6 +22575,7 @@
                     "sourceTaskId",
                     "targetTaskId",
                     "relationType",
+                    "lag",
                     "createdAt"
                   ]
                 }

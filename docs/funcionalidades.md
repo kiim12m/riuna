@@ -137,7 +137,16 @@ horas, etiquetas, épicas, ciclo, campos personalizados y número de ticket.
   números nuevos allí.
 - **Épicas**: grupos transversales dentro del proyecto, muchos a muchos con las
   tareas, con fechas, orden y archivado.
-- **Relaciones entre tareas**: bloquea, bloqueada por, relacionada con.
+- **Relaciones entre tareas**: bloquea, bloqueada por, relacionada con, y **precede a / sigue
+  a** con un desfase en días laborables, negativo para solapar
+  ([ADR 084](adr/084-precedencias-y-planificacion-automatica.md)).
+  - **Planificación automática**: una sucesora con fechas automáticas va atada. Empieza el día
+    laborable siguiente al fin de su última predecesora, más el desfase, y conserva su
+    duración. Si la predecesora se mueve, en cualquier sentido, la sigue.
+  - Su inicio no se edita a mano; su fin sí.
+  - No se admiten entre proyectos, hacia un resumen, dentro de la propia rama ni si cerrarían
+    un ciclo.
+  - El Gantt las dibuja con su desfase.
 - **Observadores** ([ADR 076](adr/076-observadores.md)): seguir una tarea sin
   estar asignado, con el botón «Observar» del detalle, que enseña quién observa.
   - Los asignados observan siempre, sin poder dejarlo mientras lo sean.
@@ -211,7 +220,7 @@ prioridad, título, fechas, asignaciones de persona y de equipo, anidado,
 | **Backlog** | Secciones *planificadas* y *archivadas*, filtros del servidor, agrupación, orden y «mover todo» al tablero |
 | **Tabla** | Hoja de cálculo con edición en línea, **campos personalizados como columnas**, filtros compuestos, cuatro modos de jerarquía, **vistas guardadas**, **totales de todo el filtro** (cuántas, estimado, registrado y cada campo de número o moneda) y **colorear filas** por prioridad o vencimiento ([ADR 080](adr/080-totales-y-colores-en-la-tabla.md)) |
 | **Calendario** | Rejilla mensual, barras multi-día por fecha de inicio y de vencimiento, desbordamiento por día y filtros |
-| **Gantt** | Zoom día/semana/mes/trimestre, arrastrar y redimensionar barras para cambiar fechas, **capa de dependencias**, rango de rama y filtros |
+| **Gantt** | Zoom día/semana/mes/trimestre, arrastrar y redimensionar barras para cambiar fechas, **capa de dependencias** (bloquea y precede a, con su desfase), hitos como rombos, **barras de resumen** de las fechas automáticas, arrastrar un padre con toda su rama, corchete rojo si la rama desborda al padre, y filtros |
 | **Ciclos** | Panel de sprint con métricas y gráficas |
 
 **Motor de filtros** común a todas ([ADR 014](adr/014-motor-de-filtros.md)):
@@ -686,7 +695,7 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 59 herramientas**. Una prueba de paridad
+Dos caminos con **las mismas 60 herramientas**. Una prueba de paridad
 (`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
 antes el paquete stdio se había quedado sin las cinco del plan personal y el
 cronómetro.

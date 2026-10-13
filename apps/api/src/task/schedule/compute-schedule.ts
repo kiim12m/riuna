@@ -70,22 +70,34 @@ export function computeSchedule({
     successorsOf.set(precedence.predecessorId, succs);
   }
 
-  /** Inicio y fin de toda la rama por debajo, sin la propia tarea. */
-  const branchSpan = (id: string) => {
+  /**
+   * Inicio y fin de toda la rama por debajo, sin la propia tarea. Se compone
+   * de los tramos de las hijas y se guarda: recorrer la rama entera en cada
+   * evaluacion de cada ancestro convertia una cadena de doscientas sucesoras
+   * en cientos de miles de visitas. Cambiar una tarea solo invalida a sus
+   * ancestros.
+   */
+  type Span = { start: Date | null; due: Date | null };
+  const spans = new Map<string, Span>();
+  const branchSpan = (id: string): Span => {
+    const cached = spans.get(id);
+    if (cached) return cached;
     let start: Date | null = null;
     let due: Date | null = null;
-    const stack = [...(children.get(id) ?? [])];
-    while (stack.length > 0) {
-      const childId = stack.pop() as string;
+    for (const childId of children.get(id) ?? []) {
       const child = current.get(childId);
       if (!child) continue;
-      const childStart = child.startDate ?? child.dueDate;
-      const childDue = child.dueDate ?? child.startDate;
-      if (childStart && (!start || childStart < start)) start = childStart;
-      if (childDue && (!due || childDue > due)) due = childDue;
-      stack.push(...(children.get(childId) ?? []));
+      const below = branchSpan(childId);
+      for (const candidate of [child.startDate ?? child.dueDate, below.start]) {
+        if (candidate && (!start || candidate < start)) start = candidate;
+      }
+      for (const candidate of [child.dueDate ?? child.startDate, below.due]) {
+        if (candidate && (!due || candidate > due)) due = candidate;
+      }
     }
-    return { start, due };
+    const span = { start, due };
+    spans.set(id, span);
+    return span;
   };
 
   /** Lo que la tarea deberia tener, segun sus hijas o sus predecesoras. */
@@ -154,6 +166,16 @@ export function computeSchedule({
       parentId = current.get(parentId)?.parentId ?? null;
     }
   };
+  // Los tramos que incluyen a una tarea son los de sus ancestros.
+  const invalidateAncestors = (id: string) => {
+    let parentId = current.get(id)?.parentId ?? null;
+    const seen = new Set<string>();
+    while (parentId && !seen.has(parentId)) {
+      seen.add(parentId);
+      spans.delete(parentId);
+      parentId = current.get(parentId)?.parentId ?? null;
+    }
+  };
   for (const seed of seeds) {
     enqueue(seed);
     enqueueAncestors(seed);
@@ -179,6 +201,7 @@ export function computeSchedule({
       continue;
     }
     current.set(id, next);
+    invalidateAncestors(id);
     enqueueAncestors(id);
     for (const successor of successorsOf.get(id) ?? []) enqueue(successor);
   }

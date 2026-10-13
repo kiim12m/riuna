@@ -839,11 +839,12 @@ export function registerMcpTools(
     "create_task_relation",
     {
       description:
-        "Create a relation between two tasks. relationType: 'blocks' (sourceTaskId blocks targetTaskId) or 'related' (bidirectional). Parent/child hierarchy is not a relation: use update_task_parent.",
+        "Create a relation between two tasks. relationType: 'blocks' (sourceTaskId blocks targetTaskId), 'related' (bidirectional) or 'precedes' (sourceTaskId precedes targetTaskId: the target switches to automatic dates and starts the working day after the source ends, plus lag working days, negative to overlap; same project only). Parent/child hierarchy is not a relation: use update_task_parent.",
       inputSchema: z.object({
         sourceTaskId: nonEmptyString,
         targetTaskId: nonEmptyString,
-        relationType: z.enum(["blocks", "related"]),
+        relationType: z.enum(["blocks", "related", "precedes"]),
+        lag: z.number().int().min(-365).max(365).optional(),
       }),
     },
     async (args) =>
@@ -854,6 +855,7 @@ export function registerMcpTools(
             sourceTaskId: args.sourceTaskId,
             targetTaskId: args.targetTaskId,
             relationType: args.relationType,
+            ...(args.lag !== undefined ? { lag: args.lag } : {}),
           }),
         }),
       ),
@@ -862,7 +864,8 @@ export function registerMcpTools(
   registerTool(
     "get_task_relations",
     {
-      description: "List all relations (blocks/related) involving a task.",
+      description:
+        "List all relations (blocks, related, precedes with its lag) involving a task.",
       inputSchema: z.object({ taskId: nonEmptyString }),
     },
     async (args) =>
@@ -1137,6 +1140,25 @@ export function registerMcpTools(
             method: "POST",
             body: JSON.stringify({ workDays: args.workDays }),
           },
+        ),
+      ),
+  );
+
+  registerTool(
+    "set_task_relation_lag",
+    {
+      description:
+        "Change the lag of a 'precedes' relation, in working days (negative to overlap), and reschedule its successor.",
+      inputSchema: z.object({
+        relationId: nonEmptyString,
+        lag: z.number().int().min(-365).max(365),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/task-relation/${encodeURIComponent(args.relationId)}/lag`,
+          { method: "PATCH", body: JSON.stringify({ lag: args.lag }) },
         ),
       ),
   );

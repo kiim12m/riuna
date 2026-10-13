@@ -1,4 +1,4 @@
-import { asc, desc, eq, inArray, type SQL, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, type SQL, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import {
@@ -6,6 +6,7 @@ import {
   externalLinkTable,
   labelTable,
   projectTable,
+  taskRelationTable,
   taskTable,
   teamTable,
   userTable,
@@ -239,8 +240,26 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
         ]
       : []);
 
+  // Las que siguen a otra (ADR 084): con fechas automaticas, su inicio no se
+  // elige a mano. Una sola consulta por proyecto.
+  const followers = new Set(
+    (
+      await db
+        .selectDistinct({ id: taskRelationTable.targetTaskId })
+        .from(taskRelationTable)
+        .innerJoin(taskTable, eq(taskTable.id, taskRelationTable.targetTaskId))
+        .where(
+          and(
+            eq(taskRelationTable.relationType, "precedes"),
+            eq(taskTable.projectId, projectId),
+          ),
+        )
+    ).map((row) => row.id),
+  );
+
   const decorate = (task: (typeof paginatedTasks)[number]) => ({
     ...task,
+    hasPredecessors: followers.has(task.id),
     assignees: assigneesOf(task),
     labels: taskLabelsMap.get(task.id) || [],
     externalLinks: taskExternalLinksMap.get(task.id) || [],

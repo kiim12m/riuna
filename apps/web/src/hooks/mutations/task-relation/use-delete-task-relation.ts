@@ -10,6 +10,12 @@ function useDeleteTaskRelation(taskId: string) {
       queryClient.invalidateQueries({
         queryKey: ["task-relations", taskId],
       });
+      // Quitar una predecesora puede adelantar a la sucesora (ADR 084).
+      queryClient.invalidateQueries({ queryKey: ["task"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({
+        queryKey: ["task-relations", "project"],
+      });
     },
   });
 }

@@ -6,6 +6,7 @@ import {
   columnTable,
   projectTable,
   taskEpicTable,
+  taskRelationTable,
   taskTable,
 } from "../../database/schema";
 import { publishEvent } from "../../events";
@@ -311,6 +312,17 @@ async function moveTask({
       .update(assetTable)
       .set({ projectId: destinationProjectId })
       .where(inArray(assetTable.taskId, subtreeIds));
+
+    // Una precedencia solo vale dentro de un proyecto (ADR 084): las que
+    // quedarian cruzando de uno a otro se rompen. Las de dentro de la rama
+    // viajan con ella.
+    await tx.delete(taskRelationTable).where(
+      and(
+        eq(taskRelationTable.relationType, "precedes"),
+        sql`(${taskRelationTable.sourceTaskId} = ANY(${sql.param(subtreeIds)}::text[]))
+          <> (${taskRelationTable.targetTaskId} = ANY(${sql.param(subtreeIds)}::text[]))`,
+      ),
+    );
 
     return updatedTask;
   });

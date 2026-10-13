@@ -12,12 +12,17 @@ import createTaskRelation from "./controllers/create-task-relation";
 import deleteTaskRelation from "./controllers/delete-task-relation";
 import getProjectTaskRelations from "./controllers/get-project-task-relations";
 import getTaskRelations from "./controllers/get-task-relations";
+import {
+  createPrecedence,
+  updatePrecedenceLag,
+} from "./controllers/save-precedence";
 
 const taskRelationSchema = v.object({
   id: v.string(),
   sourceTaskId: v.string(),
   targetTaskId: v.string(),
   relationType: v.string(),
+  lag: v.nullable(v.number()),
   createdAt: v.date(),
 });
 
@@ -27,7 +32,15 @@ const projectRelationSchema = v.array(
     sourceTaskId: v.string(),
     targetTaskId: v.string(),
     relationType: v.string(),
+    lag: v.nullable(v.number()),
   }),
+);
+
+const lagSchema = v.pipe(
+  v.number(),
+  v.integer(),
+  v.minValue(-365),
+  v.maxValue(365),
 );
 
 const taskRelation = new Hono<{
@@ -108,7 +121,10 @@ const taskRelation = new Hono<{
         targetTaskId: v.string(),
         // `subtask` se retiro en la Fase 2: la jerarquia vive en el arbol
         // (`task.parent_id`), no en una relacion entre pares. Ver ADR 011.
-        relationType: v.picklist(["blocks", "related"]),
+        // `precedes` planifica (ADR 084): la origen precede a la destino.
+        relationType: v.picklist(["blocks", "related", "precedes"]),
+        // Solo con `precedes`: dias laborables, negativo para solapar.
+        lag: v.optional(lagSchema),
       }),
     ),
     async (c, next) => {
@@ -133,7 +149,18 @@ const taskRelation = new Hono<{
     requireWorkspacePermission({ task: ["update"] }),
     async (c) => {
       const userId = c.get("userId");
-      const { sourceTaskId, targetTaskId, relationType } = c.req.valid("json");
+      const { sourceTaskId, targetTaskId, relationType, lag } =
+        c.req.valid("json");
+      if (relationType === "precedes") {
+        return c.json(
+          await createPrecedence({
+            sourceTaskId,
+            targetTaskId,
+            lag: lag ?? 0,
+            userId,
+          }),
+        );
+      }
       const relation = await createTaskRelation({
         sourceTaskId,
         targetTaskId,
@@ -142,6 +169,53 @@ const taskRelation = new Hono<{
         workspaceId: c.get("workspaceId"),
       });
       return c.json(relation);
+    },
+  )
+  .patch(
+    "/:id/lag",
+    describeRoute({
+      operationId: "updateTaskRelationLag",
+      tags: ["Task Relations"],
+      description:
+        "Change the lag of a `precedes` relation, in working days (negative to overlap), and reschedule its successor",
+      responses: {
+        200: {
+          description: "The relation",
+          content: {
+            "application/json": { schema: resolver(taskRelationSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ lag: lagSchema })),
+    async (c, next) => {
+      const userId = c.get("userId");
+      if (!userId) {
+        throw new HTTPException(401, { message: "Unauthorized" });
+      }
+      const { id } = c.req.valid("param");
+      const [task] = await db
+        .select({ workspaceId: projectTable.workspaceId })
+        .from(taskRelationTable)
+        .innerJoin(taskTable, eq(taskTable.id, taskRelationTable.sourceTaskId))
+        .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
+        .where(eq(taskRelationTable.id, id))
+        .limit(1);
+      if (!task) {
+        throw new HTTPException(404, { message: "Task relation not found" });
+      }
+      await validateWorkspaceAccess(userId, task.workspaceId);
+      c.set("workspaceId", task.workspaceId);
+      return next();
+    },
+    requireWorkspacePermission({ task: ["update"] }),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { lag } = c.req.valid("json");
+      return c.json(
+        await updatePrecedenceLag({ id, lag, userId: c.get("userId") }),
+      );
     },
   )
   .delete(

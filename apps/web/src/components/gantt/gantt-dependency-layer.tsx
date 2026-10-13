@@ -9,6 +9,8 @@ export type ProjectTaskRelation = {
   sourceTaskId: string;
   targetTaskId: string;
   relationType: string;
+  /** Solo en `precedes`: dias laborables de desfase (ADR 084). */
+  lag?: number | null;
 };
 
 type GanttDependencyLayerProps = {
@@ -20,8 +22,8 @@ type GanttDependencyLayerProps = {
   className?: string;
 };
 
-// Conectores fin -> inicio de las relaciones `blocks` que ya existan. Solo
-// lectura: crearlas o editarlas es Fase 6. Se dibujan sobre la geometria que
+// Conectores fin -> inicio de las relaciones `blocks` y `precedes` (ADR 084),
+// estas con su desfase. Solo lectura: se crean y se editan en el detalle. Se dibujan sobre la geometria que
 // deriva del propio `timeline` (no del DOM), asi que salen bien en cualquier
 // zoom sin medir ni re-renderizar por efectos.
 export function GanttDependencyLayer({
@@ -57,7 +59,12 @@ export function GanttDependencyLayer({
     const head = 5;
 
     return relations.flatMap((relation) => {
-      if (relation.relationType !== "blocks") return [];
+      if (
+        relation.relationType !== "blocks" &&
+        relation.relationType !== "precedes"
+      ) {
+        return [];
+      }
       if (relation.sourceTaskId === relation.targetTaskId) return [];
       const from = geom.get(relation.sourceTaskId);
       const to = geom.get(relation.targetTaskId);
@@ -73,17 +80,30 @@ export function GanttDependencyLayer({
           ? `M${x1} ${y1} H${x1 + gap} V${y2} H${x2 - head}`
           : `M${x1} ${y1} h${gap} V${(y1 + y2) / 2} H${x2 - gap} V${y2} H${x2 - head}`;
 
+      const lag =
+        relation.relationType === "precedes" ? (relation.lag ?? 0) : 0;
+      const names = {
+        source: titleById.get(relation.sourceTaskId) ?? relation.sourceTaskId,
+        target: titleById.get(relation.targetTaskId) ?? relation.targetTaskId,
+      };
       return [
         {
           key: relation.id,
           path,
           arrow: `${x2},${y2} ${x2 - head},${y2 - 3} ${x2 - head},${y2 + 3}`,
-          title: t("tasks:gantt.dependencyBlocks", {
-            source:
-              titleById.get(relation.sourceTaskId) ?? relation.sourceTaskId,
-            target:
-              titleById.get(relation.targetTaskId) ?? relation.targetTaskId,
-          }),
+          title:
+            relation.relationType === "precedes"
+              ? t("tasks:gantt.dependencyPrecedes", { ...names, lag })
+              : t("tasks:gantt.dependencyBlocks", names),
+          // El desfase junto a la flecha: «+2 d» espera, «−1 d» solapa.
+          label:
+            lag === 0
+              ? null
+              : {
+                  x: x2 - gap - 22,
+                  y: y2 > y1 ? y2 - 4 : y2 + 10,
+                  text: `${lag > 0 ? "+" : "−"}${Math.abs(lag)} d`,
+                },
         },
       ];
     });
@@ -110,6 +130,15 @@ export function GanttDependencyLayer({
               strokeWidth={1.5}
             />
             <polygon points={segment.arrow} fill="currentColor" />
+            {segment.label && (
+              <text
+                x={segment.label.x}
+                y={segment.label.y}
+                className="fill-current font-mono text-[9px]"
+              >
+                {segment.label.text}
+              </text>
+            )}
           </g>
         ))}
       </svg>

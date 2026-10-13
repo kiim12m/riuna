@@ -449,6 +449,23 @@ subscribeToEvent<{
   });
 });
 
+// Empezar a seguir a otra tarea, cambiar el desfase o dejar de seguirla
+// (ADR 084). Se apunta en la sucesora, que es la que se mueve.
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  predecessorId: string;
+  lag?: number;
+  action: "added" | "updated" | "removed";
+  type: string;
+}>("task.precedence_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    predecessorId: data.predecessorId,
+    action: data.action,
+    ...(data.lag !== undefined ? { lag: data.lag } : {}),
+  });
+});
+
 // Mover la rama entera desde el Gantt (ADR 083).
 subscribeToEvent<{
   taskId: string;

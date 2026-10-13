@@ -10,6 +10,7 @@ import {
   teamTable,
   userTable,
 } from "../../database/schema";
+import { hasPredecessors } from "../schedule/children";
 import { loadWorkCalendar } from "../schedule/work-calendar";
 import {
   getTaskSubtreeAggregate,
@@ -162,6 +163,7 @@ async function getTask(taskId: string) {
       project?.weightedProgress ?? false,
     ),
     schedule: await scheduleWarning(row, aggregate, project?.workspaceId),
+    hasPredecessors: await hasPredecessors(taskId),
   };
 }
 

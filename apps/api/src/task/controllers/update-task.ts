@@ -8,7 +8,7 @@ import {
   assertAssignableUser,
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
-import { hasChildren } from "../schedule/children";
+import { hasChildren, hasPredecessors } from "../schedule/children";
 import { scheduleAfter } from "../schedule/reschedule";
 import { assertValidTaskStatus } from "../validate-task-fields";
 import { syncPrimaryAssignee } from "./assignees";
@@ -75,17 +75,23 @@ async function updateTask(
   // edicion completa manda las que tenia el navegador, que pueden ser viejas,
   // asi que se ignoran en vez de rechazar el cambio de titulo que venia con
   // ellas.
+  // Una sucesora automatica (ADR 084) tampoco elige su inicio: sale de sus
+  // predecesoras. Su fin si, que es su duracion, salvo en un hito.
   const derived = existingTask.autoDates && (await hasChildren(id));
-  const nextStartDate = derived
-    ? existingTask.startDate
-    : existingTask.isMilestone
-      ? milestoneDay
-      : startDate;
-  const nextDueDate = derived
-    ? existingTask.dueDate
-    : existingTask.isMilestone
-      ? milestoneDay
-      : dueDate;
+  const tied =
+    !derived && existingTask.autoDates && (await hasPredecessors(id));
+  const nextStartDate =
+    derived || tied
+      ? existingTask.startDate
+      : existingTask.isMilestone
+        ? milestoneDay
+        : startDate;
+  const nextDueDate =
+    derived || (tied && existingTask.isMilestone)
+      ? existingTask.dueDate
+      : existingTask.isMilestone
+        ? milestoneDay
+        : dueDate;
 
   const column = await db.query.columnTable.findFirst({
     where: and(

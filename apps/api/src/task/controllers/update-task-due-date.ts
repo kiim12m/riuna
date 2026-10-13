@@ -3,7 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
-import { hasChildren } from "../schedule/children";
+import { hasChildren, hasPredecessors } from "../schedule/children";
 import { scheduleAfter } from "../schedule/reschedule";
 
 async function updateTaskDueDate({
@@ -26,7 +26,11 @@ async function updateTaskDueDate({
   }
 
   // Las de un padre con fechas automaticas salen de su rama (ADR 083).
-  if (existingTask.autoDates && (await hasChildren(id))) {
+  if (
+    existingTask.autoDates &&
+    ((await hasChildren(id)) ||
+      (existingTask.isMilestone && (await hasPredecessors(id))))
+  ) {
     throw new HTTPException(409, {
       message:
         "This task takes its dates from its subtasks: switch it to its own dates to change them",
