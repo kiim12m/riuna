@@ -3,16 +3,41 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import {
   epicTable,
+  projectTable,
   taskAssigneeTable,
   taskEpicTable,
   taskTable,
   teamTable,
   userTable,
 } from "../../database/schema";
+import { loadWorkCalendar } from "../schedule/work-calendar";
 import {
   getTaskSubtreeAggregate,
   serializeAggregate,
+  type TaskSubtreeAggregate,
 } from "../tree-aggregates";
+
+/**
+ * El aviso de desviacion (ADR 083): un padre con fechas propias cuyas
+ * subtareas acaban despues de su vencimiento, y cuantos dias laborables.
+ */
+async function scheduleWarning(
+  row: { autoDates: boolean; dueDate: Date | null },
+  aggregate: TaskSubtreeAggregate | null,
+  workspaceId: string | undefined,
+) {
+  if (row.autoDates || !aggregate?.dueDate || !row.dueDate || !workspaceId) {
+    return null;
+  }
+  if (aggregate.dueDate <= row.dueDate) return null;
+  const calendar = await loadWorkCalendar(workspaceId);
+  const nextDay = new Date(row.dueDate);
+  nextDay.setDate(nextDay.getDate() + 1);
+  return {
+    branchDueDate: aggregate.dueDate,
+    overflowWorkDays: calendar.workDaysBetween(nextDay, aggregate.dueDate),
+  };
+}
 
 async function getTask(taskId: string) {
   const task = await db
@@ -38,6 +63,7 @@ async function getTask(taskId: string) {
       depth: taskTable.depth,
       estimate: taskTable.estimate,
       isMilestone: taskTable.isMilestone,
+      autoDates: taskTable.autoDates,
       cycleId: taskTable.cycleId,
       completedAt: taskTable.completedAt,
       customFields: taskTable.customFields,
@@ -70,7 +96,7 @@ async function getTask(taskId: string) {
 
   const row = task[0];
 
-  const [epics, aggregate, parent, children] = await Promise.all([
+  const [epics, aggregate, project, parent, children] = await Promise.all([
     db
       .select({
         id: epicTable.id,
@@ -81,6 +107,15 @@ async function getTask(taskId: string) {
       .innerJoin(epicTable, eq(taskEpicTable.epicId, epicTable.id))
       .where(eq(taskEpicTable.taskId, taskId)),
     getTaskSubtreeAggregate(row.projectId, taskId),
+    db
+      .select({
+        workspaceId: projectTable.workspaceId,
+        weightedProgress: projectTable.weightedProgress,
+      })
+      .from(projectTable)
+      .where(eq(projectTable.id, row.projectId))
+      .limit(1)
+      .then((rows) => rows[0]),
     row.parentId
       ? db
           .select({
@@ -121,10 +156,12 @@ async function getTask(taskId: string) {
     epics,
     children,
     parent: parent[0] ?? null,
-    subtree: serializeAggregate(aggregate ?? undefined, {
-      startDate: row.startDate,
-      dueDate: row.dueDate,
-    }),
+    subtree: serializeAggregate(
+      aggregate ?? undefined,
+      { startDate: row.startDate, dueDate: row.dueDate },
+      project?.weightedProgress ?? false,
+    ),
+    schedule: await scheduleWarning(row, aggregate, project?.workspaceId),
   };
 }
 

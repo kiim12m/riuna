@@ -216,7 +216,7 @@ const project = new Hono<{
       operationId: "updateProjectTreeSettings",
       tags: ["Projects"],
       description:
-        "Update how the task tree behaves in this project: whether closing or archiving cascades down the branch, and how deep the tree may go.",
+        "Update how the task tree behaves in this project: whether closing or archiving cascades down the branch, how deep the tree may go, and whether a branch's progress weighs each task by its estimate.",
       responses: {
         200: {
           description: "Project tree settings updated successfully",
@@ -235,6 +235,7 @@ const project = new Hono<{
         maxTaskDepth: v.optional(
           v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(10)),
         ),
+        weightedProgress: v.optional(v.boolean()),
       }),
     ),
     workspaceAccess.fromProject(),

@@ -129,6 +129,7 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     depth: taskTable.depth,
     estimate: taskTable.estimate,
     isMilestone: taskTable.isMilestone,
+    autoDates: taskTable.autoDates,
     cycleId: taskTable.cycleId,
     completedAt: taskTable.completedAt,
     customFields: taskTable.customFields,
@@ -244,10 +245,11 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
     labels: taskLabelsMap.get(task.id) || [],
     externalLinks: taskExternalLinksMap.get(task.id) || [],
     epics: epicsByTask.get(task.id) || [],
-    subtree: serializeAggregate(aggregates.get(task.id), {
-      startDate: task.startDate,
-      dueDate: task.dueDate,
-    }),
+    subtree: serializeAggregate(
+      aggregates.get(task.id),
+      { startDate: task.startDate, dueDate: task.dueDate },
+      project.weightedProgress,
+    ),
   });
 
   const projectColumns = await db
@@ -288,6 +290,7 @@ async function getTasks(projectId: string, options: GetTasksOptions = {}) {
       // edita no tenga que resolver antes el espacio de trabajo.
       cascadeClose: project.cascadeClose,
       cascadeArchive: project.cascadeArchive,
+      weightedProgress: project.weightedProgress,
       maxTaskDepth: project.maxTaskDepth,
       columns,
       archivedTasks,

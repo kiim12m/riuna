@@ -3,6 +3,8 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { hasChildren } from "../schedule/children";
+import { scheduleAfter } from "../schedule/reschedule";
 
 async function updateTaskDueDate({
   id,
@@ -20,6 +22,14 @@ async function updateTaskDueDate({
   if (!existingTask) {
     throw new HTTPException(404, {
       message: "Task not found",
+    });
+  }
+
+  // Las de un padre con fechas automaticas salen de su rama (ADR 083).
+  if (existingTask.autoDates && (await hasChildren(id))) {
+    throw new HTTPException(409, {
+      message:
+        "This task takes its dates from its subtasks: switch it to its own dates to change them",
     });
   }
 
@@ -52,6 +62,12 @@ async function updateTaskDueDate({
     newDueDate: dueDate,
     title: updatedTask.title,
     type: "due_date_changed",
+  });
+
+  await scheduleAfter({
+    projectId: updatedTask.projectId,
+    taskIds: [updatedTask.id],
+    actorId: currentUserId,
   });
 
   return updatedTask;

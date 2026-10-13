@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { scheduleAfter } from "../schedule/reschedule";
 
 /**
  * Marca o desmarca una tarea como hito (ADR 082). Un hito tiene una sola
@@ -84,6 +85,12 @@ async function updateTaskMilestone({
       type: "due_date_changed",
     });
   }
+
+  await scheduleAfter({
+    projectId: updated.projectId,
+    taskIds: [id],
+    actorId: currentUserId,
+  });
 
   await publishEvent("task.updated", {
     taskId: id,

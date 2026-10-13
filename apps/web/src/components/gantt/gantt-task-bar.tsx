@@ -1,8 +1,10 @@
 import { addDays, differenceInCalendarDays, startOfDay } from "date-fns";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useShiftTaskBranch } from "@/hooks/mutations/task/use-task-schedule";
 import { useUpdateTask } from "@/hooks/mutations/task/use-update-task";
 import { cn } from "@/lib/cn";
+import { hasDerivedDates } from "@/lib/task-dates";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
 import { barHeightRem, barMetrics, type GanttTimeline } from "./gantt-timeline";
@@ -49,6 +51,11 @@ export function GanttTaskBar({
 }: GanttTaskBarProps) {
   const { t } = useTranslation();
   const { mutateAsync: updateTask } = useUpdateTask();
+  const { mutateAsync: shiftBranch } = useShiftTaskBranch();
+  // Un padre se arrastra con toda su rama (ADR 083), y si sus fechas son
+  // automaticas no se estira: salen de las subtareas.
+  const isParent = (task.subtree?.childCount ?? 0) > 0;
+  const derived = hasDerivedDates(task);
   const [dragDisplay, setDragDisplay] = useState<{
     start: Date;
     end: Date;
@@ -95,6 +102,27 @@ export function GanttTaskBar({
       }
     },
     [task, updateTask, t],
+  );
+
+  const persistBranch = useCallback(
+    async (nextStart: Date): Promise<boolean> => {
+      try {
+        await shiftBranch({
+          taskId: task.id,
+          projectId: task.projectId,
+          startDate: toIsoDay(nextStart),
+        });
+        return true;
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : t("tasks:gantt.updateDatesError"),
+        );
+        return false;
+      }
+    },
+    [task.id, task.projectId, shiftBranch, t],
   );
 
   const startIdx = differenceInCalendarDays(task.scheduleStart, rangeStart);
@@ -217,7 +245,10 @@ export function GanttTaskBar({
         ) {
           return setDragDisplay(null);
         }
-        if (!(await persistDates(nextStart, nextEnd))) setDragDisplay(null);
+        const saved = isParent
+          ? await persistBranch(nextStart)
+          : await persistDates(nextStart, nextEnd);
+        if (!saved) setDragDisplay(null);
       },
       originX,
     );
@@ -282,8 +313,9 @@ export function GanttTaskBar({
       {branch && (
         <div
           aria-hidden="true"
-          title={t("tasks:gantt.branchSpan")}
-          className="pointer-events-none absolute z-[1] h-1 rounded-t-[3px] border-x-[1.5px] border-t-[1.5px] border-brand/45"
+          title={t("tasks:gantt.branchOverflow")}
+          data-testid="gantt-branch-overflow"
+          className="pointer-events-none absolute z-[1] h-1 rounded-t-[3px] border-x-[1.5px] border-t-[1.5px] border-destructive/70"
           style={{
             left: branch.left,
             width: branch.width,
@@ -295,6 +327,9 @@ export function GanttTaskBar({
         className={cn(
           "group/bar pointer-events-auto absolute top-1/2 z-[2] flex -translate-y-1/2 items-stretch rounded-full bg-brand/22 transition-[background-color,box-shadow] duration-150 ease-out",
           "hover:bg-brand/32 hover:shadow-e2",
+          // La barra de resumen de unas fechas automaticas (ADR 083).
+          derived &&
+            "rounded-[3px] border-x-[3px] border-brand-strong bg-brand-strong/30 hover:bg-brand-strong/40",
           isDone && "opacity-50",
         )}
         style={{ left, width, height: barHeight }}
@@ -306,7 +341,7 @@ export function GanttTaskBar({
             style={{ width: `${subtree?.progress ?? 0}%` }}
           />
         )}
-        {!readOnly && (
+        {!readOnly && !derived && (
           <button
             type="button"
             aria-label={t("tasks:gantt.resizeStart")}
@@ -335,7 +370,7 @@ export function GanttTaskBar({
             readOnly ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
           )}
         />
-        {!readOnly && (
+        {!readOnly && !derived && (
           <button
             type="button"
             aria-label={t("tasks:gantt.resizeDue")}

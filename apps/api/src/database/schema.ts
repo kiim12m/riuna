@@ -348,6 +348,9 @@ export const projectTable = pgTable(
     cascadeClose: boolean("cascade_close").notNull().default(false),
     cascadeArchive: boolean("cascade_archive").notNull().default(false),
     maxTaskDepth: integer("max_task_depth").notNull().default(5),
+    // El progreso de una rama pesa por la estimacion en vez de contar tareas
+    // hechas (ADR 083).
+    weightedProgress: boolean("weighted_progress").notNull().default(false),
     // Con valor, el proyecto es la Bandeja de esa persona (ADR 051): no sale
     // en las listas de proyectos, pero sus tareas no son privadas. Al borrar
     // a la persona, o al salir ella del espacio, vuelve a ser un proyecto
@@ -473,6 +476,10 @@ export const taskTable = pgTable(
     // Un hito (ADR 082): una sola fecha —el inicio es el vencimiento—, sin
     // estimacion ni subtareas. Columna propia porque se filtra.
     isMilestone: boolean("is_milestone").notNull().default(false),
+    // Fechas automaticas (ADR 083): las de un padre salen de su rama y se
+    // guardan aqui mismo, para que filtros, orden y exportacion las vean. La
+    // 2.3 lo amplia a las sucesoras de una precedencia.
+    autoDates: boolean("auto_dates").notNull().default(false),
     // El arbol. `parent_id` es la verdad; `path` y `depth` son su forma
     // materializada, que es lo que permite contestar "todo el subarbol" con un
     // prefijo en vez de una recursiva por consulta. `path` incluye la propia

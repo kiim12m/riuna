@@ -1026,6 +1026,9 @@
                       "maxTaskDepth": {
                         "type": "number"
                       },
+                      "weightedProgress": {
+                        "type": "boolean"
+                      },
                       "ownerUserId": {
                         "type": "string",
                         "nullable": true
@@ -1128,6 +1131,9 @@
                     },
                     "maxTaskDepth": {
                       "type": "number"
+                    },
+                    "weightedProgress": {
+                      "type": "boolean"
                     },
                     "ownerUserId": {
                       "type": "string",
@@ -1249,6 +1255,9 @@
                     "maxTaskDepth": {
                       "type": "number"
                     },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
                     "ownerUserId": {
                       "type": "string",
                       "nullable": true
@@ -1343,6 +1352,9 @@
                     },
                     "maxTaskDepth": {
                       "type": "number"
+                    },
+                    "weightedProgress": {
+                      "type": "boolean"
                     },
                     "ownerUserId": {
                       "type": "string",
@@ -1473,6 +1485,9 @@
                     "maxTaskDepth": {
                       "type": "number"
                     },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
                     "ownerUserId": {
                       "type": "string",
                       "nullable": true
@@ -1572,6 +1587,9 @@
                       "maxTaskDepth": {
                         "type": "number"
                       },
+                      "weightedProgress": {
+                        "type": "boolean"
+                      },
                       "ownerUserId": {
                         "type": "string",
                         "nullable": true
@@ -1653,7 +1671,7 @@
         "tags": [
           "Projects"
         ],
-        "description": "Update how the task tree behaves in this project: whether closing or archiving cascades down the branch, and how deep the tree may go.",
+        "description": "Update how the task tree behaves in this project: whether closing or archiving cascades down the branch, how deep the tree may go, and whether a branch's progress weighs each task by its estimate.",
         "responses": {
           "200": {
             "description": "Project tree settings updated successfully",
@@ -1704,6 +1722,9 @@
                     },
                     "maxTaskDepth": {
                       "type": "number"
+                    },
+                    "weightedProgress": {
+                      "type": "boolean"
                     },
                     "ownerUserId": {
                       "type": "string",
@@ -1758,6 +1779,9 @@
                     "type": "integer",
                     "minimum": 1,
                     "maximum": 10
+                  },
+                  "weightedProgress": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -1824,6 +1848,9 @@
                     },
                     "maxTaskDepth": {
                       "type": "number"
+                    },
+                    "weightedProgress": {
+                      "type": "boolean"
                     },
                     "ownerUserId": {
                       "type": "string",
@@ -1921,6 +1948,9 @@
                     },
                     "maxTaskDepth": {
                       "type": "number"
+                    },
+                    "weightedProgress": {
+                      "type": "boolean"
                     },
                     "ownerUserId": {
                       "type": "string",
@@ -2312,6 +2342,9 @@
                     "isMilestone": {
                       "type": "boolean"
                     },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -2474,6 +2507,9 @@
                     "isMilestone": {
                       "type": "boolean"
                     },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -2574,6 +2610,9 @@
                       "format": "date-time"
                     },
                     "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
                       "type": "boolean"
                     },
                     "customFields": {
@@ -2732,6 +2771,9 @@
                     "isMilestone": {
                       "type": "boolean"
                     },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -2837,6 +2879,9 @@
                           "format": "date-time"
                         },
                         "isMilestone": {
+                          "type": "boolean"
+                        },
+                        "autoDates": {
                           "type": "boolean"
                         },
                         "customFields": {
@@ -3296,6 +3341,9 @@
                     "isMilestone": {
                       "type": "boolean"
                     },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -3416,6 +3464,9 @@
                       "format": "date-time"
                     },
                     "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
                       "type": "boolean"
                     },
                     "customFields": {
@@ -3541,6 +3592,9 @@
                       "format": "date-time"
                     },
                     "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
                       "type": "boolean"
                     },
                     "customFields": {
@@ -3670,6 +3724,9 @@
                       "format": "date-time"
                     },
                     "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
                       "type": "boolean"
                     },
                     "customFields": {
@@ -3848,6 +3905,9 @@
                     "isMilestone": {
                       "type": "boolean"
                     },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -3908,6 +3968,191 @@
           }
         },
         "summary": "Update Task Parent"
+      }
+    },
+    "/task/auto-dates/{id}": {
+      "put": {
+        "operationId": "updateTaskAutoDates",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Own or automatic dates. With automatic dates a parent takes its start and due date from its branch and they stop being editable by hand; switching back to own dates keeps the ones it had",
+        "responses": {
+          "200": {
+            "description": "The task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string"
+                    },
+                    "position": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "number": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "userId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "enum": [
+                        "no-priority",
+                        "low",
+                        "medium",
+                        "high",
+                        "urgent"
+                      ],
+                      "type": "string"
+                    },
+                    "startDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "position",
+                    "number",
+                    "userId",
+                    "title",
+                    "description",
+                    "status",
+                    "priority",
+                    "customFields",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "autoDates": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "autoDates"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Task Auto Dates"
+      }
+    },
+    "/task/shift-branch/{id}": {
+      "post": {
+        "operationId": "shiftTaskBranch",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Move a task and its whole branch the same number of working days (Monday to Friday, skipping the workspace holidays); negative moves it earlier. Instead of `workDays`, `startDate` moves it so the task starts that day. What dragging a parent does in the Gantt",
+        "responses": {
+          "200": {
+            "description": "How many tasks moved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "moved": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "moved"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "workDays": {
+                    "type": "integer",
+                    "minimum": -365,
+                    "maximum": 365
+                  },
+                  "startDate": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Shift Task Branch"
       }
     },
     "/task/milestone/{id}": {
@@ -3972,6 +4217,9 @@
                       "format": "date-time"
                     },
                     "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
                       "type": "boolean"
                     },
                     "customFields": {
@@ -4094,6 +4342,9 @@
                       "format": "date-time"
                     },
                     "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
                       "type": "boolean"
                     },
                     "customFields": {
@@ -4220,6 +4471,9 @@
                     "isMilestone": {
                       "type": "boolean"
                     },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -4341,6 +4595,9 @@
                       "format": "date-time"
                     },
                     "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
                       "type": "boolean"
                     },
                     "customFields": {
@@ -4466,6 +4723,9 @@
                     "isMilestone": {
                       "type": "boolean"
                     },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -4583,6 +4843,9 @@
                       "format": "date-time"
                     },
                     "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
                       "type": "boolean"
                     },
                     "customFields": {
@@ -4841,6 +5104,9 @@
                       "format": "date-time"
                     },
                     "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
                       "type": "boolean"
                     },
                     "customFields": {
@@ -15493,6 +15759,9 @@
                         "maxTaskDepth": {
                           "type": "number"
                         },
+                        "weightedProgress": {
+                          "type": "boolean"
+                        },
                         "ownerUserId": {
                           "type": "string",
                           "nullable": true
@@ -15597,6 +15866,9 @@
                         },
                         "maxTaskDepth": {
                           "type": "number"
+                        },
+                        "weightedProgress": {
+                          "type": "boolean"
                         },
                         "ownerUserId": {
                           "type": "string",
@@ -15717,6 +15989,9 @@
                           "format": "date-time"
                         },
                         "isMilestone": {
+                          "type": "boolean"
+                        },
+                        "autoDates": {
                           "type": "boolean"
                         },
                         "customFields": {
@@ -18455,6 +18730,9 @@
                           "isMilestone": {
                             "type": "boolean"
                           },
+                          "autoDates": {
+                            "type": "boolean"
+                          },
                           "customFields": {
                             "type": "object",
                             "additionalProperties": true
@@ -18526,6 +18804,9 @@
                           },
                           "maxTaskDepth": {
                             "type": "number"
+                          },
+                          "weightedProgress": {
+                            "type": "boolean"
                           },
                           "ownerUserId": {
                             "type": "string",

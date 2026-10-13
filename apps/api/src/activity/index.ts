@@ -398,6 +398,9 @@ subscribeToEvent<{
   });
 });
 
+const isoOf = (value: Date | string | null | undefined) =>
+  value instanceof Date ? value.toISOString() : (value ?? null);
+
 subscribeToEvent<{
   taskId: string;
   userId: string;
@@ -405,16 +408,58 @@ subscribeToEvent<{
   newDueDate: Date;
   title: string;
   type: string;
+  cascadedFrom?: string;
 }>("task.due_date_changed", async (data) => {
   await createActivity(data.taskId, data.type, data.userId, null, {
-    oldDueDate:
-      data.oldDueDate instanceof Date
-        ? data.oldDueDate.toISOString()
-        : data.oldDueDate,
-    newDueDate:
-      data.newDueDate instanceof Date
-        ? data.newDueDate.toISOString()
-        : data.newDueDate,
+    oldDueDate: isoOf(data.oldDueDate),
+    newDueDate: isoOf(data.newDueDate),
+    // Lo movio la planificacion por un cambio en otra tarea (ADR 083).
+    ...(data.cascadedFrom ? { cascadedFrom: data.cascadedFrom } : {}),
+  });
+});
+
+// La fecha de inicio no dejaba rastro: la linea base la necesita (ADR 083).
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  oldStartDate: Date | null;
+  newStartDate: Date | null;
+  type: string;
+  cascadedFrom?: string;
+}>("task.start_date_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    oldStartDate: isoOf(data.oldStartDate),
+    newStartDate: isoOf(data.newStartDate),
+    ...(data.cascadedFrom ? { cascadedFrom: data.cascadedFrom } : {}),
+  });
+});
+
+// Fechas propias o automaticas, a mano o porque un padre se quedo sin
+// fechas (ADR 083).
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  autoDates: boolean;
+  type: string;
+  cascadedFrom?: string;
+}>("task.auto_dates_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    autoDates: data.autoDates,
+    ...(data.cascadedFrom ? { cascadedFrom: data.cascadedFrom } : {}),
+  });
+});
+
+// Mover la rama entera desde el Gantt (ADR 083).
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  workDays: number;
+  moved: number;
+  type: string;
+}>("task.branch_shifted", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    workDays: data.workDays,
+    moved: data.moved,
   });
 });
 

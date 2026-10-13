@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { projectTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { scheduleAfter } from "../schedule/reschedule";
 import {
   childPath,
   DEFAULT_MAX_TASK_DEPTH,
@@ -282,6 +283,13 @@ async function updateTaskParent({
     type: "parent_changed",
     oldParentId: result.oldParentId,
     newParentId: result.newParentId,
+  });
+
+  // Cambian dos ramas: la que la pierde y la que la gana (ADR 083).
+  await scheduleAfter({
+    projectId: result.projectId,
+    taskIds: [taskId, result.oldParentId],
+    actorId: currentUserId,
   });
 
   return result.task;

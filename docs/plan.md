@@ -30,7 +30,7 @@
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
 | **Total Bloque A** | **45** + 18 del interludio | |
-| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hecha la tanda 1 (1.1-1.6) y de la tanda 2, la 2.1 · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
+| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hecha la tanda 1 (1.1-1.6) y de la tanda 2, la 2.1 y la 2.2 · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -3009,25 +3009,21 @@ siempre), incluida `watchers.spec.ts` de la 1.1.
   - Sin estimación, cronómetro ni subtareas: la API rechaza cada una.
   - Interruptor «Hito» en el detalle, actividad propia y MCP (`set_task_milestone`).
   - La hoja CSV/Excel de ida y vuelta no lleva todavía la marca.
-- **2.2 Tareas resumen** · M. Parte de lo que ya existe: `apps/api/src/task/tree-aggregates.ts`
-  calcula al leer el inicio más temprano, el vencimiento más tardío, las sumas y el progreso de
-  la rama, y `gantt-task-bar.tsx` dibuja el corchete. Añade:
-  - **fechas automáticas del padre**: un padre puede pasar a «fechas automáticas». Deja de tener
-    fechas propias y las suyas son las de la rama en el detalle, las vistas, los filtros y la
-    exportación. En el Gantt se dibuja como barra de resumen, que no se redimensiona. Es el modo
-    que la 2.3 amplía a las dependencias;
-  - **mover la rama entera**: arrastrar un padre en el Gantt mueve toda su rama los mismos días
-    laborables, en una transacción, bajo el cerrojo por proyecto, con actividad y sin disparar
-    automatizaciones en cascada;
-  - **aviso de desviación**: si un padre con fechas propias queda desbordado por sus hijas, el
-    corchete sale en el tono de peligro y el detalle lo dice («las subtareas acaban 2 días
-    laborables después»);
-  - **progreso ponderado**: un ajuste de jerarquía por proyecto, junto a las cascadas, para que el
-    progreso de la rama pese por la estimación en vez de contar tareas hechas. Los paneles y la
-    exportación cuentan lo mismo.
-
-  A decidir en la ADR: si «fechas automáticas» es una marca en la tarea o se deduce de no tener
-  fechas propias, y cómo convive con la fecha heredada que hoy se anuncia.
+- **2.2 Tareas resumen** ✔ · M · [ADR 083](adr/083-tareas-resumen.md). **Hecho (2026-10-13).**
+  Decisiones del usuario: los padres sin fechas propias pasan solos a automáticas; una subtarea
+  sin estimar pesa la media de la rama; los días laborables son de lunes a viernes sin los
+  festivos del espacio.
+  - **Fechas automáticas**: marca `auto_dates` y fechas guardadas en la fila (migración 0088,
+    que convierte los padres sin fechas y les escribe las de su rama). Se recalculan al escribir
+    en `task/schedule`, bajo el cerrojo del proyecto, desde cada camino que mueve fechas, estados
+    o el árbol.
+  - **Mover la rama entera**: `POST /task/shift-branch/:id`, que usa arrastrar un padre en el
+    Gantt. La barra de resumen no se estira.
+  - **Aviso de desviación** en el detalle y corchete en tono de peligro.
+  - **Progreso ponderado**, ajuste de jerarquía del proyecto. Un hito no pesa.
+  - La fecha de inicio pasa a dejar actividad. Lo que mueve la planificación deja actividad,
+    pero no avisa ni dispara automatizaciones. MCP: `set_task_auto_dates` y
+    `shift_task_branch`.
 - **2.3 Precede/sigue con desfase y planificación automática** · L. Una relación `precedes` —«sigue
   a» es su inversa— con un desfase en días laborables, también negativo para solapar.
   - Con fechas automáticas, mover una predecesora desplaza a sus sucesoras en días laborables,

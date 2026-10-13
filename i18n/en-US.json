@@ -1432,7 +1432,9 @@
 			"cascadeArchiveHint": "Archiving a task archives every task below it too.",
 			"depthLabel": "Depth limit",
 			"depthHint": "How many levels a branch may have. Past five, indentation eats the list.",
-			"updateError": "Failed to update the hierarchy settings"
+			"updateError": "Failed to update the hierarchy settings",
+			"weightedProgressLabel": "Weigh progress by the estimate",
+			"weightedProgressHint": "A branch's progress counts each subtask by its estimate instead of counting finished tasks. One without an estimate weighs the branch average; a milestone weighs nothing."
 		},
 		"projectEpics": {
 			"title": "Epics",
@@ -2221,7 +2223,15 @@
 		"automationActor": "Automation “{{name}}”",
 		"manualAutomationActor": "{{user}} via “{{name}}”",
 		"markedMilestone": "marked it as a milestone",
-		"unmarkedMilestone": "made it a regular task again"
+		"unmarkedMilestone": "made it a regular task again",
+		"bySchedule": "(automatic scheduling)",
+		"changedStartDate": "changed the start date from {{from}} to {{to}}",
+		"setStartDate": "set the start date to {{date}}",
+		"clearedStartDate": "cleared the start date",
+		"switchedToAutoDates": "switched to automatic dates",
+		"switchedToOwnDates": "switched to its own dates",
+		"shiftedBranch_one": "moved its branch ({{count}} task) {{days}} working days",
+		"shiftedBranch_other": "moved its branch ({{count}} tasks) {{days}} working days"
 	},
 	"tasks": {
 		"actions": {
@@ -2516,7 +2526,8 @@
 			"quarterShort": "Q{{n}}",
 			"dependencyBlocks": "{{source}} blocks {{target}}",
 			"milestoneAriaLabel": "Milestone {{title}}: drag to change its date or press Enter to open it",
-			"milestoneAriaLabelReadOnly": "Milestone {{title}}: press Enter to open it"
+			"milestoneAriaLabelReadOnly": "Milestone {{title}}: press Enter to open it",
+			"branchOverflow": "The subtasks run past this task's own dates"
 		},
 		"group": {
 			"label": "Group",
@@ -2906,6 +2917,19 @@
 			"marked": "Marked as a milestone",
 			"unmarked": "No longer a milestone",
 			"error": "Could not change the milestone"
+		},
+		"dates": {
+			"modeOwn": "Dates: own",
+			"modeAuto": "Dates: automatic",
+			"own": "Own",
+			"ownHint": "You set them. If the subtasks run past them, you get a warning.",
+			"auto": "Automatic",
+			"autoHint": "They come from the subtasks: from the first start to the last end. They cannot be edited by hand.",
+			"error": "Could not change the dates",
+			"overflow_one": "The subtasks end on {{date}}, {{count}} working day after the due date.",
+			"overflow_other": "The subtasks end on {{date}}, {{count}} working days after the due date.",
+			"moveDue": "Move the due date to {{date}}",
+			"switchToAuto": "Switch to automatic dates"
 		}
 	},
 	"invitations": {

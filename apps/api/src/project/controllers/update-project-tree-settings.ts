@@ -12,11 +12,14 @@ async function updateProjectTreeSettings({
   cascadeClose,
   cascadeArchive,
   maxTaskDepth,
+  weightedProgress,
 }: {
   projectId: string;
   cascadeClose?: boolean;
   cascadeArchive?: boolean;
   maxTaskDepth?: number;
+  /** El progreso de rama pesa por la estimacion (ADR 083). */
+  weightedProgress?: boolean;
 }) {
   if (
     maxTaskDepth !== undefined &&
@@ -31,6 +34,9 @@ async function updateProjectTreeSettings({
   if (cascadeClose !== undefined) changes.cascadeClose = cascadeClose;
   if (cascadeArchive !== undefined) changes.cascadeArchive = cascadeArchive;
   if (maxTaskDepth !== undefined) changes.maxTaskDepth = maxTaskDepth;
+  if (weightedProgress !== undefined) {
+    changes.weightedProgress = weightedProgress;
+  }
 
   if (Object.keys(changes).length === 0) {
     throw new HTTPException(400, { message: "Nothing to update" });

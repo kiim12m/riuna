@@ -15,6 +15,7 @@ import {
   assertMappedProjects,
   importProjectRows,
 } from "../exports/servitec-write";
+import { publishScheduleChanges } from "../schedule/reschedule";
 import {
   type importTasksInTransaction,
   publishImportEvents,
@@ -150,6 +151,10 @@ export async function importServitec({
   let createdTasks: Awaited<
     ReturnType<typeof importTasksInTransaction>
   >["created"] = [];
+  const scheduled: Array<{
+    projectId: string;
+    changes: Awaited<ReturnType<typeof importTasksInTransaction>>["scheduled"];
+  }> = [];
   try {
     await db.transaction(async (tx) => {
       // En orden estable de id: dos importaciones a la vez toman los cerrojos
@@ -162,6 +167,7 @@ export async function importServitec({
           currentUserId,
         });
         createdTasks = [...createdTasks, ...outcome.created];
+        scheduled.push({ projectId, changes: outcome.scheduled });
         await finishRows(tx, {
           rows,
           results: outcome.report.results.rows,
@@ -190,5 +196,12 @@ export async function importServitec({
   }
 
   publishImportEvents(createdTasks, currentUserId);
+  for (const { projectId, changes } of scheduled) {
+    await publishScheduleChanges(changes, {
+      projectId,
+      actorId: currentUserId,
+      origin: "import",
+    });
+  }
   return report;
 }

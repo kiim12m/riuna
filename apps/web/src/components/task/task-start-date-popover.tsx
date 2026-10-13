@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/popover";
 import { useUpdateTask } from "@/hooks/mutations/task/use-update-task";
 import { useEditableUntilKnown } from "@/hooks/use-workspace-permission";
+import { hasDerivedDates } from "@/lib/task-dates";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
 
@@ -44,7 +45,8 @@ export default function TaskStartDatePopover({
     }
   };
 
-  if (!canEdit) return <>{children}</>;
+  // Las fechas automaticas de un padre salen de su rama (ADR 083).
+  if (!canEdit || hasDerivedDates(task)) return <>{children}</>;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

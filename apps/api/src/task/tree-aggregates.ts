@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, type SQL, sql } from "drizzle-orm";
 import db from "../database";
 import { columnTable, taskTable } from "../database/schema";
 import { getFieldDefinitionsForProject } from "../field/controllers/get-field-definitions";
@@ -35,6 +35,17 @@ export type TaskSubtreeAggregate = {
    * en la rama no aparece. Un "Presupuesto" de la obra entera.
    */
   fieldSums: Record<string, number>;
+  /**
+   * Para el progreso ponderado (ADR 083), solo de los descendientes: cuantos
+   * estan estimados y su suma, lo mismo de los hechos, y cuantos son hitos,
+   * que no pesan.
+   */
+  estimatedCount: number;
+  estimatedSum: number;
+  doneEstimatedCount: number;
+  doneEstimatedSum: number;
+  milestoneCount: number;
+  doneMilestoneCount: number;
 };
 
 export type TaskSubtreeAggregates = Map<string, TaskSubtreeAggregate>;
@@ -48,6 +59,12 @@ type AggregateRow = {
   subtree_due_date: string | null;
   estimate_sum: number | string;
   logged_sum: number | string;
+  estimated_count: number | string;
+  estimated_sum: number | string;
+  done_estimated_count: number | string;
+  done_estimated_sum: number | string;
+  milestone_count: number | string;
+  done_milestone_count: number | string;
 };
 
 function toNumber(value: number | string | null): number {
@@ -96,6 +113,45 @@ function toFieldSums(rows: FieldSumRow[]) {
     byTask.set(row.task_id, sums);
   }
   return byTask;
+}
+
+/**
+ * Las cifras del progreso ponderado (ADR 083), solo sobre los descendientes
+ * —`d.id <> ancestro`—: la propia tarea no cuenta en su progreso.
+ */
+function weightedColumns(ancestor: SQL, finalStatusList: SQL) {
+  const descendant = sql`d."id" <> ${ancestor}`;
+  const done = sql`d."status" IN (${finalStatusList})`;
+  return sql`
+      COUNT(*) FILTER (
+        WHERE ${descendant} AND d."estimate" IS NOT NULL AND NOT d."is_milestone"
+      )::int AS estimated_count,
+      COALESCE(SUM(d."estimate") FILTER (
+        WHERE ${descendant} AND NOT d."is_milestone"
+      ), 0)::bigint AS estimated_sum,
+      COUNT(*) FILTER (
+        WHERE ${descendant} AND ${done} AND d."estimate" IS NOT NULL
+          AND NOT d."is_milestone"
+      )::int AS done_estimated_count,
+      COALESCE(SUM(d."estimate") FILTER (
+        WHERE ${descendant} AND ${done} AND NOT d."is_milestone"
+      ), 0)::bigint AS done_estimated_sum,
+      COUNT(*) FILTER (WHERE ${descendant} AND d."is_milestone")::int
+        AS milestone_count,
+      COUNT(*) FILTER (
+        WHERE ${descendant} AND ${done} AND d."is_milestone"
+      )::int AS done_milestone_count`;
+}
+
+function weightedFields(row: AggregateRow) {
+  return {
+    estimatedCount: toNumber(row.estimated_count),
+    estimatedSum: toNumber(row.estimated_sum),
+    doneEstimatedCount: toNumber(row.done_estimated_count),
+    doneEstimatedSum: toNumber(row.done_estimated_sum),
+    milestoneCount: toNumber(row.milestone_count),
+    doneMilestoneCount: toNumber(row.done_milestone_count),
+  };
 }
 
 async function getFinalStatuses(projectId: string): Promise<string[]> {
@@ -154,7 +210,8 @@ export async function getProjectSubtreeAggregates(
       MIN(d."start_date")::text AS subtree_start_date,
       MAX(d."due_date")::text AS subtree_due_date,
       COALESCE(SUM(d."estimate"), 0)::bigint AS estimate_sum,
-      COALESCE(SUM(tt.logged), 0)::bigint AS logged_sum
+      COALESCE(SUM(tt.logged), 0)::bigint AS logged_sum,
+      ${weightedColumns(sql`ancestor.id`, finalStatusList)}
     FROM "task" d
     -- Cada tarea aporta a la cuenta de cada uno de sus ancestros, y sus
     -- ancestros son exactamente los segmentos de su propio path: para
@@ -220,6 +277,7 @@ export async function getProjectSubtreeAggregates(
       estimateSeconds: toNumber(row.estimate_sum),
       loggedSeconds: toNumber(row.logged_sum),
       fieldSums: fieldSums.get(row.task_id) ?? {},
+      ...weightedFields(row),
     });
   }
 
@@ -264,7 +322,8 @@ export async function getTaskSubtreeAggregate(
       MIN(d."start_date")::text AS subtree_start_date,
       MAX(d."due_date")::text AS subtree_due_date,
       COALESCE(SUM(d."estimate"), 0)::bigint AS estimate_sum,
-      COALESCE(SUM(tt.logged), 0)::bigint AS logged_sum
+      COALESCE(SUM(tt.logged), 0)::bigint AS logged_sum,
+      ${weightedColumns(sql`${taskId}`, finalStatusList)}
     FROM "task" d
     LEFT JOIN (
       SELECT te."task_id" AS task_id, COALESCE(SUM(te."duration"), 0) AS logged
@@ -310,6 +369,7 @@ export async function getTaskSubtreeAggregate(
     estimateSeconds: toNumber(row.estimate_sum),
     loggedSeconds: toNumber(row.logged_sum),
     fieldSums: sums ?? {},
+    ...weightedFields(row),
   };
 }
 
@@ -320,6 +380,8 @@ export async function getTaskSubtreeAggregate(
 export function serializeAggregate(
   aggregate: TaskSubtreeAggregate | undefined,
   own: { startDate: Date | null; dueDate: Date | null },
+  /** El ajuste de jerarquia del proyecto (ADR 083). */
+  weighted = false,
 ) {
   if (!aggregate) return null;
 
@@ -329,10 +391,7 @@ export function serializeAggregate(
     childCount: aggregate.childCount,
     descendantCount,
     descendantDoneCount,
-    progress:
-      descendantCount > 0
-        ? Math.round((descendantDoneCount / descendantCount) * 100)
-        : 0,
+    progress: branchProgress(aggregate, weighted),
     // La fecha heredada solo se anuncia cuando amplia la propia: si el padre
     // ya abarca a sus hijas, repetir su fecha como "heredada" seria ruido.
     startDate: aggregate.startDate,
@@ -350,3 +409,42 @@ export function serializeAggregate(
 }
 
 export type SerializedSubtreeAggregate = ReturnType<typeof serializeAggregate>;
+
+/**
+ * El progreso de una rama, en porcentaje. Contando tareas hechas, o pesando
+ * cada una por su estimacion (ADR 083): una sin estimar pesa la media de las
+ * estimadas de la rama, y un hito no pesa. Sin ninguna estimacion que pesar,
+ * se vuelve a contar tareas.
+ */
+export function branchProgress(
+  aggregate: Pick<
+    TaskSubtreeAggregate,
+    | "descendantCount"
+    | "descendantDoneCount"
+    | "estimatedCount"
+    | "estimatedSum"
+    | "doneEstimatedCount"
+    | "doneEstimatedSum"
+    | "milestoneCount"
+    | "doneMilestoneCount"
+  >,
+  weighted: boolean,
+): number {
+  const { descendantCount, descendantDoneCount } = aggregate;
+  if (descendantCount === 0) return 0;
+  const counted = Math.round((descendantDoneCount / descendantCount) * 100);
+  if (!weighted || aggregate.estimatedCount === 0) return counted;
+
+  const average = aggregate.estimatedSum / aggregate.estimatedCount;
+  const unestimated =
+    descendantCount - aggregate.estimatedCount - aggregate.milestoneCount;
+  const doneUnestimated =
+    descendantDoneCount -
+    aggregate.doneEstimatedCount -
+    aggregate.doneMilestoneCount;
+  const total = aggregate.estimatedSum + average * unestimated;
+  if (total <= 0) return counted;
+  return Math.round(
+    ((aggregate.doneEstimatedSum + average * doneUnestimated) / total) * 100,
+  );
+}

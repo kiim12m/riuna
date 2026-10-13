@@ -930,6 +930,47 @@ export function registerTools(
       ),
   );
   server.registerTool(
+    "set_task_auto_dates",
+    {
+      description:
+        "Own or automatic dates for a task. With automatic dates a parent takes its start and due date from its branch and they stop being editable by hand; switching back keeps the ones it had.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        autoDates: z.boolean(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/task/auto-dates/${encodeURIComponent(args.taskId)}`, {
+          method: "PUT",
+          body: JSON.stringify({ autoDates: args.autoDates }),
+        }),
+      ),
+  );
+
+  server.registerTool(
+    "shift_task_branch",
+    {
+      description:
+        "Move a task and its whole branch the same number of working days (Monday to Friday, skipping the workspace holidays); negative moves it earlier.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        workDays: z.number().int().min(-365).max(365),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/task/shift-branch/${encodeURIComponent(args.taskId)}`,
+          {
+            method: "POST",
+            body: JSON.stringify({ workDays: args.workDays }),
+          },
+        ),
+      ),
+  );
+
+  server.registerTool(
     "delete_label",
     {
       description:

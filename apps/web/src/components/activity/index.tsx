@@ -292,6 +292,7 @@ function renderActivityContent({
                 })
               : t("activity:setDueDate", { date: newDueDate })
             : t("activity:clearedDueDate")}
+          {eventData.cascadedFrom ? ` ${t("activity:bySchedule")}` : null}
         </span>
       );
     }
@@ -466,6 +467,47 @@ function renderActivityContent({
         {names.length > 0
           ? t("activity:assignedTo", { name: names.join(", ") })
           : t("activity:unassigned")}
+      </span>
+    );
+  }
+
+  // La fecha de inicio, las fechas automaticas y mover la rama (ADR 083).
+  if (activity.type === "start_date_changed" && eventData) {
+    const oldStart = eventData.oldStartDate
+      ? formatActivityDateText(String(eventData.oldStartDate))
+      : null;
+    const newStart = eventData.newStartDate
+      ? formatActivityDateText(String(eventData.newStartDate))
+      : null;
+    return (
+      <span className="text-sm text-muted-foreground">
+        {newStart
+          ? oldStart
+            ? t("activity:changedStartDate", { from: oldStart, to: newStart })
+            : t("activity:setStartDate", { date: newStart })
+          : t("activity:clearedStartDate")}
+        {eventData.cascadedFrom ? ` ${t("activity:bySchedule")}` : null}
+      </span>
+    );
+  }
+
+  if (activity.type === "auto_dates_changed" && eventData) {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {eventData.autoDates
+          ? t("activity:switchedToAutoDates")
+          : t("activity:switchedToOwnDates")}
+      </span>
+    );
+  }
+
+  if (activity.type === "branch_shifted" && eventData) {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {t("activity:shiftedBranch", {
+          count: Number(eventData.moved ?? 0),
+          days: Number(eventData.workDays ?? 0),
+        })}
       </span>
     );
   }

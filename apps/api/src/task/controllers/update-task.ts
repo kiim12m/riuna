@@ -8,6 +8,8 @@ import {
   assertAssignableUser,
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
+import { hasChildren } from "../schedule/children";
+import { scheduleAfter } from "../schedule/reschedule";
 import { assertValidTaskStatus } from "../validate-task-fields";
 import { syncPrimaryAssignee } from "./assignees";
 import { cascadeStatusToSubtree } from "./cascade-status";
@@ -34,6 +36,8 @@ async function updateTask(
       projectId: taskTable.projectId,
       userId: taskTable.userId,
       isMilestone: taskTable.isMilestone,
+      autoDates: taskTable.autoDates,
+      startDate: taskTable.startDate,
     })
     .from(taskTable)
     .where(eq(taskTable.id, id))
@@ -67,8 +71,21 @@ async function updateTask(
   const milestoneDay = existingTask.isMilestone
     ? (dueDate ?? startDate)
     : undefined;
-  const nextStartDate = existingTask.isMilestone ? milestoneDay : startDate;
-  const nextDueDate = existingTask.isMilestone ? milestoneDay : dueDate;
+  // Las de un padre con fechas automaticas salen de su rama (ADR 083): la
+  // edicion completa manda las que tenia el navegador, que pueden ser viejas,
+  // asi que se ignoran en vez de rechazar el cambio de titulo que venia con
+  // ellas.
+  const derived = existingTask.autoDates && (await hasChildren(id));
+  const nextStartDate = derived
+    ? existingTask.startDate
+    : existingTask.isMilestone
+      ? milestoneDay
+      : startDate;
+  const nextDueDate = derived
+    ? existingTask.dueDate
+    : existingTask.isMilestone
+      ? milestoneDay
+      : dueDate;
 
   const column = await db.query.columnTable.findFirst({
     where: and(
@@ -152,6 +169,20 @@ async function updateTask(
     });
   }
 
+  if (
+    (existingTask.startDate?.getTime() ?? null) !==
+    (updatedTask.startDate?.getTime() ?? null)
+  ) {
+    await publishEvent("task.start_date_changed", {
+      taskId: updatedTask.id,
+      projectId: updatedTask.projectId,
+      userId: currentUserId,
+      oldStartDate: existingTask.startDate,
+      newStartDate: updatedTask.startDate,
+      type: "start_date_changed",
+    });
+  }
+
   await publishEvent("task.updated", {
     taskId: updatedTask.id,
     projectId: updatedTask.projectId,
@@ -159,6 +190,21 @@ async function updateTask(
     status: updatedTask.status,
     userId: currentUserId,
   });
+
+  // Fechas o estado (archivar saca de la rama): lo que mueve las fechas
+  // automaticas (ADR 083). Un cambio de titulo no paga la replanificacion.
+  const datesChanged =
+    (existingTask.startDate?.getTime() ?? null) !==
+      (updatedTask.startDate?.getTime() ?? null) ||
+    (existingTask.dueDate?.getTime() ?? null) !==
+      (updatedTask.dueDate?.getTime() ?? null);
+  if (datesChanged || existingTask.status !== status) {
+    await scheduleAfter({
+      projectId: updatedTask.projectId,
+      taskIds: [updatedTask.id],
+      actorId: currentUserId ?? "",
+    });
+  }
 
   if (existingTask.description !== description) {
     deleteOrphanedAssets(existingTask.description, description, {

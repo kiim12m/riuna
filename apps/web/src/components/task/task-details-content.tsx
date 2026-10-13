@@ -18,6 +18,7 @@ import type { FieldDefinition } from "../table-view/custom-field-cell";
 import TaskDescription from "./task-description";
 import TaskManualActions from "./task-manual-actions";
 import TaskRelations from "./task-relations";
+import TaskScheduleAlert from "./task-schedule-alert";
 import TaskSubtasks from "./task-subtasks";
 import TaskTime from "./task-time";
 import TaskTitle from "./task-title";
@@ -101,6 +102,7 @@ export default function TaskDetailsContent({
           {task && <TaskManualActions taskId={task.id} />}
         </div>
         <TaskTitle taskId={taskId} />
+        {task && <TaskScheduleAlert task={task} />}
         <TaskDescription taskId={taskId} />
       </div>
       {!isLoadingExternalLinks && externalLinks.length > 0 && (

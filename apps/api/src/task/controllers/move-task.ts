@@ -10,6 +10,7 @@ import {
 } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { getFieldDefinitionsForProject } from "../../field/controllers/get-field-definitions";
+import { scheduleAfter } from "../schedule/reschedule";
 import { rebasePath, rootPath, subtreePattern } from "../tree";
 import claimTaskNumbers from "./claim-task-numbers";
 import { lockProjectTree } from "./lock-project-tree";
@@ -312,6 +313,14 @@ async function moveTask({
       .where(inArray(assetTable.taskId, subtreeIds));
 
     return updatedTask;
+  });
+
+  // La rama de origen pierde una hija y puede encoger (ADR 083).
+  await scheduleAfter({
+    projectId: sourceProject.id,
+    taskIds: [existingTask.parentId],
+    actorId: currentUserId,
+    origin: taskId,
   });
 
   await publishEvent("task.moved", {

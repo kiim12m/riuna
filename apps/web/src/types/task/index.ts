@@ -79,6 +79,10 @@ type Task = {
   estimate?: number | null;
   // Un hito: una sola fecha, sin estimacion ni subtareas (ADR 082).
   isMilestone?: boolean;
+  // Fechas automaticas (ADR 083): las de un padre salen de su rama.
+  autoDates?: boolean;
+  // Solo en el detalle: un padre con fechas propias desbordado por su rama.
+  schedule?: { branchDueDate: string; overflowWorkDays: number } | null;
   epics?: TaskEpic[];
   // Los valores de los campos personalizados, indexados por la `key` de su
   // definicion. Siempre viene, aunque sea vacio: la columna es NOT NULL.

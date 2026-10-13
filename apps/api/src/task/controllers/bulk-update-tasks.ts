@@ -14,6 +14,7 @@ import { removeLabelFromGitea } from "../../plugins/gitea/utils/sync-label-to-gi
 import { removeLabelFromGitHub } from "../../plugins/github/utils/sync-label-to-github";
 import { assertAssignableUser } from "../../utils/assert-assignable-user";
 import { log } from "../../utils/log";
+import { scheduleAfter } from "../schedule/reschedule";
 import {
   assertValidPriority,
   assertValidTaskStatus,
@@ -50,6 +51,7 @@ async function bulkUpdateTasks({
       path: taskTable.path,
       userId: taskTable.userId,
       dueDate: taskTable.dueDate,
+      parentId: taskTable.parentId,
       workspaceId: projectTable.workspaceId,
     })
     .from(taskTable)
@@ -394,6 +396,25 @@ async function bulkUpdateTasks({
       throw new HTTPException(400, {
         message: `Unknown operation "${operation}"`,
       });
+    }
+  }
+
+  // Lo que mueve fechas automaticas (ADR 083): vencimientos, archivar y
+  // borrar. Una replanificacion por proyecto, no por tarea.
+  if (
+    operation === "updateDueDate" ||
+    operation === "delete" ||
+    (operation === "updateStatus" &&
+      (value === "archived" || tasks.some((t) => t.status === "archived")))
+  ) {
+    const byProject = new Map<string, string[]>();
+    for (const task of tasks) {
+      const seeds = byProject.get(task.projectId) ?? [];
+      seeds.push(operation === "delete" ? (task.parentId ?? "") : task.id);
+      byProject.set(task.projectId, seeds);
+    }
+    for (const [projectId, seeds] of byProject) {
+      await scheduleAfter({ projectId, taskIds: seeds, actorId: userId });
     }
   }
 

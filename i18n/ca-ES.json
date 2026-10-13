@@ -1432,7 +1432,9 @@
 			"cascadeArchiveHint": "Archivar una tarea archiva también todo lo que cuelga de ella.",
 			"depthLabel": "Profundidad máxima",
 			"depthHint": "Cuántos niveles puede tener una rama. Más allá de cinco, la sangría se come la lista.",
-			"updateError": "No se han podido guardar los ajustes de jerarquía"
+			"updateError": "No se han podido guardar los ajustes de jerarquía",
+			"weightedProgressLabel": "Progreso ponderado por la estimación",
+			"weightedProgressHint": "El progreso de una rama cuenta cada subtarea por su estimación en vez de contar tareas hechas. Una sin estimar pesa la media de la rama; un hito no pesa."
 		},
 		"projectEpics": {
 			"title": "Épicas",
@@ -2221,7 +2223,15 @@
 		"automationActor": "Automatización «{{name}}»",
 		"manualAutomationActor": "{{user}} con «{{name}}»",
 		"markedMilestone": "la marcó como hito",
-		"unmarkedMilestone": "la volvió a dejar como tarea"
+		"unmarkedMilestone": "la volvió a dejar como tarea",
+		"bySchedule": "(planificación automática)",
+		"changedStartDate": "cambió el inicio del {{from}} al {{to}}",
+		"setStartDate": "puso el inicio el {{date}}",
+		"clearedStartDate": "quitó la fecha de inicio",
+		"switchedToAutoDates": "pasó a fechas automáticas",
+		"switchedToOwnDates": "pasó a fechas propias",
+		"shiftedBranch_one": "movió su rama ({{count}} tarea) {{days}} días laborables",
+		"shiftedBranch_other": "movió su rama ({{count}} tareas) {{days}} días laborables"
 	},
 	"tasks": {
 		"actions": {
@@ -2516,7 +2526,8 @@
 			"quarterShort": "T{{n}}",
 			"dependencyBlocks": "{{source}} bloquea a {{target}}",
 			"milestoneAriaLabel": "Hito {{title}}: arrastra para cambiar su fecha o pulsa Intro para abrirlo",
-			"milestoneAriaLabelReadOnly": "Hito {{title}}: pulsa Intro para abrirlo"
+			"milestoneAriaLabelReadOnly": "Hito {{title}}: pulsa Intro para abrirlo",
+			"branchOverflow": "Las subtareas se salen de las fechas propias de esta tarea"
 		},
 		"group": {
 			"label": "Agrupar",
@@ -2906,6 +2917,19 @@
 			"marked": "Marcada como hito",
 			"unmarked": "Ya no es un hito",
 			"error": "No se pudo cambiar el hito"
+		},
+		"dates": {
+			"modeOwn": "Fechas: propias",
+			"modeAuto": "Fechas: automáticas",
+			"own": "Propias",
+			"ownHint": "Las pones tú. Si las subtareas se salen, te avisa.",
+			"auto": "Automáticas",
+			"autoHint": "Salen de las subtareas: del primer inicio al último fin. No se editan a mano.",
+			"error": "No se pudieron cambiar las fechas",
+			"overflow_one": "Las subtareas acaban el {{date}}, {{count}} día laborable después del vencimiento.",
+			"overflow_other": "Las subtareas acaban el {{date}}, {{count}} días laborables después del vencimiento.",
+			"moveDue": "Mover el vencimiento al {{date}}",
+			"switchToAuto": "Pasar a fechas automáticas"
 		}
 	},
 	"invitations": {

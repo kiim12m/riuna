@@ -102,7 +102,7 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
   arrastrando, icono, color y marca de **columna final**, que es la que define
   «hecho».
 - **Ajustes de jerarquía por proyecto**: cascada al cerrar, cascada al
-  archivar y profundidad máxima.
+  archivar, profundidad máxima y progreso ponderado por la estimación.
 - Aviso automático cuando el proyecto pasa de 5.000 tareas.
 - **Avisos del proyecto y del espacio**
   ([ADR 081](adr/081-avisos-de-proyecto-y-espacio.md)):
@@ -147,6 +147,17 @@ horas, etiquetas, épicas, ciclo, campos personalizados y número de ticket.
   - Observarse a uno mismo basta con ver la tarea; añadir o quitar a otra persona
     pide poder asignar.
   - Observar no deja rastro en la actividad.
+- **Tareas resumen** ([ADR 083](adr/083-tareas-resumen.md)):
+  - **Fechas automáticas**: un padre las toma de su rama, del primer inicio al último fin, y no
+    se editan a mano. Un padre sin fechas propias pasa solo a automáticas.
+  - Se cambia entre «propias» y «automáticas» desde el lateral.
+  - **Mover la rama entera** arrastrando el padre en el Gantt: toda la rama se mueve los
+    mismos días laborables, de lunes a viernes y sin los festivos del espacio.
+  - **Aviso de desviación**: un padre con fechas propias desbordado por sus subtareas lo dice en
+    el detalle, con cuántos días laborables, y ofrece mover el vencimiento o pasar a
+    automáticas. En el Gantt, el corchete sale en rojo.
+  - **Progreso ponderado** por la estimación, ajuste de jerarquía del proyecto. Una subtarea
+    sin estimar pesa la media de la rama; un hito no pesa.
 - **Hitos** ([ADR 082](adr/082-hitos.md)): una tarea marcada como hito es un punto en el
   tiempo.
   - Tiene una sola fecha: el inicio es siempre el vencimiento.
@@ -675,7 +686,7 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 57 herramientas**. Una prueba de paridad
+Dos caminos con **las mismas 59 herramientas**. Una prueba de paridad
 (`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
 antes el paquete stdio se había quedado sin las cinco del plan personal y el
 cronómetro.

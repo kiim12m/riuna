@@ -5660,6 +5660,12 @@
 						},
 						"updateError": {
 							"type": "string"
+						},
+						"weightedProgressLabel": {
+							"type": "string"
+						},
+						"weightedProgressHint": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -5671,7 +5677,9 @@
 						"cascadeArchiveHint",
 						"depthLabel",
 						"depthHint",
-						"updateError"
+						"updateError",
+						"weightedProgressLabel",
+						"weightedProgressHint"
 					]
 				},
 				"projectEpics": {
@@ -8762,6 +8770,30 @@
 				},
 				"unmarkedMilestone": {
 					"type": "string"
+				},
+				"bySchedule": {
+					"type": "string"
+				},
+				"changedStartDate": {
+					"type": "string"
+				},
+				"setStartDate": {
+					"type": "string"
+				},
+				"clearedStartDate": {
+					"type": "string"
+				},
+				"switchedToAutoDates": {
+					"type": "string"
+				},
+				"switchedToOwnDates": {
+					"type": "string"
+				},
+				"shiftedBranch_one": {
+					"type": "string"
+				},
+				"shiftedBranch_other": {
+					"type": "string"
 				}
 			},
 			"required": [
@@ -8790,7 +8822,15 @@
 				"automationActor",
 				"manualAutomationActor",
 				"markedMilestone",
-				"unmarkedMilestone"
+				"unmarkedMilestone",
+				"bySchedule",
+				"changedStartDate",
+				"setStartDate",
+				"clearedStartDate",
+				"switchedToAutoDates",
+				"switchedToOwnDates",
+				"shiftedBranch_one",
+				"shiftedBranch_other"
 			]
 		},
 		"tasks": {
@@ -9906,6 +9946,9 @@
 						},
 						"milestoneAriaLabelReadOnly": {
 							"type": "string"
+						},
+						"branchOverflow": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -9936,7 +9979,8 @@
 						"quarterShort",
 						"dependencyBlocks",
 						"milestoneAriaLabel",
-						"milestoneAriaLabelReadOnly"
+						"milestoneAriaLabelReadOnly",
+						"branchOverflow"
 					]
 				},
 				"group": {
@@ -11414,6 +11458,58 @@
 						"unmarked",
 						"error"
 					]
+				},
+				"dates": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"modeOwn": {
+							"type": "string"
+						},
+						"modeAuto": {
+							"type": "string"
+						},
+						"own": {
+							"type": "string"
+						},
+						"ownHint": {
+							"type": "string"
+						},
+						"auto": {
+							"type": "string"
+						},
+						"autoHint": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						},
+						"overflow_one": {
+							"type": "string"
+						},
+						"overflow_other": {
+							"type": "string"
+						},
+						"moveDue": {
+							"type": "string"
+						},
+						"switchToAuto": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"modeOwn",
+						"modeAuto",
+						"own",
+						"ownHint",
+						"auto",
+						"autoHint",
+						"error",
+						"overflow_one",
+						"overflow_other",
+						"moveDue",
+						"switchToAuto"
+					]
 				}
 			},
 			"required": [
@@ -11460,7 +11556,8 @@
 				"watchers",
 				"reminder",
 				"manualActions",
-				"milestone"
+				"milestone",
+				"dates"
 			]
 		},
 		"invitations": {

@@ -23,6 +23,7 @@ export const projectSchema = v.object({
   cascadeClose: v.boolean(),
   cascadeArchive: v.boolean(),
   maxTaskDepth: v.number(),
+  weightedProgress: v.optional(v.boolean()),
   /** Con valor, es la Bandeja de esa persona (ADR 051). */
   ownerUserId: v.nullable(v.string()),
 });
@@ -46,6 +47,7 @@ export const taskSchema = v.object({
   startDate: v.optional(v.date()),
   dueDate: v.optional(v.date()),
   isMilestone: v.optional(v.boolean()),
+  autoDates: v.optional(v.boolean()),
   customFields: v.record(v.string(), v.unknown()),
   createdAt: v.date(),
 });

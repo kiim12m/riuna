@@ -53,9 +53,11 @@ import {
   requireBulkTaskPermission,
   requireTaskAssigneePermission,
 } from "./controllers/require-task-permission";
+import shiftTaskBranch from "./controllers/shift-task-branch";
 import updateTask from "./controllers/update-task";
 import updateTaskAssignee from "./controllers/update-task-assignee";
 import updateTaskAssignees from "./controllers/update-task-assignees";
+import updateTaskAutoDates from "./controllers/update-task-auto-dates";
 import updateTaskCustomFields from "./controllers/update-task-custom-fields";
 import updateTaskDescription from "./controllers/update-task-description";
 import updateTaskDueDate from "./controllers/update-task-due-date";
@@ -1059,6 +1061,89 @@ const task = new Hono<{
       });
 
       return c.json(task);
+    },
+  )
+  .put(
+    "/auto-dates/:id",
+    describeRoute({
+      operationId: "updateTaskAutoDates",
+      tags: ["Tasks"],
+      description:
+        "Own or automatic dates. With automatic dates a parent takes its start and due date from its branch and they stop being editable by hand; switching back to own dates keeps the ones it had",
+      responses: {
+        200: {
+          description: "The task",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ autoDates: v.boolean() })),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { autoDates } = c.req.valid("json");
+      return c.json(
+        await updateTaskAutoDates({
+          id,
+          autoDates,
+          currentUserId: c.get("userId"),
+        }),
+      );
+    },
+  )
+  .post(
+    "/shift-branch/:id",
+    describeRoute({
+      operationId: "shiftTaskBranch",
+      tags: ["Tasks"],
+      description:
+        "Move a task and its whole branch the same number of working days (Monday to Friday, skipping the workspace holidays); negative moves it earlier. Instead of `workDays`, `startDate` moves it so the task starts that day. What dragging a parent does in the Gantt",
+      responses: {
+        200: {
+          description: "How many tasks moved",
+          content: {
+            "application/json": {
+              schema: resolver(v.object({ moved: v.number() })),
+            },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator(
+      "json",
+      v.object({
+        workDays: v.optional(
+          v.pipe(v.number(), v.integer(), v.minValue(-365), v.maxValue(365)),
+        ),
+        // O el dia en que tiene que empezar: la API cuenta los laborables.
+        startDate: v.optional(v.string()),
+      }),
+    ),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { workDays, startDate } = c.req.valid("json");
+      if (workDays === undefined && !startDate) {
+        throw new HTTPException(400, {
+          message: "Send workDays or the startDate to move the branch to",
+        });
+      }
+      return c.json(
+        await shiftTaskBranch({
+          id,
+          workDays,
+          toStartDate: startDate
+            ? validateAndParseDate(startDate, "startDate")
+            : undefined,
+          currentUserId: c.get("userId"),
+        }),
+      );
     },
   )
   .put(

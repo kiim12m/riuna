@@ -11,6 +11,7 @@ import {
   assertAssignableUser,
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
+import { scheduleAfter } from "../schedule/reschedule";
 import { childTaskTreeFields, rootTaskTreeFields } from "../tree";
 import { assertValidTaskStatus } from "../validate-task-fields";
 import { syncPrimaryAssignee } from "./assignees";
@@ -155,6 +156,15 @@ async function createTask({
     type: "created",
     content: null,
   });
+
+  // Una hija nueva puede cambiar las fechas automaticas de su rama (ADR 083).
+  if (createdTask.parentId) {
+    await scheduleAfter({
+      projectId,
+      taskIds: [createdTask.id],
+      actorId: currentUserId,
+    });
+  }
 
   if (creatorWatches) {
     await publishWatchersChanged({
