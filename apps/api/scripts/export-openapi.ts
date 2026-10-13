@@ -10,6 +10,12 @@ if (!response.ok) {
 }
 
 const spec = await response.json();
+// `servers` sale del `.env` de cada maquina, y este fichero se publica con el
+// repositorio: se escribe uno neutro para no dejar en el la direccion de la
+// instancia. La prueba que lo compara ya ignora `servers`.
+spec.servers = [
+  { url: "http://localhost:1337/api", description: "Riuna API Server" },
+];
 // Antes se escribia en apps/docs, la documentacion de Kaneo que Riuna elimino
 // en la fase 0. Ahora vive junto a la propia API.
 const outputPath = resolve(import.meta.dirname, "../openapi.json");

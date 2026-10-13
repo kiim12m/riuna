@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://riuna-lix.tail01016d.ts.net/api",
+      "url": "http://localhost:1337/api",
       "description": "Riuna API Server"
     }
   ],
