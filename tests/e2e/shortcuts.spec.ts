@@ -20,9 +20,17 @@ test.describe("Atajos y paleta", () => {
     ).toBeVisible({ timeout: 30_000 });
 
     await page.locator("body").click({ position: { x: 5, y: 5 } });
-    await page.keyboard.press("p");
 
-    await expect(page.getByRole("button", { name: /Urgente/ })).toBeVisible();
+    // Los atajos del detalle se registran cuando ya se sabe que se puede
+    // editar, y los permisos pueden llegar despues que el titulo: en la
+    // version de produccion del simulacro la tecla caia antes y se perdia. Se
+    // repite hasta que el selector se abre; no tiene buscador, asi que otra
+    // `p` con el abierto no escribe nada.
+    const urgent = page.getByRole("button", { name: /Urgente/ });
+    await expect(async () => {
+      if (!(await urgent.isVisible())) await page.keyboard.press("p");
+      await expect(urgent).toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 15_000 });
   });
 
   test("la paleta lleva al Planificador", async ({ page, riuna }) => {
