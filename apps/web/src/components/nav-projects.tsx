@@ -161,7 +161,8 @@ export function NavProjects() {
     );
   };
 
-  const handleProjectClick = (project: ProjectWithTasks) => {
+  // Solo hace falta el id: los proyectos de la lista no son los de una vista.
+  const handleProjectClick = (project: Pick<ProjectWithTasks, "id">) => {
     navigate({
       to: "/dashboard/workspace/$workspaceId/project/$projectId/board",
       params: {
