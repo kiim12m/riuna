@@ -2672,7 +2672,8 @@
 			"lag": "Lag (working days)",
 			"lagChip": "lag {{lag}} d",
 			"lagHint": "Working days between the predecessor's end and the successor's start; negative to overlap. Click to change it.",
-			"lagError": "Could not change the lag"
+			"lagError": "Could not change the lag",
+			"add": "Add relation"
 		},
 		"sort": {
 			"label": "Sort",

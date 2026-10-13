@@ -2672,7 +2672,8 @@
 			"lag": "Desfase (días lab.)",
 			"lagChip": "desfase {{lag}} d",
 			"lagHint": "Días laborables entre el fin de la predecesora y el inicio de la sucesora; negativo para solapar. Pulsa para cambiarlo.",
-			"lagError": "No se pudo cambiar el desfase"
+			"lagError": "No se pudo cambiar el desfase",
+			"add": "Añadir relación"
 		},
 		"sort": {
 			"label": "Ordenar",

@@ -10510,6 +10510,9 @@
 						},
 						"lagError": {
 							"type": "string"
+						},
+						"add": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -10530,7 +10533,8 @@
 						"lag",
 						"lagChip",
 						"lagHint",
-						"lagError"
+						"lagError",
+						"add"
 					]
 				},
 				"sort": {

@@ -319,6 +319,8 @@ export default function TaskRelations({
               variant="ghost"
               size="xs"
               className="text-muted-foreground"
+              aria-label={t("tasks:relations.add")}
+              title={t("tasks:relations.add")}
               onClick={() => setCommandOpen(true)}
             >
               <Plus className="size-3.5" />
