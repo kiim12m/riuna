@@ -95,6 +95,7 @@ import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProject
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdAutomationsRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/automations'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdGeneralRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/general'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdIntegrationsRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/integrations'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdStatusRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/status'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdVisibilityRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/visibility'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdWorkflowRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/workflow'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdTaskTaskIdRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId_'
@@ -710,6 +711,15 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjec
         LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsRoute,
     } as any,
   )
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdStatusRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdStatusRouteImport.update(
+    {
+      id: '/$projectId/status',
+      path: '/$projectId/status',
+      getParentRoute: () =>
+        LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsRoute,
+    } as any,
+  )
 const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdVisibilityRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdVisibilityRouteImport.update(
     {
@@ -823,6 +833,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/automations': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdAutomationsRoute
   '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/general': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdGeneralRoute
   '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/integrations': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdIntegrationsRoute
+  '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/status': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdStatusRoute
   '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/visibility': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdVisibilityRoute
   '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/workflow': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdWorkflowRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdTaskTaskIdRoute
@@ -905,6 +916,7 @@ export interface FileRoutesByTo {
   '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/automations': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdAutomationsRoute
   '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/general': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdGeneralRoute
   '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/integrations': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdIntegrationsRoute
+  '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/status': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdStatusRoute
   '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/visibility': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdVisibilityRoute
   '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/workflow': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdWorkflowRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdTaskTaskIdRoute
@@ -997,6 +1009,7 @@ export interface FileRoutesById {
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/automations': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdAutomationsRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/general': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdGeneralRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/integrations': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdIntegrationsRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/status': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdStatusRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/visibility': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdVisibilityRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/workflow': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdWorkflowRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId_': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdTaskTaskIdRoute
@@ -1088,6 +1101,7 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/automations'
     | '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/general'
     | '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/integrations'
+    | '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/status'
     | '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/visibility'
     | '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/workflow'
     | '/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId'
@@ -1170,6 +1184,7 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/automations'
     | '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/general'
     | '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/integrations'
+    | '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/status'
     | '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/visibility'
     | '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/workflow'
     | '/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId'
@@ -1261,6 +1276,7 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/automations'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/general'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/integrations'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/status'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/visibility'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/workflow'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId_'
@@ -1881,6 +1897,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdIntegrationsRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsRoute
     }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/status': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/status'
+      path: '/$projectId/status'
+      fullPath: '/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/status'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdStatusRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsRoute
+    }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/visibility': {
       id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/project-settings/$projectId/visibility'
       path: '/$projectId/visibility'
@@ -1996,6 +2019,7 @@ interface LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsRo
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdAutomationsRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdAutomationsRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdGeneralRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdGeneralRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdIntegrationsRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdIntegrationsRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdStatusRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdStatusRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdVisibilityRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdVisibilityRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdWorkflowRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdWorkflowRoute
 }
@@ -2008,6 +2032,8 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsRouteC
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdGeneralRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdIntegrationsRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdIntegrationsRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdStatusRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdStatusRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdVisibilityRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdVisibilityRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdAdminProjectSettingsProjectIdWorkflowRoute:

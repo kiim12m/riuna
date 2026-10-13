@@ -95,7 +95,18 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
 - Crear, renombrar, icono (selector buscable), descripción, **clave de ticket**
   (`PRO-123`, máximo 8 caracteres), archivar y eliminar.
 - **Reordenar proyectos** arrastrándolos en la barra lateral.
-- Lista de proyectos con progreso, fecha objetivo y estado.
+- Lista de proyectos con progreso, responsable, inicio y fin, y su **estado de
+  salud**.
+- **Estado del proyecto** ([ADR 087](adr/087-estado-del-proyecto.md)):
+  - salud (sin empezar, en plazo, en riesgo, desviado, terminado o cancelado)
+    con una nota, fechas propias y un responsable del espacio;
+  - si las tareas acaban después del fin, la lista y la cabecera lo avisan con
+    los días laborables de más;
+  - la lista resume cuántos hay en cada estado y filtra «En riesgo o desviados»
+    y «Los míos»;
+  - lo cambia quien puede configurar el proyecto, desde la lista, la cabecera o
+    «Estado y fechas» en sus ajustes, donde queda el historial;
+  - al cambiar la salud se puede avisar a todo el espacio.
 - **Proyecto público**: URL de solo lectura sin sesión, con tablero y lista,
   detalle de tarea, tema claro/oscuro y copia del enlace.
 - **Columnas del tablero** configurables: crear, renombrar, reordenar
@@ -695,7 +706,7 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 61 herramientas**. Una prueba de paridad
+Dos caminos con **las mismas 62 herramientas**. Una prueba de paridad
 (`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
 antes el paquete stdio se había quedado sin las cinco del plan personal y el
 cronómetro.
@@ -707,7 +718,7 @@ cronómetro.
   instalador interactivo para Cursor —global y por proyecto—, Claude Desktop o
   una ruta JSON propia, y autenticación por device flow o `RIUNA_API_KEY`.
 
-Las herramientas cubren identidad y espacios, proyectos, tareas, comentarios,
+Las herramientas cubren identidad y espacios, proyectos y su estado, tareas, comentarios,
 etiquetas, épicas, relaciones, observadores, recordatorios, acciones de un clic,
 totales de un filtro, línea base, avisos, miembros, búsqueda, columnas, registro de tiempo,
 actividad y notificaciones, además del plan personal, el

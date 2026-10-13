@@ -30,8 +30,13 @@ import {
 import { useTranslation } from "react-i18next";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import PageTitle from "@/components/page-title";
+import {
+  HealthDot,
+  ProjectHealthChip,
+  ProjectScheduleWarning,
+} from "@/components/project/project-health";
 import CreateProjectModal from "@/components/shared/modals/create-project-modal";
-import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -42,6 +47,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Progress } from "@/components/ui/progress";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -55,16 +61,34 @@ import icons from "@/constants/project-icons";
 import { shortcuts } from "@/constants/shortcuts";
 import useReorderProjects from "@/hooks/mutations/project/use-reorder-projects";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
+import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/cn";
 import { formatDateMedium } from "@/lib/format";
+import { getInitials } from "@/lib/get-initials";
+import {
+  isProjectHealth,
+  needsAttention,
+  PROJECT_HEALTHS,
+} from "@/lib/project-health";
 import { toast } from "@/lib/toast";
+
+/** Los filtros rapidos de la lista (ADR 087), en la URL para pegarlos. */
+const QUICK_VIEWS = ["all", "attention", "mine"] as const;
+type QuickView = (typeof QUICK_VIEWS)[number];
 
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/projects",
 )({
   component: RouteComponent,
+  validateSearch: (search: Record<string, unknown>): { show?: QuickView } => ({
+    show:
+      QUICK_VIEWS.includes(search.show as QuickView) && search.show !== "all"
+        ? (search.show as QuickView)
+        : undefined,
+  }),
 });
 
 function SortableProjectRow({
@@ -125,10 +149,23 @@ function RouteComponent() {
   const { t } = useTranslation();
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const { workspaceId } = Route.useParams();
+  const { show = "all" } = Route.useSearch();
   const navigate = useNavigate();
   const { data: projects, isLoading } = useGetProjects({
     workspaceId,
   });
+  const { data: session } = authClient.useSession();
+  const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
+  const members = useMemo(
+    () =>
+      new Map(
+        (workspaceUsers?.members ?? []).map((member) => [
+          member.userId,
+          member.user,
+        ]),
+      ),
+    [workspaceUsers],
+  );
   const reorderProjects = useReorderProjects();
 
   // React state, not the query cache: dnd-kit clears its transforms with a
@@ -136,7 +173,7 @@ function RouteComponent() {
   // leaving a frame with the transforms gone and the rows not yet moved.
   const [droppedOrder, setDroppedOrder] = useState<string[] | null>(null);
 
-  const orderedProjects = useMemo(() => {
+  const sortedProjects = useMemo(() => {
     if (!projects || !droppedOrder) return projects;
 
     const rank = new Map(droppedOrder.map((id, index) => [id, index]));
@@ -147,6 +184,30 @@ function RouteComponent() {
         (rank.get(b.id) ?? Number.MAX_SAFE_INTEGER),
     );
   }, [projects, droppedOrder]);
+
+  const orderedProjects = useMemo(
+    () =>
+      sortedProjects?.filter((project) =>
+        show === "attention"
+          ? needsAttention(project.health)
+          : show === "mine"
+            ? project.leadUserId === session?.user?.id
+            : true,
+      ),
+    [sortedProjects, show, session?.user?.id],
+  );
+
+  // Cuantos hay en cada estado, sobre todos y no sobre los filtrados.
+  const healthCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const project of projects ?? []) {
+      const health = isProjectHealth(project.health)
+        ? project.health
+        : "not_started";
+      counts.set(health, (counts.get(health) ?? 0) + 1);
+    }
+    return counts;
+  }, [projects]);
 
   // Released once the server agrees, or a reorder made elsewhere stays pinned.
   useEffect(() => {
@@ -160,7 +221,9 @@ function RouteComponent() {
   const canCreate = canCreateProjects();
   // Matches the API, which gates /project/reorder on `project: ["update"]`
   // alone — not the create+update+delete bundle.
-  const canReorder = canUpdateProjects();
+  // Reordenar un subconjunto filtrado no diria donde caen los demas.
+  const canEditProjects = canUpdateProjects();
+  const canReorder = canEditProjects && show === "all";
 
   // Below these thresholds the row is still a link and the page still scrolls;
   // above them the gesture becomes a drag.
@@ -367,6 +430,42 @@ function RouteComponent() {
           onDragEnd={handleDragEnd}
           onDragCancel={() => document.body.classList.remove("riuna-dragging")}
         >
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 pb-3">
+            <SegmentedControl
+              label={t("workspace:projects.quick.label")}
+              value={show}
+              onValueChange={(next) =>
+                navigate({
+                  to: ".",
+                  search: { show: next === "all" ? undefined : next },
+                  replace: true,
+                })
+              }
+              options={QUICK_VIEWS.map((view) => ({
+                value: view,
+                label: t(`workspace:projects.quick.${view}`),
+              }))}
+            />
+            <div
+              className="flex flex-wrap items-center gap-3 text-muted-foreground text-xs"
+              data-testid="project-health-summary"
+            >
+              {PROJECT_HEALTHS.filter((health) => healthCounts.get(health)).map(
+                (health) => (
+                  <span
+                    key={health}
+                    className="inline-flex items-center gap-1.5"
+                  >
+                    <HealthDot health={health} />
+                    {t(`workspace:projects.health.${health}`)}
+                    <span className="font-medium text-foreground tabular-nums">
+                      {healthCounts.get(health)}
+                    </span>
+                  </span>
+                ),
+              )}
+            </div>
+          </div>
           <Table>
             <TableHeader className="p-4">
               <TableRow>
@@ -374,13 +473,19 @@ function RouteComponent() {
                   {t("workspace:projects.title")}
                 </TableHead>
                 <TableHead className="text-foreground font-medium">
-                  {t("workspace:projects.progress")}
-                </TableHead>
-                <TableHead className="text-foreground font-medium">
-                  {t("workspace:projects.dueDate")}
-                </TableHead>
-                <TableHead className="text-foreground font-medium">
                   {t("workspace:projects.status")}
+                </TableHead>
+                <TableHead className="text-foreground font-medium">
+                  {t("workspace:projects.lead")}
+                </TableHead>
+                <TableHead className="text-foreground font-medium">
+                  {t("workspace:projects.startDate")}
+                </TableHead>
+                <TableHead className="text-foreground font-medium">
+                  {t("workspace:projects.endDate")}
+                </TableHead>
+                <TableHead className="text-foreground font-medium">
+                  {t("workspace:projects.progress")}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -394,21 +499,9 @@ function RouteComponent() {
 
                   const IconComponent =
                     icons[project.icon as keyof typeof icons] || icons.Layout;
-
-                  const getStatusText = () => {
-                    if (project.statistics.totalTasks === 0)
-                      return t("workspace:projects.projectStatus.notStarted");
-                    if (project.statistics.completionPercentage === 100)
-                      return t("workspace:projects.projectStatus.complete");
-                    return t("workspace:projects.projectStatus.inProgress");
-                  };
-
-                  const getStatusVariant = () => {
-                    if (project.statistics.totalTasks === 0) return "secondary";
-                    if (project.statistics.completionPercentage === 100)
-                      return "default";
-                    return "outline";
-                  };
+                  const lead = project.leadUserId
+                    ? members.get(project.leadUserId)
+                    : undefined;
 
                   return (
                     <SortableProjectRow
@@ -424,6 +517,41 @@ function RouteComponent() {
                         </div>
                       </TableCell>
                       <TableCell className="py-3">
+                        <ProjectHealthChip
+                          project={project}
+                          workspaceId={workspaceId}
+                          canEdit={canEditProjects}
+                        />
+                      </TableCell>
+                      <TableCell className="py-3">
+                        {lead ? (
+                          <span className="flex items-center gap-1.5 text-sm">
+                            <Avatar className="size-5">
+                              <AvatarImage src={lead.image ?? ""} alt="" />
+                              <AvatarFallback className="text-label">
+                                {getInitials(lead.name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="truncate">{lead.name}</span>
+                          </span>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <span className="text-sm text-muted-foreground">
+                          {project.startDate
+                            ? formatDateMedium(project.startDate)
+                            : ""}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          {project.endDate
+                            ? formatDateMedium(project.endDate)
+                            : ""}
+                          <ProjectScheduleWarning schedule={project.schedule} />
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-3">
                         <div className="flex items-center gap-2">
                           <Progress
                             value={project.statistics.completionPercentage}
@@ -433,18 +561,6 @@ function RouteComponent() {
                             {project.statistics.completionPercentage}%
                           </span>
                         </div>
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <span className="text-sm text-muted-foreground">
-                          {project.statistics.dueDate
-                            ? formatDateMedium(project.statistics.dueDate)
-                            : t("workspace:projects.noDueDate")}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <Badge variant={getStatusVariant()}>
-                          {getStatusText()}
-                        </Badge>
                       </TableCell>
                     </SortableProjectRow>
                   );

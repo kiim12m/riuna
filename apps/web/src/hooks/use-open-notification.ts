@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import {
   getAnnouncementTarget,
   getNotificationTarget,
+  getProjectTarget,
 } from "@/lib/notification";
 import type { Notification } from "@/types/notification";
 
@@ -20,6 +21,15 @@ export function useOpenNotification() {
         navigate({
           to: "/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId",
           params: task,
+        });
+        return;
+      }
+
+      const project = getProjectTarget(notification);
+      if (project) {
+        navigate({
+          to: "/dashboard/workspace/$workspaceId/project/$projectId/board",
+          params: project,
         });
         return;
       }

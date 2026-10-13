@@ -7331,6 +7331,75 @@
 						"revokedOthers",
 						"revokeError"
 					]
+				},
+				"projectStatus": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"pageTitle": {
+							"type": "string"
+						},
+						"title": {
+							"type": "string"
+						},
+						"subtitle": {
+							"type": "string"
+						},
+						"health": {
+							"type": "string"
+						},
+						"noLead": {
+							"type": "string"
+						},
+						"invalidDates": {
+							"type": "string"
+						},
+						"history": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"empty": {
+									"type": "string"
+								},
+								"someone": {
+									"type": "string"
+								},
+								"health": {
+									"type": "string"
+								},
+								"dates": {
+									"type": "string"
+								},
+								"lead": {
+									"type": "string"
+								},
+								"leadRemoved": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"empty",
+								"someone",
+								"health",
+								"dates",
+								"lead",
+								"leadRemoved"
+							]
+						}
+					},
+					"required": [
+						"pageTitle",
+						"title",
+						"subtitle",
+						"health",
+						"noLead",
+						"invalidDates",
+						"history"
+					]
 				}
 			},
 			"required": [
@@ -7376,7 +7445,8 @@
 				"servitecImport",
 				"instance",
 				"security",
-				"securityPage"
+				"securityPage",
+				"projectStatus"
 			]
 		},
 		"navigation": {
@@ -8252,6 +8322,22 @@
 								}
 							},
 							"required": ["title", "content", "contentWorkspace"]
+						},
+						"project_health_changed": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"content": {
+									"type": "string"
+								},
+								"contentWithoutNote": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "content", "contentWithoutNote"]
 						}
 					},
 					"required": [
@@ -8268,7 +8354,8 @@
 						"time_entry_created",
 						"instance_alert",
 						"task_reminder",
-						"announcement_published"
+						"announcement_published",
+						"project_health_changed"
 					]
 				},
 				"loadMore": {
@@ -11802,6 +11889,104 @@
 						},
 						"reorderError": {
 							"type": "string"
+						},
+						"lead": {
+							"type": "string"
+						},
+						"startDate": {
+							"type": "string"
+						},
+						"endDate": {
+							"type": "string"
+						},
+						"overflow_one": {
+							"type": "string"
+						},
+						"overflow_other": {
+							"type": "string"
+						},
+						"quick": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"all": {
+									"type": "string"
+								},
+								"attention": {
+									"type": "string"
+								},
+								"mine": {
+									"type": "string"
+								}
+							},
+							"required": ["label", "all", "attention", "mine"]
+						},
+						"health": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"not_started": {
+									"type": "string"
+								},
+								"on_track": {
+									"type": "string"
+								},
+								"at_risk": {
+									"type": "string"
+								},
+								"off_track": {
+									"type": "string"
+								},
+								"finished": {
+									"type": "string"
+								},
+								"cancelled": {
+									"type": "string"
+								},
+								"titleFor": {
+									"type": "string"
+								},
+								"note": {
+									"type": "string"
+								},
+								"notePlaceholder": {
+									"type": "string"
+								},
+								"noNote": {
+									"type": "string"
+								},
+								"notify": {
+									"type": "string"
+								},
+								"save": {
+									"type": "string"
+								},
+								"saved": {
+									"type": "string"
+								},
+								"error": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"not_started",
+								"on_track",
+								"at_risk",
+								"off_track",
+								"finished",
+								"cancelled",
+								"titleFor",
+								"note",
+								"notePlaceholder",
+								"noNote",
+								"notify",
+								"save",
+								"saved",
+								"error"
+							]
 						}
 					},
 					"required": [
@@ -11818,7 +12003,14 @@
 						"projectStatus",
 						"noDueDate",
 						"reorderHandle",
-						"reorderError"
+						"reorderError",
+						"lead",
+						"startDate",
+						"endDate",
+						"overflow_one",
+						"overflow_other",
+						"quick",
+						"health"
 					]
 				},
 				"search": {

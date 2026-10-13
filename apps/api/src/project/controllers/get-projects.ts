@@ -1,17 +1,22 @@
 import { and, count, eq, isNull, min, sql } from "drizzle-orm";
 import db from "../../database";
 import { projectTable, taskTable } from "../../database/schema";
+import { loadWorkCalendar } from "../../task/schedule/work-calendar";
+import { projectScheduleWarning } from "../schedule-warning";
 
 type ProjectStatistics = {
   completionPercentage: number;
   totalTasks: number;
   dueDate: Date | null;
+  /** El vencimiento mas tardio de sus tareas, para el aviso de la ADR 087. */
+  latestDueDate: Date | null;
 };
 
 const EMPTY_STATISTICS: ProjectStatistics = {
   completionPercentage: 0,
   totalTasks: 0,
   dueDate: null,
+  latestDueDate: null,
 };
 
 /**
@@ -60,6 +65,11 @@ async function getProjectStatistics(
         sql`case when ${taskTable.completedAt} is not null then 1 end`,
       ),
       dueDate: min(taskTable.dueDate),
+      // Con `mapWith`, como la columna: crudo llegaria como texto sin zona.
+      latestDueDate:
+        sql<Date | null>`max(case when ${taskTable.status} <> 'archived' then ${taskTable.dueDate} end)`.mapWith(
+          taskTable.dueDate,
+        ),
     })
     .from(taskTable)
     .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
@@ -75,6 +85,7 @@ async function getProjectStatistics(
       completionPercentage:
         totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
       dueDate: row.dueDate ?? null,
+      latestDueDate: row.latestDueDate ?? null,
     });
   }
 
@@ -98,13 +109,23 @@ async function getProjects(workspaceId: string, includeArchived = false) {
     includeArchived,
   );
 
-  return projects.map((project) => ({
-    ...project,
-    statistics: statisticsByProject.get(project.id) ?? EMPTY_STATISTICS,
-    archivedTasks: [],
-    plannedTasks: [],
-    columns: [],
-  }));
+  const calendar = await loadWorkCalendar(workspaceId);
+
+  return projects.map((project) => {
+    const statistics = statisticsByProject.get(project.id) ?? EMPTY_STATISTICS;
+    return {
+      ...project,
+      statistics,
+      schedule: projectScheduleWarning(
+        project.endDate,
+        statistics.latestDueDate,
+        calendar,
+      ),
+      archivedTasks: [],
+      plannedTasks: [],
+      columns: [],
+    };
+  });
 }
 
 export default getProjects;

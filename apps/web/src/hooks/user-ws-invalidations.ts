@@ -49,6 +49,10 @@ export function userMessageInvalidations(message: UserWsMessage): QueryKey[] {
       return [["planner"], ["schedule"], ["today"], ["my-work", "counts"]];
     // Un bloque fijo o la jornada cambian la capacidad y los bloques que el
     // Planificador y Hoy tambien leen (ADR 045).
+    // El estado de un proyecto (ADR 087): la lista de proyectos, su cabecera
+    // y su historia.
+    case "PROJECTS_INVALIDATED":
+      return [["projects"], ["project-activity"]];
     case "SCHEDULE_INVALIDATED":
       return [["schedule"], ["planner"], ["today"]];
     // Un festivo, una ausencia o marcar a un responsable (ADR 060, ADR 059):

@@ -5,6 +5,7 @@ import {
   getNotificationContent,
   getNotificationTarget,
   getNotificationTitle,
+  getProjectTarget,
 } from "./notification";
 
 const t = (key: string, options?: Record<string, unknown>) => {
@@ -114,6 +115,39 @@ describe("notification targets", () => {
       projectId: null,
     });
     expect(getNotificationTarget(project)).toBeNull();
+  });
+
+  it("opens the project whose health changed, and says which health", () => {
+    const item = {
+      ...notification("project_health_changed", {
+        workspaceId: "w1",
+        projectId: "p1",
+        projectName: "Reforma nave",
+        health: "at_risk",
+        note: null,
+      }),
+      resourceType: "project",
+      resourceId: "p1",
+    } as Notification;
+    expect(getProjectTarget(item)).toEqual({
+      workspaceId: "w1",
+      projectId: "p1",
+    });
+    expect(getNotificationTarget(item)).toBeNull();
+    expect(getAnnouncementTarget(item)).toBeNull();
+
+    const seen: Array<[string, Record<string, unknown> | undefined]> = [];
+    const spy = (key: string, options?: Record<string, unknown>) => {
+      seen.push([key, options]);
+      return key;
+    };
+    getNotificationTitle(item, spy);
+    expect(seen.map(([key]) => key)).toContain(
+      "workspace:projects.health.at_risk",
+    );
+    expect(getNotificationContent(item, t)).toBe(
+      "notifications:events.project_health_changed.contentWithoutNote",
+    );
   });
 
   it("shows a reminder's note, or a fallback without one", () => {

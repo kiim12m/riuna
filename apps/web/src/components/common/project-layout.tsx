@@ -18,6 +18,10 @@ import ProjectCrumbSelect from "@/components/common/header/project-crumb-select"
 import WorkspaceCrumbSelect from "@/components/common/header/workspace-crumb-select";
 import Layout from "@/components/common/layout";
 import { MobileHeaderBell } from "@/components/notification/mobile-header-bell";
+import {
+  ProjectHealthChip,
+  ProjectScheduleWarning,
+} from "@/components/project/project-health";
 import { useAuth } from "@/components/providers/auth-provider/hooks/use-auth";
 import { QuickAddInput } from "@/components/quick-add/quick-add-input";
 import CreateProjectModal from "@/components/shared/modals/create-project-modal";
@@ -81,7 +85,7 @@ export default function ProjectLayout({
   const location = useLocation();
   const { data: project } = useGetProject({ id: projectId, workspaceId });
   const { user } = useAuth();
-  const { canCreateTasks } = useWorkspacePermission();
+  const { canCreateTasks, canUpdateProjects } = useWorkspacePermission();
   // En la Bandeja propia, la captura rapida a mano: es a lo que se viene.
   const isOwnInbox =
     Boolean(project?.ownerUserId) && project?.ownerUserId === user?.id;
@@ -222,6 +226,18 @@ export default function ProjectLayout({
                 onAddProject={() => setIsCreateProjectModalOpen(true)}
               />
             </div>
+
+            {/* El estado del proyecto (ADR 087): lo ve todo el espacio. */}
+            {project && !project.ownerUserId && (
+              <span className="hidden items-center gap-1 sm:inline-flex">
+                <ProjectHealthChip
+                  project={project}
+                  workspaceId={workspaceId}
+                  canEdit={canUpdateProjects()}
+                />
+                <ProjectScheduleWarning schedule={project.schedule} />
+              </span>
+            )}
 
             {/* Oculta, no privada (ADR 051): que nadie la tome por privada. Un
                 popover y no un tooltip, para que tambien se lea en tactil. */}

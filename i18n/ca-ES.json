@@ -1860,6 +1860,23 @@
 			"revoked": "Sesión cerrada",
 			"revokedOthers": "Sesiones cerradas: {{total}}",
 			"revokeError": "No se pudo cerrar la sesión"
+		},
+		"projectStatus": {
+			"pageTitle": "Estado y fechas",
+			"title": "Estado y fechas",
+			"subtitle": "Cómo va el proyecto, sus fechas propias y quién lo lleva. Lo ve todo el espacio en la lista de proyectos y en la cabecera del proyecto.",
+			"health": "Salud",
+			"noLead": "Sin responsable",
+			"invalidDates": "El fin no puede ser anterior al inicio",
+			"history": {
+				"title": "Historial",
+				"empty": "Todavía no ha cambiado nada.",
+				"someone": "Alguien",
+				"health": "puso el estado en {{health}}",
+				"dates": "puso las fechas {{start}} – {{end}}",
+				"lead": "puso de responsable a {{name}}",
+				"leadRemoved": "quitó el responsable"
+			}
 		}
 	},
 	"navigation": {
@@ -2086,6 +2103,11 @@
 				"title": "Aviso: {{announcementTitle}}",
 				"content": "{{authorName}} publicó un aviso en {{projectName}}",
 				"contentWorkspace": "{{authorName}} publicó un aviso del espacio"
+			},
+			"project_health_changed": {
+				"title": "{{projectName}}: {{health}}",
+				"content": "{{authorName}}: {{note}}",
+				"contentWithoutNote": "{{authorName}} cambió el estado del proyecto"
 			}
 		},
 		"reminderLeadTime": {
@@ -2995,7 +3017,34 @@
 			"noDueDate": "Sin fecha de vencimiento",
 			"reorderHandle": "Reordenar proyecto",
 			"reorderError": "No se pudieron reordenar los proyectos",
-			"emptyDescriptionReadOnly": "Todavía no hay proyectos en este espacio de trabajo. Pide a un admin que cree uno."
+			"emptyDescriptionReadOnly": "Todavía no hay proyectos en este espacio de trabajo. Pide a un admin que cree uno.",
+			"lead": "Responsable",
+			"startDate": "Inicio",
+			"endDate": "Fin",
+			"overflow_one": "Sus tareas acaban el {{date}}, {{count}} día laborable después del fin",
+			"overflow_other": "Sus tareas acaban el {{date}}, {{count}} días laborables después del fin",
+			"quick": {
+				"label": "Mostrar",
+				"all": "Todos",
+				"attention": "En riesgo o desviados",
+				"mine": "Los míos"
+			},
+			"health": {
+				"not_started": "Sin empezar",
+				"on_track": "En plazo",
+				"at_risk": "En riesgo",
+				"off_track": "Desviado",
+				"finished": "Terminado",
+				"cancelled": "Cancelado",
+				"titleFor": "Estado de {{name}}",
+				"note": "Nota",
+				"notePlaceholder": "Qué pasa, en una línea",
+				"noNote": "Sin nota",
+				"notify": "Avisar al espacio",
+				"save": "Guardar",
+				"saved": "Estado del proyecto guardado",
+				"error": "No se pudo guardar el estado del proyecto"
+			}
 		},
 		"search": {
 			"pageTitle": "Buscar",

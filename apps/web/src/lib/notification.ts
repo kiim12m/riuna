@@ -98,6 +98,14 @@ export function getNotificationTitle(notification: Notification, t: Translate) {
           ...eventData,
           defaultValue: notification.title ?? notification.type,
         });
+      case "project_health_changed":
+        return t("notifications:events.project_health_changed.title", {
+          ...eventData,
+          health: t(`workspace:projects.health.${String(eventData.health)}`, {
+            defaultValue: String(eventData.health ?? ""),
+          }),
+          defaultValue: notification.title ?? notification.type,
+        });
       case "task_reminder":
         return t("notifications:events.task_reminder.title", {
           ...eventData,
@@ -206,6 +214,19 @@ export function getNotificationContent(
               ...eventData,
               defaultValue: notification.content ?? "",
             });
+      case "project_health_changed":
+        return typeof eventData.note === "string" && eventData.note
+          ? t("notifications:events.project_health_changed.content", {
+              ...eventData,
+              defaultValue: notification.content ?? "",
+            })
+          : t(
+              "notifications:events.project_health_changed.contentWithoutNote",
+              {
+                ...eventData,
+                defaultValue: notification.content ?? "",
+              },
+            );
       case "announcement_published":
         return typeof eventData.projectName === "string"
           ? t("notifications:events.announcement_published.content", {
@@ -277,6 +298,21 @@ export function getNotificationTarget(
   if (!workspaceId || !projectId || !taskId) return null;
 
   return { workspaceId, projectId, taskId };
+}
+
+/** El proyecto cuyo estado cambio (ADR 087), o `null`. */
+export function getProjectTarget(
+  notification: Notification,
+): { workspaceId: string; projectId: string } | null {
+  if (notification.resourceType !== "project") return null;
+
+  const eventData = getEventDataRecord(notification.eventData);
+  const workspaceId =
+    typeof eventData?.workspaceId === "string" ? eventData.workspaceId : null;
+  const projectId = notification.resourceId ?? null;
+  if (!workspaceId || !projectId) return null;
+
+  return { workspaceId, projectId };
 }
 
 export type AnnouncementTarget = {

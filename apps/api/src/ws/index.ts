@@ -411,6 +411,17 @@ subscribeToEvent<{ workspaceId: string }>(
   },
 );
 
+// El estado de un proyecto (ADR 087) sale en la lista de proyectos y en su
+// cabecera, que mira todo el espacio: por el canal de usuario de cada miembro.
+subscribeToEvent<{ workspaceId: string }>(
+  "project.status_changed",
+  async ({ workspaceId }) => {
+    for (const userId of await membersOfWorkspace(workspaceId)) {
+      broadcastToUser(userId, { type: "PROJECTS_INVALIDATED", workspaceId });
+    }
+  },
+);
+
 subscribeToEvent<{
   workspaceId: string;
   projectId: string | null;

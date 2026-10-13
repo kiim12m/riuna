@@ -54,6 +54,16 @@ function buildTaskUrl(workspaceId: string, projectId: string, taskId: string) {
   return `${clientUrl}/dashboard/workspace/${workspaceId}/project/${projectId}/task/${taskId}`;
 }
 
+// Los canales externos hablan en ingles, como el resto de este fichero.
+const PROJECT_HEALTH_LABELS: Record<string, string> = {
+  not_started: "not started",
+  on_track: "on track",
+  at_risk: "at risk",
+  off_track: "off track",
+  finished: "finished",
+  cancelled: "cancelled",
+};
+
 function getStringValue(
   data: Record<string, unknown> | null | undefined,
   key: string,
@@ -248,6 +258,16 @@ function buildDeliveryContent(notification: {
       return {
         title: taskTitle ? `Reminder: ${taskTitle}` : "Task reminder",
         body: note || "You asked to be reminded about this task.",
+      };
+    }
+    case "project_health_changed": {
+      const projectName = getStringValue(notification.eventData, "projectName");
+      const health = getStringValue(notification.eventData, "health");
+      const note = getStringValue(notification.eventData, "note");
+      const authorName = getStringValue(notification.eventData, "authorName");
+      return {
+        title: `${projectName ?? "A project"}: ${PROJECT_HEALTH_LABELS[health ?? ""] ?? health ?? "status changed"}`,
+        body: `${authorName ?? "Someone"} changed the project's health${note ? `: ${note}` : "."}`,
       };
     }
     case "announcement_published": {

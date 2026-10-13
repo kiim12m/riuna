@@ -6,7 +6,7 @@ import {
   useNavigate,
   useParams,
 } from "@tanstack/react-router";
-import { Eye, GitBranch, Plug, Settings, Zap } from "lucide-react";
+import { Activity, Eye, GitBranch, Plug, Settings, Zap } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import WorkspaceLayout from "@/components/common/workspace-layout";
@@ -51,6 +51,11 @@ function RouteComponent() {
       title: t("settings:projectGeneral.title"),
       icon: Settings,
       segment: "general",
+    },
+    {
+      title: t("settings:projectStatus.title"),
+      icon: Activity,
+      segment: "status",
     },
     {
       title: t("settings:projectVisibility.title"),

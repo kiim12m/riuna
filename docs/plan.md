@@ -30,7 +30,7 @@
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
 | **Total Bloque A** | **45** + 18 del interludio | |
-| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hechas la tanda 1 (1.1-1.6) y la tanda 2 (2.1-2.4) · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
+| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hechas la tanda 1 (1.1-1.6) y la tanda 2 (2.1-2.4), y de la tanda 3 la 3.1 · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -3060,9 +3060,16 @@ siempre), incluida `watchers.spec.ts` de la 1.1.
 
 **Tanda 3 — Proyectos y cartera** (≈ 7 semanas)
 
-- **3.1 Estado de salud del proyecto** · S. Sin empezar, en plazo, en riesgo, desviado, terminado o
-  cancelado, con una nota y fechas de inicio y fin. Sale en la lista de proyectos, se puede
-  filtrar y queda en la actividad.
+- **3.1 Estado de salud del proyecto** ✔ · S · [ADR 087](adr/087-estado-del-proyecto.md).
+  **Hecho (2026-10-13).** Sin empezar, en plazo, en riesgo, desviado, terminado o cancelado, con
+  una nota. Decisiones del usuario: el responsable es una columna propia; las fechas son propias,
+  con aviso si las tareas acaban después del fin.
+  - Columnas en `project` (migración 0090) y una actividad de proyecto nueva, `project_activity`.
+  - `PATCH /project/:id/status` con `project:update`; «Avisar al espacio» al cambiar la salud.
+  - En la lista de proyectos: salud, responsable, fechas con aviso, resumen por estados y los
+    filtros «Todos», «En riesgo o desviados» y «Los míos». También en la cabecera del proyecto y en
+    sus ajustes, con el historial.
+  - MCP: `set_project_status`.
 - **3.2 Campos de proyecto y cartera** · L. Campos personalizados con alcance de proyecto, definidos
   en el espacio. La lista de proyectos pasa por el motor de filtros
   ([ADR 014](adr/014-motor-de-filtros.md)), con columnas, orden, vistas guardadas y exportación:

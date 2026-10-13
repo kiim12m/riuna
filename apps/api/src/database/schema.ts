@@ -358,9 +358,27 @@ export const projectTable = pgTable(
     ownerUserId: text("owner_user_id").references(() => userTable.id, {
       onDelete: "set null",
     }),
+    // El estado del proyecto (ADR 087): su salud, con una nota, sus fechas
+    // propias y quien lo lleva. La lista de proyectos filtra y ordena por
+    // todo menos la nota, que va siempre con la salud.
+    health: text("health").notNull().default("not_started"),
+    healthNote: text("health_note"),
+    startDate: timestamp("start_date", { mode: "date" }),
+    endDate: timestamp("end_date", { mode: "date" }),
+    leadUserId: text("lead_user_id").references(() => userTable.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     unique("project_workspace_id_id_unique").on(table.workspaceId, table.id),
+    check(
+      "project_health_valid",
+      sql`${table.health} IN ('not_started', 'on_track', 'at_risk', 'off_track', 'finished', 'cancelled')`,
+    ),
+    check(
+      "project_dates_ordered",
+      sql`${table.endDate} IS NULL OR ${table.startDate} IS NULL OR ${table.endDate} >= ${table.startDate}`,
+    ),
     index("project_workspaceId_position_idx").on(
       table.workspaceId,
       table.position,
@@ -653,6 +671,35 @@ export const taskReminderTable = pgTable(
 // Avisos de proyecto y de espacio (ADR 081). `project_id` nulo es un aviso
 // del espacio. Fijar lo saca como franja en las vistas del proyecto hasta
 // `pinned_until`, o sin fin.
+// La historia de un proyecto (ADR 087): `activity` es de tareas —su
+// `task_id` es obligatorio— y el estado de un proyecto no tiene tarea.
+export const projectActivityTable = pgTable(
+  "project_activity",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projectTable.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    userId: text("user_id").references(() => userTable.id, {
+      onDelete: "set null",
+    }),
+    eventData: jsonb("event_data")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("project_activity_project_created_idx").on(
+      table.projectId,
+      table.createdAt,
+    ),
+  ],
+);
+
 export const announcementTable = pgTable(
   "announcement",
   {

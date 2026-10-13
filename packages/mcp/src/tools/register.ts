@@ -1018,6 +1018,41 @@ export function registerTools(
   );
 
   server.registerTool(
+    "set_project_status",
+    {
+      description:
+        "Set a project's status: its health (not_started, on_track, at_risk, off_track, finished or cancelled) with a short note, its own start and end dates (ISO, or null to clear) and its lead (a workspace member's user id, or null). Only what is sent changes. With notify, a change of health is announced to the whole workspace.",
+      inputSchema: z.object({
+        projectId: nonEmptyString,
+        health: z
+          .enum([
+            "not_started",
+            "on_track",
+            "at_risk",
+            "off_track",
+            "finished",
+            "cancelled",
+          ])
+          .optional(),
+        note: z.string().max(500).nullable().optional(),
+        startDate: z.string().nullable().optional(),
+        endDate: z.string().nullable().optional(),
+        leadUserId: z.string().nullable().optional(),
+        notify: z.boolean().optional(),
+      }),
+    },
+    async (args) => {
+      const { projectId, ...body } = args;
+      return run(() =>
+        client.json(`/api/project/${encodeURIComponent(projectId)}/status`, {
+          method: "PATCH",
+          body: JSON.stringify(body),
+        }),
+      );
+    },
+  );
+
+  server.registerTool(
     "delete_label",
     {
       description:

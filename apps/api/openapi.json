@@ -1032,6 +1032,31 @@
                       "ownerUserId": {
                         "type": "string",
                         "nullable": true
+                      },
+                      "health": {
+                        "enum": [
+                          "not_started",
+                          "on_track",
+                          "at_risk",
+                          "off_track",
+                          "finished",
+                          "cancelled"
+                        ],
+                        "type": "string"
+                      },
+                      "healthNote": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "startDate": {
+                        "nullable": true
+                      },
+                      "endDate": {
+                        "nullable": true
+                      },
+                      "leadUserId": {
+                        "type": "string",
+                        "nullable": true
                       }
                     },
                     "required": [
@@ -1136,6 +1161,31 @@
                       "type": "boolean"
                     },
                     "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
                       "type": "string",
                       "nullable": true
                     }
@@ -1261,6 +1311,31 @@
                     "ownerUserId": {
                       "type": "string",
                       "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -1357,6 +1432,31 @@
                       "type": "boolean"
                     },
                     "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
                       "type": "string",
                       "nullable": true
                     }
@@ -1491,6 +1591,31 @@
                     "ownerUserId": {
                       "type": "string",
                       "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -1591,6 +1716,31 @@
                         "type": "boolean"
                       },
                       "ownerUserId": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "health": {
+                        "enum": [
+                          "not_started",
+                          "on_track",
+                          "at_risk",
+                          "off_track",
+                          "finished",
+                          "cancelled"
+                        ],
+                        "type": "string"
+                      },
+                      "healthNote": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "startDate": {
+                        "nullable": true
+                      },
+                      "endDate": {
+                        "nullable": true
+                      },
+                      "leadUserId": {
                         "type": "string",
                         "nullable": true
                       }
@@ -1729,6 +1879,31 @@
                     "ownerUserId": {
                       "type": "string",
                       "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
                     }
                   },
                   "required": [
@@ -1789,6 +1964,208 @@
           }
         },
         "summary": "Update Project Tree Settings"
+      }
+    },
+    "/project/{id}/status": {
+      "patch": {
+        "operationId": "updateProjectStatus",
+        "tags": [
+          "Projects"
+        ],
+        "description": "Update a project's status: its health (not started, on track, at risk, off track, finished or cancelled) with a short note, its own start and end dates, and its lead, a member of the workspace. Only what is sent changes, and each change is kept in the project's activity. With `notify`, a change of health is announced to the whole workspace.",
+        "responses": {
+          "200": {
+            "description": "Project status updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "workspaceId": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "icon": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "isPublic": {
+                      "type": "boolean",
+                      "nullable": true
+                    },
+                    "archivedAt": {
+                      "nullable": true
+                    },
+                    "position": {
+                      "type": "number"
+                    },
+                    "cascadeClose": {
+                      "type": "boolean"
+                    },
+                    "cascadeArchive": {
+                      "type": "boolean"
+                    },
+                    "maxTaskDepth": {
+                      "type": "number"
+                    },
+                    "weightedProgress": {
+                      "type": "boolean"
+                    },
+                    "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "workspaceId",
+                    "slug",
+                    "icon",
+                    "name",
+                    "description",
+                    "createdAt",
+                    "isPublic",
+                    "archivedAt",
+                    "position",
+                    "cascadeClose",
+                    "cascadeArchive",
+                    "maxTaskDepth",
+                    "ownerUserId"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "health": {
+                    "enum": [
+                      "not_started",
+                      "on_track",
+                      "at_risk",
+                      "off_track",
+                      "finished",
+                      "cancelled"
+                    ],
+                    "type": "string"
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "nullable": true
+                  },
+                  "startDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "leadUserId": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "notify": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update Project Status"
+      }
+    },
+    "/project/{id}/activity": {
+      "get": {
+        "operationId": "getProjectActivity",
+        "tags": [
+          "Projects"
+        ],
+        "description": "The history of a project's status, newest first: changes of health (with their note), of dates and of lead, with who made them.",
+        "responses": {
+          "200": {
+            "description": "Project activity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Get Project Activity"
       }
     },
     "/project/{id}/archive": {
@@ -1853,6 +2230,31 @@
                       "type": "boolean"
                     },
                     "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
                       "type": "string",
                       "nullable": true
                     }
@@ -1953,6 +2355,31 @@
                       "type": "boolean"
                     },
                     "ownerUserId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "health": {
+                      "enum": [
+                        "not_started",
+                        "on_track",
+                        "at_risk",
+                        "off_track",
+                        "finished",
+                        "cancelled"
+                      ],
+                      "type": "string"
+                    },
+                    "healthNote": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "startDate": {
+                      "nullable": true
+                    },
+                    "endDate": {
+                      "nullable": true
+                    },
+                    "leadUserId": {
                       "type": "string",
                       "nullable": true
                     }
@@ -9805,7 +10232,8 @@
                           "task_comment",
                           "task_due_date_changed",
                           "task_reminder",
-                          "announcement_published"
+                          "announcement_published",
+                          "project_health_changed"
                         ],
                         "type": "string"
                       },
@@ -9936,7 +10364,8 @@
                         "task_comment",
                         "task_due_date_changed",
                         "task_reminder",
-                        "announcement_published"
+                        "announcement_published",
+                        "project_health_changed"
                       ],
                       "type": "string"
                     },
@@ -10096,7 +10525,8 @@
                         "task_comment",
                         "task_due_date_changed",
                         "task_reminder",
-                        "announcement_published"
+                        "announcement_published",
+                        "project_health_changed"
                       ],
                       "type": "string"
                     },
@@ -15894,6 +16324,31 @@
                         "ownerUserId": {
                           "type": "string",
                           "nullable": true
+                        },
+                        "health": {
+                          "enum": [
+                            "not_started",
+                            "on_track",
+                            "at_risk",
+                            "off_track",
+                            "finished",
+                            "cancelled"
+                          ],
+                          "type": "string"
+                        },
+                        "healthNote": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "startDate": {
+                          "nullable": true
+                        },
+                        "endDate": {
+                          "nullable": true
+                        },
+                        "leadUserId": {
+                          "type": "string",
+                          "nullable": true
                         }
                       },
                       "required": [
@@ -16000,6 +16455,31 @@
                           "type": "boolean"
                         },
                         "ownerUserId": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "health": {
+                          "enum": [
+                            "not_started",
+                            "on_track",
+                            "at_risk",
+                            "off_track",
+                            "finished",
+                            "cancelled"
+                          ],
+                          "type": "string"
+                        },
+                        "healthNote": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "startDate": {
+                          "nullable": true
+                        },
+                        "endDate": {
+                          "nullable": true
+                        },
+                        "leadUserId": {
                           "type": "string",
                           "nullable": true
                         }
@@ -18938,6 +19418,31 @@
                             "type": "boolean"
                           },
                           "ownerUserId": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "health": {
+                            "enum": [
+                              "not_started",
+                              "on_track",
+                              "at_risk",
+                              "off_track",
+                              "finished",
+                              "cancelled"
+                            ],
+                            "type": "string"
+                          },
+                          "healthNote": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "startDate": {
+                            "nullable": true
+                          },
+                          "endDate": {
+                            "nullable": true
+                          },
+                          "leadUserId": {
                             "type": "string",
                             "nullable": true
                           }

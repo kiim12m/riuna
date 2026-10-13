@@ -10,11 +10,19 @@ import archiveProjectCtrl from "./controllers/archive-project";
 import createProjectCtrl from "./controllers/create-project";
 import deleteProjectCtrl from "./controllers/delete-project";
 import getProjectCtrl from "./controllers/get-project";
+import getProjectActivity from "./controllers/get-project-activity";
 import getProjectsCtrl from "./controllers/get-projects";
 import reorderProjectsCtrl from "./controllers/reorder-projects";
 import unarchiveProjectCtrl from "./controllers/unarchive-project";
 import updateProjectCtrl from "./controllers/update-project";
+import updateProjectStatus, {
+  PROJECT_HEALTHS,
+} from "./controllers/update-project-status";
 import updateProjectTreeSettings from "./controllers/update-project-tree-settings";
+import "./status-events";
+
+// Un dia sin zona (ADR 049), o nada para quitarlo.
+const projectDay = v.nullable(v.pipe(v.string(), v.isoTimestamp()));
 
 const project = new Hono<{
   Variables: {
@@ -246,6 +254,81 @@ const project = new Hono<{
       return c.json(
         await updateProjectTreeSettings({ projectId: id, ...body }),
       );
+    },
+  )
+  .patch(
+    "/:id/status",
+    describeRoute({
+      operationId: "updateProjectStatus",
+      tags: ["Projects"],
+      description:
+        "Update a project's status: its health (not started, on track, at risk, off track, finished or cancelled) with a short note, its own start and end dates, and its lead, a member of the workspace. Only what is sent changes, and each change is kept in the project's activity. With `notify`, a change of health is announced to the whole workspace.",
+      responses: {
+        200: {
+          description: "Project status updated",
+          content: {
+            "application/json": { schema: resolver(projectSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator(
+      "json",
+      v.object({
+        health: v.optional(v.picklist(PROJECT_HEALTHS)),
+        note: v.optional(v.nullable(v.pipe(v.string(), v.maxLength(500)))),
+        startDate: v.optional(projectDay),
+        endDate: v.optional(projectDay),
+        leadUserId: v.optional(v.nullable(v.string())),
+        notify: v.optional(v.boolean()),
+      }),
+    ),
+    workspaceAccess.fromProject(),
+    requireWorkspacePermission({ project: ["update"] }),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { notify, startDate, endDate, ...rest } = c.req.valid("json");
+      const toDate = (value: string | null | undefined) =>
+        value === undefined
+          ? undefined
+          : value === null
+            ? null
+            : new Date(value);
+      return c.json(
+        await updateProjectStatus({
+          projectId: id,
+          workspaceId: c.get("workspaceId"),
+          userId: c.get("userId"),
+          input: {
+            ...rest,
+            startDate: toDate(startDate),
+            endDate: toDate(endDate),
+          },
+          notify,
+        }),
+      );
+    },
+  )
+  .get(
+    "/:id/activity",
+    describeRoute({
+      operationId: "getProjectActivity",
+      tags: ["Projects"],
+      description:
+        "The history of a project's status, newest first: changes of health (with their note), of dates and of lead, with who made them.",
+      responses: {
+        200: {
+          description: "Project activity",
+          content: { "application/json": { schema: resolver(v.any()) } },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    workspaceAccess.fromProject(),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      return c.json(await getProjectActivity(id));
     },
   )
   .delete(

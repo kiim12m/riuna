@@ -1860,6 +1860,23 @@
 			"revoked": "Session closed",
 			"revokedOthers": "Sessions closed: {{total}}",
 			"revokeError": "Could not close the session"
+		},
+		"projectStatus": {
+			"pageTitle": "Status and dates",
+			"title": "Status and dates",
+			"subtitle": "How the project is going, its own dates and who leads it. The whole workspace sees it in the project list and in the project header.",
+			"health": "Health",
+			"noLead": "No lead",
+			"invalidDates": "The end cannot be before the start",
+			"history": {
+				"title": "History",
+				"empty": "Nothing has changed yet.",
+				"someone": "Someone",
+				"health": "set the health to {{health}}",
+				"dates": "set the dates to {{start}} – {{end}}",
+				"lead": "made {{name}} the lead",
+				"leadRemoved": "removed the lead"
+			}
 		}
 	},
 	"navigation": {
@@ -2094,6 +2111,11 @@
 				"title": "Announcement: {{announcementTitle}}",
 				"content": "{{authorName}} posted an announcement in {{projectName}}",
 				"contentWorkspace": "{{authorName}} posted a workspace announcement"
+			},
+			"project_health_changed": {
+				"title": "{{projectName}}: {{health}}",
+				"content": "{{authorName}}: {{note}}",
+				"contentWithoutNote": "{{authorName}} changed the project's health"
 			}
 		},
 		"loadMore": "Load older notifications",
@@ -2995,7 +3017,34 @@
 			},
 			"noDueDate": "No due date",
 			"reorderHandle": "Reorder project",
-			"reorderError": "Failed to reorder projects"
+			"reorderError": "Failed to reorder projects",
+			"lead": "Lead",
+			"startDate": "Start",
+			"endDate": "End",
+			"overflow_one": "Its tasks end on {{date}}, {{count}} working day after the end date",
+			"overflow_other": "Its tasks end on {{date}}, {{count}} working days after the end date",
+			"quick": {
+				"label": "Show",
+				"all": "All",
+				"attention": "At risk or off track",
+				"mine": "Mine"
+			},
+			"health": {
+				"not_started": "Not started",
+				"on_track": "On track",
+				"at_risk": "At risk",
+				"off_track": "Off track",
+				"finished": "Finished",
+				"cancelled": "Cancelled",
+				"titleFor": "Health of {{name}}",
+				"note": "Note",
+				"notePlaceholder": "What is going on, in a line",
+				"noNote": "No note",
+				"notify": "Tell the workspace",
+				"save": "Save",
+				"saved": "Project status saved",
+				"error": "The project status could not be saved"
+			}
 		},
 		"search": {
 			"pageTitle": "Search",
