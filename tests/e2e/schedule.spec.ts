@@ -235,11 +235,17 @@ test.describe("Cronograma", () => {
     });
     await page.mouse.up();
 
-    const task = await riuna.api<{ estimate: number | null }>(
-      "get",
-      `/api/task/${taskId}`,
-    );
-    expect(task.estimate).toBe(1800 + 20 * 60);
+    // El cambio se guarda despues de soltar: leerlo en el acto podia llegar
+    // antes que el (en el simulacro salia la duracion de antes).
+    await expect
+      .poll(async () => {
+        const task = await riuna.api<{ estimate: number | null }>(
+          "get",
+          `/api/task/${taskId}`,
+        );
+        return task.estimate;
+      })
+      .toBe(1800 + 20 * 60);
   });
 
   test("moves a task to another day by dragging it across columns", async ({
@@ -319,18 +325,24 @@ test.describe("Cronograma", () => {
       targetColumn.getByTestId(`schedule-segment-${taskId}`),
     ).toBeVisible();
 
-    const nextDay = await riuna.api<{
-      days: Array<{
-        segments: Array<{ type: string; taskId?: string; startSecond: number }>;
-      }>;
-    }>(
-      "get",
-      `/api/schedule?workspaceId=${riuna.workspaceId}&from=${tuesdayKey}&days=1`,
-    );
-    const moved = nextDay.days[0]?.segments.find(
-      (s) => s.type === "pinned" && s.taskId === taskId,
-    );
-    expect(moved).toBeTruthy();
+    // Lo optimista ya se ve; el cambio se guarda despues, asi que se espera
+    // a que la API lo tenga (en el simulacro llegaba a leerse antes).
+    type Segment = { type: string; taskId?: string; startSecond: number };
+    let moved: Segment | undefined;
+    await expect
+      .poll(async () => {
+        const nextDay = await riuna.api<{
+          days: Array<{ segments: Segment[] }>;
+        }>(
+          "get",
+          `/api/schedule?workspaceId=${riuna.workspaceId}&from=${tuesdayKey}&days=1`,
+        );
+        moved = nextDay.days[0]?.segments.find(
+          (s) => s.type === "pinned" && s.taskId === taskId,
+        );
+        return Boolean(moved);
+      })
+      .toBe(true);
     // Sigue en torno a las 09:00, con margen por el redondeo de 5 min.
     expect(moved?.startSecond).toBeGreaterThan(8 * 3600 + 50 * 60);
     expect(moved?.startSecond).toBeLessThan(9 * 3600 + 10 * 60);

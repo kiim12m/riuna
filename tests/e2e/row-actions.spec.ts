@@ -53,6 +53,11 @@ test.describe("Acciones de fila", () => {
       await page
         .getByRole("menuitemcheckbox", { name: "Imprescindible" })
         .click();
+      // El menu sale con una animacion, y mientras sale sigue en la pagina:
+      // abrir el de la fila siguiente antes daba dos «Imprescindible» a la
+      // vez. Pasaba en el simulacro, que corre contra la version de
+      // produccion y va mas deprisa.
+      await expect(page.getByRole("menu")).toHaveCount(0);
     }
 
     const keyGroup = page.getByTestId("today-key-tasks");
