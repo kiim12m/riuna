@@ -33,7 +33,32 @@ permissions:
   contents: read
 
 jobs:
+  # Una noche sin commits en main no trae nada nuevo que verificar (ADR 086):
+  # se salta, salvo los lunes, que corre igual por si cambiaron las imagenes
+  # base o lo que se baja de fuera. A mano corre siempre.
+  changes:
+    runs-on: ubuntu-24.04
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          since=$(date -u -d '25 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+          recent=$(gh api "repos/$REPO/commits?sha=$BRANCH&since=$since&per_page=1" --jq length)
+          if [ "$EVENT" != schedule ] || [ "$recent" != 0 ] || [ "$(date -u +%u)" = 1 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
   drill:
+    needs: changes
+    if: ${{ needs.changes.outputs.run == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:

@@ -112,9 +112,9 @@ Run repository-wide checks when a change crosses packages broadly, before a requ
 
 What survives in `.github/workflows/`:
 
-- `ci.yml` — lint, typecheck and tests on push and pull request. The safety net; keep it green.
-- `nightly.yml` — scheduled verification with a real PostgreSQL service.
-- `restore-drill.yml` — nightly (and on PRs touching backups, images or migrations): builds the `compose.local.yml` images, seeds and backs up, then runs `deploy/simulacro.sh --humo` — the same script used on the PC with the real backup — which restores into an isolated Compose project and runs the full smoke from a Playwright container (ADR 072).
+- `ci.yml` — lint, typecheck and tests on push and pull request. The safety net; keep it green. The end-to-end job runs only on pull requests against `main` and on pushes to `main`, not on stacked pull requests (ADR 086).
+- `nightly.yml` — scheduled verification with a real PostgreSQL service. Skips nights without commits on `main`, except Mondays (ADR 086).
+- `restore-drill.yml` — nightly when `main` changed and every Monday (and on PRs touching backups, images or migrations): builds the `compose.local.yml` images, seeds and backs up, then runs `deploy/simulacro.sh --humo` — the same script used on the PC with the real backup — which restores into an isolated Compose project and runs the full smoke from a Playwright container (ADR 072).
 - `docker.yml` → `build-images.yml` — manual dispatch that builds and pushes images to `ghcr.io/<owner>/…` under **your** namespace.
 - `helm-chart.yml` → `helm-validate.yml` — packages and validates the Helm chart.
 
