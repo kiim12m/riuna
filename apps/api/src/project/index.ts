@@ -1,20 +1,26 @@
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import { requireEntitlement } from "../billing/require-entitlement-middleware";
 import { projectSchema } from "../schemas";
 import { createProjectFromTemplate } from "../template/controllers/create-project-from-template";
+import { buildContentDisposition } from "../utils/content-disposition";
 import { requireWorkspacePermission } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
+import { parseFilterParam } from "../view/filter-schema";
+import { FilterError, type FilterNode } from "../view/filter-to-sql";
 import archiveProjectCtrl from "./controllers/archive-project";
 import createProjectCtrl from "./controllers/create-project";
 import deleteProjectCtrl from "./controllers/delete-project";
+import exportProjects from "./controllers/export-projects";
 import getProjectCtrl from "./controllers/get-project";
 import getProjectActivity from "./controllers/get-project-activity";
 import getProjectsCtrl from "./controllers/get-projects";
 import reorderProjectsCtrl from "./controllers/reorder-projects";
 import unarchiveProjectCtrl from "./controllers/unarchive-project";
 import updateProjectCtrl from "./controllers/update-project";
+import updateProjectCustomFields from "./controllers/update-project-custom-fields";
 import updateProjectStatus, {
   PROJECT_HEALTHS,
 } from "./controllers/update-project-status";
@@ -35,7 +41,8 @@ const project = new Hono<{
     describeRoute({
       operationId: "listProjects",
       tags: ["Projects"],
-      description: "Get all projects in a workspace",
+      description:
+        "Get all projects in a workspace, with their statistics. `filter` narrows the list with the same filter tree as the task views, over the project's own fields (name, key, health, lead, startDate, endDate, createdAt, progress) and its project fields as `custom.<key>`.",
       responses: {
         200: {
           description: "List of projects with statistics",
@@ -50,17 +57,90 @@ const project = new Hono<{
       v.object({
         workspaceId: v.string(),
         includeArchived: v.optional(v.string()),
+        // El arbol de filtros de la cartera, como JSON (ADR 088).
+        filter: v.optional(v.string()),
       }),
     ),
     workspaceAccess.fromQuery(),
     async (c) => {
       const workspaceId = c.get("workspaceId");
-      const { includeArchived } = c.req.valid("query");
-      const projects = await getProjectsCtrl(
-        workspaceId,
-        includeArchived === "true",
-      );
-      return c.json(projects);
+      const { includeArchived, filter: rawFilter } = c.req.valid("query");
+
+      let filter: FilterNode | null = null;
+      try {
+        filter = parseFilterParam(rawFilter);
+      } catch (error) {
+        throw new HTTPException(400, {
+          message: error instanceof Error ? error.message : "Invalid filter",
+        });
+      }
+
+      try {
+        return c.json(
+          await getProjectsCtrl(
+            workspaceId,
+            includeArchived === "true",
+            filter,
+          ),
+        );
+      } catch (error) {
+        if (error instanceof FilterError) {
+          throw new HTTPException(400, { message: error.message });
+        }
+        throw error;
+      }
+    },
+  )
+  .get(
+    "/export",
+    describeRoute({
+      operationId: "exportProjects",
+      tags: ["Projects"],
+      description:
+        "Export the project list as a spreadsheet (ADR 088): the projects that match `filter`, with their status, dates, progress and one column per project field.",
+      responses: {
+        200: {
+          description: "Spreadsheet file",
+          content: {
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+              { schema: { type: "string", format: "binary" } },
+          },
+        },
+      },
+    }),
+    validator(
+      "query",
+      v.object({ workspaceId: v.string(), filter: v.optional(v.string()) }),
+    ),
+    workspaceAccess.fromQuery(),
+    async (c) => {
+      const { filter: rawFilter } = c.req.valid("query");
+      let filter: FilterNode | null = null;
+      try {
+        filter = parseFilterParam(rawFilter);
+      } catch (error) {
+        throw new HTTPException(400, {
+          message: error instanceof Error ? error.message : "Invalid filter",
+        });
+      }
+
+      let sheet: Awaited<ReturnType<typeof exportProjects>>;
+      try {
+        sheet = await exportProjects(c.get("workspaceId"), filter);
+      } catch (error) {
+        if (error instanceof FilterError) {
+          throw new HTTPException(400, { message: error.message });
+        }
+        throw error;
+      }
+
+      // Sin Content-Length: el `compress()` global puede recodificar el cuerpo.
+      return c.body(new Uint8Array(sheet.buffer), 200, {
+        "Content-Disposition": buildContentDisposition(sheet.filename, false),
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "X-Content-Type-Options": "nosniff",
+      });
     },
   )
   .post(
@@ -306,6 +386,39 @@ const project = new Hono<{
             endDate: toDate(endDate),
           },
           notify,
+        }),
+      );
+    },
+  )
+  .put(
+    "/:id/custom-fields",
+    describeRoute({
+      operationId: "updateProjectCustomFields",
+      tags: ["Projects"],
+      description:
+        "Write values of the workspace's project fields on a project (ADR 088). `values` is partial: what is not sent is kept, and an empty value clears the key. Each value is validated against its field definition.",
+      responses: {
+        200: {
+          description: "Project with its updated field values",
+          content: {
+            "application/json": { schema: resolver(projectSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ values: v.record(v.string(), v.unknown()) })),
+    workspaceAccess.fromProject(),
+    requireWorkspacePermission({ project: ["update"] }),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { values } = c.req.valid("json");
+      return c.json(
+        await updateProjectCustomFields({
+          projectId: id,
+          workspaceId: c.get("workspaceId"),
+          values,
+          userId: c.get("userId"),
         }),
       );
     },

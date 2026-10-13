@@ -6018,9 +6018,25 @@
 						},
 						"description": {
 							"type": "string"
+						},
+						"projectTitle": {
+							"type": "string"
+						},
+						"projectDescription": {
+							"type": "string"
+						},
+						"addProjectField": {
+							"type": "string"
 						}
 					},
-					"required": ["title", "pageTitle", "description"]
+					"required": [
+						"title",
+						"pageTitle",
+						"description",
+						"projectTitle",
+						"projectDescription",
+						"addProjectField"
+					]
 				},
 				"automations": {
 					"type": "object",
@@ -7378,6 +7394,9 @@
 								},
 								"leadRemoved": {
 									"type": "string"
+								},
+								"fields": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -7387,8 +7406,15 @@
 								"health",
 								"dates",
 								"lead",
-								"leadRemoved"
+								"leadRemoved",
+								"fields"
 							]
+						},
+						"fieldsTitle": {
+							"type": "string"
+						},
+						"fieldsEmpty": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -7398,7 +7424,9 @@
 						"health",
 						"noLead",
 						"invalidDates",
-						"history"
+						"history",
+						"fieldsTitle",
+						"fieldsEmpty"
 					]
 				}
 			},
@@ -11987,6 +12015,70 @@
 								"saved",
 								"error"
 							]
+						},
+						"key": {
+							"type": "string"
+						},
+						"createdAt": {
+							"type": "string"
+						},
+						"columns": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"health": {
+									"type": "string"
+								},
+								"lead": {
+									"type": "string"
+								},
+								"startDate": {
+									"type": "string"
+								},
+								"endDate": {
+									"type": "string"
+								},
+								"progress": {
+									"type": "string"
+								},
+								"tasks": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"title",
+								"health",
+								"lead",
+								"startDate",
+								"endDate",
+								"progress",
+								"tasks"
+							]
+						},
+						"columnsGroup": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"base": {
+									"type": "string"
+								},
+								"custom": {
+									"type": "string"
+								}
+							},
+							"required": ["base", "custom"]
+						},
+						"export": {
+							"type": "string"
+						},
+						"exportError": {
+							"type": "string"
+						},
+						"noMatches": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -12010,7 +12102,14 @@
 						"overflow_one",
 						"overflow_other",
 						"quick",
-						"health"
+						"health",
+						"key",
+						"createdAt",
+						"columns",
+						"columnsGroup",
+						"export",
+						"exportError",
+						"noMatches"
 					]
 				},
 				"search": {

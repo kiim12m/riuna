@@ -95,8 +95,19 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
 - Crear, renombrar, icono (selector buscable), descripción, **clave de ticket**
   (`PRO-123`, máximo 8 caracteres), archivar y eliminar.
 - **Reordenar proyectos** arrastrándolos en la barra lateral.
-- Lista de proyectos con progreso, responsable, inicio y fin, y su **estado de
-  salud**.
+- **Lista de proyectos como cartera**
+  ([ADR 088](adr/088-campos-de-proyecto-y-cartera.md)):
+  - columnas elegibles (estado, responsable, inicio y fin, progreso, tareas y
+    cada campo de proyecto), orden por cabecera y edición de los campos en la
+    propia celda;
+  - filtros compuestos con el motor de las vistas, también por progreso y por
+    campos de proyecto, en la URL;
+  - vistas guardadas de espacio, privadas o compartidas, y exportación a Excel
+    con el filtro que se ve.
+- **Campos de proyecto**: campos personalizados de los propios proyectos
+  (cliente, tipo de obra, presupuesto…), con los mismos tipos que los de
+  tarea, definidos en los ajustes del espacio y rellenados en «Estado y
+  fechas» de cada proyecto o en la lista.
 - **Estado del proyecto** ([ADR 087](adr/087-estado-del-proyecto.md)):
   - salud (sin empezar, en plazo, en riesgo, desviado, terminado o cancelado)
     con una nota, fechas propias y un responsable del espacio;
@@ -706,7 +717,7 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 62 herramientas**. Una prueba de paridad
+Dos caminos con **las mismas 63 herramientas**. Una prueba de paridad
 (`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
 antes el paquete stdio se había quedado sin las cinco del plan personal y el
 cronómetro.
@@ -718,7 +729,7 @@ cronómetro.
   instalador interactivo para Cursor —global y por proyecto—, Claude Desktop o
   una ruta JSON propia, y autenticación por device flow o `RIUNA_API_KEY`.
 
-Las herramientas cubren identidad y espacios, proyectos y su estado, tareas, comentarios,
+Las herramientas cubren identidad y espacios, proyectos con su estado y sus campos, tareas, comentarios,
 etiquetas, épicas, relaciones, observadores, recordatorios, acciones de un clic,
 totales de un filtro, línea base, avisos, miembros, búsqueda, columnas, registro de tiempo,
 actividad y notificaciones, además del plan personal, el

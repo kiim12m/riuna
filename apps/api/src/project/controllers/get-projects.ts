@@ -2,6 +2,8 @@ import { and, count, eq, isNull, min, sql } from "drizzle-orm";
 import db from "../../database";
 import { projectTable, taskTable } from "../../database/schema";
 import { loadWorkCalendar } from "../../task/schedule/work-calendar";
+import { type FilterNode, filterToSql } from "../../view/filter-to-sql";
+import { getProjectFieldRegistry } from "../portfolio-registry";
 import { projectScheduleWarning } from "../schedule-warning";
 
 type ProjectStatistics = {
@@ -92,9 +94,17 @@ async function getProjectStatistics(
   return statisticsByProject;
 }
 
-async function getProjects(workspaceId: string, includeArchived = false) {
+async function getProjects(
+  workspaceId: string,
+  includeArchived = false,
+  // El filtro de la cartera (ADR 088), con el motor de las vistas (ADR 014).
+  filter?: FilterNode | null,
+) {
+  const filterSql = filter
+    ? filterToSql(filter, await getProjectFieldRegistry(workspaceId))
+    : undefined;
   const projects = await db.query.projectTable.findMany({
-    where: listedProjects(workspaceId, includeArchived),
+    where: and(listedProjects(workspaceId, includeArchived), filterSql),
     // `id` is the deterministic tie-breaker: without it, rows sharing both a
     // position and a createdAt come back in an unspecified order.
     orderBy: (project, { asc }) => [

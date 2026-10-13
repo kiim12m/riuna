@@ -27,7 +27,7 @@ type FieldChange = {
   to?: unknown;
 };
 
-function describeFieldChanges(
+export function describeFieldChanges(
   definitions: { key: string; name: string; type: string }[],
   before: Record<string, unknown>,
   after: Record<string, unknown>,

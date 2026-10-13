@@ -304,11 +304,18 @@ export function registerMcpTools(
           .boolean()
           .optional()
           .describe("Include archived projects"),
+        filter: z
+          .string()
+          .optional()
+          .describe(
+            'A filter as JSON, the same tree the views use, over the project: name, key, health (not_started, on_track, at_risk, off_track, finished, cancelled), lead (user id), startDate, endDate, createdAt, progress (0-100) and custom.<key> for the workspace\'s project fields. Example: {"type":"condition","field":"health","operator":"in","value":["at_risk","off_track"]}.',
+          ),
       }),
     },
     async (args) => {
       const qs = new URLSearchParams({ workspaceId: args.workspaceId });
       if (args.includeArchived === true) qs.set("includeArchived", "true");
+      if (args.filter) qs.set("filter", args.filter);
       return run(() =>
         client.json(`/api/project?${qs.toString()}`, { method: "GET" }),
       );
@@ -1221,6 +1228,25 @@ export function registerMcpTools(
         }),
       );
     },
+  );
+
+  registerTool(
+    "set_project_fields",
+    {
+      description:
+        "Write values of the workspace's project fields on a project (custom fields defined for projects, not tasks). Partial: only the keys sent change, and an empty value clears one.",
+      inputSchema: z.object({
+        projectId: nonEmptyString,
+        values: z.record(z.string(), z.unknown()),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/project/${encodeURIComponent(args.projectId)}/custom-fields`,
+          { method: "PUT", body: JSON.stringify({ values: args.values }) },
+        ),
+      ),
   );
 
   registerTool(

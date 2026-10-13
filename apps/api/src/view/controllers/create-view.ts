@@ -4,7 +4,14 @@ import db from "../../database";
 import { viewTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 
-const VIEW_TYPES = ["table", "board", "list", "calendar", "gantt"] as const;
+const VIEW_TYPES = [
+  "table",
+  "board",
+  "list",
+  "calendar",
+  "gantt",
+  "portfolio",
+] as const;
 export type ViewType = (typeof VIEW_TYPES)[number];
 
 async function createView({
@@ -28,6 +35,13 @@ async function createView({
 
   if (!trimmed) {
     throw new HTTPException(400, { message: "View name is required" });
+  }
+
+  // La cartera (ADR 088) mira todos los proyectos: no es de ninguno.
+  if (type === "portfolio" && projectId) {
+    throw new HTTPException(400, {
+      message: "A portfolio view belongs to the workspace, not to a project",
+    });
   }
 
   const scope = projectId

@@ -638,6 +638,13 @@
 			"when": 1791900768310,
 			"tag": "0090_project_status",
 			"breakpoints": true
+		},
+		{
+			"idx": 91,
+			"version": "7",
+			"when": 1791902125416,
+			"tag": "0091_project_fields",
+			"breakpoints": true
 		}
 	]
 }

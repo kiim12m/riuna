@@ -26,6 +26,8 @@ async function getFieldDefinitionsForProject(
           eq(fieldDefinitionTable.projectId, projectId),
           isNull(fieldDefinitionTable.projectId),
         ),
+        // Los campos de proyecto (ADR 088) no se ponen a una tarea.
+        eq(fieldDefinitionTable.entity, "task"),
         includeArchived ? undefined : isNull(fieldDefinitionTable.archivedAt),
       ),
     )
@@ -49,10 +51,14 @@ async function getFieldDefinitionsForProject(
   );
 }
 
-/** Solo las definiciones de alcance espacio de trabajo. */
+/**
+ * Solo las definiciones de alcance espacio de trabajo: las de tarea o, con
+ * `entity`, las de proyecto (ADR 088).
+ */
 async function getWorkspaceFieldDefinitions(
   workspaceId: string,
   includeArchived = false,
+  entity: "task" | "project" = "task",
 ) {
   return db
     .select()
@@ -61,6 +67,7 @@ async function getWorkspaceFieldDefinitions(
       and(
         eq(fieldDefinitionTable.workspaceId, workspaceId),
         isNull(fieldDefinitionTable.projectId),
+        eq(fieldDefinitionTable.entity, entity),
         includeArchived ? undefined : isNull(fieldDefinitionTable.archivedAt),
       ),
     )

@@ -22,8 +22,9 @@ export type FieldDescriptor =
   | { kind: "column"; column: PgColumn; valueType: ValueType }
   // Una expresion calculada, como la prioridad convertida a rango ordenable.
   | { kind: "expression"; expression: SQL; valueType: ValueType }
-  // Una clave dentro de `task.custom_fields`.
-  | { kind: "json"; key: string; valueType: ValueType }
+  // Una clave dentro de `task.custom_fields`, o de la columna JSONB que diga
+  // `source` (los campos de proyecto, ADR 088).
+  | { kind: "json"; key: string; valueType: ValueType; source?: PgColumn }
   // Pertenencia, que se resuelve con un EXISTS y no con una comparacion:
   // epicas, etiquetas, asignados adicionales y observadores.
   | {

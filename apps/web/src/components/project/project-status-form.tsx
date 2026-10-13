@@ -24,6 +24,7 @@ import {
   type ProjectHealth,
 } from "@/lib/project-health";
 import { toast } from "@/lib/toast";
+import ProjectFieldValues from "./project-field-values";
 import { HealthDot, ProjectScheduleWarning } from "./project-health";
 
 const NO_LEAD = "__none";
@@ -254,6 +255,13 @@ export default function ProjectStatusForm({
         )}
       </div>
 
+      <ProjectFieldValues
+        projectId={projectId}
+        workspaceId={workspaceId}
+        values={(project.customFields ?? {}) as Record<string, unknown>}
+        canEdit={canEdit}
+      />
+
       <ProjectStatusHistory
         projectId={projectId}
         memberName={(userId) =>
@@ -294,6 +302,14 @@ function ProjectStatusHistory({
       return data.to
         ? t("settings:projectStatus.history.lead", { name: name ?? "?" })
         : t("settings:projectStatus.history.leadRemoved");
+    }
+    if (entry.type === "fields_changed") {
+      const changes = Array.isArray(data.changes)
+        ? (data.changes as Array<{ name?: string }>)
+        : [];
+      return t("settings:projectStatus.history.fields", {
+        names: changes.map((change) => change.name).join(", "),
+      });
     }
     return entry.type;
   };

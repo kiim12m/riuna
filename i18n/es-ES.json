@@ -1523,7 +1523,10 @@
 		"workspaceFields": {
 			"title": "Campos personalizados",
 			"pageTitle": "Campos personalizados",
-			"description": "Los campos que valen para todos los proyectos del espacio. Cada proyecto puede definir los suyos además de estos."
+			"description": "Los campos que valen para todos los proyectos del espacio. Cada proyecto puede definir los suyos además de estos.",
+			"projectTitle": "Campos de proyecto",
+			"projectDescription": "Atributos de los propios proyectos, como el cliente o el presupuesto. Son columnas, filtros y exportación de la lista de proyectos, y cada proyecto los rellena desde sus ajustes o en la propia lista.",
+			"addProjectField": "Nuevo campo de proyecto"
 		},
 		"automations": {
 			"title": "Automatizaciones",
@@ -1875,8 +1878,11 @@
 				"health": "puso el estado en {{health}}",
 				"dates": "puso las fechas {{start}} – {{end}}",
 				"lead": "puso de responsable a {{name}}",
-				"leadRemoved": "quitó el responsable"
-			}
+				"leadRemoved": "quitó el responsable",
+				"fields": "cambió {{names}}"
+			},
+			"fieldsTitle": "Campos del proyecto",
+			"fieldsEmpty": "El espacio aún no tiene campos de proyecto. Se definen en los ajustes del espacio, en Campos personalizados."
 		}
 	},
 	"navigation": {
@@ -3044,7 +3050,25 @@
 				"save": "Guardar",
 				"saved": "Estado del proyecto guardado",
 				"error": "No se pudo guardar el estado del proyecto"
-			}
+			},
+			"key": "Clave",
+			"createdAt": "Creado",
+			"columns": {
+				"title": "Proyecto",
+				"health": "Estado",
+				"lead": "Responsable",
+				"startDate": "Inicio",
+				"endDate": "Fin",
+				"progress": "Progreso",
+				"tasks": "Tareas"
+			},
+			"columnsGroup": {
+				"base": "Del proyecto",
+				"custom": "Campos de proyecto"
+			},
+			"export": "Exportar",
+			"exportError": "No se pudo exportar la lista de proyectos",
+			"noMatches": "Ningún proyecto cumple el filtro"
 		},
 		"search": {
 			"pageTitle": "Buscar",

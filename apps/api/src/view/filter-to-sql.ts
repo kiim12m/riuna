@@ -1,4 +1,5 @@
 import { type SQL, sql } from "drizzle-orm";
+import type { PgColumn } from "drizzle-orm/pg-core";
 import {
   labelTable,
   taskAssigneeTable,
@@ -86,19 +87,25 @@ const OPERATORS_BY_VALUE_TYPE: Record<ValueType, FilterOperator[]> = {
   idList: ["eq", "neq", "in", "notIn", "isEmpty", "isNotEmpty"],
 };
 
+// La columna JSONB de los campos personalizados: la de `task`, salvo que el
+// descriptor diga otra (los campos de proyecto, ADR 088).
+type JsonSource = PgColumn;
+const jsonSourceOf = (descriptor: { source?: PgColumn }) =>
+  descriptor.source ?? taskTable.customFields;
+
 // `jsonb_typeof` en vez de castear a ciegas. Una clave del JSONB puede tener
 // hoy un numero y manana, tras cambiar la definicion o importar un fichero
 // torcido, un texto; `(custom_fields->>'k')::numeric` reventaria la consulta
 // entera con un error de conversion. Filtrar antes por tipo hace que esas
 // filas simplemente no casen, que es lo que un filtro debe hacer.
-function jsonNumeric(key: string): SQL {
-  return sql`CASE WHEN jsonb_typeof(${taskTable.customFields} -> ${key}) = 'number'
-    THEN (${taskTable.customFields} ->> ${key})::numeric END`;
+function jsonNumeric(source: JsonSource, key: string): SQL {
+  return sql`CASE WHEN jsonb_typeof(${source} -> ${key}) = 'number'
+    THEN (${source} ->> ${key})::numeric END`;
 }
 
-function jsonText(key: string): SQL {
-  return sql`CASE WHEN jsonb_typeof(${taskTable.customFields} -> ${key}) = 'string'
-    THEN ${taskTable.customFields} ->> ${key} END`;
+function jsonText(source: JsonSource, key: string): SQL {
+  return sql`CASE WHEN jsonb_typeof(${source} -> ${key}) = 'string'
+    THEN ${source} ->> ${key} END`;
 }
 
 // Contencion sobre el objeto entero: es la unica forma correcta de preguntar
@@ -106,8 +113,12 @@ function jsonText(key: string): SQL {
 // indice GIN acelera. Extraerlo como texto —que es lo que hacia antes— nunca
 // casa: un array no es una cadena, asi que la comparacion salia NULL y el
 // filtro no devolvia nada, en silencio.
-function jsonListContains(key: string, value: unknown): SQL {
-  return sql`${taskTable.customFields} @> ${JSON.stringify({ [key]: [value] })}::jsonb`;
+function jsonListContains(
+  source: JsonSource,
+  key: string,
+  value: unknown,
+): SQL {
+  return sql`${source} @> ${JSON.stringify({ [key]: [value] })}::jsonb`;
 }
 
 // "Tiene algo" es tener un array con al menos un elemento.
@@ -122,17 +133,17 @@ function jsonListContains(key: string, value: unknown): SQL {
 // 2. Con la clave ausente, `jsonb_typeof(NULL)` es NULL, y `NOT NULL` es NULL
 //    y no `true`: "esta vacio" no devolvia las tareas sin el campo, que son
 //    justo las que se estaban buscando. El `ELSE false` lo cierra.
-function jsonListHasAny(key: string): SQL {
+function jsonListHasAny(source: JsonSource, key: string): SQL {
   return sql`CASE
-    WHEN jsonb_typeof(${taskTable.customFields} -> ${key}) = 'array'
-    THEN jsonb_array_length(${taskTable.customFields} -> ${key}) > 0
+    WHEN jsonb_typeof(${source} -> ${key}) = 'array'
+    THEN jsonb_array_length(${source} -> ${key}) > 0
     ELSE false
   END`;
 }
 
-function jsonBoolean(key: string): SQL {
-  return sql`CASE WHEN jsonb_typeof(${taskTable.customFields} -> ${key}) = 'boolean'
-    THEN (${taskTable.customFields} ->> ${key})::boolean END`;
+function jsonBoolean(source: JsonSource, key: string): SQL {
+  return sql`CASE WHEN jsonb_typeof(${source} -> ${key}) = 'boolean'
+    THEN (${source} ->> ${key})::boolean END`;
 }
 
 /**
@@ -149,15 +160,15 @@ function comparableExpression(descriptor: FieldDescriptor): SQL {
     case "json":
       switch (descriptor.valueType) {
         case "number":
-          return jsonNumeric(descriptor.key);
+          return jsonNumeric(jsonSourceOf(descriptor), descriptor.key);
         case "boolean":
-          return jsonBoolean(descriptor.key);
+          return jsonBoolean(jsonSourceOf(descriptor), descriptor.key);
         case "idList":
           throw new FilterError(
             "A list field is asked what it contains, not compared as a value",
           );
         default:
-          return jsonText(descriptor.key);
+          return jsonText(jsonSourceOf(descriptor), descriptor.key);
       }
     case "membership":
       throw new FilterError(
@@ -391,22 +402,22 @@ function conditionToSql(
 
     switch (node.operator) {
       case "isEmpty":
-        return sql`NOT ${jsonListHasAny(key)}`;
+        return sql`NOT ${jsonListHasAny(jsonSourceOf(descriptor), key)}`;
       case "isNotEmpty":
-        return jsonListHasAny(key);
+        return jsonListHasAny(jsonSourceOf(descriptor), key);
       case "eq":
-        return jsonListContains(key, node.value);
+        return jsonListContains(jsonSourceOf(descriptor), key, node.value);
       case "neq":
-        return sql`NOT ${jsonListContains(key, node.value)}`;
+        return sql`NOT ${jsonListContains(jsonSourceOf(descriptor), key, node.value)}`;
       case "in": {
         const parts = toList(node.value).map((value) =>
-          jsonListContains(key, value),
+          jsonListContains(jsonSourceOf(descriptor), key, value),
         );
         return sql`(${sql.join(parts, sql` OR `)})`;
       }
       case "notIn": {
         const parts = toList(node.value).map((value) =>
-          jsonListContains(key, value),
+          jsonListContains(jsonSourceOf(descriptor), key, value),
         );
         return sql`NOT (${sql.join(parts, sql` OR `)})`;
       }

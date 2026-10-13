@@ -91,6 +91,20 @@ export async function notifyProjectHealth(data: ProjectStatusChanged) {
   }
 }
 
+// Los campos de proyecto (ADR 088) tambien dejan rastro en su actividad.
+void subscribeToEvent<{
+  projectId: string;
+  userId: string;
+  changes: Array<Record<string, unknown>>;
+}>("project.fields_changed", async (data) => {
+  await db.insert(projectActivityTable).values({
+    projectId: data.projectId,
+    userId: data.userId,
+    type: "fields_changed",
+    eventData: { changes: data.changes },
+  });
+});
+
 void subscribeToEvent<ProjectStatusChanged>(
   "project.status_changed",
   async (data) => {

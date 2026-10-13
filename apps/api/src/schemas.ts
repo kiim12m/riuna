@@ -41,6 +41,8 @@ export const projectSchema = v.object({
   startDate: v.optional(v.nullable(v.date())),
   endDate: v.optional(v.nullable(v.date())),
   leadUserId: v.optional(v.nullable(v.string())),
+  /** Los valores de los campos de proyecto (ADR 088). */
+  customFields: v.optional(v.record(v.string(), v.unknown())),
 });
 
 export const taskSchema = v.object({

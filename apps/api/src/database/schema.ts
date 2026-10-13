@@ -368,6 +368,11 @@ export const projectTable = pgTable(
     leadUserId: text("lead_user_id").references(() => userTable.id, {
       onDelete: "set null",
     }),
+    // Los valores de los campos de proyecto (ADR 088), como los de una tarea.
+    customFields: jsonb("custom_fields")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
   },
   (table) => [
     unique("project_workspace_id_id_unique").on(table.workspaceId, table.id),
@@ -1239,6 +1244,9 @@ export const fieldDefinitionTable = pgTable(
     // Borrado suave, como en `epic`: archivar una definicion la retira de los
     // formularios sin borrar el valor que miles de tareas ya tienen guardado.
     archivedAt: timestamp("archived_at", { mode: "date" }),
+    // A que se pone el campo: a las tareas o, definido en el espacio, a los
+    // proyectos (ADR 088). Sus valores van en `project.custom_fields`.
+    entity: text("entity").notNull().default("task"),
   },
   (table) => [
     index("field_definition_workspaceId_idx").on(table.workspaceId),
@@ -1248,8 +1256,9 @@ export const fieldDefinitionTable = pgTable(
     // es igual a NULL—, asi que un `unique(workspace_id, project_id, key)`
     // dejaria repetir la clave de todos los campos de espacio. `NULLS NOT
     // DISTINCT` lo arreglaria pero solo existe desde Postgres 15.
+    // Con `entity`: un «presupuesto» de tarea y otro de proyecto conviven.
     uniqueIndex("field_definition_workspace_key_unique")
-      .on(table.workspaceId, table.key)
+      .on(table.workspaceId, table.entity, table.key)
       .where(sql`project_id IS NULL`),
     uniqueIndex("field_definition_project_key_unique")
       .on(table.projectId, table.key)
@@ -1260,6 +1269,11 @@ export const fieldDefinitionTable = pgTable(
     check(
       "field_definition_type_valid",
       sql`${table.type} IN ('text', 'number', 'currency', 'select', 'multi_select', 'date', 'checkbox', 'user', 'url', 'relation')`,
+    ),
+    // Un campo de proyecto se define en el espacio, nunca en un proyecto.
+    check(
+      "field_definition_entity_valid",
+      sql`${table.entity} = 'task' OR (${table.entity} = 'project' AND ${table.projectId} IS NULL)`,
     ),
   ],
 );
@@ -1567,7 +1581,7 @@ export const viewTable = pgTable(
     index("view_workspace_shared_idx").on(table.workspaceId, table.isShared),
     check(
       "view_type_valid",
-      sql`${table.type} IN ('table', 'board', 'list', 'calendar', 'gantt')`,
+      sql`${table.type} IN ('table', 'board', 'list', 'calendar', 'gantt', 'portfolio')`,
     ),
   ],
 );

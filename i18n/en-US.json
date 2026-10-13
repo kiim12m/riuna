@@ -1523,7 +1523,10 @@
 		"workspaceFields": {
 			"title": "Custom fields",
 			"pageTitle": "Custom fields",
-			"description": "Fields that apply to every project of the workspace. A project can define its own on top of these."
+			"description": "Fields that apply to every project of the workspace. A project can define its own on top of these.",
+			"projectTitle": "Project fields",
+			"projectDescription": "Attributes of the projects themselves, such as the client or the budget. They are columns, filters and export of the project list, and each project fills them in from its settings or right in the list.",
+			"addProjectField": "New project field"
 		},
 		"automations": {
 			"title": "Automations",
@@ -1875,8 +1878,11 @@
 				"health": "set the health to {{health}}",
 				"dates": "set the dates to {{start}} – {{end}}",
 				"lead": "made {{name}} the lead",
-				"leadRemoved": "removed the lead"
-			}
+				"leadRemoved": "removed the lead",
+				"fields": "changed {{names}}"
+			},
+			"fieldsTitle": "Project fields",
+			"fieldsEmpty": "The workspace has no project fields yet. They are defined in the workspace settings, under Custom fields."
 		}
 	},
 	"navigation": {
@@ -3044,7 +3050,25 @@
 				"save": "Save",
 				"saved": "Project status saved",
 				"error": "The project status could not be saved"
-			}
+			},
+			"key": "Key",
+			"createdAt": "Created",
+			"columns": {
+				"title": "Project",
+				"health": "Status",
+				"lead": "Lead",
+				"startDate": "Start",
+				"endDate": "End",
+				"progress": "Progress",
+				"tasks": "Tasks"
+			},
+			"columnsGroup": {
+				"base": "Of the project",
+				"custom": "Project fields"
+			},
+			"export": "Export",
+			"exportError": "The project list could not be exported",
+			"noMatches": "No project matches the filter"
 		},
 		"search": {
 			"pageTitle": "Search",

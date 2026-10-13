@@ -30,7 +30,7 @@
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
 | **Total Bloque A** | **45** + 18 del interludio | |
-| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hechas la tanda 1 (1.1-1.6) y la tanda 2 (2.1-2.4), y de la tanda 3 la 3.1 · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
+| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hechas la tanda 1 (1.1-1.6) y la tanda 2 (2.1-2.4), y de la tanda 3 la 3.1 y la 3.2 · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -3070,10 +3070,18 @@ siempre), incluida `watchers.spec.ts` de la 1.1.
     filtros «Todos», «En riesgo o desviados» y «Los míos». También en la cabecera del proyecto y en
     sus ajustes, con el historial.
   - MCP: `set_project_status`.
-- **3.2 Campos de proyecto y cartera** · L. Campos personalizados con alcance de proyecto, definidos
-  en el espacio. La lista de proyectos pasa por el motor de filtros
-  ([ADR 014](adr/014-motor-de-filtros.md)), con columnas, orden, vistas guardadas y exportación:
-  Excel ya, PDF cuando llegue la 4.2.
+- **3.2 Campos de proyecto y cartera** ✔ · L · [ADR 088](adr/088-campos-de-proyecto-y-cartera.md).
+  **Hecho (2026-10-13).** Campos personalizados de los propios proyectos, definidos en el espacio.
+  La lista de proyectos pasa por el motor de filtros ([ADR 014](adr/014-motor-de-filtros.md)), con
+  columnas, orden, vistas guardadas y exportación a Excel; el PDF, cuando llegue la 4.2.
+  - `field_definition.entity` (`task` o `project`) y `project.custom_fields` (migración 0091). Los
+    campos de tarea nunca ven uno de proyecto.
+  - `PUT /project/:id/custom-fields` con `project:update`; deja rastro en la actividad del
+    proyecto.
+  - El registro de la cartera filtra por nombre, clave, salud, responsable, fechas, progreso y cada
+    campo de proyecto.
+  - Edición en la celda; vistas guardadas de tipo `portfolio`; `GET /project/export`.
+  - MCP: `filter` en `list_projects` y `set_project_fields`.
 - **3.3 Subproyectos** · L. Un proyecto padre con profundidad limitada.
   - Las vistas del padre pueden incluir las tareas de los hijos.
   - El progreso se agrega, y la lista de proyectos sale en árbol.

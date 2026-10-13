@@ -22,10 +22,13 @@ export default function ColumnPicker({
   options,
   visible,
   onToggle,
+  groupLabels,
 }: {
   options: TableColumnOption[];
   visible: ReadonlySet<string>;
   onToggle: (id: string) => void;
+  /** Otros titulos de grupo: la cartera (ADR 088) no tiene ramas. */
+  groupLabels?: Partial<Record<(typeof KINDS)[number], string>>;
 }) {
   const { t } = useTranslation();
 
@@ -46,7 +49,8 @@ export default function ColumnPicker({
             <DropdownMenuGroup key={kind}>
               {index > 0 && <DropdownMenuSeparator />}
               <DropdownMenuLabel>
-                {t(`tasks:table.columnsPicker.group.${kind}`)}
+                {groupLabels?.[kind] ??
+                  t(`tasks:table.columnsPicker.group.${kind}`)}
               </DropdownMenuLabel>
               {group.map((option) => (
                 <DropdownMenuCheckboxItem

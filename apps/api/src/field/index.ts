@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
+import { getProjectFieldRegistry } from "../project/portfolio-registry";
 import { requireWorkspacePermission } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import { getWorkspaceFieldRegistry } from "../view/workspace-registry";
@@ -75,7 +76,7 @@ const field = new Hono<{
       operationId: "listWorkspaceFieldDefinitions",
       tags: ["Fields"],
       description:
-        "List the workspace-wide custom fields. `filterable` says whether a view across projects can filter by the field: it is false when some project redefines the key with another way of comparing it",
+        "List the workspace-wide custom fields: those of tasks or, with `entity=project`, those of projects. `filterable` says whether a view across projects can filter by a task field: it is false when some project redefines the key with another way of comparing it",
       responses: {
         200: {
           description: "Field definitions ordered by position",
@@ -86,16 +87,24 @@ const field = new Hono<{
     validator("param", v.object({ workspaceId: v.string() })),
     validator(
       "query",
-      v.optional(v.object({ includeArchived: v.optional(v.string()) })),
+      v.optional(
+        v.object({
+          includeArchived: v.optional(v.string()),
+          entity: v.optional(v.picklist(["task", "project"])),
+        }),
+      ),
     ),
     workspaceAccess.fromParam("workspaceId"),
     async (c) => {
       const includeArchived = c.req.query("includeArchived") === "true";
+      const entity = c.req.query("entity") === "project" ? "project" : "task";
 
       const workspaceId = c.get("workspaceId");
       const [definitions, registry] = await Promise.all([
-        getWorkspaceFieldDefinitions(workspaceId, includeArchived),
-        getWorkspaceFieldRegistry(workspaceId),
+        getWorkspaceFieldDefinitions(workspaceId, includeArchived, entity),
+        entity === "task"
+          ? getWorkspaceFieldRegistry(workspaceId)
+          : getProjectFieldRegistry(workspaceId),
       ]);
 
       // Lo que ofrece la interfaz para filtrar y lo que acepta el servidor tiene
@@ -159,7 +168,7 @@ const field = new Hono<{
       operationId: "createWorkspaceFieldDefinition",
       tags: ["Fields"],
       description:
-        "Define a custom field for every project in the workspace at once",
+        'Define a custom field for every project in the workspace at once: a field of their tasks or, with `entity: "project"`, a field of the projects themselves (ADR 088), which cannot be a relation',
       responses: {
         200: {
           description: "Field definition created successfully",
@@ -176,6 +185,7 @@ const field = new Hono<{
         description: v.optional(v.nullable(v.string())),
         config: v.optional(v.unknown()),
         required: v.optional(v.boolean()),
+        entity: v.optional(v.picklist(["task", "project"])),
       }),
     ),
     workspaceAccess.fromParam("workspaceId"),
@@ -192,6 +202,7 @@ const field = new Hono<{
           description: body.description,
           config: body.config,
           required: body.required,
+          entity: body.entity,
           currentUserId: c.get("userId"),
         }),
       );

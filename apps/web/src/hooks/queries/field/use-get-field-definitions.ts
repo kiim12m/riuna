@@ -19,13 +19,19 @@ export function useGetFieldDefinitions(
 
 export function useGetWorkspaceFieldDefinitions(
   workspaceId: string,
-  { includeArchived = false }: { includeArchived?: boolean } = {},
+  {
+    includeArchived = false,
+    entity = "task",
+  }: { includeArchived?: boolean; entity?: "task" | "project" } = {},
 ) {
+  // Los de proyecto (ADR 088) bajo su propia clave, dentro del mismo prefijo.
+  const scope = entity === "project" ? "project-fields" : "workspace";
   return useQuery({
     queryKey: includeArchived
-      ? ["field-definitions", "workspace", workspaceId, "all"]
-      : ["field-definitions", "workspace", workspaceId],
-    queryFn: () => getWorkspaceFieldDefinitions(workspaceId, includeArchived),
+      ? ["field-definitions", scope, workspaceId, "all"]
+      : ["field-definitions", scope, workspaceId],
+    queryFn: () =>
+      getWorkspaceFieldDefinitions(workspaceId, includeArchived, entity),
     enabled: Boolean(workspaceId),
   });
 }

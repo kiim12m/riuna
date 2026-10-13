@@ -18,9 +18,12 @@ async function createFieldDefinition({
   config,
   required,
   currentUserId,
+  entity = "task",
 }: {
   workspaceId: string;
   projectId: string | null;
+  /** De tarea o, definido en el espacio, de proyecto (ADR 088). */
+  entity?: "task" | "project";
   name: string;
   type: FieldType;
   description?: string | null;
@@ -29,6 +32,20 @@ async function createFieldDefinition({
   currentUserId: string;
 }) {
   const trimmed = name.trim();
+
+  if (entity === "project") {
+    if (projectId) {
+      throw new HTTPException(400, {
+        message: "A project field is defined in the workspace",
+      });
+    }
+    // Una relacion enlaza tareas: en un proyecto no tiene a que apuntar.
+    if (type === "relation") {
+      throw new HTTPException(400, {
+        message: "A project field cannot be a relation",
+      });
+    }
+  }
 
   if (!trimmed) {
     throw new HTTPException(400, { message: "Field name is required" });
@@ -58,6 +75,7 @@ async function createFieldDefinition({
     : and(
         eq(fieldDefinitionTable.workspaceId, workspaceId),
         isNull(fieldDefinitionTable.projectId),
+        eq(fieldDefinitionTable.entity, entity),
       );
 
   const [existing] = await db
@@ -87,8 +105,10 @@ async function createFieldDefinition({
       type,
       description: description ?? null,
       config: parsedConfig,
-      required: required ?? false,
+      // «Obligatorio» se pide al crear una tarea; un proyecto no pasa por ahi.
+      required: entity === "project" ? false : (required ?? false),
       position: (row?.maxPosition ?? 0) + 1,
+      entity,
     })
     .returning();
 
