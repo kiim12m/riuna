@@ -1,4 +1,6 @@
 version: 2
+# Mensual y no semanal (ADR 086): cada PR de Dependabot pasa el CI entero. Las
+# actualizaciones de seguridad no esperan al calendario.
 updates:
   # Single entry at the workspace root. This repo is a pnpm workspace with one
   # root pnpm-lock.yaml, so dependabot must run from "/" to discover every
@@ -8,7 +10,7 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     commit-message:
       prefix: "chore(deps)"
     open-pull-requests-limit: 10
@@ -25,6 +27,6 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
     commit-message:
       prefix: "ci(deps)"

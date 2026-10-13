@@ -106,7 +106,8 @@ La copia no sale del PC.
   mirarlo.
 - **Para tirarlo**, `sh deploy/simulacro.sh --down`.
 
-Cada noche, CI hace lo mismo con datos sembrados (`restore-drill.yml`), con este mismo guion.
+Cada noche con cambios en `main`, y todos los lunes, CI hace lo mismo con datos sembrados
+(`restore-drill.yml`), con este mismo guion ([ADR 086](adr/086-menos-minutos-de-ci.md)).
 
 **Simulacro con la copia real:** pendiente (Fase 9, 7.2).
 

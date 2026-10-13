@@ -168,7 +168,12 @@ jobs:
   # contra una base propia (`playwright.config.ts`), asi que solo necesita el
   # servicio de Postgres. Lleva `build` porque la API y la web consumen el
   # `dist` de los paquetes del monorepo (`@riuna/permissions`, `@riuna/libs`…).
+  #
+  # Son unos 20 minutos, la mitad del CI. En una PR apilada sobre otra rama no
+  # corre (ADR 086): corre cuando la PR apunta a `main` y otra vez al fusionar,
+  # que es lo que cuenta. Para tenerla antes, «Run workflow» a mano.
   e2e:
+    if: ${{ github.event_name != 'pull_request' || github.base_ref == 'main' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     services:
