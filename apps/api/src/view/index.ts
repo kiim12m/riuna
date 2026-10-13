@@ -46,6 +46,9 @@ const configSchema = v.object({
   ),
   // Agrupar por: hoy solo por epica.
   groupBy: v.optional(v.picklist(["epic"])),
+  // Como se colorean las filas (ADR 080). Sin declararlo, `v.object` lo
+  // descartaba en silencio y la vista guardada volvia sin color.
+  color: v.optional(v.picklist(["priority", "due"])),
 });
 
 const view = new Hono<{

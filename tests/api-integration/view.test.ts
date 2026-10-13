@@ -145,6 +145,31 @@ describe("saved views", () => {
     expect((await response.json()).config).toEqual(config);
   });
 
+  it("remembers the row colours", async () => {
+    const { app, projectId } = await setup();
+    const config = { color: "priority" };
+
+    const response = await saveView(app, projectId, {
+      name: "Por prioridad",
+      type: "table",
+      config,
+    });
+
+    expect((await response.json()).config).toEqual(config);
+  });
+
+  it("refuses a colouring the table does not offer", async () => {
+    const { app, projectId } = await setup();
+
+    const response = await saveView(app, projectId, {
+      name: "Mal",
+      type: "table",
+      config: { color: "epic" },
+    });
+
+    expect(response.status).toBe(400);
+  });
+
   it("refuses a grouping the table does not offer, or an absurd column list", async () => {
     const { app, projectId } = await setup();
 
