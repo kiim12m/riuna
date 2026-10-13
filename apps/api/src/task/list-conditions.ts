@@ -31,6 +31,33 @@ export type TaskListFilters = {
 };
 
 /**
+ * El arbol de filtros de una vista, compilado para las tareas de un proyecto.
+ *
+ * El registro se construye con las definiciones que aplican al proyecto, que
+ * es lo que hace que `custom.presupuesto` exista como campo filtrable aqui y
+ * no en un proyecto que no lo haya definido.
+ *
+ * Se incluyen las archivadas. Archivar una definicion la retira de los
+ * formularios sin borrar los valores, que siguen en el JSONB y siguen siendo
+ * filtrables. Excluyendolas, archivar un campo convertia toda vista guardada
+ * que lo filtrase en un 400 **del listado entero** —no se caia la condicion,
+ * se caia la consulta— y dejaba la pantalla en blanco para todo el equipo,
+ * sin decir que campo sobraba.
+ */
+export async function compileTaskFilter(
+  projectId: string,
+  workspaceId: string,
+  filter: FilterNode,
+) {
+  const definitions = await getFieldDefinitionsForProject(
+    workspaceId,
+    projectId,
+    true,
+  );
+  return filterToSql(filter, buildFieldRegistry(definitions));
+}
+
+/**
  * La clausula WHERE de la lista de tareas de un proyecto. La comparten la
  * lista y sus totales (ADR 080), para que la fila de totales sume exactamente
  * las tareas que la Tabla pinta.
@@ -85,25 +112,10 @@ export async function taskListWhere(
   }
 
   if (options.filter) {
-    // El registro se construye con las definiciones que aplican al proyecto,
-    // que es lo que hace que `custom.presupuesto` exista como campo filtrable
-    // aqui y no en un proyecto que no lo haya definido.
-    //
-    // Se incluyen las archivadas. Archivar una definicion la retira de los
-    // formularios sin borrar los valores, que siguen en el JSONB y siguen
-    // siendo filtrables. Excluyendolas, archivar un campo convertia toda vista
-    // guardada que lo filtrase en un 400 **del listado entero** —no se caia la
-    // condicion, se caia la consulta— y dejaba la pantalla en blanco para todo
-    // el equipo, sin decir que campo sobraba.
-    const definitions = await getFieldDefinitionsForProject(
-      workspaceId,
+    const filterSql = await compileTaskFilter(
       projectId,
-      true,
-    );
-
-    const filterSql = filterToSql(
+      workspaceId,
       options.filter,
-      buildFieldRegistry(definitions),
     );
 
     if (filterSql) {

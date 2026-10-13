@@ -2234,7 +2234,10 @@
 		"shiftedBranch_other": "moved its branch ({{count}} tasks) {{days}} working days",
 		"precedenceAdded": "started following another task (lag {{lag}} working days)",
 		"precedenceLagChanged": "changed the lag of a predecessor to {{lag}} working days",
-		"precedenceRemoved": "stopped following a task"
+		"precedenceRemoved": "stopped following a task",
+		"changedEstimate": "changed the estimate from {{from}} to {{to}}",
+		"setEstimate": "estimated it at {{estimate}}",
+		"clearedEstimate": "removed the estimate"
 	},
 	"tasks": {
 		"actions": {
@@ -2942,6 +2945,22 @@
 			"overflow_other": "The subtasks end on {{date}}, {{count}} working days after the due date.",
 			"moveDue": "Move the due date to {{date}}",
 			"switchToAuto": "Switch to automatic dates"
+		},
+		"baseline": {
+			"label": "Baseline",
+			"none": "None",
+			"yesterday": "Yesterday",
+			"lastWorkDay": "Last working day",
+			"week": "A week ago",
+			"date": "Date…",
+			"dateLabel": "Baseline date",
+			"added": "Matches now and did not then",
+			"changed": "Changed since then",
+			"unassigned": "Unassigned",
+			"removedTitle_one": "{{count}} task no longer matches",
+			"removedTitle_other": "{{count}} tasks no longer match",
+			"summary": "Since {{since}}: {{added}} in · {{removed}} out · {{changed}} changed",
+			"ghost": "Then: {{start}} – {{end}}"
 		}
 	},
 	"invitations": {

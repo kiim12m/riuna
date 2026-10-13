@@ -30,7 +30,7 @@
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
 | **Total Bloque A** | **45** + 18 del interludio | |
-| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hecha la tanda 1 (1.1-1.6) y de la tanda 2, de la 2.1 a la 2.3 · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
+| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hechas la tanda 1 (1.1-1.6) y la tanda 2 (2.1-2.4) · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -3042,11 +3042,21 @@ siempre), incluida `watchers.spec.ts` de la 1.1.
   - Medido con 50.000 tareas: una cadena de 200 precedencias que arrastra unas 240 tareas, p95
     de 167 ms (299 ms con la batería de integración a la vez). Un cambio sin nada automático
     encima, 1,4 ms. Los planes, revisados con `EXPLAIN`.
-- **2.4 Línea base** · L. Comparar una vista con ayer, el último día laborable, hace una semana o
-  una fecha: qué tareas entran, salen o cambian, con el valor anterior tachado, y en el Gantt la
-  barra anterior en fantasma. Se reconstruye desde `activity`: antes se comprueba que guarda el
-  valor anterior de cada campo que se puede filtrar, y se cubren los huecos. Las tareas borradas
-  no salen.
+- **2.4 Línea base** ✔ · L · [ADR 085](adr/085-linea-base.md). **Hecho (2026-10-13).** Comparar
+  una vista con ayer, el último día laborable, hace una semana o una fecha: qué tareas entran,
+  salen o cambian, con el valor anterior tachado, y en el Gantt la barra anterior en fantasma.
+  - Se reconstruye desde `activity`, sin instantáneas ni migración. El filtro se evalúa contra el
+    pasado con el motor de siempre.
+  - Huecos cubiertos de aquí en adelante: asignado y equipo anteriores, la estimación, y el título
+    y la prioridad de la edición completa. Una fila antigua sin el valor anterior se da por igual
+    que ahora.
+  - Las pertenencias se evalúan como están ahora. Las tareas borradas no salen.
+  - Selector en la Tabla (en la URL y en la vista guardada) y en el Gantt. MCP:
+    `compare_task_baseline`.
+  - Medido con 50.000 tareas: ayer y una semana, menos de 155 ms de p95; dos meses con el
+    proyecto entero cambiado, 295 ms en el peor caso. Revisado con `EXPLAIN`: un índice nuevo en
+    `activity` se probó y no se usaba.
+  - De paso: la vista guardada perdía el color de las filas de la 1.5. Ya no.
 
 **Tanda 3 — Proyectos y cartera** (≈ 7 semanas)
 

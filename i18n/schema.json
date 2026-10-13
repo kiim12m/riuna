@@ -8803,6 +8803,15 @@
 				},
 				"precedenceRemoved": {
 					"type": "string"
+				},
+				"changedEstimate": {
+					"type": "string"
+				},
+				"setEstimate": {
+					"type": "string"
+				},
+				"clearedEstimate": {
+					"type": "string"
 				}
 			},
 			"required": [
@@ -8842,7 +8851,10 @@
 				"shiftedBranch_other",
 				"precedenceAdded",
 				"precedenceLagChanged",
-				"precedenceRemoved"
+				"precedenceRemoved",
+				"changedEstimate",
+				"setEstimate",
+				"clearedEstimate"
 			]
 		},
 		"tasks": {
@@ -11562,6 +11574,70 @@
 						"moveDue",
 						"switchToAuto"
 					]
+				},
+				"baseline": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"label": {
+							"type": "string"
+						},
+						"none": {
+							"type": "string"
+						},
+						"yesterday": {
+							"type": "string"
+						},
+						"lastWorkDay": {
+							"type": "string"
+						},
+						"week": {
+							"type": "string"
+						},
+						"date": {
+							"type": "string"
+						},
+						"dateLabel": {
+							"type": "string"
+						},
+						"added": {
+							"type": "string"
+						},
+						"changed": {
+							"type": "string"
+						},
+						"unassigned": {
+							"type": "string"
+						},
+						"removedTitle_one": {
+							"type": "string"
+						},
+						"removedTitle_other": {
+							"type": "string"
+						},
+						"summary": {
+							"type": "string"
+						},
+						"ghost": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"label",
+						"none",
+						"yesterday",
+						"lastWorkDay",
+						"week",
+						"date",
+						"dateLabel",
+						"added",
+						"changed",
+						"unassigned",
+						"removedTitle_one",
+						"removedTitle_other",
+						"summary",
+						"ghost"
+					]
 				}
 			},
 			"required": [
@@ -11609,7 +11685,8 @@
 				"reminder",
 				"manualActions",
 				"milestone",
-				"dates"
+				"dates",
+				"baseline"
 			]
 		},
 		"invitations": {

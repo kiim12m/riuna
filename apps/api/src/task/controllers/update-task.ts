@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
-import { columnTable, taskTable } from "../../database/schema";
+import { activityTable, columnTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { deleteOrphanedAssets } from "../../storage/cleanup-assets";
 import {
@@ -38,6 +38,8 @@ async function updateTask(
       isMilestone: taskTable.isMilestone,
       autoDates: taskTable.autoDates,
       startDate: taskTable.startDate,
+      title: taskTable.title,
+      priority: taskTable.priority,
     })
     .from(taskTable)
     .where(eq(taskTable.id, id))
@@ -124,6 +126,17 @@ async function updateTask(
     if (rows[0]) {
       await syncPrimaryAssignee(id, existingTask.userId, rows[0].userId, tx);
     }
+    // El rastro del titulo va en la misma transaccion, como en
+    // `update-task-title.ts`: la historia no es un efecto secundario.
+    if (rows[0] && rows[0].title !== existingTask.title) {
+      await tx.insert(activityTable).values({
+        taskId: id,
+        type: "title_changed",
+        userId: currentUserId,
+        content: null,
+        eventData: { oldTitle: existingTask.title, newTitle: rows[0].title },
+      });
+    }
 
     return rows;
   });
@@ -172,6 +185,31 @@ async function updateTask(
       newDueDate: updatedTask.dueDate,
       title: updatedTask.title,
       type: "due_date_changed",
+    });
+  }
+
+  // La edicion completa tambien cambia titulo y prioridad: sin estos eventos,
+  // las integraciones no se enteraban, y sin la actividad de la prioridad, la
+  // linea base (ADR 085) tampoco.
+  if (existingTask.title !== updatedTask.title) {
+    await publishEvent("task.title_changed", {
+      taskId: updatedTask.id,
+      projectId: updatedTask.projectId,
+      userId: currentUserId,
+      oldTitle: existingTask.title,
+      newTitle: updatedTask.title,
+      type: "title_changed",
+    });
+  }
+  if (existingTask.priority !== updatedTask.priority) {
+    await publishEvent("task.priority_changed", {
+      taskId: updatedTask.id,
+      projectId: updatedTask.projectId,
+      userId: currentUserId,
+      oldPriority: existingTask.priority,
+      newPriority: updatedTask.priority,
+      title: updatedTask.title,
+      type: "priority_changed",
     });
   }
 

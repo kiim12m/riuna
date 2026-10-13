@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
 import { parseDayKey } from "@/lib/day-key";
+import { formatDuration } from "@/lib/duration";
 import { formatDateMedium, formatRelativeTime } from "@/lib/format";
 import { getInitials } from "@/lib/get-initials";
 import { getPriorityLabel, getStatusLabel } from "@/lib/i18n/domain";
@@ -208,11 +209,13 @@ function renderActivityContent({
   workspaceUsers,
   fieldDefinitions,
   t,
+  language,
 }: {
   activity: ActivityItem;
   workspaceUsers: WorkspaceUser[] | undefined;
   fieldDefinitions: readonly FieldDefinition[] | undefined;
   t: (key: string, options?: Record<string, unknown>) => string;
+  language: string;
 }) {
   const content = activity.content || "";
   const eventData = getEventDataRecord(activity.eventData);
@@ -537,6 +540,26 @@ function renderActivityContent({
     );
   }
 
+  // La estimacion, en segundos en la base (ADR 085).
+  if (activity.type === "estimate_changed" && eventData) {
+    const from = Number(eventData.oldEstimate ?? 0);
+    const to = Number(eventData.newEstimate ?? 0);
+    return (
+      <span className="text-sm text-muted-foreground">
+        {to > 0
+          ? from > 0
+            ? t("activity:changedEstimate", {
+                from: formatDuration(from, language),
+                to: formatDuration(to, language),
+              })
+            : t("activity:setEstimate", {
+                estimate: formatDuration(to, language),
+              })
+          : t("activity:clearedEstimate")}
+      </span>
+    );
+  }
+
   if (activity.type === "parent_changed" && eventData) {
     return (
       <span className="text-sm text-muted-foreground">
@@ -628,7 +651,7 @@ function Activity({
   /** Los campos del proyecto, para leer los cambios de campo con sus etiquetas. */
   fieldDefinitions?: readonly FieldDefinition[];
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: workspace } = useActiveWorkspace();
   const { data: workspaceUsers } = useGetWorkspaceUsers({
     workspaceId: workspace?.id,
@@ -712,6 +735,7 @@ function Activity({
           workspaceUsers: workspaceUsers as WorkspaceUser[] | undefined,
           fieldDefinitions,
           t,
+          language: i18n.language,
         })}{" "}
         <span className="whitespace-nowrap text-muted-foreground/70 text-xs">
           {formatRelativeTime(activity.createdAt)}

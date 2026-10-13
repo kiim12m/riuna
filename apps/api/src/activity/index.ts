@@ -247,8 +247,12 @@ subscribeToEvent<{
   userId: string;
   title: string;
   type: string;
+  previousAssigneeId?: string | null;
 }>("task.unassigned", async (data) => {
-  await createActivity(data.taskId, data.type, data.userId, null, {});
+  // Quien lo tenia, para la linea base (ADR 085).
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    previousAssigneeId: data.previousAssigneeId ?? null,
+  });
 });
 
 subscribeToEvent<{
@@ -264,6 +268,8 @@ subscribeToEvent<{
     newAssigneeId: data.newAssigneeId,
     newAssignee: data.newAssignee,
     isSelfAssigned: data.userId === data.newAssigneeId,
+    // `oldAssignee` es el id anterior pese al nombre (ADR 085).
+    oldAssigneeId: data.oldAssignee ?? null,
   });
 });
 
@@ -272,8 +278,11 @@ subscribeToEvent<{
   userId: string;
   title: string;
   type: string;
+  oldTeamId?: string | null;
 }>("task.team_unassigned", async (data) => {
-  await createActivity(data.taskId, data.type, data.userId, null, {});
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    oldTeamId: data.oldTeamId ?? null,
+  });
 });
 
 subscribeToEvent<{
@@ -288,6 +297,7 @@ subscribeToEvent<{
   await createActivity(data.taskId, data.type, data.userId, null, {
     newTeamId: data.newTeamId,
     newTeam: data.newTeam,
+    oldTeamId: data.oldTeamId ?? null,
   });
 });
 
@@ -383,6 +393,21 @@ subscribeToEvent<{
   await createActivity(data.taskId, data.type, data.userId, null, {
     oldCycleId: data.oldCycleId,
     newCycleId: data.newCycleId,
+  });
+});
+
+// La estimacion no dejaba rastro: la linea base lo necesita (ADR 085). El
+// titulo si lo deja, pero lo escribe su controlador en su transaccion.
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  oldEstimate: number | null;
+  newEstimate: number | null;
+  type: string;
+}>("task.estimate_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    oldEstimate: data.oldEstimate,
+    newEstimate: data.newEstimate,
   });
 });
 

@@ -1164,6 +1164,31 @@ export function registerMcpTools(
   );
 
   registerTool(
+    "compare_task_baseline",
+    {
+      description:
+        "Compare a project's tasks (optionally a filter and treeScope, as in list_tasks) with how they were at an earlier moment `at` (ISO date-time): which entered or left the filter and the previous title, status, priority, assignee, dates and estimate of the ones that changed. Rebuilt from the activity; memberships count as they are now.",
+      inputSchema: z.object({
+        projectId: nonEmptyString,
+        at: isoDateTimeSchema,
+        filter: z.string().optional(),
+        treeScope: z.enum(["matching", "roots", "withDescendants"]).optional(),
+      }),
+    },
+    async (args) => {
+      const qs = new URLSearchParams({ at: args.at });
+      if (args.filter) qs.set("filter", args.filter);
+      if (args.treeScope) qs.set("treeScope", args.treeScope);
+      return run(() =>
+        client.json(
+          `/api/task/tasks/${encodeURIComponent(args.projectId)}/baseline?${qs}`,
+          { method: "GET" },
+        ),
+      );
+    },
+  );
+
+  registerTool(
     "delete_label",
     {
       description:

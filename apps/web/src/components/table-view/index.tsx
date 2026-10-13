@@ -9,8 +9,15 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  BaselineMark,
+  BaselineSummary,
+  RemovedRows,
+  type ViewBaseline,
+  Was,
+} from "@/components/baseline/baseline-view";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { TaskTotals } from "@/fetchers/task/get-task-totals";
@@ -71,6 +78,8 @@ type Props = {
   coloring?: RowColoring;
   /** Los totales de todo el filtro, calculados por la API (ADR 080). */
   totals?: TaskTotals | null;
+  /** La comparacion con un momento pasado (ADR 085). */
+  baseline?: ViewBaseline | null;
   canEdit: boolean;
   onOpenTask: (taskId: string) => void;
   onSetCustomField: (taskId: string, key: string, value: unknown) => void;
@@ -84,6 +93,10 @@ function formatDate(value: string | null) {
 }
 
 type TableColumns = ReturnType<typeof helper.columns>;
+
+function beforeOf(baseline: ViewBaseline | null | undefined, taskId: string) {
+  return baseline?.changed.get(taskId);
+}
 
 function rowClassName(row: TableRow, coloring: RowColoring | undefined) {
   const tint = rowTint(row, coloring);
@@ -187,6 +200,7 @@ function TableView({
   groupBy,
   coloring,
   totals,
+  baseline,
   canEdit,
   onOpenTask,
   onSetCustomField,
@@ -224,6 +238,26 @@ function TableView({
     () => new Map(projectColumns.map((column) => [column.slug, column.name])),
     [projectColumns],
   );
+  const statusName = useCallback(
+    (slug: string) => columnNames.get(slug) ?? slug,
+    [columnNames],
+  );
+  const memberName = useCallback(
+    (id: string | null) =>
+      id
+        ? (members.find((member) => member.id === id)?.name ?? "?")
+        : t("tasks:baseline.unassigned"),
+    [members, t],
+  );
+  // El valor de entonces de un campo que cambio, envuelto para distinguir
+  // «era vacio» de «no cambio».
+  const wasOf = useCallback(
+    (taskId: string, key: keyof NonNullable<ReturnType<typeof beforeOf>>) => {
+      const before = beforeOf(baseline, taskId);
+      return before && key in before ? { value: before[key] } : undefined;
+    },
+    [baseline],
+  );
 
   const columns = useMemo(() => {
     const all = helper.columns([
@@ -257,6 +291,10 @@ function TableView({
             ) : (
               <span className="w-4.5" />
             )}
+            <BaselineMark baseline={baseline} taskId={row.original.id} />
+            {wasOf(row.original.id, "title") && (
+              <Was>{String(wasOf(row.original.id, "title")?.value ?? "")}</Was>
+            )}
             <button
               type="button"
               onClick={() => onOpenTask(row.original.id)}
@@ -285,23 +323,29 @@ function TableView({
         // prioridad de al lado si resuelve icono y etiqueta. Si la columna ya
         // no existe —se archivo— se cae al slug antes que dejar la celda
         // vacia: un dato feo dice mas que ninguno.
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
           const slug = String(getValue() ?? "");
           if (!slug) return null;
+          const was = wasOf(row.original.id, "status");
 
           return (
-            <span className="text-meta">{columnNames.get(slug) ?? slug}</span>
+            <span className="text-meta">
+              {was && <Was>{statusName(String(was.value ?? ""))}</Was>}
+              {statusName(slug)}
+            </span>
           );
         },
       }),
       helper.accessor("priority", {
         id: "priority",
         header: t("tasks:table.columns.priority"),
-        cell: ({ getValue }) => {
+        cell: ({ getValue, row }) => {
           const priority = getValue();
           if (!priority) return null;
+          const was = wasOf(row.original.id, "priority");
           return (
             <span className="flex items-center gap-1 text-xs">
+              {was && <Was>{getPriorityLabel(String(was.value ?? ""))}</Was>}
               {getPriorityIcon(priority)}
               {getPriorityLabel(priority)}
             </span>
@@ -311,9 +355,14 @@ function TableView({
       helper.accessor((row) => row.assigneeName ?? "", {
         id: "assignee",
         header: t("tasks:table.columns.assignee"),
-        cell: ({ row }) =>
-          row.original.assigneeName ? (
+        cell: ({ row }) => {
+          const was = wasOf(row.original.id, "userId");
+          const past = was && (
+            <Was>{memberName((was.value as string | null) ?? null)}</Was>
+          );
+          return row.original.assigneeName ? (
             <span className="flex items-center gap-1.5 text-xs">
+              {past}
               <Avatar className="size-5">
                 <AvatarImage src={row.original.assigneeImage ?? ""} alt="" />
                 <AvatarFallback className="text-label">
@@ -322,14 +371,27 @@ function TableView({
               </Avatar>
               <span className="truncate">{row.original.assigneeName}</span>
             </span>
-          ) : null,
+          ) : past ? (
+            <span className="text-xs">{past}</span>
+          ) : null;
+        },
       }),
       helper.accessor((row) => row.dueDate ?? "", {
         id: "dueDate",
         header: t("tasks:table.columns.dueDate"),
-        cell: ({ row }) => (
-          <span className="text-xs">{formatDate(row.original.dueDate)}</span>
-        ),
+        cell: ({ row }) => {
+          const was = wasOf(row.original.id, "dueDate");
+          return (
+            <span className="text-xs">
+              {was && (
+                <Was>
+                  {formatDate((was.value as string | null) ?? null) || "—"}
+                </Was>
+              )}
+              {formatDate(row.original.dueDate)}
+            </span>
+          );
+        },
       }),
       ...definitions.map((definition) =>
         helper.accessor(
@@ -394,9 +456,22 @@ function TableView({
           cell: ({ row }) => {
             const seconds =
               row.original.subtree?.estimateSeconds ?? row.original.estimate;
-            return seconds ? (
+            // La estimacion de entonces es la propia: en una rama, la columna
+            // suma, y tachar un valor que no es el que se ve confundiria.
+            const was =
+              row.original.subtree?.estimateSeconds === undefined
+                ? wasOf(row.original.id, "estimate")
+                : undefined;
+            return seconds || was ? (
               <span className="text-xs tabular-nums">
-                {formatDuration(seconds, i18n.language)}
+                {was && (
+                  <Was>
+                    {was.value
+                      ? formatDuration(Number(was.value), i18n.language)
+                      : "—"}
+                  </Was>
+                )}
+                {seconds ? formatDuration(seconds, i18n.language) : null}
               </span>
             ) : null;
           },
@@ -446,7 +521,10 @@ function TableView({
     canEdit,
     onOpenTask,
     onSetCustomField,
-    columnNames,
+    statusName,
+    memberName,
+    wasOf,
+    baseline,
     t,
   ]);
 
@@ -472,6 +550,7 @@ function TableView({
 
   return (
     <div className="h-full overflow-auto">
+      {baseline && <BaselineSummary baseline={baseline} />}
       <table className="w-full border-collapse text-sm">
         <thead className="sticky top-0 z-10 bg-card">
           {table.getHeaderGroups().map((headerGroup) => (
@@ -552,6 +631,15 @@ function TableView({
         <div className="flex h-32 items-center justify-center text-muted-foreground text-sm">
           {t("tasks:table.empty")}
         </div>
+      )}
+
+      {baseline && (
+        <RemovedRows
+          removed={baseline.removed}
+          statusName={statusName}
+          memberName={memberName}
+          formatDate={formatDate}
+        />
       )}
 
       {totals && totals.count > 0 && (

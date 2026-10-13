@@ -145,29 +145,42 @@ describe("saved views", () => {
     expect((await response.json()).config).toEqual(config);
   });
 
-  it("remembers the row colours", async () => {
+  it("remembers the row colours and the baseline", async () => {
     const { app, projectId } = await setup();
-    const config = { color: "priority" };
+    const relative = { color: "priority", baseline: "lastWorkDay" };
+    const fixed = { color: "due", baseline: "2026-09-01" };
 
-    const response = await saveView(app, projectId, {
-      name: "Por prioridad",
+    const first = await saveView(app, projectId, {
+      name: "Desde el viernes",
       type: "table",
-      config,
+      config: relative,
+    });
+    const second = await saveView(app, projectId, {
+      name: "Desde septiembre",
+      type: "table",
+      config: fixed,
     });
 
-    expect((await response.json()).config).toEqual(config);
+    expect((await first.json()).config).toEqual(relative);
+    expect((await second.json()).config).toEqual(fixed);
   });
 
-  it("refuses a colouring the table does not offer", async () => {
+  it("refuses a colouring or a baseline the table does not offer", async () => {
     const { app, projectId } = await setup();
 
-    const response = await saveView(app, projectId, {
+    const byEpic = await saveView(app, projectId, {
       name: "Mal",
       type: "table",
       config: { color: "epic" },
     });
+    const tomorrow = await saveView(app, projectId, {
+      name: "Manana",
+      type: "table",
+      config: { baseline: "tomorrow" },
+    });
 
-    expect(response.status).toBe(400);
+    expect(byEpic.status).toBe(400);
+    expect(tomorrow.status).toBe(400);
   });
 
   it("refuses a grouping the table does not offer, or an absurd column list", async () => {

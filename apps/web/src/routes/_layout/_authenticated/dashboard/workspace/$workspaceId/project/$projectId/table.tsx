@@ -1,12 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { BaselinePicker } from "@/components/baseline/baseline-picker";
+import { toViewBaseline } from "@/components/baseline/baseline-view";
 import ProjectLayout from "@/components/common/project-layout";
 import PageTitle from "@/components/page-title";
 import { ProjectSizeWarning } from "@/components/project/project-size-warning";
 import TableView from "@/components/table-view";
 import type { AddFieldPayload } from "@/components/table-view/add-field-dialog";
 import AddFieldDialog from "@/components/table-view/add-field-dialog";
+
 import ColumnPicker from "@/components/table-view/column-picker";
 import {
   availableColumns,
@@ -40,12 +43,14 @@ import {
 } from "@/hooks/mutations/view/use-view-mutations";
 import useGetFieldDefinitions from "@/hooks/queries/field/use-get-field-definitions";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
+import { useTaskBaseline } from "@/hooks/queries/task/use-task-baseline";
 import { useTaskTotals } from "@/hooks/queries/task/use-task-totals";
 import useGetViews from "@/hooks/queries/view/use-get-views";
 import { useGetActiveWorkspaceUsers } from "@/hooks/queries/workspace-users/use-get-active-workspace-users";
 import { useFilterableFields } from "@/hooks/use-filterable-fields";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { authClient } from "@/lib/auth-client";
+import { type BaselineChoice, isBaselineChoice } from "@/lib/baseline";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
 import { buildFilter, type EditableCondition } from "@/types/task-filter";
@@ -73,6 +78,8 @@ type TableSearchParams = {
   groupBy?: GroupBy;
   /** Como se colorean las filas (ADR 080). Sin dato, sin color. */
   color?: RowColoring;
+  /** Con que momento se compara (ADR 085). Sin dato, con ninguno. */
+  baseline?: BaselineChoice;
 };
 
 const GROUP_BYS = ["epic"] as const;
@@ -105,6 +112,7 @@ export const Route = createFileRoute(
     color: ROW_COLORINGS.includes(search.color as RowColoring)
       ? (search.color as RowColoring)
       : undefined,
+    baseline: isBaselineChoice(search.baseline) ? search.baseline : undefined,
   }),
 });
 
@@ -119,6 +127,7 @@ function RouteComponent() {
     columns: columnsParam,
     groupBy,
     color,
+    baseline: baselineChoice,
   } = Route.useSearch();
   const navigate = useNavigate();
 
@@ -167,6 +176,19 @@ function RouteComponent() {
     filter,
     queryOptions,
     dataUpdatedAt,
+  );
+  const { data: baselineData } = useTaskBaseline({
+    projectId,
+    workspaceId,
+    choice: baselineChoice,
+    filter,
+    options: queryOptions,
+    listUpdatedAt: dataUpdatedAt,
+  });
+  const baseline = useMemo(
+    () =>
+      baselineChoice && baselineData ? toViewBaseline(baselineData) : null,
+    [baselineChoice, baselineData],
   );
   const { data: definitions = [] } = useGetFieldDefinitions(projectId);
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
@@ -239,6 +261,9 @@ function RouteComponent() {
           color: ROW_COLORINGS.includes(view.config.color as RowColoring)
             ? (view.config.color as RowColoring)
             : undefined,
+          baseline: isBaselineChoice(view.config.baseline)
+            ? view.config.baseline
+            : undefined,
           viewId: view.id,
         },
         replace: true,
@@ -261,6 +286,7 @@ function RouteComponent() {
             ...(columnsParam ? { columns: columnsParam } : {}),
             ...(groupBy ? { groupBy } : {}),
             ...(color ? { color } : {}),
+            ...(baselineChoice ? { baseline: baselineChoice } : {}),
           },
         },
         {
@@ -277,7 +303,16 @@ function RouteComponent() {
         },
       );
     },
-    [saveView, conditions, treeMode, columnsParam, groupBy, color, t],
+    [
+      saveView,
+      conditions,
+      treeMode,
+      columnsParam,
+      groupBy,
+      color,
+      baselineChoice,
+      t,
+    ],
   );
 
   const handleOpenTask = useCallback(
@@ -436,6 +471,19 @@ function RouteComponent() {
                 </SelectItem>
               </SelectContent>
             </Select>
+            <BaselinePicker
+              value={baselineChoice}
+              onChange={(next) =>
+                navigate({
+                  to: ".",
+                  search: (previous: TableSearchParams) => ({
+                    ...previous,
+                    baseline: next,
+                  }),
+                  replace: true,
+                })
+              }
+            />
             <ViewPicker
               views={views as SavedView[]}
               activeViewId={viewId}
@@ -445,7 +493,8 @@ function RouteComponent() {
                 treeMode !== "tree" ||
                 Boolean(columnsParam) ||
                 Boolean(groupBy) ||
-                Boolean(color)
+                Boolean(color) ||
+                Boolean(baselineChoice)
               }
               saving={isSavingView}
               onApply={handleApplyView}
@@ -495,6 +544,7 @@ function RouteComponent() {
           groupBy={groupBy}
           coloring={color}
           totals={totals}
+          baseline={baseline}
           canEdit={canEditValues}
           onOpenTask={handleOpenTask}
           onSetCustomField={handleSetCustomField}

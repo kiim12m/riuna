@@ -218,9 +218,9 @@ prioridad, título, fechas, asignaciones de persona y de equipo, anidado,
 | **Tablero (Kanban)** | Arrastrar entre columnas y dentro de una columna, filtros y búsqueda rápida resueltos en el servidor (el mismo motor que la Tabla), orden y añadir tarea por columna |
 | **Lista** | Agrupación por estado, equipo o **jerarquía**; secciones plegables; arrastrar para reparentar; archivar todas las completadas |
 | **Backlog** | Secciones *planificadas* y *archivadas*, filtros del servidor, agrupación, orden y «mover todo» al tablero |
-| **Tabla** | Hoja de cálculo con edición en línea, **campos personalizados como columnas**, filtros compuestos, cuatro modos de jerarquía, **vistas guardadas**, **totales de todo el filtro** (cuántas, estimado, registrado y cada campo de número o moneda) y **colorear filas** por prioridad o vencimiento ([ADR 080](adr/080-totales-y-colores-en-la-tabla.md)) |
+| **Tabla** | Hoja de cálculo con edición en línea, **campos personalizados como columnas**, filtros compuestos, cuatro modos de jerarquía, **vistas guardadas**, **totales de todo el filtro** (cuántas, estimado, registrado y cada campo de número o moneda), **colorear filas** por prioridad o vencimiento ([ADR 080](adr/080-totales-y-colores-en-la-tabla.md)) y **línea base**: lo que entra, sale o cambió desde ayer, el último día laborable, hace una semana o una fecha, con el valor anterior tachado ([ADR 085](adr/085-linea-base.md)) |
 | **Calendario** | Rejilla mensual, barras multi-día por fecha de inicio y de vencimiento, desbordamiento por día y filtros |
-| **Gantt** | Zoom día/semana/mes/trimestre, arrastrar y redimensionar barras para cambiar fechas, **capa de dependencias** (bloquea y precede a, con su desfase), hitos como rombos, **barras de resumen** de las fechas automáticas, arrastrar un padre con toda su rama, corchete rojo si la rama desborda al padre, y filtros |
+| **Gantt** | Zoom día/semana/mes/trimestre, arrastrar y redimensionar barras para cambiar fechas, **capa de dependencias** (bloquea y precede a, con su desfase), hitos como rombos, **barras de resumen** de las fechas automáticas, arrastrar un padre con toda su rama, corchete rojo si la rama desborda al padre, **línea base** con la barra de entonces en fantasma, y filtros |
 | **Ciclos** | Panel de sprint con métricas y gráficas |
 
 **Motor de filtros** común a todas ([ADR 014](adr/014-motor-de-filtros.md)):
@@ -231,8 +231,8 @@ etiqueta, asignado, observador). El filtro vive en la URL, así que se comparte 
 enlace.
 
 **Vistas guardadas** ([ADR 015](adr/015-vistas-guardadas.md)): guardar el
-filtro, el modo de jerarquía y, en la Tabla, las columnas, la agrupación y el color
-de las filas con un nombre, compartirlo con el espacio de
+filtro, el modo de jerarquía y, en la Tabla, las columnas, la agrupación, el color
+de las filas y la línea base con un nombre, compartirlo con el espacio de
 trabajo, y eliminarlo.
 
 **Orden**: manual, fecha de creación, prioridad, vencimiento, título o número.
@@ -695,7 +695,7 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 60 herramientas**. Una prueba de paridad
+Dos caminos con **las mismas 61 herramientas**. Una prueba de paridad
 (`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
 antes el paquete stdio se había quedado sin las cinco del plan personal y el
 cronómetro.
@@ -709,7 +709,7 @@ cronómetro.
 
 Las herramientas cubren identidad y espacios, proyectos, tareas, comentarios,
 etiquetas, épicas, relaciones, observadores, recordatorios, acciones de un clic,
-totales de un filtro, avisos, miembros, búsqueda, columnas, registro de tiempo,
+totales de un filtro, línea base, avisos, miembros, búsqueda, columnas, registro de tiempo,
 actividad y notificaciones, además del plan personal, el
 cronómetro,
 Hoy (`get_today`) y la captura a Personal (`capture_task`). `list_projects`

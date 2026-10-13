@@ -10,7 +10,14 @@ import {
 import { CalendarDays, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { BaselinePicker } from "@/components/baseline/baseline-picker";
+import {
+  BaselineMark,
+  BaselineSummary,
+  toViewBaseline,
+} from "@/components/baseline/baseline-view";
 import ProjectLayout from "@/components/common/project-layout";
+import { GanttBaselineGhost } from "@/components/gantt/gantt-baseline-ghost";
 import { GanttDependencyLayer } from "@/components/gantt/gantt-dependency-layer";
 import {
   GanttTaskBar,
@@ -37,10 +44,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
+import { useTaskBaseline } from "@/hooks/queries/task/use-task-baseline";
 import useGetProjectTaskRelations from "@/hooks/queries/task-relation/use-get-project-task-relations";
 import { useFilterableFields } from "@/hooks/use-filterable-fields";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { readFilterParam, useUrlFilter } from "@/hooks/use-url-filter";
+import { type BaselineChoice, isBaselineChoice } from "@/lib/baseline";
 import { cn } from "@/lib/cn";
 import { formatDateShort } from "@/lib/format";
 import { getStatusLabel } from "@/lib/i18n/domain";
@@ -53,6 +62,8 @@ type GanttSearchParams = {
   filter?: EditableCondition[];
   /** Escala temporal. En la URL para que un Gantt a un zoom se pueda pegar. */
   zoom?: ZoomLevel;
+  /** Con que momento se compara (ADR 085). Sin dato, con ninguno. */
+  baseline?: BaselineChoice;
 };
 
 export const Route = createFileRoute(
@@ -63,6 +74,7 @@ export const Route = createFileRoute(
     taskId: typeof search.taskId === "string" ? search.taskId : undefined,
     filter: readFilterParam(search.filter),
     zoom: isZoomLevel(search.zoom) ? search.zoom : undefined,
+    baseline: isBaselineChoice(search.baseline) ? search.baseline : undefined,
   }),
 });
 
@@ -87,6 +99,20 @@ function parseTaskDate(value: string | null | undefined) {
   if (!value) return null;
   const parsed = parseISO(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+// El tramo que se pinta para unas fechas: sin una de las dos, un solo dia en
+// la otra; sin ninguna, nada.
+function scheduleSpan(
+  startDate: string | null | undefined,
+  dueDate: string | null | undefined,
+) {
+  const parsedStart = parseTaskDate(startDate) ?? parseTaskDate(dueDate);
+  const parsedEnd = parseTaskDate(dueDate) ?? parseTaskDate(startDate);
+  if (!parsedStart || !parsedEnd) return null;
+  const start = parsedStart <= parsedEnd ? parsedStart : parsedEnd;
+  const end = parsedEnd >= parsedStart ? parsedEnd : parsedStart;
+  return { start: startOfDay(start), end: startOfDay(end) };
 }
 
 // Orden de arbol: cada raiz por fecha, sus hijas debajo por fecha. Si el filtro
@@ -121,11 +147,28 @@ function orderTree(tasks: ScheduledTask[]): GanttRow[] {
 function RouteComponent() {
   const { t } = useTranslation();
   const { projectId, workspaceId } = Route.useParams();
-  const { taskId, filter: filterParam, zoom: zoomParam } = Route.useSearch();
+  const {
+    taskId,
+    filter: filterParam,
+    zoom: zoomParam,
+    baseline: baselineChoice,
+  } = Route.useSearch();
   const navigate = useNavigate();
   const { conditions, setConditions, filter } = useUrlFilter(filterParam);
   const filterableFields = useFilterableFields(projectId, workspaceId);
-  const { data: project } = useGetTasks(projectId, filter);
+  const { data: project, dataUpdatedAt } = useGetTasks(projectId, filter);
+  const { data: baselineData } = useTaskBaseline({
+    projectId,
+    workspaceId,
+    choice: baselineChoice,
+    filter,
+    listUpdatedAt: dataUpdatedAt,
+  });
+  const baseline = useMemo(
+    () =>
+      baselineChoice && baselineData ? toViewBaseline(baselineData) : null,
+    [baselineChoice, baselineData],
+  );
   const { data: relations } = useGetProjectTaskRelations(projectId);
   const weekStartsOn = useUserPreferencesStore((state) => state.weekStartsOn);
   const [searchQuery, setSearchQuery] = useState("");
@@ -179,21 +222,35 @@ function RouteComponent() {
   const parsedTasks = useMemo<ScheduledTask[]>(() => {
     return allTasks
       .map((task): ScheduledTask | null => {
-        const parsedStart =
-          parseTaskDate(task.startDate) ?? parseTaskDate(task.dueDate);
-        const parsedEnd =
-          parseTaskDate(task.dueDate) ?? parseTaskDate(task.startDate);
-        if (!parsedStart || !parsedEnd) return null;
-        const start = parsedStart <= parsedEnd ? parsedStart : parsedEnd;
-        const end = parsedEnd >= parsedStart ? parsedEnd : parsedStart;
-        return {
-          ...task,
-          scheduleStart: startOfDay(start),
-          scheduleEnd: startOfDay(end),
-        };
+        const span = scheduleSpan(task.startDate, task.dueDate);
+        if (!span) return null;
+        return { ...task, scheduleStart: span.start, scheduleEnd: span.end };
       })
       .filter((task): task is ScheduledTask => task !== null);
   }, [allTasks]);
+
+  // Las barras de entonces de lo que cambio de fechas (ADR 085). Solo si se
+  // movieron: un fantasma encima de la barra de ahora no dice nada.
+  const ghosts = useMemo(() => {
+    const map = new Map<string, { start: Date; end: Date }>();
+    if (!baseline) return map;
+    for (const task of parsedTasks) {
+      const before = baseline.changed.get(task.id);
+      if (!before || !("startDate" in before || "dueDate" in before)) continue;
+      const span = scheduleSpan(
+        "startDate" in before ? before.startDate : task.startDate,
+        "dueDate" in before ? before.dueDate : task.dueDate,
+      );
+      if (
+        span &&
+        (span.start.getTime() !== task.scheduleStart.getTime() ||
+          span.end.getTime() !== task.scheduleEnd.getTime())
+      ) {
+        map.set(task.id, span);
+      }
+    }
+    return map;
+  }, [baseline, parsedTasks]);
 
   const visibleTasks = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -373,6 +430,20 @@ function RouteComponent() {
               </Button>
             </div>
 
+            <BaselinePicker
+              value={baselineChoice}
+              onChange={(next) =>
+                navigate({
+                  to: ".",
+                  search: (previous: Record<string, unknown>) => ({
+                    ...previous,
+                    baseline: next,
+                  }),
+                  replace: true,
+                })
+              }
+            />
+
             <div className="relative ml-auto w-full max-w-xs">
               <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -400,6 +471,8 @@ function RouteComponent() {
             </Button>
           </div>
         </div>
+
+        {baseline && <BaselineSummary baseline={baseline} />}
 
         {!hasSchedule ? (
           <Empty>
@@ -531,6 +604,7 @@ function RouteComponent() {
 
                   <div ref={rowsRef} className="flex flex-col">
                     {orderedRows.map(({ task, depth }) => {
+                      const ghost = ghosts.get(task.id);
                       const progress =
                         task.subtree && task.subtree.descendantCount > 0
                           ? task.subtree.progress
@@ -590,6 +664,10 @@ function RouteComponent() {
                                   {project?.slug}-{task.number}
                                 </span>
                                 <span className="min-w-0 flex-1 truncate font-medium text-foreground text-xs">
+                                  <BaselineMark
+                                    baseline={baseline}
+                                    taskId={task.id}
+                                  />
                                   {task.title}
                                 </span>
                                 {progress != null && (
@@ -605,6 +683,14 @@ function RouteComponent() {
                             className="relative shrink-0"
                             style={{ width: `${timeline.trackWidthPx}px` }}
                           >
+                            {ghost && (
+                              <GanttBaselineGhost
+                                start={ghost.start}
+                                end={ghost.end}
+                                depth={depth}
+                                timeline={timeline}
+                              />
+                            )}
                             <GanttTaskBar
                               task={task}
                               depth={depth}

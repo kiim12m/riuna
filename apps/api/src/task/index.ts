@@ -43,6 +43,7 @@ import exportTaskSheet from "./controllers/export-task-sheet";
 import exportTasks from "./controllers/export-tasks";
 import exportWorkspaceTasks from "./controllers/export-workspace-tasks";
 import getTask from "./controllers/get-task";
+import { getTaskBaseline } from "./controllers/get-task-baseline";
 import { getTaskTotals } from "./controllers/get-task-totals";
 import getTasks from "./controllers/get-tasks";
 import { importServitec } from "./controllers/import-servitec";
@@ -227,6 +228,60 @@ const task = new Hono<{
       try {
         return c.json(
           await getTaskTotals(projectId, {
+            treeScope: query.treeScope,
+            filter,
+          }),
+        );
+      } catch (error) {
+        if (error instanceof FilterError) {
+          throw new HTTPException(400, { message: error.message });
+        }
+        throw error;
+      }
+    },
+  )
+  .get(
+    "/tasks/:projectId/baseline",
+    describeRoute({
+      operationId: "getTaskBaseline",
+      tags: ["Tasks"],
+      description:
+        "Compare a project view with a moment in the past (`at`, an ISO instant): which tasks matched the same `filter` and `treeScope` then and not now (removed, with their past values), which match now and did not then (added), and what changed in the ones that match both (their previous title, status, priority, assignee, dates and estimate). Rebuilt from the activity: memberships are evaluated as they are now, and deleted tasks do not appear",
+      responses: {
+        200: {
+          description: "The comparison",
+          content: { "application/json": { schema: resolver(v.any()) } },
+        },
+      },
+    }),
+    validator("param", v.object({ projectId: v.string() })),
+    validator(
+      "query",
+      v.object({
+        at: v.pipe(v.string(), v.isoTimestamp()),
+        filter: v.optional(v.string()),
+        treeScope: v.optional(
+          v.picklist(["matching", "roots", "withDescendants"]),
+        ),
+      }),
+    ),
+    workspaceAccess.fromProject("projectId"),
+    async (c) => {
+      const { projectId } = c.req.valid("param");
+      const query = c.req.valid("query");
+
+      let filter: FilterNode | null = null;
+      try {
+        filter = parseFilterParam(query.filter);
+      } catch (error) {
+        throw new HTTPException(400, {
+          message: error instanceof Error ? error.message : "Invalid filter",
+        });
+      }
+
+      try {
+        return c.json(
+          await getTaskBaseline(projectId, new Date(query.at), {
             treeScope: query.treeScope,
             filter,
           }),

@@ -2205,6 +2205,66 @@
         "summary": "Get Task Totals"
       }
     },
+    "/task/tasks/{projectId}/baseline": {
+      "get": {
+        "operationId": "getTaskBaseline",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Compare a project view with a moment in the past (`at`, an ISO instant): which tasks matched the same `filter` and `treeScope` then and not now (removed, with their past values), which match now and did not then (added), and what changed in the ones that match both (their previous title, status, priority, assignee, dates and estimate). Rebuilt from the activity: memberships are evaluated as they are now, and deleted tasks do not appear",
+        "responses": {
+          "200": {
+            "description": "The comparison",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "at",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "treeScope",
+            "schema": {
+              "enum": [
+                "matching",
+                "roots",
+                "withDescendants"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "Get Task Baseline"
+      }
+    },
     "/task/bulk": {
       "patch": {
         "operationId": "bulkUpdateTasks",
@@ -6164,6 +6224,22 @@
                           "due"
                         ],
                         "type": "string"
+                      },
+                      "baseline": {
+                        "anyOf": [
+                          {
+                            "enum": [
+                              "yesterday",
+                              "lastWorkDay",
+                              "week"
+                            ],
+                            "type": "string"
+                          },
+                          {
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                          }
+                        ]
                       }
                     }
                   },
@@ -6355,6 +6431,22 @@
                           "due"
                         ],
                         "type": "string"
+                      },
+                      "baseline": {
+                        "anyOf": [
+                          {
+                            "enum": [
+                              "yesterday",
+                              "lastWorkDay",
+                              "week"
+                            ],
+                            "type": "string"
+                          },
+                          {
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                          }
+                        ]
                       }
                     }
                   },
@@ -6490,6 +6582,22 @@
                           "due"
                         ],
                         "type": "string"
+                      },
+                      "baseline": {
+                        "anyOf": [
+                          {
+                            "enum": [
+                              "yesterday",
+                              "lastWorkDay",
+                              "week"
+                            ],
+                            "type": "string"
+                          },
+                          {
+                            "type": "string",
+                            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                          }
+                        ]
                       }
                     }
                   },

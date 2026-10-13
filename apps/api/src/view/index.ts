@@ -49,6 +49,14 @@ const configSchema = v.object({
   // Como se colorean las filas (ADR 080). Sin declararlo, `v.object` lo
   // descartaba en silencio y la vista guardada volvia sin color.
   color: v.optional(v.picklist(["priority", "due"])),
+  // Con que momento se compara (ADR 085): un relativo, que se recalcula cada
+  // dia, o un dia fijo.
+  baseline: v.optional(
+    v.union([
+      v.picklist(["yesterday", "lastWorkDay", "week"]),
+      v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),
+    ]),
+  ),
 });
 
 const view = new Hono<{
