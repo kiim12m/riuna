@@ -5,6 +5,11 @@ import type { TaskSubtree } from "@/types/task";
 
 type SubtaskBadgeProps = {
   subtree: TaskSubtree | null | undefined;
+  /**
+   * `badge`, con borde, para las tarjetas del tablero; `inline`, solo el icono
+   * y la cuenta, junto al titulo en las filas de lista.
+   */
+  variant?: "badge" | "inline";
   className?: string;
 };
 
@@ -15,6 +20,7 @@ type SubtaskBadgeProps = {
  */
 export default function SubtaskBadge({
   subtree,
+  variant = "badge",
   className,
 }: SubtaskBadgeProps) {
   const { t } = useTranslation();
@@ -30,7 +36,8 @@ export default function SubtaskBadge({
         total: subtree.descendantCount,
       })}
       className={cn(
-        "inline-flex flex-shrink-0 items-center gap-1 rounded border border-border/60 px-1.5 py-0.5 text-label font-medium tabular-nums",
+        "inline-flex flex-shrink-0 items-center gap-1 text-label font-medium tabular-nums",
+        variant === "badge" && "rounded border border-border/60 px-1.5 py-0.5",
         isComplete ? "text-success-foreground" : "text-muted-foreground",
         className,
       )}
