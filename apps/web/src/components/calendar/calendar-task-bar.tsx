@@ -9,6 +9,8 @@ export type CalendarTask = PackableTask & {
   number: number | null;
   /** Un hito sale con su rombo (ADR 082). */
   isMilestone?: boolean;
+  /** La clave de su proyecto, si es de un subproyecto (ADR 089). */
+  projectSlug?: string;
 };
 
 type CalendarTaskBarProps = {

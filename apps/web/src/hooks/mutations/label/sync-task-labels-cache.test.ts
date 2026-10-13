@@ -70,6 +70,8 @@ describe("updateTaskLabelsInProject", () => {
       ],
       plannedTasks: [],
       archivedTasks: [],
+      subprojectCount: 0,
+      subprojects: [],
     };
 
     const updatedProject = updateTaskLabelsInProject(
@@ -110,6 +112,8 @@ describe("updateTaskLabelsInProject", () => {
       cascadeArchive: false,
       maxTaskDepth: 5,
       weightedProgress: false,
+      subprojectCount: 0,
+      subprojects: [],
       columns: [],
       plannedTasks: [
         {
