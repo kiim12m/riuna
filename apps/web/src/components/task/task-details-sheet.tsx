@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/tooltip";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTask from "@/hooks/queries/task/use-get-task";
+import { useIsMobile } from "@/hooks/use-mobile";
+import TaskActions from "./task-actions";
 import TaskDetailsContent from "./task-details-content";
 import TaskPropertiesSidebar from "./task-properties-sidebar";
 
@@ -39,6 +41,9 @@ export default function TaskDetailsSheet({
   // subproyecto (ADR 089), con sus columnas y sus campos.
   const projectId = task?.projectId ?? routeProjectId;
   const { data: project } = useGetProject({ id: projectId, workspaceId });
+  // Entre 640 y 767 px el cajon mide 512 px y en su cabecera no caben
+  // «Recuérdamelo» ni «Observando» con su texto.
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (taskId) {
@@ -71,13 +76,24 @@ export default function TaskDetailsSheet({
         side="right"
         className="w-full max-w-full sm:max-w-lg md:max-w-2xl lg:max-w-4xl p-0 gap-0 [&>button]:hidden"
       >
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-background shrink-0">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border bg-background shrink-0">
+          <div className="flex min-w-0 items-center gap-2">
             <span className="text-sm font-medium text-muted-foreground">
               {project?.slug}-{task?.number}
             </span>
           </div>
           <div className="flex items-center gap-1">
+            {currentTaskId && (
+              <>
+                <TaskActions
+                  taskId={currentTaskId}
+                  projectId={projectId}
+                  workspaceId={workspaceId}
+                  iconOnly={isMobile}
+                />
+                <div className="mx-1 h-5 w-px shrink-0 bg-border" />
+              </>
+            )}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -114,7 +130,7 @@ export default function TaskDetailsSheet({
             taskId={currentTaskId}
             projectId={projectId}
             workspaceId={workspaceId}
-            className="w-full bg-sidebar border-b border-border flex flex-col gap-0 overflow-y-auto shrink-0"
+            className="w-full max-h-[40dvh] bg-sidebar border-b border-border flex flex-col gap-0 overflow-y-auto shrink-0"
             compact={true}
           />
 
@@ -125,6 +141,7 @@ export default function TaskDetailsSheet({
                 projectId={projectId}
                 workspaceId={workspaceId}
                 className="flex flex-col gap-3"
+                showCustomFields
               />
             </div>
           </div>

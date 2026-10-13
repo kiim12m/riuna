@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cajón de tarea</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
+<style>
+/* Maqueta del cajón de tarea: antes y después de compactar la barra de
+   propiedades. Tokens semánticos de apps/web/src/index.css, copiados de
+   docs/design-previews/ideas-openproject.html. La franja oscura y las
+   etiquetas negras son andamiaje, no producto. */
+:root {
+  --color-white:#fff;
+  --font-sans:"Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:"Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --riuna-navy:#1b3a5c; --riuna-ink:#141d2b; --riuna-mid:#4a6380; --riuna-surface:#f6f7f9;
+  --riuna-teal:#0e8a7a; --riuna-teal-strong:#0b7466; --riuna-teal-light:#2ab39f;
+  --riuna-ground:#0b141f; --riuna-raised:#101c2a; --riuna-sunken:#0e1825; --riuna-text-night:#e6edf4; --riuna-mid-night:#8fa7c0;
+
+  --background:var(--color-white); --foreground:var(--riuna-ink);
+  --card:var(--color-white);
+  --border:color-mix(in srgb, var(--riuna-navy) 17%, transparent);
+  --input:color-mix(in srgb, var(--riuna-navy) 22%, transparent);
+  --muted:color-mix(in srgb, var(--riuna-navy) 5%, transparent);
+  --muted-foreground:var(--riuna-mid);
+  --accent:color-mix(in srgb, var(--riuna-teal) 10%, transparent);
+  --brand:var(--riuna-teal); --brand-strong:var(--riuna-teal-strong);
+  --ring:var(--riuna-teal);
+  --sidebar:var(--riuna-surface);
+  --warning:#d97706; --warning-foreground:#c2410c;
+  --label-a:#7c3aed; --label-b:#2563eb;
+  --canvas:color-mix(in srgb, var(--riuna-navy) 9%, var(--riuna-surface));
+  --scaffold:var(--riuna-ink); --scaffold-fg:#cdd7e2; --scaffold-line:#ffffff26; --scaffold-dim:#9fb0c2;
+  --meter-fixed:var(--warning); --meter-ok:var(--riuna-teal);
+
+  --elevation-1:0 1px 2px -1px color-mix(in srgb, var(--riuna-navy) 24%, transparent), 0 1px 1px -1px color-mix(in srgb, var(--riuna-navy) 16%, transparent);
+  --elevation-3:0 8px 24px -6px color-mix(in srgb, var(--riuna-navy) 26%, transparent), 0 2px 6px -2px color-mix(in srgb, var(--riuna-navy) 18%, transparent);
+  --motion-fast:140ms; --ease-out:cubic-bezier(0.23,1,0.32,1);
+
+  --text-page:1.875rem; --text-section:0.9375rem; --text-body:0.875rem; --text-secondary:0.75rem; --text-label:0.6875rem;
+  --tr-label:0.06em;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --background:var(--riuna-ground); --foreground:var(--riuna-text-night);
+  --card:var(--riuna-raised);
+  --border:color-mix(in srgb, var(--color-white) 10%, transparent);
+  --input:color-mix(in srgb, var(--color-white) 12%, transparent);
+  --muted:color-mix(in srgb, var(--color-white) 5%, transparent);
+  --muted-foreground:var(--riuna-mid-night);
+  --accent:color-mix(in srgb, var(--riuna-teal-light) 14%, transparent);
+  --brand:var(--riuna-teal-light); --brand-strong:var(--riuna-teal-light); --ring:var(--riuna-teal-light);
+  --sidebar:var(--riuna-sunken);
+  --warning-foreground:#f0a83c; --label-a:#a78bfa; --label-b:#7ca9f5;
+  --canvas:#070d15;
+  --scaffold:#05090f; --scaffold-fg:#b9c6d4;
+  --meter-fixed:#f0a83c; --meter-ok:var(--riuna-teal-light);
+  --elevation-1:0 1px 2px -1px color-mix(in srgb, #000 55%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent);
+  --elevation-3:0 10px 28px -8px color-mix(in srgb, #000 60%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"] {
+  --background:var(--riuna-ground); --foreground:var(--riuna-text-night);
+  --card:var(--riuna-raised);
+  --border:color-mix(in srgb, var(--color-white) 10%, transparent);
+  --input:color-mix(in srgb, var(--color-white) 12%, transparent);
+  --muted:color-mix(in srgb, var(--color-white) 5%, transparent);
+  --muted-foreground:var(--riuna-mid-night);
+  --accent:color-mix(in srgb, var(--riuna-teal-light) 14%, transparent);
+  --brand:var(--riuna-teal-light); --brand-strong:var(--riuna-teal-light); --ring:var(--riuna-teal-light);
+  --sidebar:var(--riuna-sunken);
+  --warning-foreground:#f0a83c; --label-a:#a78bfa; --label-b:#7ca9f5;
+  --canvas:#070d15;
+  --scaffold:#05090f; --scaffold-fg:#b9c6d4;
+  --meter-fixed:#f0a83c; --meter-ok:var(--riuna-teal-light);
+  --elevation-1:0 1px 2px -1px color-mix(in srgb, #000 55%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 5%, transparent);
+  --elevation-3:0 10px 28px -8px color-mix(in srgb, #000 60%, transparent), inset 0 1px 0 color-mix(in srgb, #fff 6%, transparent);
+  color-scheme:dark;
+}
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { transition-duration:.001ms !important; } }
+
+* { box-sizing:border-box; }
+[hidden] { display:none !important; }
+body { margin:0; background:var(--canvas); color:var(--foreground); font-family:var(--font-sans); font-size:var(--text-body); -webkit-font-smoothing:antialiased; }
+button { font:inherit; color:inherit; }
+h1,h2,p { margin:0; }
+h1,h2 { text-wrap:balance; }
+.num { font-variant-numeric:tabular-nums; }
+.muted { color:var(--muted-foreground); }
+:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
+.icn { width:1rem; height:1rem; flex:none; display:inline-block; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.icn-s { width:0.875rem; height:0.875rem; }
+.icn-xs { width:0.625rem; height:0.625rem; }
+.sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+/* ===== andamiaje ===== */
+.pchrome { position:sticky; top:env(safe-area-inset-top,0px); z-index:50; display:flex; flex-wrap:wrap; align-items:center; gap:0.5rem 1.1rem; padding:0.5rem 16px; background:var(--scaffold); color:var(--scaffold-fg); font-size:var(--text-label); text-transform:uppercase; letter-spacing:var(--tr-label); font-weight:600; }
+.pchrome .brand { color:#fff; }
+.pchrome .spacer { flex:1; }
+.pgroup { display:inline-flex; align-items:center; gap:0.45rem; }
+.pseg { display:inline-flex; flex-wrap:wrap; padding:2px; gap:2px; border:1px solid var(--scaffold-line); border-radius:7px; }
+.pseg button { border:0; cursor:pointer; background:transparent; color:var(--scaffold-dim); font-size:var(--text-label); font-weight:600; text-transform:uppercase; letter-spacing:var(--tr-label); padding:4px 8px; border-radius:5px; }
+.pseg button[aria-pressed="true"] { background:var(--riuna-teal-strong); color:#fff; }
+.ptag { display:inline-flex; align-items:center; height:1.05rem; padding:0 0.35rem; border-radius:4px; background:var(--scaffold); color:#e6edf4; font:600 0.625rem/1 var(--font-mono); letter-spacing:0.02em; white-space:nowrap; flex:none; }
+.stage[data-marks="off"] .ptag { display:none; }
+
+.wrap { padding-inline:16px; padding-block:1.25rem 3rem; max-width:1840px; margin:0 auto; display:grid; gap:1.25rem; }
+.intro { display:grid; gap:0.6rem; max-width:74ch; }
+.intro h1 { font-size:1.25rem; font-weight:600; letter-spacing:-0.01em; }
+.intro p { color:var(--muted-foreground); line-height:1.55; }
+.changes { display:grid; gap:0.35rem; margin:0; padding:0; list-style:none; font-size:var(--text-secondary); line-height:1.5; color:var(--muted-foreground); }
+.changes li { display:flex; gap:0.5rem; align-items:baseline; }
+.changes b { color:var(--foreground); font-weight:600; }
+.changes code { font-family:var(--font-mono); font-size:0.95em; }
+.stage[data-marks="off"] .changes .ptag { display:inline-flex; }
+
+/* ===== escenario ===== */
+.stage { --dw-w:896px; --dw-h:760px; display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start; gap:2rem 1.5rem; }
+.stage[data-w="narrow"] { --dw-w:512px; }
+.col { width:min(var(--dw-w), 100%); display:grid; gap:0.6rem; min-width:0; }
+.stage[data-show="antes"] .col.despues, .stage[data-show="despues"] .col.antes { display:none; }
+.cap { display:flex; flex-wrap:wrap; align-items:center; gap:0.4rem 0.9rem; }
+.cap-name { font-size:var(--text-label); font-weight:700; text-transform:uppercase; letter-spacing:var(--tr-label); padding:0.2rem 0.5rem; border-radius:5px; background:var(--scaffold); color:#fff; }
+.col.despues .cap-name { background:var(--riuna-teal-strong); }
+.meter { display:flex; align-items:center; gap:0.6rem; font-size:var(--text-secondary); color:var(--muted-foreground); }
+.meter b { color:var(--foreground); font-weight:600; font-variant-numeric:tabular-nums; }
+.meter-bar { width:7rem; height:8px; border-radius:999px; background:color-mix(in srgb, var(--muted-foreground) 20%, transparent); overflow:hidden; display:flex; }
+.meter-bar i { display:block; height:100%; background:var(--meter-fixed); border-radius:999px; transition:width var(--motion-fast) var(--ease-out); }
+.col.despues .meter-bar i { background:var(--meter-ok); }
+
+/* ===== cajón (producto) ===== */
+.dw { height:var(--dw-h); display:flex; flex-direction:column; background:var(--background); border:1px solid var(--border); border-radius:12px; box-shadow:var(--elevation-3); overflow:hidden; }
+.dw-head { flex:none; display:flex; align-items:center; gap:0.25rem; padding:0.5rem 1rem; border-bottom:1px solid var(--border); background:var(--background); min-height:2.75rem; }
+.dw-id { font-size:var(--text-body); font-weight:500; color:var(--muted-foreground); margin-right:auto; }
+.vsep { width:1px; height:1.25rem; background:var(--border); margin:0 0.35rem; flex:none; }
+.ib { display:inline-grid; place-items:center; width:2rem; height:2rem; border:0; border-radius:7px; background:transparent; cursor:pointer; color:var(--foreground); flex:none; }
+.ib:hover { background:var(--accent); }
+.dw-pinned { flex:none; background:var(--sidebar); border-bottom:1px solid var(--border); overflow-y:auto; }
+.dw-body { flex:1; min-height:0; overflow-y:auto; padding:1rem; display:grid; gap:1rem; align-content:start; }
+
+/* botones */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:0.4rem; height:2rem; padding:0 0.7rem; border-radius:8px; border:1px solid var(--input); background:var(--card); color:var(--foreground); font-size:var(--text-body); font-weight:500; cursor:pointer; white-space:nowrap; flex:none; transition:background-color var(--motion-fast) var(--ease-out); }
+.btn:hover { background:var(--accent); }
+.btn[aria-pressed="true"] { background:var(--accent); border-color:color-mix(in srgb, var(--brand) 45%, transparent); color:var(--brand-strong); }
+.btn.sm { height:1.75rem; padding:0 0.55rem; font-size:var(--text-secondary); }
+.btn.icon { width:2rem; padding:0; }
+.grp { display:inline-flex; flex:none; }
+.grp .btn { border-radius:0; }
+.grp .btn + .btn { border-left-width:0; }
+.grp .btn:first-child { border-radius:8px 0 0 8px; }
+.grp .btn:last-child { border-radius:0 8px 8px 0; }
+/* En el cajón estrecho la cabecera solo tiene sitio para los iconos (plan, punto 2). */
+.stage[data-w="narrow"] .despues .dw-head .lbl { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.stage[data-w="narrow"] .despues .dw-head .btn.act { width:2rem; padding:0; gap:0; }
+.stage[data-w="narrow"] .despues .dw-head .btn.act.watch { width:auto; padding:0 0.5rem; gap:0.3rem; }
+/* Por debajo de 640 px la app ya esconde las etiquetas de estos botones (`hidden sm:inline`). */
+@media (max-width:639px) { .dw .lbl { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; } }
+
+/* chips de propiedad */
+.chip { display:inline-flex; align-items:center; gap:0.375rem; height:1.75rem; padding:0 0.375rem; border:0; border-radius:7px; background:transparent; font-size:var(--text-secondary); font-weight:600; white-space:nowrap; cursor:pointer; flex:none; }
+.chip:hover { background:var(--accent); }
+.chip.dim span { color:var(--muted-foreground); }
+.chip .icn { color:var(--muted-foreground); }
+.chip .prio { color:var(--warning-foreground); }
+.bub { width:16px; height:16px; border-radius:999px; background:var(--muted); border:1px solid var(--border); display:inline-grid; place-items:center; flex:none; font-size:0.5625rem; font-weight:600; color:var(--foreground); }
+.bub .icn { width:10px; height:10px; }
+.badge { display:inline-flex; align-items:center; gap:0.3rem; height:1.25rem; padding:0 0.4rem; border:1px solid var(--border); border-radius:6px; font-size:var(--text-label); font-weight:500; background:var(--background); white-space:nowrap; }
+.badge i { width:6px; height:6px; border-radius:999px; flex:none; }
+.plus { display:inline-grid; place-items:center; width:1.25rem; height:1.25rem; border-radius:999px; border:0; background:transparent; cursor:pointer; color:var(--foreground); flex:none; }
+.plus:hover { background:var(--accent); }
+.stage[data-labels="none"] .has-labels, .stage[data-labels="two"] .no-labels { display:none !important; }
+
+/* ===== ANTES: copia de la disposición compacta de hoy ===== */
+.old-bar { display:flex; flex-direction:row-reverse; gap:0.5rem; border-bottom:1px solid var(--border); }
+.old-actions { display:flex; align-items:flex-start; gap:0.5rem; padding:0.5rem 0.75rem; flex:none; }
+.old-chips { flex:1 1 auto; min-width:0; display:flex; flex-wrap:wrap; align-items:center; gap:0.25rem; padding:0.5rem; }
+.old-chips .full { width:100%; justify-content:flex-start; }
+.old-fields { display:grid; gap:0.25rem; width:15.6rem; flex:none; }
+.old-fields .h { padding:0 0.375rem; font-size:var(--text-label); font-weight:500; text-transform:uppercase; letter-spacing:var(--tr-label); color:var(--muted-foreground); }
+.frow { display:flex; align-items:center; gap:0.5rem; padding:0.125rem 0.375rem; min-width:0; }
+.frow .k { width:100px; flex:none; font-size:var(--text-secondary); color:var(--muted-foreground); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.frow .v { flex:1; min-width:0; font-size:var(--text-secondary); padding:0.125rem 0.25rem; border-radius:5px; }
+.frow .v.sel { display:flex; align-items:center; justify-content:space-between; height:1.75rem; border-bottom:1px solid var(--border); border-radius:5px 5px 0 0; }
+.cbx { display:inline-block; width:1rem; height:1rem; border-radius:4px; border:1px solid var(--input); background:var(--background); vertical-align:middle; }
+.old-labels { display:grid; gap:0.25rem; padding:0.5rem 1.25rem 0.75rem; }
+.old-labels .h { font-size:var(--text-secondary); font-weight:500; color:color-mix(in srgb, var(--foreground) 70%, transparent); }
+.old-labels .row { display:flex; flex-wrap:wrap; align-items:center; gap:0.375rem; }
+/* Hoy el bloque de etiquetas solo existe a partir de 1024 px: en el cajón estrecho no se ve. */
+.stage[data-w="narrow"] .old-labels { display:none; }
+
+/* ===== DESPUÉS ===== */
+.new-chips { display:flex; flex-wrap:wrap; align-items:center; gap:0.25rem; padding:0.5rem 0.75rem; }
+.labels-chip { display:inline-flex; align-items:center; gap:0.3rem; height:1.75rem; padding:0 0.25rem 0 0.375rem; border-radius:7px; flex:none; }
+.labels-chip > .icn { color:var(--muted-foreground); }
+
+/* cuerpo común */
+.meta-row { display:flex; flex-wrap:wrap; align-items:center; gap:0.5rem; }
+.meta-row .mid { font-size:var(--text-secondary); font-weight:600; color:color-mix(in srgb, var(--foreground) 70%, transparent); }
+.sq { display:inline-grid; place-items:center; width:1.5rem; height:1.5rem; border:1px solid var(--input); border-radius:6px; background:var(--card); cursor:pointer; }
+.sq .icn { width:0.6rem; height:0.6rem; fill:currentColor; }
+.btn.rule-act .icn { color:var(--brand-strong); }
+.t-title { font-size:var(--text-page); font-weight:700; letter-spacing:-0.02em; line-height:1.2; }
+.desc { position:relative; min-height:4.5rem; line-height:1.6; padding-right:2.75rem; }
+.clip { position:absolute; right:0; bottom:0; display:inline-grid; place-items:center; width:2rem; height:2rem; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--muted-foreground); cursor:pointer; }
+.sec { display:grid; gap:0.5rem; }
+.sec-h { display:flex; align-items:center; gap:0.5rem; font-size:var(--text-section); font-weight:600; }
+.sec-h .n { font-weight:500; color:var(--muted-foreground); font-variant-numeric:tabular-nums; }
+.kv2 { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:0.15rem 1.5rem; }
+.stage[data-w="narrow"] .kv2 { grid-template-columns:minmax(0,1fr); }
+@media (max-width:639px) { .kv2 { grid-template-columns:minmax(0,1fr); } }
+.kv2 .frow { padding-left:0; }
+.kv2 .frow .v:hover, .old-fields .frow .v:hover { background:var(--accent); }
+.subrow { display:grid; grid-template-columns:auto auto minmax(0,1fr) auto; align-items:center; gap:0.6rem; padding:0.4rem 0.5rem; border-radius:8px; font-size:var(--text-secondary); }
+.subrow:hover { background:var(--accent); }
+.subrow .icn { color:var(--muted-foreground); width:0.8rem; height:0.8rem; }
+.subrow .id { font-family:var(--font-mono); color:var(--muted-foreground); }
+.subrow .t { font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.subrow .d { color:var(--muted-foreground); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.rule { height:1px; background:var(--border); border:0; margin:0.25rem 0; }
+.comment { border:1px solid var(--input); border-radius:10px; padding:0.6rem 0.75rem; color:var(--muted-foreground); background:var(--card); }
+.act-item { display:grid; grid-template-columns:auto minmax(0,1fr); gap:0.6rem; font-size:var(--text-secondary); line-height:1.5; color:var(--muted-foreground); }
+.act-item b { color:var(--foreground); font-weight:600; }
+.av { width:1.35rem; height:1.35rem; border-radius:999px; display:inline-grid; place-items:center; font-size:0.6rem; font-weight:600; background:var(--accent); color:var(--brand-strong); border:1px solid color-mix(in srgb, var(--brand) 30%, transparent); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></symbol>
+  <symbol id="i-prio" viewBox="0 0 24 24"><path d="m17 11-5-5-5 5"/><path d="m17 18-5-5-5 5"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-cal-days" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></symbol>
+  <symbol id="i-cal-cog" viewBox="0 0 24 24"><path d="M21 10.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="18" cy="18" r="3"/><path d="M18 14v1M18 21v1M14 18h1M21 18h1"/></symbol>
+  <symbol id="i-alarm" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-move" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+  <symbol id="i-branch" viewBox="0 0 24 24"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+  <symbol id="i-max" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 3l14 9-14 9V3z"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.42l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r="1"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+  <symbol id="i-updown" viewBox="0 0 24 24"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"/></symbol>
+</svg>
+
+<div class="pchrome" role="toolbar" aria-label="Controles de la maqueta">
+  <span class="brand">Cajón de tarea</span>
+  <span class="pgroup">Ver
+    <span class="pseg" data-key="show">
+      <button type="button" data-v="ambos" aria-pressed="true">Los dos</button>
+      <button type="button" data-v="antes" aria-pressed="false">Antes</button>
+      <button type="button" data-v="despues" aria-pressed="false">Después</button>
+    </span>
+  </span>
+  <span class="pgroup">Ancho
+    <span class="pseg" data-key="w">
+      <button type="button" data-v="wide" aria-pressed="true">896 px</button>
+      <button type="button" data-v="narrow" aria-pressed="false">512 px</button>
+    </span>
+  </span>
+  <span class="pgroup">Etiquetas
+    <span class="pseg" data-key="labels">
+      <button type="button" data-v="none" aria-pressed="true">Ninguna</button>
+      <button type="button" data-v="two" aria-pressed="false">Dos</button>
+    </span>
+  </span>
+  <span class="pgroup">Marcas
+    <span class="pseg" data-key="marks">
+      <button type="button" data-v="on" aria-pressed="true">Sí</button>
+      <button type="button" data-v="off" aria-pressed="false">No</button>
+    </span>
+  </span>
+  <span class="spacer"></span>
+  <span class="pgroup">Tema
+    <span class="pseg" data-key="theme">
+      <button type="button" data-v="system" aria-pressed="true">Sistema</button>
+      <button type="button" data-v="light" aria-pressed="false">Claro</button>
+      <button type="button" data-v="dark" aria-pressed="false">Oscuro</button>
+    </span>
+  </span>
+</div>
+
+<main class="wrap">
+  <div class="intro">
+    <h1>Barra de propiedades compacta</h1>
+    <p>La tarea DEMO-1 de la captura, tal como sale hoy y como quedaría con el plan. El medidor de cada cajón dice cuánto queda fijo arriba (cabecera y propiedades) y no se desplaza con el contenido. «512 px» es el cajón entre 640 y 767 px de pantalla; ahí, hoy, las etiquetas ni se ven.</p>
+    <ul class="changes">
+      <li><span class="ptag">1·2</span><span><b>Acciones a la cabecera</b>, junto a DEMO-1, en un solo componente (<code>task-actions.tsx</code>). En el cajón estrecho, solo iconos.</span></li>
+      <li><span class="ptag">3</span><span><b>Una sola fila de chips</b> para el cajón y para la página completa estrecha. Las etiquetas pasan a ser un chip más.</span></li>
+      <li><span class="ptag">4</span><span><b>«Fechas» e «Hito» sin ancho completo</b>: dejan de ocupar una línea cada uno.</span></li>
+      <li><span class="ptag">5·6</span><span><b>Campos personalizados en el cuerpo</b>, como sección a dos columnas tras la descripción. Se desplazan con el resto.</span></li>
+    </ul>
+  </div>
+
+  <div class="stage" id="stage" data-show="ambos" data-w="wide" data-labels="none" data-marks="on">
+
+    <!-- ================= ANTES ================= -->
+    <section class="col antes" aria-label="Antes">
+      <div class="cap">
+        <span class="cap-name">Antes</span>
+        <span class="meter"><span class="meter-bar"><i data-bar></i></span><span data-meter>Fijo arriba: …</span></span>
+      </div>
+      <article class="dw" data-dw>
+        <header class="dw-head">
+          <span class="dw-id">DEMO-1</span>
+          <button class="ib" type="button" aria-label="Abrir a pantalla completa"><svg class="icn icn-s"><use href="#i-max"/></svg></button>
+          <button class="ib" type="button" aria-label="Cerrar"><svg class="icn icn-s"><use href="#i-x"/></svg></button>
+        </header>
+        <div class="dw-pinned" data-pinned>
+          <div class="old-bar">
+            <div class="old-actions">
+              <button class="btn sm act" type="button"><svg class="icn"><use href="#i-alarm"/></svg><span class="lbl">Recuérdamelo</span></button>
+              <button class="btn sm act watch" type="button" aria-pressed="true"><svg class="icn"><use href="#i-eye"/></svg><span class="lbl">Observando</span><span class="num">1</span></button>
+              <span class="grp">
+                <button class="btn sm icon" type="button" aria-label="Mover a otro proyecto"><svg class="icn"><use href="#i-move"/></svg></button>
+                <button class="btn sm icon" type="button" aria-label="Copiar enlace"><svg class="icn"><use href="#i-copy"/></svg></button>
+                <button class="btn sm icon" type="button" aria-label="Copiar nombre de rama"><svg class="icn"><use href="#i-branch"/></svg></button>
+              </span>
+            </div>
+            <div class="old-chips">
+              <button class="chip" type="button"><svg class="icn icn-s"><use href="#i-circle"/></svg><span>Por hacer</span></button>
+              <button class="chip" type="button"><svg class="icn icn-s prio"><use href="#i-prio"/></svg><span>Alta</span></button>
+              <button class="chip" type="button"><span class="bub">?</span><span>No asignada</span></button>
+              <button class="chip" type="button"><span class="bub"><svg class="icn"><use href="#i-users"/></svg></span><span>Sin equipo</span></button>
+              <button class="chip dim" type="button"><svg class="icn icn-s"><use href="#i-target"/></svg><span>Sin ciclo</span></button>
+              <button class="chip" type="button"><svg class="icn icn-s"><use href="#i-layers"/></svg><span>Lanzamiento web</span></button>
+              <div class="old-fields">
+                <p class="h">Campos personalizados</p>
+                <div class="frow"><span class="k">Cliente final</span><span class="v muted">—</span></div>
+                <div class="frow"><span class="k">Coste</span><span class="v muted">—</span></div>
+                <div class="frow"><span class="k">Área</span><span class="v sel"><span class="muted">—</span><svg class="icn icn-s muted"><use href="#i-updown"/></svg></span></div>
+                <div class="frow"><span class="k">Revisado</span><span class="v"><span class="cbx"></span></span></div>
+              </div>
+              <button class="chip" type="button"><svg class="icn icn-s"><use href="#i-cal-days"/></svg><span>16 oct</span></button>
+              <button class="chip" type="button"><svg class="icn icn-s"><use href="#i-cal"/></svg><span>30 oct</span></button>
+              <button class="chip full" type="button"><svg class="icn icn-s"><use href="#i-cal-cog"/></svg><span>Fechas: automáticas</span></button>
+            </div>
+          </div>
+          <div class="old-labels">
+            <span class="h">Etiquetas</span>
+            <div class="row">
+              <span class="badge has-labels"><i style="background:var(--label-a)"></i>Diseño</span>
+              <span class="badge has-labels"><i style="background:var(--label-b)"></i>Web</span>
+              <button class="plus" type="button" aria-label="Añadir etiqueta"><svg class="icn icn-s"><use href="#i-plus"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="dw-body">
+          <div class="meta-row">
+            <span class="mid">DEMO-1</span>
+            <button class="sq" type="button" aria-label="Iniciar cronómetro"><svg class="icn"><use href="#i-play"/></svg></button>
+            <button class="btn sm rule-act" type="button"><svg class="icn icn-s"><use href="#i-zap"/></svg>Enviar a revisión</button>
+          </div>
+          <h2 class="t-title">Fase 1 · Diseño</h2>
+          <div class="desc"><p>Fase 1 · Diseño</p><button class="clip" type="button" aria-label="Adjuntar"><svg class="icn icn-s"><use href="#i-clip"/></svg></button></div>
+          <section class="sec">
+            <h3 class="sec-h">Subtareas <span class="n">3</span></h3>
+            <div class="subrow"><svg class="icn"><use href="#i-circle"/></svg><span class="id">DEMO-4</span><span class="t">Wireframes de la portada</span><span class="d">16–21 oct</span></div>
+            <div class="subrow"><svg class="icn"><use href="#i-circle"/></svg><span class="id">DEMO-5</span><span class="t">Guía de estilo</span><span class="d">20–24 oct</span></div>
+            <div class="subrow"><svg class="icn"><use href="#i-circle"/></svg><span class="id">DEMO-6</span><span class="t">Revisión con el cliente</span><span class="d">27–30 oct</span></div>
+          </section>
+          <hr class="rule">
+          <section class="sec">
+            <h3 class="sec-h">Actividad</h3>
+            <div class="comment">Escribe un comentario…</div>
+            <div class="act-item"><span class="av">TÚ</span><span><b>Tú</b> pasaste las fechas a automáticas · hace 2 h</span></div>
+            <div class="act-item"><span class="av">TÚ</span><span><b>Tú</b> creaste la tarea · ayer</span></div>
+          </section>
+        </div>
+      </article>
+    </section>
+
+    <!-- ================= DESPUÉS ================= -->
+    <section class="col despues" aria-label="Después">
+      <div class="cap">
+        <span class="cap-name">Después</span>
+        <span class="meter"><span class="meter-bar"><i data-bar></i></span><span data-meter>Fijo arriba: …</span></span>
+      </div>
+      <article class="dw" data-dw>
+        <header class="dw-head">
+          <span class="dw-id">DEMO-1</span>
+          <span class="ptag" style="margin-right:0.35rem">1·2</span>
+          <button class="btn sm act" type="button" aria-label="Recuérdamelo"><svg class="icn"><use href="#i-alarm"/></svg><span class="lbl">Recuérdamelo</span></button>
+          <button class="btn sm act watch" type="button" aria-pressed="true" style="margin-left:0.25rem"><svg class="icn"><use href="#i-eye"/></svg><span class="lbl">Observando</span><span class="num">1</span></button>
+          <span class="grp" style="margin-left:0.25rem">
+            <button class="btn sm icon" type="button" aria-label="Mover a otro proyecto"><svg class="icn"><use href="#i-move"/></svg></button>
+            <button class="btn sm icon" type="button" aria-label="Copiar enlace"><svg class="icn"><use href="#i-copy"/></svg></button>
+            <button class="btn sm icon" type="button" aria-label="Copiar nombre de rama"><svg class="icn"><use href="#i-branch"/></svg></button>
+          </span>
+          <span class="vsep"></span>
+          <button class="ib" type="button" aria-label="Abrir a pantalla completa"><svg class="icn icn-s"><use href="#i-max"/></svg></button>
+          <button class="ib" type="button" aria-label="Cerrar"><svg class="icn icn-s"><use href="#i-x"/></svg></button>
+        </header>
+        <div class="dw-pinned" data-pinned>
+          <div class="new-chips">
+            <span class="ptag">3</span>
+            <button class="chip" type="button"><svg class="icn icn-s"><use href="#i-circle"/></svg><span>Por hacer</span></button>
+            <button class="chip" type="button"><svg class="icn icn-s prio"><use href="#i-prio"/></svg><span>Alta</span></button>
+            <button class="chip" type="button"><span class="bub">?</span><span>No asignada</span></button>
+            <button class="chip" type="button"><span class="bub"><svg class="icn"><use href="#i-users"/></svg></span><span>Sin equipo</span></button>
+            <button class="chip dim" type="button"><svg class="icn icn-s"><use href="#i-target"/></svg><span>Sin ciclo</span></button>
+            <button class="chip" type="button"><svg class="icn icn-s"><use href="#i-layers"/></svg><span>Lanzamiento web</span></button>
+            <button class="chip" type="button"><svg class="icn icn-s"><use href="#i-cal-days"/></svg><span>16 oct</span></button>
+            <button class="chip" type="button"><svg class="icn icn-s"><use href="#i-cal"/></svg><span>30 oct</span></button>
+            <button class="chip" type="button"><svg class="icn icn-s"><use href="#i-cal-cog"/></svg><span>Fechas: automáticas</span></button>
+            <span class="ptag">4</span>
+            <button class="chip dim no-labels" type="button"><svg class="icn icn-s"><use href="#i-tag"/></svg><span>Etiquetas</span></button>
+            <span class="labels-chip has-labels">
+              <svg class="icn icn-s"><use href="#i-tag"/></svg>
+              <span class="badge"><i style="background:var(--label-a)"></i>Diseño</span>
+              <span class="badge"><i style="background:var(--label-b)"></i>Web</span>
+              <button class="plus" type="button" aria-label="Añadir etiqueta"><svg class="icn icn-s"><use href="#i-plus"/></svg></button>
+            </span>
+          </div>
+        </div>
+        <div class="dw-body">
+          <div class="meta-row">
+            <span class="mid">DEMO-1</span>
+            <button class="sq" type="button" aria-label="Iniciar cronómetro"><svg class="icn"><use href="#i-play"/></svg></button>
+            <button class="btn sm rule-act" type="button"><svg class="icn icn-s"><use href="#i-zap"/></svg>Enviar a revisión</button>
+          </div>
+          <h2 class="t-title">Fase 1 · Diseño</h2>
+          <div class="desc"><p>Fase 1 · Diseño</p><button class="clip" type="button" aria-label="Adjuntar"><svg class="icn icn-s"><use href="#i-clip"/></svg></button></div>
+          <section class="sec">
+            <h3 class="sec-h">Campos personalizados <span class="ptag">5·6</span></h3>
+            <div class="kv2">
+              <div class="frow"><span class="k">Cliente final</span><span class="v muted">—</span></div>
+              <div class="frow"><span class="k">Coste</span><span class="v muted">—</span></div>
+              <div class="frow"><span class="k">Área</span><span class="v sel"><span class="muted">—</span><svg class="icn icn-s muted"><use href="#i-updown"/></svg></span></div>
+              <div class="frow"><span class="k">Revisado</span><span class="v"><span class="cbx"></span></span></div>
+            </div>
+          </section>
+          <section class="sec">
+            <h3 class="sec-h">Subtareas <span class="n">3</span></h3>
+            <div class="subrow"><svg class="icn"><use href="#i-circle"/></svg><span class="id">DEMO-4</span><span class="t">Wireframes de la portada</span><span class="d">16–21 oct</span></div>
+            <div class="subrow"><svg class="icn"><use href="#i-circle"/></svg><span class="id">DEMO-5</span><span class="t">Guía de estilo</span><span class="d">20–24 oct</span></div>
+            <div class="subrow"><svg class="icn"><use href="#i-circle"/></svg><span class="id">DEMO-6</span><span class="t">Revisión con el cliente</span><span class="d">27–30 oct</span></div>
+          </section>
+          <hr class="rule">
+          <section class="sec">
+            <h3 class="sec-h">Actividad</h3>
+            <div class="comment">Escribe un comentario…</div>
+            <div class="act-item"><span class="av">TÚ</span><span><b>Tú</b> pasaste las fechas a automáticas · hace 2 h</span></div>
+            <div class="act-item"><span class="av">TÚ</span><span><b>Tú</b> creaste la tarea · ayer</span></div>
+          </section>
+        </div>
+      </article>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  var stage = document.getElementById("stage");
+  var root = document.documentElement;
+
+  function measure() {
+    document.querySelectorAll(".col").forEach(function (col) {
+      var dw = col.querySelector("[data-dw]");
+      if (!dw || dw.offsetParent === null) return;
+      var fixed = dw.querySelector(".dw-head").offsetHeight + dw.querySelector("[data-pinned]").offsetHeight;
+      var pct = Math.round((fixed / dw.clientHeight) * 100);
+      col.querySelector("[data-meter]").innerHTML = "Fijo arriba: <b>" + fixed + " px</b> · " + pct + " % del cajón";
+      col.querySelector("[data-bar]").style.width = pct + "%";
+    });
+  }
+
+  document.querySelectorAll(".pseg").forEach(function (seg) {
+    var key = seg.dataset.key;
+    seg.addEventListener("click", function (e) {
+      var btn = e.target.closest("button");
+      if (!btn) return;
+      seg.querySelectorAll("button").forEach(function (b) { b.setAttribute("aria-pressed", String(b === btn)); });
+      var v = btn.dataset.v;
+      if (key === "theme") {
+        if (v === "system") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", v);
+      } else {
+        stage.dataset[key] = v;
+      }
+      measure();
+    });
+  });
+
+  if (window.ResizeObserver) new ResizeObserver(measure).observe(stage);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+  measure();
+})();
+</script>
+</body>
+</html>

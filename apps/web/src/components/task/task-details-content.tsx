@@ -15,6 +15,7 @@ import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTask from "@/hooks/queries/task/use-get-task";
 import type { ExternalLink } from "@/types/external-link";
 import type { FieldDefinition } from "../table-view/custom-field-cell";
+import TaskCustomFields from "./task-custom-fields";
 import TaskDescription from "./task-description";
 import TaskManualActions from "./task-manual-actions";
 import TaskRelations from "./task-relations";
@@ -29,6 +30,12 @@ type TaskDetailsContentProps = {
   projectId: string;
   workspaceId: string;
   className?: string;
+  /**
+   * Pinta los campos personalizados como seccion del cuerpo. Lo pide quien no
+   * los tiene ya en la columna de propiedades: el cajon, y la pagina completa
+   * por debajo de `lg`.
+   */
+  showCustomFields?: boolean;
 };
 
 export default function TaskDetailsContent({
@@ -36,6 +43,7 @@ export default function TaskDetailsContent({
   projectId,
   workspaceId,
   className,
+  showCustomFields = false,
 }: TaskDetailsContentProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -105,6 +113,15 @@ export default function TaskDetailsContent({
         {task && <TaskScheduleAlert task={task} />}
         <TaskDescription taskId={taskId} />
       </div>
+      {showCustomFields && task && (
+        <TaskCustomFields
+          task={task}
+          projectId={projectId}
+          workspaceId={workspaceId}
+          variant="section"
+          className="mt-4"
+        />
+      )}
       {!isLoadingExternalLinks && externalLinks.length > 0 && (
         <div className="mt-4">
           <ExternalLinksAccordion
