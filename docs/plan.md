@@ -30,7 +30,7 @@
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
 | **Total Bloque A** | **45** + 18 del interludio | |
-| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hecha la tanda 1 (1.1-1.6) · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
+| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hecha la tanda 1 (1.1-1.6) y de la tanda 2, la 2.1 · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -3001,8 +3001,14 @@ siempre), incluida `watchers.spec.ts` de la 1.1.
 
 **Tanda 2 — Planificación** (≈ 6 semanas)
 
-- **2.1 Hitos** · S. Una tarea marcada como hito, con una sola fecha, que sale como rombo en el
-  Gantt y el Calendario y se puede filtrar. Sin estimación ni cronómetro.
+- **2.1 Hitos** ✔ · S · [ADR 082](adr/082-hitos.md). **Hecho (2026-10-13).** Una tarea marcada
+  como hito, con una sola fecha, que sale como rombo en el Gantt y con `◆` en el Calendario, el
+  tablero, la lista y la Tabla, y se puede filtrar.
+  - Columna `is_milestone` (migración 0087).
+  - El inicio es siempre el vencimiento, en cualquier camino que cambie fechas.
+  - Sin estimación, cronómetro ni subtareas: la API rechaza cada una.
+  - Interruptor «Hito» en el detalle, actividad propia y MCP (`set_task_milestone`).
+  - La hoja CSV/Excel de ida y vuelta no lleva todavía la marca.
 - **2.2 Tareas resumen** · M. Parte de lo que ya existe: `apps/api/src/task/tree-aggregates.ts`
   calcula al leer el inicio más temprano, el vencimiento más tardío, las sumas y el progreso de
   la rama, y `gantt-task-bar.tsx` dibuja el corchete. Añade:

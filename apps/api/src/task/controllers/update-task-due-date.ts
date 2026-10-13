@@ -26,9 +26,15 @@ async function updateTaskDueDate({
   // Los avisos ya enviados se rearman solos al cambiar la fecha: lo hace el
   // disparador `task_rearm_due_reminders` (ADR 050), para todos los caminos
   // que escriben `due_date`, no solo este.
+  // Un hito tiene una sola fecha: mover el vencimiento mueve tambien el
+  // inicio (ADR 082).
   const [updatedTask] = await db
     .update(taskTable)
-    .set({ dueDate: dueDate || null })
+    .set(
+      existingTask.isMilestone
+        ? { dueDate: dueDate || null, startDate: dueDate || null }
+        : { dueDate: dueDate || null },
+    )
     .where(eq(taskTable.id, id))
     .returning();
 

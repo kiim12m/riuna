@@ -470,6 +470,17 @@ function renderActivityContent({
     );
   }
 
+  // Hacerla hito o dejar de serlo (ADR 082).
+  if (activity.type === "milestone_changed" && eventData) {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {eventData.isMilestone
+          ? t("activity:markedMilestone")
+          : t("activity:unmarkedMilestone")}
+      </span>
+    );
+  }
+
   if (activity.type === "parent_changed" && eventData) {
     return (
       <span className="text-sm text-muted-foreground">

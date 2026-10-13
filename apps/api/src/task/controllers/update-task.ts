@@ -33,6 +33,7 @@ async function updateTask(
       dueDate: taskTable.dueDate,
       projectId: taskTable.projectId,
       userId: taskTable.userId,
+      isMilestone: taskTable.isMilestone,
     })
     .from(taskTable)
     .where(eq(taskTable.id, id))
@@ -61,6 +62,14 @@ async function updateTask(
     );
   }
 
+  // Un hito tiene una sola fecha (ADR 082): el Gantt manda las dos al
+  // arrastrarlo, y manda la del final.
+  const milestoneDay = existingTask.isMilestone
+    ? (dueDate ?? startDate)
+    : undefined;
+  const nextStartDate = existingTask.isMilestone ? milestoneDay : startDate;
+  const nextDueDate = existingTask.isMilestone ? milestoneDay : dueDate;
+
   const column = await db.query.columnTable.findFirst({
     where: and(
       eq(columnTable.projectId, projectId),
@@ -78,8 +87,8 @@ async function updateTask(
         title,
         status,
         columnId: column?.id ?? null,
-        startDate: startDate || null,
-        dueDate: dueDate || null,
+        startDate: nextStartDate || null,
+        dueDate: nextDueDate || null,
         projectId,
         description,
         priority,

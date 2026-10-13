@@ -84,7 +84,8 @@ export default function TaskDetailsContent({
           <p className="text-xs font-semibold text-foreground/70">
             {project?.slug}-{task?.number}
           </p>
-          {task && (
+          {/* Un hito no dura, asi que ni cronometro ni estimacion (ADR 082). */}
+          {task && !task.isMilestone && (
             <TaskTimerButton
               task={{
                 id: task.id,
@@ -115,7 +116,7 @@ export default function TaskDetailsContent({
           <TaskTree taskId={taskId} projectId={projectId} />
         </div>
       )}
-      {task && (
+      {task && !task.isMilestone && (
         <div className="mt-4">
           <TaskTime
             taskId={taskId}
@@ -125,7 +126,7 @@ export default function TaskDetailsContent({
         </div>
       )}
       <div className="mt-4">
-        {task && (
+        {task && !task.isMilestone && (
           <TaskSubtasks
             taskId={taskId}
             projectId={projectId}

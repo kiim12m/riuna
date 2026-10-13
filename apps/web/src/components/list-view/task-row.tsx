@@ -286,6 +286,11 @@ function TaskRow({ task, projectSlug, statusColumn, tree }: TaskRowProps) {
             <div className="flex-1 min-w-0 flex items-center gap-2">
               <div className="flex items-center gap-2 justify-between w-full">
                 <span className="line-clamp-2 text-sm text-foreground sm:truncate">
+                  {task.isMilestone && (
+                    <span aria-hidden="true" className="mr-1 text-brand-strong">
+                      ◆
+                    </span>
+                  )}
                   {task.title}
                 </span>
                 <div className="flex items-center gap-1">

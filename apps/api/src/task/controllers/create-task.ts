@@ -30,6 +30,7 @@ async function createTask({
   priority,
   parentId,
   estimate,
+  isMilestone = false,
   creatorWatches = false,
 }: {
   projectId: string;
@@ -43,6 +44,8 @@ async function createTask({
   priority?: string;
   parentId?: string | null;
   estimate?: number | null;
+  /** Un hito: una sola fecha y sin estimacion (ADR 082). */
+  isMilestone?: boolean;
   /**
    * Quien la crea la observa (ADR 076). Solo lo piden quienes crean de una en
    * una —la interfaz, la API y la captura—: una plantilla, una recurrencia o
@@ -92,6 +95,9 @@ async function createTask({
 
   const nextPosition = (maxPositionResult?.maxPosition ?? 0) + 1;
 
+  // Un hito tiene una sola fecha: la del final, si llegan las dos.
+  const milestoneDay = isMilestone ? (dueDate ?? startDate ?? null) : null;
+
   const createdTask = await db.transaction(async (tx) => {
     await lockProjectTree(tx, projectId);
 
@@ -109,14 +115,15 @@ async function createTask({
       .insert(taskTable)
       .values({
         ...treeFields,
-        estimate: estimate ?? null,
+        estimate: isMilestone ? null : (estimate ?? null),
+        isMilestone,
         projectId,
         userId: normalizedUserId ?? null,
         title: title || "",
         status: resolvedStatus,
         columnId: column?.id ?? null,
-        startDate: startDate || null,
-        dueDate: dueDate || null,
+        startDate: isMilestone ? milestoneDay : startDate || null,
+        dueDate: isMilestone ? milestoneDay : dueDate || null,
         description: description || "",
         priority: resolvedPriority,
         number: taskNumber,

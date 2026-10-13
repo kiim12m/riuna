@@ -86,6 +86,12 @@ export const BUILT_IN_FIELDS: FieldRegistry = {
     column: taskTable.completedAt,
     valueType: "date",
   },
+  // Un hito (ADR 082).
+  milestone: {
+    kind: "column",
+    column: taskTable.isMilestone,
+    valueType: "boolean",
+  },
   column: { kind: "column", column: taskTable.columnId, valueType: "id" },
   parent: { kind: "column", column: taskTable.parentId, valueType: "id" },
   depth: { kind: "column", column: taskTable.depth, valueType: "number" },

@@ -8756,6 +8756,12 @@
 				},
 				"manualAutomationActor": {
 					"type": "string"
+				},
+				"markedMilestone": {
+					"type": "string"
+				},
+				"unmarkedMilestone": {
+					"type": "string"
 				}
 			},
 			"required": [
@@ -8782,7 +8788,9 @@
 				"customFieldChangedPlain",
 				"emptyValue",
 				"automationActor",
-				"manualAutomationActor"
+				"manualAutomationActor",
+				"markedMilestone",
+				"unmarkedMilestone"
 			]
 		},
 		"tasks": {
@@ -9892,6 +9900,12 @@
 						},
 						"dependencyBlocks": {
 							"type": "string"
+						},
+						"milestoneAriaLabel": {
+							"type": "string"
+						},
+						"milestoneAriaLabelReadOnly": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -9920,7 +9934,9 @@
 						"previousRange",
 						"nextRange",
 						"quarterShort",
-						"dependencyBlocks"
+						"dependencyBlocks",
+						"milestoneAriaLabel",
+						"milestoneAriaLabelReadOnly"
 					]
 				},
 				"group": {
@@ -10607,6 +10623,9 @@
 								},
 								"watchers": {
 									"type": "string"
+								},
+								"milestone": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -10617,7 +10636,8 @@
 								"dueDate",
 								"done",
 								"completedAt",
-								"watchers"
+								"watchers",
+								"milestone"
 							]
 						},
 						"addField": {
@@ -11358,6 +11378,42 @@
 						}
 					},
 					"required": ["menu", "hint", "done", "failed", "error"]
+				},
+				"milestone": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"mark": {
+							"type": "string"
+						},
+						"is": {
+							"type": "string"
+						},
+						"hint": {
+							"type": "string"
+						},
+						"notWithSubtasks": {
+							"type": "string"
+						},
+						"marked": {
+							"type": "string"
+						},
+						"unmarked": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"mark",
+						"is",
+						"hint",
+						"notWithSubtasks",
+						"marked",
+						"unmarked",
+						"error"
+					]
 				}
 			},
 			"required": [
@@ -11403,7 +11459,8 @@
 				"archiveModal",
 				"watchers",
 				"reminder",
-				"manualActions"
+				"manualActions",
+				"milestone"
 			]
 		},
 		"invitations": {

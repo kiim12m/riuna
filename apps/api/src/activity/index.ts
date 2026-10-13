@@ -386,6 +386,18 @@ subscribeToEvent<{
   });
 });
 
+// Hacerla hito, o dejar de serlo (ADR 082).
+subscribeToEvent<{
+  taskId: string;
+  userId: string;
+  isMilestone: boolean;
+  type: string;
+}>("task.milestone_changed", async (data) => {
+  await createActivity(data.taskId, data.type, data.userId, null, {
+    isMilestone: data.isMilestone,
+  });
+});
+
 subscribeToEvent<{
   taskId: string;
   userId: string;

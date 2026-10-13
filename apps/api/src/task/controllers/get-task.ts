@@ -37,6 +37,7 @@ async function getTask(taskId: string) {
       path: taskTable.path,
       depth: taskTable.depth,
       estimate: taskTable.estimate,
+      isMilestone: taskTable.isMilestone,
       cycleId: taskTable.cycleId,
       completedAt: taskTable.completedAt,
       customFields: taskTable.customFields,

@@ -77,6 +77,15 @@ export function useWorkspaceFilterableFields(workspaceId: string) {
         label: t("tasks:table.columns.completedAt"),
         valueType: "date",
       },
+      {
+        key: "milestone",
+        label: t("tasks:table.columns.milestone"),
+        valueType: "boolean",
+        options: [
+          { value: "true", label: t("common:boolean.yes") },
+          { value: "false", label: t("common:boolean.no") },
+        ],
+      },
       ...custom,
     ];
   }, [workspaceUsers, workspaceFields, user?.id, t]);

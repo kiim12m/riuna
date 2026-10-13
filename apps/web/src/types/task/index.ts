@@ -77,6 +77,8 @@ type Task = {
   depth?: number;
   // Estimacion en segundos, la misma unidad que el tiempo registrado.
   estimate?: number | null;
+  // Un hito: una sola fecha, sin estimacion ni subtareas (ADR 082).
+  isMilestone?: boolean;
   epics?: TaskEpic[];
   // Los valores de los campos personalizados, indexados por la `key` de su
   // definicion. Siempre viene, aunque sea vacio: la columna es NOT NULL.

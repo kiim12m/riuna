@@ -2309,6 +2309,9 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -2379,6 +2382,9 @@
                     "type": "number",
                     "minimum": 0,
                     "nullable": true
+                  },
+                  "isMilestone": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -2464,6 +2470,9 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -2563,6 +2572,9 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -2717,6 +2729,9 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -2820,6 +2835,9 @@
                         "dueDate": {
                           "type": "string",
                           "format": "date-time"
+                        },
+                        "isMilestone": {
+                          "type": "boolean"
                         },
                         "customFields": {
                           "type": "object",
@@ -3275,6 +3293,9 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -3393,6 +3414,9 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -3515,6 +3539,9 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -3641,6 +3668,9 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -3815,6 +3845,9 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -3877,6 +3910,128 @@
         "summary": "Update Task Parent"
       }
     },
+    "/task/milestone/{id}": {
+      "put": {
+        "operationId": "updateTaskMilestone",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Mark or unmark a task as a milestone: a single date (its start becomes its due date), no estimate and no subtasks. A task with subtasks cannot be one",
+        "responses": {
+          "200": {
+            "description": "The task",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string"
+                    },
+                    "position": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "number": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "userId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "enum": [
+                        "no-priority",
+                        "low",
+                        "medium",
+                        "high",
+                        "urgent"
+                      ],
+                      "type": "string"
+                    },
+                    "startDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "position",
+                    "number",
+                    "userId",
+                    "title",
+                    "description",
+                    "status",
+                    "priority",
+                    "customFields",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "isMilestone": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "isMilestone"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Update Task Milestone"
+      }
+    },
     "/task/estimate/{id}": {
       "put": {
         "operationId": "updateTaskEstimate",
@@ -3937,6 +4092,9 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -4059,6 +4217,9 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -4178,6 +4339,9 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -4299,6 +4463,9 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
                     "customFields": {
                       "type": "object",
                       "additionalProperties": true
@@ -4414,6 +4581,9 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -4669,6 +4839,9 @@
                     "dueDate": {
                       "type": "string",
                       "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
                     },
                     "customFields": {
                       "type": "object",
@@ -15543,6 +15716,9 @@
                           "type": "string",
                           "format": "date-time"
                         },
+                        "isMilestone": {
+                          "type": "boolean"
+                        },
                         "customFields": {
                           "type": "object",
                           "additionalProperties": true
@@ -18275,6 +18451,9 @@
                           "dueDate": {
                             "type": "string",
                             "format": "date-time"
+                          },
+                          "isMilestone": {
+                            "type": "boolean"
                           },
                           "customFields": {
                             "type": "object",

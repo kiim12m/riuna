@@ -65,6 +65,11 @@ export default function DayOverflowPopover({
                   </span>
                 ) : null}
                 <span className="w-full truncate text-xs font-medium text-foreground">
+                  {task.isMilestone && (
+                    <span aria-hidden="true" className="mr-1 text-brand-strong">
+                      ◆
+                    </span>
+                  )}
                   {task.title}
                 </span>
                 <span className="w-full truncate text-label text-muted-foreground">

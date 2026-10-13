@@ -262,6 +262,11 @@ function TableView({
               onClick={() => onOpenTask(row.original.id)}
               className="truncate text-left text-xs hover:underline"
             >
+              {row.original.isMilestone && (
+                <span aria-hidden="true" className="mr-1 text-brand-strong">
+                  ◆
+                </span>
+              )}
               {row.original.title}
             </button>
             {row.original.subRows.length > 0 && (

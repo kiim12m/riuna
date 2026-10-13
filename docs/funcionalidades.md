@@ -147,6 +147,12 @@ horas, etiquetas, épicas, ciclo, campos personalizados y número de ticket.
   - Observarse a uno mismo basta con ver la tarea; añadir o quitar a otra persona
     pide poder asignar.
   - Observar no deja rastro en la actividad.
+- **Hitos** ([ADR 082](adr/082-hitos.md)): una tarea marcada como hito es un punto en el
+  tiempo.
+  - Tiene una sola fecha: el inicio es siempre el vencimiento.
+  - No lleva estimación, cronómetro ni subtareas.
+  - Sale como rombo en el Gantt y con `◆` en el Calendario, el tablero, la lista y la Tabla.
+  - Se filtra con «Hito».
 - **Recordatorio en la tarea** ([ADR 077](adr/077-recordatorio-en-la-tarea.md)):
   «Recuérdamelo» en el detalle y en el menú contextual.
   - Mañana a las 9:00, el próximo lunes, en una semana, o un día y una hora, con
@@ -200,8 +206,8 @@ prioridad, título, fechas, asignaciones de persona y de equipo, anidado,
 **Motor de filtros** común a todas ([ADR 014](adr/014-motor-de-filtros.md)):
 árbol `and`/`or`/`not` con los operadores `eq`, `neq`, `gt`, `gte`, `lt`,
 `lte`, `contains`, `startsWith`, `in`, `notIn`, `isEmpty` y `isNotEmpty`, sobre
-campos nativos, campos personalizados y pertenencia (épica, etiqueta,
-asignado, observador). El filtro vive en la URL, así que se comparte pegando el
+campos nativos (también «Hito»), campos personalizados y pertenencia (épica,
+etiqueta, asignado, observador). El filtro vive en la URL, así que se comparte pegando el
 enlace.
 
 **Vistas guardadas** ([ADR 015](adr/015-vistas-guardadas.md)): guardar el
@@ -669,7 +675,7 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 56 herramientas**. Una prueba de paridad
+Dos caminos con **las mismas 57 herramientas**. Una prueba de paridad
 (`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
 antes el paquete stdio se había quedado sin las cinco del plan personal y el
 cronómetro.

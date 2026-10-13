@@ -60,6 +60,7 @@ import updateTaskCustomFields from "./controllers/update-task-custom-fields";
 import updateTaskDescription from "./controllers/update-task-description";
 import updateTaskDueDate from "./controllers/update-task-due-date";
 import updateTaskEstimate from "./controllers/update-task-estimate";
+import updateTaskMilestone from "./controllers/update-task-milestone";
 import updateTaskParent from "./controllers/update-task-parent";
 import updateTaskPriority from "./controllers/update-task-priority";
 import updateTaskStatus from "./controllers/update-task-status";
@@ -332,6 +333,7 @@ const task = new Hono<{
         userId: v.optional(v.string()),
         parentId: v.optional(v.nullable(v.string())),
         estimate: v.optional(v.nullable(v.pipe(v.number(), v.minValue(0)))),
+        isMilestone: v.optional(v.boolean()),
       }),
     ),
     workspaceAccess.fromProject("projectId"),
@@ -349,6 +351,7 @@ const task = new Hono<{
         userId,
         parentId,
         estimate,
+        isMilestone,
       } = c.req.valid("json");
 
       const parsedStartDate =
@@ -374,6 +377,7 @@ const task = new Hono<{
         status,
         parentId,
         estimate,
+        isMilestone,
         creatorWatches: true,
       });
 
@@ -1055,6 +1059,38 @@ const task = new Hono<{
       });
 
       return c.json(task);
+    },
+  )
+  .put(
+    "/milestone/:id",
+    describeRoute({
+      operationId: "updateTaskMilestone",
+      tags: ["Tasks"],
+      description:
+        "Mark or unmark a task as a milestone: a single date (its start becomes its due date), no estimate and no subtasks. A task with subtasks cannot be one",
+      responses: {
+        200: {
+          description: "The task",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator("json", v.object({ isMilestone: v.boolean() })),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { isMilestone } = c.req.valid("json");
+      return c.json(
+        await updateTaskMilestone({
+          id,
+          isMilestone,
+          currentUserId: c.get("userId"),
+        }),
+      );
     },
   )
   .put(

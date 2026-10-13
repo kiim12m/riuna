@@ -172,6 +172,16 @@ export function useFilterableFields(projectId: string, workspaceId: string) {
         label: t("tasks:table.columns.completedAt"),
         valueType: "date",
       },
+      // Un hito (ADR 082).
+      {
+        key: "milestone",
+        label: t("tasks:table.columns.milestone"),
+        valueType: "boolean",
+        options: [
+          { value: "true", label: t("common:boolean.yes") },
+          { value: "false", label: t("common:boolean.no") },
+        ],
+      },
     ];
 
     const custom = customFieldsToFilterable(

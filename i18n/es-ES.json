@@ -2219,7 +2219,9 @@
 		"customFieldChangedPlain": "cambiado «{{name}}»",
 		"emptyValue": "vacío",
 		"automationActor": "Automatización «{{name}}»",
-		"manualAutomationActor": "{{user}} con «{{name}}»"
+		"manualAutomationActor": "{{user}} con «{{name}}»",
+		"markedMilestone": "la marcó como hito",
+		"unmarkedMilestone": "la volvió a dejar como tarea"
 	},
 	"tasks": {
 		"actions": {
@@ -2512,7 +2514,9 @@
 			"previousRange": "Retroceder",
 			"nextRange": "Avanzar",
 			"quarterShort": "T{{n}}",
-			"dependencyBlocks": "{{source}} bloquea a {{target}}"
+			"dependencyBlocks": "{{source}} bloquea a {{target}}",
+			"milestoneAriaLabel": "Hito {{title}}: arrastra para cambiar su fecha o pulsa Intro para abrirlo",
+			"milestoneAriaLabelReadOnly": "Hito {{title}}: pulsa Intro para abrirlo"
 		},
 		"group": {
 			"label": "Agrupar",
@@ -2696,7 +2700,8 @@
 				"dueDate": "Fecha límite",
 				"done": "Hecha",
 				"completedAt": "Fecha de cierre",
-				"watchers": "Observada por"
+				"watchers": "Observada por",
+				"milestone": "Hito"
 			},
 			"addField": "Añadir un campo",
 			"addFieldTitle": "Campo personalizado nuevo",
@@ -2892,6 +2897,15 @@
 			"done": "«{{name}}» hecho",
 			"failed": "«{{name}}» se quedó a medias: {{error}}",
 			"error": "No se pudo correr la acción"
+		},
+		"milestone": {
+			"mark": "Hito",
+			"is": "Hito",
+			"hint": "Un hito es una sola fecha, sin estimación, cronómetro ni subtareas.",
+			"notWithSubtasks": "Una tarea con subtareas no puede ser un hito.",
+			"marked": "Marcada como hito",
+			"unmarked": "Ya no es un hito",
+			"error": "No se pudo cambiar el hito"
 		}
 	},
 	"invitations": {

@@ -470,6 +470,9 @@ export const taskTable = pgTable(
     priority: text("priority").default("low").notNull(),
     startDate: timestamp("start_date", { mode: "date" }),
     dueDate: timestamp("due_date", { mode: "date" }),
+    // Un hito (ADR 082): una sola fecha —el inicio es el vencimiento—, sin
+    // estimacion ni subtareas. Columna propia porque se filtra.
+    isMilestone: boolean("is_milestone").notNull().default(false),
     // El arbol. `parent_id` es la verdad; `path` y `depth` son su forma
     // materializada, que es lo que permite contestar "todo el subarbol" con un
     // prefijo en vez de una recursiva por consulta. `path` incluye la propia

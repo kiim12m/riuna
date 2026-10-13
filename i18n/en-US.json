@@ -2219,7 +2219,9 @@
 		"customFieldChangedPlain": "changed “{{name}}”",
 		"emptyValue": "empty",
 		"automationActor": "Automation “{{name}}”",
-		"manualAutomationActor": "{{user}} via “{{name}}”"
+		"manualAutomationActor": "{{user}} via “{{name}}”",
+		"markedMilestone": "marked it as a milestone",
+		"unmarkedMilestone": "made it a regular task again"
 	},
 	"tasks": {
 		"actions": {
@@ -2512,7 +2514,9 @@
 			"previousRange": "Scroll back",
 			"nextRange": "Scroll forward",
 			"quarterShort": "Q{{n}}",
-			"dependencyBlocks": "{{source}} blocks {{target}}"
+			"dependencyBlocks": "{{source}} blocks {{target}}",
+			"milestoneAriaLabel": "Milestone {{title}}: drag to change its date or press Enter to open it",
+			"milestoneAriaLabelReadOnly": "Milestone {{title}}: press Enter to open it"
 		},
 		"group": {
 			"label": "Group",
@@ -2696,7 +2700,8 @@
 				"dueDate": "Due date",
 				"done": "Done",
 				"completedAt": "Completed on",
-				"watchers": "Watched by"
+				"watchers": "Watched by",
+				"milestone": "Milestone"
 			},
 			"addField": "Add a field",
 			"addFieldTitle": "New custom field",
@@ -2892,6 +2897,15 @@
 			"done": "“{{name}}” done",
 			"failed": "“{{name}}” stopped halfway: {{error}}",
 			"error": "Could not run the action"
+		},
+		"milestone": {
+			"mark": "Milestone",
+			"is": "Milestone",
+			"hint": "A milestone is a single date, with no estimate, timer or subtasks.",
+			"notWithSubtasks": "A task with subtasks cannot be a milestone.",
+			"marked": "Marked as a milestone",
+			"unmarked": "No longer a milestone",
+			"error": "Could not change the milestone"
 		}
 	},
 	"invitations": {

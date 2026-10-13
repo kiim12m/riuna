@@ -345,18 +345,25 @@ export function registerTools(
         startDate: optionalIsoDateTimeSchema,
         dueDate: optionalIsoDateTimeSchema,
         userId: optionalNonEmptyString,
+        isMilestone: z
+          .boolean()
+          .optional()
+          .describe(
+            "A milestone: a single date (its due date), no estimate and no subtasks.",
+          ),
         ...taskExtrasShape,
       }),
     },
     async (args) => {
       const { customFields, assigneeIds, teamId } = args;
       const extras: TaskExtras = { customFields, assigneeIds, teamId };
-      const body: Record<string, string | undefined> = {
+      const body: Record<string, string | boolean | undefined> = {
         title: args.title,
         description: args.description,
         priority: args.priority,
         status: args.status,
       };
+      if (args.isMilestone !== undefined) body.isMilestone = args.isMilestone;
       if (args.startDate !== undefined) {
         body.startDate = args.startDate;
       }
@@ -904,6 +911,24 @@ export function registerTools(
     },
   );
 
+  server.registerTool(
+    "set_task_milestone",
+    {
+      description:
+        "Mark or unmark a task as a milestone: a single date (its start becomes its due date), no estimate and no subtasks. A task with subtasks cannot be one.",
+      inputSchema: z.object({
+        taskId: nonEmptyString,
+        isMilestone: z.boolean(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/task/milestone/${encodeURIComponent(args.taskId)}`, {
+          method: "PUT",
+          body: JSON.stringify({ isMilestone: args.isMilestone }),
+        }),
+      ),
+  );
   server.registerTool(
     "delete_label",
     {

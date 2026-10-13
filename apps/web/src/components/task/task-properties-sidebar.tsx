@@ -54,6 +54,7 @@ import TaskLabelsPopover from "./task-labels-popover";
 import TaskMovePopover from "./task-move-popover";
 import TaskPriorityPopover from "./task-priority-popover";
 import TaskReminderButton from "./task-reminder-button";
+import TaskScheduleProperty from "./task-schedule-property";
 import TaskStartDatePopover from "./task-start-date-popover";
 import TaskStatusPopover from "./task-status-popover";
 import TaskTeamPopover from "./task-team-popover";
@@ -380,7 +381,7 @@ export default function TaskPropertiesSidebar({
                   />
                 </>
               )}
-              {task && (
+              {task && !task.isMilestone && (
                 <TaskStartDatePopover task={task}>
                   <Button
                     variant="ghost"
@@ -445,6 +446,7 @@ export default function TaskPropertiesSidebar({
                   </Button>
                 </TaskDueDatePopover>
               )}
+              {task && <TaskScheduleProperty task={task} />}
             </div>
           </div>
         )}
@@ -623,7 +625,7 @@ export default function TaskPropertiesSidebar({
                     />
                   </>
                 )}
-                {task && (
+                {task && !task.isMilestone && (
                   <TaskStartDatePopover task={task}>
                     <Button
                       variant="ghost"
@@ -688,6 +690,7 @@ export default function TaskPropertiesSidebar({
                     </Button>
                   </TaskDueDatePopover>
                 )}
+                {task && <TaskScheduleProperty task={task} />}
               </div>
             </div>
 
@@ -873,7 +876,7 @@ export default function TaskPropertiesSidebar({
                     />
                   </>
                 )}
-                {task && (
+                {task && !task.isMilestone && (
                   <TaskStartDatePopover task={task}>
                     <Button
                       variant="ghost"
@@ -938,6 +941,7 @@ export default function TaskPropertiesSidebar({
                     </Button>
                   </TaskDueDatePopover>
                 )}
+                {task && <TaskScheduleProperty task={task} />}
               </div>
             </div>
           </>

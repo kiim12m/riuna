@@ -21,6 +21,18 @@ async function updateTaskEstimate({
     });
   }
 
+  if (estimate != null) {
+    const [task] = await db
+      .select({ isMilestone: taskTable.isMilestone })
+      .from(taskTable)
+      .where(eq(taskTable.id, id))
+      .limit(1);
+    // Un hito no se estima (ADR 082): no dura.
+    if (task?.isMilestone) {
+      throw new HTTPException(400, { message: "A milestone has no estimate" });
+    }
+  }
+
   const [updatedTask] = await db
     .update(taskTable)
     .set({ estimate })

@@ -223,6 +223,42 @@ export function GanttTaskBar({
     );
   };
 
+  // Un hito es un rombo en su dia (ADR 082): se arrastra, pero no se estira.
+  if (task.isMilestone) {
+    const size = 14;
+    return (
+      <button
+        type="button"
+        aria-label={t(
+          readOnly
+            ? "tasks:gantt.milestoneAriaLabelReadOnly"
+            : "tasks:gantt.milestoneAriaLabel",
+          { title: task.title },
+        )}
+        data-testid="gantt-milestone"
+        onPointerDown={readOnly ? undefined : handleMove}
+        onClick={readOnly ? onOpenTask : undefined}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onOpenTask();
+          }
+        }}
+        className={cn(
+          "pointer-events-auto absolute top-1/2 z-[2] rotate-45 rounded-[2px] border-[1.5px] border-brand-strong bg-brand/70 outline-none transition-shadow hover:shadow-e2 focus-visible:ring-2 focus-visible:ring-ring",
+          readOnly ? "cursor-pointer" : "cursor-grab active:cursor-grabbing",
+          isDone && "opacity-50",
+        )}
+        style={{
+          left: left + width / 2 - size / 2,
+          width: size,
+          height: size,
+          marginTop: -size / 2,
+        }}
+      />
+    );
+  }
+
   // Corchete de la rama: solo cuando el subarbol se sale del tramo propio del
   // padre. Si el padre ya abarca a sus hijas, repetir la franja seria ruido.
   const subtree = task.subtree ?? null;

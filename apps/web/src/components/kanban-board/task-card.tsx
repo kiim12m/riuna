@@ -252,6 +252,11 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
                   hyphens: "auto",
                 }}
               >
+                {task.isMilestone && (
+                  <span aria-hidden="true" className="mr-1 text-brand-strong">
+                    ◆
+                  </span>
+                )}
                 {task.title}
               </div>
             </div>
