@@ -48,8 +48,17 @@ export type WidgetGroupBy =
 
 export type Granularity = "day" | "week" | "month";
 
-/** El mismo vocabulario que `utils/due-window.ts` en la API. */
-export type WidgetDueWindow = "overdue" | "today" | "week" | "later" | "none";
+/**
+ * El mismo vocabulario que `WIDGET_DUE_WINDOWS` en la API: las cinco ventanas
+ * de `utils/due-window.ts` mas `thisWeek`, la semana natural (ADR 090).
+ */
+export type WidgetDueWindow =
+  | "overdue"
+  | "today"
+  | "week"
+  | "thisWeek"
+  | "later"
+  | "none";
 
 /**
  * El mismo vocabulario editable que una vista guardada (ADR 015), reutilizado

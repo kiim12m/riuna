@@ -13119,7 +13119,8 @@
                           "today",
                           "week",
                           "later",
-                          "none"
+                          "none",
+                          "thisWeek"
                         ],
                         "type": "string"
                       },
@@ -13295,7 +13296,8 @@
                           "today",
                           "week",
                           "later",
-                          "none"
+                          "none",
+                          "thisWeek"
                         ],
                         "type": "string"
                       },

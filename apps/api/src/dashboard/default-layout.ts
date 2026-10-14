@@ -63,7 +63,10 @@ export const DEFAULT_LAYOUT: DefaultWidget[] = [
   {
     type: "count",
     title: "Vencen esta semana",
-    config: { scope: "assigned", dueWindow: "week", filter: OPEN_ONLY },
+    // La semana **natural**, de mañana al domingo (o al dia en que acabe la
+    // semana de quien mira): la `week` movil contaba tareas del martes que
+    // viene que la tira de "Mi semana" no ensenaba en ningun dia (ADR 090).
+    config: { scope: "assigned", dueWindow: "thisWeek", filter: OPEN_ONLY },
     span: 3,
     rowSpan: 1,
   },
@@ -117,11 +120,12 @@ export const DEFAULT_LAYOUT: DefaultWidget[] = [
     span: 3,
     rowSpan: 1,
   },
-  // Fila 3: la semana en curso, que es lo que las cifras no pueden decir.
+  // Fila 3: lo planificado para la semana en curso, que es lo que las cifras
+  // no pueden decir. Sin ambito: el plan ya es de quien mira (ADR 090).
   {
     type: "week",
     title: "Mi semana",
-    config: { scope: "assigned" },
+    config: {},
     span: 12,
     // Dos filas y no tres: la tira son siete columnas de cuatro tareas como
     // mucho, y con tres sobraban cien pixeles de vacio bajo el contenido.

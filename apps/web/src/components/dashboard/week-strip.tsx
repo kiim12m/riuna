@@ -21,12 +21,13 @@ export type WeekDay = {
 };
 
 /**
- * La semana en curso, un dia por columna.
+ * Lo planificado para la semana en curso, un dia por columna.
  *
- * Es lo que ninguna cifra puede decir —"que me toca el jueves"— y lo unico que
- * antes obligaba a salir del panel al Cronograma. La ventana la decide el
- * servidor a partir de la preferencia de inicio de semana, la misma que ya usan
- * calendario, Gantt y Cronograma: aqui no se recalcula nada.
+ * Es lo que ninguna cifra puede decir —"que tengo planificado el jueves"— y lo
+ * unico que antes obligaba a salir del panel al Planificador. Cada tarea sale
+ * en el dia en que se planifico, no en el que vence (ADR 090). La ventana la
+ * decide el servidor a partir de la preferencia de inicio de semana, la misma
+ * que ya usan calendario, Gantt y Cronograma: aqui no se recalcula nada.
  *
  * En movil son siete filas y no siete columnas: a 320 px cada columna serian
  * 45 px, donde no cabe ni un titulo.

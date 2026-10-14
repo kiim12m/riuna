@@ -115,6 +115,9 @@ export function WidgetEditor({
   const requiresProject = draft.type === "epic_progress";
   // Y un widget de objetivo tiene que nombrar uno.
   const requiresGoal = draft.type === "goal";
+  // La tira semanal es el plan de quien mira, que ya es personal: un ambito ahi
+  // seria un control que no cambia nada (ADR 090).
+  const hasPersonalScope = draft.type !== "week";
   // Y `status` compara slugs de un proyecto concreto.
   const availableGroupBy = draft.projectId
     ? groupByOptions
@@ -285,39 +288,41 @@ export function WidgetEditor({
 
             {/* El ambito personal: lo que "Mi trabajo" era como pantalla, y que
                 cualquier widget puede tener desde la ADR 031. */}
-            <div className="space-y-1.5">
-              <Label htmlFor="widget-personal-scope">
-                {t("panels:widget.personalScope")}
-              </Label>
-              <Select
-                value={draft.config.scope ?? "all"}
-                onValueChange={(value) =>
-                  setDraft((p) => ({
-                    ...p,
-                    config: {
-                      ...p.config,
-                      scope:
-                        value === "all"
-                          ? undefined
-                          : (value as "assigned" | "team"),
-                    },
-                  }))
-                }
-              >
-                <SelectTrigger id="widget-personal-scope">
-                  <SelectValue>
-                    {t(`panels:scope.${draft.config.scope ?? "all"}`)}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {SCOPES.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {t(`panels:scope.${option}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {hasPersonalScope && (
+              <div className="space-y-1.5">
+                <Label htmlFor="widget-personal-scope">
+                  {t("panels:widget.personalScope")}
+                </Label>
+                <Select
+                  value={draft.config.scope ?? "all"}
+                  onValueChange={(value) =>
+                    setDraft((p) => ({
+                      ...p,
+                      config: {
+                        ...p.config,
+                        scope:
+                          value === "all"
+                            ? undefined
+                            : (value as "assigned" | "team"),
+                      },
+                    }))
+                  }
+                >
+                  <SelectTrigger id="widget-personal-scope">
+                    <SelectValue>
+                      {t(`panels:scope.${draft.config.scope ?? "all"}`)}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SCOPES.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {t(`panels:scope.${option}`)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* El tamaño tambien se elige aqui, no solo arrastrando la esquina:
                 el tirador no existe con teclado ni por debajo de `lg`, y desde

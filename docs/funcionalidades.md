@@ -554,7 +554,9 @@ la tarea y en la propia tabla.
 - **Widgets**: contador, desglose, tendencia, tiempo registrado, progreso de
   épica, lista de tareas, **semana en curso**, notificaciones y objetivo. El de
   notificaciones se llamaba «Bandeja» hasta que ese nombre pasó al proyecto de
-  captura, hoy «Personal».
+  captura, hoy «Personal». La semana en curso enseña, día a día, lo que quien
+  mira tiene **planificado** (Planificador o Cronograma), no lo que vence
+  ([ADR 090](adr/090-mi-semana-lee-el-plan.md)).
   Las métricas son tareas, completadas, porcentaje completado, estimado y
   registrado; se agrupan por proyecto, asignado, prioridad, equipo, estado,
   hecho, vencimiento (sin fecha, vencida, hoy, esta semana, más adelante),
@@ -567,9 +569,9 @@ la tarea y en la propia tabla.
   alto (1-6), o se ajusta desde su diálogo. Los widgets se recolocan sin dejar
   huecos y el ancho se reduce solo en tablet y móvil.
 - **Distribución de partida** en tres alturas: ocho cifras arriba —vencidas,
-  vencen hoy, vencen esta semana, pendientes, cerradas en siete días, alta
-  prioridad, sin fecha y horas registradas—, la semana en curso a ancho
-  completo, y debajo la lista de pendientes con las notificaciones al lado. Restaurable
+  vencen hoy, vencen esta semana (de mañana al final de la semana natural),
+  pendientes, cerradas en siete días, alta prioridad, sin fecha y horas
+  registradas—, la semana en curso a ancho completo, y debajo la lista de pendientes con las notificaciones al lado. Restaurable
   en cualquier momento, sustituyendo los widgets que se hayan añadido o editado.
 - **Objetivos (OKR)**: objetivo con periodo de fechas y **resultados clave**
   medidos con el mismo motor de agregación que los widgets. Compartibles con el

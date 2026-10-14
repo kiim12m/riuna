@@ -1,7 +1,12 @@
-import { gte, lt, type SQL } from "drizzle-orm";
+import { and, gte, lt, type SQL } from "drizzle-orm";
 import { taskTable } from "../database/schema";
+import { addDays, startOfServerDay } from "../utils/day-boundaries";
 import { dueWindowCondition } from "../utils/due-window";
-import { trendRange, type WidgetConfig } from "./widget-config";
+import {
+  trendRange,
+  type WidgetConfig,
+  type WidgetDueWindow,
+} from "./widget-config";
 
 /**
  * Lo que distingue a un widget **dentro** de un barrido compartido.
@@ -14,13 +19,38 @@ import { trendRange, type WidgetConfig } from "./widget-config";
  * `FILTER (WHERE ...)` (la ruta colapsada), que es lo que garantiza que las dos
  * devuelvan la misma cifra.
  *
+ * `weekStart` es el principio de la semana natural de quien mira
+ * (`startOfServerWeek`), que solo hace falta para `thisWeek`.
+ *
  * **La ventana de `rangeDays` no esta aqui a proposito**: se aplica sobre
  * `task.completed_at` o sobre `time_entry.start_time` segun la metrica, y esa
  * eleccion la hace `aggregate()`, que es quien sabe sobre que relacion esta
  * consultando. Meterla aqui habria puesto `completed_at` en la tarjeta de horas.
  */
-export function widgetPredicates(config: WidgetConfig, now: Date): SQL[] {
-  return config.dueWindow ? [dueWindowCondition(config.dueWindow, now)] : [];
+export function widgetPredicates(
+  config: WidgetConfig,
+  now: Date,
+  weekStart: Date,
+): SQL[] {
+  return config.dueWindow
+    ? [widgetDueWindowCondition(config.dueWindow, now, weekStart)]
+    : [];
+}
+
+function widgetDueWindowCondition(
+  window: WidgetDueWindow,
+  now: Date,
+  weekStart: Date,
+): SQL {
+  if (window !== "thisWeek") return dueWindowCondition(window, now);
+
+  // De mañana, como la `week` compartida —hoy ya lo cuenta "Vencen hoy"—, al
+  // final de la semana natural. El ultimo dia de la semana el rango queda
+  // vacio y la tarjeta da 0, que es la respuesta correcta.
+  return and(
+    gte(taskTable.dueDate, addDays(startOfServerDay(now), 1)),
+    lt(taskTable.dueDate, addDays(weekStart, 7)),
+  ) as SQL;
 }
 
 /**

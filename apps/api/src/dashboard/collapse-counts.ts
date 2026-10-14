@@ -41,12 +41,15 @@ export default async function collapseCountWidgets({
   workspaceId,
   userId,
   now,
+  weekStart,
   registryFor,
 }: {
   widgets: WidgetRow[];
   workspaceId: string;
   userId: string;
   now: Date;
+  /** El principio de la semana natural de quien mira, para `thisWeek`. */
+  weekStart: Date;
   registryFor: (projectId: string | null) => Promise<FieldRegistry>;
 }): Promise<Map<string, AggregateResult>> {
   const out = new Map<string, AggregateResult>();
@@ -104,7 +107,7 @@ export default async function collapseCountWidgets({
       const config = widget.config as WidgetConfig;
       try {
         const conditions: SQL[] = [
-          ...widgetPredicates(config, now),
+          ...widgetPredicates(config, now, weekStart),
           ...completionRangePredicates(config, now),
         ];
         const compiled = filterToSql(
