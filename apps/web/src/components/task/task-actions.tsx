@@ -1,0 +1,162 @@
+import { Copy, GitBranch } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import { KbdSequence } from "@/components/ui/kbd";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import useGetGiteaIntegration from "@/hooks/queries/gitea-integration/use-get-gitea-integration";
+import useGetGithubIntegration from "@/hooks/queries/github-integration/use-get-github-integration";
+import useGetProject from "@/hooks/queries/project/use-get-project";
+import useGetProjects from "@/hooks/queries/project/use-get-projects";
+import useGetTask from "@/hooks/queries/task/use-get-task";
+import { cn } from "@/lib/cn";
+import { toast } from "@/lib/toast";
+import TaskMovePopover from "./task-move-popover";
+import TaskReminderButton from "./task-reminder-button";
+import TaskWatchersButton from "./task-watchers-button";
+
+function slugify(text: string | undefined): string {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 50);
+}
+
+function generateBranchName(
+  pattern: string,
+  projectSlug: string | undefined,
+  taskNumber: number | null | undefined,
+  taskTitle: string | undefined,
+): string {
+  if (!projectSlug || !taskNumber) return "";
+  return pattern
+    .replace("{slug}", projectSlug.toLowerCase())
+    .replace("{number}", taskNumber.toString())
+    .replace("{title}", slugify(taskTitle));
+}
+
+type TaskActionsProps = {
+  taskId: string;
+  projectId: string;
+  workspaceId: string;
+  /** Sin la palabra en «Recuérdamelo» y «Observando», donde no cabe. */
+  iconOnly?: boolean;
+  className?: string;
+};
+
+/**
+ * Las acciones sobre la tarea -recordar, observar, mover, copiar enlace y
+ * rama-. Van en la cabecera del cajon, en la de la pagina completa por debajo
+ * de `lg` y en la del lateral de escritorio: un solo componente para que las
+ * tres no vuelvan a divergir.
+ */
+export default function TaskActions({
+  taskId,
+  projectId,
+  workspaceId,
+  iconOnly = false,
+  className,
+}: TaskActionsProps) {
+  const { t } = useTranslation();
+  const { data: task } = useGetTask(taskId);
+  const { data: project } = useGetProject({ id: projectId, workspaceId });
+  const { data: githubIntegration } = useGetGithubIntegration(projectId);
+  const { data: giteaIntegration } = useGetGiteaIntegration(projectId);
+  const { data: workspaceProjects = [] } = useGetProjects({ workspaceId });
+  const canMoveTask =
+    Boolean(task) && workspaceProjects.some((p) => p.id !== task?.projectId);
+  const branchPattern =
+    githubIntegration?.branchPattern ||
+    giteaIntegration?.branchPattern ||
+    "{slug}-{number}";
+
+  const handleCopyTaskLink = () => {
+    navigator.clipboard.writeText(
+      `${window.location.origin}/dashboard/workspace/${workspaceId}/project/${projectId}/task/${taskId}`,
+    );
+    toast.message(t("tasks:properties.copyTaskLink"));
+  };
+
+  const handleCopyTaskBranch = () => {
+    navigator.clipboard.writeText(
+      generateBranchName(
+        branchPattern,
+        project?.slug,
+        task?.number,
+        task?.title,
+      ),
+    );
+    toast.message(t("tasks:properties.copyTaskBranch"));
+  };
+
+  return (
+    <div className={cn("flex items-center gap-2", className)}>
+      <TaskReminderButton taskId={taskId} iconOnly={iconOnly} />
+      <TaskWatchersButton
+        taskId={taskId}
+        workspaceId={workspaceId}
+        iconOnly={iconOnly}
+      />
+      <div className="flex">
+        {task && canMoveTask && (
+          <TaskMovePopover
+            task={task}
+            workspaceId={workspaceId}
+            triggerClassName="rounded-l-md rounded-r-none border-r-0"
+          />
+        )}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "text-foreground border-r-0",
+                  canMoveTask ? "rounded-none" : "rounded-r-none",
+                )}
+                onClick={handleCopyTaskLink}
+                aria-label={t("tasks:properties.copyTaskLink")}
+              >
+                <Copy className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <KbdSequence
+                keys={["Ctrl", "Shift", "C"]}
+                description={t("tasks:properties.copyTaskLink")}
+                separator=""
+              />
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-foreground rounded-l-none"
+                onClick={handleCopyTaskBranch}
+                aria-label={t("tasks:properties.copyTaskBranch")}
+              >
+                <GitBranch className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <KbdSequence
+                keys={["Ctrl", "Shift", "G"]}
+                description={t("tasks:properties.copyTaskBranch")}
+                separator=""
+              />
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    </div>
+  );
+}

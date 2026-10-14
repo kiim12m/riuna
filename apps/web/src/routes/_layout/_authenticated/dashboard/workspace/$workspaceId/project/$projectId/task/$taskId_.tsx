@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import TaskLayout from "@/components/common/task-layout";
 import PageTitle from "@/components/page-title";
+import TaskActions from "@/components/task/task-actions";
 import TaskDetailsContent from "@/components/task/task-details-content";
 import {
   TaskDetailsSkeleton,
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import useGetActivitiesByTaskId from "@/hooks/queries/activity/use-get-activities-by-task-id";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTask from "@/hooks/queries/task/use-get-task";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { getSharedShikiHighlighter } from "@/lib/shiki-highlighter";
 
 export const Route = createFileRoute(
@@ -25,6 +27,10 @@ function RouteComponent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { projectId, workspaceId, taskId } = Route.useParams();
+  // A partir de `lg` los campos personalizados y las acciones van en la
+  // columna de propiedades; por debajo, la barra de arriba no lleva ninguno de
+  // los dos: los campos van en el cuerpo y las acciones en la cabecera.
+  const isWide = useMediaQuery("(min-width: 1024px)");
   const {
     data: task,
     isLoading: isTaskLoading,
@@ -65,6 +71,16 @@ function RouteComponent() {
       taskId={taskId}
       projectId={projectId}
       workspaceId={workspaceId}
+      headerActions={
+        !isWide && task ? (
+          <TaskActions
+            taskId={taskId}
+            projectId={projectId}
+            workspaceId={workspaceId}
+            iconOnly
+          />
+        ) : undefined
+      }
       rightSidebar={
         isLoading ? (
           <TaskPropertiesSidebarSkeleton className="h-full w-full lg:w-72 xl:w-80 flex flex-col gap-2" />
@@ -119,6 +135,7 @@ function RouteComponent() {
           projectId={projectId}
           workspaceId={workspaceId}
           className="mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col gap-2 px-3 pb-16 pt-3 sm:px-4 xl:pb-20 xl:pt-8"
+          showCustomFields={!isWide}
         />
       )}
     </TaskLayout>

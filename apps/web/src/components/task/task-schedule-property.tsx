@@ -60,7 +60,7 @@ function DatesModeProperty({ task }: { task: Task }) {
         <Button
           variant="ghost"
           size="sm"
-          className="justify-start h-7 px-1.5 gap-1.5 w-full"
+          className="justify-start h-7 px-1.5 gap-1.5"
           disabled={!canUpdateTasks() || isPending}
           data-testid="task-dates-mode"
         >
@@ -127,7 +127,7 @@ function MilestoneProperty({ task }: { task: Task }) {
     <Button
       variant="ghost"
       size="sm"
-      className="justify-start h-7 px-1.5 gap-1.5 w-full"
+      className="justify-start h-7 px-1.5 gap-1.5"
       disabled={disabled}
       aria-pressed={isMilestone}
       data-testid="task-milestone-toggle"

@@ -1,12 +1,7 @@
-import { Calendar, CalendarClock, CalendarX } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import DueDatePill from "@/components/task/due-date-pill";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  dueDateStatusColors,
-  getDueDateStatus,
-  isTaskCompleted,
-} from "@/lib/due-date-status";
-import { formatDateShort } from "@/lib/format";
+import { isTaskCompleted } from "@/lib/due-date-status";
 import { getInitials } from "@/lib/get-initials";
 import { getPriorityIcon } from "@/lib/priority";
 import type { PublicTask } from "@/types/project";
@@ -73,21 +68,7 @@ export function PublicTaskRow({
         )}
 
         {task.dueDate && (
-          <div
-            className={`flex items-center gap-1 text-label px-2 py-1 rounded ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
-          >
-            {getDueDateStatus(task.dueDate, taskIsCompleted) === "overdue" && (
-              <CalendarX className="w-3 h-3" />
-            )}
-            {getDueDateStatus(task.dueDate, taskIsCompleted) === "due-soon" && (
-              <CalendarClock className="w-3 h-3" />
-            )}
-            {(getDueDateStatus(task.dueDate, taskIsCompleted) ===
-              "far-future" ||
-              getDueDateStatus(task.dueDate, taskIsCompleted) ===
-                "no-due-date") && <Calendar className="w-3 h-3" />}
-            <span>{formatDateShort(task.dueDate)}</span>
-          </div>
+          <DueDatePill dueDate={task.dueDate} isCompleted={taskIsCompleted} />
         )}
 
         {task.priority && (

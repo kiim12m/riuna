@@ -1,19 +1,12 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useNavigate } from "@tanstack/react-router";
-import { format } from "date-fns";
 import { useReducedMotion } from "framer-motion";
-import {
-  Calendar,
-  CalendarClock,
-  CalendarX,
-  ChevronRight,
-  GitMerge,
-  GitPullRequest,
-} from "lucide-react";
+import { ChevronRight, GitMerge, GitPullRequest } from "lucide-react";
 import { type CSSProperties, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AssigneeStack } from "@/components/task/assignee-stack";
+import DueDatePill from "@/components/task/due-date-pill";
 import {
   AlertDialog,
   AlertDialogClose,
@@ -33,11 +26,7 @@ import { useDeleteTask } from "@/hooks/mutations/task/use-delete-task";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { cn } from "@/lib/cn";
 import { getColumnIcon } from "@/lib/column";
-import {
-  dueDateStatusColors,
-  getDueDateStatus,
-  isTaskCompleted,
-} from "@/lib/due-date-status";
+import { isTaskCompleted } from "@/lib/due-date-status";
 import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
 import queryClient from "@/query-client";
@@ -78,6 +67,14 @@ type TaskRowProps = {
 // Cada nivel sangra lo justo para que la relacion se lea sin comerse el ancho
 // del titulo, que es lo que pasa cuando se sangra por tabulador entero.
 const TREE_INDENT_PX = 18;
+
+// La parte derecha va en ranuras de ancho fijo a partir de `sm`: midiendo
+// cada pieza por su contenido, «Hecha» y «En revisión», «8 oct» y «30 oct» o
+// uno y dos avatares descolocaban la fila siguiente. En movil no: tres
+// ranuras fijas dejarian el titulo en nada.
+const STATUS_SLOT = "sm:w-28";
+const DUE_DATE_SLOT = "sm:w-[4.75rem]";
+const ASSIGNEE_SLOT = "sm:w-16";
 
 function TaskRow({
   task,
@@ -293,169 +290,186 @@ function TaskRow({
             {/* En movil la clave le quitaba el sitio al titulo: se queda en el
              * detalle y en pantallas anchas. */}
             {showTaskNumbers && (
-              <div className="hidden text-xs font-mono text-muted-foreground flex-shrink-0 sm:block">
+              <div
+                className="hidden text-xs font-mono tabular-nums text-muted-foreground flex-shrink-0 sm:block"
+                // Ancho de la clave hasta el numero 9999: «DEMO-1» y «DEMO-16»
+                // ocupan lo mismo y los titulos de un nivel empiezan a la vez.
+                style={{ minWidth: `${projectSlug.length + 5}ch` }}
+              >
                 {projectSlug}-{task.number}
               </div>
             )}
 
             <div className="flex-1 min-w-0 flex items-center gap-2">
-              <div className="flex items-center gap-2 justify-between w-full">
-                <span className="line-clamp-2 text-sm text-foreground sm:truncate">
-                  {task.isMilestone && (
-                    <span aria-hidden="true" className="mr-1 text-brand-strong">
-                      ◆
-                    </span>
-                  )}
-                  {task.title}
-                </span>
-                <div className="flex items-center gap-1">
-                  <SubtaskBadge subtree={task.subtree} />
-                  {showLabels && <TaskLabels labels={task.labels ?? []} />}
+              <span className="line-clamp-2 min-w-0 text-sm text-foreground sm:truncate">
+                {task.isMilestone && (
+                  <span aria-hidden="true" className="mr-1 text-brand-strong">
+                    ◆
+                  </span>
+                )}
+                {task.title}
+              </span>
+              <SubtaskBadge subtree={task.subtree} variant="inline" />
+              {/* En movil, como la clave: las etiquetas no encogen y dejaban
+               * el titulo en nada. */}
+              <div className="ml-auto hidden items-center gap-1 sm:flex">
+                {showLabels && <TaskLabels labels={task.labels ?? []} />}
 
-                  {pullRequests.length === 1 && (
-                    <HoverCard openDelay={200} closeDelay={100}>
-                      <HoverCardTrigger asChild>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            window.open(pullRequests[0].url, "_blank");
-                          }}
-                          className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-label font-medium text-muted-foreground"
-                        >
-                          {getPRInfo(pullRequests[0]).icon}
-                          <span>#{pullRequests[0].externalId}</span>
-                        </button>
-                      </HoverCardTrigger>
-                      <HoverCardContent
-                        className="w-72 p-3"
-                        side="bottom"
-                        onClick={(e) => e.stopPropagation()}
+                {pullRequests.length === 1 && (
+                  <HoverCard openDelay={200} closeDelay={100}>
+                    <HoverCardTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(pullRequests[0].url, "_blank");
+                        }}
+                        className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-label font-medium text-muted-foreground"
                       >
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {getPRInfo(pullRequests[0]).icon}
-                            <span>{getPRInfo(pullRequests[0]).status}</span>
-                            <span className="text-muted-foreground/50">•</span>
-                            <span>#{pullRequests[0].externalId}</span>
-                          </div>
-                          <p className="text-sm font-medium leading-snug">
-                            {pullRequests[0].title || t("tasks:pr.label")}
-                          </p>
+                        {getPRInfo(pullRequests[0]).icon}
+                        <span>#{pullRequests[0].externalId}</span>
+                      </button>
+                    </HoverCardTrigger>
+                    <HoverCardContent
+                      className="w-72 p-3"
+                      side="bottom"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {getPRInfo(pullRequests[0]).icon}
+                          <span>{getPRInfo(pullRequests[0]).status}</span>
+                          <span className="text-muted-foreground/50">•</span>
+                          <span>#{pullRequests[0].externalId}</span>
                         </div>
-                      </HoverCardContent>
-                    </HoverCard>
-                  )}
+                        <p className="text-sm font-medium leading-snug">
+                          {pullRequests[0].title || t("tasks:pr.label")}
+                        </p>
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+                )}
 
-                  {pullRequests.length > 1 &&
-                    (() => {
-                      const hasOpen = pullRequests.some(
-                        (pr) => !pr.metadata?.merged && !pr.metadata?.draft,
-                      );
-                      const allMerged = pullRequests.every(
-                        (pr) => pr.metadata?.merged,
-                      );
-                      const iconColor = allMerged
-                        ? "text-info-foreground"
-                        : hasOpen
-                          ? "text-success-foreground"
-                          : "text-muted-foreground";
+                {pullRequests.length > 1 &&
+                  (() => {
+                    const hasOpen = pullRequests.some(
+                      (pr) => !pr.metadata?.merged && !pr.metadata?.draft,
+                    );
+                    const allMerged = pullRequests.every(
+                      (pr) => pr.metadata?.merged,
+                    );
+                    const iconColor = allMerged
+                      ? "text-info-foreground"
+                      : hasOpen
+                        ? "text-success-foreground"
+                        : "text-muted-foreground";
 
-                      return (
-                        <HoverCard openDelay={200} closeDelay={100}>
-                          <HoverCardTrigger asChild>
-                            <button
-                              type="button"
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-label font-medium text-muted-foreground"
-                            >
-                              <GitPullRequest
-                                className={`h-3 w-3 ${iconColor}`}
-                              />
-                              <span>
-                                {t("tasks:pr.count", {
-                                  count: pullRequests.length,
-                                })}
-                              </span>
-                            </button>
-                          </HoverCardTrigger>
-                          <HoverCardContent
-                            className="w-auto min-w-56 max-w-96 p-1"
-                            side="bottom"
+                    return (
+                      <HoverCard openDelay={200} closeDelay={100}>
+                        <HoverCardTrigger asChild>
+                          <button
+                            type="button"
                             onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-label font-medium text-muted-foreground"
                           >
-                            {pullRequests.map((pr, index) => {
-                              const prInfo = getPRInfo(pr);
-                              const repoMatch = pr.url.match(
-                                /github\.com\/([^/]+\/[^/]+)\/pull/,
-                              );
-                              const repoName = repoMatch ? repoMatch[1] : null;
-                              return (
-                                <div key={pr.id}>
-                                  {index > 0 && (
-                                    <hr className="border-border my-1" />
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      window.open(pr.url, "_blank")
-                                    }
-                                    className="w-full px-2 py-1.5 text-left hover:bg-muted/50 rounded transition-colors"
-                                  >
-                                    <div className="flex items-center gap-1.5 text-label text-muted-foreground">
-                                      {prInfo.icon}
-                                      <span>
-                                        {repoName}#{pr.externalId}
-                                      </span>
-                                    </div>
-                                    <p className="text-xs leading-tight line-clamp-2 mt-0.5">
-                                      {pr.title || t("tasks:pr.label")}
-                                    </p>
-                                    <span className="text-meta text-muted-foreground">
-                                      {prInfo.status}
+                            <GitPullRequest
+                              className={`h-3 w-3 ${iconColor}`}
+                            />
+                            <span>
+                              {t("tasks:pr.count", {
+                                count: pullRequests.length,
+                              })}
+                            </span>
+                          </button>
+                        </HoverCardTrigger>
+                        <HoverCardContent
+                          className="w-auto min-w-56 max-w-96 p-1"
+                          side="bottom"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {pullRequests.map((pr, index) => {
+                            const prInfo = getPRInfo(pr);
+                            const repoMatch = pr.url.match(
+                              /github\.com\/([^/]+\/[^/]+)\/pull/,
+                            );
+                            const repoName = repoMatch ? repoMatch[1] : null;
+                            return (
+                              <div key={pr.id}>
+                                {index > 0 && (
+                                  <hr className="border-border my-1" />
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => window.open(pr.url, "_blank")}
+                                  className="w-full px-2 py-1.5 text-left hover:bg-muted/50 rounded transition-colors"
+                                >
+                                  <div className="flex items-center gap-1.5 text-label text-muted-foreground">
+                                    {prInfo.icon}
+                                    <span>
+                                      {repoName}#{pr.externalId}
                                     </span>
-                                  </button>
-                                </div>
-                              );
-                            })}
-                          </HoverCardContent>
-                        </HoverCard>
-                      );
-                    })()}
-                </div>
+                                  </div>
+                                  <p className="text-xs leading-tight line-clamp-2 mt-0.5">
+                                    {pr.title || t("tasks:pr.label")}
+                                  </p>
+                                  <span className="text-meta text-muted-foreground">
+                                    {prInfo.status}
+                                  </span>
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </HoverCardContent>
+                      </HoverCard>
+                    );
+                  })()}
               </div>
             </div>
 
             {statusColumn && (
-              <div className="flex items-center gap-1 text-label text-muted-foreground flex-shrink-0 rounded border border-border/60 px-1.5 py-0.5 [&_svg]:h-3 [&_svg]:w-3">
-                {getColumnIcon(
-                  statusColumn.id,
-                  statusColumn.isFinal ?? undefined,
-                  statusColumn.icon,
-                )}
-                <span>{statusColumn.name}</span>
+              <div className={cn("flex-shrink-0", STATUS_SLOT)}>
+                <div
+                  className="flex items-center gap-1 text-label text-muted-foreground rounded border border-border/60 px-1.5 py-0.5 [&_svg]:h-3 [&_svg]:w-3 [&_svg]:shrink-0"
+                  title={statusColumn.name}
+                >
+                  {getColumnIcon(
+                    statusColumn.id,
+                    statusColumn.isFinal ?? undefined,
+                    statusColumn.icon,
+                  )}
+                  <span className="truncate">{statusColumn.name}</span>
+                </div>
               </div>
             )}
 
-            {showDueDates && task.dueDate && (
+            {/* Sin fecha la ranura se queda vacia, para no correr a las demas. */}
+            {showDueDates && (
               <div
-                className={`flex items-center gap-1 text-label px-2 py-1 rounded flex-shrink-0 ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
+                className={cn(
+                  "flex-shrink-0",
+                  DUE_DATE_SLOT,
+                  !task.dueDate && "hidden sm:block",
+                )}
               >
-                {getDueDateStatus(task.dueDate, taskIsCompleted) ===
-                  "overdue" && <CalendarX className="w-3 h-3" />}
-                {getDueDateStatus(task.dueDate, taskIsCompleted) ===
-                  "due-soon" && <CalendarClock className="w-3 h-3" />}
-                {(getDueDateStatus(task.dueDate, taskIsCompleted) ===
-                  "far-future" ||
-                  getDueDateStatus(task.dueDate, taskIsCompleted) ===
-                    "no-due-date") && <Calendar className="w-3 h-3" />}
-                <span>{format(new Date(task.dueDate), "MMM d")}</span>
+                {task.dueDate && (
+                  <DueDatePill
+                    dueDate={task.dueDate}
+                    isCompleted={taskIsCompleted}
+                    className="w-full"
+                  />
+                )}
               </div>
             )}
 
             {showAssignees && (
-              <div className="flex-shrink-0">
-                <AssigneeStack assignees={task.assignees ?? []} size="md" />
+              <div
+                className={cn("flex flex-shrink-0 justify-end", ASSIGNEE_SLOT)}
+              >
+                <AssigneeStack
+                  assignees={task.assignees ?? []}
+                  size="md"
+                  max={2}
+                />
               </div>
             )}
           </div>

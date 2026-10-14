@@ -1,12 +1,11 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useNavigate } from "@tanstack/react-router";
-import { format } from "date-fns";
 import { useReducedMotion } from "framer-motion";
-import { Calendar, CalendarClock, CalendarX } from "lucide-react";
 import { type CSSProperties, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AssigneeStack } from "@/components/task/assignee-stack";
+import DueDatePill from "@/components/task/due-date-pill";
 import {
   AlertDialog,
   AlertDialogClose,
@@ -20,11 +19,7 @@ import { Button } from "@/components/ui/button";
 import { useDeleteTask } from "@/hooks/mutations/task/use-delete-task";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { cn } from "@/lib/cn";
-import {
-  dueDateStatusColors,
-  getDueDateStatus,
-  isTaskCompleted,
-} from "@/lib/due-date-status";
+import { isTaskCompleted } from "@/lib/due-date-status";
 import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
 import queryClient from "@/query-client";
@@ -173,42 +168,51 @@ export default function BacklogTaskRow({ task }: BacklogTaskRowProps) {
               </div>
             )}
             {showTaskNumbers && (
-              <div className="text-xs font-mono text-muted-foreground flex-shrink-0">
+              <div
+                className="text-xs font-mono tabular-nums text-muted-foreground flex-shrink-0"
+                // Las mismas ranuras que la fila de la Lista (`list-view/task-row`).
+                style={{ minWidth: `${(project?.slug ?? "").length + 5}ch` }}
+              >
                 {project?.slug}-{task.number}
               </div>
             )}
 
             <div className="flex-1 min-w-0 flex items-center gap-2">
-              <div className="flex items-center gap-2 justify-between w-full">
-                <span className="text-sm text-foreground truncate">
-                  {task.title}
-                </span>
-                <div className="flex items-center gap-1">
-                  <SubtaskBadge subtree={task.subtree} />
-                  {showLabels && <TaskLabels labels={task.labels ?? []} />}
+              <span className="min-w-0 text-sm text-foreground truncate">
+                {task.title}
+              </span>
+              <SubtaskBadge subtree={task.subtree} variant="inline" />
+              {showLabels && (
+                <div className="ml-auto hidden items-center gap-1 sm:flex">
+                  <TaskLabels labels={task.labels ?? []} />
                 </div>
-              </div>
+              )}
             </div>
 
-            {showDueDates && task.dueDate && (
+            {showDueDates && (
               <div
-                className={`flex items-center gap-1 text-label px-2 py-1 rounded flex-shrink-0 ${dueDateStatusColors[getDueDateStatus(task.dueDate, taskIsCompleted)]}`}
+                className={cn(
+                  "flex-shrink-0 sm:w-[4.75rem]",
+                  !task.dueDate && "hidden sm:block",
+                )}
               >
-                {getDueDateStatus(task.dueDate, taskIsCompleted) ===
-                  "overdue" && <CalendarX className="w-3 h-3" />}
-                {getDueDateStatus(task.dueDate, taskIsCompleted) ===
-                  "due-soon" && <CalendarClock className="w-3 h-3" />}
-                {(getDueDateStatus(task.dueDate, taskIsCompleted) ===
-                  "far-future" ||
-                  getDueDateStatus(task.dueDate, taskIsCompleted) ===
-                    "no-due-date") && <Calendar className="w-3 h-3" />}
-                <span>{format(new Date(task.dueDate), "MMM d")}</span>
+                {task.dueDate && (
+                  <DueDatePill
+                    dueDate={task.dueDate}
+                    isCompleted={taskIsCompleted}
+                    className="w-full"
+                  />
+                )}
               </div>
             )}
 
             {showAssignees && (
-              <div className="flex-shrink-0">
-                <AssigneeStack assignees={task.assignees ?? []} size="md" />
+              <div className="flex flex-shrink-0 justify-end sm:w-16">
+                <AssigneeStack
+                  assignees={task.assignees ?? []}
+                  size="md"
+                  max={2}
+                />
               </div>
             )}
           </div>
