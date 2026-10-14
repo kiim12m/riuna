@@ -6659,7 +6659,7 @@
         "tags": [
           "Fields"
         ],
-        "description": "Define a custom field inside a project",
+        "description": "Define a custom field inside a project. `description` is its help text. A `formula` field is calculated: `config.expression` reads number, currency and other calculated fields by name between braces ({Budget}), the branch estimate and logged time in hours ({Estimate}, {Logged}), with + - * /, min(), max() and si(condition; then; else); `config.format` is \"number\", \"currency\" (with `config.currency`) or \"percent\". It is stored with keys instead of names, and its value cannot be written",
         "responses": {
           "200": {
             "description": "Field definition created successfully",
@@ -6705,12 +6705,14 @@
                       "checkbox",
                       "user",
                       "url",
-                      "relation"
+                      "relation",
+                      "formula"
                     ],
                     "type": "string"
                   },
                   "description": {
                     "type": "string",
+                    "maxLength": 500,
                     "nullable": true
                   },
                   "config": {
@@ -6786,7 +6788,7 @@
         "tags": [
           "Fields"
         ],
-        "description": "Define a custom field for every project in the workspace at once: a field of their tasks or, with `entity: \"project\"`, a field of the projects themselves (ADR 088), which cannot be a relation",
+        "description": "Define a custom field for every project in the workspace at once: a field of their tasks or, with `entity: \"project\"`, a field of the projects themselves (ADR 088), which cannot be a relation nor calculated. A `formula` field reads only workspace fields; see the project route for its syntax",
         "responses": {
           "200": {
             "description": "Field definition created successfully",
@@ -6832,12 +6834,14 @@
                       "checkbox",
                       "user",
                       "url",
-                      "relation"
+                      "relation",
+                      "formula"
                     ],
                     "type": "string"
                   },
                   "description": {
                     "type": "string",
+                    "maxLength": 500,
                     "nullable": true
                   },
                   "config": {
@@ -6872,7 +6876,7 @@
         "tags": [
           "Fields"
         ],
-        "description": "Update or archive a custom field. Its type and key never change.",
+        "description": "Update or archive a custom field. Its type and key never change. A field that a calculated field reads cannot be archived (409)",
         "responses": {
           "200": {
             "description": "Field definition updated successfully",
@@ -6909,6 +6913,7 @@
                   },
                   "description": {
                     "type": "string",
+                    "maxLength": 500,
                     "nullable": true
                   },
                   "config": {
@@ -6936,7 +6941,7 @@
         "tags": [
           "Fields"
         ],
-        "description": "Delete a custom field and the values the tasks had stored for it",
+        "description": "Delete a custom field and the values the tasks had stored for it. A field that a calculated field reads cannot be deleted (409)",
         "responses": {
           "200": {
             "description": "Field definition deleted successfully",

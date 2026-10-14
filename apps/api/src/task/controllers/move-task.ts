@@ -11,6 +11,7 @@ import {
 } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { getFieldDefinitionsForProject } from "../../field/controllers/get-field-definitions";
+import { refreshFormulasAfter } from "../../field/formula/refresh";
 import { scheduleAfter } from "../schedule/reschedule";
 import { rebasePath, rootPath, subtreePattern } from "../tree";
 import claimTaskNumbers from "./claim-task-numbers";
@@ -176,6 +177,9 @@ async function moveTask({
     (definition) => definition.key,
   );
 
+  // Toda la rama que viaja: en el destino se recalcula lo suyo (ADR 090).
+  let movedIds: string[] = [];
+
   const movedTask = await db.transaction(async (tx) => {
     // Se toma sobre el proyecto de origen, que es de donde se arranca la rama.
     await lockProjectTree(tx, existingTask.projectId);
@@ -226,6 +230,7 @@ async function moveTask({
 
     const descendants = subtree.filter((node) => node.id !== taskId);
     const subtreeIds = subtree.map((node) => node.id);
+    movedIds = subtreeIds;
     const newRootPath = rootPath(taskId);
 
     const rootColumn = pickDestinationColumn(
@@ -333,6 +338,16 @@ async function moveTask({
     taskIds: [existingTask.parentId],
     actorId: currentUserId,
     origin: taskId,
+  });
+  // Los campos calculados de la rama de origen pierden lo que se fue, y la
+  // rama que llega se calcula con las formulas del destino.
+  await refreshFormulasAfter({
+    projectId: sourceProject.id,
+    taskIds: [existingTask.parentId],
+  });
+  await refreshFormulasAfter({
+    projectId: destinationProject.id,
+    taskIds: movedIds,
   });
 
   await publishEvent("task.moved", {

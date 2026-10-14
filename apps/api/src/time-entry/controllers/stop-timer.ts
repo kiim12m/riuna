@@ -1,6 +1,7 @@
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { publishEvent } from "../../events";
+import { refreshFormulasForTasks } from "../../field/formula/refresh";
 import { closeRunningEntry } from "../running";
 
 /**
@@ -21,6 +22,8 @@ async function stopTimer({
       message: "No time entry is currently running",
     });
   }
+
+  await refreshFormulasForTasks([closed.taskId]);
 
   await publishEvent("time-entry.stopped", {
     timeEntryId: closed.id,

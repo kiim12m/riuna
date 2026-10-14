@@ -237,7 +237,8 @@ function customHeader(name: string): string {
 
 function customKind(type: FieldType): ExchangeSheetColumn["kind"] {
   if (type === "date") return "date";
-  if (type === "number" || type === "currency") return "number";
+  if (type === "number" || type === "currency" || type === "formula")
+    return "number";
   return "text";
 }
 
@@ -251,7 +252,7 @@ function formatCustomValue(
   if (type === "multi_select") {
     return Array.isArray(value) ? formatList(value.map(String)) : String(value);
   }
-  if (type === "number" || type === "currency") {
+  if (type === "number" || type === "currency" || type === "formula") {
     return typeof value === "number" ? value : null;
   }
 

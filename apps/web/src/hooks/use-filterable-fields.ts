@@ -21,6 +21,8 @@ const CUSTOM_FIELD_VALUE_TYPES: Record<string, FilterValueType | undefined> = {
   checkbox: "boolean",
   user: "id",
   url: "text",
+  // Un calculado se guarda como numero (ADR 090).
+  formula: "number",
 };
 
 /**

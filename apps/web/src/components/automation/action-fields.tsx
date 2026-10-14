@@ -136,7 +136,10 @@ export function ActionFields({
           <OptionSelect
             label={e("field")}
             value={action.fieldKey}
-            options={options.fields.map((f) => ({ id: f.key, name: f.name }))}
+            // Un calculado lo escribe su formula, no una regla (ADR 090).
+            options={options.fields
+              .filter((f) => f.type !== "formula")
+              .map((f) => ({ id: f.key, name: f.name }))}
             placeholder={e("chooseField")}
             onChange={(fieldKey) =>
               onChange({ ...action, fieldKey, value: "" })

@@ -8,6 +8,7 @@ import {
   projectTable,
   taskTable,
 } from "../../database/schema";
+import { refreshProjectFormulas } from "../../field/formula/refresh";
 import type { GitHubConfig } from "../../plugins/github/config";
 import {
   createExternalLink,
@@ -185,6 +186,10 @@ export async function importIssues(projectId: string): Promise<ImportResult> {
       errors.push(`PR #${pr.number}: ${errorMessage}`);
     }
   }
+
+  // Las tareas entran sin pasar por `createTask`: lo calculado (ADR 090) se
+  // pone de una pasada.
+  if (imported > 0) await refreshProjectFormulas(projectId);
 
   return {
     imported,

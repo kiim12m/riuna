@@ -1512,8 +1512,6 @@
 			"title": "Campos personalizados",
 			"description": "Los campos que puede rellenar cada tarea del proyecto. Su tipo y su clave no cambian nunca; archiva uno para ocultarlo sin perder sus valores.",
 			"empty": "Aún no hay campos personalizados.",
-			"renameAction": "Renombrar",
-			"saveName": "Guardar el nombre",
 			"moveUp": "Subir",
 			"moveDown": "Bajar",
 			"archiveAction": "Archivar",
@@ -1524,7 +1522,8 @@
 			"deleteTitle": "¿Borrar «{{name}}»?",
 			"deleteDescription": "Se borran el campo y los valores que cada tarea tiene guardados. No se puede deshacer. Si solo quieres ocultarlo, archívalo.",
 			"updateError": "No se ha podido actualizar el campo",
-			"deleteError": "No se ha podido borrar el campo"
+			"deleteError": "No se ha podido borrar el campo",
+			"editAction": "Editar"
 		},
 		"workspaceFields": {
 			"title": "Campos personalizados",
@@ -2787,7 +2786,8 @@
 				"date": "Fecha",
 				"checkbox": "Casilla",
 				"user": "Persona",
-				"url": "URL"
+				"url": "URL",
+				"formula": "Calculado"
 			},
 			"addFilter": "Añadir un filtro",
 			"removeFilter": "Quitar este filtro",
@@ -2857,7 +2857,10 @@
 				"label": "Total del filtro · {{total}} tareas",
 				"estimate": "Estimado",
 				"logged": "Registrado"
-			}
+			},
+			"editFieldTitle": "Editar el campo",
+			"editFieldDescription": "El tipo y la clave no cambian, así que los valores que ya hay se conservan.",
+			"saveField": "Guardar el campo"
 		},
 		"team": {
 			"label": "Equipo",
@@ -3002,6 +3005,26 @@
 		"subprojects": {
 			"include_one": "Incluir su subproyecto",
 			"include_other": "Incluir sus {{count}} subproyectos"
+		},
+		"fields": {
+			"help": "Sobre {{name}}",
+			"helpText": "Texto de ayuda",
+			"helpTextPlaceholder": "Qué significa y cómo se rellena",
+			"formula": {
+				"label": "Fórmula",
+				"placeholder": "{Presupuesto} / {Horas previstas}",
+				"insert": "Insertar:",
+				"hint": "Los campos van entre llaves. + − × ÷, min(a; b), max(a; b) y si(condición; valor; si no). Si falta un dato, el resultado queda vacío. Estimado y Registrado son los de toda la rama, en horas.",
+				"format": "Mostrar como",
+				"formats": {
+					"number": "Número",
+					"currency": "Moneda",
+					"percent": "Porcentaje"
+				},
+				"estimate": "Estimado",
+				"logged": "Registrado",
+				"calculatedAs": "Se calcula: {{formula}}"
+			}
 		}
 	},
 	"invitations": {

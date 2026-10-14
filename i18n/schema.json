@@ -5971,12 +5971,6 @@
 						"empty": {
 							"type": "string"
 						},
-						"renameAction": {
-							"type": "string"
-						},
-						"saveName": {
-							"type": "string"
-						},
 						"moveUp": {
 							"type": "string"
 						},
@@ -6009,14 +6003,15 @@
 						},
 						"deleteError": {
 							"type": "string"
+						},
+						"editAction": {
+							"type": "string"
 						}
 					},
 					"required": [
 						"title",
 						"description",
 						"empty",
-						"renameAction",
-						"saveName",
 						"moveUp",
 						"moveDown",
 						"archiveAction",
@@ -6027,7 +6022,8 @@
 						"deleteTitle",
 						"deleteDescription",
 						"updateError",
-						"deleteError"
+						"deleteError",
+						"editAction"
 					]
 				},
 				"workspaceFields": {
@@ -10965,6 +10961,9 @@
 								},
 								"url": {
 									"type": "string"
+								},
+								"formula": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -10976,7 +10975,8 @@
 								"date",
 								"checkbox",
 								"user",
-								"url"
+								"url",
+								"formula"
 							]
 						},
 						"addFilter": {
@@ -11219,6 +11219,15 @@
 								}
 							},
 							"required": ["label", "estimate", "logged"]
+						},
+						"editFieldTitle": {
+							"type": "string"
+						},
+						"editFieldDescription": {
+							"type": "string"
+						},
+						"saveField": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -11255,7 +11264,10 @@
 						"columnsPicker",
 						"groupBy",
 						"color",
-						"totals"
+						"totals",
+						"editFieldTitle",
+						"editFieldDescription",
+						"saveField"
 					]
 				},
 				"team": {
@@ -11802,6 +11814,79 @@
 						}
 					},
 					"required": ["include_one", "include_other"]
+				},
+				"fields": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"help": {
+							"type": "string"
+						},
+						"helpText": {
+							"type": "string"
+						},
+						"helpTextPlaceholder": {
+							"type": "string"
+						},
+						"formula": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"label": {
+									"type": "string"
+								},
+								"placeholder": {
+									"type": "string"
+								},
+								"insert": {
+									"type": "string"
+								},
+								"hint": {
+									"type": "string"
+								},
+								"format": {
+									"type": "string"
+								},
+								"formats": {
+									"type": "object",
+									"additionalProperties": false,
+									"properties": {
+										"number": {
+											"type": "string"
+										},
+										"currency": {
+											"type": "string"
+										},
+										"percent": {
+											"type": "string"
+										}
+									},
+									"required": ["number", "currency", "percent"]
+								},
+								"estimate": {
+									"type": "string"
+								},
+								"logged": {
+									"type": "string"
+								},
+								"calculatedAs": {
+									"type": "string"
+								}
+							},
+							"required": [
+								"label",
+								"placeholder",
+								"insert",
+								"hint",
+								"format",
+								"formats",
+								"estimate",
+								"logged",
+								"calculatedAs"
+							]
+						}
+					},
+					"required": ["help", "helpText", "helpTextPlaceholder", "formula"]
 				}
 			},
 			"required": [
@@ -11851,7 +11936,8 @@
 				"milestone",
 				"dates",
 				"baseline",
-				"subprojects"
+				"subprojects",
+				"fields"
 			]
 		},
 		"invitations": {

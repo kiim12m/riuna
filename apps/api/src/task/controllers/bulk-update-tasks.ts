@@ -10,6 +10,7 @@ import {
   workspaceUserTable,
 } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { refreshFormulasAfter } from "../../field/formula/refresh";
 import { removeLabelFromGitea } from "../../plugins/gitea/utils/sync-label-to-gitea";
 import { removeLabelFromGitHub } from "../../plugins/github/utils/sync-label-to-github";
 import { assertAssignableUser } from "../../utils/assert-assignable-user";
@@ -415,6 +416,10 @@ async function bulkUpdateTasks({
     }
     for (const [projectId, seeds] of byProject) {
       await scheduleAfter({ projectId, taskIds: seeds, actorId: userId });
+      // Archivar y borrar cambian lo que suma cada rama (ADR 090).
+      if (operation !== "updateDueDate") {
+        await refreshFormulasAfter({ projectId, taskIds: seeds });
+      }
     }
   }
 

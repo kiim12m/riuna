@@ -590,6 +590,7 @@ function RouteComponent() {
         pending={isCreatingField}
         onClose={() => setIsAddFieldOpen(false)}
         onCreate={handleCreateField}
+        formulaFields={definitions as FieldDefinition[]}
       />
 
       <TaskDetailsSheet

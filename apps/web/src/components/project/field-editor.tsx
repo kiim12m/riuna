@@ -3,16 +3,16 @@ import {
   ArchiveRestore,
   ArrowDown,
   ArrowUp,
-  Check,
   Pencil,
   Plus,
   Trash2,
-  X,
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import FieldHelp from "@/components/field/field-help";
 import AddFieldDialog, {
   type AddFieldPayload,
+  type FieldPatch,
 } from "@/components/table-view/add-field-dialog";
 import {
   AlertDialog,
@@ -23,7 +23,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   useCreateFieldDefinition,
   useDeleteFieldDefinition,
@@ -45,6 +44,8 @@ type Definition = {
   position: number;
   required: boolean;
   archivedAt: string | Date | null;
+  description: string | null;
+  config: Record<string, unknown>;
 };
 
 /**
@@ -90,8 +91,8 @@ export default function FieldEditor({
   const { mutateAsync: remove } = useDeleteFieldDefinition();
 
   const [adding, setAdding] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [draftName, setDraftName] = useState("");
+  const [editing, setEditing] = useState<Definition | null>(null);
+  const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<Definition | null>(null);
 
   // Los del espacio, en el editor de un proyecto, se ven y no se tocan.
@@ -115,16 +116,27 @@ export default function FieldEditor({
     }
   };
 
-  const rename = async (definition: Definition) => {
-    const name = draftName.trim();
-    setEditingId(null);
-    if (!name || name === definition.name) return;
+  // Nombre, ayuda y, en un calculado, su formula (ADR 090). El dialogo sigue
+  // abierto si la API rechaza la formula, para corregirla sin reescribirla.
+  const save = async (patch: FieldPatch) => {
+    if (!editing) return;
+    setSaving(true);
     try {
-      await update({ id: definition.id, name });
+      await update({ id: editing.id, ...patch });
+      setEditing(null);
     } catch (error) {
       fail(error, "settings:projectFields.updateError");
+    } finally {
+      setSaving(false);
     }
   };
+
+  // Lo que una formula puede leer: los campos vigentes del mismo alcance. Un
+  // campo de proyecto (ADR 088) no se calcula.
+  const formulaFields =
+    entity === "task"
+      ? definitions.filter((definition) => !definition.archivedAt)
+      : undefined;
 
   const setArchived = async (definition: Definition, archived: boolean) => {
     try {
@@ -210,28 +222,11 @@ export default function FieldEditor({
                 archived && "opacity-60",
               )}
             >
-              <div className="min-w-0 flex-1">
-                {editingId === definition.id ? (
-                  <Input
-                    size="sm"
-                    autoFocus
-                    value={draftName}
-                    aria-label={t("settings:projectFields.renameAction")}
-                    onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-                      setDraftName(event.target.value)
-                    }
-                    onKeyDown={(
-                      event: React.KeyboardEvent<HTMLInputElement>,
-                    ) => {
-                      if (event.key === "Enter") rename(definition);
-                      if (event.key === "Escape") setEditingId(null);
-                    }}
-                  />
-                ) : (
-                  <span className="block truncate text-sm">
-                    {definition.name}
-                  </span>
-                )}
+              <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                <span className="block truncate text-sm">
+                  {definition.name}
+                </span>
+                <FieldHelp definition={definition} fields={definitions} />
               </div>
 
               <span className="shrink-0 text-muted-foreground text-xs">
@@ -250,28 +245,7 @@ export default function FieldEditor({
                 </span>
               )}
 
-              {mine && editingId === definition.id && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    aria-label={t("settings:projectFields.saveName")}
-                    onClick={() => rename(definition)}
-                  >
-                    <Check className="size-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    aria-label={t("common:actions.cancel")}
-                    onClick={() => setEditingId(null)}
-                  >
-                    <X className="size-3.5" />
-                  </Button>
-                </>
-              )}
-
-              {mine && editingId !== definition.id && (
+              {mine && (
                 <>
                   <Button
                     variant="ghost"
@@ -294,11 +268,8 @@ export default function FieldEditor({
                   <Button
                     variant="ghost"
                     size="xs"
-                    aria-label={t("settings:projectFields.renameAction")}
-                    onClick={() => {
-                      setEditingId(definition.id);
-                      setDraftName(definition.name);
-                    }}
+                    aria-label={t("settings:projectFields.editAction")}
+                    onClick={() => setEditing(definition)}
                   >
                     <Pencil className="size-3.5" />
                   </Button>
@@ -339,6 +310,16 @@ export default function FieldEditor({
         pending={isCreating}
         onClose={() => setAdding(false)}
         onCreate={handleCreate}
+        formulaFields={formulaFields}
+      />
+
+      <AddFieldDialog
+        open={editing !== null}
+        pending={saving}
+        editing={editing}
+        onClose={() => setEditing(null)}
+        onUpdate={save}
+        formulaFields={formulaFields}
       />
 
       <AlertDialog

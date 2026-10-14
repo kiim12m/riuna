@@ -1,6 +1,9 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import CustomFieldCell, { type FieldDefinition } from "./custom-field-cell";
+import CustomFieldCell, {
+  type FieldDefinition,
+  formatForDisplay,
+} from "./custom-field-cell";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -55,5 +58,49 @@ describe("CustomFieldCell with a number", () => {
 
     expect(onCommit).not.toHaveBeenCalled();
     expect(screen.queryByRole("textbox")).toBeNull();
+  });
+});
+
+describe("CustomFieldCell with a calculated field", () => {
+  const formula = (config: Record<string, unknown>): FieldDefinition => ({
+    id: "field-2",
+    key: "margen",
+    name: "Margen",
+    type: "formula",
+    required: false,
+    config: { expression: "{a} / {b}", ...config },
+  });
+
+  it("shows the value and offers nothing to edit", () => {
+    render(
+      <CustomFieldCell
+        definition={formula({ format: "number" })}
+        value={287.5}
+        onCommit={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.queryByRole("textbox")).toBeNull();
+    expect(screen.getByTestId("formula-value").textContent).toMatch(/287/);
+  });
+
+  it("formats a percentage and a currency", () => {
+    expect(formatForDisplay(formula({ format: "percent" }), 0.22)).toMatch(
+      /22\s?%/,
+    );
+    expect(
+      formatForDisplay(formula({ format: "currency", currency: "EUR" }), 12.5),
+    ).toMatch(/12[.,]50/);
+  });
+
+  it("shows a dash when the result is empty", () => {
+    render(
+      <CustomFieldCell
+        definition={formula({})}
+        value={undefined}
+        onCommit={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("formula-value").textContent).toBe("—");
   });
 });

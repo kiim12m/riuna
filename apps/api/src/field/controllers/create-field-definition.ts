@@ -8,6 +8,11 @@ import {
   parseFieldConfig,
   slugifyFieldKey,
 } from "../field-types";
+import { prepareFormulaConfig } from "../formula/definitions";
+import {
+  refreshProjectFormulas,
+  refreshWorkspaceFormulas,
+} from "../formula/refresh";
 
 async function createFieldDefinition({
   workspaceId,
@@ -45,6 +50,20 @@ async function createFieldDefinition({
         message: "A project field cannot be a relation",
       });
     }
+    // Una formula lee la estimacion y lo registrado de una tarea (ADR 090).
+    if (type === "formula") {
+      throw new HTTPException(400, {
+        message: "A project field cannot be calculated",
+      });
+    }
+  }
+
+  // Lo obligatorio se le pide a quien crea la tarea; un calculado no lo
+  // rellena nadie.
+  if (type === "formula" && required) {
+    throw new HTTPException(400, {
+      message: "A calculated field cannot be required",
+    });
   }
 
   if (!trimmed) {
@@ -65,6 +84,16 @@ async function createFieldDefinition({
   } catch (error) {
     throw new HTTPException(400, {
       message: error instanceof Error ? error.message : "Invalid configuration",
+    });
+  }
+
+  if (type === "formula") {
+    parsedConfig = await prepareFormulaConfig({
+      workspaceId,
+      projectId,
+      key,
+      name: trimmed,
+      config: parsedConfig,
     });
   }
 
@@ -116,6 +145,12 @@ async function createFieldDefinition({
     throw new HTTPException(500, {
       message: "Failed to create field definition",
     });
+  }
+
+  // Antes del evento, para que quien recargue al recibirlo ya vea los valores.
+  if (type === "formula") {
+    if (projectId) await refreshProjectFormulas(projectId);
+    else await refreshWorkspaceFormulas(workspaceId);
   }
 
   await publishEvent("field-definition.changed", {

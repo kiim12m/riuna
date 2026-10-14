@@ -2,6 +2,7 @@ import { inArray } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { projectTable } from "../../database/schema";
+import { refreshProjectFormulas } from "../../field/formula/refresh";
 import { insertProject } from "../../project/controllers/create-project";
 import { finishRows, projectKey } from "../exports/servitec-finish";
 import { normalizeProjectName } from "../exports/servitec-parse";
@@ -195,6 +196,9 @@ export async function importServitec({
     throw error;
   }
 
+  for (const { projectId } of scheduled) {
+    await refreshProjectFormulas(projectId);
+  }
   publishImportEvents(createdTasks, currentUserId);
   for (const { projectId, changes } of scheduled) {
     await publishScheduleChanges(changes, {

@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { columnTable, taskTable, userTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { refreshFormulasAfter } from "../../field/formula/refresh";
 import {
   addWatchers,
   publishWatchersChanged,
@@ -147,6 +148,9 @@ async function createTask({
       message: "Failed to create task",
     });
   }
+
+  // Lo calculado de la tarea nueva y, si tiene estimacion, de su rama (ADR 090).
+  await refreshFormulasAfter({ projectId, taskIds: [createdTask.id] });
 
   await publishEvent("task.created", {
     ...createdTask,

@@ -22,6 +22,10 @@ vi.mock("@/hooks/mutations/task/use-import-tasks", () => ({
   default: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
+vi.mock("@/hooks/queries/field/use-get-field-definitions", () => ({
+  default: () => ({ data: [] }),
+}));
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();

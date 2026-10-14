@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { projectTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { refreshFormulasAfter } from "../../field/formula/refresh";
 import { scheduleAfter } from "../schedule/reschedule";
 import {
   childPath,
@@ -290,6 +291,11 @@ async function updateTaskParent({
     projectId: result.projectId,
     taskIds: [taskId, result.oldParentId],
     actorId: currentUserId,
+  });
+  // La rama vieja pierde lo que la nueva gana (ADR 090).
+  await refreshFormulasAfter({
+    projectId: result.projectId,
+    taskIds: [taskId, result.oldParentId],
   });
 
   return result.task;

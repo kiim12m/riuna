@@ -272,11 +272,26 @@ las raíces, o con sus descendientes.
 
 ## 6. Campos personalizados
 
-Diez tipos: texto, número, moneda, select, multi-select, fecha, casilla,
-usuario, URL y relación ([ADR 013](adr/013-campos-personalizados.md)). Alcance
-de proyecto o de espacio de trabajo, con obligatoriedad, orden y archivado
-suave. Se crean desde el «+» de la vista Tabla y se rellenan en el detalle de
-la tarea y en la propia tabla.
+Once tipos: texto, número, moneda, select, multi-select, fecha, casilla,
+usuario, URL, relación ([ADR 013](adr/013-campos-personalizados.md)) y
+calculado. Alcance de proyecto o de espacio de trabajo, con obligatoriedad,
+orden y archivado suave. Se crean desde el «+» de la vista Tabla o desde los
+ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
+
+- **Texto de ayuda** en cada campo, que sale como un «?» junto a su nombre en el
+  detalle, la cabecera de la Tabla, el editor de campos y el importador
+  ([ADR 090](adr/090-campos-calculados-y-textos-de-ayuda.md)).
+- **Campos calculados**: una fórmula sobre los campos de número, moneda y otros
+  calculados, más la estimación y lo registrado de la rama, en horas.
+  - Se escribe como en una hoja de cálculo: `{Presupuesto} ÷ {Horas previstas}`,
+    `min`, `max` y `si(condición; valor; si no)`, con botones para meter cada
+    campo. Se muestra como número, moneda o porcentaje.
+  - Si falta un dato, el resultado queda vacío.
+  - Se recalcula sola en cuanto cambia lo que lee, y se filtra, se ordena y se
+    exporta como cualquier número. Ni se edita ni se importa.
+  - En la Tabla lleva «ƒ» y no suma en los totales. En el detalle, la fórmula
+    sale bajo el valor.
+  - No se puede archivar ni borrar un campo que lee una fórmula.
 
 ## 7. Ejecución y productividad personal
 
@@ -725,7 +740,7 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 64 herramientas**. Una prueba de paridad
+Dos caminos con **las mismas 65 herramientas**. Una prueba de paridad
 (`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
 antes el paquete stdio se había quedado sin las cinco del plan personal y el
 cronómetro.
@@ -737,7 +752,7 @@ cronómetro.
   instalador interactivo para Cursor —global y por proyecto—, Claude Desktop o
   una ruta JSON propia, y autenticación por device flow o `RIUNA_API_KEY`.
 
-Las herramientas cubren identidad y espacios, proyectos con su estado, sus campos y sus subproyectos, tareas, comentarios,
+Las herramientas cubren identidad y espacios, proyectos con su estado, sus campos y sus subproyectos, los campos de las tareas con su ayuda y sus fórmulas (`list_project_fields`), tareas, comentarios,
 etiquetas, épicas, relaciones, observadores, recordatorios, acciones de un clic,
 totales de un filtro, línea base, avisos, miembros, búsqueda, columnas, registro de tiempo,
 actividad y notificaciones, además del plan personal, el
