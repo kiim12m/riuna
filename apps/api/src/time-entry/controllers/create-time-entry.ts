@@ -4,6 +4,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { taskTable, timeEntryTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { refreshFormulasForTasks } from "../../field/formula/refresh";
 import { isUniqueViolation } from "../../utils/is-unique-violation";
 import { resolveDuration } from "../duration";
 import type { FocusMode } from "../focus-mode";
@@ -58,10 +59,12 @@ async function createTimeEntry({
   // un registro manual y no toca nada mas -es el `POST` viejo, que sigue
   // sirviendo a MCP-.
   let createdTimeEntry: typeof timeEntryTable.$inferSelect | undefined;
+  let closedTaskId: string | null = null;
   try {
     createdTimeEntry = await db.transaction(async (tx) => {
       if (!endTime) {
-        await closeRunningEntry(tx, userId, startTime);
+        const closed = await closeRunningEntry(tx, userId, startTime);
+        closedTaskId = closed?.taskId ?? null;
       }
 
       const [inserted] = await tx
@@ -99,6 +102,10 @@ async function createTimeEntry({
       message: "Failed to create time entry",
     });
   }
+
+  // Lo registrado de la rama es un dato de las formulas (ADR 090), tambien en
+  // la tarea cuyo cronometro se acaba de cerrar.
+  await refreshFormulasForTasks([createdTimeEntry.taskId, closedTaskId]);
 
   await publishEvent("time-entry.created", {
     timeEntryId: createdTimeEntry.id,

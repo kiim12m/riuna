@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import db from "../../../database";
 import { columnTable, projectTable, taskTable } from "../../../database/schema";
 import { publishEvent } from "../../../events";
+import { refreshFormulasAfter } from "../../../field/formula/refresh";
 import { claimTaskNumber } from "../../../task/controllers/claim-task-numbers";
 import { rootTaskTreeFields } from "../../../task/tree";
 import { log } from "../../../utils/log";
@@ -126,6 +127,9 @@ export async function handleGiteaIssueOpened(
       log.error("Failed to create task from Gitea issue");
       continue;
     }
+
+    // Entra sin pasar por `createTask`: su calculado (ADR 090) se pone aqui.
+    await refreshFormulasAfter({ projectId, taskIds: [createdTask.id] });
 
     // Must run before task.created: the plugin's onTaskCreated uses link
     // existence to skip self-originated tasks, else it duplicates the issue.

@@ -20,7 +20,10 @@ import {
   matchHeader,
   PRIORITY_LABELS,
 } from "../exchange/format";
-import { assignOutlineNumbers } from "../exchange/outline-numbers";
+import {
+  assignOutlineNumbers,
+  compareOutline,
+} from "../exchange/outline-numbers";
 import { formatSheetDateIso } from "../exchange/sheet-dates";
 import getTasks from "./get-tasks";
 
@@ -186,19 +189,6 @@ async function exportTaskSheet(
   };
 }
 
-/** Orden de recorrido del arbol: `1.2` antes que `1.10`, y `1.10` antes que `2`. */
-function compareOutline(left: string, right: string): number {
-  const a = left.split(".").map(Number);
-  const b = right.split(".").map(Number);
-
-  for (let index = 0; index < Math.max(a.length, b.length); index += 1) {
-    const difference = (a[index] ?? 0) - (b[index] ?? 0);
-    if (difference !== 0) return difference;
-  }
-
-  return 0;
-}
-
 /** Los asignados de cada tarea con su correo, en una sola consulta. */
 async function loadAssignees(taskIds: string[]) {
   const byTask = new Map<string, Array<{ userId: string; email: string }>>();
@@ -237,7 +227,8 @@ function customHeader(name: string): string {
 
 function customKind(type: FieldType): ExchangeSheetColumn["kind"] {
   if (type === "date") return "date";
-  if (type === "number" || type === "currency") return "number";
+  if (type === "number" || type === "currency" || type === "formula")
+    return "number";
   return "text";
 }
 
@@ -251,7 +242,7 @@ function formatCustomValue(
   if (type === "multi_select") {
     return Array.isArray(value) ? formatList(value.map(String)) : String(value);
   }
-  if (type === "number" || type === "currency") {
+  if (type === "number" || type === "currency" || type === "formula") {
     return typeof value === "number" ? value : null;
   }
 

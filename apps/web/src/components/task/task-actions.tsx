@@ -1,4 +1,6 @@
-import { Copy, GitBranch } from "lucide-react";
+import { saveAs } from "file-saver";
+import { Copy, FileDown, GitBranch, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { KbdSequence } from "@/components/ui/kbd";
@@ -8,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import exportTaskPdf from "@/fetchers/task/export-task-pdf";
 import useGetGiteaIntegration from "@/hooks/queries/gitea-integration/use-get-gitea-integration";
 import useGetGithubIntegration from "@/hooks/queries/github-integration/use-get-github-integration";
 import useGetProject from "@/hooks/queries/project/use-get-project";
@@ -95,6 +98,21 @@ export default function TaskActions({
     toast.message(t("tasks:properties.copyTaskBranch"));
   };
 
+  const [exporting, setExporting] = useState(false);
+  const handleExportPdf = async () => {
+    setExporting(true);
+    try {
+      const { blob, filename } = await exportTaskPdf(taskId);
+      saveAs(blob, filename);
+    } catch (error) {
+      toast.error(t("tasks:export.failed"), {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <TaskReminderButton taskId={taskId} iconOnly={iconOnly} />
@@ -140,7 +158,7 @@ export default function TaskActions({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-foreground rounded-l-none"
+                className="text-foreground rounded-none border-r-0"
                 onClick={handleCopyTaskBranch}
                 aria-label={t("tasks:properties.copyTaskBranch")}
               >
@@ -154,6 +172,26 @@ export default function TaskActions({
                 separator=""
               />
             </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-foreground rounded-l-none"
+                onClick={handleExportPdf}
+                disabled={exporting}
+                aria-label={t("tasks:export.taskPdf")}
+                data-testid="task-export-pdf"
+              >
+                {exporting ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <FileDown className="size-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t("tasks:export.taskPdf")}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>

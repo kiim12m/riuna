@@ -112,6 +112,11 @@ async function analyzeImport({
 
     const key = column.target.key;
 
+    // Un campo calculado no se importa: su valor sale de su formula (ADR 090).
+    if (lookups.fieldTypes.get(key) === "formula") {
+      return { index, header, kind: "ignore", samples };
+    }
+
     if (lookups.fieldTypes.has(key)) {
       return {
         index,

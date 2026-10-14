@@ -115,6 +115,9 @@ export const CUSTOM_FIELD_VALUE_TYPES: Partial<Record<FieldType, ValueType>> = {
   checkbox: "boolean",
   user: "id",
   url: "text",
+  // Un calculado se guarda como numero en el JSONB (ADR 090): se filtra y se
+  // ordena como cualquier otro.
+  formula: "number",
 };
 
 /**

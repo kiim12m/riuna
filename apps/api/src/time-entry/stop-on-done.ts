@@ -2,6 +2,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import db from "../database";
 import { taskTable, timeEntryTable } from "../database/schema";
 import { publishEvent, subscribeToEvent } from "../events";
+import { refreshFormulasForTasks } from "../field/formula/refresh";
 import { closeRunningEntry } from "./running";
 
 /**
@@ -39,6 +40,7 @@ async function stopIfDone(taskId: string | undefined) {
 
     const closed = await closeRunningEntry(db, entry.userId, new Date());
     if (closed) {
+      await refreshFormulasForTasks([closed.taskId]);
       await publishEvent("time-entry.stopped", {
         timeEntryId: closed.id,
         taskId: closed.taskId,

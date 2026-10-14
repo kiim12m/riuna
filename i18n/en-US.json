@@ -1512,8 +1512,6 @@
 			"title": "Custom fields",
 			"description": "The fields every task of the project can fill in. Their type and key never change; archive one to hide it without losing its values.",
 			"empty": "There are no custom fields yet.",
-			"renameAction": "Rename",
-			"saveName": "Save the name",
 			"moveUp": "Move up",
 			"moveDown": "Move down",
 			"archiveAction": "Archive",
@@ -1524,7 +1522,8 @@
 			"deleteTitle": "Delete “{{name}}”?",
 			"deleteDescription": "The field and the values every task has stored for it are deleted. This cannot be undone. To just hide it, archive it instead.",
 			"updateError": "The field could not be updated",
-			"deleteError": "The field could not be deleted"
+			"deleteError": "The field could not be deleted",
+			"editAction": "Edit"
 		},
 		"workspaceFields": {
 			"title": "Custom fields",
@@ -2787,7 +2786,8 @@
 				"date": "Date",
 				"checkbox": "Checkbox",
 				"user": "Person",
-				"url": "URL"
+				"url": "URL",
+				"formula": "Calculated"
 			},
 			"addFilter": "Add a filter",
 			"removeFilter": "Remove this filter",
@@ -2857,7 +2857,10 @@
 				"label": "Whole filter · {{total}} tasks",
 				"estimate": "Estimated",
 				"logged": "Logged"
-			}
+			},
+			"editFieldTitle": "Edit field",
+			"editFieldDescription": "Its type and key stay as they are, so the values already saved are kept.",
+			"saveField": "Save field"
 		},
 		"team": {
 			"label": "Team",
@@ -3002,6 +3005,34 @@
 		"subprojects": {
 			"include_one": "Include its {{count}} subproject",
 			"include_other": "Include its {{count}} subprojects"
+		},
+		"fields": {
+			"help": "About {{name}}",
+			"helpText": "Help text",
+			"helpTextPlaceholder": "What it means and how to fill it in",
+			"formula": {
+				"label": "Formula",
+				"placeholder": "{Budget} / {Planned hours}",
+				"insert": "Insert:",
+				"hint": "Fields go between braces. + − × ÷, min(a; b), max(a; b) and if(condition; value; otherwise). If a value is missing the result stays empty. Estimate and Logged are those of the whole branch, in hours.",
+				"format": "Show as",
+				"formats": {
+					"number": "Number",
+					"currency": "Currency",
+					"percent": "Percentage"
+				},
+				"estimate": "Estimate",
+				"logged": "Logged",
+				"calculatedAs": "Calculated: {{formula}}"
+			}
+		},
+		"export": {
+			"label": "Export",
+			"pdf": "PDF",
+			"xlsx": "Excel",
+			"csv": "CSV",
+			"failed": "Could not export",
+			"taskPdf": "Export to PDF"
 		}
 	},
 	"invitations": {
@@ -3078,8 +3109,6 @@
 				"base": "Of the project",
 				"custom": "Project fields"
 			},
-			"export": "Export",
-			"exportError": "The project list could not be exported",
 			"noMatches": "No project matches the filter",
 			"subprojectCount_one": "{{count}} subproject",
 			"subprojectCount_other": "{{count}} subprojects"
@@ -3684,8 +3713,6 @@
 			"task": "Task",
 			"project": "Project"
 		},
-		"export": "Export",
-		"exportError": "Couldn't export the time sheet.",
 		"rangeInvalid": "The end date must be after the start date.",
 		"entries": "Entries",
 		"hours": "Hours",

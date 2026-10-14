@@ -286,6 +286,10 @@ export function coerceCustomValue(
     case "relation":
       // Su valor son filas de `task_relation`, no JSONB. Ver ADR 013.
       return undefined;
+    case "formula":
+      // Lo calcula la base (ADR 090): la columna que trae la exportacion se
+      // lee y se descarta, para que la ida y vuelta no falle.
+      return undefined;
     default:
       return text;
   }

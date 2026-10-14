@@ -5,6 +5,7 @@ import { taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { getFieldDefinitionsForProject } from "../../field/controllers/get-field-definitions";
 import type { FieldType } from "../../field/field-types";
+import { refreshFormulasAfter } from "../../field/formula/refresh";
 import {
   type FieldDefinitionLike,
   FieldValidationError,
@@ -173,6 +174,18 @@ async function updateTaskCustomFields({
     [...Object.keys(changes.set), ...changes.clear],
   );
 
+  // Lo calculado que lee estos campos (ADR 090), antes de avisar: quien recargue
+  // al recibir el evento ya lo ve. Se devuelve el documento con los valores
+  // nuevos para que la celda que se acaba de confirmar no espere a la recarga.
+  await refreshFormulasAfter({
+    projectId: updatedTask.projectId,
+    taskIds: [updatedTask.id],
+  });
+  const [refreshed] = await db
+    .select({ customFields: taskTable.customFields })
+    .from(taskTable)
+    .where(eq(taskTable.id, id));
+
   if (fieldChanges.length > 0) {
     await publishEvent("task.custom_fields_changed", {
       taskId: updatedTask.id,
@@ -191,7 +204,7 @@ async function updateTaskCustomFields({
     userId: currentUserId,
   });
 
-  return updatedTask;
+  return refreshed ? { ...updatedTask, ...refreshed } : updatedTask;
 }
 
 export default updateTaskCustomFields;

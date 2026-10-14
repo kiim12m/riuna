@@ -26,6 +26,8 @@ export type FieldDefinition = {
   type: string;
   required: boolean;
   config: Record<string, unknown>;
+  /** El texto de ayuda (ADR 090). */
+  description?: string | null;
 };
 
 export type FieldMember = {
@@ -57,6 +59,21 @@ function optionsOf(definition: FieldDefinition) {
 
 export function formatForDisplay(definition: FieldDefinition, value: unknown) {
   if (value === null || value === undefined || value === "") return "";
+
+  // Un calculado lleva su formato en la configuracion (ADR 090).
+  if (definition.type === "formula" && typeof value === "number") {
+    const format = definition.config?.format;
+    if (format === "currency") {
+      return formatForDisplay(
+        { ...definition, type: "currency", config: definition.config },
+        value,
+      );
+    }
+    return new Intl.NumberFormat(undefined, {
+      style: format === "percent" ? "percent" : "decimal",
+      maximumFractionDigits: format === "percent" ? 1 : 2,
+    }).format(value);
+  }
 
   if (definition.type === "currency" && typeof value === "number") {
     const currency =
@@ -112,6 +129,19 @@ function CustomFieldCell({
   useEffect(() => {
     if (editing) inputRef.current?.focus();
   }, [editing]);
+
+  // Lo escribe la base a partir de su formula: se lee, no se edita.
+  if (definition.type === "formula") {
+    const display = formatForDisplay(definition, value);
+    return (
+      <span
+        className="block w-full truncate px-1 py-0.5 text-xs tabular-nums"
+        data-testid="formula-value"
+      >
+        {display || <span className="text-muted-foreground">—</span>}
+      </span>
+    );
+  }
 
   if (definition.type === "multi_select") {
     const options = optionsOf(definition);

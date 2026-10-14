@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { columnTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { refreshFormulasAfter } from "../../field/formula/refresh";
 import { scheduleAfter } from "../schedule/reschedule";
 import { assertValidTaskStatus } from "../validate-task-fields";
 import { cascadeStatusToSubtree } from "./cascade-status";
@@ -76,6 +77,11 @@ async function updateTaskStatus({
       projectId: updatedTask.projectId,
       taskIds: [updatedTask.id],
       actorId: currentUserId,
+    });
+    // Lo archivado no suma en la rama (ADR 090, como `tree-aggregates`).
+    await refreshFormulasAfter({
+      projectId: updatedTask.projectId,
+      taskIds: [updatedTask.id],
     });
   }
 

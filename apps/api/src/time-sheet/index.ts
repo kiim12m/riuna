@@ -2,6 +2,8 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
+import { pdfResponse } from "../pdf/response";
+import { buildTimeSheetPdf } from "../pdf/time-sheet";
 import { buildContentDisposition } from "../utils/content-disposition";
 import {
   addDays,
@@ -110,23 +112,43 @@ const timeSheet = new Hono<{
       operationId: "exportTimeSheet",
       tags: ["Time Sheet"],
       description:
-        "Export the time sheet for the requested range as a spreadsheet",
+        "Export the time sheet for the requested range as a spreadsheet or, with `format=pdf`, as a document with every entry, the total, each day against the work schedule and room for two signatures (ADR 091)",
       responses: {
         200: {
-          description: "Spreadsheet file",
+          description: "Spreadsheet or PDF file",
           content: {
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
               { schema: { type: "string", format: "binary" } },
+            "application/pdf": { schema: { type: "string", format: "binary" } },
           },
         },
       },
     }),
-    validator("query", querySchema),
+    validator(
+      "query",
+      v.object({
+        ...querySchema.entries,
+        format: v.optional(v.picklist(["xlsx", "pdf"]), "xlsx"),
+      }),
+    ),
     workspaceAccess.fromQuery(),
     requireApiKeyScope({ task: ["read"] }),
     async (c) => {
-      const { workspaceId, start, end, groupBy } = c.req.valid("query");
+      const { workspaceId, start, end, groupBy, format } = c.req.valid("query");
       const { windowStart, windowEnd } = resolveWindow(start, end);
+
+      if (format === "pdf") {
+        return pdfResponse(
+          c,
+          await buildTimeSheetPdf({
+            workspaceId,
+            userId: c.get("userId"),
+            windowStart,
+            windowEnd,
+            groupBy,
+          }),
+        );
+      }
 
       const { buffer, filename, contentType } = await exportTimeSheet({
         workspaceId,

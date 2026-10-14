@@ -9,6 +9,7 @@ import {
 import { publishEventsPaced } from "../../events";
 import { upsertExternalRefs } from "../../external-ref";
 import { parseFieldConfig, slugifyFieldKey } from "../../field/field-types";
+import { refreshProjectFormulas } from "../../field/formula/refresh";
 import {
   assertRequiredFieldsPresent,
   FieldValidationError,
@@ -157,6 +158,8 @@ async function importTasks(input: ImportInput): Promise<ImportReport> {
     throw error;
   }
 
+  // Una importacion toca muchas filas: el proyecto entero de una pasada.
+  await refreshProjectFormulas(input.projectId);
   publishImportEvents(outcome.created, input.currentUserId);
   await publishScheduleChanges(outcome.scheduled, {
     projectId: input.projectId,

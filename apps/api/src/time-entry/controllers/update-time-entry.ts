@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { timeEntryTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { refreshFormulasForTasks } from "../../field/formula/refresh";
 import { resolveDuration } from "../duration";
 
 type UpdateTimeEntryParams = {
@@ -63,6 +64,8 @@ async function updateTimeEntry(params: UpdateTimeEntryParams) {
       message: "Failed to update time entry",
     });
   }
+
+  await refreshFormulasForTasks([updatedTimeEntry.taskId]);
 
   await publishEvent("time-entry.updated", {
     timeEntryId: updatedTimeEntry.id,

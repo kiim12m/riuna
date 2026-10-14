@@ -2,6 +2,7 @@ import { and, eq, inArray, like, ne } from "drizzle-orm";
 import db from "../../database";
 import { columnTable, projectTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { refreshFormulasAfter } from "../../field/formula/refresh";
 import { descendantsPattern } from "../tree";
 import { lockProjectTree } from "./lock-project-tree";
 
@@ -149,6 +150,15 @@ export async function cascadeStatusToSubtrees({
 
     return found;
   });
+
+  // Una rama archivada deja de sumar en las formulas de sus propias tareas;
+  // las de arriba las recalcula quien archivo la raiz (ADR 090).
+  if (status === "archived" && moved.length > 0) {
+    await refreshFormulasAfter({
+      projectId,
+      taskIds: moved.map((row) => row.id),
+    });
+  }
 
   for (const descendant of moved) {
     await publishEvent("task.status_changed", {

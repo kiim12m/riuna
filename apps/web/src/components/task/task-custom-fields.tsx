@@ -1,6 +1,7 @@
 import { SlidersHorizontal } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import FieldHelp, { formulaDisplayOf } from "@/components/field/field-help";
 import CustomFieldCell, {
   type FieldDefinition,
   type FieldMember,
@@ -72,8 +73,9 @@ function TaskCustomFields({
         variant === "sidebar" && "px-1.5",
       )}
     >
-      <span className="w-[100px] shrink-0 truncate text-xs text-muted-foreground">
-        {definition.name}
+      <span className="flex w-[100px] shrink-0 items-center gap-1 text-xs text-muted-foreground">
+        <span className="truncate">{definition.name}</span>
+        <FieldHelp definition={definition} fields={definitions} />
       </span>
       <div className="min-w-0 flex-1">
         <CustomFieldCell
@@ -95,6 +97,11 @@ function TaskCustomFields({
             )
           }
         />
+        {definition.type === "formula" && (
+          <p className="truncate px-1 font-mono text-label text-muted-foreground">
+            ƒ {formulaDisplayOf(definition, definitions, t)}
+          </p>
+        )}
       </div>
     </div>
   ));
@@ -118,7 +125,10 @@ function TaskCustomFields({
   }
 
   return (
-    <div className={cn("space-y-1", className)}>
+    <div
+      className={cn("space-y-1", className)}
+      data-testid="task-custom-fields"
+    >
       <p className="px-1.5 text-label font-medium uppercase text-muted-foreground">
         {t("tasks:properties.customFields")}
       </p>

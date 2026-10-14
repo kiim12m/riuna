@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { activityTable, columnTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { refreshFormulasAfter } from "../../field/formula/refresh";
 import { deleteOrphanedAssets } from "../../storage/cleanup-assets";
 import {
   assertAssignableUser,
@@ -247,6 +248,16 @@ async function updateTask(
       projectId: updatedTask.projectId,
       taskIds: [updatedTask.id],
       actorId: currentUserId ?? "",
+    });
+  }
+  // Lo archivado no suma en la rama de los campos calculados (ADR 090).
+  if (
+    existingTask.status !== status &&
+    (existingTask.status === "archived" || status === "archived")
+  ) {
+    await refreshFormulasAfter({
+      projectId: updatedTask.projectId,
+      taskIds: [updatedTask.id],
     });
   }
 

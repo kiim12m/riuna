@@ -6,6 +6,7 @@ import {
   taskEpicTable,
   taskTable,
 } from "../database/schema";
+import { refreshFormulasAfter } from "../field/formula/refresh";
 
 /** Las epicas que se nombran, creando en el proyecto las que falten. */
 export async function resolveEpics(
@@ -66,10 +67,19 @@ export async function decorateTask({
   epicIdsByName: Map<string, string>;
 }) {
   if (customFields) {
-    await db
+    const [task] = await db
       .update(taskTable)
       .set({ customFields })
-      .where(eq(taskTable.id, taskId));
+      .where(eq(taskTable.id, taskId))
+      .returning({ projectId: taskTable.projectId });
+    // La tarea se creo sin estos valores, y escribirlos reemplaza el documento
+    // entero: lo calculado (ADR 090) se rehace con ellos.
+    if (task) {
+      await refreshFormulasAfter({
+        projectId: task.projectId,
+        taskIds: [taskId],
+      });
+    }
   }
 
   if (labels?.length) {

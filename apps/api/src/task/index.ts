@@ -13,6 +13,10 @@ import {
   workspaceTable,
 } from "../database/schema";
 import { buildImportSource } from "../external-ref";
+import { personName } from "../pdf/context";
+import { pdfResponse } from "../pdf/response";
+import { buildTaskPdf } from "../pdf/task";
+import { buildTaskListPdf } from "../pdf/task-list";
 import { forProjectAndSubprojects } from "../project/subprojects";
 import { taskSchema } from "../schemas";
 import {
@@ -484,6 +488,30 @@ const task = new Hono<{
       return c.json(task);
     },
   )
+  .get(
+    "/:id/pdf",
+    describeRoute({
+      operationId: "exportTaskPdf",
+      tags: ["Tasks"],
+      description:
+        "A task as a PDF (ADR 091): its fields, description, direct subtasks and comments",
+      responses: {
+        200: {
+          description: "PDF document",
+          content: {
+            "application/pdf": { schema: { type: "string", format: "binary" } },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    workspaceAccess.fromTask(),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const pdf = await buildTaskPdf(id, await personName(c.get("userId")));
+      return pdfResponse(c, pdf);
+    },
+  )
   .put(
     "/move/:id",
     describeRoute({
@@ -616,7 +644,8 @@ const task = new Hono<{
     describeRoute({
       operationId: "exportTasks",
       tags: ["Tasks"],
-      description: "Export all tasks from a project",
+      description:
+        "Export the tasks of a project: `json` (a backup), `csv` or `xlsx` (the exchange format, ADR 017) or `pdf` (ADR 091). Every format but `json` takes the view's `filter` and `treeScope`; `pdf` also takes the Table's visible `columns` (comma separated ids), and a `title` and `subtitle` that say which view it is",
       responses: {
         200: {
           description: "Exported tasks data",
@@ -630,11 +659,14 @@ const task = new Hono<{
     validator(
       "query",
       v.object({
-        format: v.optional(v.picklist(["json", "csv", "xlsx"])),
+        format: v.optional(v.picklist(["json", "csv", "xlsx", "pdf"])),
         filter: v.optional(v.string()),
         treeScope: v.optional(
           v.picklist(["matching", "roots", "withDescendants"]),
         ),
+        columns: v.optional(v.pipe(v.string(), v.maxLength(4_000))),
+        title: v.optional(v.pipe(v.string(), v.maxLength(200))),
+        subtitle: v.optional(v.pipe(v.string(), v.maxLength(500))),
       }),
     ),
     workspaceAccess.fromProject("projectId"),
@@ -657,6 +689,28 @@ const task = new Hono<{
         throw new HTTPException(400, {
           message: error instanceof Error ? error.message : "Invalid filter",
         });
+      }
+
+      if (query.format === "pdf") {
+        try {
+          const pdf = await buildTaskListPdf(
+            projectId,
+            {
+              filter,
+              treeScope: query.treeScope,
+              columns: query.columns?.split(",").filter(Boolean),
+              title: query.title,
+              subtitle: query.subtitle,
+            },
+            await personName(c.get("userId")),
+          );
+          return pdfResponse(c, pdf);
+        } catch (error) {
+          if (error instanceof FilterError) {
+            throw new HTTPException(400, { message: error.message });
+          }
+          throw error;
+        }
       }
 
       let sheet: Awaited<ReturnType<typeof exportTaskSheet>>;

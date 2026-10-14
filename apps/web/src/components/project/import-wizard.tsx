@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, FileUp, Loader2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import FieldHelp from "@/components/field/field-help";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,6 +22,7 @@ import useAnalyzeImport from "@/hooks/mutations/task/use-analyze-import";
 import useImportTasks, {
   type ImportColumnMapping,
 } from "@/hooks/mutations/task/use-import-tasks";
+import useGetFieldDefinitions from "@/hooks/queries/field/use-get-field-definitions";
 import { cn } from "@/lib/cn";
 import { toast } from "@/lib/toast";
 
@@ -99,6 +101,15 @@ export function ImportWizard({
   const [choices, setChoices] = useState<Record<number, ColumnChoice>>({});
   const [source, setSource] = useState("");
   const [preview, setPreview] = useState<Report | null>(null);
+
+  // Para ensenar, junto a un campo que ya existe, su texto de ayuda (ADR 090).
+  const { data: definitions = [] } = useGetFieldDefinitions(projectId);
+  const helpFor = (key: string | undefined) => {
+    const existing = definitions.find((definition) => definition.key === key);
+    return existing ? (
+      <FieldHelp definition={existing} fields={definitions} />
+    ) : null;
+  };
 
   const { mutateAsync: analyze, isPending: isAnalyzing } = useAnalyzeImport();
   const { mutateAsync: runImport, isPending: isImporting } = useImportTasks();
@@ -413,10 +424,11 @@ export function ImportWizard({
                           </SelectContent>
                         </Select>
                       ) : (
-                        <span className="text-xs text-muted-foreground w-36">
+                        <span className="flex w-36 items-center gap-1 text-xs text-muted-foreground">
                           {column.existingFieldKey
                             ? t("settings:tasksImportExport.existingField")
                             : ""}
+                          {helpFor(column.existingFieldKey)}
                         </span>
                       )}
                     </div>

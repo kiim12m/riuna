@@ -61,7 +61,16 @@ test("la lista de proyectos filtra por un campo de proyecto, se edita en la celd
   });
   await expect(table.getByText("Alumbrado del polideportivo")).toHaveCount(0);
 
-  const download = page.waitForEvent("download");
-  await page.getByTestId("portfolio-export").click();
-  expect((await download).suggestedFilename()).toMatch(/^proyectos-.*\.xlsx$/);
+  // Excel o PDF desde el mismo menu (ADR 091).
+  for (const [format, extension] of [
+    ["Excel", "xlsx"],
+    ["PDF", "pdf"],
+  ] as const) {
+    const download = page.waitForEvent("download");
+    await page.getByTestId("portfolio-export").click();
+    await page.getByRole("menuitem", { name: format }).click();
+    expect((await download).suggestedFilename()).toMatch(
+      new RegExp(`^proyectos-.*\\.${extension}$`),
+    );
+  }
 });

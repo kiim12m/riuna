@@ -18,6 +18,7 @@ import {
   type ViewBaseline,
   Was,
 } from "@/components/baseline/baseline-view";
+import FieldHelp from "@/components/field/field-help";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { TaskTotals } from "@/fetchers/task/get-task-totals";
@@ -408,7 +409,12 @@ function TableView({
           (row) => (row.customFields?.[definition.key] ?? null) as string,
           {
             id: `custom.${definition.key}`,
-            header: definition.name,
+            // La «ƒ» dice que es calculado (ADR 090). Su «?» va fuera del
+            // boton de ordenar, en la propia cabecera: un boton no anida otro.
+            header:
+              definition.type === "formula"
+                ? `ƒ ${definition.name}`
+                : definition.name,
             cell: ({ row }) => (
               <CustomFieldCell
                 definition={definition}
@@ -536,6 +542,22 @@ function TableView({
     t,
   ]);
 
+  // El «?» de cada campo personalizado, por id de columna (ADR 090).
+  const helpByColumn = useMemo(
+    () =>
+      new Map(
+        definitions.map((definition) => [
+          `custom.${definition.key}`,
+          <FieldHelp
+            key={definition.key}
+            definition={definition}
+            fields={definitions}
+          />,
+        ]),
+      ),
+    [definitions],
+  );
+
   const table = useTable({
     features,
     data,
@@ -568,15 +590,18 @@ function TableView({
                   key={header.id}
                   className="whitespace-nowrap px-3 py-2 text-left font-medium text-muted-foreground text-xs"
                 >
-                  <button
-                    type="button"
-                    onClick={header.column.getToggleSortingHandler()}
-                    className="flex items-center gap-1 hover:text-foreground"
-                  >
-                    <table.FlexRender header={header} />
-                    {header.column.getIsSorted() === "asc" && "↑"}
-                    {header.column.getIsSorted() === "desc" && "↓"}
-                  </button>
+                  <span className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={header.column.getToggleSortingHandler()}
+                      className="flex items-center gap-1 hover:text-foreground"
+                    >
+                      <table.FlexRender header={header} />
+                      {header.column.getIsSorted() === "asc" && "↑"}
+                      {header.column.getIsSorted() === "desc" && "↓"}
+                    </button>
+                    {helpByColumn.get(header.column.id)}
+                  </span>
                 </th>
               ))}
               {showAddField && (

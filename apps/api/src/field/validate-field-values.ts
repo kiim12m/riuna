@@ -1,6 +1,6 @@
 import * as v from "valibot";
 import type { FieldType } from "./field-types";
-import { storesValueInJson } from "./field-types";
+import { isUserWritable, storesValueInJson } from "./field-types";
 
 export type FieldDefinitionLike = {
   key: string;
@@ -166,6 +166,16 @@ export function resolveFieldValueChanges({
   for (const [key, rawValue] of Object.entries(incoming)) {
     const definition = byKey.get(key);
 
+    // Un campo calculado no se escribe ni se vacia: lo recalcula la base en
+    // cuanto cambia lo que lee (ADR 090), asi que cualquier valor puesto a mano
+    // duraria hasta la siguiente edicion.
+    if (definition?.type === "formula") {
+      throw new FieldValidationError(
+        key,
+        `"${definition.name}" is a calculated field; its value comes from its formula`,
+      );
+    }
+
     // Vaciar una clave se permite siempre, incluso si su definicion ya no
     // existe o esta archivada: si no, un valor guardado bajo un campo retirado
     // seria imposible de borrar, y eso incluye datos personales.
@@ -220,7 +230,7 @@ export function assertRequiredFieldsPresent({
 }) {
   for (const definition of definitions) {
     if (!definition.required) continue;
-    if (!storesValueInJson(definition.type)) continue;
+    if (!isUserWritable(definition.type)) continue;
     if (isCleared(values[definition.key])) {
       throw new FieldValidationError(
         definition.key,

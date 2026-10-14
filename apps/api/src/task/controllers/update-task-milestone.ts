@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { refreshFormulasAfter } from "../../field/formula/refresh";
 import { scheduleAfter } from "../schedule/reschedule";
 
 /**
@@ -91,6 +92,8 @@ async function updateTaskMilestone({
     taskIds: [id],
     actorId: currentUserId,
   });
+  // Un hito pierde la estimacion, que cuenta en las formulas de su rama.
+  await refreshFormulasAfter({ projectId: updated.projectId, taskIds: [id] });
 
   await publishEvent("task.updated", {
     taskId: id,

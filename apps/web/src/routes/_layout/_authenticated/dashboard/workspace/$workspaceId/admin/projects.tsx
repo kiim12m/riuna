@@ -1,9 +1,13 @@
 import { arrayMove } from "@dnd-kit/sortable";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { saveAs } from "file-saver";
-import { Download, LayoutGrid, Plus } from "lucide-react";
+import { LayoutGrid, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  ExportMenu,
+  type ExportMenuFormat,
+} from "@/components/common/export-menu";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import PageTitle from "@/components/page-title";
 import {
@@ -55,6 +59,7 @@ import { useProjectFilterableFields } from "@/hooks/use-project-filterable-field
 import { readFilterParam } from "@/hooks/use-url-filter";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { authClient } from "@/lib/auth-client";
+import { describeConditions } from "@/lib/describe-filter";
 import {
   isProjectHealth,
   needsAttention,
@@ -264,17 +269,28 @@ function RouteComponent() {
     },
   });
 
-  const handleExport = async () => {
-    try {
-      const { blob, filename } = await exportProjects(workspaceId, filter);
-      saveAs(blob, filename);
-    } catch (exportError) {
-      toast.error(
-        exportError instanceof Error
-          ? exportError.message
-          : t("workspace:projects.exportError"),
-      );
-    }
+  // El PDF lleva las columnas que se ven y dice que vista y que filtro son
+  // (ADR 091); el Excel sigue llevandolas todas.
+  const handleExport = async (format: ExportMenuFormat) => {
+    const { blob, filename } = await exportProjects(
+      workspaceId,
+      filter,
+      format === "pdf"
+        ? {
+            columns: columnOptions
+              .map((option) => option.id)
+              .filter((id) => visibleColumns.has(id)),
+            title: [
+              t("workspace:projects.pageTitle"),
+              (views as SavedView[]).find((view) => view.id === viewId)?.name,
+            ]
+              .filter(Boolean)
+              .join(" · "),
+            subtitle: describeConditions(conditions, fields, t),
+          }
+        : undefined,
+    );
+    saveAs(blob, filename);
   };
 
   const handleApplyView = (view: SavedView) => {
@@ -436,16 +452,12 @@ function RouteComponent() {
                     })
                   }
                 />
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  className="gap-1.5"
-                  data-testid="portfolio-export"
-                  onClick={handleExport}
-                >
-                  <Download className="size-3.5" />
-                  {t("workspace:projects.export")}
-                </Button>
+                <ExportMenu
+                  formats={["pdf", "xlsx"]}
+                  className="h-6 border-0 px-2"
+                  testId="portfolio-export"
+                  onExport={handleExport}
+                />
               </div>
             </div>
             <FilterBar

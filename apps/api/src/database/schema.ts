@@ -1275,7 +1275,7 @@ export const fieldDefinitionTable = pgTable(
     // que dejo establecido el arbol de la Fase 2.
     check(
       "field_definition_type_valid",
-      sql`${table.type} IN ('text', 'number', 'currency', 'select', 'multi_select', 'date', 'checkbox', 'user', 'url', 'relation')`,
+      sql`${table.type} IN ('text', 'number', 'currency', 'select', 'multi_select', 'date', 'checkbox', 'user', 'url', 'relation', 'formula')`,
     ),
     // Un campo de proyecto se define en el espacio, nunca en un proyecto.
     check(

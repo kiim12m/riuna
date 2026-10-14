@@ -1512,8 +1512,6 @@
 			"title": "Custom fields",
 			"description": "The fields every task of the project can fill in. Their type and key never change; archive one to hide it without losing its values.",
 			"empty": "There are no custom fields yet.",
-			"renameAction": "Rename",
-			"saveName": "Save the name",
 			"moveUp": "Move up",
 			"moveDown": "Move down",
 			"archiveAction": "Archive",
@@ -1524,7 +1522,8 @@
 			"deleteTitle": "Delete “{{name}}”?",
 			"deleteDescription": "The field and the values every task has stored for it are deleted. This cannot be undone. To just hide it, archive it instead.",
 			"updateError": "The field could not be updated",
-			"deleteError": "The field could not be deleted"
+			"deleteError": "The field could not be deleted",
+			"editAction": "Editar"
 		},
 		"workspaceFields": {
 			"title": "Custom fields",
@@ -2787,7 +2786,8 @@
 				"date": "Fecha",
 				"checkbox": "Casilla",
 				"user": "Persona",
-				"url": "URL"
+				"url": "URL",
+				"formula": "Calculado"
 			},
 			"addFilter": "Añadir un filtro",
 			"removeFilter": "Quitar este filtro",
@@ -2857,7 +2857,10 @@
 				"label": "Total del filtro · {{total}} tareas",
 				"estimate": "Estimado",
 				"logged": "Registrado"
-			}
+			},
+			"editFieldTitle": "Editar el campo",
+			"editFieldDescription": "El tipo y la clave no cambian, así que los valores que ya hay se conservan.",
+			"saveField": "Guardar el campo"
 		},
 		"team": {
 			"label": "Equip",
@@ -3002,6 +3005,34 @@
 		"subprojects": {
 			"include_one": "Incluir su subproyecto",
 			"include_other": "Incluir sus {{count}} subproyectos"
+		},
+		"fields": {
+			"help": "Sobre {{name}}",
+			"helpText": "Texto de ayuda",
+			"helpTextPlaceholder": "Qué significa y cómo se rellena",
+			"formula": {
+				"label": "Fórmula",
+				"placeholder": "{Presupuesto} / {Horas previstas}",
+				"insert": "Insertar:",
+				"hint": "Los campos van entre llaves. + − × ÷, min(a; b), max(a; b) y si(condición; valor; si no). Si falta un dato, el resultado queda vacío. Estimado y Registrado son los de toda la rama, en horas.",
+				"format": "Mostrar como",
+				"formats": {
+					"number": "Número",
+					"currency": "Moneda",
+					"percent": "Porcentaje"
+				},
+				"estimate": "Estimado",
+				"logged": "Registrado",
+				"calculatedAs": "Se calcula: {{formula}}"
+			}
+		},
+		"export": {
+			"label": "Exportar",
+			"pdf": "PDF",
+			"xlsx": "Excel",
+			"csv": "CSV",
+			"failed": "No se ha podido exportar",
+			"taskPdf": "Exportar a PDF"
 		}
 	},
 	"invitations": {
@@ -3078,8 +3109,6 @@
 				"base": "Del proyecto",
 				"custom": "Campos de proyecto"
 			},
-			"export": "Exportar",
-			"exportError": "No se pudo exportar la lista de proyectos",
 			"noMatches": "Ningún proyecto cumple el filtro",
 			"subprojectCount_one": "{{count}} subproyecto",
 			"subprojectCount_other": "{{count}} subproyectos"
@@ -3684,8 +3713,6 @@
 			"task": "Tasca",
 			"project": "Projecte"
 		},
-		"export": "Exportar",
-		"exportError": "No s'ha pogut exportar el part.",
 		"rangeInvalid": "La data de fi ha de ser posterior a la d'inici.",
 		"entries": "Entrades",
 		"hours": "Hores",

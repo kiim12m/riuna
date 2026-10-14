@@ -15,6 +15,9 @@ export const FIELD_TYPES = [
   "user",
   "url",
   "relation",
+  // Un campo calculado (ADR 090): su valor lo escribe la base a partir de una
+  // formula, nunca una persona.
+  "formula",
 ] as const;
 
 export type FieldType = (typeof FIELD_TYPES)[number];
@@ -27,6 +30,11 @@ export const fieldTypeSchema = v.picklist(FIELD_TYPES);
 // gestiona el modulo de relaciones. Ver ADR 013.
 export function storesValueInJson(type: FieldType) {
   return type !== "relation";
+}
+
+/** Si su valor lo escribe quien edita la tarea. Uno calculado, no. */
+export function isUserWritable(type: FieldType) {
+  return type !== "relation" && type !== "formula";
 }
 
 const optionSchema = v.object({
@@ -69,6 +77,25 @@ const currencyConfigSchema = v.object({
 
 const emptyConfigSchema = v.object({});
 
+// La formula llega aqui tal como la escribio alguien; su forma canonica, con
+// claves en vez de nombres, la pone `prepareFormulaConfig`, que necesita la base
+// para resolver los nombres.
+const formulaConfigSchema = v.pipe(
+  v.object({
+    expression: v.pipe(v.string(), v.minLength(1), v.maxLength(500)),
+    format: v.optional(v.picklist(["number", "currency", "percent"]), "number"),
+    currency: v.optional(
+      v.nullable(
+        v.pipe(v.string(), v.regex(/^[A-Z]{3}$/, "Use an ISO 4217 code")),
+      ),
+    ),
+  }),
+  v.check(
+    (config) => config.format !== "currency" || Boolean(config.currency),
+    "A currency formula needs a currency code",
+  ),
+);
+
 const configSchemas = {
   text: v.object({
     maxLength: v.optional(v.nullable(v.pipe(v.number(), v.minValue(1)))),
@@ -82,6 +109,7 @@ const configSchemas = {
   user: emptyConfigSchema,
   url: emptyConfigSchema,
   relation: emptyConfigSchema,
+  formula: formulaConfigSchema,
 } as const satisfies Record<FieldType, unknown>;
 
 export type FieldConfig<T extends FieldType = FieldType> = v.InferOutput<
