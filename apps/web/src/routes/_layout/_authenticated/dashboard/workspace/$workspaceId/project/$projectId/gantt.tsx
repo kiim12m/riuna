@@ -31,6 +31,7 @@ import {
   type ZoomLevel,
 } from "@/components/gantt/gantt-timeline";
 import PageTitle from "@/components/page-title";
+import { ExportViewMenu } from "@/components/project/export-view-menu";
 import { SubprojectToggle } from "@/components/project/subproject-toggle";
 import FilterBar from "@/components/table-view/filter-bar";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
@@ -52,6 +53,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { readFilterParam, useUrlFilter } from "@/hooks/use-url-filter";
 import { type BaselineChoice, isBaselineChoice } from "@/lib/baseline";
 import { cn } from "@/lib/cn";
+import { describeConditions } from "@/lib/describe-filter";
 import { formatDateShort } from "@/lib/format";
 import { getStatusLabel } from "@/lib/i18n/domain";
 import { subprojectDoneIds, subprojectTasks } from "@/lib/subproject-tasks";
@@ -393,12 +395,22 @@ function RouteComponent() {
         hideAppName
       />
       <div className="flex h-full min-h-0 flex-col bg-background">
-        <div className="border-border/80 border-b">
-          <FilterBar
-            fields={filterableFields}
-            conditions={conditions}
-            onChange={setConditions}
-          />
+        <div className="flex flex-wrap items-center border-border/80 border-b">
+          <div className="min-w-0 flex-1">
+            <FilterBar
+              fields={filterableFields}
+              conditions={conditions}
+              onChange={setConditions}
+            />
+          </div>
+          <div className="px-3">
+            <ExportViewMenu
+              projectId={projectId}
+              filter={filter}
+              title={`${t("tasks:gantt.title")} · ${project?.name ?? ""}`}
+              subtitle={describeConditions(conditions, filterableFields, t)}
+            />
+          </div>
         </div>
 
         <div className="border-border/80 border-b px-3 py-2.5 sm:px-4">

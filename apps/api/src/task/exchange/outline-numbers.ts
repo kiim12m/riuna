@@ -90,3 +90,16 @@ export function assignOutlineNumbers(
 
   return outlineById;
 }
+
+/** Orden de recorrido del arbol: `1.2` antes que `1.10`, y `1.10` antes que `2`. */
+export function compareOutline(left: string, right: string): number {
+  const a = left.split(".").map(Number);
+  const b = right.split(".").map(Number);
+
+  for (let index = 0; index < Math.max(a.length, b.length); index += 1) {
+    const difference = (a[index] ?? 0) - (b[index] ?? 0);
+    if (difference !== 0) return difference;
+  }
+
+  return 0;
+}

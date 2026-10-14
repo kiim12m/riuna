@@ -3,6 +3,9 @@ import { HTTPException } from "hono/http-exception";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import { requireEntitlement } from "../billing/require-entitlement-middleware";
+import { personName } from "../pdf/context";
+import { buildPortfolioPdf } from "../pdf/portfolio";
+import { pdfResponse } from "../pdf/response";
 import { projectSchema } from "../schemas";
 import { createProjectFromTemplate } from "../template/controllers/create-project-from-template";
 import { buildContentDisposition } from "../utils/content-disposition";
@@ -98,24 +101,33 @@ const project = new Hono<{
       operationId: "exportProjects",
       tags: ["Projects"],
       description:
-        "Export the project list as a spreadsheet (ADR 088): the projects that match `filter`, with their status, dates, progress and one column per project field.",
+        "Export the project list as a spreadsheet (ADR 088): the projects that match `filter`, with their status, dates, progress and one column per project field. With `format=pdf` (ADR 091) it takes the visible `columns` (comma separated ids), a `title` and a `subtitle`.",
       responses: {
         200: {
-          description: "Spreadsheet file",
+          description: "Spreadsheet or PDF file",
           content: {
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
               { schema: { type: "string", format: "binary" } },
+            "application/pdf": { schema: { type: "string", format: "binary" } },
           },
         },
       },
     }),
     validator(
       "query",
-      v.object({ workspaceId: v.string(), filter: v.optional(v.string()) }),
+      v.object({
+        workspaceId: v.string(),
+        filter: v.optional(v.string()),
+        format: v.optional(v.picklist(["xlsx", "pdf"]), "xlsx"),
+        columns: v.optional(v.pipe(v.string(), v.maxLength(4_000))),
+        title: v.optional(v.pipe(v.string(), v.maxLength(200))),
+        subtitle: v.optional(v.pipe(v.string(), v.maxLength(500))),
+      }),
     ),
     workspaceAccess.fromQuery(),
     async (c) => {
-      const { filter: rawFilter } = c.req.valid("query");
+      const query = c.req.valid("query");
+      const rawFilter = query.filter;
       let filter: FilterNode | null = null;
       try {
         filter = parseFilterParam(rawFilter);
@@ -123,6 +135,27 @@ const project = new Hono<{
         throw new HTTPException(400, {
           message: error instanceof Error ? error.message : "Invalid filter",
         });
+      }
+
+      if (query.format === "pdf") {
+        try {
+          const pdf = await buildPortfolioPdf(
+            c.get("workspaceId"),
+            {
+              filter,
+              columns: query.columns?.split(",").filter(Boolean),
+              title: query.title,
+              subtitle: query.subtitle,
+            },
+            await personName(c.get("userId")),
+          );
+          return pdfResponse(c, pdf);
+        } catch (error) {
+          if (error instanceof FilterError) {
+            throw new HTTPException(400, { message: error.message });
+          }
+          throw error;
+        }
       }
 
       let sheet: Awaited<ReturnType<typeof exportProjects>>;

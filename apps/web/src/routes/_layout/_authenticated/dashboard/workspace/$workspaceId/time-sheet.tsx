@@ -3,10 +3,13 @@ import { saveAs } from "file-saver";
 import { ChevronRight, FileClock } from "lucide-react";
 import { Fragment, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  ExportMenu,
+  type ExportMenuFormat,
+} from "@/components/common/export-menu";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import PageTitle from "@/components/page-title";
 import { TimeSheetEntryRow } from "@/components/time-sheet/entry-row";
-import { Button } from "@/components/ui/button";
 import {
   Empty,
   EmptyDescription,
@@ -39,7 +42,6 @@ import { cn } from "@/lib/cn";
 import { dayKey } from "@/lib/day-key";
 import { formatDuration } from "@/lib/duration";
 import { formatDate } from "@/lib/format";
-import { toast } from "@/lib/toast";
 
 const DEFAULT_RANGE_DAYS = 7;
 
@@ -68,7 +70,6 @@ function RouteComponent() {
   );
   const [end, setEnd] = useState(() => dayKey(new Date()));
   const [groupBy, setGroupBy] = useState<TimeSheetGroupBy>("day");
-  const [isExporting, setIsExporting] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     () => new Set(),
   );
@@ -90,16 +91,13 @@ function RouteComponent() {
 
   const invalidRange = end < start;
 
-  const handleExport = async () => {
-    setIsExporting(true);
-    try {
-      const { blob, filename } = await exportTimeSheet(workspaceId, query);
-      saveAs(blob, filename);
-    } catch {
-      toast.error(t("timeSheet:exportError"));
-    } finally {
-      setIsExporting(false);
-    }
+  const handleExport = async (format: ExportMenuFormat) => {
+    const { blob, filename } = await exportTimeSheet(
+      workspaceId,
+      query,
+      format === "pdf" ? "pdf" : "xlsx",
+    );
+    saveAs(blob, filename);
   };
 
   const groupLabel = (key: string, label: string) => {
@@ -176,14 +174,11 @@ function RouteComponent() {
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={invalidRange || isExporting || isEmpty}
-              onClick={handleExport}
-            >
-              {t("timeSheet:export")}
-            </Button>
+            <ExportMenu
+              formats={["pdf", "xlsx"]}
+              disabled={invalidRange || isEmpty}
+              onExport={handleExport}
+            />
           </div>
 
           {invalidRange && (

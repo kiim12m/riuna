@@ -8,16 +8,27 @@ import type { TaskFilter } from "@/types/task-filter";
 
 export type SheetFormat = "csv" | "xlsx";
 
+/** Una hoja de calculo o, desde la 4.2, un PDF (ADR 091). */
+export type ExportFormat = SheetFormat | "pdf";
+
 async function exportTaskSheet({
   projectId,
   format,
   filter,
   treeScope,
+  columns,
+  title,
+  subtitle,
 }: {
   projectId: string;
-  format: SheetFormat;
+  format: ExportFormat;
   filter?: TaskFilter | null;
   treeScope?: "matching" | "roots" | "withDescendants";
+  /** Las columnas que se ven en la Tabla; solo las usa el PDF. */
+  columns?: string[];
+  /** La vista y su filtro en palabras, para la cabecera del PDF. */
+  title?: string;
+  subtitle?: string;
 }) {
   const response = await client.task.export[":projectId"].$get({
     param: { projectId },
@@ -25,6 +36,11 @@ async function exportTaskSheet({
       format,
       ...(filter ? { filter: JSON.stringify(filter) } : {}),
       ...(treeScope && treeScope !== "matching" ? { treeScope } : {}),
+      ...(format === "pdf" && columns?.length
+        ? { columns: columns.join(",") }
+        : {}),
+      ...(format === "pdf" && title ? { title } : {}),
+      ...(format === "pdf" && subtitle ? { subtitle } : {}),
     },
   });
 

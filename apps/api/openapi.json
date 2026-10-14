@@ -1276,12 +1276,18 @@
         "tags": [
           "Projects"
         ],
-        "description": "Export the project list as a spreadsheet (ADR 088): the projects that match `filter`, with their status, dates, progress and one column per project field.",
+        "description": "Export the project list as a spreadsheet (ADR 088): the projects that match `filter`, with their status, dates, progress and one column per project field. With `format=pdf` (ADR 091) it takes the visible `columns` (comma separated ids), a `title` and a `subtitle`.",
         "responses": {
           "200": {
-            "description": "Spreadsheet file",
+            "description": "Spreadsheet or PDF file",
             "content": {
               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/pdf": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
@@ -1304,6 +1310,42 @@
             "name": "filter",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "schema": {
+              "enum": [
+                "xlsx",
+                "pdf"
+              ],
+              "type": "string",
+              "default": "xlsx"
+            }
+          },
+          {
+            "in": "query",
+            "name": "columns",
+            "schema": {
+              "type": "string",
+              "maxLength": 4000
+            }
+          },
+          {
+            "in": "query",
+            "name": "title",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "in": "query",
+            "name": "subtitle",
+            "schema": {
+              "type": "string",
+              "maxLength": 500
             }
           }
         ],
@@ -3765,6 +3807,39 @@
         "summary": "Delete Task"
       }
     },
+    "/task/{id}/pdf": {
+      "get": {
+        "operationId": "exportTaskPdf",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "A task as a PDF (ADR 091): its fields, description, direct subtasks and comments",
+        "responses": {
+          "200": {
+            "description": "PDF document",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Export Task Pdf"
+      }
+    },
     "/task/move/{id}": {
       "put": {
         "operationId": "moveTask",
@@ -3915,7 +3990,7 @@
         "tags": [
           "Tasks"
         ],
-        "description": "Export all tasks from a project",
+        "description": "Export the tasks of a project: `json` (a backup), `csv` or `xlsx` (the exchange format, ADR 017) or `pdf` (ADR 091). Every format but `json` takes the view's `filter` and `treeScope`; `pdf` also takes the Table's visible `columns` (comma separated ids), and a `title` and `subtitle` that say which view it is",
         "responses": {
           "200": {
             "description": "Exported tasks data",
@@ -3944,7 +4019,8 @@
               "enum": [
                 "json",
                 "csv",
-                "xlsx"
+                "xlsx",
+                "pdf"
               ],
               "type": "string"
             }
@@ -3966,6 +4042,30 @@
                 "withDescendants"
               ],
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "columns",
+            "schema": {
+              "type": "string",
+              "maxLength": 4000
+            }
+          },
+          {
+            "in": "query",
+            "name": "title",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
+            "in": "query",
+            "name": "subtitle",
+            "schema": {
+              "type": "string",
+              "maxLength": 500
             }
           }
         ],
@@ -9353,12 +9453,18 @@
         "tags": [
           "Time Sheet"
         ],
-        "description": "Export the time sheet for the requested range as a spreadsheet",
+        "description": "Export the time sheet for the requested range as a spreadsheet or, with `format=pdf`, as a document with every entry, the total, each day against the work schedule and room for two signatures (ADR 091)",
         "responses": {
           "200": {
-            "description": "Spreadsheet file",
+            "description": "Spreadsheet or PDF file",
             "content": {
               "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/pdf": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
@@ -9402,6 +9508,18 @@
               ],
               "type": "string",
               "default": "day"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "schema": {
+              "enum": [
+                "xlsx",
+                "pdf"
+              ],
+              "type": "string",
+              "default": "xlsx"
             }
           }
         ],

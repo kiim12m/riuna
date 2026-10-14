@@ -9,7 +9,7 @@ import {
 import type { FilterNode } from "../../view/filter-to-sql";
 import getProjects from "./get-projects";
 
-const HEALTH_LABELS: Record<string, string> = {
+export const HEALTH_LABELS: Record<string, string> = {
   not_started: "Sin empezar",
   on_track: "En plazo",
   at_risk: "En riesgo",

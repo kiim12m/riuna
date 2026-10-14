@@ -30,7 +30,7 @@
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
 | **Total Bloque A** | **45** + 18 del interludio | |
-| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hechas las tandas 1 (1.1-1.6), 2 (2.1-2.4) y 3 (3.1-3.3), y el 4.1 · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
+| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hechas las tandas 1 (1.1-1.6), 2 (2.1-2.4), 3 (3.1-3.3) y 4 (4.1-4.2) · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -3118,12 +3118,18 @@ unitarias del orden y el árbol de la cartera y del aviso nuevo, y de extremo a 
   - MCP: `list_project_fields` (65 herramientas).
   - Medido con 50.000 tareas: recalcular tras una escritura, p95 de 6,5 ms (20 ms con valores de
     rama); una fórmula nueva del espacio escribe sus 50.000 filas en unos 6 s, una vez.
-- **4.2 Exportar a PDF** · M. Tres documentos:
-  - una tarea, con sus campos, la descripción, las subtareas y los comentarios;
-  - cualquier vista con sus filtros, como ya hace el Excel;
-  - el parte de horas con sus totales.
+- **4.2 Exportar a PDF** ✔ · M · [ADR 091](adr/091-exportar-a-pdf.md). **Hecho (2026-10-14).**
+  Con `pdfmake` (MIT), que maqueta tablas que saltan de página repitiendo la cabecera; trae Roboto
+  y no puede leer nada de la red. Los tres documentos de la maqueta y el que la 3.2 dejó pendiente:
+  - una tarea, desde sus acciones: ficha con los campos, descripción, subtareas y comentarios;
+  - cualquier vista con sus filtros, desde un menú «Exportar» nuevo en la Tabla (con sus columnas
+    visibles y los totales), el Gantt y el Calendario, que también ofrece el Excel y el CSV que la
+    API ya sabía hacer; hasta 5.000 filas;
+  - el parte de horas, con el total, lo registrado frente a la jornada de cada día y dos firmas;
+  - la cartera de proyectos.
 
-  Una dependencia nueva, con su justificación de una línea y licencia compatible: nada GPL.
+  Medido con 50.000 tareas: una tarea, el parte o la cartera, menos de 110 ms; una vista de 5.000
+  filas, unos 4 s. El MCP no exporta PDF.
 
 **Tanda 5 — Wiki de páginas** · L (≈ 4 semanas)
 
@@ -3679,8 +3685,8 @@ La **Fase 9**, operación, está hecha (2026-10-11), en las PR apiladas #51 a #5
 Con eso se cierra el Bloque A. Después viene el
 [interludio de ideas de OpenProject](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado),
 planificado el 2026-10-12, y el Bloque B (CRM y ERP ligero) empieza en la Fase 10. Del
-interludio están hechas las tandas 1 a 3 y el 4.1 (campos calculados, 2026-10-14); sigue el
-4.2, exportar a PDF.
+interludio están hechas las tandas 1 a 4 (la 4, campos calculados y PDF, el 2026-10-14); la
+siguiente es la tanda 5, la wiki.
 
 **Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
 seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.

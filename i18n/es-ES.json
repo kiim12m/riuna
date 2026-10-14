@@ -3025,6 +3025,14 @@
 				"logged": "Registrado",
 				"calculatedAs": "Se calcula: {{formula}}"
 			}
+		},
+		"export": {
+			"label": "Exportar",
+			"pdf": "PDF",
+			"xlsx": "Excel",
+			"csv": "CSV",
+			"failed": "No se ha podido exportar",
+			"taskPdf": "Exportar a PDF"
 		}
 	},
 	"invitations": {
@@ -3101,8 +3109,6 @@
 				"base": "Del proyecto",
 				"custom": "Campos de proyecto"
 			},
-			"export": "Exportar",
-			"exportError": "No se pudo exportar la lista de proyectos",
 			"noMatches": "Ningún proyecto cumple el filtro",
 			"subprojectCount_one": "{{count}} subproyecto",
 			"subprojectCount_other": "{{count}} subproyectos"
@@ -3707,8 +3713,6 @@
 			"task": "Tarea",
 			"project": "Proyecto"
 		},
-		"export": "Exportar",
-		"exportError": "No se pudo exportar el parte.",
 		"rangeInvalid": "La fecha de fin tiene que ser posterior a la de inicio.",
 		"entries": "Entradas",
 		"hours": "Horas",

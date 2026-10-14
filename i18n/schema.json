@@ -11887,6 +11887,31 @@
 						}
 					},
 					"required": ["help", "helpText", "helpTextPlaceholder", "formula"]
+				},
+				"export": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"label": {
+							"type": "string"
+						},
+						"pdf": {
+							"type": "string"
+						},
+						"xlsx": {
+							"type": "string"
+						},
+						"csv": {
+							"type": "string"
+						},
+						"failed": {
+							"type": "string"
+						},
+						"taskPdf": {
+							"type": "string"
+						}
+					},
+					"required": ["label", "pdf", "xlsx", "csv", "failed", "taskPdf"]
 				}
 			},
 			"required": [
@@ -11937,7 +11962,8 @@
 				"dates",
 				"baseline",
 				"subprojects",
-				"fields"
+				"fields",
+				"export"
 			]
 		},
 		"invitations": {
@@ -12203,12 +12229,6 @@
 							},
 							"required": ["base", "custom"]
 						},
-						"export": {
-							"type": "string"
-						},
-						"exportError": {
-							"type": "string"
-						},
 						"noMatches": {
 							"type": "string"
 						},
@@ -12245,8 +12265,6 @@
 						"createdAt",
 						"columns",
 						"columnsGroup",
-						"export",
-						"exportError",
 						"noMatches",
 						"subprojectCount_one",
 						"subprojectCount_other"
@@ -14558,12 +14576,6 @@
 					},
 					"required": ["day", "task", "project"]
 				},
-				"export": {
-					"type": "string"
-				},
-				"exportError": {
-					"type": "string"
-				},
 				"rangeInvalid": {
 					"type": "string"
 				},
@@ -14615,8 +14627,6 @@
 				"to",
 				"groupBy",
 				"groupByOption",
-				"export",
-				"exportError",
 				"rangeInvalid",
 				"entries",
 				"hours",

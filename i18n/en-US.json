@@ -3025,6 +3025,14 @@
 				"logged": "Logged",
 				"calculatedAs": "Calculated: {{formula}}"
 			}
+		},
+		"export": {
+			"label": "Export",
+			"pdf": "PDF",
+			"xlsx": "Excel",
+			"csv": "CSV",
+			"failed": "Could not export",
+			"taskPdf": "Export to PDF"
 		}
 	},
 	"invitations": {
@@ -3101,8 +3109,6 @@
 				"base": "Of the project",
 				"custom": "Project fields"
 			},
-			"export": "Export",
-			"exportError": "The project list could not be exported",
 			"noMatches": "No project matches the filter",
 			"subprojectCount_one": "{{count}} subproject",
 			"subprojectCount_other": "{{count}} subprojects"
@@ -3707,8 +3713,6 @@
 			"task": "Task",
 			"project": "Project"
 		},
-		"export": "Export",
-		"exportError": "Couldn't export the time sheet.",
 		"rangeInvalid": "The end date must be after the start date.",
 		"entries": "Entries",
 		"hours": "Hours",

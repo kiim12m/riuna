@@ -103,7 +103,7 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
   - filtros compuestos con el motor de las vistas, también por progreso y por
     campos de proyecto, en la URL;
   - vistas guardadas de espacio, privadas o compartidas, y exportación a Excel
-    con el filtro que se ve.
+    y a PDF con el filtro que se ve.
 - **Subproyectos** ([ADR 089](adr/089-subproyectos.md)): un proyecto puede
   colgar de otro, de un solo nivel, desde «Subproyecto de» en sus ajustes.
   - En la lista de proyectos, el padre resume su rama (progreso, tareas y aviso
@@ -538,7 +538,9 @@ ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
 - **Parte de horas** ([ADR 042](adr/042-parte-de-horas.md)): lo registrado
   por quien mira, cruzando proyectos, en un rango de fechas. Agrupable por
   día, tarea o proyecto; una entrada en marcha cuenta lo transcurrido hasta
-  ahora. Exportable a Excel. Cada grupo se despliega en sus entradas —con el
+  ahora. Exportable a Excel y a PDF, con un resumen de cada día frente a la
+  jornada y sitio para dos firmas ([ADR 091](adr/091-exportar-a-pdf.md)). Cada
+  grupo se despliega en sus entradas —con el
   título de su tarea, y la fecha si no se agrupa por día—, que se editan
   (inicio y fin) y se borran con confirmación.
 - **Cronómetro** ([ADR 044](adr/044-cronometro-en-el-pie.md)): un solo
@@ -640,9 +642,19 @@ ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
 - Techo de 20.000 filas. Medido: 5.000 filas en 6,6 s de alta y 6,1 s de
   reimportación.
 - **Exportar** a CSV, a Excel y a copia JSON; **cualquier vista con sus filtros
-  aplicados**; y el libro completo del espacio en formato SERVITEC
+  aplicados**, desde el menú «Exportar» de la Tabla, el Gantt y el Calendario; y
+  el libro completo del espacio en formato SERVITEC
   ([ADR 012](adr/012-exportacion-a-excel.md)), con los comentarios seguidos y la
   fecha de cada uno en negrita.
+- **Exportar a PDF** ([ADR 091](adr/091-exportar-a-pdf.md)), con la marca, de
+  dónde sale, quién lo generó y la página:
+  - una tarea, desde sus acciones: ficha con los campos, descripción, subtareas y
+    comentarios;
+  - una vista, con su filtro en palabras, las columnas que se ven en la Tabla y
+    los totales al pie, hasta 5.000 filas;
+  - el parte de horas, con el total, lo registrado frente a la jornada y dos
+    firmas;
+  - la cartera de proyectos, con sus columnas y los subproyectos bajo su padre.
 - **La hoja de SERVITEC de vuelta** ([ADR 069](adr/069-la-hoja-de-servitec-vuelve.md)),
   desde *Administración del espacio › General*:
   - sirve para migrar el cuadro que se llevaba a mano y para la ida y vuelta,
