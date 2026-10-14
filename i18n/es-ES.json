@@ -3430,6 +3430,13 @@
 		"week": {
 			"more_one": "+{{count}} más",
 			"more_other": "+{{count}} más"
+		},
+		"widgetTasks": {
+			"open_one": "Ver la tarea de «{{title}}»",
+			"open_other": "Ver las {{count}} tareas de «{{title}}»",
+			"empty": "Ahora mismo no hay ninguna tarea",
+			"loadMore": "Cargar más",
+			"error": "No se ha podido cargar la lista"
 		}
 	},
 	"goals": {

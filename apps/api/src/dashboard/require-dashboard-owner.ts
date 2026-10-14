@@ -132,13 +132,53 @@ export async function requireDashboardVisible(c: Context, next: Next) {
     throw new HTTPException(404, { message: "Dashboard not found" });
   }
 
+  return assertVisible(c, next, dashboard.createdBy, dashboard.isShared);
+}
+
+/**
+ * Lo mismo para una ruta que nombra el widget: leer la lista de una tarjeta es
+ * leer el panel en el que esta.
+ */
+export async function requireWidgetVisible(c: Context, next: Next) {
+  const id = c.req.param("id");
+
+  if (!id) {
+    throw new HTTPException(400, { message: "Widget id is required" });
+  }
+
+  const [widget] = await db
+    .select({
+      createdBy: dashboardTable.createdBy,
+      isShared: dashboardTable.isShared,
+    })
+    .from(dashboardWidgetTable)
+    .innerJoin(
+      dashboardTable,
+      eq(dashboardWidgetTable.dashboardId, dashboardTable.id),
+    )
+    .where(eq(dashboardWidgetTable.id, id))
+    .limit(1);
+
+  if (!widget) {
+    throw new HTTPException(404, { message: "Widget not found" });
+  }
+
+  return assertVisible(c, next, widget.createdBy, widget.isShared);
+}
+
+async function assertVisible(
+  c: Context,
+  next: Next,
+  createdBy: string,
+  isShared: boolean,
+) {
   const userId = c.get("userId");
 
   if (!userId) {
     throw new HTTPException(401, { message: "Unauthorized" });
   }
 
-  if (dashboard.isShared || dashboard.createdBy === userId) {
+  if (isShared || createdBy === userId) {
     return next();
   }
 

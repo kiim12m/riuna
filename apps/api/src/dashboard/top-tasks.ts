@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, type SQL, sql } from "drizzle-orm";
 import db from "../database";
 import { projectTable, taskTable } from "../database/schema";
 import type { PersonalScope } from "../my-work/scope";
@@ -18,6 +18,10 @@ import { TABLE_WIDGET_ROWS } from "./widget-config";
  * total obligaria a un segundo barrido completo para un numero que nadie mira
  * en un widget. El orden es el mismo que el de "Mi trabajo" —vence antes,
  * luego mas prioritaria—, que es lo que hace util una lista corta.
+ *
+ * La lista que abre una tarjeta de recuento (`get-widget-tasks.ts`) es esta
+ * misma lectura con los predicados de la tarjeta en `extra` y paginada: las
+ * mismas columnas y el mismo orden, y la misma fila en la web.
  */
 export default async function topTasks({
   workspaceId,
@@ -26,6 +30,9 @@ export default async function topTasks({
   scope,
   filter,
   registry,
+  extra = [],
+  limit = TABLE_WIDGET_ROWS,
+  offset = 0,
 }: {
   workspaceId: string;
   userId: string;
@@ -33,6 +40,9 @@ export default async function topTasks({
   scope?: PersonalScope;
   filter: FilterNode | null;
   registry: FieldRegistry;
+  extra?: SQL[];
+  limit?: number;
+  offset?: number;
 }) {
   const conditions = await workspaceTaskConditions({
     workspaceId,
@@ -61,11 +71,12 @@ export default async function topTasks({
     })
     .from(taskTable)
     .innerJoin(projectTable, eq(taskTable.projectId, projectTable.id))
-    .where(and(...conditions))
+    .where(and(...conditions, ...extra))
     .orderBy(
       sql`${taskTable.dueDate} ASC NULLS LAST`,
       desc(priorityRankExpression),
       asc(taskTable.id),
     )
-    .limit(TABLE_WIDGET_ROWS);
+    .limit(limit)
+    .offset(offset);
 }

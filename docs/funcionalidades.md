@@ -571,7 +571,9 @@ la tarea y en la propia tabla.
 - **Distribución de partida** en tres alturas: ocho cifras arriba —vencidas,
   vencen hoy, vencen esta semana (de mañana al final de la semana natural),
   pendientes, cerradas en siete días, alta prioridad, sin fecha y horas
-  registradas—, la semana en curso a ancho completo, y debajo la lista de pendientes con las notificaciones al lado. Restaurable
+  registradas—. **Pulsar una cifra que cuenta tareas abre la lista de esas
+  tareas**, y desde ella se abre cada una. Debajo, la semana en curso a ancho
+  completo, y bajo ella la lista de pendientes con las notificaciones al lado. Restaurable
   en cualquier momento, sustituyendo los widgets que se hayan añadido o editado.
 - **Objetivos (OKR)**: objetivo con periodo de fechas y **resultados clave**
   medidos con el mismo motor de agregación que los widgets. Compartibles con el

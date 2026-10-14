@@ -3430,6 +3430,13 @@
 		"week": {
 			"more_one": "+{{count}} més",
 			"more_other": "+{{count}} més"
+		},
+		"widgetTasks": {
+			"open_one": "Veure la tasca de «{{title}}»",
+			"open_other": "Veure les {{count}} tasques de «{{title}}»",
+			"empty": "Ara mateix no hi ha cap tasca",
+			"loadMore": "Carregar-ne més",
+			"error": "No s'ha pogut carregar la llista"
 		}
 	},
 	"goals": {

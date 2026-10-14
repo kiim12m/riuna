@@ -119,6 +119,21 @@ type ResolvedWidget = Pick<
 >;
 
 /**
+ * Las tarjetas cuya cifra es **un numero de tareas**: un recuento sin agrupar,
+ * de tareas o de completadas.
+ *
+ * Son las que entran en el barrido compartido (`collapse-counts.ts`) y las que
+ * se abren en lista al pulsarlas (`get-widget-tasks.ts`, ADR 090): detras de
+ * una cifra de horas, de estimado o de una proporcion no hay una lista que
+ * sume eso. La web lleva el espejo en `widget-labels.ts`.
+ */
+export function isTaskCount(type: WidgetType, config: WidgetConfig): boolean {
+  if (type !== "count" || config.groupBy) return false;
+  const metric = config.metric ?? "count";
+  return metric === "count" || metric === "doneCount";
+}
+
+/**
  * Que consulta corresponde a cada tipo, y que combinaciones no existen.
  *
  * Se valida al **escribir** y no solo al leer, por el mismo motivo que el

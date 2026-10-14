@@ -91,6 +91,32 @@ test.describe("Panel personal", () => {
     await expect(semana.getByText("Solo vence hoy")).toHaveCount(0);
   });
 
+  // Pulsar una cifra abre las tareas que cuenta, y desde ahi se abre la tarea
+  // (ADR 090). La lista sale de los mismos predicados que la cifra.
+  test("opens the tasks behind a figure", async ({ page, riuna }) => {
+    for (const titulo of ["Primera pendiente", "Segunda pendiente"]) {
+      const id = await createTask(riuna, titulo);
+      await riuna.api("put", `/api/task/assignee/${id}`, {
+        userId: riuna.userId,
+      });
+    }
+
+    await page.goto(`/dashboard/workspace/${riuna.workspaceId}/home`);
+
+    await page
+      // Exacto: «Tareas pendientes» tambien contiene la palabra.
+      .getByRole("region", { name: "Pendientes", exact: true })
+      .getByRole("button", { name: "Ver las 2 tareas de «Pendientes»" })
+      .click();
+
+    const lista = page.getByRole("dialog", { name: "Pendientes" });
+    await expect(lista.getByText("Primera pendiente")).toBeVisible();
+    await expect(lista.getByText("Segunda pendiente")).toBeVisible();
+
+    await lista.getByText("Segunda pendiente").click();
+    await expect(page).toHaveURL(/\/task\//);
+  });
+
   test("redirects the two routes it replaced", async ({ page, riuna }) => {
     // Los enlaces guardados de quien ya usaba las pantallas viejas siguen
     // llegando a la que responde la misma pregunta.

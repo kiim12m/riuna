@@ -13364,6 +13364,62 @@
         "summary": "Delete Widget"
       }
     },
+    "/dashboard/widget/{id}/tasks": {
+      "get": {
+        "operationId": "listWidgetTasks",
+        "tags": [
+          "Dashboards"
+        ],
+        "description": "List, page by page, the tasks a count widget counts: the same scope, filter and windows as its figure. Only widgets that count tasks can be listed",
+        "responses": {
+          "200": {
+            "description": "A page of tasks and whether there are more",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "weekStartsOn",
+            "schema": {
+              "enum": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "summary": "List Widget Tasks"
+      }
+    },
     "/dashboard/{id}/widget/order": {
       "put": {
         "operationId": "reorderWidgets",

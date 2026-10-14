@@ -1,4 +1,4 @@
-import { and, gte, lt, type SQL } from "drizzle-orm";
+import { and, gte, isNotNull, lt, type SQL } from "drizzle-orm";
 import { taskTable } from "../database/schema";
 import { addDays, startOfServerDay } from "../utils/day-boundaries";
 import { dueWindowCondition } from "../utils/due-window";
@@ -54,12 +54,38 @@ function widgetDueWindowCondition(
 }
 
 /**
+ * Todo lo que acota una tarjeta de recuento de tareas (`isTaskCount`) encima de
+ * su ambito y su filtro: la ventana de vencimiento, la de cierre y, si cuenta
+ * completadas, que lo esten.
+ *
+ * Lo comparten el barrido colapsado y la lista que se abre al pulsar la
+ * tarjeta (ADR 090), y es lo que garantiza que la lista sea **exactamente** lo
+ * que cuenta la cifra. La ruta en serie llega al mismo numero por `aggregate()`
+ * —`from`/`to` y el `FILTER` de `doneCount`—, y la prueba de integracion
+ * compara las tres.
+ */
+export function countPredicates(
+  config: WidgetConfig,
+  now: Date,
+  weekStart: Date,
+): SQL[] {
+  return [
+    ...widgetPredicates(config, now, weekStart),
+    ...completionRangePredicates(config, now),
+    ...(config.metric === "doneCount"
+      ? [isNotNull(taskTable.completedAt) as SQL]
+      : []),
+  ];
+}
+
+/**
  * La ventana de cierre de `rangeDays`, sobre `task.completed_at`.
  *
- * Solo la usa la ruta colapsada, que por construccion consulta `task`: en la
- * ruta en serie el equivalente lo aplica `aggregate()` con su `from`/`to`. Sale
- * del mismo `trendRange` para que "los ultimos siete dias" no pueda significar
- * dos cosas segun por donde se calcule la tarjeta.
+ * Solo la usan las lecturas que consultan `task` por construccion —el barrido
+ * colapsado y la lista de una tarjeta—: en la ruta en serie el equivalente lo
+ * aplica `aggregate()` con su `from`/`to`. Sale del mismo `trendRange` para que
+ * "los ultimos siete dias" no pueda significar dos cosas segun por donde se
+ * calcule la tarjeta.
  */
 export function completionRangePredicates(
   config: WidgetConfig,

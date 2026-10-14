@@ -3430,6 +3430,13 @@
 		"week": {
 			"more_one": "+{{count}} more",
 			"more_other": "+{{count}} more"
+		},
+		"widgetTasks": {
+			"open_one": "See the task in «{{title}}»",
+			"open_other": "See the {{count}} tasks in «{{title}}»",
+			"empty": "No tasks here right now",
+			"loadMore": "Load more",
+			"error": "The list could not be loaded"
 		}
 	},
 	"goals": {

@@ -891,6 +891,134 @@ describe("API integration: personal dashboards", () => {
       const serial = await read();
       expect(serial.get(thisWeek)).toBe(2);
     });
+
+    /**
+     * Pulsar una cifra abre sus tareas, y la lista tiene que ser **exactamente**
+     * lo que cuenta la cifra (ADR 090). Se comprueba con la distribucion de
+     * partida de verdad —sus ventanas, sus filtros, `doneCount` con
+     * `rangeDays`—, no con tarjetas hechas a medida de la prueba.
+     */
+    it("lists exactly the tasks each count card counts", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const other = await addWorkspaceMember(member.workspace.id, "member");
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const dashboard = await seedDashboard(
+        member.workspace.id,
+        member.user.id,
+      );
+
+      // Vencida, hoy, manana, la semana que viene, sin fecha, una urgente y
+      // una cerrada hoy: material para cada tarjeta de la fila de arriba.
+      const [, , , , , urgent, closed] = await seedTasks(
+        project.id,
+        member.user.id,
+        [
+          serverNoon(-1),
+          serverNoon(0),
+          serverNoon(1),
+          serverNoon(9),
+          null,
+          null,
+          serverNoon(-2),
+        ],
+      );
+      await db
+        .update(schema.taskTable)
+        .set({ priority: "urgent" })
+        .where(eq(schema.taskTable.id, urgent));
+      await db
+        .update(schema.taskTable)
+        .set({ completedAt: new Date() })
+        .where(eq(schema.taskTable.id, closed));
+
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const reset = await app.request(
+        `/api/dashboard/${dashboard.id}/reset-layout`,
+        { method: "POST" },
+      );
+      expect(reset.status).toBe(200);
+
+      const panels = (await (
+        await app.request(`/api/dashboard?workspaceId=${member.workspace.id}`)
+      ).json()) as Array<{
+        id: string;
+        widgets: Array<{ id: string; title: string; type: string }>;
+      }>;
+      const widgets =
+        panels.find((panel) => panel.id === dashboard.id)?.widgets ?? [];
+
+      const data = (await (
+        await app.request(
+          `/api/dashboard/${dashboard.id}/data?weekStartsOn=1`,
+          { method: "POST" },
+        )
+      ).json()) as { widgets: WidgetPayload[] };
+      const figures = new Map<string, number>();
+      for (const entry of data.widgets) {
+        if ("error" in entry) throw new Error(entry.error);
+        const buckets = entry.data.buckets as
+          | Array<{ value: number }>
+          | undefined;
+        figures.set(entry.id, buckets?.[0]?.value ?? 0);
+      }
+
+      const list = (widgetId: string) =>
+        app.request(`/api/dashboard/widget/${widgetId}/tasks?weekStartsOn=1`);
+
+      const counts = widgets.filter((widget) => widget.type === "count");
+      expect(counts).toHaveLength(7);
+
+      for (const widget of counts) {
+        const response = await list(widget.id);
+        expect(response.status, widget.title).toBe(200);
+        const page = (await response.json()) as {
+          tasks: Array<{ id: string }>;
+          hasMore: boolean;
+        };
+        expect(page.hasMore).toBe(false);
+        expect(page.tasks.length, widget.title).toBe(figures.get(widget.id));
+      }
+
+      // Que la comparacion no sea cero contra cero.
+      const byTitle = new Map(counts.map((widget) => [widget.title, widget]));
+      const titled = async (title: string) => {
+        const widget = byTitle.get(title);
+        if (!widget) throw new Error(`missing ${title}`);
+        const page = (await (await list(widget.id)).json()) as {
+          tasks: Array<{ id: string }>;
+        };
+        return page.tasks.map((task) => task.id);
+      };
+      expect(await titled("Alta prioridad")).toEqual([urgent]);
+      expect(await titled("Cerradas · 7 días")).toEqual([closed]);
+      expect((await titled("Pendientes")).length).toBe(6);
+
+      // Detras de una tira o de una cifra de horas no hay una lista que sume eso.
+      for (const widget of widgets.filter(
+        (item) => item.type === "week" || item.type === "time",
+      )) {
+        expect((await list(widget.id)).status, widget.title).toBe(400);
+      }
+
+      // Un panel sin compartir no se lee desde fuera, y compartido si.
+      const anyCount = counts[0];
+      if (!anyCount) throw new Error("no count widget");
+      mockAuthenticatedSession(other);
+      expect((await list(anyCount.id)).status).toBe(403);
+
+      mockAuthenticatedSession(member.user);
+      await app.request(`/api/dashboard/${dashboard.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ isShared: true }),
+      });
+      mockAuthenticatedSession(other);
+      expect((await list(anyCount.id)).status).toBe(200);
+    });
   });
 
   /**

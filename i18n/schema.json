@@ -13485,6 +13485,28 @@
 						}
 					},
 					"required": ["more_one", "more_other"]
+				},
+				"widgetTasks": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"open_one": {
+							"type": "string"
+						},
+						"open_other": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"loadMore": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						}
+					},
+					"required": ["open_one", "open_other", "empty", "loadMore", "error"]
 				}
 			},
 			"required": [
@@ -13503,7 +13525,8 @@
 				"shared",
 				"errors",
 				"scope",
-				"week"
+				"week",
+				"widgetTasks"
 			]
 		},
 		"goals": {

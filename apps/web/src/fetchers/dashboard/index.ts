@@ -104,6 +104,27 @@ export async function getDashboardData(id: string, weekStartsOn: number) {
   );
 }
 
+/**
+ * Las tareas que cuenta una tarjeta de recuento, pagina a pagina (ADR 090). El
+ * inicio de semana viaja por lo mismo que en `getDashboardData`: «Vencen esta
+ * semana» acaba donde acaba la semana de quien mira.
+ */
+export async function getWidgetTasks(
+  id: string,
+  weekStartsOn: number,
+  page: number,
+) {
+  return unwrap(
+    await client.dashboard.widget[":id"].tasks.$get({
+      param: { id },
+      query: {
+        weekStartsOn: WEEK_START_PARAMS[weekStartsOn],
+        page: String(page),
+      },
+    }),
+  );
+}
+
 export async function createDashboard(input: {
   workspaceId: string;
   name: string;

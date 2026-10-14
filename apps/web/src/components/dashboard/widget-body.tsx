@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Bar,
@@ -20,8 +21,14 @@ import { Progress } from "@/components/ui/progress";
 import type { Widget, WidgetConfig, WidgetPayload } from "@/fetchers/dashboard";
 import { InboxWidget } from "./inbox-widget";
 import { WeekStrip } from "./week-strip";
-import { bucketLabel, effectiveGroupBy, toHours } from "./widget-labels";
+import {
+  bucketLabel,
+  effectiveGroupBy,
+  isTaskCount,
+  toHours,
+} from "./widget-labels";
 import { WidgetTaskRow } from "./widget-task-row";
+import { WidgetTasksDialog } from "./widget-tasks-dialog";
 
 /**
  * La forma la dicta el contrato, no este fichero: se infiere de la respuesta
@@ -135,11 +142,19 @@ export function WidgetBody({
 
     return (
       <div className="flex h-full flex-col justify-center gap-2">
-        <p className="text-page tabular-nums">
-          {total === undefined
-            ? format(value)
-            : t("panels:widget.ofTotal", { value, total })}
-        </p>
+        {isTaskCount(widget.type, config) ? (
+          <TaskCountFigure
+            widget={widget}
+            value={value}
+            onOpenTask={onOpenTask}
+          />
+        ) : (
+          <p className="text-page tabular-nums">
+            {total === undefined
+              ? format(value)
+              : t("panels:widget.ofTotal", { value, total })}
+          </p>
+        )}
         {percent !== null && <Progress value={percent} className="h-1.5" />}
       </div>
     );
@@ -270,6 +285,47 @@ export function WidgetBody({
         </BarChart>
       </ResponsiveContainer>
     </div>
+  );
+}
+
+/**
+ * La cifra de una tarjeta que cuenta tareas, que se abre en su lista
+ * (ADR 090). El boton es la cifra y no la tarjeta entera: la tarjeta ya lleva
+ * su menu y el arrastre, y un clic en el titulo no deberia abrir nada.
+ */
+function TaskCountFigure({
+  widget,
+  value,
+  onOpenTask,
+}: {
+  widget: Widget;
+  value: number;
+  onOpenTask: (projectId: string, taskId: string) => void;
+}) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={t("panels:widgetTasks.open", {
+          count: value,
+          title: widget.title,
+        })}
+        className="cursor-pointer self-start rounded-sm text-left text-page tabular-nums underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {value}
+      </button>
+      <WidgetTasksDialog
+        widgetId={widget.id}
+        title={widget.title}
+        open={open}
+        onOpenChange={setOpen}
+        onOpenTask={onOpenTask}
+      />
+    </>
   );
 }
 
