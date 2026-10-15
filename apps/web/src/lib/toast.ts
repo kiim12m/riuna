@@ -57,10 +57,9 @@ const loading: ToastFn = (title, options) =>
     description: options?.description,
     type: "loading",
   });
-const dismiss = (id?: ToastId) => {
-  if (!id) return;
-  toastManager.close(id);
-};
+// Sin `id` no hay a quien cerrar: heredado de sonner, `dismiss()` cerraba
+// todos, y aqui se quedaba en nada y el aviso de carga no se iba nunca.
+const dismiss = (id: ToastId) => toastManager.close(id);
 
 const toast = Object.assign(message, {
   success,

@@ -19,16 +19,18 @@ export function WorkspaceTasksExport({
   const [importing, setImporting] = useState(false);
 
   const handleExport = async () => {
+    const loadingToast = toast.loading(
+      t("settings:workspaceTasksExport.exporting"),
+    );
     try {
-      toast.loading(t("settings:workspaceTasksExport.exporting"));
       const { blob, filename } = await exportTasks(workspaceId);
 
       saveAs(blob, filename);
 
-      toast.dismiss();
+      toast.dismiss(loadingToast);
       toast.success(t("settings:workspaceTasksExport.exportSuccess"));
     } catch (error) {
-      toast.dismiss();
+      toast.dismiss(loadingToast);
       toast.error(t("settings:workspaceTasksExport.exportError"));
       console.error(error);
     }

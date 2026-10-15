@@ -82,4 +82,7 @@ test("inicia sesión, crea un proyecto, subdivide una tarea, la mueve y exporta"
     .getByRole("button", { name: "Exportar a Excel" })
     .click({ timeout: 30_000 });
   expect((await download).suggestedFilename()).toMatch(/\.xlsx$/);
+  // El aviso de carga se cierra al acabar (se quedaba hasta recargar).
+  await expect(page.getByText("Tareas exportadas correctamente")).toBeVisible();
+  await expect(page.getByText("Exportando tareas...")).toBeHidden();
 });
