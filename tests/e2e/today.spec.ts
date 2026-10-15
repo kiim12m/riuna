@@ -80,6 +80,59 @@ test.describe("Hoy", () => {
     ).toBeVisible();
   });
 
+  test("los títulos y las horas quedan en columna, con hora o sin ella", async ({
+    page,
+    riuna,
+  }) => {
+    const titles = ["Reintentos", "Integración de pagos", "API de catálogo"];
+    const [timedId, untimedId, previousId] = await Promise.all(
+      titles.map((title) => createTask(riuna, title, { estimate: 3600 })),
+    );
+    for (const id of [timedId, untimedId, previousId]) {
+      await riuna.api("put", `/api/task/assignee/${id}`, {
+        userId: riuna.userId,
+      });
+    }
+    const plan = (id: string, body: Record<string, unknown>) =>
+      riuna.api(
+        "put",
+        `/api/planner/${id}?workspaceId=${riuna.workspaceId}`,
+        body,
+      );
+    await plan(timedId, { plannedDate: serverDay(0), startMinute: 480 });
+    await plan(untimedId, { plannedDate: serverDay(0) });
+    await plan(previousId, { plannedDate: serverDay(-1) });
+
+    await page.goto(`/dashboard/workspace/${riuna.workspaceId}/today`);
+    const rows = [timedId, untimedId, previousId].map((id) =>
+      page.getByTestId(`today-row-${id}`),
+    );
+    await expect(rows[0].getByText("08:00")).toBeVisible({ timeout: 30_000 });
+    await expect(rows[2]).toBeVisible();
+
+    // Sin hora, la fila guarda el hueco: el titulo empieza donde los demas.
+    const titleLefts = await Promise.all(
+      rows.map(async (row, index) => {
+        const box = await row
+          .getByText(titles[index], { exact: true })
+          .boundingBox();
+        return box && Math.round(box.x);
+      }),
+    );
+    expect(new Set(titleLefts).size).toBe(1);
+
+    // «Añadir a hoy» va delante de las horas y no las saca de la columna.
+    const hourRights = await Promise.all(
+      rows.map(async (row) => {
+        const box = await row
+          .getByRole("button", { name: "1 h", exact: true })
+          .boundingBox();
+        return box && Math.round(box.x + box.width);
+      }),
+    );
+    expect(new Set(hourRights).size).toBe(1);
+  });
+
   test("marcar la casilla mueve la tarea a 'Hechas hoy'", async ({
     page,
     riuna,

@@ -34,10 +34,27 @@ test.describe("Captura rápida", () => {
     });
 
     await page.goto(`/dashboard/workspace/${riuna.workspaceId}/today`);
-    const input = page.getByTestId("quick-add-input");
-    await input.fill("Llamar al proveedor 1h30 #cliente *alta", {
-      timeout: 30_000,
+
+    // La chuleta de la sintaxis no va a la vista: sale del «?», al pasar el
+    // raton, y pulsarlo la deja abierta.
+    const help = page.getByTestId("quick-add-help");
+    const helpButton = page.getByRole("button", {
+      name: "Ayuda de la captura",
     });
+    await expect(helpButton).toBeVisible({ timeout: 30_000 });
+    await expect(help).toBeHidden();
+    await helpButton.hover();
+    await expect(help).toContainText("@día la planifica");
+    await page.mouse.move(0, 0);
+    await expect(help).toBeHidden();
+    await helpButton.click();
+    await page.mouse.move(0, 0);
+    await expect(help).toContainText("+CLAVE proyecto");
+    await page.keyboard.press("Escape");
+    await expect(help).toBeHidden();
+
+    const input = page.getByTestId("quick-add-input");
+    await input.fill("Llamar al proveedor 1h30 #cliente *alta");
 
     const preview = page.getByTestId("quick-add-preview");
     await expect(preview).toContainText("Personal");

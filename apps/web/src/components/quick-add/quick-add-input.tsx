@@ -1,5 +1,6 @@
 import {
   CalendarClock,
+  CircleHelp,
   Flag,
   FolderKanban,
   Inbox,
@@ -10,6 +11,7 @@ import {
 import { type ReactNode, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import { useCaptureTask } from "@/hooks/mutations/capture/use-capture-task";
 import useGetLabelsByWorkspace from "@/hooks/queries/label/use-get-labels-by-workspace";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
@@ -27,11 +29,42 @@ type QuickAddInputProps = {
   /** El dia del plan si no se escribe ninguno: en Hoy, hoy. */
   defaultPlannedDate?: string;
   autoFocus?: boolean;
-  /** La chuleta de la sintaxis bajo la caja; sobra en una columna estrecha. */
+  /** El «?» con la chuleta de la sintaxis junto a la caja; sobra en una
+   * columna estrecha. */
   showHint?: boolean;
   onCaptured?: () => void;
   className?: string;
 };
+
+/**
+ * La chuleta de la sintaxis, detras de un «?»: se abre al pasar el raton o al
+ * pulsarlo -en una pantalla tactil no hay raton-. Antes iba siempre a la
+ * vista bajo la caja.
+ */
+function SyntaxHelp() {
+  const { t } = useTranslation();
+  return (
+    <Popover>
+      <PopoverTrigger
+        type="button"
+        openOnHover
+        delay={150}
+        aria-label={t("quickAdd:help")}
+        className="inline-flex size-8 shrink-0 cursor-help items-center justify-center rounded-md text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/70"
+      >
+        <CircleHelp className="size-4" />
+      </PopoverTrigger>
+      <PopoverPopup tooltipStyle side="bottom" align="end" className="max-w-72">
+        <p
+          className="whitespace-pre-line px-1 py-1 leading-relaxed"
+          data-testid="quick-add-help"
+        >
+          {t("quickAdd:hint")}
+        </p>
+      </PopoverPopup>
+    </Popover>
+  );
+}
 
 function Chip({ icon, children }: { icon?: ReactNode; children: ReactNode }) {
   return (
@@ -157,24 +190,28 @@ export function QuickAddInput({
       {/* Relleno y sin borde: con el borde y el fondo de una tarjeta, en la
           columna «Sin planificar» parecia una tarea mas. El borde vuelve al
           escribir. */}
-      <label
-        htmlFor={inputId}
-        className="flex cursor-text items-center gap-2 rounded-md border border-transparent bg-muted/60 px-2 transition-colors hover:bg-muted focus-within:border-input focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/40"
-      >
-        <Plus className="size-4 shrink-0 text-muted-foreground" />
-        <span className="sr-only">{t("quickAdd:label")}</span>
-        <input
-          id={inputId}
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-          placeholder={t("quickAdd:placeholder")}
-          // biome-ignore lint/a11y/noAutofocus: se abre a peticion, con `q`.
-          autoFocus={autoFocus}
-          autoComplete="off"
-          className="h-8 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          data-testid="quick-add-input"
-        />
-      </label>
+      <div className="flex items-center gap-1">
+        <label
+          htmlFor={inputId}
+          className="flex min-w-0 flex-1 cursor-text items-center gap-2 rounded-md border border-transparent bg-muted/60 px-2 transition-colors hover:bg-muted focus-within:border-input focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/40"
+        >
+          <Plus className="size-4 shrink-0 text-muted-foreground" />
+          <span className="sr-only">{t("quickAdd:label")}</span>
+          <input
+            id={inputId}
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            placeholder={t("quickAdd:placeholder")}
+            // biome-ignore lint/a11y/noAutofocus: se abre a peticion, con `q`.
+            autoFocus={autoFocus}
+            autoComplete="off"
+            className="h-8 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            data-testid="quick-add-input"
+          />
+        </label>
+        {/* Fuera de la etiqueta: un boton dentro de un `label` es HTML invalido. */}
+        {showHint && <SyntaxHelp />}
+      </div>
 
       {hasText ? (
         <ul
@@ -220,13 +257,7 @@ export function QuickAddInput({
             </Chip>
           ))}
         </ul>
-      ) : (
-        showHint && (
-          <p className="text-meta text-muted-foreground">
-            {t("quickAdd:hint")}
-          </p>
-        )
-      )}
+      ) : null}
     </form>
   );
 }
