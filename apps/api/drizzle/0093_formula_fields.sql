@@ -1,0 +1,2 @@
+ALTER TABLE "field_definition" DROP CONSTRAINT "field_definition_type_valid";--> statement-breakpoint
+ALTER TABLE "field_definition" ADD CONSTRAINT "field_definition_type_valid" CHECK ("field_definition"."type" IN ('text', 'number', 'currency', 'select', 'multi_select', 'date', 'checkbox', 'user', 'url', 'relation', 'formula'));

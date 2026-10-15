@@ -1350,6 +1350,19 @@ export function registerMcpTools(
   );
 
   registerTool(
+    "list_project_fields",
+    {
+      description:
+        "List the custom fields of a project's tasks: their keys (what create_task and update_task take in customFields), type, help text (`description`) and, for a calculated field (`formula`), its formula with keys between braces. A calculated field cannot be written.",
+      inputSchema: z.object({ projectId: nonEmptyString }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/field/project/${encodeURIComponent(args.projectId)}`),
+      ),
+  );
+
+  registerTool(
     "list_project_columns",
     {
       description:

@@ -4,6 +4,14 @@ import db from "../../database";
 import { fieldDefinitionTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { type FieldType, parseFieldConfig } from "../field-types";
+import {
+  assertNotReadByFormulas,
+  prepareFormulaConfig,
+} from "../formula/definitions";
+import {
+  refreshProjectFormulas,
+  refreshWorkspaceFormulas,
+} from "../formula/refresh";
 
 async function updateFieldDefinition({
   id,
@@ -44,10 +52,23 @@ async function updateFieldDefinition({
     values.name = trimmed;
   }
 
+  const isFormula = existing.type === "formula";
+
   if (description !== undefined) values.description = description;
-  if (required !== undefined) values.required = required;
+  if (required !== undefined) {
+    if (required && isFormula) {
+      throw new HTTPException(400, {
+        message: "A calculated field cannot be required",
+      });
+    }
+    values.required = required;
+  }
   if (position !== undefined) values.position = position;
   if (archived !== undefined) {
+    // Archivar un campo que lee una formula la dejaria vacia sin explicacion.
+    if (archived && !existing.archivedAt) {
+      await assertNotReadByFormulas(existing);
+    }
     values.archivedAt = archived ? new Date() : null;
   }
 
@@ -58,6 +79,15 @@ async function updateFieldDefinition({
       throw new HTTPException(400, {
         message:
           error instanceof Error ? error.message : "Invalid configuration",
+      });
+    }
+    if (isFormula) {
+      values.config = await prepareFormulaConfig({
+        workspaceId: existing.workspaceId,
+        projectId: existing.projectId,
+        key: existing.key,
+        name: values.name ?? existing.name,
+        config: values.config,
       });
     }
   }
@@ -76,6 +106,18 @@ async function updateFieldDefinition({
     throw new HTTPException(500, {
       message: "Failed to update field definition",
     });
+  }
+
+  // Una formula nueva, o que vuelve del archivo, se recalcula entera. Cambiar
+  // solo el formato no cambia ningun valor.
+  const formulaChanged =
+    isFormula &&
+    ((values.config !== undefined &&
+      values.config.expression !== existing.config.expression) ||
+      (archived === false && existing.archivedAt !== null));
+  if (formulaChanged) {
+    if (updated.projectId) await refreshProjectFormulas(updated.projectId);
+    else await refreshWorkspaceFormulas(updated.workspaceId);
   }
 
   await publishEvent("field-definition.changed", {

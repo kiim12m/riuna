@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { refreshFormulasAfter } from "../../field/formula/refresh";
 
 // La estimacion se guarda en segundos, la misma unidad que `time_entry`, para
 // que el agregado del subarbol compare estimado y registrado sin convertir.
@@ -43,6 +44,12 @@ async function updateTaskEstimate({
   if (!updatedTask) {
     throw new HTTPException(404, { message: "Task not found" });
   }
+
+  // La estimacion de la rama es un dato de las formulas (ADR 090).
+  await refreshFormulasAfter({
+    projectId: updatedTask.projectId,
+    taskIds: [updatedTask.id],
+  });
 
   if ((existing?.estimate ?? null) !== (updatedTask.estimate ?? null)) {
     await publishEvent("task.estimate_changed", {

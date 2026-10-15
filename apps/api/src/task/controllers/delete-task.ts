@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { taskRelationTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { refreshFormulasAfter } from "../../field/formula/refresh";
 import { deleteS3Keys, getTaskAssetKeys } from "../../storage/cleanup-assets";
 import { scheduleAfter } from "../schedule/reschedule";
 import { subtreePattern, TASK_PATH_SEPARATOR } from "../tree";
@@ -113,6 +114,10 @@ async function deleteTask(taskId: string, currentUserId: string) {
     taskIds: [deletedTask.parentId],
     actorId: currentUserId,
     origin: task.id,
+  });
+  await refreshFormulasAfter({
+    projectId: task.projectId,
+    taskIds: [deletedTask.parentId],
   });
 
   for (const relation of relations) {

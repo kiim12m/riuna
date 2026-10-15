@@ -103,7 +103,7 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
   - filtros compuestos con el motor de las vistas, también por progreso y por
     campos de proyecto, en la URL;
   - vistas guardadas de espacio, privadas o compartidas, y exportación a Excel
-    con el filtro que se ve.
+    y a PDF con el filtro que se ve.
 - **Subproyectos** ([ADR 089](adr/089-subproyectos.md)): un proyecto puede
   colgar de otro, de un solo nivel, desde «Subproyecto de» en sus ajustes.
   - En la lista de proyectos, el padre resume su rama (progreso, tareas y aviso
@@ -272,11 +272,26 @@ las raíces, o con sus descendientes.
 
 ## 6. Campos personalizados
 
-Diez tipos: texto, número, moneda, select, multi-select, fecha, casilla,
-usuario, URL y relación ([ADR 013](adr/013-campos-personalizados.md)). Alcance
-de proyecto o de espacio de trabajo, con obligatoriedad, orden y archivado
-suave. Se crean desde el «+» de la vista Tabla y se rellenan en el detalle de
-la tarea y en la propia tabla.
+Once tipos: texto, número, moneda, select, multi-select, fecha, casilla,
+usuario, URL, relación ([ADR 013](adr/013-campos-personalizados.md)) y
+calculado. Alcance de proyecto o de espacio de trabajo, con obligatoriedad,
+orden y archivado suave. Se crean desde el «+» de la vista Tabla o desde los
+ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
+
+- **Texto de ayuda** en cada campo, que sale como un «?» junto a su nombre en el
+  detalle, la cabecera de la Tabla, el editor de campos y el importador
+  ([ADR 090](adr/090-campos-calculados-y-textos-de-ayuda.md)).
+- **Campos calculados**: una fórmula sobre los campos de número, moneda y otros
+  calculados, más la estimación y lo registrado de la rama, en horas.
+  - Se escribe como en una hoja de cálculo: `{Presupuesto} ÷ {Horas previstas}`,
+    `min`, `max` y `si(condición; valor; si no)`, con botones para meter cada
+    campo. Se muestra como número, moneda o porcentaje.
+  - Si falta un dato, el resultado queda vacío.
+  - Se recalcula sola en cuanto cambia lo que lee, y se filtra, se ordena y se
+    exporta como cualquier número. Ni se edita ni se importa.
+  - En la Tabla lleva «ƒ» y no suma en los totales. En el detalle, la fórmula
+    sale bajo el valor.
+  - No se puede archivar ni borrar un campo que lee una fórmula.
 
 ## 7. Ejecución y productividad personal
 
@@ -523,7 +538,9 @@ la tarea y en la propia tabla.
 - **Parte de horas** ([ADR 042](adr/042-parte-de-horas.md)): lo registrado
   por quien mira, cruzando proyectos, en un rango de fechas. Agrupable por
   día, tarea o proyecto; una entrada en marcha cuenta lo transcurrido hasta
-  ahora. Exportable a Excel. Cada grupo se despliega en sus entradas —con el
+  ahora. Exportable a Excel y a PDF, con un resumen de cada día frente a la
+  jornada y sitio para dos firmas ([ADR 091](adr/091-exportar-a-pdf.md)). Cada
+  grupo se despliega en sus entradas —con el
   título de su tarea, y la fecha si no se agrupa por día—, que se editan
   (inicio y fin) y se borran con confirmación.
 - **Cronómetro** ([ADR 044](adr/044-cronometro-en-el-pie.md)): un solo
@@ -629,9 +646,19 @@ la tarea y en la propia tabla.
 - Techo de 20.000 filas. Medido: 5.000 filas en 6,6 s de alta y 6,1 s de
   reimportación.
 - **Exportar** a CSV, a Excel y a copia JSON; **cualquier vista con sus filtros
-  aplicados**; y el libro completo del espacio en formato SERVITEC
+  aplicados**, desde el menú «Exportar» de la Tabla, el Gantt y el Calendario; y
+  el libro completo del espacio en formato SERVITEC
   ([ADR 012](adr/012-exportacion-a-excel.md)), con los comentarios seguidos y la
   fecha de cada uno en negrita.
+- **Exportar a PDF** ([ADR 091](adr/091-exportar-a-pdf.md)), con la marca, de
+  dónde sale, quién lo generó y la página:
+  - una tarea, desde sus acciones: ficha con los campos, descripción, subtareas y
+    comentarios;
+  - una vista, con su filtro en palabras, las columnas que se ven en la Tabla y
+    los totales al pie, hasta 5.000 filas;
+  - el parte de horas, con el total, lo registrado frente a la jornada y dos
+    firmas;
+  - la cartera de proyectos, con sus columnas y los subproyectos bajo su padre.
 - **La hoja de SERVITEC de vuelta** ([ADR 069](adr/069-la-hoja-de-servitec-vuelve.md)),
   desde *Administración del espacio › General*:
   - sirve para migrar el cuadro que se llevaba a mano y para la ida y vuelta,
@@ -729,7 +756,7 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 64 herramientas**. Una prueba de paridad
+Dos caminos con **las mismas 65 herramientas**. Una prueba de paridad
 (`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
 antes el paquete stdio se había quedado sin las cinco del plan personal y el
 cronómetro.
@@ -741,7 +768,7 @@ cronómetro.
   instalador interactivo para Cursor —global y por proyecto—, Claude Desktop o
   una ruta JSON propia, y autenticación por device flow o `RIUNA_API_KEY`.
 
-Las herramientas cubren identidad y espacios, proyectos con su estado, sus campos y sus subproyectos, tareas, comentarios,
+Las herramientas cubren identidad y espacios, proyectos con su estado, sus campos y sus subproyectos, los campos de las tareas con su ayuda y sus fórmulas (`list_project_fields`), tareas, comentarios,
 etiquetas, épicas, relaciones, observadores, recordatorios, acciones de un clic,
 totales de un filtro, línea base, avisos, miembros, búsqueda, columnas, registro de tiempo,
 actividad y notificaciones, además del plan personal, el

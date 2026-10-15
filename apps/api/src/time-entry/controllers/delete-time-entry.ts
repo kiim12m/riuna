@@ -3,6 +3,7 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { timeEntryTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { refreshFormulasForTasks } from "../../field/formula/refresh";
 
 /**
  * Borra una entrada, y solo si es propia -mismo patron que
@@ -20,6 +21,8 @@ async function deleteTimeEntry(userId: string, id: string) {
       message: "Time entry not found or you are not the owner",
     });
   }
+
+  await refreshFormulasForTasks([deleted.taskId]);
 
   await publishEvent("time-entry.deleted", {
     timeEntryId: deleted.id,

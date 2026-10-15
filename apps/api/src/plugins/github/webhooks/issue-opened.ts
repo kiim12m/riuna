@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import db from "../../../database";
 import { columnTable, projectTable, taskTable } from "../../../database/schema";
+import { refreshFormulasAfter } from "../../../field/formula/refresh";
 import { claimTaskNumber } from "../../../task/controllers/claim-task-numbers";
 import { rootTaskTreeFields } from "../../../task/tree";
 import { log } from "../../../utils/log";
@@ -115,6 +116,9 @@ export async function handleIssueOpened(payload: IssueOpenedPayload) {
       log.error("Failed to create task from GitHub issue");
       continue;
     }
+
+    // Entra sin pasar por `createTask`: su calculado (ADR 090) se pone aqui.
+    await refreshFormulasAfter({ projectId, taskIds: [createdTask.id] });
 
     await createExternalLink({
       taskId: createdTask.id,

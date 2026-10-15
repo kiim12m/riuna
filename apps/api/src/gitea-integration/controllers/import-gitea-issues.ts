@@ -9,6 +9,7 @@ import {
   taskTable,
 } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { refreshProjectFormulas } from "../../field/formula/refresh";
 import type { GiteaConfig } from "../../plugins/gitea/config";
 import { extractTaskNumberGitea } from "../../plugins/gitea/utils/branch-matcher";
 import {
@@ -182,6 +183,10 @@ export async function importGiteaIssues(
       errors.push(`PR #${pr.number}: ${errorMessage}`);
     }
   }
+
+  // Las tareas entran sin pasar por `createTask`: lo calculado (ADR 090) se
+  // pone de una pasada.
+  if (imported > 0) await refreshProjectFormulas(projectId);
 
   return {
     imported,

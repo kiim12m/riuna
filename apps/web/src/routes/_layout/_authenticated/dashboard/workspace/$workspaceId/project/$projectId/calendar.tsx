@@ -7,6 +7,7 @@ import MonthGrid from "@/components/calendar/month-grid";
 import { buildMonthWeeks } from "@/components/calendar/month-grid-model";
 import ProjectLayout from "@/components/common/project-layout";
 import PageTitle from "@/components/page-title";
+import { ExportViewMenu } from "@/components/project/export-view-menu";
 import { SubprojectToggle } from "@/components/project/subproject-toggle";
 import FilterBar from "@/components/table-view/filter-bar";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
@@ -16,6 +17,7 @@ import { useFilterableFields } from "@/hooks/use-filterable-fields";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { readFilterParam, useUrlFilter } from "@/hooks/use-url-filter";
+import { describeConditions } from "@/lib/describe-filter";
 import { subprojectTasks } from "@/lib/subproject-tasks";
 import { toScheduledTasks } from "@/lib/task-schedule";
 import { useUserPreferencesStore } from "@/store/user-preferences";
@@ -183,6 +185,14 @@ function RouteComponent() {
               fields={filterableFields}
               conditions={conditions}
               onChange={setConditions}
+            />
+          </div>
+          <div className="px-3">
+            <ExportViewMenu
+              projectId={projectId}
+              filter={filter}
+              title={`${t("tasks:calendar.title")} · ${project?.name ?? ""}`}
+              subtitle={describeConditions(conditions, filterableFields, t)}
             />
           </div>
           <SubprojectToggle

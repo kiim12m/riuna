@@ -47,7 +47,13 @@ export async function checkTemplateFits(
       config: definition.config,
     }),
   );
-  const known = new Set(definitions.map((definition) => definition.key));
+  // Un calculado tampoco viaja: una plantilla sacada de una tarea lleva su
+  // valor, pero en el destino lo vuelve a calcular la base (ADR 090).
+  const known = new Set(
+    definitions
+      .filter((definition) => definition.type !== "formula")
+      .map((definition) => definition.key),
+  );
 
   for (const node of withFields) {
     const incoming = Object.fromEntries(

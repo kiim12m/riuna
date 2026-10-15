@@ -132,7 +132,10 @@ export function TriggerFields({
           value={trigger.fieldKey ?? ANY}
           options={[
             any,
-            ...options.fields.map((f) => ({ id: f.key, name: f.name })),
+            // Recalcular un campo no es editarlo: nunca lo dispararia.
+            ...options.fields
+              .filter((f) => f.type !== "formula")
+              .map((f) => ({ id: f.key, name: f.name })),
           ]}
           onChange={(id) =>
             onChange({

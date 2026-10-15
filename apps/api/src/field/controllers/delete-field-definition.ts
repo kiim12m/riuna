@@ -9,6 +9,7 @@ import {
 import { publishEvent } from "../../events";
 import type { FieldType } from "../field-types";
 import { storesValueInJson } from "../field-types";
+import { assertNotReadByFormulas } from "../formula/definitions";
 
 /**
  * Borra la definicion y, con ella, el valor que las tareas tuvieran guardado.
@@ -30,6 +31,8 @@ async function deleteFieldDefinition(id: string, currentUserId: string) {
   if (!existing) {
     throw new HTTPException(404, { message: "Field definition not found" });
   }
+
+  await assertNotReadByFormulas(existing);
 
   const deleted = await db.transaction(async (tx) => {
     if (storesValueInJson(existing.type as FieldType)) {

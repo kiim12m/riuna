@@ -117,7 +117,7 @@ For headless or sandboxed environments where opening a browser is impractical, s
 
 - Session: `whoami`, `list_workspaces`, `list_workspace_members`, `list_notifications`
 - Search: `search`
-- Projects: `list_projects`, `get_project`, `create_project`, `update_project`, `list_project_columns`
+- Projects: `list_projects`, `get_project`, `create_project`, `update_project`, `list_project_columns`, `list_project_fields`
 - Tasks: `list_tasks` (also by a `filter` on any field, custom ones included), `get_task`, `create_task` and `update_task` (both take `customFields`, `assigneeIds` and `teamId`), `delete_task`, `move_task`, `update_task_status`, `update_task_assignee`, `update_task_due_date`, `list_task_activity`
 - Time entries: `list_task_time_entries`, `get_time_entry`, `create_time_entry`, `update_time_entry`
 - Comments: `list_task_comments`, `create_task_comment`, `update_task_comment`, `delete_task_comment`
@@ -126,6 +126,8 @@ For headless or sandboxed environments where opening a browser is impractical, s
 
 Call `list_project_columns` before setting a status: the column slugs it
 returns are the values `create_task` and `update_task_status` accept.
+`list_project_fields` gives the keys `customFields` takes, each field's help
+text, and which ones are calculated and therefore read-only.
 `list_workspace_members` resolves the user IDs the assignee tools expect.
 Time entries have no delete endpoint on the API, so there is no
 `delete_time_entry` tool.

@@ -34,6 +34,8 @@ export async function getTimeSheet(
 export async function exportTimeSheet(
   workspaceId: string,
   query: TimeSheetQuery = {},
+  /** Excel, o el PDF con la jornada y las firmas (ADR 091). */
+  format: "xlsx" | "pdf" = "xlsx",
 ) {
   const response = await client["time-sheet"].export.$get({
     query: {
@@ -41,6 +43,7 @@ export async function exportTimeSheet(
       ...(query.start ? { start: query.start } : {}),
       ...(query.end ? { end: query.end } : {}),
       ...(query.groupBy ? { groupBy: query.groupBy } : {}),
+      format,
     },
   });
 
@@ -50,7 +53,7 @@ export async function exportTimeSheet(
 
   return {
     blob: await response.blob(),
-    filename: filenameFromResponse(response, "parte-de-horas.xlsx"),
+    filename: filenameFromResponse(response, `parte-de-horas.${format}`),
   };
 }
 

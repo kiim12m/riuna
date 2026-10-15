@@ -506,6 +506,7 @@ describe("the field type vocabulary stays in one piece", () => {
       checkbox: "boolean",
       user: "id",
       url: "text",
+      formula: "number",
     });
   });
 });

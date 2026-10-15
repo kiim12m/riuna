@@ -22,9 +22,16 @@ import { requireFieldDefinitionPermission } from "./require-field-definition-per
 // a la vez. Rellenar el valor de un campo, en cambio, es editar la tarea y va
 // con `task:update`, en el modulo de tareas.
 
+// El texto de ayuda de un campo (ADR 090): sale junto a su nombre en el
+// detalle, la Tabla y el importador. La columna existia desde la Fase 2 y no la
+// ensenaba nadie.
+const helpTextSchema = v.optional(
+  v.nullable(v.pipe(v.string(), v.maxLength(500))),
+);
+
 const definitionPayload = v.object({
   name: v.optional(v.pipe(v.string(), v.minLength(1), v.maxLength(120))),
-  description: v.optional(v.nullable(v.string())),
+  description: helpTextSchema,
   config: v.optional(v.unknown()),
   required: v.optional(v.boolean()),
   position: v.optional(v.number()),
@@ -123,7 +130,8 @@ const field = new Hono<{
     describeRoute({
       operationId: "createProjectFieldDefinition",
       tags: ["Fields"],
-      description: "Define a custom field inside a project",
+      description:
+        'Define a custom field inside a project. `description` is its help text. A `formula` field is calculated: `config.expression` reads number, currency and other calculated fields by name between braces ({Budget}), the branch estimate and logged time in hours ({Estimate}, {Logged}), with + - * /, min(), max() and si(condition; then; else); `config.format` is "number", "currency" (with `config.currency`) or "percent". It is stored with keys instead of names, and its value cannot be written',
       responses: {
         200: {
           description: "Field definition created successfully",
@@ -137,7 +145,7 @@ const field = new Hono<{
       v.object({
         name: v.pipe(v.string(), v.minLength(1), v.maxLength(120)),
         type: fieldTypeSchema,
-        description: v.optional(v.nullable(v.string())),
+        description: helpTextSchema,
         config: v.optional(v.unknown()),
         required: v.optional(v.boolean()),
       }),
@@ -168,7 +176,7 @@ const field = new Hono<{
       operationId: "createWorkspaceFieldDefinition",
       tags: ["Fields"],
       description:
-        'Define a custom field for every project in the workspace at once: a field of their tasks or, with `entity: "project"`, a field of the projects themselves (ADR 088), which cannot be a relation',
+        'Define a custom field for every project in the workspace at once: a field of their tasks or, with `entity: "project"`, a field of the projects themselves (ADR 088), which cannot be a relation nor calculated. A `formula` field reads only workspace fields; see the project route for its syntax',
       responses: {
         200: {
           description: "Field definition created successfully",
@@ -182,7 +190,7 @@ const field = new Hono<{
       v.object({
         name: v.pipe(v.string(), v.minLength(1), v.maxLength(120)),
         type: fieldTypeSchema,
-        description: v.optional(v.nullable(v.string())),
+        description: helpTextSchema,
         config: v.optional(v.unknown()),
         required: v.optional(v.boolean()),
         entity: v.optional(v.picklist(["task", "project"])),
@@ -214,7 +222,7 @@ const field = new Hono<{
       operationId: "updateFieldDefinition",
       tags: ["Fields"],
       description:
-        "Update or archive a custom field. Its type and key never change.",
+        "Update or archive a custom field. Its type and key never change. A field that a calculated field reads cannot be archived (409)",
       responses: {
         200: {
           description: "Field definition updated successfully",
@@ -250,7 +258,7 @@ const field = new Hono<{
       operationId: "deleteFieldDefinition",
       tags: ["Fields"],
       description:
-        "Delete a custom field and the values the tasks had stored for it",
+        "Delete a custom field and the values the tasks had stored for it. A field that a calculated field reads cannot be deleted (409)",
       responses: {
         200: {
           description: "Field definition deleted successfully",

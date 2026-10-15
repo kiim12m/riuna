@@ -5,12 +5,12 @@ import { BaselinePicker } from "@/components/baseline/baseline-picker";
 import { toViewBaseline } from "@/components/baseline/baseline-view";
 import ProjectLayout from "@/components/common/project-layout";
 import PageTitle from "@/components/page-title";
+import { ExportViewMenu } from "@/components/project/export-view-menu";
 import { ProjectSizeWarning } from "@/components/project/project-size-warning";
 import { SubprojectToggle } from "@/components/project/subproject-toggle";
 import TableView from "@/components/table-view";
 import type { AddFieldPayload } from "@/components/table-view/add-field-dialog";
 import AddFieldDialog from "@/components/table-view/add-field-dialog";
-
 import ColumnPicker from "@/components/table-view/column-picker";
 import {
   availableColumns,
@@ -52,6 +52,7 @@ import { useFilterableFields } from "@/hooks/use-filterable-fields";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { authClient } from "@/lib/auth-client";
 import { type BaselineChoice, isBaselineChoice } from "@/lib/baseline";
+import { describeConditions } from "@/lib/describe-filter";
 import { subprojectColumns, subprojectTasks } from "@/lib/subproject-tasks";
 import { toast } from "@/lib/toast";
 import type Task from "@/types/task";
@@ -539,6 +540,25 @@ function RouteComponent() {
                 })
               }
             />
+            <ExportViewMenu
+              projectId={projectId}
+              filter={filter}
+              treeScope={
+                treeMode === "roots" || treeMode === "withDescendants"
+                  ? treeMode
+                  : undefined
+              }
+              columns={columnOptions
+                .map((option) => option.id)
+                .filter((id) => visibleColumns.has(id))}
+              title={`${t("tasks:table.title")} · ${
+                (views as SavedView[]).find((view) => view.id === viewId)
+                  ?.name ??
+                project?.name ??
+                ""
+              }`}
+              subtitle={describeConditions(conditions, filterableFields, t)}
+            />
           </div>
           <FilterBar
             fields={filterableFields}
@@ -590,6 +610,7 @@ function RouteComponent() {
         pending={isCreatingField}
         onClose={() => setIsAddFieldOpen(false)}
         onCreate={handleCreateField}
+        formulaFields={definitions as FieldDefinition[]}
       />
 
       <TaskDetailsSheet

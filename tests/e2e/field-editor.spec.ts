@@ -5,6 +5,7 @@ type Listed = {
   name: string;
   position: number;
   archivedAt: string | null;
+  description: string | null;
 };
 
 /**
@@ -37,15 +38,21 @@ test.describe("Editor de campos personalizados", () => {
       list.getByRole("listitem").filter({ hasText: name });
     await expect(row("Cliente")).toBeVisible({ timeout: 30_000 });
 
-    // Renombrar: la clave no cambia, solo el nombre.
-    await row("Cliente").getByRole("button", { name: "Renombrar" }).click();
-    await page.getByRole("textbox", { name: "Renombrar" }).fill("Comprador");
-    await page.keyboard.press("Enter");
+    // Editar: el nombre y la ayuda cambian; la clave no (ADR 090).
+    await row("Cliente").getByRole("button", { name: "Editar" }).click();
+    const editor = page.getByRole("dialog", { name: "Editar el campo" });
+    await editor.getByRole("textbox", { name: "Nombre" }).fill("Comprador");
+    await editor
+      .getByRole("textbox", { name: "Texto de ayuda" })
+      .fill("Quien paga la obra");
+    await editor.getByRole("button", { name: "Guardar el campo" }).click();
+    await expect(editor).toBeHidden();
     await expect(row("Comprador")).toBeVisible();
-    expect((await listed()).map((field) => field.name).sort()).toEqual([
-      "Comprador",
-      "Presupuesto",
-    ]);
+    expect(
+      (await listed())
+        .map((field) => `${field.name}:${field.description ?? ""}`)
+        .sort(),
+    ).toEqual(["Comprador:Quien paga la obra", "Presupuesto:"]);
 
     // Ordenar: subir el segundo al primer puesto.
     const before = (await listed()).sort((a, b) => a.position - b.position);
