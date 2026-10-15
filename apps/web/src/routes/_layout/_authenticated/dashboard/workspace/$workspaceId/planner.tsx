@@ -54,7 +54,7 @@ import { usePlannerMutations } from "@/hooks/mutations/planner/use-planner-mutat
 import { useCompleteTask } from "@/hooks/mutations/task/use-complete-task";
 import { usePlanner } from "@/hooks/queries/planner/use-planner";
 import { useWorkSchedule } from "@/hooks/queries/work-schedule/use-work-schedule";
-import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { useEditableUntilKnown } from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
 import { dayKey, parseDayKey } from "@/lib/day-key";
 import { formatDuration } from "@/lib/duration";
@@ -105,7 +105,9 @@ function RouteComponent() {
   const { workspaceId } = Route.useParams();
   const { from } = Route.useSearch();
   const navigate = Route.useNavigate();
-  const { canCreateTasks } = useWorkspacePermission();
+  // La captura se pinta desde el principio: si esperase a los permisos,
+  // apareceria despues y empujaria las tarjetas (y el clic que iba a una).
+  const canCapture = useEditableUntilKnown("createTasks");
   const { data, isPending } = usePlanner(workspaceId, WINDOW_DAYS, from);
   const { data: workSchedule } = useWorkSchedule();
   const { moveTask, reorderDay } = usePlannerMutations(
@@ -415,7 +417,7 @@ function RouteComponent() {
                   id={UNPLANNED_ID}
                   title={t("planner:unplanned")}
                   header={
-                    canCreateTasks() && (
+                    canCapture && (
                       <QuickAddInput
                         workspaceId={workspaceId}
                         showHint={false}

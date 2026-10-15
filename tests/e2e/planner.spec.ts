@@ -24,9 +24,10 @@ async function drag(
   /** Una zona del dia: se espera a que se resalte antes de soltar. */
   dropZone?: import("@playwright/test").Locator,
 ) {
-  // La captura de «Sin planificar» sale cuando cargan los permisos y empuja
-  // las tarjetas 38 px hacia abajo. Si se miden antes, el `mouse.down` cae
-  // en la captura y no arrastra nada: fallaba 3 de cada 5 veces.
+  // Medir con la pantalla quieta. La captura de «Sin planificar» salia al
+  // cargar los permisos y empujaba las tarjetas 38 px: el `mouse.down` caia en
+  // ella y no arrastraba nada (3 de cada 5 veces). Ya se pinta desde el
+  // principio; esperarla sigue cubriendo el primer pintado de la columna.
   await expect(page.getByTestId("quick-add-input")).toBeVisible();
   const fromBox = await from.boundingBox();
   const toBox = await to.boundingBox();

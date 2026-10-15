@@ -43,7 +43,10 @@ import {
 import { shortcuts } from "@/constants/shortcuts";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import { useProjectWebSocket } from "@/hooks/use-project-websocket";
-import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import {
+  useEditableUntilKnown,
+  useWorkspacePermission,
+} from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
 
 type ProjectLayoutProps = {
@@ -87,7 +90,9 @@ export default function ProjectLayout({
   const location = useLocation();
   const { data: project } = useGetProject({ id: projectId, workspaceId });
   const { user } = useAuth();
-  const { canCreateTasks, canUpdateProjects } = useWorkspacePermission();
+  const { canUpdateProjects } = useWorkspacePermission();
+  // Desde el principio, como en el Planificador: si no, empuja la lista.
+  const canCapture = useEditableUntilKnown("createTasks");
   // En la Bandeja propia, la captura rapida a mano: es a lo que se viene.
   const isOwnInbox =
     Boolean(project?.ownerUserId) && project?.ownerUserId === user?.id;
@@ -374,7 +379,7 @@ export default function ProjectLayout({
         </div>
       </Layout.Header>
 
-      {isOwnInbox && canCreateTasks() && (
+      {isOwnInbox && canCapture && (
         <div className="shrink-0 border-border/80 border-b px-3 py-2">
           <QuickAddInput workspaceId={workspaceId} showHint={false} />
         </div>
