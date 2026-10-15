@@ -14,6 +14,43 @@ function todayColumnId() {
 }
 
 /**
+ * Arrastrar con el raton: `dragTo` es para el HTML5 nativo y dnd-kit escucha
+ * punteros. Los pasos intermedios cruzan su umbral de activacion (8 px).
+ */
+async function drag(
+  page: import("@playwright/test").Page,
+  from: import("@playwright/test").Locator,
+  to: import("@playwright/test").Locator,
+  /** Una zona del dia: se espera a que se resalte antes de soltar. */
+  dropZone?: import("@playwright/test").Locator,
+) {
+  // La captura de «Sin planificar» sale cuando cargan los permisos y empuja
+  // las tarjetas 38 px hacia abajo. Si se miden antes, el `mouse.down` cae
+  // en la captura y no arrastra nada: fallaba 3 de cada 5 veces.
+  await expect(page.getByTestId("quick-add-input")).toBeVisible();
+  const fromBox = await from.boundingBox();
+  const toBox = await to.boundingBox();
+  if (!fromBox || !toBox) throw new Error("No se pudo medir el arrastre");
+  await page.mouse.move(
+    fromBox.x + fromBox.width / 2,
+    fromBox.y + fromBox.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    fromBox.x + fromBox.width / 2 + 30,
+    fromBox.y + fromBox.height / 2,
+    { steps: 5 },
+  );
+  await page.mouse.move(toBox.x + toBox.width / 2, toBox.y + toBox.height / 2, {
+    steps: 10,
+  });
+  // Y no se suelta hasta que la zona se resalta, como haria una persona:
+  // dnd-kit decide la zona despues del ultimo movimiento.
+  if (dropZone) await expect(dropZone).toHaveClass(/bg-brand\/10/);
+  await page.mouse.up();
+}
+
+/**
  * El Planificador: ventana rodante de 15 dias sobre `personal_plan_entry`
  * (ADR 040). Lo que un navegador de verdad puede ver que ninguna prueba de
  * API puede: que arrastrar una tarjeta entre columnas no mueve `due_date`.
@@ -44,30 +81,7 @@ test.describe("Planificador", () => {
     await expect(card).toBeVisible({ timeout: 20_000 });
     await expect(todayColumn).toBeVisible();
 
-    // No `dragTo`: es para el HTML5 nativo, y dnd-kit escucha punteros. Hacen
-    // falta pasos intermedios para cruzar el umbral de activacion (8 px).
-    const cardBox = await card.boundingBox();
-    const columnBox = await todayColumn.boundingBox();
-    if (!cardBox || !columnBox) {
-      throw new Error("No se pudo medir el arrastre");
-    }
-
-    await page.mouse.move(
-      cardBox.x + cardBox.width / 2,
-      cardBox.y + cardBox.height / 2,
-    );
-    await page.mouse.down();
-    await page.mouse.move(
-      cardBox.x + cardBox.width / 2 + 30,
-      cardBox.y + cardBox.height / 2,
-      { steps: 5 },
-    );
-    await page.mouse.move(
-      columnBox.x + columnBox.width / 2,
-      columnBox.y + columnBox.height / 2,
-      { steps: 10 },
-    );
-    await page.mouse.up();
+    await drag(page, card, todayColumn);
 
     // Se movio de columna: aparece en la de hoy y desaparece de "sin
     // planificar", no solo "sigue habiendo una".
@@ -142,32 +156,6 @@ test.describe("Planificador", () => {
  * planificar" una tarjeta que ya estaba ahi mandaba un DELETE en balde.
  */
 test.describe("Planificador: anclar, hecha y sin planificar", () => {
-  async function drag(
-    page: import("@playwright/test").Page,
-    from: import("@playwright/test").Locator,
-    to: import("@playwright/test").Locator,
-  ) {
-    const fromBox = await from.boundingBox();
-    const toBox = await to.boundingBox();
-    if (!fromBox || !toBox) throw new Error("No se pudo medir el arrastre");
-    await page.mouse.move(
-      fromBox.x + fromBox.width / 2,
-      fromBox.y + fromBox.height / 2,
-    );
-    await page.mouse.down();
-    await page.mouse.move(
-      fromBox.x + fromBox.width / 2 + 30,
-      fromBox.y + fromBox.height / 2,
-      { steps: 5 },
-    );
-    await page.mouse.move(
-      toBox.x + toBox.width / 2,
-      toBox.y + toBox.height / 2,
-      { steps: 10 },
-    );
-    await page.mouse.up();
-  }
-
   test("ancla una tarea en un día sin nada con hora", async ({
     page,
     riuna,
@@ -183,11 +171,10 @@ test.describe("Planificador: anclar, hecha y sin planificar", () => {
       .getByText("Llamar a la ingeniería");
     await expect(card).toBeVisible({ timeout: 20_000 });
 
-    await drag(
-      page,
-      card,
-      page.locator(`[data-testid="planner-timed-${todayColumnId()}"]`),
+    const timed = page.locator(
+      `[data-testid="planner-timed-${todayColumnId()}"]`,
     );
+    await drag(page, card, timed, timed);
 
     // Anclada al inicio de la jornada por defecto (09:00) y con el selector
     // de hora abierto para ajustarla.
