@@ -4175,7 +4175,9 @@
 			"newIn": "New page in {{group}}",
 			"empty": "No pages",
 			"choose": "Choose a page",
-			"newPage": "New page"
+			"newPage": "New page",
+			"hide": "Hide pages",
+			"show": "Show pages"
 		},
 		"create": {
 			"title": "New page",
@@ -4217,7 +4219,9 @@
 			"first": "First version",
 			"restore": "Restore version {{version}}",
 			"restored": "Version {{version}} restored",
-			"restoreFailed": "The version could not be restored"
+			"restoreFailed": "The version could not be restored",
+			"hide": "Hide history",
+			"show": "Show history"
 		},
 		"page": {
 			"loading": "Loading…",

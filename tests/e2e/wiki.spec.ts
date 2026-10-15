@@ -4,8 +4,8 @@ type Page = { id: string; version: number };
 
 /**
  * La wiki de paginas (ADR 092): crear y editar desde la pestaña Wiki, el
- * aviso cuando otro guarda mientras se edita, el historial y borrar una
- * pagina con subpaginas.
+ * aviso cuando otro guarda mientras se edita, el historial, borrar una
+ * pagina con subpaginas y los laterales minimizables.
  */
 test("una página se crea, se edita, avisa del conflicto y vuelve a una versión", async ({
   page,
@@ -14,8 +14,12 @@ test("una página se crea, se edita, avisa del conflicto y vuelve a una versión
   await page.goto(
     `/dashboard/workspace/${riuna.workspaceId}/project/${riuna.projectId}/wiki`,
   );
+  // El arbol empieza minimizado.
+  await page
+    .getByRole("button", { name: "Mostrar páginas" })
+    .click({ timeout: 30_000 });
   const tree = page.getByTestId("wiki-tree").filter({ visible: true });
-  await expect(tree).toBeVisible({ timeout: 30_000 });
+  await expect(tree).toBeVisible();
 
   // Una pagina del proyecto, desde el «+» de su grupo.
   await tree
@@ -156,4 +160,67 @@ test("borrar una página con subpáginas deja elegir, y una tarea la enlaza", as
   expect(left).toEqual([
     expect.objectContaining({ title: "Corte de suministro", parentId: null }),
   ]);
+});
+
+test("los laterales empiezan minimizados, se abren y este navegador lo recuerda", async ({
+  page,
+  riuna,
+}) => {
+  await page.goto(
+    `/dashboard/workspace/${riuna.workspaceId}/project/${riuna.projectId}/wiki`,
+  );
+  const tree = page.getByTestId("wiki-tree");
+  const showTree = page.getByRole("button", { name: "Mostrar páginas" });
+  await expect(showTree).toBeVisible({ timeout: 30_000 });
+  await expect(tree).toBeHidden();
+
+  // Con la wiki vacia y el arbol minimizado, la primera pagina se crea desde
+  // el vacio.
+  await page.getByRole("button", { name: "Nueva página", exact: true }).click();
+  const create = page.getByRole("dialog", { name: "Página nueva" });
+  await expect(create).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(create).toBeHidden();
+
+  await riuna.api<Page>(
+    "post",
+    `/api/wiki/workspace/${riuna.workspaceId}/pages`,
+    { title: "Índice", projectId: riuna.projectId },
+  );
+  await page.reload();
+  const article = page.getByTestId("wiki-page");
+  await expect(article.getByText(/Versión 1/)).toBeVisible({
+    timeout: 30_000,
+  });
+  const history = page.getByRole("complementary", { name: "Historial" });
+  const showHistory = page.getByRole("button", { name: "Mostrar historial" });
+  await expect(showHistory).toBeVisible();
+  await expect(history).toBeHidden();
+
+  // Se abren desde sus franjas…
+  await showTree.click();
+  await expect(tree.getByText("Índice")).toBeVisible();
+  await showHistory.click();
+  await expect(history.getByTestId("wiki-versions")).toBeVisible();
+
+  // …y siguen abiertos al volver.
+  await page.reload();
+  await expect(tree.getByText("Índice")).toBeVisible({ timeout: 30_000 });
+  await expect(history.getByTestId("wiki-versions")).toBeVisible();
+
+  // Se minimizan desde su cabecera, y el boton «Historial» de la pagina
+  // tambien abre y cierra el suyo.
+  await page.getByRole("button", { name: "Ocultar páginas" }).click();
+  await expect(tree).toBeHidden();
+  await expect(showTree).toBeVisible();
+  await history.getByRole("button", { name: "Ocultar historial" }).click();
+  await expect(history).toBeHidden();
+  const historyButton = article.getByRole("button", {
+    name: "Historial",
+    exact: true,
+  });
+  await expect(historyButton).toHaveAttribute("aria-pressed", "false");
+  await historyButton.click();
+  await expect(history).toBeVisible();
+  await expect(historyButton).toHaveAttribute("aria-pressed", "true");
 });

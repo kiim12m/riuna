@@ -16325,6 +16325,12 @@
 						},
 						"newPage": {
 							"type": "string"
+						},
+						"hide": {
+							"type": "string"
+						},
+						"show": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -16340,7 +16346,9 @@
 						"newIn",
 						"empty",
 						"choose",
-						"newPage"
+						"newPage",
+						"hide",
+						"show"
 					]
 				},
 				"create": {
@@ -16497,6 +16505,12 @@
 						},
 						"restoreFailed": {
 							"type": "string"
+						},
+						"hide": {
+							"type": "string"
+						},
+						"show": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -16508,7 +16522,9 @@
 						"first",
 						"restore",
 						"restored",
-						"restoreFailed"
+						"restoreFailed",
+						"hide",
+						"show"
 					]
 				},
 				"page": {
