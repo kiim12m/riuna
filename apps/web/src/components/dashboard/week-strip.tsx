@@ -25,7 +25,7 @@ export type WeekDay = {
  *
  * Es lo que ninguna cifra puede decir —"que tengo planificado el jueves"— y lo
  * unico que antes obligaba a salir del panel al Planificador. Cada tarea sale
- * en el dia en que se planifico, no en el que vence (ADR 090). La ventana la
+ * en el dia en que se planifico, no en el que vence (ADR 093). La ventana la
  * decide el servidor a partir de la preferencia de inicio de semana, la misma
  * que ya usan calendario, Gantt y Cronograma: aqui no se recalcula nada.
  *

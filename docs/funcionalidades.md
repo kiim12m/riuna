@@ -573,7 +573,7 @@ ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
   notificaciones se llamaba «Bandeja» hasta que ese nombre pasó al proyecto de
   captura, hoy «Personal». La semana en curso enseña, día a día, lo que quien
   mira tiene **planificado** (Planificador o Cronograma), no lo que vence
-  ([ADR 090](adr/090-mi-semana-lee-el-plan.md)).
+  ([ADR 093](adr/093-mi-semana-lee-el-plan.md)).
   Las métricas son tareas, completadas, porcentaje completado, estimado y
   registrado; se agrupan por proyecto, asignado, prioridad, equipo, estado,
   hecho, vencimiento (sin fecha, vencida, hoy, esta semana, más adelante),

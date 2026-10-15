@@ -290,7 +290,7 @@ export function WidgetBody({
 
 /**
  * La cifra de una tarjeta que cuenta tareas, que se abre en su lista
- * (ADR 090). El boton es la cifra y no la tarjeta entera: la tarjeta ya lleva
+ * (ADR 093). El boton es la cifra y no la tarjeta entera: la tarjeta ya lleva
  * su menu y el arrastre, y un clic en el titulo no deberia abrir nada.
  */
 function TaskCountFigure({

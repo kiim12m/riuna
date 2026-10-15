@@ -708,7 +708,7 @@ describe("API integration: personal dashboards", () => {
     });
 
     /**
-     * La tira es el plan, no el vencimiento (ADR 090).
+     * La tira es el plan, no el vencimiento (ADR 093).
      *
      * El caso que la origino: una tarea que vence esta semana y nadie ha
      * planificado no tiene que salir, y una planificada para el miercoles que
@@ -818,7 +818,7 @@ describe("API integration: personal dashboards", () => {
 
     /**
      * "Vencen esta semana" cuenta hasta el final de la semana **natural**
-     * (ADR 090), no los siete dias moviles de `week`.
+     * (ADR 093), no los siete dias moviles de `week`.
      *
      * La semana se pide empezando ayer para que el resultado no dependa del dia
      * en que corra la prueba: su ultimo dia es dentro de cinco, asi que la
@@ -894,7 +894,7 @@ describe("API integration: personal dashboards", () => {
 
     /**
      * Pulsar una cifra abre sus tareas, y la lista tiene que ser **exactamente**
-     * lo que cuenta la cifra (ADR 090). Se comprueba con la distribucion de
+     * lo que cuenta la cifra (ADR 093). Se comprueba con la distribucion de
      * partida de verdad —sus ventanas, sus filtros, `doneCount` con
      * `rangeDays`—, no con tarjetas hechas a medida de la prueba.
      */

@@ -18,7 +18,7 @@ import {
 import { countPredicates } from "../widget-predicate";
 
 /**
- * Las tareas que cuenta una tarjeta de recuento, paginadas (ADR 090).
+ * Las tareas que cuenta una tarjeta de recuento, paginadas (ADR 093).
  *
  * **La lista tiene que ser exactamente lo que cuenta la cifra.** Por eso no se
  * vuelve a describir la pregunta: se toman el ambito, el filtro y los

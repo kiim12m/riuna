@@ -50,7 +50,7 @@ export type Granularity = "day" | "week" | "month";
 
 /**
  * El mismo vocabulario que `WIDGET_DUE_WINDOWS` en la API: las cinco ventanas
- * de `utils/due-window.ts` mas `thisWeek`, la semana natural (ADR 090).
+ * de `utils/due-window.ts` mas `thisWeek`, la semana natural (ADR 093).
  */
 export type WidgetDueWindow =
   | "overdue"
@@ -105,7 +105,7 @@ export async function getDashboardData(id: string, weekStartsOn: number) {
 }
 
 /**
- * Las tareas que cuenta una tarjeta de recuento, pagina a pagina (ADR 090). El
+ * Las tareas que cuenta una tarjeta de recuento, pagina a pagina (ADR 093). El
  * inicio de semana viaja por lo mismo que en `getDashboardData`: «Vencen esta
  * semana» acaba donde acaba la semana de quien mira.
  */

@@ -12,7 +12,7 @@ import { useGetWidgetTasks } from "@/hooks/queries/dashboard/use-dashboards";
 import { WidgetTaskRow } from "./widget-task-row";
 
 /**
- * Las tareas que hay detras de una cifra del panel (ADR 090).
+ * Las tareas que hay detras de una cifra del panel (ADR 093).
  *
  * La lista la calcula el servidor con los mismos predicados que la tarjeta, asi
  * que su longitud es la cifra: aqui no se vuelve a filtrar nada. Las filas son

@@ -30,7 +30,7 @@ export type WeekDay = {
 /**
  * Lo que quien mira tiene **planificado** en una semana, repartido por dia.
  *
- * **Es el plan, no el vencimiento** (ADR 090). Vencer y planificar son datos
+ * **Es el plan, no el vencimiento** (ADR 093). Vencer y planificar son datos
  * distintos desde la ADR 040, y la tira se leia por `due_date`: una tarea que
  * vence el martes de la semana que viene contaba en "Vencen esta semana" y no
  * aparecia en ningun dia, y lo que la persona habia puesto en su Planificador

@@ -41,7 +41,7 @@ export const WEEK_WIDGET_TASKS_PER_DAY = 4;
 
 /**
  * Las ventanas de vencimiento de un widget: las cinco compartidas mas
- * `thisWeek`, de mañana al final de la **semana natural** (ADR 090).
+ * `thisWeek`, de mañana al final de la **semana natural** (ADR 093).
  *
  * `thisWeek` es solo de los paneles y no entra en `DUE_WINDOWS` a proposito.
  * La `week` compartida es una ventana movil de siete dias que leen Mi trabajo,
@@ -123,7 +123,7 @@ type ResolvedWidget = Pick<
  * de tareas o de completadas.
  *
  * Son las que entran en el barrido compartido (`collapse-counts.ts`) y las que
- * se abren en lista al pulsarlas (`get-widget-tasks.ts`, ADR 090): detras de
+ * se abren en lista al pulsarlas (`get-widget-tasks.ts`, ADR 093): detras de
  * una cifra de horas, de estimado o de una proporcion no hay una lista que
  * sume eso. La web lleva el espejo en `widget-labels.ts`.
  */

@@ -1,4 +1,4 @@
-# ADR 090 — «Mi semana» lee el plan, «Vencen esta semana» la semana natural, y las cifras se abren
+# ADR 093 — «Mi semana» lee el plan, «Vencen esta semana» la semana natural, y las cifras se abren
 
 **Fecha:** 2026-10-15 · **Estado:** aceptada · **Precisa la
 [ADR 043](043-rejilla-de-doce-columnas-del-panel.md)**

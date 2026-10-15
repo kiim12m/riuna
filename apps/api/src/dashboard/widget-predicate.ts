@@ -59,7 +59,7 @@ function widgetDueWindowCondition(
  * completadas, que lo esten.
  *
  * Lo comparten el barrido colapsado y la lista que se abre al pulsar la
- * tarjeta (ADR 090), y es lo que garantiza que la lista sea **exactamente** lo
+ * tarjeta (ADR 093), y es lo que garantiza que la lista sea **exactamente** lo
  * que cuenta la cifra. La ruta en serie llega al mismo numero por `aggregate()`
  * —`from`/`to` y el `FILTER` de `doneCount`—, y la prueba de integracion
  * compara las tres.

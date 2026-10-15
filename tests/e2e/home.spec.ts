@@ -57,7 +57,7 @@ test.describe("Panel personal", () => {
     ).toHaveCount(1);
   });
 
-  // «Mi semana» es el plan, no el vencimiento (ADR 090). El caso que la
+  // «Mi semana» es el plan, no el vencimiento (ADR 093). El caso que la
   // origino: la tira salia vacia porque solo miraba `due_date`, y lo que la
   // persona se habia puesto en el Planificador no aparecia en el panel.
   test("shows in «Mi semana» what was planned, not what falls due", async ({
@@ -92,7 +92,7 @@ test.describe("Panel personal", () => {
   });
 
   // Pulsar una cifra abre las tareas que cuenta, y desde ahi se abre la tarea
-  // (ADR 090). La lista sale de los mismos predicados que la cifra.
+  // (ADR 093). La lista sale de los mismos predicados que la cifra.
   test("opens the tasks behind a figure", async ({ page, riuna }) => {
     for (const titulo of ["Primera pendiente", "Segunda pendiente"]) {
       const id = await createTask(riuna, titulo);

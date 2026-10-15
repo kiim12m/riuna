@@ -116,7 +116,7 @@ export function WidgetEditor({
   // Y un widget de objetivo tiene que nombrar uno.
   const requiresGoal = draft.type === "goal";
   // La tira semanal es el plan de quien mira, que ya es personal: un ambito ahi
-  // seria un control que no cambia nada (ADR 090).
+  // seria un control que no cambia nada (ADR 093).
   const hasPersonalScope = draft.type !== "week";
   // Y `status` compara slugs de un proyecto concreto.
   const availableGroupBy = draft.projectId
