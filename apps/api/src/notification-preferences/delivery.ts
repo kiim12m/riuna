@@ -10,6 +10,7 @@ import {
   userNotificationPreferenceTable,
   userNotificationWorkspaceRuleTable,
   userTable,
+  wikiPageTable,
   workspaceTable,
 } from "../database/schema";
 import { assertPublicWebhookDestination } from "../plugins/generic-webhook/config";
@@ -219,6 +220,21 @@ function buildDeliveryContent(notification: {
         body: taskTitle
           ? `You were mentioned in ${taskTitle}.`
           : "You were mentioned in a Riuna task.",
+      };
+    }
+    case "wiki_mention": {
+      const pageTitle = getStringValue(notification.eventData, "pageTitle");
+      const mentionerName = getStringValue(
+        notification.eventData,
+        "mentionerName",
+      );
+      return {
+        title: mentionerName
+          ? `${mentionerName} mentioned you`
+          : "You were mentioned",
+        body: pageTitle
+          ? `You were mentioned in the wiki page ${pageTitle}.`
+          : "You were mentioned in a wiki page.",
       };
     }
     case "task_comment": {
@@ -436,6 +452,45 @@ async function resolveNotificationContext(notification: {
       taskUrl: announcement.projectId
         ? `${base}/project/${announcement.projectId}/announcements`
         : `${base}/announcements`,
+    };
+  }
+
+  // Una pagina de la wiki (ADR 092) se abre en la wiki de su proyecto o en la
+  // del espacio.
+  if (notification.resourceType === "wiki_page") {
+    const [page] = await db
+      .select({
+        pageId: wikiPageTable.id,
+        workspaceId: workspaceTable.id,
+        workspaceName: workspaceTable.name,
+        projectId: projectTable.id,
+        projectName: projectTable.name,
+      })
+      .from(wikiPageTable)
+      .innerJoin(
+        workspaceTable,
+        eq(wikiPageTable.workspaceId, workspaceTable.id),
+      )
+      .leftJoin(projectTable, eq(wikiPageTable.projectId, projectTable.id))
+      .where(eq(wikiPageTable.id, notification.resourceId))
+      .limit(1);
+
+    if (!page) {
+      return null;
+    }
+
+    const clientUrl = process.env.RIUNA_CLIENT_URL || "http://localhost:5173";
+    const base = `${clientUrl}/dashboard/workspace/${page.workspaceId}`;
+    return {
+      workspaceId: page.workspaceId,
+      workspaceName: page.workspaceName,
+      projectId: page.projectId,
+      projectName: page.projectName,
+      taskId: null,
+      taskTitle: null,
+      taskUrl: page.projectId
+        ? `${base}/project/${page.projectId}/wiki?page=${page.pageId}`
+        : `${base}/wiki?page=${page.pageId}`,
     };
   }
 

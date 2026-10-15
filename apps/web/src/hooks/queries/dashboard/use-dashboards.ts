@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   createDashboard,
   createWidget,
@@ -6,6 +11,7 @@ import {
   deleteWidget,
   getDashboardData,
   getDashboards,
+  getWidgetTasks,
   reorderWidgets,
   resetDashboardLayout,
   updateDashboard,
@@ -47,6 +53,26 @@ export function useGetDashboardData(dashboardId: string | undefined) {
     staleTime: 30_000,
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,
+  });
+}
+
+/**
+ * La lista de una tarjeta de recuento, que solo se pide con el dialogo abierto.
+ *
+ * Cuelga de `["dashboard-data"]` a proposito: es lo que invalidan las
+ * mutaciones del panel y `use-user-websocket.ts`, asi que la lista se refresca
+ * a la vez que la cifra y no puede quedarse contando otra cosa.
+ */
+export function useGetWidgetTasks(widgetId: string, enabled: boolean) {
+  const weekStartsOn = useUserPreferencesStore((state) => state.weekStartsOn);
+
+  return useInfiniteQuery({
+    queryKey: ["dashboard-data", "widget-tasks", widgetId, weekStartsOn],
+    queryFn: ({ pageParam }) =>
+      getWidgetTasks(widgetId, weekStartsOn, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (last) => (last.hasMore ? last.page + 1 : undefined),
+    enabled,
   });
 }
 

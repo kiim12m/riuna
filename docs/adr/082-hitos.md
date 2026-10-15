@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-13 · **Estado:** aceptada
 
-**Contexto.** Punto 2.1 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 2.1 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 marcar un punto en el tiempo —«boletín entregado», «entrega al cliente»— que no es un trabajo
 que dure. Hasta ahora se hacía con una tarea de un día, que sumaba estimación, admitía
 cronómetro y se dibujaba como una barra más.

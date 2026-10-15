@@ -145,6 +145,23 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
   - uno fijado sale como franja en las vistas del proyecto, hasta una fecha o
     sin fin, y cada uno puede ocultarla en su navegador;
   - un proyecto «Personal» no tiene avisos.
+- **Wiki de páginas** ([ADR 092](adr/092-wiki-de-paginas.md)), en la pestaña
+  «Wiki» de cada proyecto, que enseña las páginas del proyecto y las del
+  espacio:
+  - páginas en árbol, con subpáginas, «Mover a…» y el editor de la
+    descripción de las tareas: menciones, imágenes, Mermaid y el menú `/`;
+  - lee cualquiera del espacio; crea, edita y borra quien puede editar tareas;
+  - mientras se edita, el borrador se guarda en el navegador y se puede
+    recuperar; «Guardar» crea una versión, con una nota opcional;
+  - si otra persona guarda mientras editas, sale el aviso con «Ver
+    diferencias», «Guardar encima de la suya» y «Descartar lo mío»;
+  - historial con las diferencias de cada versión y «Restaurar la versión N»;
+  - enlaces en los dos sentidos: desde el menú `/`, una página enlaza tareas y
+    otras páginas, y la descripción de una tarea enlaza páginas. La página dice
+    qué tareas la enlazan, y la tarea qué páginas;
+  - al borrar una página con subpáginas se elige entre borrar la rama entera
+    o subir sus hijas un nivel;
+  - mencionar a alguien le avisa una sola vez por página.
 
 ## 4. Tareas
 
@@ -571,7 +588,9 @@ ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
 - **Widgets**: contador, desglose, tendencia, tiempo registrado, progreso de
   épica, lista de tareas, **semana en curso**, notificaciones y objetivo. El de
   notificaciones se llamaba «Bandeja» hasta que ese nombre pasó al proyecto de
-  captura, hoy «Personal».
+  captura, hoy «Personal». La semana en curso enseña, día a día, lo que quien
+  mira tiene **planificado** (Planificador o Cronograma), no lo que vence
+  ([ADR 093](adr/093-mi-semana-lee-el-plan.md)).
   Las métricas son tareas, completadas, porcentaje completado, estimado y
   registrado; se agrupan por proyecto, asignado, prioridad, equipo, estado,
   hecho, vencimiento (sin fecha, vencida, hoy, esta semana, más adelante),
@@ -584,9 +603,11 @@ ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
   alto (1-6), o se ajusta desde su diálogo. Los widgets se recolocan sin dejar
   huecos y el ancho se reduce solo en tablet y móvil.
 - **Distribución de partida** en tres alturas: ocho cifras arriba —vencidas,
-  vencen hoy, vencen esta semana, pendientes, cerradas en siete días, alta
-  prioridad, sin fecha y horas registradas—, la semana en curso a ancho
-  completo, y debajo la lista de pendientes con las notificaciones al lado. Restaurable
+  vencen hoy, vencen esta semana (de mañana al final de la semana natural),
+  pendientes, cerradas en siete días, alta prioridad, sin fecha y horas
+  registradas—. **Pulsar una cifra que cuenta tareas abre la lista de esas
+  tareas**, y desde ella se abre cada una. Debajo, la semana en curso a ancho
+  completo, y bajo ella la lista de pendientes con las notificaciones al lado. Restaurable
   en cualquier momento, sustituyendo los widgets que se hayan añadido o editado.
 - **Objetivos (OKR)**: objetivo con periodo de fechas y **resultados clave**
   medidos con el mismo motor de agregación que los widgets. Compartibles con el
@@ -600,19 +621,21 @@ ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
   tarea.
 - **Paleta de comandos** con `Ctrl/Cmd+K`:
   - ir a las pantallas personales (Hoy, Planificador, Cronograma, Mis tareas,
-    Parte de horas, Mi panel, Objetivos, Avisos del espacio) o a cualquier proyecto del espacio
+    Parte de horas, Mi panel, Objetivos, Avisos del espacio, Wiki del espacio) o a cualquier proyecto del espacio
     (`p`+`l` abre la paleta en esa lista);
   - parar el cronómetro o reanudar la última tarea;
   - crear tarea, proyecto o espacio. Fuera de un proyecto, la tarea nace
     asignada a quien la crea, igual que con el botón de la cabecera;
   - cambiar el tema y abrir la ayuda de atajos.
-- **Búsqueda global** con `/`: tareas, proyectos, espacios, comentarios y
-  actividad, más búsqueda por ID corto de tarea (`DEP-23`).
+- **Búsqueda global** con `/`: tareas, proyectos, espacios, comentarios,
+  actividad y páginas de la wiki, más búsqueda por ID corto de tarea
+  (`DEP-23`).
 - **Notificaciones in-app** con campana, contador de no leídas, marcar todas
   como leídas y borrar todas. Eventos: tarea creada, asignación, mención,
   comentario, cambio de estado, cambio de vencimiento, recordatorio de
   vencimiento, tarea vencida, recordatorio pedido en la tarea, aviso publicado,
-  espacio creado y alta en un espacio de trabajo.
+  mención en una página de la wiki, espacio creado y alta en un espacio de
+  trabajo.
 - **Comentarios, cambios de estado y cambios de vencimiento llegan a todos los
   asignados y a quien observa**, nunca a quien hizo el cambio ni a quien ya no es
   del espacio ([ADR 076](adr/076-observadores.md)). A quien solo observa no se le
@@ -752,7 +775,7 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 65 herramientas**. Una prueba de paridad
+Dos caminos con **las mismas 69 herramientas**. Una prueba de paridad
 (`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
 antes el paquete stdio se había quedado sin las cinco del plan personal y el
 cronómetro.
@@ -766,7 +789,7 @@ cronómetro.
 
 Las herramientas cubren identidad y espacios, proyectos con su estado, sus campos y sus subproyectos, los campos de las tareas con su ayuda y sus fórmulas (`list_project_fields`), tareas, comentarios,
 etiquetas, épicas, relaciones, observadores, recordatorios, acciones de un clic,
-totales de un filtro, línea base, avisos, miembros, búsqueda, columnas, registro de tiempo,
+totales de un filtro, línea base, avisos, la wiki (leer, buscar y crear páginas), miembros, búsqueda, columnas, registro de tiempo,
 actividad y notificaciones, además del plan personal, el
 cronómetro,
 Hoy (`get_today`) y la captura a Personal (`capture_task`). `list_projects`
@@ -777,8 +800,8 @@ no lista los proyectos Personal.
 - **WebSockets** por proyecto y por usuario, con lotes de 100 ms y
   deduplicación, que empujan creación, actualización, borrado y movimiento de
   tareas, además de relaciones, etiquetas, comentarios, ciclos, épicas, vistas,
-  campos, notificaciones y avisos (estos, a todo el espacio por el canal de
-  usuario).
+  campos, notificaciones, avisos y páginas de la wiki (estos dos, a todo el
+  espacio por el canal de usuario).
 - **El canal de usuario no depende de la barra lateral**
   ([ADR 048](adr/048-frescura-de-las-pantallas-personales.md)): sigue conectado
   al cambiar de pantalla, en los ajustes de cuenta y en móvil con la barra

@@ -6,6 +6,7 @@ import {
   getNotificationTarget,
   getNotificationTitle,
   getProjectTarget,
+  getWikiPageTarget,
 } from "./notification";
 
 const t = (key: string, options?: Record<string, unknown>) => {
@@ -115,6 +116,26 @@ describe("notification targets", () => {
       projectId: null,
     });
     expect(getNotificationTarget(project)).toBeNull();
+  });
+
+  it("opens the wiki page where someone was mentioned", () => {
+    const page = {
+      ...notification("wiki_mention", { workspaceId: "w1", projectId: "p1" }),
+      resourceType: "wiki_page",
+      resourceId: "page-1",
+    } as Notification;
+    const workspacePage = {
+      ...notification("wiki_mention", { workspaceId: "w1", projectId: null }),
+      resourceType: "wiki_page",
+      resourceId: "page-2",
+    } as Notification;
+    expect(getWikiPageTarget(page)).toEqual({
+      workspaceId: "w1",
+      projectId: "p1",
+      pageId: "page-1",
+    });
+    expect(getWikiPageTarget(workspacePage)?.projectId).toBeNull();
+    expect(getNotificationTarget(page)).toBeNull();
   });
 
   it("opens the project whose health changed, and says which health", () => {

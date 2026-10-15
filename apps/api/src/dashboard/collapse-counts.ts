@@ -10,11 +10,12 @@ import type { FieldRegistry } from "../view/field-registry";
 import { filterToSql } from "../view/filter-to-sql";
 import { workspaceTaskConditions } from "../view/workspace-task-query";
 import type { AggregateResult } from "./aggregate";
-import type { WidgetConfig } from "./widget-config";
 import {
-  completionRangePredicates,
-  widgetPredicates,
-} from "./widget-predicate";
+  isTaskCount,
+  type WidgetConfig,
+  type WidgetType,
+} from "./widget-config";
+import { countPredicates } from "./widget-predicate";
 
 type WidgetRow = typeof dashboardWidgetTable.$inferSelect;
 
@@ -41,12 +42,15 @@ export default async function collapseCountWidgets({
   workspaceId,
   userId,
   now,
+  weekStart,
   registryFor,
 }: {
   widgets: WidgetRow[];
   workspaceId: string;
   userId: string;
   now: Date;
+  /** El principio de la semana natural de quien mira, para `thisWeek`. */
+  weekStart: Date;
   registryFor: (projectId: string | null) => Promise<FieldRegistry>;
 }): Promise<Map<string, AggregateResult>> {
   const out = new Map<string, AggregateResult>();
@@ -103,10 +107,7 @@ export default async function collapseCountWidgets({
     for (const widget of group) {
       const config = widget.config as WidgetConfig;
       try {
-        const conditions: SQL[] = [
-          ...widgetPredicates(config, now),
-          ...completionRangePredicates(config, now),
-        ];
+        const conditions = countPredicates(config, now, weekStart);
         const compiled = filterToSql(
           buildFilter(config.filter ?? []),
           registry,
@@ -130,12 +131,10 @@ export default async function collapseCountWidgets({
     // Alias posicionales y no ids: un identificador de Postgres topa en 63
     // bytes y un cuid2 no dice nada al leer la consulta.
     const selection: Record<string, SQL<number>> = {};
-    eligible.forEach(({ widget, predicate }, index) => {
-      const metric = (widget.config as WidgetConfig).metric;
+    // `doneCount` ya lleva su `completed_at IS NOT NULL` dentro del predicado.
+    eligible.forEach(({ predicate }, index) => {
       selection[`w${index}`] =
-        metric === "doneCount"
-          ? sql<number>`COUNT(*) FILTER (WHERE ${predicate} AND ${taskTable.completedAt} IS NOT NULL)::int`
-          : sql<number>`COUNT(*) FILTER (WHERE ${predicate})::int`;
+        sql<number>`COUNT(*) FILTER (WHERE ${predicate})::int`;
     });
 
     const [row] = await db
@@ -154,16 +153,12 @@ export default async function collapseCountWidgets({
 }
 
 /**
- * Que tarjeta entra en el barrido compartido.
+ * Que tarjeta entra en el barrido compartido: las que cuentan tareas.
  *
  * `doneRatio` se queda fuera: necesita un denominador propio por widget, que
  * duplica la superficie por dos widgets heredados que la ruta en serie calcula
  * igual de bien.
  */
 function isCollapsible(widget: WidgetRow): boolean {
-  if (widget.type !== "count") return false;
-  const config = widget.config as WidgetConfig;
-  if (config.groupBy) return false;
-  const metric = config.metric ?? "count";
-  return metric === "count" || metric === "doneCount";
+  return isTaskCount(widget.type as WidgetType, widget.config as WidgetConfig);
 }

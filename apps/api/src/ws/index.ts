@@ -446,6 +446,31 @@ async function membersOfWorkspace(workspaceId: string): Promise<string[]> {
   return rows.map((row) => row.userId);
 }
 
+// Una pagina de la wiki (ADR 092) se ve desde la pestaña Wiki de cualquier
+// proyecto del espacio, asi que el cambio va a todos sus miembros por el canal
+// de usuario, que conserva los campos que el de proyecto descartaria con Redis.
+// Va tambien a quien guardo: sus otras pestañas tienen que enterarse.
+subscribeToEvent<{
+  workspaceId: string;
+  projectId: string | null;
+  pageId: string;
+  version: number;
+  userId: string;
+  kind: string;
+}>("wiki.page_changed", async (data) => {
+  for (const userId of await membersOfWorkspace(data.workspaceId)) {
+    broadcastToUser(userId, {
+      type: "WIKI_UPDATED",
+      workspaceId: data.workspaceId,
+      projectId: data.projectId,
+      pageId: data.pageId,
+      version: data.version,
+      actorId: data.userId,
+      kind: data.kind,
+    });
+  }
+});
+
 // Un aviso de proyecto o de espacio (ADR 081) se ve en el tablon y en la
 // franja de las vistas de todo el espacio, asi que va a todos sus miembros
 // por el canal de usuario.

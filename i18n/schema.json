@@ -7760,6 +7760,9 @@
 								},
 								"fallback": {
 									"type": "string"
+								},
+								"wiki": {
+									"type": "string"
 								}
 							},
 							"required": [
@@ -7768,7 +7771,8 @@
 								"workspace",
 								"comment",
 								"activity",
-								"fallback"
+								"fallback",
+								"wiki"
 							]
 						}
 					},
@@ -8394,6 +8398,19 @@
 								}
 							},
 							"required": ["title", "content", "contentWithoutNote"]
+						},
+						"wiki_mention": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"title": {
+									"type": "string"
+								},
+								"content": {
+									"type": "string"
+								}
+							},
+							"required": ["title", "content"]
 						}
 					},
 					"required": [
@@ -8411,7 +8428,8 @@
 						"instance_alert",
 						"task_reminder",
 						"announcement_published",
-						"project_health_changed"
+						"project_health_changed",
+						"wiki_mention"
 					]
 				},
 				"loadMore": {
@@ -13589,6 +13607,28 @@
 						}
 					},
 					"required": ["more_one", "more_other"]
+				},
+				"widgetTasks": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"open_one": {
+							"type": "string"
+						},
+						"open_other": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"loadMore": {
+							"type": "string"
+						},
+						"error": {
+							"type": "string"
+						}
+					},
+					"required": ["open_one", "open_other", "empty", "loadMore", "error"]
 				}
 			},
 			"required": [
@@ -13607,7 +13647,8 @@
 				"shared",
 				"errors",
 				"scope",
-				"week"
+				"week",
+				"widgetTasks"
 			]
 		},
 		"goals": {
@@ -16193,6 +16234,449 @@
 				"dialog",
 				"banner"
 			]
+		},
+		"wiki": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"title": {
+					"type": "string"
+				},
+				"pageTitle": {
+					"type": "string"
+				},
+				"workspaceTitle": {
+					"type": "string"
+				},
+				"empty": {
+					"type": "string"
+				},
+				"links": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"task": {
+							"type": "string"
+						},
+						"page": {
+							"type": "string"
+						},
+						"pickTask": {
+							"type": "string"
+						},
+						"pickPage": {
+							"type": "string"
+						},
+						"search": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"task",
+						"page",
+						"pickTask",
+						"pickPage",
+						"search",
+						"empty"
+					]
+				},
+				"tree": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"label": {
+							"type": "string"
+						},
+						"workspace": {
+							"type": "string"
+						},
+						"project": {
+							"type": "string"
+						},
+						"collapse": {
+							"type": "string"
+						},
+						"expand": {
+							"type": "string"
+						},
+						"actions": {
+							"type": "string"
+						},
+						"newSubpage": {
+							"type": "string"
+						},
+						"move": {
+							"type": "string"
+						},
+						"delete": {
+							"type": "string"
+						},
+						"newIn": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"choose": {
+							"type": "string"
+						},
+						"newPage": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"label",
+						"workspace",
+						"project",
+						"collapse",
+						"expand",
+						"actions",
+						"newSubpage",
+						"move",
+						"delete",
+						"newIn",
+						"empty",
+						"choose",
+						"newPage"
+					]
+				},
+				"create": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"under": {
+							"type": "string"
+						},
+						"name": {
+							"type": "string"
+						},
+						"submit": {
+							"type": "string"
+						},
+						"failed": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"under",
+						"name",
+						"submit",
+						"failed"
+					]
+				},
+				"move": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"parent": {
+							"type": "string"
+						},
+						"root": {
+							"type": "string"
+						},
+						"submit": {
+							"type": "string"
+						},
+						"failed": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"parent",
+						"root",
+						"submit",
+						"failed"
+					]
+				},
+				"delete": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"description": {
+							"type": "string"
+						},
+						"lift": {
+							"type": "string"
+						},
+						"liftHint_one": {
+							"type": "string"
+						},
+						"liftHint_other": {
+							"type": "string"
+						},
+						"branch_one": {
+							"type": "string"
+						},
+						"branch_other": {
+							"type": "string"
+						},
+						"branchHint": {
+							"type": "string"
+						},
+						"submit": {
+							"type": "string"
+						},
+						"submitBranch_one": {
+							"type": "string"
+						},
+						"submitBranch_other": {
+							"type": "string"
+						},
+						"done": {
+							"type": "string"
+						},
+						"failed": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"description",
+						"lift",
+						"liftHint_one",
+						"liftHint_other",
+						"branch_one",
+						"branch_other",
+						"branchHint",
+						"submit",
+						"submitBranch_one",
+						"submitBranch_other",
+						"done",
+						"failed"
+					]
+				},
+				"history": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"noChanges": {
+							"type": "string"
+						},
+						"version": {
+							"type": "string"
+						},
+						"restoredFrom": {
+							"type": "string"
+						},
+						"diff": {
+							"type": "string"
+						},
+						"first": {
+							"type": "string"
+						},
+						"restore": {
+							"type": "string"
+						},
+						"restored": {
+							"type": "string"
+						},
+						"restoreFailed": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"noChanges",
+						"version",
+						"restoredFrom",
+						"diff",
+						"first",
+						"restore",
+						"restored",
+						"restoreFailed"
+					]
+				},
+				"page": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"loading": {
+							"type": "string"
+						},
+						"missing": {
+							"type": "string"
+						},
+						"saved": {
+							"type": "string"
+						},
+						"saveFailed": {
+							"type": "string"
+						},
+						"linkCopied": {
+							"type": "string"
+						},
+						"titleLabel": {
+							"type": "string"
+						},
+						"meta": {
+							"type": "string"
+						},
+						"linked": {
+							"type": "string"
+						},
+						"save": {
+							"type": "string"
+						},
+						"copyLink": {
+							"type": "string"
+						},
+						"edit": {
+							"type": "string"
+						},
+						"more": {
+							"type": "string"
+						},
+						"editorLabel": {
+							"type": "string"
+						},
+						"readerLabel": {
+							"type": "string"
+						},
+						"placeholder": {
+							"type": "string"
+						},
+						"empty": {
+							"type": "string"
+						},
+						"noteLabel": {
+							"type": "string"
+						},
+						"notePlaceholder": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"loading",
+						"missing",
+						"saved",
+						"saveFailed",
+						"linkCopied",
+						"titleLabel",
+						"meta",
+						"linked",
+						"save",
+						"copyLink",
+						"edit",
+						"more",
+						"editorLabel",
+						"readerLabel",
+						"placeholder",
+						"empty",
+						"noteLabel",
+						"notePlaceholder"
+					]
+				},
+				"draft": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"found": {
+							"type": "string"
+						},
+						"recover": {
+							"type": "string"
+						},
+						"discard": {
+							"type": "string"
+						},
+						"saving": {
+							"type": "string"
+						}
+					},
+					"required": ["found", "recover", "discard", "saving"]
+				},
+				"conflict": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						},
+						"detail": {
+							"type": "string"
+						},
+						"diff": {
+							"type": "string"
+						},
+						"overwrite": {
+							"type": "string"
+						},
+						"discard": {
+							"type": "string"
+						},
+						"diffTitle": {
+							"type": "string"
+						},
+						"you": {
+							"type": "string"
+						},
+						"someone": {
+							"type": "string"
+						}
+					},
+					"required": [
+						"title",
+						"detail",
+						"diff",
+						"overwrite",
+						"discard",
+						"diffTitle",
+						"you",
+						"someone"
+					]
+				},
+				"taskLinks": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"title": {
+							"type": "string"
+						}
+					},
+					"required": ["title"]
+				}
+			},
+			"required": [
+				"title",
+				"pageTitle",
+				"workspaceTitle",
+				"empty",
+				"links",
+				"tree",
+				"create",
+				"move",
+				"delete",
+				"history",
+				"page",
+				"draft",
+				"conflict",
+				"taskLinks"
+			]
 		}
 	},
 	"required": [
@@ -16224,6 +16708,7 @@
 		"calendar",
 		"availability",
 		"lead",
-		"announcements"
+		"announcements",
+		"wiki"
 	]
 }

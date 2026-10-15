@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-12 · **Estado:** aceptada
 
-**Contexto.** Punto 1.4 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 1.4 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 ver dónde está abierta la cuenta y cerrar lo que sobre. Better Auth guarda las sesiones en la
 tabla `session`, con navegador e IP. Su `listSessions` devuelve también el **token** de cada
 sesión, que es la credencial de ese dispositivo.

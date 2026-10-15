@@ -1958,7 +1958,8 @@
 				"workspace": "Espacios de trabajo",
 				"comment": "Comentarios",
 				"activity": "Actividad",
-				"fallback": "Resultados"
+				"fallback": "Resultados",
+				"wiki": "Wiki"
 			}
 		},
 		"settingsLayout": {
@@ -2121,6 +2122,10 @@
 				"title": "{{projectName}}: {{health}}",
 				"content": "{{authorName}}: {{note}}",
 				"contentWithoutNote": "{{authorName}} cambió el estado del proyecto"
+			},
+			"wiki_mention": {
+				"title": "{{mentionerName}} te ha mencionado",
+				"content": "{{mentionerName}} te ha mencionado en la página de la wiki: {{pageTitle}}"
 			}
 		},
 		"reminderLeadTime": {
@@ -3459,6 +3464,13 @@
 		"week": {
 			"more_one": "+{{count}} más",
 			"more_other": "+{{count}} más"
+		},
+		"widgetTasks": {
+			"open_one": "Ver la tarea de «{{title}}»",
+			"open_other": "Ver las {{count}} tareas de «{{title}}»",
+			"empty": "Ahora mismo no hay ninguna tarea",
+			"loadMore": "Cargar más",
+			"error": "No se ha podido cargar la lista"
 		}
 	},
 	"goals": {
@@ -4135,6 +4147,116 @@
 			"workspace": "Aviso del espacio:",
 			"open": "Ver avisos",
 			"hide": "Ocultar para mí"
+		}
+	},
+	"wiki": {
+		"title": "Wiki",
+		"pageTitle": "Wiki · {{name}}",
+		"workspaceTitle": "Wiki del espacio",
+		"empty": "Todavía no hay páginas. Crea la primera desde el árbol.",
+		"links": {
+			"task": "Enlazar una tarea",
+			"page": "Enlazar una página de la wiki",
+			"pickTask": "Enlazar una tarea",
+			"pickPage": "Enlazar una página de la wiki",
+			"search": "Buscar…",
+			"empty": "No hay nada"
+		},
+		"tree": {
+			"label": "Páginas",
+			"workspace": "Espacio",
+			"project": "Proyecto",
+			"collapse": "Plegar",
+			"expand": "Desplegar",
+			"actions": "Acciones de {{title}}",
+			"newSubpage": "Nueva subpágina",
+			"move": "Mover a…",
+			"delete": "Borrar",
+			"newIn": "Nueva página en {{group}}",
+			"empty": "Sin páginas",
+			"choose": "Elige una página",
+			"newPage": "Nueva página"
+		},
+		"create": {
+			"title": "Página nueva",
+			"description": "Ponle un título; el texto se escribe al abrirla.",
+			"under": "Una subpágina de {{title}}.",
+			"name": "Título",
+			"submit": "Crear la página",
+			"failed": "No se ha podido crear la página"
+		},
+		"move": {
+			"title": "Mover {{title}}",
+			"description": "Debajo de otra página de la misma wiki, o en lo más alto.",
+			"parent": "Debajo de",
+			"root": "En lo más alto",
+			"submit": "Mover",
+			"failed": "No se ha podido mover la página"
+		},
+		"delete": {
+			"title": "¿Borrar {{title}}?",
+			"description": "Su historial se va con ella.",
+			"lift": "Borrar solo esta página",
+			"liftHint_one": "Su subpágina sube un nivel.",
+			"liftHint_other": "Sus {{count}} subpáginas suben un nivel.",
+			"branch_one": "Borrar también su subpágina",
+			"branch_other": "Borrar también sus {{count}} subpáginas",
+			"branchHint": "Se borra la rama entera.",
+			"submit": "Borrar la página",
+			"submitBranch_one": "Borrar {{count}} página",
+			"submitBranch_other": "Borrar {{count}} páginas",
+			"done": "Borrada",
+			"failed": "No se ha podido borrar la página"
+		},
+		"history": {
+			"title": "Historial",
+			"noChanges": "Sin cambios",
+			"version": "Versión {{version}}",
+			"restoredFrom": "Restaura la versión {{version}}",
+			"diff": "Diferencias {{from}} → {{to}}",
+			"first": "Primera versión",
+			"restore": "Restaurar la versión {{version}}",
+			"restored": "Versión {{version}} restaurada",
+			"restoreFailed": "No se ha podido restaurar la versión"
+		},
+		"page": {
+			"loading": "Cargando…",
+			"missing": "Esta página ya no existe.",
+			"saved": "Página guardada",
+			"saveFailed": "No se ha podido guardar la página",
+			"linkCopied": "Enlace copiado",
+			"titleLabel": "Título",
+			"meta": "Versión {{version}} · editada por {{name}} {{when}}",
+			"linked": "Enlazada con",
+			"save": "Guardar",
+			"copyLink": "Copiar el enlace",
+			"edit": "Editar",
+			"more": "Más acciones",
+			"editorLabel": "Editor de la página",
+			"readerLabel": "Contenido de la página",
+			"placeholder": "Escribe la página. Con / insertas bloques, tareas y páginas.",
+			"empty": "Esta página está vacía.",
+			"noteLabel": "Nota del cambio",
+			"notePlaceholder": "Qué has cambiado (opcional)"
+		},
+		"draft": {
+			"found": "Hay un borrador sin guardar de esta página en este navegador.",
+			"recover": "Recuperarlo",
+			"discard": "Descartar",
+			"saving": "Borrador guardado en este navegador"
+		},
+		"conflict": {
+			"title": "{{name}} guardó esta página {{when}}, mientras la editabas.",
+			"detail": "Tus cambios siguen aquí, sin guardar. La suya es la versión {{version}}.",
+			"diff": "Ver diferencias",
+			"overwrite": "Guardar encima de la suya",
+			"discard": "Descartar lo mío",
+			"diffTitle": "La versión {{version}} frente a la tuya",
+			"you": "Tú (en otra pestaña)",
+			"someone": "Alguien"
+		},
+		"taskLinks": {
+			"title": "Wiki"
 		}
 	}
 }

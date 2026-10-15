@@ -48,8 +48,17 @@ export type WidgetGroupBy =
 
 export type Granularity = "day" | "week" | "month";
 
-/** El mismo vocabulario que `utils/due-window.ts` en la API. */
-export type WidgetDueWindow = "overdue" | "today" | "week" | "later" | "none";
+/**
+ * El mismo vocabulario que `WIDGET_DUE_WINDOWS` en la API: las cinco ventanas
+ * de `utils/due-window.ts` mas `thisWeek`, la semana natural (ADR 093).
+ */
+export type WidgetDueWindow =
+  | "overdue"
+  | "today"
+  | "week"
+  | "thisWeek"
+  | "later"
+  | "none";
 
 /**
  * El mismo vocabulario editable que una vista guardada (ADR 015), reutilizado
@@ -91,6 +100,27 @@ export async function getDashboardData(id: string, weekStartsOn: number) {
       // La preferencia de inicio de semana de quien mira: la ventana del widget
       // semanal la calcula el servidor, pero no puede adivinar donde empieza.
       query: { weekStartsOn: WEEK_START_PARAMS[weekStartsOn] },
+    }),
+  );
+}
+
+/**
+ * Las tareas que cuenta una tarjeta de recuento, pagina a pagina (ADR 093). El
+ * inicio de semana viaja por lo mismo que en `getDashboardData`: «Vencen esta
+ * semana» acaba donde acaba la semana de quien mira.
+ */
+export async function getWidgetTasks(
+  id: string,
+  weekStartsOn: number,
+  page: number,
+) {
+  return unwrap(
+    await client.dashboard.widget[":id"].tasks.$get({
+      param: { id },
+      query: {
+        weekStartsOn: WEEK_START_PARAMS[weekStartsOn],
+        page: String(page),
+      },
     }),
   );
 }

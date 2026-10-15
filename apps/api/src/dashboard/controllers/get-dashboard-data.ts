@@ -137,6 +137,7 @@ export default async function getDashboardData(
       workspaceId,
       userId,
       now,
+      weekStart,
       registryFor,
     });
   } catch (error) {
@@ -180,12 +181,13 @@ export default async function getDashboardData(
         continue;
       }
 
+      // Sin `scope`: la tira es el plan de quien mira, que ya es personal
+      // (`week-tasks.ts`). Un widget guardado con ambito lo conserva sin efecto.
       if (type === "week") {
         const days = await weekTasks({
           workspaceId,
           userId,
           projectId: widget.projectId,
-          scope: config.scope,
           filter,
           registry,
           weekStart,
@@ -230,7 +232,7 @@ export default async function getDashboardData(
           projectId: widget.projectId,
           filter,
           registry,
-          extra: widgetPredicates(config, now),
+          extra: widgetPredicates(config, now, weekStart),
           now,
           ...resolved,
           ...(range ?? {}),

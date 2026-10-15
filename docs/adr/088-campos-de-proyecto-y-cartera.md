@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-13 · **Estado:** aceptada
 
-**Contexto.** Punto 3.2 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 3.2 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 mirar todos los proyectos como una cartera, con los atributos que cada espacio necesite (cliente,
 tipo de obra, presupuesto…), filtrarla, guardar esas miradas y sacarla a Excel. Los campos
 personalizados eran solo de tareas, y la lista de proyectos no filtraba ni elegía columnas. La

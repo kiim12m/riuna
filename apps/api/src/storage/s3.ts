@@ -242,14 +242,26 @@ export function buildObjectKeyPrefix(
   ].join("/");
 }
 
-export function buildObjectKey(context: TaskImageUploadContext) {
-  const extension = getFileExtension(context.filename);
-  const objectKeyPrefix = buildObjectKeyPrefix(context);
+/** Los adjuntos de una pagina de la wiki (ADR 092), que no es de una tarea. */
+export function buildWikiObjectKeyPrefix(context: {
+  workspaceId: string;
+  pageId: string;
+}) {
+  return [
+    "workspace",
+    sanitizePathSegment(context.workspaceId),
+    "wiki",
+    sanitizePathSegment(context.pageId),
+  ].join("/");
+}
+
+function objectKeyUnder(objectKeyPrefix: string, filename: string) {
+  const extension = getFileExtension(filename);
   const timestamp = Date.now();
   const randomId = createId();
 
   const baseName = sanitizePathSegment(
-    context.filename.replace(/\.[^/.]+$/, "") || "image",
+    filename.replace(/\.[^/.]+$/, "") || "image",
   ).slice(0, 64);
 
   const fileName = extension
@@ -257,6 +269,10 @@ export function buildObjectKey(context: TaskImageUploadContext) {
     : `${baseName}-${timestamp}-${randomId}`;
 
   return `${objectKeyPrefix}/${fileName}`;
+}
+
+export function buildObjectKey(context: TaskImageUploadContext) {
+  return objectKeyUnder(buildObjectKeyPrefix(context), context.filename);
 }
 
 export function applyKeyPrefix(prefix: string, key: string) {
@@ -286,18 +302,18 @@ export function validateTaskAssetUploadInput(
   }
 }
 
-export async function createTaskImageUploadUrl(
-  context: TaskImageUploadContext,
+async function presignUpload(
+  rawKey: string,
+  contentType: string,
 ): Promise<TaskImageUploadUrl> {
   const config = getStorageConfig();
   const client = getClient(config);
-  const rawKey = buildObjectKey(context);
   const key = applyKeyPrefix(config.keyPrefix, rawKey);
 
   const command = new PutObjectCommand({
     Bucket: config.bucket,
     Key: key,
-    ContentType: context.contentType,
+    ContentType: contentType,
   });
 
   const uploadUrl = await getSignedUrl(client, command, {
@@ -308,9 +324,27 @@ export async function createTaskImageUploadUrl(
     key,
     uploadUrl,
     headers: {
-      "Content-Type": context.contentType,
+      "Content-Type": contentType,
     },
   };
+}
+
+export async function createTaskImageUploadUrl(
+  context: TaskImageUploadContext,
+): Promise<TaskImageUploadUrl> {
+  return presignUpload(buildObjectKey(context), context.contentType);
+}
+
+export async function createWikiImageUploadUrl(context: {
+  workspaceId: string;
+  pageId: string;
+  filename: string;
+  contentType: string;
+}): Promise<TaskImageUploadUrl> {
+  return presignUpload(
+    objectKeyUnder(buildWikiObjectKeyPrefix(context), context.filename),
+    context.contentType,
+  );
 }
 
 export function assertStorageConfigured() {
@@ -321,8 +355,18 @@ export function assertTaskImageKeyMatchesContext(
   key: string,
   context: Omit<TaskImageUploadContext, "filename" | "contentType">,
 ) {
+  return keyIsUnder(key, buildObjectKeyPrefix(context));
+}
+
+export function assertWikiImageKeyMatchesContext(
+  key: string,
+  context: { workspaceId: string; pageId: string },
+) {
+  return keyIsUnder(key, buildWikiObjectKeyPrefix(context));
+}
+
+function keyIsUnder(key: string, objectPrefix: string) {
   const config = getStorageConfig();
-  const objectPrefix = buildObjectKeyPrefix(context);
   const fullPrefix = `${applyKeyPrefix(config.keyPrefix, objectPrefix)}/`;
 
   if (!key.startsWith(fullPrefix)) {

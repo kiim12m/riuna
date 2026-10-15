@@ -11,6 +11,7 @@ import deleteWidget from "./controllers/delete-widget";
 import exportDashboard from "./controllers/export-dashboard";
 import getDashboardData from "./controllers/get-dashboard-data";
 import getDashboards from "./controllers/get-dashboards";
+import getWidgetTasks from "./controllers/get-widget-tasks";
 import reorderWidgets from "./controllers/reorder-widgets";
 import resetDashboardLayout from "./controllers/reset-dashboard-layout";
 import updateDashboard from "./controllers/update-dashboard";
@@ -19,6 +20,7 @@ import {
   requireDashboardOwner,
   requireDashboardVisible,
   requireWidgetOwner,
+  requireWidgetVisible,
 } from "./require-dashboard-owner";
 import { WIDGET_TYPES, widgetConfigSchema } from "./widget-config";
 
@@ -337,6 +339,53 @@ const dashboard = new Hono<{
     workspaceAccess.fromDashboardWidget("id"),
     requireWidgetOwner,
     async (c) => c.json(await deleteWidget(c.req.valid("param").id)),
+  )
+  .get(
+    "/widget/:id/tasks",
+    describeRoute({
+      operationId: "listWidgetTasks",
+      tags: ["Dashboards"],
+      description:
+        "List, page by page, the tasks a count widget counts: the same scope, filter and windows as its figure. Only widgets that count tasks can be listed",
+      responses: {
+        200: {
+          description: "A page of tasks and whether there are more",
+          content: { "application/json": { schema: resolver(v.any()) } },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator(
+      "query",
+      v.object({
+        weekStartsOn: weekStartsOnSchema,
+        page: v.optional(
+          v.pipe(
+            v.string(),
+            v.transform(Number),
+            v.number(),
+            v.integer("Page must be an integer"),
+            v.minValue(1, "Page must be at least 1"),
+          ),
+        ),
+      }),
+    ),
+    workspaceAccess.fromDashboardWidget("id"),
+    // Leer, como `/:id/data`: la lista de un panel compartido la ve el espacio.
+    requireWidgetVisible,
+    requireApiKeyScope({ task: ["read"] }),
+    async (c) => {
+      const { weekStartsOn, page } = c.req.valid("query");
+      return c.json(
+        await getWidgetTasks({
+          widgetId: c.req.valid("param").id,
+          workspaceId: c.get("workspaceId"),
+          userId: c.get("userId"),
+          weekStartsOn: weekStartsOn ? Number(weekStartsOn) : undefined,
+          page,
+        }),
+      );
+    },
   )
   .put(
     "/:id/widget/order",

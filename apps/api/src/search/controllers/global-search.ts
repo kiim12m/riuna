@@ -6,9 +6,11 @@ import {
   projectTable,
   taskTable,
   userTable,
+  wikiPageTable,
   workspaceTable,
   workspaceUserTable,
 } from "../../database/schema";
+import { richTextToPlainText } from "../../utils/rich-text-to-plain-text";
 import { escapeLikePattern } from "../like-pattern";
 import { TASK_SHORT_ID_PATTERN } from "../task-short-id";
 
@@ -22,7 +24,8 @@ type SearchParams = {
     | "projects"
     | "workspaces"
     | "comments"
-    | "activities";
+    | "activities"
+    | "wiki";
   workspaceId?: string;
   projectId?: string;
   limit?: number;
@@ -30,7 +33,7 @@ type SearchParams = {
 
 type SearchResult = {
   id: string;
-  type: "task" | "project" | "workspace" | "comment" | "activity";
+  type: "task" | "project" | "workspace" | "comment" | "activity" | "wiki_page";
   title: string;
   description?: string;
   content?: string;
@@ -492,6 +495,72 @@ async function globalSearch(params: SearchParams): Promise<{
         createdAt: activity.createdAt,
         relevanceScore: activity.relevanceScore,
         taskNumber: activity.taskNumber || undefined,
+      });
+    }
+  }
+
+  // Las paginas de la wiki (ADR 092): las del espacio y las de los proyectos.
+  // Dentro de un proyecto, las suyas y las del espacio.
+  if (type === "all" || type === "wiki") {
+    const wikiRelevanceScore = sql<number>`
+      CASE
+        WHEN LOWER(${wikiPageTable.title}) LIKE ${searchPattern} THEN 3
+        ELSE 1
+      END
+    `;
+
+    const pages = await db
+      .select({
+        id: wikiPageTable.id,
+        title: wikiPageTable.title,
+        content: wikiPageTable.content,
+        projectId: wikiPageTable.projectId,
+        projectName: projectTable.name,
+        projectSlug: projectTable.slug,
+        workspaceId: wikiPageTable.workspaceId,
+        workspaceName: workspaceTable.name,
+        updatedAt: wikiPageTable.updatedAt,
+        relevanceScore: wikiRelevanceScore.as("relevanceScore"),
+      })
+      .from(wikiPageTable)
+      .leftJoin(projectTable, eq(wikiPageTable.projectId, projectTable.id))
+      .leftJoin(
+        workspaceTable,
+        eq(wikiPageTable.workspaceId, workspaceTable.id),
+      )
+      .where(
+        and(
+          workspaceId
+            ? eq(wikiPageTable.workspaceId, workspaceId)
+            : inArray(wikiPageTable.workspaceId, accessibleWorkspaceIds),
+          projectId
+            ? or(
+                isNull(wikiPageTable.projectId),
+                eq(wikiPageTable.projectId, projectId),
+              )
+            : undefined,
+          or(
+            ilike(wikiPageTable.title, searchPattern),
+            ilike(wikiPageTable.content, searchPattern),
+          ),
+        ),
+      )
+      .orderBy(desc(wikiRelevanceScore), desc(wikiPageTable.updatedAt))
+      .limit(limit);
+
+    for (const page of pages) {
+      results.push({
+        id: page.id,
+        type: "wiki_page",
+        title: page.title,
+        content: richTextToPlainText(page.content).slice(0, 200) || undefined,
+        projectId: page.projectId || undefined,
+        projectName: page.projectName || undefined,
+        projectSlug: page.projectSlug || undefined,
+        workspaceId: page.workspaceId,
+        workspaceName: page.workspaceName || undefined,
+        createdAt: page.updatedAt,
+        relevanceScore: page.relevanceScore,
       });
     }
   }

@@ -77,6 +77,11 @@ export function getNotificationTitle(notification: Notification, t: Translate) {
           ...eventData,
           defaultValue: notification.title ?? notification.type,
         });
+      case "wiki_mention":
+        return t("notifications:events.wiki_mention.title", {
+          ...eventData,
+          defaultValue: notification.title ?? notification.type,
+        });
       // A quien solo observa no se le dice «tu tarea» (ADR 076).
       case "task_comment":
         return t(
@@ -198,6 +203,11 @@ export function getNotificationContent(
           ...eventData,
           defaultValue: notification.content ?? "",
         });
+      case "wiki_mention":
+        return t("notifications:events.wiki_mention.content", {
+          ...eventData,
+          defaultValue: notification.content ?? "",
+        });
       case "task_comment":
         return t("notifications:events.task_comment.content", {
           ...eventData,
@@ -313,6 +323,32 @@ export function getProjectTarget(
   if (!workspaceId || !projectId) return null;
 
   return { workspaceId, projectId };
+}
+
+export type WikiPageTarget = {
+  workspaceId: string;
+  /** Nulo: una pagina del espacio. */
+  projectId: string | null;
+  pageId: string;
+};
+
+/** La pagina de la wiki donde mencionaron a alguien (ADR 092), o `null`. */
+export function getWikiPageTarget(
+  notification: Notification,
+): WikiPageTarget | null {
+  if (notification.resourceType !== "wiki_page" || !notification.resourceId) {
+    return null;
+  }
+  const eventData = getEventDataRecord(notification.eventData);
+  const workspaceId =
+    typeof eventData?.workspaceId === "string" ? eventData.workspaceId : null;
+  if (!workspaceId) return null;
+  return {
+    workspaceId,
+    projectId:
+      typeof eventData?.projectId === "string" ? eventData.projectId : null,
+    pageId: notification.resourceId,
+  };
 }
 
 export type AnnouncementTarget = {

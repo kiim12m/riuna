@@ -4,11 +4,13 @@ import {
   getAnnouncementTarget,
   getNotificationTarget,
   getProjectTarget,
+  getWikiPageTarget,
 } from "@/lib/notification";
 import type { Notification } from "@/types/notification";
 
 /**
- * Abre a donde lleva una notificacion: su tarea, o el tablon de su aviso. La
+ * Abre a donde lleva una notificacion: su tarea, su pagina de la wiki o el
+ * tablon de su aviso. La
  * campana y la bandeja de «Mi panel» lo hacen igual, y por eso es uno.
  */
 export function useOpenNotification() {
@@ -31,6 +33,27 @@ export function useOpenNotification() {
           to: "/dashboard/workspace/$workspaceId/project/$projectId/board",
           params: project,
         });
+        return;
+      }
+
+      const wiki = getWikiPageTarget(notification);
+      if (wiki) {
+        if (wiki.projectId) {
+          navigate({
+            to: "/dashboard/workspace/$workspaceId/project/$projectId/wiki",
+            params: {
+              workspaceId: wiki.workspaceId,
+              projectId: wiki.projectId,
+            },
+            search: { page: wiki.pageId },
+          });
+        } else {
+          navigate({
+            to: "/dashboard/workspace/$workspaceId/wiki",
+            params: { workspaceId: wiki.workspaceId },
+            search: { page: wiki.pageId },
+          });
+        }
         return;
       }
 

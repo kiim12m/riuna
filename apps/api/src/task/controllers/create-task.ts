@@ -12,6 +12,7 @@ import {
   assertAssignableUser,
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
+import { syncTaskLinks } from "../../wiki/links";
 import { scheduleAfter } from "../schedule/reschedule";
 import { childTaskTreeFields, rootTaskTreeFields } from "../tree";
 import { assertValidTaskStatus } from "../validate-task-fields";
@@ -151,6 +152,10 @@ async function createTask({
 
   // Lo calculado de la tarea nueva y, si tiene estimacion, de su rama (ADR 090).
   await refreshFormulasAfter({ projectId, taskIds: [createdTask.id] });
+  // Las paginas de la wiki que enlaza su descripcion (ADR 092).
+  if (createdTask.description) {
+    await syncTaskLinks(createdTask.id, createdTask.description);
+  }
 
   await publishEvent("task.created", {
     ...createdTask,

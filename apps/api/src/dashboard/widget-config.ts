@@ -40,6 +40,21 @@ export const TABLE_WIDGET_ROWS = 20;
 export const WEEK_WIDGET_TASKS_PER_DAY = 4;
 
 /**
+ * Las ventanas de vencimiento de un widget: las cinco compartidas mas
+ * `thisWeek`, de mañana al final de la **semana natural** (ADR 093).
+ *
+ * `thisWeek` es solo de los paneles y no entra en `DUE_WINDOWS` a proposito.
+ * La `week` compartida es una ventana movil de siete dias que leen Mi trabajo,
+ * el Planificador y el reparto por `dueWindow`, y el `CASE` que etiqueta ese
+ * reparto no puede tener dos ramas que se solapen. La semana natural depende
+ * ademas del inicio de semana de quien mira, que solo llega a la lectura del
+ * panel.
+ */
+export const WIDGET_DUE_WINDOWS = [...DUE_WINDOWS, "thisWeek"] as const;
+
+export type WidgetDueWindow = (typeof WIDGET_DUE_WINDOWS)[number];
+
+/**
  * El tamano con el que nace cada tipo, en celdas de la rejilla de doce.
  *
  * Vive aqui y no en el `default()` de la columna porque el defecto de la base
@@ -86,11 +101,11 @@ export const widgetConfigSchema = v.object({
    *
    * Es una clave propia y no una condicion del filtro porque "hoy" es relativo:
    * un filtro guardado lleva fechas absolutas y al dia siguiente estaria
-   * mintiendo. Se compila con `dueWindowCondition`, el predicado sargable, y
+   * mintiendo. Se compila en `widgetPredicates` como predicado sargable, y
    * **no** entra en el ambito base de la lectura: es lo que distingue a cada
    * tarjeta dentro del barrido que comparten (`collapse-counts.ts`).
    */
-  dueWindow: v.optional(v.picklist(DUE_WINDOWS)),
+  dueWindow: v.optional(v.picklist(WIDGET_DUE_WINDOWS)),
   granularity: v.optional(v.picklist(GRANULARITIES)),
   /** Ventana de la tendencia, hacia atras desde hoy. */
   rangeDays: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(1095))),
@@ -102,6 +117,21 @@ type ResolvedWidget = Pick<
   AggregateRequest,
   "metric" | "groupBy" | "granularity"
 >;
+
+/**
+ * Las tarjetas cuya cifra es **un numero de tareas**: un recuento sin agrupar,
+ * de tareas o de completadas.
+ *
+ * Son las que entran en el barrido compartido (`collapse-counts.ts`) y las que
+ * se abren en lista al pulsarlas (`get-widget-tasks.ts`, ADR 093): detras de
+ * una cifra de horas, de estimado o de una proporcion no hay una lista que
+ * sume eso. La web lleva el espejo en `widget-labels.ts`.
+ */
+export function isTaskCount(type: WidgetType, config: WidgetConfig): boolean {
+  if (type !== "count" || config.groupBy) return false;
+  const metric = config.metric ?? "count";
+  return metric === "count" || metric === "doneCount";
+}
 
 /**
  * Que consulta corresponde a cada tipo, y que combinaciones no existen.

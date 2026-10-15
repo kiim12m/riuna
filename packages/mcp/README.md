@@ -123,6 +123,7 @@ For headless or sandboxed environments where opening a browser is impractical, s
 - Comments: `list_task_comments`, `create_task_comment`, `update_task_comment`, `delete_task_comment`
 - Labels: `list_workspace_labels`, `create_label`, `attach_label_to_task`, `detach_label_from_task`, `delete_label`
 - Task relations: `create_task_relation`, `get_task_relations`, `delete_task_relation`
+- Wiki: `list_wiki_pages`, `get_wiki_page`, `search_wiki`, `create_wiki_page`
 
 Call `list_project_columns` before setting a status: the column slugs it
 returns are the values `create_task` and `update_task_status` accept.

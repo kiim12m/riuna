@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import {
+  BookOpen,
   FileText,
   FolderKanban,
   Hash,
@@ -34,7 +35,7 @@ type SearchResultItem = {
   title: string;
   description?: string;
   content?: string;
-  type: "task" | "project" | "workspace" | "comment" | "activity";
+  type: "task" | "project" | "workspace" | "comment" | "activity" | "wiki_page";
   projectId?: string;
   workspaceId?: string;
   taskNumber?: number;
@@ -121,6 +122,25 @@ function SearchCommandMenu({ open, setOpen }: SearchCommandMenuProps) {
           });
         }
         break;
+      // Una pagina de la wiki (ADR 092), en la de su proyecto o en la del
+      // espacio.
+      case "wiki_page":
+        if (item.id && workspace?.id) {
+          if (item.projectId) {
+            navigate({
+              to: "/dashboard/workspace/$workspaceId/project/$projectId/wiki",
+              params: { workspaceId: workspace.id, projectId: item.projectId },
+              search: { page: item.id },
+            });
+          } else {
+            navigate({
+              to: "/dashboard/workspace/$workspaceId/wiki",
+              params: { workspaceId: workspace.id },
+              search: { page: item.id },
+            });
+          }
+        }
+        break;
       case "comment":
       case "activity":
         if (item.projectId && item.id && workspace?.id) {
@@ -149,6 +169,8 @@ function SearchCommandMenu({ open, setOpen }: SearchCommandMenuProps) {
         return MessageSquare;
       case "activity":
         return Zap;
+      case "wiki_page":
+        return BookOpen;
       default:
         return FileText;
     }
@@ -178,6 +200,8 @@ function SearchCommandMenu({ open, setOpen }: SearchCommandMenuProps) {
           return t("navigation:search.groups.comment");
         case "activity":
           return t("navigation:search.groups.activity");
+        case "wiki_page":
+          return t("navigation:search.groups.wiki");
         default:
           return t("navigation:search.groups.fallback");
       }

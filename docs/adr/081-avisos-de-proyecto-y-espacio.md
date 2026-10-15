@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-12 · **Estado:** aceptada
 
-**Contexto.** Punto 1.6 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 1.6 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 un tablón de anuncios. Hasta ahora, «el jueves cortan la luz» iba por chat o en una tarea que
 nadie tenía que hacer.
 

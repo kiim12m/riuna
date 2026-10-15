@@ -147,6 +147,9 @@ function CommandPalette() {
         to: "announcements",
         label: t("announcements:workspaceTitle"),
       },
+      // Tampoco la wiki del espacio (ADR 092): esto, la busqueda o la pestaña
+      // Wiki de cualquier proyecto.
+      { value: "wiki", to: "wiki", label: t("wiki:workspaceTitle") },
       // Los rituales solo se abren a peticion (ADR 054): un boton o esto.
       {
         value: "plan-day",

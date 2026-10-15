@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-13 · **Estado:** aceptada
 
-**Contexto.** Punto 3.3 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 3.3 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 agrupar proyectos bajo otro, como un cliente con varias obras, y ver el conjunto. Los proyectos de
 Riuna eran una lista plana. Las decisiones se tomaron preguntando (2026-10-13). La referencia
 visual es la pestaña «Proyectos» de [la maqueta](../design-previews/ideas-openproject.html).

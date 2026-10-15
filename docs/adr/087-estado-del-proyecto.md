@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-13 · **Estado:** aceptada
 
-**Contexto.** Punto 3.1 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 3.1 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 saber de un vistazo cómo va cada proyecto. Un proyecto de Riuna no tenía estado, fechas ni
 responsable. La lista de proyectos enseñaba un «estado» calculado a partir del progreso (sin
 empezar, en progreso, completado) que no decía si un proyecto iba bien. Las decisiones se tomaron

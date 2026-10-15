@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-12 · **Estado:** aceptada
 
-**Contexto.** Punto 1.3 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 1.3 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 un botón en la tarea que haga varias cosas a la vez, como «Enviar a revisión». El motor de
 automatizaciones (ADR 066 y 067) ya sabe condiciones y acciones; solo le faltaba un disparador
 que no venga de un evento.

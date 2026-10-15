@@ -24,6 +24,7 @@ import TaskSubtasks from "./task-subtasks";
 import TaskTime from "./task-time";
 import TaskTitle from "./task-title";
 import TaskTree from "./task-tree";
+import TaskWikiLinks from "./task-wiki-links";
 
 type TaskDetailsContentProps = {
   taskId: string | undefined;
@@ -111,8 +112,9 @@ export default function TaskDetailsContent({
         </div>
         <TaskTitle taskId={taskId} />
         {task && <TaskScheduleAlert task={task} />}
-        <TaskDescription taskId={taskId} />
+        <TaskDescription taskId={taskId} workspaceId={workspaceId} />
       </div>
+      <TaskWikiLinks taskId={taskId} workspaceId={workspaceId} />
       {showCustomFields && task && (
         <TaskCustomFields
           task={task}

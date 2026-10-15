@@ -2,7 +2,7 @@
 export const OTHER_BUCKET_KEY = "__other__";
 
 import type { TFunction } from "i18next";
-import type { WidgetGroupBy } from "@/fetchers/dashboard";
+import type { WidgetGroupBy, WidgetMetric } from "@/fetchers/dashboard";
 import { getPriorityLabel } from "@/lib/i18n/domain";
 
 export type KeyLabel = {
@@ -10,6 +10,20 @@ export type KeyLabel = {
   color?: string | null;
   icon?: string | null;
 };
+
+/**
+ * Si la cifra de una tarjeta es un numero de tareas, y por tanto se abre en
+ * lista. Espejo de `isTaskCount` en `dashboard/widget-config.ts` de la API, que
+ * es quien decide: un widget que no pase alli devuelve un 400.
+ */
+export function isTaskCount(
+  type: string,
+  config: { groupBy?: WidgetGroupBy; metric?: WidgetMetric },
+): boolean {
+  if (type !== "count" || config.groupBy) return false;
+  const metric = config.metric ?? "count";
+  return metric === "count" || metric === "doneCount";
+}
 
 /**
  * La agrupacion con la que el servidor calculo de verdad los cubos.

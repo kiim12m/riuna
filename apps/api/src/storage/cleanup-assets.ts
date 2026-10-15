@@ -1,6 +1,7 @@
 import { and, eq, inArray, like } from "drizzle-orm";
 import db from "../database";
 import { activityTable, assetTable, taskTable } from "../database/schema";
+import type { DbOrTx } from "../task/controllers/assignees";
 import { log } from "../utils/log";
 import { deleteS3Object } from "./s3";
 
@@ -129,6 +130,23 @@ export async function getTaskAssetKeys(taskId: string): Promise<string[]> {
     .where(eq(assetTable.taskId, taskId));
 
   return assets.map((a) => a.objectKey);
+}
+
+/**
+ * Los adjuntos de unas paginas de la wiki (ADR 092). Al guardar una pagina no
+ * se borra ninguno: sus versiones anteriores los siguen usando, y restaurarlas
+ * los necesita. Se van cuando se va la pagina.
+ */
+export async function getWikiPageAssetKeys(
+  pageIds: string[],
+  executor: DbOrTx = db,
+): Promise<string[]> {
+  if (pageIds.length === 0) return [];
+  const assets = await executor
+    .select({ objectKey: assetTable.objectKey })
+    .from(assetTable)
+    .where(inArray(assetTable.wikiPageId, pageIds));
+  return assets.map((asset) => asset.objectKey);
 }
 
 export async function deleteS3Keys(

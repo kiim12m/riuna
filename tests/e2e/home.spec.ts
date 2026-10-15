@@ -1,5 +1,14 @@
 import { API_URL, createTask, expect, test } from "./fixtures";
 
+/** `yyyy-mm-dd` en hora local, como lo lee la API (ADR 049). */
+function localDay(offsetDays: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + offsetDays);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
 /**
  * El panel personal: la pantalla que funde "Mi trabajo" y "Panel".
  *
@@ -46,6 +55,66 @@ test.describe("Panel personal", () => {
     await expect(
       page.getByRole("heading", { name: "Tareas pendientes" }),
     ).toHaveCount(1);
+  });
+
+  // «Mi semana» es el plan, no el vencimiento (ADR 093). El caso que la
+  // origino: la tira salia vacia porque solo miraba `due_date`, y lo que la
+  // persona se habia puesto en el Planificador no aparecia en el panel.
+  test("shows in «Mi semana» what was planned, not what falls due", async ({
+    page,
+    riuna,
+  }) => {
+    const hoy = localDay(0);
+    const enDiezDias = new Date(Date.now() + 10 * 86_400_000).toISOString();
+
+    const planificada = await createTask(riuna, "Planificada para hoy", {
+      dueDate: enDiezDias,
+    });
+    const soloVence = await createTask(riuna, "Solo vence hoy", {
+      dueDate: new Date().toISOString(),
+    });
+    for (const id of [planificada, soloVence]) {
+      await riuna.api("put", `/api/task/assignee/${id}`, {
+        userId: riuna.userId,
+      });
+    }
+    await riuna.api(
+      "put",
+      `/api/planner/${planificada}?workspaceId=${riuna.workspaceId}`,
+      { plannedDate: hoy },
+    );
+
+    await page.goto(`/dashboard/workspace/${riuna.workspaceId}/home`);
+
+    const semana = page.getByRole("region", { name: "Mi semana" });
+    await expect(semana.getByText("Planificada para hoy")).toBeVisible();
+    await expect(semana.getByText("Solo vence hoy")).toHaveCount(0);
+  });
+
+  // Pulsar una cifra abre las tareas que cuenta, y desde ahi se abre la tarea
+  // (ADR 093). La lista sale de los mismos predicados que la cifra.
+  test("opens the tasks behind a figure", async ({ page, riuna }) => {
+    for (const titulo of ["Primera pendiente", "Segunda pendiente"]) {
+      const id = await createTask(riuna, titulo);
+      await riuna.api("put", `/api/task/assignee/${id}`, {
+        userId: riuna.userId,
+      });
+    }
+
+    await page.goto(`/dashboard/workspace/${riuna.workspaceId}/home`);
+
+    await page
+      // Exacto: «Tareas pendientes» tambien contiene la palabra.
+      .getByRole("region", { name: "Pendientes", exact: true })
+      .getByRole("button", { name: "Ver las 2 tareas de «Pendientes»" })
+      .click();
+
+    const lista = page.getByRole("dialog", { name: "Pendientes" });
+    await expect(lista.getByText("Primera pendiente")).toBeVisible();
+    await expect(lista.getByText("Segunda pendiente")).toBeVisible();
+
+    await lista.getByText("Segunda pendiente").click();
+    await expect(page).toHaveURL(/\/task\//);
   });
 
   test("redirects the two routes it replaced", async ({ page, riuna }) => {

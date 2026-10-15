@@ -659,6 +659,20 @@
 			"when": 1791954315721,
 			"tag": "0093_formula_fields",
 			"breakpoints": true
+		},
+		{
+			"idx": 94,
+			"version": "7",
+			"when": 1792017549751,
+			"tag": "0094_widget_this_week",
+			"breakpoints": true
+		},
+		{
+			"idx": 95,
+			"version": "7",
+			"when": 1792018402469,
+			"tag": "0095_wiki",
+			"breakpoints": true
 		}
 	]
 }

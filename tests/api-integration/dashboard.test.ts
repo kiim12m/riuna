@@ -6,6 +6,7 @@ import { createApp } from "../../apps/api/src/index";
 import { mockAnonymousSession, mockAuthenticatedSession } from "./helpers/auth";
 import { resetTestDatabase } from "./helpers/database";
 import {
+  addWorkspaceMember,
   createProjectFixture,
   createWorkspaceMember,
   taskTreeValues,
@@ -573,9 +574,11 @@ describe("API integration: personal dashboards", () => {
       userId: string,
       dueDates: Array<Date | null>,
     ) {
+      const ids: string[] = [];
       let number = 1;
       for (const dueDate of dueDates) {
         const tree = taskTreeValues();
+        ids.push(tree.id);
         await db.insert(schema.taskTable).values({
           ...tree,
           projectId,
@@ -592,6 +595,22 @@ describe("API integration: personal dashboards", () => {
           .values({ taskId: tree.id, userId });
         number += 1;
       }
+      return ids;
+    }
+
+    /** Medianoche del servidor, `days` dias despues de hoy. */
+    function serverMidnight(days: number) {
+      const date = new Date();
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() + days);
+      return date;
+    }
+
+    /** Mediodia del servidor, lejos de las fronteras de dia. */
+    function serverNoon(days: number) {
+      const date = serverMidnight(days);
+      date.setHours(12);
+      return date;
     }
 
     /**
@@ -688,9 +707,20 @@ describe("API integration: personal dashboards", () => {
       expect(serial.get(overdue)).toBe(collapsed.get(overdue));
     });
 
-    it("lays out seven days from the week start the client asks for", async () => {
+    /**
+     * La tira es el plan, no el vencimiento (ADR 093).
+     *
+     * El caso que la origino: una tarea que vence esta semana y nadie ha
+     * planificado no tiene que salir, y una planificada para el miercoles que
+     * vence la semana que viene tiene que salir el miercoles.
+     */
+    it("lays out what the viewer planned for each day of the week", async () => {
       const member = await createWorkspaceMember({ role: "member" });
+      const other = await addWorkspaceMember(member.workspace.id, "member");
       const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const { project: archived } = await createProjectFixture({
         workspaceId: member.workspace.id,
       });
       const dashboard = await seedDashboard(
@@ -698,9 +728,41 @@ describe("API integration: personal dashboards", () => {
         member.user.id,
       );
 
-      const today = new Date();
-      today.setHours(12, 0, 0, 0);
-      await seedTasks(project.id, member.user.id, [today]);
+      // El lunes de esta semana, con `weekStartsOn=1`.
+      const monday = serverMidnight(-((new Date().getDay() + 6) % 7));
+      const wednesday = new Date(monday);
+      wednesday.setDate(wednesday.getDate() + 2);
+
+      const [planned, dueOnly, othersPlan, done] = await seedTasks(
+        project.id,
+        member.user.id,
+        [serverNoon(10), serverNoon(0), null, null],
+      );
+      const [inArchived] = await seedTasks(archived.id, member.user.id, [null]);
+      await db
+        .update(schema.taskTable)
+        .set({ completedAt: new Date() })
+        .where(eq(schema.taskTable.id, done));
+      await db
+        .update(schema.projectTable)
+        .set({ archivedAt: new Date() })
+        .where(eq(schema.projectTable.id, archived.id));
+
+      const plan = (userId: string, taskId: string, position: number) => ({
+        workspaceId: member.workspace.id,
+        userId,
+        taskId,
+        plannedDate: wednesday,
+        position,
+      });
+      await db
+        .insert(schema.personalPlanEntryTable)
+        .values([
+          plan(member.user.id, done, 0),
+          plan(member.user.id, planned, 1),
+          plan(member.user.id, inArchived, 2),
+          plan(other.id, othersPlan, 0),
+        ]);
 
       mockAuthenticatedSession(member.user);
       const { app } = createApp();
@@ -710,7 +772,8 @@ describe("API integration: personal dashboards", () => {
         json({
           type: "week",
           title: "Mi semana",
-          config: { scope: "assigned" },
+          // Un ambito guardado no cambia nada: el plan ya es de quien mira.
+          config: { scope: "team" },
         }),
       );
       expect(created.status).toBe(200);
@@ -726,7 +789,11 @@ describe("API integration: personal dashboards", () => {
       if (!entry || "error" in entry) throw new Error("week widget failed");
 
       const week = entry.data.week as {
-        days: Array<{ day: string; tasks: unknown[]; overflow: number }>;
+        days: Array<{
+          day: string;
+          tasks: Array<{ id: string; isDone: boolean }>;
+          overflow: number;
+        }>;
       };
 
       // Siempre siete columnas, tenga tareas o no cada dia: una semana con
@@ -734,8 +801,223 @@ describe("API integration: personal dashboards", () => {
       expect(week.days).toHaveLength(7);
       expect(new Date(`${week.days[0].day}T00:00:00`).getDay()).toBe(1);
 
-      const placed = week.days.flatMap((day) => day.tasks);
-      expect(placed).toHaveLength(1);
+      // Solo el miercoles, en el orden del Planificador, con la hecha tachada.
+      // Ni la que solo vence, ni el plan de otra persona, ni lo archivado.
+      const [wednesdayColumn] = week.days.filter((day) => day.tasks.length);
+      expect(week.days.indexOf(wednesdayColumn)).toBe(2);
+      expect(wednesdayColumn.tasks.map((task) => task.id)).toEqual([
+        done,
+        planned,
+      ]);
+      expect(wednesdayColumn.tasks[0].isDone).toBe(true);
+      expect(wednesdayColumn.overflow).toBe(0);
+      expect(
+        week.days.flatMap((day) => day.tasks).map((task) => task.id),
+      ).not.toContain(dueOnly);
+    });
+
+    /**
+     * "Vencen esta semana" cuenta hasta el final de la semana **natural**
+     * (ADR 093), no los siete dias moviles de `week`.
+     *
+     * La semana se pide empezando ayer para que el resultado no dependa del dia
+     * en que corra la prueba: su ultimo dia es dentro de cinco, asi que la
+     * tarea de dentro de seis la cuenta `week` y no `thisWeek`.
+     */
+    it("counts what is due for the rest of the calendar week", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const dashboard = await seedDashboard(
+        member.workspace.id,
+        member.user.id,
+      );
+
+      // Hoy (ya lo cuenta "Vencen hoy"), manana, el ultimo dia de la semana y
+      // el primero de la siguiente.
+      await seedTasks(project.id, member.user.id, [
+        serverNoon(0),
+        serverNoon(1),
+        serverNoon(5),
+        serverNoon(6),
+      ]);
+
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const add = async (title: string, dueWindow: string) => {
+        const response = await app.request(
+          `/api/dashboard/${dashboard.id}/widget`,
+          json({
+            type: "count",
+            title,
+            config: { scope: "assigned", dueWindow },
+          }),
+        );
+        expect(response.status).toBe(200);
+        return ((await response.json()) as { id: string }).id;
+      };
+
+      const thisWeek = await add("Vencen esta semana", "thisWeek");
+      const rolling = await add("Proximos siete dias", "week");
+
+      const weekStartsOn = (new Date().getDay() + 6) % 7;
+      const read = async () => {
+        const response = await app.request(
+          `/api/dashboard/${dashboard.id}/data?weekStartsOn=${weekStartsOn}`,
+          { method: "POST" },
+        );
+        expect(response.status).toBe(200);
+        const body = (await response.json()) as { widgets: WidgetPayload[] };
+        const values = new Map<string, number>();
+        for (const entry of body.widgets) {
+          if ("error" in entry) throw new Error(entry.error);
+          const buckets = entry.data.buckets as Array<{ value: number }>;
+          values.set(entry.id, buckets[0]?.value ?? 0);
+        }
+        return values;
+      };
+
+      // Dos tarjetas del mismo ambito: van por el barrido colapsado.
+      const collapsed = await read();
+      expect(collapsed.get(thisWeek)).toBe(2);
+      expect(collapsed.get(rolling)).toBe(3);
+
+      // Sola, la misma pregunta va por `aggregate()` y tiene que dar lo mismo.
+      await app.request(`/api/dashboard/widget/${rolling}`, {
+        method: "DELETE",
+      });
+      const serial = await read();
+      expect(serial.get(thisWeek)).toBe(2);
+    });
+
+    /**
+     * Pulsar una cifra abre sus tareas, y la lista tiene que ser **exactamente**
+     * lo que cuenta la cifra (ADR 093). Se comprueba con la distribucion de
+     * partida de verdad —sus ventanas, sus filtros, `doneCount` con
+     * `rangeDays`—, no con tarjetas hechas a medida de la prueba.
+     */
+    it("lists exactly the tasks each count card counts", async () => {
+      const member = await createWorkspaceMember({ role: "member" });
+      const other = await addWorkspaceMember(member.workspace.id, "member");
+      const { project } = await createProjectFixture({
+        workspaceId: member.workspace.id,
+      });
+      const dashboard = await seedDashboard(
+        member.workspace.id,
+        member.user.id,
+      );
+
+      // Vencida, hoy, manana, la semana que viene, sin fecha, una urgente y
+      // una cerrada hoy: material para cada tarjeta de la fila de arriba.
+      const [, , , , , urgent, closed] = await seedTasks(
+        project.id,
+        member.user.id,
+        [
+          serverNoon(-1),
+          serverNoon(0),
+          serverNoon(1),
+          serverNoon(9),
+          null,
+          null,
+          serverNoon(-2),
+        ],
+      );
+      await db
+        .update(schema.taskTable)
+        .set({ priority: "urgent" })
+        .where(eq(schema.taskTable.id, urgent));
+      await db
+        .update(schema.taskTable)
+        .set({ completedAt: new Date() })
+        .where(eq(schema.taskTable.id, closed));
+
+      mockAuthenticatedSession(member.user);
+      const { app } = createApp();
+
+      const reset = await app.request(
+        `/api/dashboard/${dashboard.id}/reset-layout`,
+        { method: "POST" },
+      );
+      expect(reset.status).toBe(200);
+
+      const panels = (await (
+        await app.request(`/api/dashboard?workspaceId=${member.workspace.id}`)
+      ).json()) as Array<{
+        id: string;
+        widgets: Array<{ id: string; title: string; type: string }>;
+      }>;
+      const widgets =
+        panels.find((panel) => panel.id === dashboard.id)?.widgets ?? [];
+
+      const data = (await (
+        await app.request(
+          `/api/dashboard/${dashboard.id}/data?weekStartsOn=1`,
+          { method: "POST" },
+        )
+      ).json()) as { widgets: WidgetPayload[] };
+      const figures = new Map<string, number>();
+      for (const entry of data.widgets) {
+        if ("error" in entry) throw new Error(entry.error);
+        const buckets = entry.data.buckets as
+          | Array<{ value: number }>
+          | undefined;
+        figures.set(entry.id, buckets?.[0]?.value ?? 0);
+      }
+
+      const list = (widgetId: string) =>
+        app.request(`/api/dashboard/widget/${widgetId}/tasks?weekStartsOn=1`);
+
+      const counts = widgets.filter((widget) => widget.type === "count");
+      expect(counts).toHaveLength(7);
+
+      for (const widget of counts) {
+        const response = await list(widget.id);
+        expect(response.status, widget.title).toBe(200);
+        const page = (await response.json()) as {
+          tasks: Array<{ id: string }>;
+          hasMore: boolean;
+        };
+        expect(page.hasMore).toBe(false);
+        expect(page.tasks.length, widget.title).toBe(figures.get(widget.id));
+      }
+
+      // Que la comparacion no sea cero contra cero.
+      const byTitle = new Map(counts.map((widget) => [widget.title, widget]));
+      const titled = async (title: string) => {
+        const widget = byTitle.get(title);
+        if (!widget) throw new Error(`missing ${title}`);
+        const page = (await (await list(widget.id)).json()) as {
+          tasks: Array<{ id: string }>;
+        };
+        return page.tasks.map((task) => task.id);
+      };
+      expect(await titled("Alta prioridad")).toEqual([urgent]);
+      expect(await titled("Cerradas · 7 días")).toEqual([closed]);
+      expect((await titled("Pendientes")).length).toBe(6);
+
+      // Detras de una tira o de una cifra de horas no hay una lista que sume eso.
+      for (const widget of widgets.filter(
+        (item) => item.type === "week" || item.type === "time",
+      )) {
+        expect((await list(widget.id)).status, widget.title).toBe(400);
+      }
+
+      // Un panel sin compartir no se lee desde fuera, y compartido si.
+      const anyCount = counts[0];
+      if (!anyCount) throw new Error("no count widget");
+      mockAuthenticatedSession(other);
+      expect((await list(anyCount.id)).status).toBe(403);
+
+      mockAuthenticatedSession(member.user);
+      await app.request(`/api/dashboard/${dashboard.id}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ isShared: true }),
+      });
+      mockAuthenticatedSession(other);
+      expect((await list(anyCount.id)).status).toBe(200);
     });
   });
 

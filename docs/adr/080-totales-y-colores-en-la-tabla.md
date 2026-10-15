@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-12 · **Estado:** aceptada
 
-**Contexto.** Punto 1.5 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 1.5 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 una fila de totales y colorear filas. La Tabla recibe todas las tareas del filtro, sin paginar,
 pero no trae el tiempo registrado de cada tarea: solo el resumen de las ramas.
 
