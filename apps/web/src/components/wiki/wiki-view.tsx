@@ -1,6 +1,14 @@
-import { BookOpen } from "lucide-react";
+import {
+  BookOpen,
+  type LucideIcon,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightOpen,
+  Plus,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -12,7 +20,9 @@ import type { WikiPageSummary } from "@/fetchers/wiki";
 import { useWikiMutations } from "@/hooks/mutations/wiki/use-wiki-mutations";
 import { useWikiPage, useWikiPages } from "@/hooks/queries/wiki/use-wiki";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { cn } from "@/lib/cn";
 import { toast } from "@/lib/toast";
+import { useUserPreferencesStore } from "@/store/user-preferences";
 import {
   CreatePageDialog,
   DeletePageDialog,
@@ -25,11 +35,50 @@ import { buildWikiTree, descendantIds } from "./wiki-tree";
 
 type Scope = { projectId: string | null; parentId: string | null };
 
+// Cadenas enteras: Tailwind solo genera las clases que lee tal cual. La clave
+// es «arbol abierto-historial abierto»; minimizado, cada lateral es una franja.
+const COLUMNS: Record<`${boolean}-${boolean}`, string> = {
+  "true-true":
+    "md:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_17rem]",
+  "true-false":
+    "md:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_2.5rem]",
+  "false-true":
+    "md:grid-cols-[2.5rem_minmax(0,1fr)] xl:grid-cols-[2.5rem_minmax(0,1fr)_17rem]",
+  "false-false":
+    "md:grid-cols-[2.5rem_minmax(0,1fr)] xl:grid-cols-[2.5rem_minmax(0,1fr)_2.5rem]",
+};
+
+/** Un lateral minimizado: la franja con el boton que lo vuelve a abrir. */
+function CollapsedRail({
+  icon: Icon,
+  label,
+  onOpen,
+}: {
+  icon: LucideIcon;
+  label: string;
+  onOpen: () => void;
+}) {
+  return (
+    <div className="flex justify-center pt-3">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label={label}
+        title={label}
+        onClick={onOpen}
+      >
+        <Icon className="size-4" />
+      </Button>
+    </div>
+  );
+}
+
 /**
  * La wiki de paginas (ADR 092): el arbol a la izquierda, la pagina en medio y
- * su historial a la derecha. Dentro de un proyecto enseña las paginas del
- * espacio y las suyas; fuera, solo las del espacio. Editar pide lo mismo que
- * editar tareas.
+ * su historial a la derecha. Los dos laterales se minimizan, empiezan
+ * minimizados y este navegador recuerda como se dejaron. Dentro de un proyecto
+ * enseña las paginas del espacio y las suyas; fuera, solo las del espacio.
+ * Editar pide lo mismo que editar tareas.
  */
 export function WikiView({
   workspaceId,
@@ -55,7 +104,12 @@ export function WikiView({
   const [moving, setMoving] = useState<WikiPageSummary | null>(null);
   const [deleting, setDeleting] = useState<WikiPageSummary | null>(null);
   const [editOnOpen, setEditOnOpen] = useState<string | null>(null);
-  const [showHistory, setShowHistory] = useState(false);
+  const treeOpen = useUserPreferencesStore((state) => state.wikiTreeOpen);
+  const setTreeOpen = useUserPreferencesStore((state) => state.setWikiTreeOpen);
+  const historyOpen = useUserPreferencesStore((state) => state.wikiHistoryOpen);
+  const setHistoryOpen = useUserPreferencesStore(
+    (state) => state.setWikiHistoryOpen,
+  );
 
   const groups = useMemo<WikiGroup[]>(() => {
     const workspacePages = pages.filter((page) => !page.projectId);
@@ -162,17 +216,47 @@ export function WikiView({
     pages.find((candidate) => candidate.id === page.id) ?? null;
 
   return (
-    <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-[15rem_minmax(0,1fr)] xl:grid-cols-[15rem_minmax(0,1fr)_17rem]">
+    <div
+      className={cn(
+        "grid h-full min-h-0 grid-cols-1",
+        COLUMNS[`${treeOpen}-${historyOpen}`],
+      )}
+    >
       <div className="hidden min-h-0 border-border/80 border-r bg-muted/30 md:flex md:flex-col">
-        <WikiSidebar
-          groups={groups}
-          selectedId={pageId}
-          canEdit={canEdit}
-          onSelect={(id) => onOpenPage(id)}
-          onCreate={setCreating}
-          onMove={setMoving}
-          onDelete={setDeleting}
-        />
+        {treeOpen ? (
+          <>
+            <div className="flex items-center justify-between gap-2 px-3 pt-3">
+              <h2 className="flex items-center gap-1.5 font-medium text-sm">
+                <BookOpen className="size-4 text-muted-foreground" />
+                {t("wiki:tree.label")}
+              </h2>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={t("wiki:tree.hide")}
+                title={t("wiki:tree.hide")}
+                onClick={() => setTreeOpen(false)}
+              >
+                <PanelLeftClose className="size-4" />
+              </Button>
+            </div>
+            <WikiSidebar
+              groups={groups}
+              selectedId={pageId}
+              canEdit={canEdit}
+              onSelect={(id) => onOpenPage(id)}
+              onCreate={setCreating}
+              onMove={setMoving}
+              onDelete={setDeleting}
+            />
+          </>
+        ) : (
+          <CollapsedRail
+            icon={PanelLeftOpen}
+            label={t("wiki:tree.show")}
+            onOpen={() => setTreeOpen(true)}
+          />
+        )}
       </div>
 
       <div className="flex min-h-0 min-w-0 flex-col overflow-y-auto">
@@ -224,8 +308,8 @@ export function WikiView({
             pageId={pageId}
             canEdit={canEdit}
             startEditing={editOnOpen === pageId}
-            showHistory={showHistory}
-            onToggleHistory={() => setShowHistory((value) => !value)}
+            showHistory={historyOpen}
+            onToggleHistory={() => setHistoryOpen(!historyOpen)}
             onNewSubpage={(page) =>
               setCreating({ projectId: page.projectId, parentId: page.id })
             }
@@ -238,11 +322,24 @@ export function WikiView({
             <p className="text-sm">
               {isLoading ? t("wiki:page.loading") : t("wiki:empty")}
             </p>
+            {/* Con el arbol minimizado, la primera pagina se crea desde aqui;
+                en el movil ya esta el boton de arriba. */}
+            {!isLoading && canEdit && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="hidden md:inline-flex"
+                onClick={() => setCreating({ projectId, parentId: null })}
+              >
+                <Plus className="size-3.5" />
+                {t("wiki:tree.newPage")}
+              </Button>
+            )}
           </div>
         )}
 
         {/* Por debajo de `xl` el historial va debajo de la pagina. */}
-        {openPage && showHistory && (
+        {openPage && historyOpen && (
           <div className="border-border/80 border-t xl:hidden">
             <WikiHistory
               workspaceId={workspaceId}
@@ -250,21 +347,30 @@ export function WikiView({
               canEdit={canEdit}
               restoring={restore.isPending}
               onRestore={handleRestore}
+              onHide={() => setHistoryOpen(false)}
             />
           </div>
         )}
       </div>
 
       <div className="hidden min-h-0 border-border/80 border-l xl:flex xl:flex-col">
-        {openPage && (
-          <WikiHistory
-            workspaceId={workspaceId}
-            page={openPage}
-            canEdit={canEdit}
-            restoring={restore.isPending}
-            onRestore={handleRestore}
-          />
-        )}
+        {openPage &&
+          (historyOpen ? (
+            <WikiHistory
+              workspaceId={workspaceId}
+              page={openPage}
+              canEdit={canEdit}
+              restoring={restore.isPending}
+              onRestore={handleRestore}
+              onHide={() => setHistoryOpen(false)}
+            />
+          ) : (
+            <CollapsedRail
+              icon={PanelRightOpen}
+              label={t("wiki:history.show")}
+              onOpen={() => setHistoryOpen(true)}
+            />
+          ))}
       </div>
 
       <CreatePageDialog

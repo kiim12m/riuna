@@ -161,7 +161,9 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
     qué tareas la enlazan, y la tarea qué páginas;
   - al borrar una página con subpáginas se elige entre borrar la rama entera
     o subir sus hijas un nivel;
-  - mencionar a alguien le avisa una sola vez por página.
+  - mencionar a alguien le avisa una sola vez por página;
+  - los laterales «Páginas» e «Historial» se minimizan a una franja; empiezan
+    minimizados y cada navegador recuerda cómo se dejaron.
 
 ## 4. Tareas
 

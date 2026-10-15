@@ -43,6 +43,12 @@ type UserPreferencesStore = {
 
   weekStartsOn: WeekStartDay;
   setWeekStartsOn: (weekStartsOn: WeekStartDay) => void;
+
+  // Los laterales de la wiki: de este navegador, no viajan con la cuenta.
+  wikiTreeOpen: boolean;
+  setWikiTreeOpen: (open: boolean) => void;
+  wikiHistoryOpen: boolean;
+  setWikiHistoryOpen: (open: boolean) => void;
 };
 
 export const useUserPreferencesStore = create<UserPreferencesStore>()(
@@ -115,6 +121,11 @@ export const useUserPreferencesStore = create<UserPreferencesStore>()(
 
       weekStartsOn: 0,
       setWeekStartsOn: (weekStartsOn) => set({ weekStartsOn }),
+
+      wikiTreeOpen: false,
+      setWikiTreeOpen: (open) => set({ wikiTreeOpen: open }),
+      wikiHistoryOpen: false,
+      setWikiHistoryOpen: (open) => set({ wikiHistoryOpen: open }),
     }),
     {
       name: "user-preferences",

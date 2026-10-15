@@ -1,4 +1,4 @@
-import { History, RotateCcw } from "lucide-react";
+import { History, PanelRightClose, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -50,12 +50,14 @@ export function WikiHistory({
   canEdit,
   restoring,
   onRestore,
+  onHide,
 }: {
   workspaceId: string;
   page: { id: string; version: number };
   canEdit: boolean;
   restoring: boolean;
   onRestore: (version: number) => void;
+  onHide?: () => void;
 }) {
   const { t } = useTranslation();
   const { data: versions = [] } = useWikiVersions(workspaceId, page.id);
@@ -78,10 +80,23 @@ export function WikiHistory({
       className="flex min-h-0 flex-col gap-3 overflow-y-auto p-3"
       aria-label={t("wiki:history.title")}
     >
-      <h2 className="flex items-center gap-1.5 font-medium text-sm">
-        <History className="size-4 text-muted-foreground" />
-        {t("wiki:history.title")}
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="flex items-center gap-1.5 font-medium text-sm">
+          <History className="size-4 text-muted-foreground" />
+          {t("wiki:history.title")}
+        </h2>
+        {onHide && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={t("wiki:history.hide")}
+            title={t("wiki:history.hide")}
+            onClick={onHide}
+          >
+            <PanelRightClose className="size-4" />
+          </Button>
+        )}
+      </div>
       <ol className="space-y-1" data-testid="wiki-versions">
         {versions.map((version) => (
           <li key={version.version}>
