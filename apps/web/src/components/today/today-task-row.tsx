@@ -20,6 +20,9 @@ type TodayTaskRowProps = {
   estimate: number | null;
   /** Ausente: la fila no ancla una hora -vencido sin planificar, hecha-. */
   startMinute?: number | null;
+  /** Reserva el hueco de la hora aunque esta fila no tenga: con alguna hora
+   * en la lista, los titulos de todas las filas empiezan a la misma altura. */
+  timeSlot?: boolean;
   /** Ausente: nada que restar de la estimacion. */
   loggedSeconds?: number;
   running: boolean;
@@ -60,6 +63,7 @@ export function TodayTaskRow({
   projectIcon,
   estimate,
   startMinute,
+  timeSlot,
   loggedSeconds,
   running,
   onToggleTimer,
@@ -101,9 +105,9 @@ export function TodayTaskRow({
         disabled={isDone}
       />
 
-      {startMinute != null && (
-        <span className="shrink-0 font-mono text-meta text-muted-foreground tabular-nums">
-          {fromMinutes(startMinute)}
+      {(startMinute != null || timeSlot) && (
+        <span className="w-[5ch] shrink-0 font-mono text-meta text-muted-foreground tabular-nums">
+          {startMinute != null && fromMinutes(startMinute)}
         </span>
       )}
 
@@ -142,6 +146,22 @@ export function TodayTaskRow({
         </button>
 
         <div className="flex items-center gap-2 empty:hidden sm:contents">
+          {/* La accion va antes que las horas: aunque no se vea hasta pasar el
+           * raton, ocupa su sitio, y detras empujaba las horas fuera de la
+           * columna de las demas filas. */}
+          {action && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                action.onClick();
+              }}
+              className="shrink-0 rounded px-1.5 py-0.5 text-label text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100 touch:opacity-100"
+            >
+              {action.label}
+            </button>
+          )}
+
           {onEstimateChange ? (
             <InlineEstimate
               estimate={estimate}
@@ -165,19 +185,6 @@ export function TodayTaskRow({
               {formatDuration(loggedSeconds, i18n.language)}
             </span>
           ) : null}
-
-          {action && (
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                action.onClick();
-              }}
-              className="shrink-0 rounded px-1.5 py-0.5 text-label text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100 touch:opacity-100"
-            >
-              {action.label}
-            </button>
-          )}
         </div>
       </div>
 

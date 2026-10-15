@@ -244,6 +244,8 @@ function TodayComponent() {
   const restPlanned = planned.filter((entry) => entry.keyRank === null);
   const urgent = data?.urgent ?? [];
   const done = data?.done ?? [];
+  // Solo el plan ancla horas; con alguna, todas las filas guardan su hueco.
+  const timeSlot = planned.some((entry) => entry.startMinute != null);
   const isEmpty =
     !isPending &&
     previous.length === 0 &&
@@ -274,6 +276,7 @@ function TodayComponent() {
       >
         {(menu) => (
           <TodayTaskRow
+            timeSlot={timeSlot}
             shaded={index % 2 === 0}
             selected={task.id === peekId}
             id={task.id}
@@ -456,6 +459,7 @@ function TodayComponent() {
                           >
                             {(menu) => (
                               <TodayTaskRow
+                                timeSlot={timeSlot}
                                 shaded={index % 2 === 0}
                                 selected={task.id === peekId}
                                 id={task.id}
@@ -550,6 +554,7 @@ function TodayComponent() {
                         >
                           {(menu) => (
                             <TodayTaskRow
+                              timeSlot={timeSlot}
                               shaded={index % 2 === 0}
                               selected={task.id === peekId}
                               id={task.id}
@@ -607,6 +612,7 @@ function TodayComponent() {
                           >
                             {(menu) => (
                               <TodayTaskRow
+                                timeSlot={timeSlot}
                                 shaded={index % 2 === 0}
                                 selected={task.id === peekId}
                                 id={task.id}
