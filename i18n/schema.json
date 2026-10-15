@@ -14742,6 +14742,9 @@
 				"hint": {
 					"type": "string"
 				},
+				"help": {
+					"type": "string"
+				},
 				"preview": {
 					"type": "string"
 				},
@@ -14764,6 +14767,7 @@
 				"dialogDescription",
 				"placeholder",
 				"hint",
+				"help",
 				"preview",
 				"due",
 				"captured",
