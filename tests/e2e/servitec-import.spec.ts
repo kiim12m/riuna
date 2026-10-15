@@ -87,3 +87,19 @@ test("importa la hoja de SERVITEC creando el proyecto que falta", async ({
   );
   expect(projects.map((item) => item.name)).toContain("Bauhaus Torrevieja");
 });
+
+test("exportar el cuadro del espacio cierra el aviso de carga", async ({
+  page,
+  riuna,
+}) => {
+  await page.goto(
+    `/dashboard/workspace/${riuna.workspaceId}/admin/workspace/general`,
+  );
+  const download = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Exportar", exact: true })
+    .click({ timeout: 30_000 });
+  expect((await download).suggestedFilename()).toMatch(/\.xlsx$/);
+  await expect(page.getByText("Tareas exportadas correctamente")).toBeVisible();
+  await expect(page.getByText("Exportando tareas...")).toBeHidden();
+});

@@ -26,8 +26,10 @@ export function TasksImportExport({ project }: TasksImportExportProps) {
   // El JSON es el respaldo heredado de Kaneo y sigue ahi: sirve para
   // reimportar un proyecto entero tal cual, sin mapeo.
   const handleExportJson = async () => {
+    const loadingToast = toast.loading(
+      t("settings:tasksImportExport.exporting"),
+    );
     try {
-      toast.loading(t("settings:tasksImportExport.exporting"));
       const exportData = await exportJson(project.id);
 
       saveAs(
@@ -37,18 +39,20 @@ export function TasksImportExport({ project }: TasksImportExportProps) {
         `${project.slug}-tasks-export.json`,
       );
 
-      toast.dismiss();
+      toast.dismiss(loadingToast);
       toast.success(t("settings:tasksImportExport.exportSuccess"));
     } catch (error) {
-      toast.dismiss();
+      toast.dismiss(loadingToast);
       toast.error(t("settings:tasksImportExport.exportError"));
       console.error(error);
     }
   };
 
   const handleExportSheet = async (format: SheetFormat) => {
+    const loadingToast = toast.loading(
+      t("settings:tasksImportExport.exporting"),
+    );
     try {
-      toast.loading(t("settings:tasksImportExport.exporting"));
       const { blob, filename } = await exportSheet({
         projectId: project.id,
         format,
@@ -56,10 +60,10 @@ export function TasksImportExport({ project }: TasksImportExportProps) {
 
       saveAs(blob, filename);
 
-      toast.dismiss();
+      toast.dismiss(loadingToast);
       toast.success(t("settings:tasksImportExport.exportSuccess"));
     } catch (error) {
-      toast.dismiss();
+      toast.dismiss(loadingToast);
       toast.error(t("settings:tasksImportExport.exportError"), {
         description: error instanceof Error ? error.message : undefined,
       });
