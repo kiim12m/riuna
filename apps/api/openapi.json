@@ -20404,7 +20404,8 @@
                 "projects",
                 "workspaces",
                 "comments",
-                "activities"
+                "activities",
+                "wiki"
               ],
               "type": "string",
               "default": "all"
@@ -25249,6 +25250,601 @@
           }
         ],
         "summary": "Delete Announcement"
+      }
+    },
+    "/wiki/workspace/{workspaceId}/pages": {
+      "get": {
+        "operationId": "listWikiPages",
+        "tags": [
+          "Wiki"
+        ],
+        "description": "The wiki tree: the workspace pages and, with `projectId`, that project's pages. Without their content.",
+        "responses": {
+          "200": {
+            "description": "Wiki pages ordered by position",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "projectId",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "summary": "List Wiki Pages"
+      },
+      "post": {
+        "operationId": "createWikiPage",
+        "tags": [
+          "Wiki"
+        ],
+        "description": "Create a wiki page in the workspace or, with `projectId`, in a project, optionally under `parentId` (a page of the same wiki). Content is Markdown, like a task description.",
+        "responses": {
+          "200": {
+            "description": "The new page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 500000,
+                    "default": ""
+                  },
+                  "projectId": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "parentId": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Create Wiki Page"
+      }
+    },
+    "/wiki/page/{id}": {
+      "get": {
+        "operationId": "getWikiPage",
+        "tags": [
+          "Wiki"
+        ],
+        "description": "A wiki page with its content, version, last editor, project and the tasks it links or that link it",
+        "responses": {
+          "200": {
+            "description": "The page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Get Wiki Page"
+      },
+      "put": {
+        "operationId": "saveWikiPage",
+        "tags": [
+          "Wiki"
+        ],
+        "description": "Save a wiki page. `baseVersion` is the version the editor started from: if someone saved a newer one meanwhile it is a 409, and saving over theirs means repeating with their version. Saving without changes keeps the version.",
+        "responses": {
+          "200": {
+            "description": "The saved page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Someone saved a newer version meanwhile"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 500000
+                  },
+                  "baseVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "note": {
+                    "type": "string",
+                    "maxLength": 300,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "title",
+                  "content",
+                  "baseVersion"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Save Wiki Page"
+      },
+      "delete": {
+        "operationId": "deleteWikiPage",
+        "tags": [
+          "Wiki"
+        ],
+        "description": "Delete a page. With `children=delete` its subpages go with it; with `children=lift` (the default) they move up to its parent.",
+        "responses": {
+          "200": {
+            "description": "How many pages were deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "children",
+            "schema": {
+              "enum": [
+                "lift",
+                "delete"
+              ],
+              "type": "string",
+              "default": "lift"
+            }
+          }
+        ],
+        "summary": "Delete Wiki Page"
+      }
+    },
+    "/wiki/page/{id}/move": {
+      "patch": {
+        "operationId": "moveWikiPage",
+        "tags": [
+          "Wiki"
+        ],
+        "description": "Hang a page under another page of the same wiki, or at its root with a null `parentId`. Rejects cycles.",
+        "responses": {
+          "200": {
+            "description": "The moved page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "parentId": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "parentId"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Move Wiki Page"
+      }
+    },
+    "/wiki/page/{id}/versions": {
+      "get": {
+        "operationId": "listWikiVersions",
+        "tags": [
+          "Wiki"
+        ],
+        "description": "The history of a page, newest first, without content",
+        "responses": {
+          "200": {
+            "description": "Versions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ],
+        "summary": "List Wiki Versions"
+      }
+    },
+    "/wiki/page/{id}/versions/{version}": {
+      "get": {
+        "operationId": "getWikiVersion",
+        "tags": [
+          "Wiki"
+        ],
+        "description": "One version of a page, with its content",
+        "responses": {
+          "200": {
+            "description": "The version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "version",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true
+          }
+        ],
+        "summary": "Get Wiki Version"
+      }
+    },
+    "/wiki/page/{id}/restore": {
+      "post": {
+        "operationId": "restoreWikiVersion",
+        "tags": [
+          "Wiki"
+        ],
+        "description": "Go back to an earlier version: saves its title and content as a new version, with the same `baseVersion` check as saving",
+        "responses": {
+          "200": {
+            "description": "The page, at its new version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Someone saved a newer version meanwhile"
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "baseVersion": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "version",
+                  "baseVersion"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Restore Wiki Version"
+      }
+    },
+    "/wiki/task/{taskId}/links": {
+      "get": {
+        "operationId": "listTaskWikiLinks",
+        "tags": [
+          "Wiki"
+        ],
+        "description": "The wiki pages a task is linked with, in either direction: the page links the task, or the task's description links the page",
+        "responses": {
+          "200": {
+            "description": "Linked pages",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "taskId",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "summary": "List Task Wiki Links"
+      }
+    },
+    "/wiki/page/{id}/image-upload": {
+      "put": {
+        "operationId": "createWikiImageUpload",
+        "tags": [
+          "Wiki"
+        ],
+        "description": "Create a presigned upload URL for a file in a wiki page",
+        "responses": {
+          "200": {
+            "description": "Upload URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "filename": {
+                    "type": "string"
+                  },
+                  "contentType": {
+                    "type": "string"
+                  },
+                  "size": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "filename",
+                  "contentType",
+                  "size"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Create Wiki Image Upload"
+      }
+    },
+    "/wiki/page/{id}/image-upload/finalize": {
+      "post": {
+        "operationId": "finalizeWikiImageUpload",
+        "tags": [
+          "Wiki"
+        ],
+        "description": "Record an uploaded wiki file as a private asset",
+        "responses": {
+          "200": {
+            "description": "The asset",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "filename": {
+                    "type": "string"
+                  },
+                  "contentType": {
+                    "type": "string"
+                  },
+                  "size": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "key",
+                  "filename",
+                  "contentType",
+                  "size"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Finalize Wiki Image Upload"
       }
     },
     "/external-link/task/{taskId}": {

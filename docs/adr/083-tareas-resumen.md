@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-13 · **Estado:** aceptada
 
-**Contexto.** Punto 2.2 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado).
+**Contexto.** Punto 2.2 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado).
 Los agregados de rama ya se calculaban al leer y el Gantt dibujaba un corchete, pero un padre
 conservaba fechas propias editables y la fecha «heredada» solo se anunciaba. Las decisiones se
 tomaron preguntando (2026-10-13).

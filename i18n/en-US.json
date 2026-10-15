@@ -1958,7 +1958,8 @@
 				"workspace": "Workspaces",
 				"comment": "Comments",
 				"activity": "Activities",
-				"fallback": "Results"
+				"fallback": "Results",
+				"wiki": "Wiki"
 			}
 		},
 		"settingsLayout": {
@@ -2129,6 +2130,10 @@
 				"title": "{{projectName}}: {{health}}",
 				"content": "{{authorName}}: {{note}}",
 				"contentWithoutNote": "{{authorName}} changed the project's health"
+			},
+			"wiki_mention": {
+				"title": "{{mentionerName}} mentioned you",
+				"content": "{{mentionerName}} mentioned you in the wiki page: {{pageTitle}}"
 			}
 		},
 		"loadMore": "Load older notifications",
@@ -4142,6 +4147,116 @@
 			"workspace": "Workspace:",
 			"open": "See announcements",
 			"hide": "Hide for me"
+		}
+	},
+	"wiki": {
+		"title": "Wiki",
+		"pageTitle": "Wiki · {{name}}",
+		"workspaceTitle": "Workspace wiki",
+		"empty": "No page yet. Create the first one from the tree.",
+		"links": {
+			"task": "Link a task",
+			"page": "Link a wiki page",
+			"pickTask": "Link a task",
+			"pickPage": "Link a wiki page",
+			"search": "Search…",
+			"empty": "Nothing found"
+		},
+		"tree": {
+			"label": "Pages",
+			"workspace": "Workspace",
+			"project": "Project",
+			"collapse": "Collapse",
+			"expand": "Expand",
+			"actions": "Actions for {{title}}",
+			"newSubpage": "New subpage",
+			"move": "Move to…",
+			"delete": "Delete",
+			"newIn": "New page in {{group}}",
+			"empty": "No pages",
+			"choose": "Choose a page",
+			"newPage": "New page"
+		},
+		"create": {
+			"title": "New page",
+			"description": "Give it a title; you write the text once it opens.",
+			"under": "A subpage of {{title}}.",
+			"name": "Title",
+			"submit": "Create page",
+			"failed": "The page could not be created"
+		},
+		"move": {
+			"title": "Move {{title}}",
+			"description": "Under another page of the same wiki, or at its top level.",
+			"parent": "Under",
+			"root": "Top level",
+			"submit": "Move",
+			"failed": "The page could not be moved"
+		},
+		"delete": {
+			"title": "Delete {{title}}?",
+			"description": "Its history goes with it.",
+			"lift": "Delete only this page",
+			"liftHint_one": "Its subpage moves up one level.",
+			"liftHint_other": "Its {{count}} subpages move up one level.",
+			"branch_one": "Delete its subpage too",
+			"branch_other": "Delete its {{count}} subpages too",
+			"branchHint": "The whole branch is deleted.",
+			"submit": "Delete page",
+			"submitBranch_one": "Delete {{count}} page",
+			"submitBranch_other": "Delete {{count}} pages",
+			"done": "Deleted",
+			"failed": "The page could not be deleted"
+		},
+		"history": {
+			"title": "History",
+			"noChanges": "No changes",
+			"version": "Version {{version}}",
+			"restoredFrom": "Restores version {{version}}",
+			"diff": "Changes {{from}} → {{to}}",
+			"first": "First version",
+			"restore": "Restore version {{version}}",
+			"restored": "Version {{version}} restored",
+			"restoreFailed": "The version could not be restored"
+		},
+		"page": {
+			"loading": "Loading…",
+			"missing": "This page does not exist any more.",
+			"saved": "Page saved",
+			"saveFailed": "The page could not be saved",
+			"linkCopied": "Link copied",
+			"titleLabel": "Title",
+			"meta": "Version {{version}} · edited by {{name}} {{when}}",
+			"linked": "Linked with",
+			"save": "Save",
+			"copyLink": "Copy link",
+			"edit": "Edit",
+			"more": "More actions",
+			"editorLabel": "Page editor",
+			"readerLabel": "Page content",
+			"placeholder": "Write the page. Type / for blocks, tasks and pages.",
+			"empty": "This page is empty.",
+			"noteLabel": "Change note",
+			"notePlaceholder": "What changed (optional)"
+		},
+		"draft": {
+			"found": "There is an unsaved draft of this page in this browser.",
+			"recover": "Recover it",
+			"discard": "Discard",
+			"saving": "Draft saved in this browser"
+		},
+		"conflict": {
+			"title": "{{name}} saved this page {{when}}, while you were editing it.",
+			"detail": "Your changes are still here, unsaved. Theirs is version {{version}}.",
+			"diff": "See differences",
+			"overwrite": "Save over theirs",
+			"discard": "Discard mine",
+			"diffTitle": "Version {{version}} against yours",
+			"you": "You (in another tab)",
+			"someone": "Someone"
+		},
+		"taskLinks": {
+			"title": "Wiki"
 		}
 	}
 }

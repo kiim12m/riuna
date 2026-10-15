@@ -25,7 +25,9 @@ async function createNotification({
   const preferenceKey =
     type === "task_assignee_changed" || type === "task_created"
       ? "taskAssignmentEnabled"
-      : type === "task_comment" || type === "task_mention"
+      : type === "task_comment" ||
+          type === "task_mention" ||
+          type === "wiki_mention"
         ? "taskCommentEnabled"
         : type === "task_status_changed"
           ? "taskStatusChangeEnabled"

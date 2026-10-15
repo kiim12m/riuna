@@ -53,6 +53,7 @@ import { AttachmentCard } from "@/components/task/extensions/attachment-card";
 import { EmbedBlock } from "@/components/task/extensions/embed-block";
 import { MermaidBlock } from "@/components/task/extensions/mermaid-block";
 import { RiunaIssueLink } from "@/components/task/extensions/riuna-issue-link";
+import { RiunaPageLink } from "@/components/task/extensions/riuna-page-link";
 import {
   SHIKI_CODEBLOCK_REFRESH_META,
   ShikiCodeBlock,
@@ -110,6 +111,11 @@ export type RichMarkdownEditorProps = {
   /** Comandos de barra de mas, en el grupo «Insertar». */
   extraSlashCommands?: SlashCommand[];
   debounceMs?: number;
+  /**
+   * Da el Markdown de ahora mismo, sin esperar al guardado diferido: la wiki
+   * lo lee al pulsar «Guardar» (ADR 092).
+   */
+  onReady?: (readMarkdown: () => string) => void;
 };
 
 type HoveredCodeBlock = {
@@ -334,6 +340,7 @@ export default function RichMarkdownEditor({
   extraExtensions,
   extraSlashCommands,
   debounceMs = DESCRIPTION_SAVE_DEBOUNCE_MS,
+  onReady,
 }: RichMarkdownEditorProps) {
   const { t } = useTranslation();
   const canEditRef = useRef(canEdit);
@@ -662,6 +669,7 @@ export default function RichMarkdownEditor({
         EmbedBlock,
         AttachmentCard,
         RiunaIssueLink,
+        RiunaPageLink,
         TaskList,
         Image.configure({
           HTMLAttributes: {
@@ -852,6 +860,11 @@ export default function RichMarkdownEditor({
       toShikiLanguage,
     ],
   );
+
+  useEffect(() => {
+    if (!editor || !onReady) return;
+    onReady(() => formatMarkdown(editor.getMarkdown()));
+  }, [editor, onReady]);
 
   useEffect(() => {
     if (!editor || !shikiHighlighter) return;

@@ -8,7 +8,8 @@ type SearchParams = {
     | "projects"
     | "workspaces"
     | "comments"
-    | "activities";
+    | "activities"
+    | "wiki";
   workspaceId: string;
   projectId?: string;
   limit?: number;

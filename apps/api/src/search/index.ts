@@ -58,6 +58,7 @@ const search = new Hono<{
           "workspaces",
           "comments",
           "activities",
+          "wiki",
         ]),
         "all",
       ),

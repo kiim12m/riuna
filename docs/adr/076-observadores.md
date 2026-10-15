@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-12 · **Estado:** aceptada
 
-**Contexto.** Punto 1.1 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 1.1 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 seguir una tarea sin estar asignado. Al empezar, un comentario y un cambio de estado solo
 avisaban al **responsable principal**: el resto de asignados no se enteraba, aunque los
 recordatorios de vencimiento ya les llegaban a todos (ADR 050). Cambiar el vencimiento no

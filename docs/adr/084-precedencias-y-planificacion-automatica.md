@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-13 · **Estado:** aceptada
 
-**Contexto.** Punto 2.3 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 2.3 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 «esta empieza cuando acabe aquella». `task_relation` solo sabía `blocks` y `related`, que se
 dibujaban pero no movían nada. Las decisiones se tomaron preguntando (2026-10-13).
 

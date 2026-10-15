@@ -88,6 +88,10 @@ export function userMessageInvalidations(message: UserWsMessage): QueryKey[] {
       return message.workspaceId
         ? [["announcements", message.workspaceId]]
         : [];
+    // Cualquier pagina de la wiki (ADR 092): el arbol, la pagina abierta —que
+    // es como quien edita se entera de que otro guardo— y su historial.
+    case "WIKI_UPDATED":
+      return message.workspaceId ? [["wiki", message.workspaceId]] : [];
     // Una vista de espacio sin proyecto no tiene socket de proyecto que la
     // escuche. El prefijo cubre `["workspace-views", workspaceId, type]`.
     case "VIEW_UPDATED":

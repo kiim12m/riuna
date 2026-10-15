@@ -30,7 +30,7 @@
 | 8 — Automatizaciones, hoja de SERVITEC y stand-up a chat | 9 | **Cerrada** (2026-10-07) — los importadores externos, solo documentados · [plan por bloques](#fase-8--automatizaciones-hoja-de-servitec-y-stand-up-a-chat--cerrada) |
 | 9 — Operación | 6 | **Hecha salvo lo que se lanza en el PC** (2026-10-11): el informe de la base (5.2) y el simulacro con la copia real (7.2) · [plan por bloques](#fase-9--operación) |
 | **Total Bloque A** | **45** + 18 del interludio | |
-| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **En curso** — planificado el 2026-10-12, cinco tandas; hechas las tandas 1 (1.1-1.6), 2 (2.1-2.4), 3 (3.1-3.3) y 4 (4.1-4.2) · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado) |
+| Interludio — Ideas de OpenProject (antes de la Fase 10) | ≈ 23 | **Cerrado** — planificado el 2026-10-12; sus cinco tandas, hechas del 2026-10-12 al 2026-10-15 (la 5, la wiki) · [plan por tandas](#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado) |
 
 **Estimación honesta:** 35 semanas nominales —las 29 del plan original más las
 6 de las Fases 4.5 y 7.5, que no estaban— a ~8 h/semana son **10-13 meses**
@@ -2872,7 +2872,7 @@ corregidos en la PR #59, un commit por hallazgo, y cada arreglo con una prueba q
 
 ---
 
-### Interludio — Ideas de OpenProject (antes de la Fase 10) · **planificado**
+### Interludio — Ideas de OpenProject (antes de la Fase 10) · **cerrado**
 
 *Nace de una [comparativa con OpenProject](comparativa-openproject.md) 17.9.1 hecha el
 2026-10-12. OpenProject es GPL-3.0, así que se usa solo como inspiración: la comparativa sale de
@@ -3131,20 +3131,51 @@ unitarias del orden y el árbol de la cartera y del aviso nuevo, y de extremo a 
   Medido con 50.000 tareas: una tarea, el parte o la cartera, menos de 110 ms; una vista de 5.000
   filas, unos 4 s. El MCP no exporta PDF.
 
-**Tanda 5 — Wiki de páginas** · L (≈ 4 semanas)
+**Tanda 5 — Wiki de páginas** ✔ · L · [ADR 092](adr/092-wiki-de-paginas.md). **Hecho
+(2026-10-15).** Decisiones del usuario, tomadas al empezarla:
+- crear, editar y borrar páginas pide `task:update`; leerlas, cualquiera del espacio. Sin permiso
+  nuevo;
+- las menciones avisan, como en los comentarios, solo la primera vez en esa página;
+- a la wiki del espacio se entra desde la pestaña «Wiki» de cualquier proyecto, la búsqueda y la
+  paleta, sin entrada en la barra lateral;
+- al borrar una página con subpáginas, un diálogo deja elegir entre borrar la rama entera o subir
+  sus hijas un nivel.
 
-- Páginas en árbol por proyecto y por espacio, con el editor TipTap actual: menciones, enlaces a
-  tareas, adjuntos y Mermaid.
-- Historial con diferencias y restaurar.
-- Bloqueo optimista: «Marc guardó mientras editabas», con ver diferencias, guardar encima o
-  descartar.
-- Búsqueda global y enlaces de la página a la tarea y de la tarea a la página.
-- Permisos con `@riuna/permissions` y MCP para leer, buscar y crear.
-- Sin dependencias nuevas. La edición simultánea con Yjs se reconsidera solo si la wiki se usa de
-  verdad.
+Lo construido:
+- tablas `wiki_page`, `wiki_page_version` y `wiki_link` (migración 0095), y `asset` con
+  `wiki_page_id`. Los adjuntos de la wiki nunca son públicos;
+- el módulo `wiki` de la API: árbol, página, crear, guardar con bloqueo optimista (409 si otro
+  guardó antes), mover sin ciclos, borrar con las dos opciones, versiones, restaurar y subir
+  imágenes;
+- el editor de la descripción pasa a `rich-markdown-editor`, que comparten la tarea y la wiki (un
+  commit aparte, sin cambio de comportamiento);
+- la pestaña «Wiki», con el árbol, la página y el historial a la derecha:
+  - el borrador va al navegador mientras se edita;
+  - el aviso de conflicto de la maqueta, con «Ver diferencias», «Guardar encima de la suya» y
+    «Descartar lo mío»;
+  - las diferencias por líneas, con un LCS propio y sin dependencia;
+  - en el móvil, el árbol pasa a un desplegable y el historial va debajo;
+- enlaces en los dos sentidos: los comandos `/` «Enlazar una tarea» y «Enlazar una página de la
+  wiki», en la wiki y en la descripción de la tarea, y una sección «Wiki» en el detalle de la
+  tarea;
+- la búsqueda global, la paleta, el tipo de aviso `wiki_mention` y el tiempo real por el canal de
+  usuario;
+- MCP: `list_wiki_pages`, `get_wiki_page`, `search_wiki` y `create_wiki_page` (69
+  herramientas).
 
-**Al cerrar el interludio**, antes de empezar el Bloque B: **montar la copia externa en Google
-Drive**, aplazada desde la Fase 9 el 2026-10-12. Es el servicio `offsite` de `compose.local.yml`
+Medido con 50.000 tareas y 3.000 páginas de 4 KB: las páginas de una tarea, el árbol y los enlaces
+de una página, menos de 3 ms; la búsqueda, sin índice, 130 ms. La edición simultánea con Yjs se
+reconsidera solo si la wiki se usa de verdad.
+
+Pruebas de la tanda 5: 5 de integración (`wiki`), unitarias de los enlaces, el árbol, las
+diferencias, el aviso y el tiempo real, y de extremo a extremo `wiki` y `task-description`.
+
+*Verificación (2026-10-15): integración 944 de 945 (1 omitida, ninguna fallada); extremo a extremo
+121, de las que 6 fallaron por carga al correr junto a la integración y pasan solas; unitarias de la
+API 893, la web 482 y el MCP 34; tipos de la API, la web y el MCP, Biome, i18n y OpenAPI.*
+
+**Al cerrar el interludio** —ya cerrado, el 2026-10-15—, antes de empezar el Bloque B: **montar
+la copia externa en Google Drive**, aplazada desde la Fase 9 el 2026-10-12. Es el servicio `offsite` de `compose.local.yml`
 con un remoto `crypt` de rclone ([ADR 072](adr/072-copias-fuera-de-la-maquina-y-simulacro.md));
 los pasos están en [copias de seguridad](copias-de-seguridad.md). Las dos contraseñas del cifrado
 se guardan fuera del PC. Hasta entonces, las copias viven solo en el disco del PC.
@@ -3200,7 +3231,7 @@ software contable o integrarse con él.
 ## Fuera de alcance
 
 Edición simultánea de la wiki con Yjs (la wiki de páginas entra en el
-[interludio de ideas de OpenProject](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado)),
+[interludio de ideas de OpenProject](#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado)),
 pizarras, chat interno, formularios públicos, app móvil nativa, funciones de IA,
 facturación de suscripciones.
 
@@ -3675,18 +3706,19 @@ La **Fase 9**, operación, está hecha (2026-10-11), en las PR apiladas #51 a #5
    los puertos a `tailscale serve` va antes del primer `deploy/actualizar.sh`.
 2. **En «Estado de la instancia»**, comprobar que la API te ve con tu IP de Tailscale y que ve
    las copias.
-3. ~~**Montar la copia externa** en Google Drive.~~ **Aplazado (2026-10-12):** se hace al cerrar
-   el [interludio de ideas de OpenProject](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado),
-   antes del Bloque B. Mientras tanto, las copias viven solo en el disco del PC.
+3. **Montar la copia externa** en Google Drive. Se aplazó el 2026-10-12 hasta cerrar el
+   [interludio de ideas de OpenProject](#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado),
+   y ya está cerrado: toca antes del Bloque B. Mientras tanto, las copias viven solo en el disco
+   del PC.
 4. **`sh deploy/simulacro.sh --humo`**: el criterio de la fase con la copia real (7.2).
 5. **Unos días después, `sh scripts/ops/informe-bd.sh`**, y pasar el resultado para repasar
    los índices con el uso real (5.2).
 
-Con eso se cierra el Bloque A. Después viene el
-[interludio de ideas de OpenProject](#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado),
-planificado el 2026-10-12, y el Bloque B (CRM y ERP ligero) empieza en la Fase 10. Del
-interludio están hechas las tandas 1 a 4 (la 4, campos calculados y PDF, el 2026-10-14); la
-siguiente es la tanda 5, la wiki.
+Con eso se cierra el Bloque A. El
+[interludio de ideas de OpenProject](#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado),
+planificado el 2026-10-12, también está cerrado: sus cinco tandas están hechas (la 5, la wiki, el
+2026-10-15). Lo siguiente es montar la copia externa (el punto 3) y empezar el Bloque B (CRM y
+ERP ligero) por la Fase 10.
 
 **Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
 seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.

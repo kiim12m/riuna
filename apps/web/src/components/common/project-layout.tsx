@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
+  BookOpen,
   CalendarDays,
   CalendarRange,
   Info,
@@ -58,6 +59,7 @@ type ProjectLayoutProps = {
     | "gantt"
     | "table"
     | "cycles"
+    | "wiki"
     | "announcements";
 };
 
@@ -106,9 +108,11 @@ export default function ProjectLayout({
             ? "table"
             : location.pathname.includes("/cycles")
               ? "cycles"
-              : location.pathname.includes("/announcements")
-                ? "announcements"
-                : "board");
+              : location.pathname.includes("/wiki")
+                ? "wiki"
+                : location.pathname.includes("/announcements")
+                  ? "announcements"
+                  : "board");
 
   const handleNavigateToBacklog = () => {
     navigate({
@@ -152,6 +156,13 @@ export default function ProjectLayout({
     });
   };
 
+  const handleNavigateToWiki = () => {
+    navigate({
+      to: "/dashboard/workspace/$workspaceId/project/$projectId/wiki",
+      params: { workspaceId, projectId },
+    });
+  };
+
   const handleProjectSwitch = (nextProjectId: string) => {
     navigate({
       to:
@@ -165,7 +176,9 @@ export default function ProjectLayout({
                 ? "/dashboard/workspace/$workspaceId/project/$projectId/table"
                 : resolvedView === "cycles"
                   ? "/dashboard/workspace/$workspaceId/project/$projectId/cycles"
-                  : "/dashboard/workspace/$workspaceId/project/$projectId/board",
+                  : resolvedView === "wiki"
+                    ? "/dashboard/workspace/$workspaceId/project/$projectId/wiki"
+                    : "/dashboard/workspace/$workspaceId/project/$projectId/board",
       params: {
         workspaceId,
         projectId: nextProjectId,
@@ -222,6 +235,7 @@ export default function ProjectLayout({
                 onSelectGantt={handleNavigateToGantt}
                 onSelectTable={handleNavigateToTable}
                 onSelectCycles={handleNavigateToCycles}
+                onSelectWiki={handleNavigateToWiki}
                 onSelectProject={handleProjectSwitch}
                 onAddProject={() => setIsCreateProjectModalOpen(true)}
               />
@@ -316,6 +330,15 @@ export default function ProjectLayout({
                 >
                   <Target className="size-3.5" />
                   {t("cycles:title")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={handleNavigateToWiki}
+                  className={viewTabClass(resolvedView === "wiki")}
+                >
+                  <BookOpen className="size-3.5" />
+                  {t("wiki:title")}
                 </Button>
               </div>
             )}

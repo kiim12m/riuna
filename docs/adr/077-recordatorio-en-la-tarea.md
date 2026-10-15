@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-12 · **Estado:** aceptada
 
-**Contexto.** Punto 1.2 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 1.2 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 «recuérdamelo» en una tarea, sin planificarla. Hasta ahora lo único parecido era el aviso del
 navegador a la hora anclada del plan del día (ADR 055), que solo suena con la pestaña abierta y
 obliga a meter la tarea en el día.

@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-14 · **Estado:** aceptada
 
-**Contexto.** Punto 4.2 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 4.2 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 sacar en papel una tarea, cualquier vista con sus filtros y el parte de horas con sus totales. La
 3.2 dejó pendiente el PDF de la cartera hasta este punto. El aspecto de los tres documentos es el
 de [la maqueta](../design-previews/ideas-openproject.html) aprobada, pestaña «PDF».

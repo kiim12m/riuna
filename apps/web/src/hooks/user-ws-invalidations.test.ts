@@ -97,6 +97,16 @@ describe("userMessageInvalidations", () => {
     ).toEqual([]);
   });
 
+  it("refreshes the whole wiki of a workspace", () => {
+    expect(
+      userMessageInvalidations({
+        type: "WIKI_UPDATED",
+        workspaceId: "ws-1",
+      }),
+    ).toEqual([["wiki", "ws-1"]]);
+    expect(userMessageInvalidations({ type: "WIKI_UPDATED" })).toEqual([]);
+  });
+
   it("refreshes notifications and ignores unknown messages", () => {
     // Tambien el recordatorio de la tarea abierta: avisar lo borra (ADR 077).
     expect(userMessageInvalidations({ type: "NOTIFICATION_CREATED" })).toEqual([

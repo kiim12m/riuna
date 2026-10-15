@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   CalendarDays,
   CalendarRange,
   Check,
@@ -29,6 +30,7 @@ type MobileProjectNavProps = {
     | "gantt"
     | "table"
     | "cycles"
+    | "wiki"
     | "announcements";
   onSelectBoard: () => void;
   onSelectBacklog: () => void;
@@ -36,6 +38,7 @@ type MobileProjectNavProps = {
   onSelectGantt: () => void;
   onSelectTable: () => void;
   onSelectCycles: () => void;
+  onSelectWiki: () => void;
   onSelectProject: (projectId: string) => void;
   onAddProject: () => void;
 };
@@ -50,6 +53,7 @@ export default function MobileProjectNav({
   onSelectGantt,
   onSelectTable,
   onSelectCycles,
+  onSelectWiki,
   onSelectProject,
   onAddProject,
 }: MobileProjectNavProps) {
@@ -139,6 +143,19 @@ export default function MobileProjectNav({
               >
                 <Target className="size-3.5" />
                 {t("cycles:title")}
+              </button>
+              <button
+                type="button"
+                onClick={onSelectWiki}
+                className={cn(
+                  "flex w-full items-center justify-center gap-1 whitespace-nowrap rounded-md border px-2 py-1.5 text-xs font-medium transition-colors",
+                  activeView === "wiki"
+                    ? "border-brand/40 bg-accent text-foreground"
+                    : "border-transparent text-muted-foreground hover:bg-accent",
+                )}
+              >
+                <BookOpen className="size-3.5" />
+                {t("wiki:title")}
               </button>
               <button
                 type="button"

@@ -11,6 +11,7 @@ import {
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
 import { parseMentionIds } from "../../utils/parse-mentions";
+import { syncTaskLinks } from "../../wiki/links";
 
 async function updateTaskDescription({
   id,
@@ -55,6 +56,9 @@ async function updateTaskDescription({
   deleteOrphanedAssets(existingTask.description, description, {
     taskId: id,
   }).catch(() => {});
+
+  // Las paginas de la wiki que enlaza la descripcion (ADR 092).
+  await syncTaskLinks(id, description);
 
   // Notify members newly @mentioned by this edit (skip ones already mentioned
   // in the previous description, and the editor themselves).

@@ -1192,6 +1192,89 @@ export function registerTools(
   );
 
   server.registerTool(
+    "list_wiki_pages",
+    {
+      description:
+        "The wiki tree of a workspace: its own pages and, with projectId, that project's pages too (id, title, parentId, projectId, version). Without content: read a page with get_wiki_page.",
+      inputSchema: z.object({
+        workspaceId: nonEmptyString,
+        projectId: nonEmptyString.optional(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/wiki/workspace/${encodeURIComponent(args.workspaceId)}/pages${
+            args.projectId
+              ? `?projectId=${encodeURIComponent(args.projectId)}`
+              : ""
+          }`,
+        ),
+      ),
+  );
+
+  server.registerTool(
+    "get_wiki_page",
+    {
+      description:
+        "A wiki page: its Markdown content, version, last editor and the tasks it links or that link it.",
+      inputSchema: z.object({ pageId: nonEmptyString }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(`/api/wiki/page/${encodeURIComponent(args.pageId)}`),
+      ),
+  );
+
+  server.registerTool(
+    "search_wiki",
+    {
+      description:
+        "Search wiki pages of a workspace by title and content; with projectId, that project's pages and the workspace's.",
+      inputSchema: z.object({
+        workspaceId: nonEmptyString,
+        query: z.string().min(1),
+        projectId: nonEmptyString.optional(),
+      }),
+    },
+    async (args) =>
+      run(() =>
+        client.json(
+          `/api/search?${new URLSearchParams({
+            q: args.query,
+            type: "wiki",
+            workspaceId: args.workspaceId,
+            ...(args.projectId ? { projectId: args.projectId } : {}),
+          })}`,
+        ),
+      ),
+  );
+
+  server.registerTool(
+    "create_wiki_page",
+    {
+      description:
+        "Create a wiki page (needs task:update) in the workspace or, with projectId, in a project, optionally under parentId (a page of the same wiki). Content is Markdown; link a task by pasting its Riuna URL (…/project/PROJECT_ID/task/TASK_ID), and the page and the task will list each other.",
+      inputSchema: z.object({
+        workspaceId: nonEmptyString,
+        title: z.string().min(1).max(200),
+        content: z.string().max(500_000).optional(),
+        projectId: nonEmptyString.optional(),
+        parentId: nonEmptyString.optional(),
+      }),
+    },
+    async (args) => {
+      const { workspaceId, ...body } = args;
+      return run(() =>
+        client.json(
+          `/api/wiki/workspace/${encodeURIComponent(workspaceId)}/pages`,
+          { method: "POST", body: JSON.stringify(body) },
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
     "list_project_columns",
     {
       description:

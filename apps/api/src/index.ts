@@ -6,7 +6,7 @@ import { serve } from "@hono/node-server";
 import { createNodeWebSocket } from "@hono/node-ws";
 import * as Sentry from "@sentry/node";
 import type { Session, User } from "better-auth/types";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { compress } from "hono/compress";
 import { cors } from "hono/cors";
@@ -103,6 +103,7 @@ import { enforceUserLimit, limitByIp } from "./utils/rate-limit";
 import { requestLog, respondingRoute } from "./utils/request-log";
 import { validateWorkspaceAccess } from "./utils/validate-workspace-access";
 import view from "./view";
+import wiki from "./wiki";
 import workSchedule from "./work-schedule";
 import workflowRule from "./workflow-rule";
 import workspace from "./workspace";
@@ -380,10 +381,13 @@ export function createApp() {
           mimeType: schema.assetTable.mimeType,
           filename: schema.assetTable.filename,
           workspaceId: schema.assetTable.workspaceId,
-          isPublic: schema.projectTable.isPublic,
+          // Un proyecto publico enseña sus tareas, no su wiki (ADR 092): un
+          // adjunto de una pagina nunca se sirve sin sesion. Las del espacio
+          // no tienen proyecto.
+          isPublic: sql<boolean>`(coalesce(${schema.projectTable.isPublic}, false) AND ${schema.assetTable.wikiPageId} IS NULL)`,
         })
         .from(schema.assetTable)
-        .innerJoin(
+        .leftJoin(
           schema.projectTable,
           eq(schema.assetTable.projectId, schema.projectTable.id),
         )
@@ -735,6 +739,7 @@ export function createApp() {
   const taskReminderApi = api.route("/task-reminder", taskReminder);
   const sessionApi = api.route("/session", sessions);
   const announcementApi = api.route("/announcement", announcement);
+  const wikiApi = api.route("/wiki", wiki);
   const externalLinkApi = api.route("/external-link", externalLink);
   const workflowRuleApi = api.route("/workflow-rule", workflowRule);
   const automationApi = api.route("/automation", automation);
@@ -925,6 +930,7 @@ export function createApp() {
     taskReminderApi,
     sessionApi,
     announcementApi,
+    wikiApi,
     telegramIntegrationApi,
     timeEntryApi,
     timeSheetApi,
@@ -1044,6 +1050,7 @@ const {
   taskReminderApi,
   sessionApi,
   announcementApi,
+  wikiApi,
   telegramIntegrationApi,
   timeEntryApi,
   timeSheetApi,
@@ -1116,6 +1123,7 @@ export type AppType =
   | typeof taskReminderApi
   | typeof sessionApi
   | typeof announcementApi
+  | typeof wikiApi
   | typeof externalLinkApi
   | typeof workflowRuleApi
   | typeof automationApi

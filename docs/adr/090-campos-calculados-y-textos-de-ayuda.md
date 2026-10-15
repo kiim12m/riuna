@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-14 · **Estado:** aceptada
 
-**Contexto.** Punto 4.1 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 4.1 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 un campo cuyo valor sale de otros, como «Coste por hora = Presupuesto ÷ Horas previstas», y una
 ayuda que diga qué significa cada campo. El plan dejaba a esta ADR decidir si el valor se
 materializa. El usuario decidió dos reglas al preguntarle (2026-10-14):

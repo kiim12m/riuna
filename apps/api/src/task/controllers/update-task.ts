@@ -9,6 +9,7 @@ import {
   assertAssignableUser,
   getProjectWorkspaceId,
 } from "../../utils/assert-assignable-user";
+import { syncTaskLinks } from "../../wiki/links";
 import { hasChildren, hasPredecessors } from "../schedule/children";
 import { scheduleAfter } from "../schedule/reschedule";
 import { assertValidTaskStatus } from "../validate-task-fields";
@@ -265,6 +266,8 @@ async function updateTask(
     deleteOrphanedAssets(existingTask.description, description, {
       taskId: id,
     }).catch(() => {});
+    // Las paginas de la wiki que enlaza la descripcion (ADR 092).
+    await syncTaskLinks(id, description ?? "");
   }
 
   return updatedTask;

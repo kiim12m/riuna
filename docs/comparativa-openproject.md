@@ -2,7 +2,7 @@
 
 > Comparativa de funcionalidades para decidir qué añadir a Riuna. Se hizo el
 > 2026-10-12 contra **OpenProject 17.9.1** (septiembre de 2026). Lo que se decidió
-> añadir está en el [interludio de ideas de OpenProject](plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado)
+> añadir está en el [interludio de ideas de OpenProject](plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado)
 > del plan, y su aspecto en la [maqueta](design-previews/ideas-openproject.html).
 >
 > Complementarios: [qué hace Riuna hoy](funcionalidades.md) ·
@@ -169,7 +169,7 @@ Nada de lo que se añada debe hacer más pesado ese flujo diario.
 
 Se preguntó funcionalidad por funcionalidad.
 
-**Entra**, en el [interludio de ideas de OpenProject](plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado),
+**Entra**, en el [interludio de ideas de OpenProject](plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado),
 antes del Bloque B:
 
 - observadores, recordatorio en la tarea, acciones de un clic, sesiones activas,

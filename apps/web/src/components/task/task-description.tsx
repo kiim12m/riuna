@@ -1,4 +1,5 @@
 import { useCallback, useLayoutEffect, useRef } from "react";
+import { useLinkCommands } from "@/components/editor/link-picker";
 import RichMarkdownEditor from "@/components/editor/rich-markdown-editor";
 import { useUpdateTaskDescription } from "@/hooks/mutations/task/use-update-task-description";
 import useGetTask from "@/hooks/queries/task/use-get-task";
@@ -7,6 +8,8 @@ import { uploadTaskImage } from "@/lib/upload-task-image";
 
 type TaskDescriptionProps = {
   taskId: string;
+  /** Con el espacio, `/tarea` y `/página` enlazan tareas y la wiki (ADR 092). */
+  workspaceId?: string;
 };
 
 /**
@@ -14,7 +17,10 @@ type TaskDescriptionProps = {
  * escribir y sube los ficheros a la tarea. Quien no puede editar tareas la ve
  * en solo lectura.
  */
-export default function TaskDescription({ taskId }: TaskDescriptionProps) {
+export default function TaskDescription({
+  taskId,
+  workspaceId,
+}: TaskDescriptionProps) {
   const { data: task } = useGetTask(taskId);
   const { mutateAsync: updateTaskDescription } = useUpdateTaskDescription();
   const { canUpdateTasks } = useWorkspacePermission();
@@ -46,13 +52,24 @@ export default function TaskDescription({ taskId }: TaskDescriptionProps) {
     [taskId],
   );
 
+  const { commands, picker } = useLinkCommands({
+    workspaceId: workspaceId ?? "",
+    kinds: LINK_KINDS,
+  });
+
   return (
-    <RichMarkdownEditor
-      documentKey={taskId}
-      markdown={task?.description}
-      onChange={save}
-      upload={upload}
-      canEdit={canUpdateTasks()}
-    />
+    <>
+      <RichMarkdownEditor
+        documentKey={taskId}
+        markdown={task?.description}
+        onChange={save}
+        upload={upload}
+        canEdit={canUpdateTasks()}
+        extraSlashCommands={workspaceId ? commands : undefined}
+      />
+      {workspaceId && picker}
+    </>
   );
 }
+
+const LINK_KINDS: Array<"page" | "task"> = ["page", "task"];

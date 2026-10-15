@@ -22,6 +22,7 @@ type WorkspaceIdSource =
         | "workflowRule"
         | "automation"
         | "announcement"
+        | "wikiPage"
         | "cycle"
         | "recurrence"
         | "template"
@@ -153,6 +154,7 @@ async function lookupWorkspaceId(
     | "workflowRule"
     | "automation"
     | "announcement"
+    | "wikiPage"
     | "cycle"
     | "recurrence"
     | "template"
@@ -407,6 +409,14 @@ async function lookupWorkspaceId(
           .limit(1);
         return announcement?.workspaceId || null;
       }
+      case "wikiPage": {
+        const [page] = await db
+          .select({ workspaceId: schema.wikiPageTable.workspaceId })
+          .from(schema.wikiPageTable)
+          .where(eq(schema.wikiPageTable.id, id))
+          .limit(1);
+        return page?.workspaceId || null;
+      }
 
       case "workflowRule": {
         const [workflowRule] = await db
@@ -552,6 +562,11 @@ export const workspaceAccess = {
   fromAnnouncement: (idKey = "id") =>
     workspaceAccessMiddleware({
       sources: [{ type: "lookup", resource: "announcement", idKey }],
+    }),
+
+  fromWikiPage: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [{ type: "lookup", resource: "wikiPage", idKey }],
     }),
 
   fromWorkflowRule: (idKey = "id") =>

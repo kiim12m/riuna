@@ -10,6 +10,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   smallint,
   text,
   timestamp,
@@ -747,6 +748,106 @@ export const announcementTable = pgTable(
       table.projectId,
       table.createdAt,
     ),
+  ],
+);
+
+// Una pagina de la wiki (ADR 092): del espacio, con `project_id` nulo, o de un
+// proyecto, en arbol por `parent_id`. El contenido es Markdown, el mismo
+// formato que la descripcion de una tarea, y `version` es el contador del
+// bloqueo optimista: guardar sobre una version que ya no es la ultima es un
+// 409, no una escritura perdida.
+export const wikiPageTable = pgTable(
+  "wiki_page",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, { onDelete: "cascade" }),
+    projectId: text("project_id").references(() => projectTable.id, {
+      onDelete: "cascade",
+    }),
+    // En cascada: borrar la rama es borrar su raiz. Subir las hijas un nivel
+    // lo hace el controlador antes de borrar.
+    parentId: text("parent_id").references(
+      (): AnyPgColumn => wikiPageTable.id,
+      {
+        onDelete: "cascade",
+      },
+    ),
+    title: text("title").notNull(),
+    content: text("content").notNull().default(""),
+    position: integer("position").notNull().default(0),
+    version: integer("version").notNull().default(1),
+    createdBy: text("created_by").references(() => userTable.id, {
+      onDelete: "set null",
+    }),
+    updatedBy: text("updated_by").references(() => userTable.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("wiki_page_workspaceId_idx").on(table.workspaceId),
+    index("wiki_page_projectId_idx").on(table.projectId),
+    index("wiki_page_parentId_idx").on(table.parentId),
+  ],
+);
+
+// Cada version guardada de una pagina, entera: las paginas son cortas y las
+// diferencias se calculan al leer.
+export const wikiPageVersionTable = pgTable(
+  "wiki_page_version",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    pageId: text("page_id")
+      .notNull()
+      .references(() => wikiPageTable.id, { onDelete: "cascade" }),
+    version: integer("version").notNull(),
+    title: text("title").notNull(),
+    content: text("content").notNull().default(""),
+    authorId: text("author_id").references(() => userTable.id, {
+      onDelete: "set null",
+    }),
+    // La «nota del cambio», opcional.
+    note: text("note"),
+    // Si esta version es la vuelta a otra anterior, cual.
+    restoredFrom: integer("restored_from"),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("wiki_page_version_page_version_unique").on(
+      table.pageId,
+      table.version,
+    ),
+  ],
+);
+
+// Que pagina y que tarea se enlazan, y desde donde: `page` si la pagina
+// enlaza la tarea, `task` si la descripcion de la tarea enlaza la pagina. Lo
+// rehacen las escrituras, para no buscar con `LIKE` en cada descripcion.
+export const wikiLinkTable = pgTable(
+  "wiki_link",
+  {
+    pageId: text("page_id")
+      .notNull()
+      .references(() => wikiPageTable.id, { onDelete: "cascade" }),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => taskTable.id, { onDelete: "cascade" }),
+    source: text("source").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.pageId, table.taskId, table.source] }),
+    index("wiki_link_taskId_idx").on(table.taskId),
+    check("wiki_link_source_valid", sql`${table.source} IN ('page', 'task')`),
   ],
 );
 
@@ -1861,12 +1962,11 @@ export const assetTable = pgTable(
         onDelete: "cascade",
         onUpdate: "cascade",
       }),
-    projectId: text("project_id")
-      .notNull()
-      .references(() => projectTable.id, {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      }),
+    // Nulo solo en un adjunto de una pagina del espacio (ADR 092).
+    projectId: text("project_id").references(() => projectTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
     taskId: text("task_id").references(() => taskTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
@@ -1874,6 +1974,9 @@ export const assetTable = pgTable(
     activityId: text("activity_id").references(() => activityTable.id, {
       onDelete: "cascade",
       onUpdate: "cascade",
+    }),
+    wikiPageId: text("wiki_page_id").references(() => wikiPageTable.id, {
+      onDelete: "cascade",
     }),
     objectKey: text("object_key").notNull().unique(),
     filename: text("filename").notNull(),
@@ -1892,6 +1995,7 @@ export const assetTable = pgTable(
     index("asset_projectId_idx").on(table.projectId),
     index("asset_taskId_idx").on(table.taskId),
     index("asset_activityId_idx").on(table.activityId),
+    index("asset_wikiPageId_idx").on(table.wikiPageId),
     index("asset_createdBy_idx").on(table.createdBy),
   ],
 );

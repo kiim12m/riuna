@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-10-13 · **Estado:** aceptada
 
-**Contexto.** Punto 2.4 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--planificado):
+**Contexto.** Punto 2.4 del [interludio de ideas de OpenProject](../plan.md#interludio--ideas-de-openproject-antes-de-la-fase-10--cerrado):
 comparar una vista con un momento pasado, para ver qué tareas entran, cuáles salen y qué cambió.
 Riuna no guarda instantáneas. La historia está en `activity`, pero varias filas no guardaban el
 valor anterior.
