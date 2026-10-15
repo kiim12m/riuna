@@ -3635,9 +3635,9 @@
 		"dayLoadPct": "{{pct}}% of your workday",
 		"dropToAnchor": "Drop here to set a time",
 		"window": {
-			"previous": "Previous week",
+			"previous": "Previous day",
 			"today": "Today",
-			"next": "Next week",
+			"next": "Next day",
 			"todayLabel": "Back to today"
 		}
 	},

@@ -63,3 +63,7 @@ ADR 047 dejó declarados como deuda el plan en bloque y el menú contextual.
     desmarcar al mover por cualquier camino, espacio ajeno, orden de Hoy, plan
     en bloque y ventana desplazada. La de la carrera falla sin el candado;
   - 6 de extremo a extremo.
+
+**Actualización (2026-10-15): las flechas van de día en día.** De semana en
+semana, el usuario no conseguía ver los últimos días de la semana sin pasarse.
+Ahora cada flecha mueve la ventana un día; `?from=` y «Hoy» no cambian.

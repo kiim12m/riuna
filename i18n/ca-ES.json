@@ -3635,9 +3635,9 @@
 		"dayLoadPct": "{{pct}} % de la teva jornada",
 		"dropToAnchor": "Suelta aquí para fijar una hora",
 		"window": {
-			"previous": "Semana anterior",
+			"previous": "Día anterior",
 			"today": "Hoy",
-			"next": "Semana siguiente",
+			"next": "Día siguiente",
 			"todayLabel": "Volver a hoy"
 		}
 	},
