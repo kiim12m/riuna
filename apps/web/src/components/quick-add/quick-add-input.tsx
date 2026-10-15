@@ -154,9 +154,12 @@ export function QuickAddInput({
         submit();
       }}
     >
+      {/* Relleno y sin borde: con el borde y el fondo de una tarjeta, en la
+          columna «Sin planificar» parecia una tarea mas. El borde vuelve al
+          escribir. */}
       <label
         htmlFor={inputId}
-        className="flex items-center gap-2 rounded-md border border-input bg-background px-2 focus-within:ring-2 focus-within:ring-ring/40"
+        className="flex cursor-text items-center gap-2 rounded-md border border-transparent bg-muted/60 px-2 transition-colors hover:bg-muted focus-within:border-input focus-within:bg-background focus-within:ring-2 focus-within:ring-ring/40"
       >
         <Plus className="size-4 shrink-0 text-muted-foreground" />
         <span className="sr-only">{t("quickAdd:label")}</span>

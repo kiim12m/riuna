@@ -66,7 +66,7 @@ import { useRunningTimer } from "@/hooks/queries/time-entry/use-running-timer";
 import { useToday } from "@/hooks/queries/today/use-today";
 import { useElapsed } from "@/hooks/use-elapsed";
 import { useStopWithConfirm } from "@/hooks/use-stop-with-confirm";
-import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
+import { useEditableUntilKnown } from "@/hooks/use-workspace-permission";
 import { formatDuration } from "@/lib/duration";
 
 export const Route = createFileRoute(
@@ -172,7 +172,8 @@ function TodayComponent() {
   );
   const completeTask = useCompleteTask(workspaceId);
   const planBulk = usePlanBulk(workspaceId);
-  const { canCreateTasks } = useWorkspacePermission();
+  // Desde el principio, como en el Planificador: si no, empuja la pantalla.
+  const canCapture = useEditableUntilKnown("createTasks");
 
   const [standupOpen, setStandupOpen] = useState(false);
   const [openTask, setOpenTask] = useState<{
@@ -382,7 +383,7 @@ function TodayComponent() {
             </p>
           )}
           {/* Lo que se captura desde Hoy es para hoy, salvo que diga otro dia. */}
-          {data && canCreateTasks() && (
+          {data && canCapture && (
             <QuickAddInput
               workspaceId={workspaceId}
               defaultPlannedDate={data.serverToday}
