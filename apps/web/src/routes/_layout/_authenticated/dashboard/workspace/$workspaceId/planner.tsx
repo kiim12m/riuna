@@ -71,8 +71,9 @@ function addDays(date: Date, days: number) {
 }
 
 const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/;
-/** Cuanto se mueve la ventana con las flechas: una semana. */
-const WINDOW_STEP_DAYS = 7;
+/** Cuanto se mueve la ventana con las flechas: un dia. De semana en semana
+ * (ADR 053) costaba ver el final de la semana sin pasarse. */
+const WINDOW_STEP_DAYS = 1;
 
 type PlannerSearch = {
   /** Primer dia de la ventana, `yyyy-mm-dd`; sin el, hoy (ADR 053). */
@@ -121,9 +122,9 @@ function RouteComponent() {
     from,
   );
 
-  // Mas alla de quince dias (ADR 053): la ventana se mueve de semana en
-  // semana. Volver a hoy quita el parametro, para que la ventana por defecto
-  // siga siendo una sola entrada de cache.
+  // Mas alla de quince dias (ADR 053): la ventana se mueve de dia en dia.
+  // Volver a hoy quita el parametro, para que la ventana por defecto siga
+  // siendo una sola entrada de cache.
   const shiftWindow = (days: number | null) => {
     const base = parseDayKey(from ?? data?.serverToday ?? dayKey(new Date()));
     const next = days === null ? undefined : dayKey(addDays(base, days));
@@ -413,28 +414,21 @@ function RouteComponent() {
               {/* En movil, columnas casi a todo lo ancho que encajan al
                * deslizar (Fase 9). */}
               <div className="flex min-h-0 flex-1 snap-x snap-mandatory gap-3 overflow-x-auto p-4 sm:snap-none">
-                <PlannerColumn
-                  id={UNPLANNED_ID}
-                  title={t("planner:unplanned")}
-                  header={
-                    canCapture && (
-                      <QuickAddInput
-                        workspaceId={workspaceId}
-                        showHint={false}
-                      />
-                    )
-                  }
-                  tasks={data?.unplanned ?? []}
-                  onOpen={(task) =>
-                    setOpenTask({ taskId: task.id, projectId: task.projectId })
-                  }
-                  onEstimateChange={setEstimate}
-                  onToggleDone={toggleDone}
-                />
-
-                {(data?.previous.length ?? 0) > 0 && (
-                  <PreviousColumn
-                    tasks={data?.previous ?? []}
+                {/* «Sin planificar» y «De dias anteriores» comparten una
+                 * columna, una encima de otra: en dos dejaban ver pocos dias. */}
+                <div className="flex h-full w-[85vw] shrink-0 snap-center flex-col gap-3 sm:w-56">
+                  <PlannerColumn
+                    id={UNPLANNED_ID}
+                    title={t("planner:unplanned")}
+                    header={
+                      canCapture && (
+                        <QuickAddInput
+                          workspaceId={workspaceId}
+                          showHint={false}
+                        />
+                      )
+                    }
+                    tasks={data?.unplanned ?? []}
                     onOpen={(task) =>
                       setOpenTask({
                         taskId: task.id,
@@ -444,7 +438,21 @@ function RouteComponent() {
                     onEstimateChange={setEstimate}
                     onToggleDone={toggleDone}
                   />
-                )}
+
+                  {(data?.previous.length ?? 0) > 0 && (
+                    <PreviousColumn
+                      tasks={data?.previous ?? []}
+                      onOpen={(task) =>
+                        setOpenTask({
+                          taskId: task.id,
+                          projectId: task.projectId,
+                        })
+                      }
+                      onEstimateChange={setEstimate}
+                      onToggleDone={toggleDone}
+                    />
+                  )}
+                </div>
 
                 {days.map((day) => {
                   const key = dayKey(day);
@@ -556,7 +564,7 @@ function PlannerColumn({
       ref={setNodeRef}
       data-testid={`planner-column-${id}`}
       className={cn(
-        "flex h-full w-[85vw] shrink-0 snap-center flex-col rounded-lg border bg-sidebar/40 sm:w-56",
+        "flex min-h-0 flex-1 flex-col rounded-lg border bg-sidebar/40",
         isOver ? "border-brand/50" : "border-border/60",
       )}
     >
@@ -589,6 +597,8 @@ function PlannerColumn({
 /**
  * "De dias anteriores" (super-productivity): solo se arrastra desde aqui, no
  * hacia aqui -no lleva `useDroppable`, asi que nada puede soltarse encima-.
+ * Va debajo de «Sin planificar», tan alta como su contenido y como mucho la
+ * mitad de la columna.
  */
 function PreviousColumn({
   tasks,
@@ -606,7 +616,7 @@ function PreviousColumn({
   return (
     <div
       data-testid="planner-column-previous"
-      className="flex h-full w-[85vw] shrink-0 snap-center flex-col rounded-lg border border-warning/40 bg-warning/5 sm:w-56"
+      className="flex max-h-1/2 min-h-0 shrink-0 flex-col rounded-lg border border-warning/40 bg-warning/5"
     >
       <div className="space-y-1 px-2 py-2">
         <div className="flex items-center justify-between">

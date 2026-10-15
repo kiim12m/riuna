@@ -518,11 +518,11 @@ ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
   día no tenga nada con hora: soltar ahí ancla la tarea al inicio de la
   jornada y abre el selector de hora. Las tareas ancladas se arrastran a otro
   día, conservando su hora, o a «sin hora», que la suelta. Cada tarjeta lleva
-  su casilla de «hecha» y su cronómetro. Una columna aparte para lo
-  planificado antes de la ventana y todavía sin terminar, de la que solo se
-  puede arrastrar.
-  Unas flechas mueven la ventana de semana en semana, más allá de los quince
-  días, y «Hoy» la devuelve.
+  su casilla de «hecha» y su cronómetro. Lo planificado antes de la ventana y
+  todavía sin terminar va debajo de «Sin planificar», en la misma columna
+  (como mucho la mitad de su alto), y solo se puede arrastrar desde ahí.
+  Unas flechas mueven la ventana de día en día, más allá de los quince días,
+  y «Hoy» la devuelve.
   Incluye una proyección de las próximas ocurrencias de tareas recurrentes
   todavía no creadas. La estimación se edita directamente en la tarjeta. La
   carga de cada día es lo que queda de cada tarea sin terminar más los bloques

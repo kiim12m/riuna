@@ -167,25 +167,45 @@ test.describe("Acciones de fila", () => {
       .toContain(id);
   });
 
-  test("el Planificador va más allá de quince días", async ({
+  test("el Planificador va más allá de quince días, de día en día", async ({
     page,
     riuna,
   }) => {
-    await myTask(riuna, "Revisión trimestral", localDay(20));
+    await myTask(riuna, "Revisión trimestral", localDay(15));
+    await myTask(riuna, "Llamar al proveedor", localDay(-1));
+    await myTask(riuna, "Preparar la oferta");
 
     await page.goto(`/dashboard/workspace/${riuna.workspaceId}/planner`);
     await page
-      .getByRole("button", { name: "Semana siguiente" })
+      .getByRole("button", { name: "Día siguiente" })
       .waitFor({ timeout: 30_000 });
     await expect(page.getByText("Revisión trimestral")).toBeHidden();
 
-    await page.getByRole("button", { name: "Semana siguiente" }).click();
-    await expect(page).toHaveURL(new RegExp(`from=${localDay(7)}`));
+    // «Sin planificar» y «De días anteriores» comparten columna: una encima
+    // de otra, no una al lado de otra.
+    const unplanned = await page
+      .getByTestId("planner-column-unplanned")
+      .boundingBox();
+    const previous = await page
+      .getByTestId("planner-column-previous")
+      .boundingBox();
+    expect(previous?.x).toBe(unplanned?.x);
+    expect(previous?.y ?? 0).toBeGreaterThan(
+      (unplanned?.y ?? 0) + (unplanned?.height ?? 0) - 1,
+    );
+
+    // Cada flecha mueve la ventana un día.
+    await page.getByRole("button", { name: "Día siguiente" }).click();
+    await expect(page).toHaveURL(new RegExp(`from=${localDay(1)}`));
     await expect(
       page
-        .getByTestId(`planner-column-${localDay(20)}`)
+        .getByTestId(`planner-column-${localDay(15)}`)
         .getByText("Revisión trimestral"),
     ).toBeVisible();
+    await page.getByRole("button", { name: "Día siguiente" }).click();
+    await expect(page).toHaveURL(new RegExp(`from=${localDay(2)}`));
+    await page.getByRole("button", { name: "Día anterior" }).click();
+    await expect(page).toHaveURL(new RegExp(`from=${localDay(1)}`));
 
     await page.getByRole("button", { name: "Volver a hoy" }).click();
     await expect(page).not.toHaveURL(/from=/);
