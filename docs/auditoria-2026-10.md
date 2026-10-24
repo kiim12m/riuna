@@ -66,9 +66,19 @@ fechas, asignado).
 - **Dónde**: `components/kanban-board/index.tsx:158-183`, `list-view/index.tsx:408-440`
   y `:470`, `backlog-list-view/index.tsx:250-289`, `backlog.tsx:286`,
   `fetchers/task/update-task.ts`.
-- **Arreglo**: endpoint nuevo `PUT /task/reorder {projectId, status, orderedIds}`
+- **Arreglo**: endpoint nuevo `PUT /task/reorder/:id {status, afterId, beforeId}`
   que reordena en una transacción y publica un solo evento. El cliente lo llama una
   vez y usa `setQueryData`. «Mover todo» y «archivar columna» pasan a `/task/bulk`.
+  - Recibe la vecina y no la lista que ve el navegador (`orderedIds`, como se
+    pensó al principio). Con un filtro puesto esa lista es solo parte de la
+    columna, y renumerarla pisaría el sitio de las tareas ocultas.
+  - Solo cambia de estado la tarea soltada. Si la vecina ya no está en la
+    columna, prueba con la otra, y si tampoco, la pone al final.
+  - `get-tasks` desempata por id, igual que el endpoint.
+  - «Mover todo» lleva a la primera columna, como dice su aviso, y no a `to-do`.
+  - **Sigue mandando el PUT completo**, sobre una sola tarea: el Gantt
+    (`gantt-task-bar.tsx`), con la tarea del listado. Hay que pasarlo a una ruta
+    parcial antes del 5.2.
 
 1.2 ✔ **El borrado en lote no repara el árbol** (`bulk-update-tasks.ts:239`).
 - **Problema**: deja hijas con `parent_id` NULL (la FK hace SET NULL) pero con
@@ -312,7 +322,8 @@ Inicializar por id.
 
 5.2 ✔ **La lista devuelve `description` de cada tarea** (`get-tasks.ts:133`) y
 ningún componente de lista la lee. Quitarla. **Requiere el 1.1**: el PUT de hoy
-mandaría la descripción vacía.
+mandaría la descripción vacía. Al arrastrar ya no se usa, pero el Gantt sí (ver
+el 1.1).
 
 5.3 ✔ **`inArray` con un parámetro por tarea** (`get-tasks.ts:183`) choca con el
 límite de 65.535. Usar un join o `= ANY(${sql.param(ids)}::text[])`.

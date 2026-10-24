@@ -25,11 +25,14 @@ import { Archive, ChevronRight, Flag, Plus, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { priorityColorsTaskCard } from "@/constants/priority-colors";
-import { useUpdateTask } from "@/hooks/mutations/task/use-update-task";
+import { placeTaskInProject } from "@/hooks/mutations/task/place-task-in-cache";
+import { useBulkOperations } from "@/hooks/mutations/task/use-bulk-operations";
+import { useReorderTask } from "@/hooks/mutations/task/use-reorder-task";
 import { useUpdateTaskParent } from "@/hooks/mutations/task/use-update-task-parent";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { cn } from "@/lib/cn";
 import { getColumnIcon } from "@/lib/column";
+import { dropNeighbours } from "@/lib/drop-neighbours";
 import { type GroupByField, groupTasksByTeam } from "@/lib/group-tasks";
 import {
   buildTaskTree,
@@ -88,7 +91,8 @@ function ListView({
     focusedTaskId,
     clearFocus,
   } = useBulkSelectionStore();
-  const { mutate: updateTask } = useUpdateTask();
+  const { mutate: reorderTask } = useReorderTask();
+  const { bulkArchive } = useBulkOperations();
   const { mutateAsync: reparentTask } = useUpdateTaskParent();
   const navigate = useNavigate();
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
@@ -376,72 +380,28 @@ function ListView({
     const activeTaskId = active.id.toString();
     const overId = over.id.toString();
 
-    const updatedProject = produce(project, (draft) => {
-      const sourceColumn = draft?.columns?.find((col) =>
-        col.tasks.some((task) => task.id === activeTaskId),
-      );
-      const destinationColumn = draft?.columns?.find(
-        (col) =>
-          col.id === overId || col.tasks.some((task) => task.id === overId),
-      );
+    const task = project.columns
+      .flatMap((column) => column.tasks)
+      .find((candidate) => candidate.id === activeTaskId);
+    const destinationColumn = project.columns.find(
+      (col) =>
+        col.id === overId || col.tasks.some((task) => task.id === overId),
+    );
+    if (!task || !destinationColumn) return;
 
-      if (!sourceColumn || !destinationColumn) return;
+    const neighbours = dropNeighbours(
+      destinationColumn.tasks,
+      activeTaskId,
+      overId,
+    );
+    if (!neighbours) return;
 
-      const sourceTaskIndex = sourceColumn.tasks.findIndex(
-        (task) => task.id === activeTaskId,
-      );
-      const task = sourceColumn.tasks[sourceTaskIndex];
-
-      sourceColumn.tasks = sourceColumn.tasks.filter(
-        (t) => t.id !== activeTaskId,
-      );
-
-      if (sourceColumn.id === destinationColumn.id) {
-        let destinationIndex = destinationColumn.tasks.findIndex(
-          (t) => t.id === overId,
-        );
-        if (sourceTaskIndex <= destinationIndex) {
-          destinationIndex += 1;
-        }
-        destinationColumn.tasks.splice(destinationIndex, 0, task);
-
-        destinationColumn.tasks.forEach((t, index) => {
-          updateTask({
-            ...t,
-            status: destinationColumn.slug,
-            position: index,
-          });
-        });
-      } else {
-        // A task's status is a column slug. The column id is only the
-        // droppable identity here, and the two are interchangeable only
-        // because the tasks endpoint happens to return `id: column.slug`.
-        task.status = destinationColumn.slug;
-        const destinationIndex =
-          overId === destinationColumn.id
-            ? destinationColumn.tasks.length
-            : destinationColumn.tasks.findIndex((t) => t.id === overId) + 1;
-
-        destinationColumn.tasks.splice(destinationIndex, 0, task);
-
-        destinationColumn.tasks.forEach((t, index) => {
-          updateTask({
-            ...t,
-            status: destinationColumn.slug,
-            position: index,
-          });
-        });
-
-        sourceColumn.tasks.forEach((t, index) => {
-          updateTask({
-            ...t,
-            position: index,
-          });
-        });
-      }
-    });
-
-    setProject(updatedProject);
+    // A task's status is a column slug. The column id is only the droppable
+    // identity here, and the two are interchangeable only because the tasks
+    // endpoint happens to return `id: column.slug`.
+    const placement = { status: destinationColumn.slug, ...neighbours };
+    setProject(placeTaskInProject(project, activeTaskId, placement));
+    reorderTask({ task, ...placement });
   };
 
   const toggleSection = (sectionId: string) => {
@@ -460,25 +420,23 @@ function ListView({
   const handleConfirmArchive = () => {
     if (!columnToArchive) return;
 
-    const updatedProject = produce(project, (draft) => {
-      const archivedColumn = draft?.columns?.find(
-        (col) => col.id === columnToArchive.id,
-      );
-      if (!archivedColumn) return;
-
-      for (const task of archivedColumn.tasks) {
-        updateTask({
-          ...task,
-          status: "archived",
-        });
-      }
-
-      archivedColumn.tasks = [];
-    });
-
-    setProject(updatedProject);
-    toast.success(
-      t("tasks:archive.success", { count: columnToArchive.tasks.length }),
+    const taskIds = columnToArchive.tasks.map((task) => task.id);
+    const previousProject = project;
+    setProject(
+      produce(project, (draft) => {
+        const archivedColumn = draft?.columns?.find(
+          (col) => col.id === columnToArchive.id,
+        );
+        if (archivedColumn) archivedColumn.tasks = [];
+      }),
+    );
+    bulkArchive(taskIds).then(
+      () =>
+        toast.success(t("tasks:archive.success", { count: taskIds.length })),
+      () => {
+        setProject(previousProject);
+        toast.error(t("tasks:update.error"));
+      },
     );
 
     setIsArchiveModalOpen(false);

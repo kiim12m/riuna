@@ -54,6 +54,7 @@ import getTasks from "./controllers/get-tasks";
 import { importServitec } from "./controllers/import-servitec";
 import importTasks from "./controllers/import-tasks";
 import moveTask from "./controllers/move-task";
+import reorderTask from "./controllers/reorder-task";
 import {
   requireBulkTaskEntitlement,
   requireBulkTaskPermission,
@@ -559,6 +560,50 @@ const task = new Hono<{
       });
 
       return c.json(result);
+    },
+  )
+  .put(
+    "/reorder/:id",
+    describeRoute({
+      operationId: "reorderTask",
+      tags: ["Tasks"],
+      description:
+        "Drop a task into a column (or the backlog or archive) next to a neighbour, and renumber that column. Only the dropped task changes status; the others only change position and keep their relative order, including the ones a filter hides. If the neighbour is no longer in the column, the other one is tried, and otherwise the task goes last",
+      responses: {
+        200: {
+          description: "Task placed",
+          content: {
+            "application/json": { schema: resolver(taskSchema) },
+          },
+        },
+      },
+    }),
+    validator("param", v.object({ id: v.string() })),
+    validator(
+      "json",
+      v.object({
+        status: v.string(),
+        afterId: v.optional(v.nullable(v.string())),
+        beforeId: v.optional(v.nullable(v.string())),
+      }),
+    ),
+    workspaceAccess.fromTask(),
+    requireWorkspacePermission({ task: ["update"] }),
+    requireEntitlement,
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { status, afterId, beforeId } = c.req.valid("json");
+      const currentUserId = c.get("userId");
+
+      const task = await reorderTask({
+        id,
+        status,
+        afterId,
+        beforeId,
+        currentUserId,
+      });
+
+      return c.json(task);
     },
   )
   .put(

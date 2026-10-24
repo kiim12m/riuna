@@ -33,7 +33,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import labelColors from "@/constants/label-colors";
 import { shortcuts } from "@/constants/shortcuts";
-import { useUpdateTask } from "@/hooks/mutations/task/use-update-task";
+import { useBulkOperations } from "@/hooks/mutations/task/use-bulk-operations";
 import useGetLabelsByWorkspace from "@/hooks/queries/label/use-get-labels-by-workspace";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
 import useGetTeams from "@/hooks/queries/team/use-get-teams";
@@ -73,7 +73,7 @@ function RouteComponent() {
   const navigate = useNavigate();
   const { project, setProject } = useProjectStore();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const { mutate: updateTask } = useUpdateTask();
+  const { bulkMoveToBoard } = useBulkOperations();
   const [sort, setSort] = useState<SortConfig>({
     field: "position",
     direction: "asc",
@@ -265,7 +265,7 @@ function RouteComponent() {
     };
   }, [shownProject, sort]);
 
-  const handleMoveAllPlannedToTodo = () => {
+  const handleMoveAllPlannedToBoard = () => {
     if (!project) return;
 
     const plannedTasks = project.plannedTasks || [];
@@ -283,31 +283,40 @@ function RouteComponent() {
       return;
     }
 
-    for (const task of plannedTasks) {
-      updateTask({
-        ...task,
-        status: "to-do",
-      });
-    }
+    // El aviso dice «la primera columna», y eso es lo que se usa: con el slug
+    // `to-do` fijo, un proyecto sin esa columna rechazaba el movimiento.
+    const firstColumn = project.columns?.[0];
+    if (!firstColumn) return;
 
-    const updatedProject = produce(project, (draft) => {
-      // "to-do" is a column slug, so it can only be matched against slug.
-      const todoColumn = draft.columns?.find((col) => col.slug === "to-do");
-      if (todoColumn && draft.plannedTasks) {
-        todoColumn.tasks.push(
-          ...draft.plannedTasks.map((task) => ({
-            ...task,
-            status: "to-do",
-          })),
+    const previousProject = project;
+    setProject(
+      produce(project, (draft) => {
+        const target = draft.columns?.find(
+          (col) => col.slug === firstColumn.slug,
         );
-
-        draft.plannedTasks = [];
-      }
-    });
-
-    setProject(updatedProject);
-    toast.success(
-      t("tasks:backlog.moveAllSuccess", { count: plannedTasks.length }),
+        if (target && draft.plannedTasks) {
+          target.tasks.push(
+            ...draft.plannedTasks.map((task) => ({
+              ...task,
+              status: firstColumn.slug,
+            })),
+          );
+          draft.plannedTasks = [];
+        }
+      }),
+    );
+    bulkMoveToBoard({
+      taskIds: plannedTasks.map((task) => task.id),
+      status: firstColumn.slug,
+    }).then(
+      () =>
+        toast.success(
+          t("tasks:backlog.moveAllSuccess", { count: plannedTasks.length }),
+        ),
+      () => {
+        setProject(previousProject);
+        toast.error(t("tasks:update.error"));
+      },
     );
   };
 
@@ -338,7 +347,7 @@ function RouteComponent() {
                 <Button
                   variant="ghost"
                   size="xs"
-                  onClick={handleMoveAllPlannedToTodo}
+                  onClick={handleMoveAllPlannedToBoard}
                   className="h-6 px-2 text-xs text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   title={t("tasks:backlog.moveAllTooltip")}
                 >

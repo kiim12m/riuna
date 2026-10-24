@@ -162,7 +162,9 @@ async function getProjectTasks(
     .leftJoin(teamTable, eq(taskTable.teamId, teamTable.id))
     .leftJoin(projectTable, eq(taskTable.projectId, projectTable.id))
     .where(whereClause)
-    .orderBy(orderByClause);
+    // Con posiciones repetidas el orden lo decidia la base, y podia cambiar de
+    // una peticion a otra; el arrastre (`reorder-task.ts`) desempata igual.
+    .orderBy(orderByClause, asc(taskTable.id));
 
   const paginatedTasks = usePagination
     ? await query.limit(pageSize).offset(offset)

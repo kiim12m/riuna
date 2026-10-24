@@ -13,13 +13,13 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { produce } from "immer";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useUpdateTask } from "@/hooks/mutations/task/use-update-task";
+import { placeTaskInProject } from "@/hooks/mutations/task/place-task-in-cache";
+import { useReorderTask } from "@/hooks/mutations/task/use-reorder-task";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { dropNeighbours } from "@/lib/drop-neighbours";
 import useBulkSelectionStore from "@/store/bulk-selection";
 import useProjectStore from "@/store/project";
 import type { ProjectWithTasks } from "@/types/project";
@@ -33,7 +33,6 @@ type KanbanBoardProps = {
 };
 
 function KanbanBoard({ project, disableDragDrop = false }: KanbanBoardProps) {
-  const queryClient = useQueryClient();
   const { setProject } = useProjectStore();
   const {
     setAvailableTasks,
@@ -43,7 +42,7 @@ function KanbanBoard({ project, disableDragDrop = false }: KanbanBoardProps) {
     clearFocus,
   } = useBulkSelectionStore();
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
-  const { mutate: updateTask } = useUpdateTask();
+  const { mutate: reorderTask } = useReorderTask();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -128,64 +127,28 @@ function KanbanBoard({ project, disableDragDrop = false }: KanbanBoardProps) {
     const activeId = active.id.toString();
     const overId = over.id.toString();
 
-    const updatedProject = produce(project, (draft) => {
-      const sourceColumn = draft?.columns?.find((col) =>
-        col.tasks.some((task) => task.id === activeId),
-      );
-      const destinationColumn = draft?.columns?.find(
-        (col) =>
-          col.id === overId || col.tasks.some((task) => task.id === overId),
-      );
+    const task = project.columns
+      .flatMap((column) => column.tasks)
+      .find((candidate) => candidate.id === activeId);
+    const destinationColumn = project.columns.find(
+      (col) =>
+        col.id === overId || col.tasks.some((task) => task.id === overId),
+    );
+    if (!task || !destinationColumn) return;
 
-      if (!sourceColumn || !destinationColumn) return;
+    const neighbours = dropNeighbours(
+      destinationColumn.tasks,
+      activeId,
+      overId,
+    );
+    if (!neighbours) return;
 
-      const sourceTaskIndex = sourceColumn.tasks.findIndex(
-        (task) => task.id === activeId,
-      );
-      const task = sourceColumn.tasks[sourceTaskIndex];
-
-      sourceColumn.tasks = sourceColumn.tasks.filter((t) => t.id !== activeId);
-
-      if (sourceColumn.id === destinationColumn.id) {
-        let destinationIndex = destinationColumn.tasks.findIndex(
-          (t) => t.id === overId,
-        );
-        if (sourceTaskIndex <= destinationIndex) {
-          destinationIndex += 1;
-        }
-        destinationColumn.tasks.splice(destinationIndex, 0, task);
-
-        destinationColumn.tasks.forEach((t, index) => {
-          updateTask({ ...t, position: index });
-        });
-
-        queryClient.invalidateQueries({
-          queryKey: ["projects", project.workspaceId],
-        });
-      } else {
-        // A task's status is a column slug. The column id is only the
-        // droppable identity here, and the two are interchangeable only
-        // because the tasks endpoint happens to return `id: column.slug`.
-        task.status = destinationColumn.slug;
-        const destinationIndex =
-          overId === destinationColumn.id
-            ? destinationColumn.tasks.length
-            : destinationColumn.tasks.findIndex((t) => t.id === overId) + 1;
-
-        destinationColumn.tasks.splice(destinationIndex, 0, task);
-
-        destinationColumn.tasks.forEach((t, index) => {
-          updateTask({ ...t, status: destinationColumn.slug, position: index });
-        });
-
-        sourceColumn.tasks.forEach((t, index) => {
-          updateTask({ ...t, position: index });
-        });
-      }
-    });
-
-    setProject(updatedProject);
-    setActiveId(null);
+    // A task's status is a column slug. The column id is only the droppable
+    // identity here, and the two are interchangeable only because the tasks
+    // endpoint happens to return `id: column.slug`.
+    const placement = { status: destinationColumn.slug, ...neighbours };
+    setProject(placeTaskInProject(project, activeId, placement));
+    reorderTask({ task, ...placement });
   };
 
   if (!project?.columns) {

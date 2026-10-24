@@ -3984,6 +3984,139 @@
         "summary": "Move Task"
       }
     },
+    "/task/reorder/{id}": {
+      "put": {
+        "operationId": "reorderTask",
+        "tags": [
+          "Tasks"
+        ],
+        "description": "Drop a task into a column (or the backlog or archive) next to a neighbour, and renumber that column. Only the dropped task changes status; the others only change position and keep their relative order, including the ones a filter hides. If the neighbour is no longer in the column, the other one is tried, and otherwise the task goes last",
+        "responses": {
+          "200": {
+            "description": "Task placed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string"
+                    },
+                    "position": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "number": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "userId": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "enum": [
+                        "no-priority",
+                        "low",
+                        "medium",
+                        "high",
+                        "urgent"
+                      ],
+                      "type": "string"
+                    },
+                    "startDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "dueDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "isMilestone": {
+                      "type": "boolean"
+                    },
+                    "autoDates": {
+                      "type": "boolean"
+                    },
+                    "customFields": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "position",
+                    "number",
+                    "userId",
+                    "title",
+                    "description",
+                    "status",
+                    "priority",
+                    "customFields",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string"
+                  },
+                  "afterId": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "beforeId": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "status"
+                ]
+              }
+            }
+          }
+        },
+        "summary": "Reorder Task"
+      }
+    },
     "/task/export/{projectId}": {
       "get": {
         "operationId": "exportTasks",
