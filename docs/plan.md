@@ -8,7 +8,8 @@
 > [decisiones (ADR)](adr/) · [copias de seguridad](copias-de-seguridad.md) ·
 > [actualizar la instancia](actualizar.md) ·
 > [plan de despliegue](plan-despliegue.md) ·
-> [comparativa con OpenProject](comparativa-openproject.md)
+> [comparativa con OpenProject](comparativa-openproject.md) ·
+> [auditoría del código (octubre)](auditoria-2026-10.md)
 
 ## Estado
 
@@ -3719,6 +3720,14 @@ Con eso se cierra el Bloque A. El
 planificado el 2026-10-12, también está cerrado: sus cinco tandas están hechas (la 5, la wiki, el
 2026-10-15). Lo siguiente es montar la copia externa (el punto 3) y empezar el Bloque B (CRM y
 ERP ligero) por la Fase 10.
+
+**Auditoría del código (2026-10-16).** Antes del Bloque B se auditó todo el código: nueve tandas
+de arreglos en [auditoría del código](auditoria-2026-10.md), con lo que pierde o corrompe datos
+primero (arrastrar en el tablero reescribe la columna entera, el borrado en lote rompe el árbol, el
+apagado corta trabajo en curso). Lleva siete decisiones: retirar GitHub y Gitea, la facturación,
+planka-import, el MCP stdio y los despliegues que no usa el PC; altas solo por invitación o cuenta
+local; adjuntos en disco local; el tablero deja de cargar archivadas y backlog; purgar solo lo
+caducado.
 
 **Revisión de código del interludio (2026-10-03):** `/code-review` sobre los
 seis bloques devolvió 14 hallazgos, comprobados uno a uno contra el código.
