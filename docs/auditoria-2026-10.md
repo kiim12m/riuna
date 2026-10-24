@@ -89,6 +89,13 @@ fechas, asignado).
   caminos.
 - **Datos existentes**: diagnóstico en el PC (`parent_id IS NULL AND depth > 0`) y,
   si aparece algo, una migración de reparación.
+  - Hecho sin esperar al diagnóstico: la migración `0096_repair_task_tree`
+    recalcula `path` y `depth` desde `parent_id` y solo escribe las filas que
+    no coinciden. En una base sana no cambia nada.
+  - El lote borra una a una, releyendo cada tarea, porque si su madre va en el
+    mismo lote su `path` ya ha cambiado. Toma el cerrojo de cada proyecto
+    siempre en el mismo orden. Además publica `task-relation.deleted`, como el
+    borrado de una sola.
 
 1.3 ✔ **Desasignar en lote publica `oldAssignee`** (`bulk-update-tasks.ts:224-232`),
 pero `my-work/recipients.ts:86`, `activity/index.ts:250` y `get-task-baseline.ts:94`
