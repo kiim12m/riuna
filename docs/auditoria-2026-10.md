@@ -129,7 +129,7 @@ Antes de cada retirada:
   `.env.sample` y lo que pase `check:env`;
 - regenerar `openapi.json` y `i18n/schema.json`.
 
-2.1 ✔ **Retirar GitHub y Gitea.** (ADR 095; también se retira `workflow_rule`, que solo servía a ambas)
+2.1 ✔ PR #81 **Retirar GitHub y Gitea.** (ADR 095; también se retira `workflow_rule`, que solo servía a ambas)
 - **API**: `github-integration/`, `gitea-integration/`, `plugins/github/`,
   `plugins/gitea/`, las rutas de webhook y sus `limitByIp` en `index.ts:246-294`, la
   dependencia `octokit` y las herramientas MCP que les toquen.
@@ -150,7 +150,7 @@ Antes de cada retirada:
 - **No se toca** el inicio de sesión con GitHub (`socialProviders.github`): no es
   la integración.
 
-2.2 ✔ **Retirar la facturación (Creem).** (ADR 096; también `trial_grant`, el correo de fin de prueba y los monitores de Sentry)
+2.2 ✔ PR #81 **Retirar la facturación (Creem).** (ADR 096; también `trial_grant`, el correo de fin de prueba y los monitores de Sentry)
 - **API** (~900 líneas): `billing/`, los trabajos `seat-reconciliation` y
   `trial-reminders`, `is-cloud` donde ya no sirva, los `syncWorkspaceSeats` de
   `auth.ts:462-469` y la excepción de `/api/billing/webhook` en `index.ts:657`.
@@ -162,10 +162,10 @@ Antes de cada retirada:
 - **Otros**: la dependencia `creem`; la excepción de `billing.tsx` en
   `hardcoded-copy.test.ts`.
 
-2.3 ✔ **Retirar `packages/planka-import`** (ADR 097), junto con sus referencias en la
+2.3 ✔ PR #81 **Retirar `packages/planka-import`** (ADR 097), junto con sus referencias en la
 documentación.
 
-2.4 ✔ **Retirar los despliegues que no usa el PC.** (ADR 098)
+2.4 ✔ PR #81 **Retirar los despliegues que no usa el PC.** (ADR 098)
 - **Ficheros**: `Dockerfile.riuna`, `apps/web/nginx.riuna.conf`,
   `deploy/riuna-entrypoint.sh`, `compose.yml`, `compose.coolify.yml`, `charts/` y
   los flujos `helm-chart.yml` y `helm-validate.yml`.
@@ -176,7 +176,7 @@ documentación.
   `compose.local.yml`. Revisar también `ENVIRONMENT_SETUP.md` y `README.md`.
 - **Se mantiene**: Redis sigue como opción. No se ha decidido nada sobre él.
 
-2.5 ✔ **Retirar el paquete MCP stdio** `packages/mcp`. (ADR 099)
+2.5 ✔ PR #81 **Retirar el paquete MCP stdio** `packages/mcp`. (ADR 099)
 - Con él desaparece la copia duplicada de las 71 herramientas.
 - Quitar sus referencias en `README.md`, `SECURITY.md`, `ENVIRONMENT_SETUP.md`,
   `AGENTS.md`, `.devcontainer/devcontainer.json` y `docs/`.
