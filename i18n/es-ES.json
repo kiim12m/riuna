@@ -1305,7 +1305,8 @@
 			"createError": "Error al crear etiqueta",
 			"updateError": "Error al actualizar etiqueta",
 			"deleteError": "Error al eliminar etiqueta",
-			"nameRequired": "El nombre de la etiqueta es obligatorio"
+			"nameRequired": "El nombre de la etiqueta es obligatorio",
+			"nameTaken": "Ya hay una etiqueta con ese nombre"
 		},
 		"giteaIntegration": {
 			"validation": {

@@ -905,7 +905,8 @@
 			"createError": "Failed to create label",
 			"updateError": "Failed to update label",
 			"deleteError": "Failed to delete label",
-			"nameRequired": "Label name is required"
+			"nameRequired": "Label name is required",
+			"nameTaken": "There is already a label with that name"
 		},
 		"projectGeneral": {
 			"pageTitle": "Project Settings",

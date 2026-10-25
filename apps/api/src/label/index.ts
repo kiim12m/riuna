@@ -177,13 +177,18 @@ const label = new Hono<{
     describeRoute({
       operationId: "updateLabel",
       tags: ["Labels"],
-      description: "Update an existing label",
+      description:
+        "Update an existing label. Renaming a workspace label also renames its task copies; a task that already carries the new name keeps that copy",
       responses: {
         200: {
           description: "Label updated successfully",
           content: {
             "application/json": { schema: resolver(labelSchema) },
           },
+        },
+        409: {
+          description:
+            "Another label of the workspace (or of the same task) already has that name",
         },
       },
     }),
