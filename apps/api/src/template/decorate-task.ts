@@ -6,19 +6,20 @@ import {
   taskEpicTable,
   taskTable,
 } from "../database/schema";
-import { refreshFormulasAfter } from "../field/formula/refresh";
+import type { DbOrTx } from "../task/controllers/assignees";
 
 /** Las epicas que se nombran, creando en el proyecto las que falten. */
 export async function resolveEpics(
   projectId: string,
   names: string[],
+  dbOrTx: DbOrTx = db,
 ): Promise<Map<string, string>> {
   const unique = [...new Set(names)].filter(Boolean);
   const byName = new Map<string, string>();
 
   if (unique.length === 0) return byName;
 
-  const existing = await db
+  const existing = await dbOrTx
     .select({ id: epicTable.id, name: epicTable.name })
     .from(epicTable)
     .where(eq(epicTable.projectId, projectId));
@@ -28,7 +29,7 @@ export async function resolveEpics(
   const missing = unique.filter((name) => !byName.has(name));
 
   if (missing.length > 0) {
-    const inserted = await db
+    const inserted = await dbOrTx
       .insert(epicTable)
       .values(
         missing.map((name, index) => ({
@@ -50,6 +51,10 @@ export async function resolveEpics(
  * creada ademas de sus campos de base: campos personalizados, etiquetas y
  * epicas. Los valores ya vienen validados contra el proyecto
  * (`checkTemplateFits`) y las epicas resueltas (`resolveEpics`).
+ *
+ * Va en la transaccion que creo la tarea (`createTaskInTransaction`), y no
+ * recalcula los campos calculados: lo hace el `afterCommit` de esa alta, que ya
+ * ve estos valores porque corre cuando la transaccion se confirma.
  */
 export async function decorateTask({
   taskId,
@@ -58,6 +63,7 @@ export async function decorateTask({
   labels,
   epics,
   epicIdsByName,
+  dbOrTx = db,
 }: {
   taskId: string;
   workspaceId: string;
@@ -65,25 +71,17 @@ export async function decorateTask({
   labels?: Array<{ name: string; color: string }>;
   epics?: string[];
   epicIdsByName: Map<string, string>;
+  dbOrTx?: DbOrTx;
 }) {
   if (customFields) {
-    const [task] = await db
+    await dbOrTx
       .update(taskTable)
       .set({ customFields })
-      .where(eq(taskTable.id, taskId))
-      .returning({ projectId: taskTable.projectId });
-    // La tarea se creo sin estos valores, y escribirlos reemplaza el documento
-    // entero: lo calculado (ADR 090) se rehace con ellos.
-    if (task) {
-      await refreshFormulasAfter({
-        projectId: task.projectId,
-        taskIds: [taskId],
-      });
-    }
+      .where(eq(taskTable.id, taskId));
   }
 
   if (labels?.length) {
-    await db.insert(labelTable).values(
+    await dbOrTx.insert(labelTable).values(
       labels.map((label) => ({
         workspaceId,
         taskId,
@@ -99,7 +97,7 @@ export async function decorateTask({
       .filter((id): id is string => Boolean(id));
 
     if (epicIds.length > 0) {
-      await db
+      await dbOrTx
         .insert(taskEpicTable)
         .values(epicIds.map((epicId) => ({ taskId, epicId })))
         .onConflictDoNothing();

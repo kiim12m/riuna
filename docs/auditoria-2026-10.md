@@ -141,6 +141,14 @@ La cascada choca con `label_task_name_unique` y con `label_workspace_name_unique
   `createTask` ya hicieron commit y emitieron eventos.
 - `recurrence/generate.ts:139-175` hace tres commits.
 - **Arreglo**: que `createTask` acepte un `tx` y publique después del commit.
+  - Hecho con `createTaskInTransaction(tx, …)`, que devuelve aparte un
+    `afterCommit` con los avisos, los recálculos y la replanificación.
+    `createTask` es el envoltorio que abre la transacción.
+  - La plantilla de proyecto crea proyecto, columnas, épicas y árbol en una
+    sola transacción, sin borrado compensatorio. La recurrencia reclama la
+    fecha, crea y decora en otra: si falla, se reintenta en la vuelta siguiente
+    en vez de perder la ocurrencia, y sigue sin duplicar.
+  - `decorateTask` ya no recalcula: lo hace el `afterCommit` del alta.
 
 ## Tanda 2 — Retiradas decididas (D2, D3, D4)
 
@@ -418,6 +426,8 @@ avisar.
 6.4 **Posiciones leídas fuera del cerrojo**: `create-task.ts:87-99`,
 `create-epic.ts:31`, `create-view.ts:52`, `create-field-definition.ts:123`,
 `create-column.ts:60`.
+El de `create-task.ts` quedó resuelto con el 1.9: ahora lee la posición
+dentro de la transacción y después del cerrojo.
 
 6.5 ~ **El stand-up puede salir dos veces** si caduca el arrendamiento de 15 minutos
 (`automation/standup.ts:87-155`).

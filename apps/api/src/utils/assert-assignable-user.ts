@@ -1,18 +1,20 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db, { schema } from "../database";
+import type { DbOrTx } from "../task/controllers/assignees";
 
 const NOT_ASSIGNABLE = "Assignee is not a member of this workspace";
 
 export async function filterAssignableUsers(
   userIds: string[],
   workspaceId: string,
+  dbOrTx: DbOrTx = db,
 ): Promise<Set<string>> {
   if (userIds.length === 0) {
     return new Set();
   }
 
-  const memberships = await db
+  const memberships = await dbOrTx
     .select({ userId: schema.workspaceUserTable.userId })
     .from(schema.workspaceUserTable)
     .where(
@@ -29,7 +31,7 @@ export async function filterAssignableUsers(
     return assignable;
   }
 
-  const admins = await db
+  const admins = await dbOrTx
     .select({ id: schema.userTable.id })
     .from(schema.userTable)
     .where(
@@ -49,8 +51,9 @@ export async function filterAssignableUsers(
 export async function assertAssignableUser(
   userId: string,
   workspaceId: string,
+  dbOrTx: DbOrTx = db,
 ): Promise<void> {
-  const assignable = await filterAssignableUsers([userId], workspaceId);
+  const assignable = await filterAssignableUsers([userId], workspaceId, dbOrTx);
 
   if (!assignable.has(userId)) {
     throw new HTTPException(403, { message: NOT_ASSIGNABLE });
@@ -59,8 +62,9 @@ export async function assertAssignableUser(
 
 export async function getProjectWorkspaceId(
   projectId: string,
+  dbOrTx: DbOrTx = db,
 ): Promise<string> {
-  const [project] = await db
+  const [project] = await dbOrTx
     .select({ workspaceId: schema.projectTable.workspaceId })
     .from(schema.projectTable)
     .where(eq(schema.projectTable.id, projectId))
