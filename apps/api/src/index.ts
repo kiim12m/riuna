@@ -57,6 +57,7 @@ import notificationPreferences from "./notification-preferences";
 import oauth from "./oauth";
 import planner from "./planner";
 import { initializePlugins } from "./plugins";
+import { installProcessErrorHandlers } from "./process-errors";
 import project from "./project";
 import { getPublicProject } from "./project/controllers/get-public-project";
 import recurrence from "./recurrence";
@@ -959,6 +960,8 @@ export async function startServer(
   injectWebSocket: ReturnType<typeof createNodeWebSocket>["injectWebSocket"],
   port = 1337,
 ) {
+  installProcessErrorHandlers();
+
   try {
     await runStartupTasks();
   } catch (error) {
