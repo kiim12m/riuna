@@ -686,7 +686,7 @@ function Activity({
     const commentUser = isExternalComment
       ? {
           id: undefined,
-          name: activity.externalUserName ?? t("activity:githubUser"),
+          name: activity.externalUserName ?? t("common:people.someone"),
           email: undefined,
           image: activity.externalUserAvatar ?? undefined,
         }
@@ -706,8 +706,6 @@ function Activity({
             content={activity.content || ""}
             user={commentUser}
             createdAt={activity.createdAt}
-            externalSource={activity.externalSource}
-            externalUrl={activity.externalUrl}
           />
         </TimelineContent>
       </TimelineItem>

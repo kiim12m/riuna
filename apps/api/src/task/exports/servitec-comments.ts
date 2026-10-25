@@ -24,7 +24,7 @@ const toHtml = (text: string) =>
 
 /**
  * Los comentarios de la hoja, en `activity` y sin eventos ni avisos: miles de
- * comentarios historicos no son miles de novedades (como los de GitHub).
+ * comentarios historicos no son miles de novedades.
  *
  * **No se repite** uno que la tarea ya tenga del mismo dia con el mismo texto,
  * comparado en texto plano. Asi la vuelta de una hoja exportada no duplica los

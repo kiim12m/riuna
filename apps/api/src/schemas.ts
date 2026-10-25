@@ -184,35 +184,6 @@ export const notificationPreferenceSchema = v.object({
   updatedAt: v.nullable(v.date()),
 });
 
-export const githubIntegrationSchema = v.object({
-  id: v.string(),
-  projectId: v.string(),
-  repositoryOwner: v.string(),
-  repositoryName: v.string(),
-  installationId: v.nullable(v.number()),
-  branchPattern: v.optional(v.string()),
-  commentTaskLinkOnGitHubIssue: v.optional(v.boolean()),
-  isActive: v.nullable(v.boolean()),
-  createdAt: v.date(),
-  updatedAt: v.date(),
-});
-
-export const giteaIntegrationSchema = v.object({
-  id: v.string(),
-  projectId: v.string(),
-  baseUrl: v.string(),
-  repositoryOwner: v.string(),
-  repositoryName: v.string(),
-  maskedAccessToken: v.string(),
-  webhookUrl: v.optional(v.string()),
-  webhookSecret: v.optional(v.string()),
-  branchPattern: v.optional(v.string()),
-  commentTaskLinkOnGiteaIssue: v.optional(v.boolean()),
-  isActive: v.nullable(v.boolean()),
-  createdAt: v.date(),
-  updatedAt: v.date(),
-});
-
 export const integrationEventsSchema = v.object({
   taskCreated: v.boolean(),
   taskStatusChanged: v.boolean(),

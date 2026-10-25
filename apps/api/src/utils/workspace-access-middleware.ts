@@ -19,7 +19,6 @@ type WorkspaceIdSource =
         | "activity"
         | "comment"
         | "column"
-        | "workflowRule"
         | "automation"
         | "announcement"
         | "wikiPage"
@@ -151,7 +150,6 @@ async function lookupWorkspaceId(
     | "activity"
     | "comment"
     | "column"
-    | "workflowRule"
     | "automation"
     | "announcement"
     | "wikiPage"
@@ -418,21 +416,6 @@ async function lookupWorkspaceId(
         return page?.workspaceId || null;
       }
 
-      case "workflowRule": {
-        const [workflowRule] = await db
-          .select({
-            workspaceId: schema.projectTable.workspaceId,
-          })
-          .from(schema.workflowRuleTable)
-          .innerJoin(
-            schema.projectTable,
-            eq(schema.workflowRuleTable.projectId, schema.projectTable.id),
-          )
-          .where(eq(schema.workflowRuleTable.id, id))
-          .limit(1);
-        return workflowRule?.workspaceId || null;
-      }
-
       default:
         return null;
     }
@@ -567,14 +550,6 @@ export const workspaceAccess = {
   fromWikiPage: (idKey = "id") =>
     workspaceAccessMiddleware({
       sources: [{ type: "lookup", resource: "wikiPage", idKey }],
-    }),
-
-  fromWorkflowRule: (idKey = "id") =>
-    workspaceAccessMiddleware({
-      sources: [
-        { type: "lookup", resource: "workflowRule", idKey },
-        { type: "query", key: "workspaceId" },
-      ],
     }),
 
   fromTemplate: (idKey = "id") =>

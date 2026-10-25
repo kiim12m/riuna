@@ -3,9 +3,6 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { labelTable, projectTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
-import { syncLabelToGitea } from "../../plugins/gitea/utils/sync-label-to-gitea";
-import { syncLabelToGitHub } from "../../plugins/github/utils/sync-label-to-github";
-import { log } from "../../utils/log";
 
 async function createLabel(
   name: string,
@@ -57,13 +54,6 @@ async function createLabel(
     }
 
     if (inserted) {
-      syncLabelToGitHub(taskId, name, color).catch((error) => {
-        log.error("Failed to sync label to GitHub:", error);
-      });
-      syncLabelToGitea(taskId, name, color).catch((error) => {
-        log.error("Failed to sync label to Gitea:", error);
-      });
-
       await publishEvent("task.label_created", {
         projectId: task.projectId,
         taskId: task.id,

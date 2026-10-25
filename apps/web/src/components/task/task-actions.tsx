@@ -11,8 +11,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import exportTaskPdf from "@/fetchers/task/export-task-pdf";
-import useGetGiteaIntegration from "@/hooks/queries/gitea-integration/use-get-gitea-integration";
-import useGetGithubIntegration from "@/hooks/queries/github-integration/use-get-github-integration";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import useGetTask from "@/hooks/queries/task/use-get-task";
@@ -22,26 +20,12 @@ import TaskMovePopover from "./task-move-popover";
 import TaskReminderButton from "./task-reminder-button";
 import TaskWatchersButton from "./task-watchers-button";
 
-function slugify(text: string | undefined): string {
-  if (!text) return "";
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 50);
-}
-
 function generateBranchName(
-  pattern: string,
   projectSlug: string | undefined,
   taskNumber: number | null | undefined,
-  taskTitle: string | undefined,
 ): string {
   if (!projectSlug || !taskNumber) return "";
-  return pattern
-    .replace("{slug}", projectSlug.toLowerCase())
-    .replace("{number}", taskNumber.toString())
-    .replace("{title}", slugify(taskTitle));
+  return `${projectSlug.toLowerCase()}-${taskNumber}`;
 }
 
 type TaskActionsProps = {
@@ -69,15 +53,9 @@ export default function TaskActions({
   const { t } = useTranslation();
   const { data: task } = useGetTask(taskId);
   const { data: project } = useGetProject({ id: projectId, workspaceId });
-  const { data: githubIntegration } = useGetGithubIntegration(projectId);
-  const { data: giteaIntegration } = useGetGiteaIntegration(projectId);
   const { data: workspaceProjects = [] } = useGetProjects({ workspaceId });
   const canMoveTask =
     Boolean(task) && workspaceProjects.some((p) => p.id !== task?.projectId);
-  const branchPattern =
-    githubIntegration?.branchPattern ||
-    giteaIntegration?.branchPattern ||
-    "{slug}-{number}";
 
   const handleCopyTaskLink = () => {
     navigator.clipboard.writeText(
@@ -88,12 +66,7 @@ export default function TaskActions({
 
   const handleCopyTaskBranch = () => {
     navigator.clipboard.writeText(
-      generateBranchName(
-        branchPattern,
-        project?.slug,
-        task?.number,
-        task?.title,
-      ),
+      generateBranchName(project?.slug, task?.number),
     );
     toast.message(t("tasks:properties.copyTaskBranch"));
   };

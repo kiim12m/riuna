@@ -10,9 +10,8 @@ type DbOrTx = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 //
 // La unicidad de `(workspace_id, source, entity_type, external_id)` **es** la
 // idempotencia. Por eso el alta va con `onConflictDoUpdate` y no con un
-// `findFirst` seguido de un `insert`, que es lo que hacen los importadores de
-// GitHub y Gitea: funciona en secuencia y duplica en cuanto hay dos peticiones
-// a la vez.
+// `findFirst` seguido de un `insert`: funciona en secuencia y duplica en cuanto
+// hay dos peticiones a la vez.
 //
 // La Fase 8 reutiliza estas dos funciones tal cual para Trello, Jira y Asana:
 // lo unico que cambia es el `source`.

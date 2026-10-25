@@ -429,45 +429,6 @@ export const columnTable = pgTable(
   (table) => [index("column_projectId_idx").on(table.projectId)],
 );
 
-export const workflowRuleTable = pgTable(
-  "workflow_rule",
-  {
-    id: text("id")
-      .$defaultFn(() => createId())
-      .primaryKey(),
-    projectId: text("project_id")
-      .notNull()
-      .references(() => projectTable.id, {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      }),
-    integrationType: text("integration_type").notNull(),
-    eventType: text("event_type").notNull(),
-    columnId: text("column_id")
-      .notNull()
-      .references(() => columnTable.id, {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      }),
-    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date" })
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (table) => [
-    index("workflow_rule_projectId_idx").on(table.projectId),
-    index("workflow_rule_columnId_idx").on(table.columnId),
-    // Una regla por evento de integracion: `resolveTargetStatus` lee una sola,
-    // y con dos no habria forma de saber cual manda.
-    uniqueIndex("workflow_rule_project_integration_event_unique").on(
-      table.projectId,
-      table.integrationType,
-      table.eventType,
-    ),
-  ],
-);
-
 export const taskTable = pgTable(
   "task",
   {
@@ -1702,7 +1663,8 @@ export const viewTable = pgTable(
  * tabla no existia: `import-tasks` no tenia idempotencia de ninguna clase —dos
  * importaciones del mismo fichero creaban 2N tareas— y los importadores de
  * GitHub y Gitea la conseguian con un `findFirst` sin bloqueo ni restriccion
- * unica, que funciona en secuencia y duplica en concurrencia.
+ * unica, que funciona en secuencia y duplica en concurrencia (se retiraron en
+ * la tanda 2 de la auditoria de octubre, ADR 095).
  *
  * No sirve `external_link` para esto, por tres motivos: exige `integration_id`
  * con clave foranea (habria que fabricar una integracion falsa por proyecto,
@@ -2134,8 +2096,6 @@ export const userPreferenceTable = pgTable("user_preference", {
 
 // Automatizaciones de usuario (Fase 8, ADR 066): cuando pasa algo -el
 // disparador-, si la tarea cumple unas condiciones, se hacen unas acciones.
-// Amplian `workflow_rule` sin sustituirlo: aquella mapea eventos de GitHub y
-// Gitea a una columna, y los movimientos que provoca disparan estas.
 export const automationTable = pgTable(
   "automation",
   {
@@ -2504,28 +2464,6 @@ export const userNotificationWorkspaceProjectTable = pgTable(
   ],
 );
 
-export const githubIntegrationTable = pgTable("github_integration", {
-  id: text("id")
-    .$defaultFn(() => createId())
-    .primaryKey(),
-  projectId: text("project_id")
-    .notNull()
-    .references(() => projectTable.id, {
-      onDelete: "cascade",
-      onUpdate: "cascade",
-    })
-    .unique(),
-  repositoryOwner: text("repository_owner").notNull(),
-  repositoryName: text("repository_name").notNull(),
-  installationId: integer("installation_id"),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { mode: "date" })
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
-
 export const integrationTable = pgTable(
   "integration",
   {
@@ -2551,55 +2489,6 @@ export const integrationTable = pgTable(
     index("integration_projectId_idx").on(table.projectId),
     index("integration_type_idx").on(table.type),
     unique("integration_project_type_unique").on(table.projectId, table.type),
-  ],
-);
-
-export const externalLinkTable = pgTable(
-  "external_link",
-  {
-    id: text("id")
-      .$defaultFn(() => createId())
-      .primaryKey(),
-    taskId: text("task_id")
-      .notNull()
-      .references(() => taskTable.id, {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      }),
-    integrationId: text("integration_id")
-      .notNull()
-      .references(() => integrationTable.id, {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      }),
-    resourceType: text("resource_type").notNull(),
-    externalId: text("external_id").notNull(),
-    url: text("url").notNull(),
-    title: text("title"),
-    metadata: text("metadata"),
-    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { mode: "date" })
-      .defaultNow()
-      .$onUpdate(() => new Date())
-      .notNull(),
-  },
-  (table) => [
-    index("external_link_taskId_idx").on(table.taskId),
-    index("external_link_integrationId_idx").on(table.integrationId),
-    index("external_link_externalId_idx").on(table.externalId),
-    index("external_link_resourceType_idx").on(table.resourceType),
-    // Sus once puntos de escritura hacen leer-y-luego-escribir sin bloqueo, asi
-    // que un webhook concurrente con una importacion creaba dos tareas para la
-    // misma incidencia, de forma permanente: las importaciones posteriores
-    // actualizan una de las dos y la otra queda huerfana para siempre.
-    //
-    // `0020_gitea_dedup_guards.sql` blindo asi `activity` y `label` y se dejo
-    // esta.
-    uniqueIndex("external_link_integration_resource_external_unique").on(
-      table.integrationId,
-      table.resourceType,
-      table.externalId,
-    ),
   ],
 );
 

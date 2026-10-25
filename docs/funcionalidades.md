@@ -253,8 +253,7 @@ resaltado** (~35 lenguajes), **tablas**, **diagramas Mermaid**, **embeds de
 YouTube**, **adjuntos arrastrando** el fichero (a S3 con URL prefirmada),
 **@menciones** que generan notificación, y enlaces a otras tareas.
 
-**Comentarios**: crear, y editar o borrar los propios. Los comentarios que
-llegan de GitHub se espejan con su avatar y su enlace.
+**Comentarios**: crear, y editar o borrar los propios.
 
 **Actividad**: historial por tarea de la creación y de los cambios de estado,
 prioridad, título, fechas, asignaciones de persona y de equipo, anidado,
@@ -694,7 +693,6 @@ ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
     repetirse;
   - tiene ensayo en seco;
   - la hoja no mueve tareas de proyecto.
-- **Importar issues** existentes de GitHub y de Gitea.
 - **Importador de PLANKA** (`packages/planka-import`): una CLI que lee PLANKA
   por su API y crea en Riuna por la API pública con una API key, con
   `--dry-run`. Mapea tableros, listas, tarjetas, checklists, elementos
@@ -707,8 +705,6 @@ ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
 
 | Integración | Dirección | Qué hace |
 |---|---|---|
-| **GitHub** | Bidireccional | GitHub App. Crea y actualiza issues, comentarios, título, descripción, prioridad, estado y etiquetas. Recibe diez webhooks —issues, comentarios, etiquetas, pull requests y push— con emparejado por nombre de rama. Importa issues existentes |
-| **Gitea** | Bidireccional | Lo mismo, con URL base y token personal por proyecto, y secreto de webhook propio |
 | **Slack** | Salida | Webhook entrante, seis eventos conmutables |
 | **Discord** | Salida | Webhook, los mismos seis eventos |
 | **Telegram** | Salida | Bot token y chat, los mismos seis eventos |
@@ -755,8 +751,6 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
   - **mensaje a Slack, Discord o Telegram**.
 
   Los textos admiten `{tarea}`, `{titulo}`, `{estado}`, `{proyecto}` y `{enlace}`.
-- **Encadenan con las reglas de GitHub y Gitea**: los movimientos que estas provocan
-  disparan aquellas.
 - **Actúa en nombre de quien la guardó por última vez.**
   - Si esa persona pierde el permiso, la regla se pausa sola y lo dice.
   - En la actividad aparece como «Automatización ‹nombre›».

@@ -34,7 +34,6 @@ function toPublicTask<
     assigneeName: string | null;
     assigneeImage: string | null;
     labels: unknown;
-    externalLinks: unknown;
   },
 >(task: T) {
   return {
@@ -53,7 +52,6 @@ function toPublicTask<
     assigneeName: task.assigneeName,
     assigneeImage: task.assigneeImage,
     labels: task.labels as T["labels"],
-    externalLinks: task.externalLinks as T["externalLinks"],
   };
 }
 

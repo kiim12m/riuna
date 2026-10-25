@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type Task from "@/types/task";
 import TaskRow from "./task-row";
 
-const useExternalLinks = vi.fn((_taskId: string) => ({ data: [] }));
 const useGetLabelsByTask = vi.fn((_taskId: string) => ({ data: [] }));
 
 afterEach(() => {
@@ -13,10 +12,6 @@ afterEach(() => {
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
-}));
-
-vi.mock("@/hooks/queries/external-link/use-external-links", () => ({
-  default: (taskId: string) => useExternalLinks(taskId),
 }));
 
 vi.mock("@/hooks/queries/label/use-get-labels-by-task", () => ({
@@ -85,27 +80,13 @@ const task: Task = {
   assigneeName: null,
   projectId: "project-1",
   labels: [{ id: "label-1", name: "Bug", color: "red" }],
-  externalLinks: [
-    {
-      id: "link-1",
-      taskId: "task-1",
-      integrationId: "integration-1",
-      resourceType: "pull_request",
-      externalId: "42",
-      url: "https://github.com/o/r/pull/42",
-      title: "Fix it",
-      metadata: { merged: false, draft: false },
-    },
-  ],
 };
 
 describe("TaskRow", () => {
-  it("renders labels and pull requests from the task payload without per-row requests", () => {
+  it("renders labels from the task payload without per-row requests", () => {
     render(<TaskRow task={task} projectSlug="kan" />);
 
     expect(screen.getByText("Bug")).toBeVisible();
-    expect(screen.getByText("#42")).toBeVisible();
-    expect(useExternalLinks).not.toHaveBeenCalled();
     expect(useGetLabelsByTask).not.toHaveBeenCalled();
   });
 });

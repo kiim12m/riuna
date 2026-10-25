@@ -37,13 +37,8 @@ import { runMigrations } from "./database/run-migrations";
 import discordIntegration from "./discord-integration";
 import epic from "./epic";
 import { eventContext } from "./events";
-import externalLink from "./external-link";
 import field from "./field";
 import genericWebhookIntegration from "./generic-webhook-integration";
-import giteaIntegration, { handleGiteaWebhookRoute } from "./gitea-integration";
-import githubIntegration, {
-  handleGithubWebhookRoute,
-} from "./github-integration";
 import goal from "./goal";
 import instance from "./instance";
 import getInstanceStatus from "./instance/controllers/get-instance-status";
@@ -105,7 +100,6 @@ import { validateWorkspaceAccess } from "./utils/validate-workspace-access";
 import view from "./view";
 import wiki from "./wiki";
 import workSchedule from "./work-schedule";
-import workflowRule from "./workflow-rule";
 import workspace from "./workspace";
 import {
   addConnection,
@@ -243,11 +237,6 @@ export function createApp() {
   api.use("/public-project/:id", limitByIp("public-project", 120));
   api.use("/invitation/public/:id", limitByIp("invitation-public", 30));
   api.use("/calendar/:file{.+\\.ics}", limitByIp("calendar-feed", 60));
-  api.use("/github-integration/webhook", limitByIp("github-webhook", 300));
-  api.use(
-    "/gitea-integration/webhook/:integrationId",
-    limitByIp("gitea-webhook", 300),
-  );
 
   api.get(
     "/instance/status",
@@ -285,13 +274,6 @@ export function createApp() {
 
     return c.json(project);
   });
-
-  api.post("/github-integration/webhook", handleGithubWebhookRoute);
-
-  api.post(
-    "/gitea-integration/webhook/:integrationId",
-    handleGiteaWebhookRoute,
-  );
 
   // El calendario de una persona por su enlace (ADR 057): sin sesion, la
   // credencial es el token. Solo casa con `….ics`, asi que no tapa las rutas
@@ -716,11 +698,6 @@ export function createApp() {
   const workScheduleApi = api.route("/work-schedule", workSchedule);
   const userPreferencesApi = api.route("/user-preferences", userPreferences);
   const searchApi = api.route("/search", search);
-  const githubIntegrationApi = api.route(
-    "/github-integration",
-    githubIntegration,
-  );
-  const giteaIntegrationApi = api.route("/gitea-integration", giteaIntegration);
   const genericWebhookIntegrationApi = api.route(
     "/generic-webhook-integration",
     genericWebhookIntegration,
@@ -740,8 +717,6 @@ export function createApp() {
   const sessionApi = api.route("/session", sessions);
   const announcementApi = api.route("/announcement", announcement);
   const wikiApi = api.route("/wiki", wiki);
-  const externalLinkApi = api.route("/external-link", externalLink);
-  const workflowRuleApi = api.route("/workflow-rule", workflowRule);
   const automationApi = api.route("/automation", automation);
   const instanceApi = api.route("/instance", instance);
   const invitationApi = api.route("/invitation", invitation);
@@ -893,12 +868,9 @@ export function createApp() {
     configApi,
     discordIntegrationApi,
     epicApi,
-    externalLinkApi,
     fieldApi,
     viewApi,
     genericWebhookIntegrationApi,
-    githubIntegrationApi,
-    giteaIntegrationApi,
     invitationApi,
     invitationPublicApi,
     cycleApi,
@@ -936,7 +908,6 @@ export function createApp() {
     timeSheetApi,
     todayApi,
     userApi,
-    workflowRuleApi,
     automationApi,
     instanceApi,
     workspaceApi,
@@ -1013,12 +984,9 @@ const {
   configApi,
   discordIntegrationApi,
   epicApi,
-  externalLinkApi,
   fieldApi,
   viewApi,
   genericWebhookIntegrationApi,
-  githubIntegrationApi,
-  giteaIntegrationApi,
   invitationApi,
   invitationPublicApi,
   cycleApi,
@@ -1056,7 +1024,6 @@ const {
   timeSheetApi,
   todayApi,
   userApi,
-  workflowRuleApi,
   automationApi,
   instanceApi,
   workspaceApi,
@@ -1112,8 +1079,6 @@ export type AppType =
   | typeof workScheduleApi
   | typeof userPreferencesApi
   | typeof searchApi
-  | typeof githubIntegrationApi
-  | typeof giteaIntegrationApi
   | typeof genericWebhookIntegrationApi
   | typeof discordIntegrationApi
   | typeof slackIntegrationApi
@@ -1124,8 +1089,6 @@ export type AppType =
   | typeof sessionApi
   | typeof announcementApi
   | typeof wikiApi
-  | typeof externalLinkApi
-  | typeof workflowRuleApi
   | typeof automationApi
   | typeof instanceApi
   | typeof invitationApi

@@ -89,8 +89,7 @@ Lo que cambia de dirección con la URL nueva:
 - **los calendarios suscritos** (ADR 057): hay que volver a suscribirlos con el enlace que da
   ahora la pantalla. Un calendario de Google o de Outlook en la nube no llega nunca a un
   tailnet; el del móvil con Tailscale activo, sí;
-- **el MCP de Claude Code**: `https://<pc>.<tailnet>.ts.net/api/mcp`;
-- **los webhooks de GitHub o Gitea**, si los hubiera: tampoco llegan a un tailnet.
+- **el MCP de Claude Code**: `https://<pc>.<tailnet>.ts.net/api/mcp`.
 
 ## La actualización habitual
 

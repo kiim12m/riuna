@@ -129,7 +129,7 @@ Antes de cada retirada:
   `.env.sample` y lo que pase `check:env`;
 - regenerar `openapi.json` y `i18n/schema.json`.
 
-2.1 **Retirar GitHub y Gitea.**
+2.1 ✔ **Retirar GitHub y Gitea.** (ADR 095; también se retira `workflow_rule`, que solo servía a ambas)
 - **API**: `github-integration/`, `gitea-integration/`, `plugins/github/`,
   `plugins/gitea/`, las rutas de webhook y sus `limitByIp` en `index.ts:246-294`, la
   dependencia `octokit` y las herramientas MCP que les toquen.

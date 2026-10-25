@@ -13,8 +13,8 @@
 #
 # Y nada de lo restaurado puede salir:
 #   - sin salida a la red (RIUNA_DISABLE_OUTBOUND): la API solo alcanza
-#     localhost. Es lo que lo garantiza: las integraciones de proyecto (el
-#     token de Gitea, los webhooks de Discord, Slack y Telegram) se restauran
+#     localhost. Es lo que lo garantiza: las integraciones de proyecto (los
+#     webhooks de Discord, Slack y Telegram) se restauran
 #     en claro, y una tarea movida por el humo las dispararia;
 #   - sin planificador: ni stand-ups ni recordatorios;
 #   - sin correo: el .env del simulacro no lleva SMTP;
