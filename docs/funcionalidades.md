@@ -840,11 +840,8 @@ no lista los proyectos Personal.
 
 ## 15. Operación
 
-- **Despliegue**: imagen única —API y web tras nginx— o imágenes separadas.
-  `compose.yml` para producción, `compose.local.yml` para desarrollo con
-  servicio de copias, y `compose.coolify.yml`.
-- **Helm chart** con Ingress, **Gateway API (HTTPRoute)**, HPA, PVC y
-  PostgreSQL opcional, publicado como OCI.
+- **Despliegue**: `compose.local.yml`, el único (ADR 098): imágenes de la API y la web
+  construidas en la máquina, PostgreSQL y servicio de copias.
 - **Copias de seguridad automáticas**: `pg_dump | gzip` con la misma imagen de
   Postgres que el servidor, retención configurable, escritura a `.partial` y
   renombrado al final. La **restauración está verificada**: comprueba el

@@ -165,7 +165,7 @@ Antes de cada retirada:
 2.3 ✔ **Retirar `packages/planka-import`** (ADR 097), junto con sus referencias en la
 documentación.
 
-2.4 **Retirar los despliegues que no usa el PC.**
+2.4 ✔ **Retirar los despliegues que no usa el PC.** (ADR 098)
 - **Ficheros**: `Dockerfile.riuna`, `apps/web/nginx.riuna.conf`,
   `deploy/riuna-entrypoint.sh`, `compose.yml`, `compose.coolify.yml`, `charts/` y
   los flujos `helm-chart.yml` y `helm-validate.yml`.

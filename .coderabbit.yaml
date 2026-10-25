@@ -13,7 +13,6 @@ reviews:
   path_filters:
     - "!apps/api/drizzle/**"
     - "!pnpm-lock.yaml"
-    - "!charts/**"
     - "!**/*.md"
 
 chat:

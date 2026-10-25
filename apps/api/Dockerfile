@@ -71,7 +71,7 @@ RUN apk add --no-cache tzdata && \
 
 WORKDIR /app
 ENV NODE_ENV=production
-# Mismo criterio que Dockerfile.riuna (ADR 049): la API vive en Madrid y
+# ADR 049: la API vive en Madrid y
 # PostgreSQL en UTC; por eso no va en el `.env` que comparten.
 ENV TZ=Europe/Madrid
 

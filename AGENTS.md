@@ -12,7 +12,7 @@ This is an operating guide, not a README. These rules are good defaults; explici
 - Features should solve a real problem without making routine work heavier.
 - Protect performance, especially on task-heavy boards and realtime views.
 - Keep self-hosting straightforward and single-instance deployments first-class. Do not make Redis or another managed service mandatory without an explicit product decision.
-- Support both bundled same-origin deployments and separately hosted API and web deployments.
+- The one supported deployment is `compose.local.yml` (ADR 098): API and web are built from source on the machine and run next to PostgreSQL. Do not add other deployment surfaces without an explicit product decision.
 - Protect user data, workspace boundaries, and authorization checks.
 - Read the relevant implementation before changing it. Follow an established local pattern when it fits, but do not preserve accidental complexity merely because it exists.
 - Stay focused. Do not mix requested work with speculative features, broad refactors, or unrelated cleanup.
@@ -24,7 +24,6 @@ This is an operating guide, not a README. These rules are good defaults; explici
 - `packages/libs` — shared typed Hono client and URL helpers.
 - `packages/permissions` — canonical permission vocabulary and built-in roles.
 - `packages/mcp` — published stdio MCP package.
-- `charts/riuna` — Helm deployment surface.
 - `tests/api` contains API unit tests; `tests/api-integration` contains PostgreSQL-backed integration tests.
 - `docs/` — Riuna's own working documents: [`plan.md`](docs/plan.md) (the phased roadmap and its live status — read it before starting anything substantial), [`funcionalidades.md`](docs/funcionalidades.md) (the inventory of what the application can do today), the Phase 0 gap audit, the backup procedure, [`actualizar.md`](docs/actualizar.md) (how the running instance is rebuilt and updated), [`entorno-desarrollo.md`](docs/entorno-desarrollo.md) (the dev environment that runs alongside it), and the ADRs.
 
@@ -63,7 +62,7 @@ Before calling a behavior change complete, decide which surfaces apply:
 - Permission definitions, API enforcement, and UI capability checks.
 - MCP, API keys, webhooks, and relevant external integrations.
 - Schema, relations, generated migration, indexes, cascades, and existing data.
-- Translations, accessibility, user documentation, Docker, and Helm.
+- Translations, accessibility, user documentation, and Docker.
 - Reverse states: create/delete, assign/unassign, enable/disable, connect/disconnect, and a visible current state.
 
 Not every change touches every surface. Make the decision deliberately rather than expanding scope automatically.
@@ -101,30 +100,29 @@ Use the smallest proof that covers the changed behavior, then broaden it when th
 - Database changes: relevant integration tests and migration inspection.
 - Cross-package contracts: typecheck or build all affected consumers.
 - Realtime changes: verify the event-to-WebSocket-to-cache path and consider both in-memory and Redis delivery.
-- Deployment changes: validate the affected Docker, Helm, or startup path.
+- Deployment changes: validate the affected Docker or startup path.
 - User-visible flows: use a real browser pass when requested or when it is the only meaningful proof.
 
 Run repository-wide checks when a change crosses packages broadly, before a requested commit or pull request, or when explicitly asked. Report what ran and what did not.
 
 ## Releases
 
-**Riuna has no release pipeline.** Kaneo's semantic-release setup was removed in Phase 0: it cut GitHub Releases, published npm packages, notified a Discord server, and bumped `charts/kaneo/Chart.yaml` — all of it aimed at Kaneo as a public product, none of it useful for an internal instance deployed from source.
+**Riuna has no release pipeline.** Kaneo's semantic-release setup was removed in Phase 0: it cut GitHub Releases, published npm packages, notified a Discord server, and bumped a Helm chart — all of it aimed at Kaneo as a public product, none of it useful for an internal instance deployed from source.
 
 What survives in `.github/workflows/`:
 
 - `ci.yml` — lint, typecheck and tests on push and pull request. The safety net; keep it green. The end-to-end job runs only on pull requests against `main` and on pushes to `main`, not on stacked pull requests (ADR 086).
 - `nightly.yml` — scheduled verification with a real PostgreSQL service. Skips nights without commits on `main`, except Mondays (ADR 086).
 - `restore-drill.yml` — nightly when `main` changed and every Monday (and on PRs touching backups, images or migrations): builds the `compose.local.yml` images, seeds and backs up, then runs `deploy/simulacro.sh --humo` — the same script used on the PC with the real backup — which restores into an isolated Compose project and runs the full smoke from a Playwright container (ADR 072).
-- `docker.yml` → `build-images.yml` — manual dispatch that builds and pushes images to `ghcr.io/<owner>/…` under **your** namespace.
-- `helm-chart.yml` → `helm-validate.yml` — packages and validates the Helm chart.
+- `docker.yml` → `build-images.yml` — manual dispatch that builds and pushes the `api` and `web` images to `ghcr.io/<owner>/…` under **your** namespace.
 
-Artifact names were renamed off `kaneo` in the internal-renaming pass: images publish as `riuna`, `web`, `api` and the chart as `charts/riuna`. Still confirm `ghcr.io/<owner>/…` resolves to a real registry namespace before running these workflows for the first time.
+Artifact names were renamed off `kaneo` in the internal-renaming pass: images publish as `web` and `api`. Still confirm `ghcr.io/<owner>/…` resolves to a real registry namespace before running these workflows for the first time.
 
 Conventional Commits are still enforced by commitlint on `commit-msg`. Nothing bumps a version automatically any more, so the convention now buys readable history rather than a release.
 
 `scripts/release/apply-version.mjs` is kept because `build-images.yml` stamps versions with it. Version-carrying files are listed inside it; add new ones there rather than in a workflow step.
 
-The root `package.json` and `charts/riuna/Chart.yaml` read `0.1.0`: Riuna resets versioning independently of the Kaneo lineage it forked from (`2.22.0`).
+The root `package.json` reads `0.1.0`: Riuna resets versioning independently of the Kaneo lineage it forked from (`2.22.0`).
 
 ## Glossary
 

@@ -194,8 +194,7 @@ riuna/
 │   ├── permissions/  # Shared permission vocabulary and built-in roles
 │   └── ...            # Import tooling and shared TypeScript configuration
 ├── docs/             # Riuna's own working documents (plan, ADRs, procedures)
-├── tests/            # API unit and integration tests
-└── charts/           # Kubernetes Helm chart
+└── tests/            # API unit and integration tests
 ```
 
 ## Using AI
