@@ -9,8 +9,6 @@ import { log } from "../utils/log";
 import { checkDueDateReminders } from "./due-date-reminders";
 import { HELD_ELSEWHERE, withJobLease } from "./leader-lock";
 import { checkProjectWebhookReminders } from "./project-webhook-reminders";
-import { reconcileWorkspaceSeats } from "./seat-reconciliation";
-import { checkTrialReminders } from "./trial-reminders";
 
 const jobs: Cron[] = [];
 
@@ -113,15 +111,6 @@ export function initializeScheduler(): number {
   // borrandolo con `SKIP LOCKED` (ADR 077).
   jobs.push(
     new Cron("* * * * *", withCheckIn("task-reminders", sendDueTaskReminders)),
-  );
-  jobs.push(
-    new Cron(
-      "17 * * * *",
-      withCheckIn("seat-reconciliation", reconcileWorkspaceSeats),
-    ),
-  );
-  jobs.push(
-    new Cron("23 * * * *", withCheckIn("trial-reminders", checkTrialReminders)),
   );
   // Cada cinco minutos, pero **con arrendamiento**: al reves que los
   // recordatorios, que son idempotentes gracias a su tabla de "ya enviado",

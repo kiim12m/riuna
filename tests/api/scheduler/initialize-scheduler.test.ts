@@ -19,12 +19,6 @@ vi.mock("../../../apps/api/src/scheduler/leader-lock", () => ({
 vi.mock("../../../apps/api/src/scheduler/project-webhook-reminders", () => ({
   checkProjectWebhookReminders: vi.fn(),
 }));
-vi.mock("../../../apps/api/src/scheduler/seat-reconciliation", () => ({
-  reconcileWorkspaceSeats: vi.fn(),
-}));
-vi.mock("../../../apps/api/src/scheduler/trial-reminders", () => ({
-  checkTrialReminders: vi.fn(),
-}));
 vi.mock("../../../apps/api/src/task-reminder/send-due", () => ({
   sendDueTaskReminders: vi.fn(),
 }));

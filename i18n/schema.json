@@ -106,9 +106,6 @@
 						"openSettingsMenu": {
 							"type": "string"
 						},
-						"dismiss": {
-							"type": "string"
-						},
 						"loading": {
 							"type": "string"
 						}
@@ -117,7 +114,6 @@
 						"toggleSidebar",
 						"toggleTheme",
 						"openSettingsMenu",
-						"dismiss",
 						"loading"
 					]
 				},
@@ -6340,12 +6336,6 @@
 										"projectWebhookReminders": {
 											"type": "string"
 										},
-										"seatReconciliation": {
-											"type": "string"
-										},
-										"trialReminders": {
-											"type": "string"
-										},
 										"recurringTasks": {
 											"type": "string"
 										},
@@ -6362,8 +6352,6 @@
 									"required": [
 										"dueDateReminders",
 										"projectWebhookReminders",
-										"seatReconciliation",
-										"trialReminders",
 										"recurringTasks",
 										"automations",
 										"instanceHealth",

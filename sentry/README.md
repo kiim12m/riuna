@@ -15,7 +15,7 @@ This directory holds Sentry configuration as code, so the alert rules and dashbo
 
 ## What's NOT here yet
 
-- Cron monitor alert. The cron jobs in `apps/api/src/scheduler/index.ts` call `Sentry.captureCheckIn` with stable slugs (`due-date-reminders`, `project-webhook-reminders`, `seat-reconciliation`, `trial-reminders`). The Sentry monitors are auto-created the first time each job runs after the next deploy. Once they exist, the next run of `provision-sentry-alerts.sh` will resolve the slugs and create the cron-missed workflow.
+- Cron monitor alert. The cron jobs in `apps/api/src/scheduler/index.ts` call `Sentry.captureCheckIn` with stable slugs (`due-date-reminders`, `project-webhook-reminders`). The Sentry monitors are auto-created the first time each job runs after the next deploy. Once they exist, the next run of `provision-sentry-alerts.sh` will resolve the slugs and create the cron-missed workflow.
 
 ## Applying the alerts
 

@@ -134,9 +134,6 @@ importers:
       better-auth:
         specifier: 1.6.25
         version: 1.6.25(@opentelemetry/api@1.9.1)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2))(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.1)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(typescript@7.0.2))(@types/pg@8.21.0)(kysely@0.29.4)(mysql2@3.15.3)(pg@8.22.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2)))(mongodb@7.1.0)(mysql2@3.15.3)(next@16.3.0(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.1.2)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(pg@8.22.0)(prisma@7.4.2(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(solid-js@1.9.10)(vitest@4.1.10)
-      creem:
-        specifier: ^1.6.0
-        version: 1.6.0
       croner:
         specifier: ^10.0.1
         version: 10.0.1
@@ -4918,10 +4915,6 @@ packages:
     resolution: {integrity: sha512-NT7w2JVU7DFroFdYkeq8cywxrgjPHWkdX1wjpRQXPX5Asews3tA+Ght6lddQO5Mkumffp3X7GEqku3epj2toIw==}
     engines: {node: '>= 10'}
 
-  creem@1.6.0:
-    resolution: {integrity: sha512-1dwtrqJ5wWgBVL+0eIqHS4IN99tJeWHa1hbr4AQUNe3r/Zjo0W1/xXvZbhS9TwPNRgsP1gDIsTRQrRHRjG4wzw==}
-    hasBin: true
-
   croner@10.0.1:
     resolution: {integrity: sha512-ixNtAJndqh173VQ4KodSdJEI6nuioBWI0V1ITNKhZZsO0pEMoDxz539T4FTTbSZ/xIOSuDnzxLVRqBVSvPNE2g==}
     engines: {node: '>=18.0'}
@@ -5967,10 +5960,6 @@ packages:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
     engines: {node: '>=6'}
     hasBin: true
-
-  jsonpath-rfc9535@1.1.0:
-    resolution: {integrity: sha512-Bj8ldGo67FNvj5nNsxGN7frkUcHZWqszNkfBOvfxOM1+WUa5J0PiGaflroTKOjGo2JQhOC1DZUaTv4tGzBaQLQ==}
-    engines: {node: '>=20'}
 
   jszip@3.10.1:
     resolution: {integrity: sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g==}
@@ -12029,15 +12018,6 @@ snapshots:
       crc-32: 1.2.2
       readable-stream: 3.6.2
 
-  creem@1.6.0:
-    dependencies:
-      '@modelcontextprotocol/sdk': 1.30.0(zod@4.4.3)
-      jsonpath-rfc9535: 1.1.0
-      zod: 4.4.3
-    transitivePeerDependencies:
-      - '@cfworker/json-schema'
-      - supports-color
-
   croner@10.0.1: {}
 
   cross-spawn@7.0.6:
@@ -13060,8 +13040,6 @@ snapshots:
   json-schema-typed@8.0.2: {}
 
   json5@2.2.3: {}
-
-  jsonpath-rfc9535@1.1.0: {}
 
   jszip@3.10.1:
     dependencies:

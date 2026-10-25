@@ -76,14 +76,9 @@
 		},
 		{
 			"name": "Cron: missed check-in (any)",
-			"description": "A monitored cron job missed its check-in (or reported an error). Covers all 4 crons created by Sentry.captureCheckIn in apps/api/src/scheduler/index.ts.",
+			"description": "A monitored cron job missed its check-in (or reported an error). Covers both crons created by Sentry.captureCheckIn in apps/api/src/scheduler/index.ts.",
 			"kind": "metric",
-			"detector_slugs": [
-				"due-date-reminders",
-				"project-webhook-reminders",
-				"seat-reconciliation",
-				"trial-reminders"
-			],
+			"detector_slugs": ["due-date-reminders", "project-webhook-reminders"],
 			"_comment_detector_slugs": "Slugs are the human-readable identifiers from the captureCheckIn calls. The provisioning script resolves these to numeric detector IDs via GET /api/0/organizations/{org}/monitors/.",
 			"workflow": {
 				"name": "Cron: missed check-in (any)",

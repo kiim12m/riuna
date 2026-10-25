@@ -335,9 +335,6 @@
                       "type": "string",
                       "nullable": true
                     },
-                    "billingEnabled": {
-                      "type": "boolean"
-                    },
                     "localAccountDomain": {
                       "type": "string"
                     }
@@ -357,7 +354,6 @@
                     "disableLoginForm",
                     "customOAuthAutoLogin",
                     "customOAuthLogoutUrl",
-                    "billingEnabled",
                     "localAccountDomain"
                   ]
                 }
@@ -865,105 +861,6 @@
           }
         },
         "summary": "Get OAuth Id Token"
-      }
-    },
-    "/billing/{workspaceId}": {
-      "get": {
-        "operationId": "getWorkspaceBilling",
-        "tags": [
-          "Billing"
-        ],
-        "description": "Get the billing state and entitlement for a workspace. Returns billingEnabled: false everywhere when billing is not configured.",
-        "responses": {
-          "type": "object"
-        },
-        "parameters": [
-          {
-            "in": "path",
-            "name": "workspaceId",
-            "schema": {
-              "type": "string"
-            },
-            "required": true
-          }
-        ],
-        "summary": "Get Workspace Billing"
-      }
-    },
-    "/billing/{workspaceId}/checkout": {
-      "post": {
-        "operationId": "createBillingCheckout",
-        "tags": [
-          "Billing"
-        ],
-        "description": "Create a Creem checkout session for a workspace plan. Owner/admin only. Returns the checkout URL to redirect the browser to.",
-        "responses": {
-          "type": "object"
-        },
-        "parameters": [
-          {
-            "in": "path",
-            "name": "workspaceId",
-            "schema": {
-              "type": "string"
-            },
-            "required": true
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "plan": {
-                    "enum": [
-                      "personal",
-                      "team"
-                    ],
-                    "type": "string"
-                  },
-                  "interval": {
-                    "enum": [
-                      "monthly",
-                      "annual"
-                    ],
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "plan",
-                  "interval"
-                ]
-              }
-            }
-          }
-        },
-        "summary": "Create Billing Checkout"
-      }
-    },
-    "/billing/{workspaceId}/portal": {
-      "post": {
-        "operationId": "createBillingPortalSession",
-        "tags": [
-          "Billing"
-        ],
-        "description": "Generate a Creem customer portal link for the workspace subscription. Owner/admin only.",
-        "responses": {
-          "type": "object"
-        },
-        "parameters": [
-          {
-            "in": "path",
-            "name": "workspaceId",
-            "schema": {
-              "type": "string"
-            },
-            "required": true
-          }
-        ],
-        "summary": "Create Billing Portal Session"
       }
     },
     "/project": {

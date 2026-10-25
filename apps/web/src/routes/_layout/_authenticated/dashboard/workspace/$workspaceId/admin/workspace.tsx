@@ -6,7 +6,6 @@ import {
 } from "@tanstack/react-router";
 import {
   CalendarOff,
-  CreditCard,
   Settings,
   Shield,
   SlidersHorizontal,
@@ -27,7 +26,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import useGetConfig from "@/hooks/queries/config/use-get-config";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
 import { getInitials } from "@/lib/get-initials";
@@ -52,7 +50,6 @@ function RouteComponent() {
   const { t } = useTranslation();
   const { workspaceId } = Route.useParams();
   const { workspace, role } = useWorkspacePermission();
-  const { data: config } = useGetConfig();
   const location = useLocation();
 
   const base = `/dashboard/workspace/${workspaceId}/admin/workspace`;
@@ -93,15 +90,6 @@ function RouteComponent() {
       url: `${base}/automations`,
       icon: Zap,
     },
-    ...(config?.billingEnabled
-      ? [
-          {
-            title: "Billing",
-            url: `${base}/billing`,
-            icon: CreditCard,
-          },
-        ]
-      : []),
   ];
   const isActivePath = (path: string) => location.pathname === path;
   const workspaceInitials = getInitials(workspace?.name, "WS");

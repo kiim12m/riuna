@@ -1,6 +1,5 @@
 import { eq } from "drizzle-orm";
 import type { Context, Next } from "hono";
-import { requireEntitlement } from "../../billing/require-entitlement-middleware";
 import db from "../../database";
 import { taskTable } from "../../database/schema";
 import { requireWorkspacePermission } from "../../utils/require-workspace-permission";
@@ -56,23 +55,6 @@ export async function requireBulkTaskPermission(
   }
 
   return requireWorkspacePermission({ task: ["update"] })(c, next);
-}
-
-export async function requireBulkTaskEntitlement(
-  c: BulkTaskContext,
-  next: Next,
-) {
-  const { operation } = c.req.valid("json");
-
-  if (
-    operation === "delete" ||
-    operation === "addLabel" ||
-    operation === "removeLabel"
-  ) {
-    return next();
-  }
-
-  return requireEntitlement(c, next);
 }
 
 export async function requireTaskAssigneePermission(

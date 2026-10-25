@@ -26,7 +26,6 @@
 			"toggleSidebar": "Toggle sidebar",
 			"toggleTheme": "Toggle theme",
 			"openSettingsMenu": "Open settings menu",
-			"dismiss": "Dismiss",
 			"loading": "Loading"
 		},
 		"sidebar": {
@@ -1619,8 +1618,6 @@
 				"names": {
 					"dueDateReminders": "Due date reminders",
 					"projectWebhookReminders": "Webhook reminders",
-					"seatReconciliation": "Seat reconciliation",
-					"trialReminders": "Trial reminders",
 					"recurringTasks": "Recurring tasks",
 					"automations": "Automations",
 					"instanceHealth": "Instance health",

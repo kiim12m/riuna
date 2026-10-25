@@ -4,7 +4,6 @@ import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
 import { ThemeToggleDropdown } from "@/components/theme-toggle-dropdown";
 import { SidebarTimer } from "@/components/timer/sidebar-timer";
-import { TrialCard } from "@/components/trial-card";
 import {
   Sidebar,
   SidebarContent,
@@ -48,7 +47,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <FocusIndicator />
         <SidebarTimer />
-        <TrialCard />
         <div className="flex items-center justify-between group-data-[collapsible=icon]:justify-center">
           <span className="group-data-[collapsible=icon]:hidden">
             <VersionDisplay />

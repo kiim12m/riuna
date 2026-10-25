@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import PageTitle from "@/components/page-title";
 import { WorkspaceRuntime } from "@/components/workspace-runtime";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
-import { usePendingCheckout } from "@/hooks/use-pending-checkout";
 import { usePreferencesSync } from "@/hooks/use-preferences-sync";
 
 export const Route = createFileRoute("/_layout/_authenticated/dashboard")({
@@ -13,7 +12,6 @@ export const Route = createFileRoute("/_layout/_authenticated/dashboard")({
 function DashboardLayoutComponent() {
   const { t } = useTranslation();
   const { data: workspace } = useActiveWorkspace();
-  usePendingCheckout();
   usePreferencesSync();
 
   return (

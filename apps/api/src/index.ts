@@ -23,7 +23,6 @@ import announcement from "./announcement";
 import { auth } from "./auth";
 import automation from "./automation";
 import availability from "./availability";
-import billing from "./billing";
 import calendar from "./calendar";
 import serveFeed from "./calendar/controllers/serve-feed";
 import capture from "./capture";
@@ -633,11 +632,7 @@ export function createApp() {
 
   api.use("*", async (c, next) => {
     const path = c.req.path;
-    if (
-      path.startsWith("/api/mcp") ||
-      path.startsWith("/api/.well-known/") ||
-      path === "/api/billing/webhook"
-    ) {
+    if (path.startsWith("/api/mcp") || path.startsWith("/api/.well-known/")) {
       return next();
     }
     return Sentry.withIsolationScope(async () => {
@@ -663,7 +658,6 @@ export function createApp() {
 
   const oauthApi = api.route("/oauth", oauth);
 
-  const billingApi = api.route("/billing", billing);
   const projectApi = api.route("/project", project);
   const taskApi = api.route("/task", task);
   const columnApi = api.route("/column", column);
@@ -862,7 +856,6 @@ export function createApp() {
     api,
     injectWebSocket,
     activityApi,
-    billingApi,
     columnApi,
     commentApi,
     configApi,
@@ -978,7 +971,6 @@ const {
   app,
   injectWebSocket,
   activityApi,
-  billingApi,
   columnApi,
   commentApi,
   configApi,
@@ -1046,7 +1038,6 @@ if (isMainModule) {
 }
 
 export type AppType =
-  | typeof billingApi
   | typeof configApi
   | typeof projectApi
   | typeof taskApi

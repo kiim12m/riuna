@@ -150,7 +150,7 @@ Antes de cada retirada:
 - **No se toca** el inicio de sesión con GitHub (`socialProviders.github`): no es
   la integración.
 
-2.2 **Retirar la facturación (Creem).**
+2.2 ✔ **Retirar la facturación (Creem).** (ADR 096; también `trial_grant`, el correo de fin de prueba y los monitores de Sentry)
 - **API** (~900 líneas): `billing/`, los trabajos `seat-reconciliation` y
   `trial-reminders`, `is-cloud` donde ya no sirva, los `syncWorkspaceSeats` de
   `auth.ts:462-469` y la excepción de `/api/billing/webhook` en `index.ts:657`.

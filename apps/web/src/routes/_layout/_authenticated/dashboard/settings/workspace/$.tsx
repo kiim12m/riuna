@@ -5,7 +5,7 @@ import { redirectToAdmin } from "@/lib/legacy-settings-redirect";
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/settings/workspace/$",
 )({
-  // Las cinco sub-paginas conservan su nombre (`general`, `roles`, `teams`,
-  // `labels`, `billing`), asi que el enlace viejo llega a la misma pagina.
+  // Las sub-paginas conservan su nombre (`general`, `roles`, `teams`,
+  // `labels`), asi que el enlace viejo llega a la misma pagina.
   beforeLoad: ({ params }) => redirectToAdmin("workspace", params._splat),
 });

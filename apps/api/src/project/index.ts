@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
-import { requireEntitlement } from "../billing/require-entitlement-middleware";
 import { personName } from "../pdf/context";
 import { buildPortfolioPdf } from "../pdf/portfolio";
 import { pdfResponse } from "../pdf/response";
@@ -206,7 +205,6 @@ const project = new Hono<{
     ),
     workspaceAccess.fromBody(),
     requireWorkspacePermission({ project: ["create"] }),
-    requireEntitlement,
     async (c) => {
       const { name, icon, slug, templateId } = c.req.valid("json");
       const workspaceId = c.get("workspaceId");

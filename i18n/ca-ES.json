@@ -26,7 +26,6 @@
 			"toggleSidebar": "Mostra la barra lateral",
 			"toggleTheme": "Cambiar tema",
 			"openSettingsMenu": "Abrir el menú de ajustes",
-			"dismiss": "Descartar",
 			"loading": "Cargando"
 		},
 		"sidebar": {
@@ -1619,8 +1618,6 @@
 				"names": {
 					"dueDateReminders": "Recordatorios de vencimiento",
 					"projectWebhookReminders": "Recordatorios por webhook",
-					"seatReconciliation": "Conciliación de plazas",
-					"trialReminders": "Avisos de prueba",
 					"recurringTasks": "Tareas recurrentes",
 					"automations": "Automatizaciones",
 					"instanceHealth": "Salud de la instancia",
