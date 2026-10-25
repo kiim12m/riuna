@@ -160,6 +160,15 @@ function RouteComponent() {
       );
       return;
     }
+    // La API responde 409; asi se dice antes y con el texto traducido.
+    if (
+      workspaceLabels.some(
+        (label) => label.id !== editingLabel.id && label.name === trimmed,
+      )
+    ) {
+      setEditError(t("settings:workspaceLabels.nameTaken"));
+      return;
+    }
 
     try {
       await updateLabel.mutateAsync({

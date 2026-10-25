@@ -3527,6 +3527,9 @@
 						},
 						"nameRequired": {
 							"type": "string"
+						},
+						"nameTaken": {
+							"type": "string"
 						}
 					},
 					"required": [
@@ -3552,7 +3555,8 @@
 						"createError",
 						"updateError",
 						"deleteError",
-						"nameRequired"
+						"nameRequired",
+						"nameTaken"
 					]
 				},
 				"projectGeneral": {

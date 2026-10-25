@@ -20,14 +20,15 @@ import {
 } from "@dnd-kit/sortable";
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { produce } from "immer";
 import { Archive, ChevronRight, Clock, Flag, Plus, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { priorityColorsTaskCard } from "@/constants/priority-colors";
-import { useUpdateTask } from "@/hooks/mutations/task/use-update-task";
+import { placeTaskInProject } from "@/hooks/mutations/task/place-task-in-cache";
+import { useReorderTask } from "@/hooks/mutations/task/use-reorder-task";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { cn } from "@/lib/cn";
+import { dropNeighbours } from "@/lib/drop-neighbours";
 import { type GroupByField, groupTasksByTeam } from "@/lib/group-tasks";
 import useBacklogBulkSelectionStore from "@/store/backlog-bulk-selection";
 import useProjectStore from "@/store/project";
@@ -53,7 +54,7 @@ function BacklogListView({
   // no son un estado cualquiera, son las dos mitades del backlog. El equipo
   // reparte por dentro de cada una.
   const isGroupedByTeam = groupBy === "team";
-  const { mutate: updateTask } = useUpdateTask();
+  const { mutate: reorderTask } = useReorderTask();
   const { setProject } = useProjectStore();
   const {
     setAvailableTasks,
@@ -201,95 +202,16 @@ function BacklogListView({
       }
     }
 
-    const updatedProject = produce(project, (draft) => {
-      const sourceSection =
-        activeTask.status === "planned"
-          ? draft.plannedTasks || []
-          : draft.archivedTasks || [];
+    const neighbours = dropNeighbours(
+      targetSection === "planned" ? plannedTasks : archivedTasks,
+      activeTaskId,
+      overId,
+    );
+    if (!neighbours) return;
 
-      const sourceTaskIndex = sourceSection.findIndex(
-        (task) => task.id === activeTaskId,
-      );
-      const task = sourceSection[sourceTaskIndex];
-
-      if (!task) return;
-
-      if (activeTask.status === "planned") {
-        draft.plannedTasks =
-          draft.plannedTasks?.filter((t) => t.id !== activeTaskId) || [];
-      } else {
-        draft.archivedTasks =
-          draft.archivedTasks?.filter((t) => t.id !== activeTaskId) || [];
-      }
-
-      if (activeTask.status === targetSection) {
-        const targetSectionTasks =
-          activeTask.status === "planned"
-            ? draft.plannedTasks || []
-            : draft.archivedTasks || [];
-
-        let destinationIndex = targetSectionTasks.findIndex(
-          (t) => t.id === overId,
-        );
-
-        if (sourceTaskIndex <= destinationIndex) {
-          destinationIndex += 1;
-        }
-
-        if (activeTask.status === "planned") {
-          draft.plannedTasks?.splice(destinationIndex, 0, task);
-        } else {
-          draft.archivedTasks?.splice(destinationIndex, 0, task);
-        }
-
-        const finalTasks =
-          activeTask.status === "planned"
-            ? draft.plannedTasks || []
-            : draft.archivedTasks || [];
-
-        finalTasks.forEach((t, index) => {
-          updateTask({
-            ...t,
-            position: index,
-          });
-        });
-      } else {
-        task.status = targetSection;
-
-        if (targetSection === "planned") {
-          draft.plannedTasks = [...(draft.plannedTasks || []), task];
-        } else {
-          draft.archivedTasks = [...(draft.archivedTasks || []), task];
-        }
-
-        const updatedTasks =
-          targetSection === "planned"
-            ? draft.plannedTasks || []
-            : draft.archivedTasks || [];
-
-        updatedTasks.forEach((t, index) => {
-          updateTask({
-            ...t,
-            status: targetSection,
-            position: index,
-          });
-        });
-
-        const sourceTasks =
-          activeTask.status === "planned"
-            ? draft.plannedTasks || []
-            : draft.archivedTasks || [];
-
-        sourceTasks.forEach((t, index) => {
-          updateTask({
-            ...t,
-            position: index,
-          });
-        });
-      }
-    });
-
-    setProject(updatedProject);
+    const placement = { status: targetSection, ...neighbours };
+    setProject(placeTaskInProject(project, activeTaskId, placement));
+    reorderTask({ task: activeTask, ...placement });
   };
 
   const toggleSection = (sectionId: string) => {

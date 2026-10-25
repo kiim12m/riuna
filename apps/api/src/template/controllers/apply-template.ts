@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { projectTable, taskTable, templateTable } from "../../database/schema";
-import createTask from "../../task/controllers/create-task";
+import { createTaskInTransaction } from "../../task/controllers/create-task";
 import { getMaxTaskDepth } from "../../task/controllers/update-task-parent";
 import { checkTemplateFits } from "../check-template";
 import {
@@ -13,16 +13,21 @@ import {
 } from "../content";
 import { decorateTask, resolveEpics } from "../decorate-task";
 
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 /**
  * Despliega el arbol de la plantilla dentro de un proyecto.
  *
- * **Cada tarea se crea con `createTask`**, no con inserciones directas: es lo
- * unico que toma el cerrojo del proyecto, resuelve `path`/`depth`, reclama el
- * numero de tarea y sincroniza el responsable. Insertar a mano seria mas rapido
- * y dejaria el arbol incoherente, que es lo que las dos CHECK de la Fase 2
- * existen para impedir.
+ * **Cada tarea se crea con `createTaskInTransaction`**, no con inserciones
+ * directas: es lo unico que toma el cerrojo del proyecto, resuelve
+ * `path`/`depth`, reclama el numero de tarea y sincroniza el responsable.
+ * Insertar a mano seria mas rapido y dejaria el arbol incoherente, que es lo
+ * que las dos CHECK de la Fase 2 existen para impedir. Lo que cada alta hace al
+ * confirmarse se apunta en `afterCommit`.
  */
 async function createBranch({
+  tx,
+  afterCommit,
   nodes,
   projectId,
   parentId,
@@ -31,6 +36,8 @@ async function createBranch({
   epicIdsByName,
   fieldsByNode,
 }: {
+  tx: Tx;
+  afterCommit: Array<() => Promise<void>>;
   nodes: TemplateNode[];
   projectId: string;
   parentId: string | null;
@@ -42,7 +49,7 @@ async function createBranch({
   let created = 0;
 
   for (const node of nodes) {
-    const task = await createTask({
+    const { task, afterCommit: published } = await createTaskInTransaction(tx, {
       projectId,
       currentUserId,
       title: node.title,
@@ -52,10 +59,12 @@ async function createBranch({
       estimate: node.estimate,
       parentId,
     });
+    afterCommit.push(published);
 
     created += 1;
 
     await decorateTask({
+      dbOrTx: tx,
       taskId: task.id,
       workspaceId,
       customFields: fieldsByNode.get(node),
@@ -66,6 +75,8 @@ async function createBranch({
 
     if (node.children?.length) {
       created += await createBranch({
+        tx,
+        afterCommit,
         nodes: node.children,
         projectId,
         parentId: task.id,
@@ -90,30 +101,32 @@ function collectEpicNames(nodes: TemplateNode[]): string[] {
 /**
  * Aplica una plantilla de tarea dentro de un proyecto.
  *
- * La profundidad se comprueba **antes** de crear nada. Sin esta guarda, un arbol
- * mas hondo que el limite del proyecto fallaria a mitad —`createTask` rechaza
- * cada hija demasiado profunda— y dejaria medio desplegada una plantilla que
- * nadie pidio a medias.
+ * La profundidad se comprueba **antes** de crear nada: aunque la transaccion ya
+ * impide dejar media plantilla, asi el error llega antes y con un mensaje
+ * claro. Devuelve aparte lo que hay que hacer cuando quien llama confirme.
  */
-export async function applyTaskTemplate({
-  templateId,
-  projectId,
-  parentId,
-  currentUserId,
-}: {
-  templateId: string;
-  projectId: string;
-  parentId?: string | null;
-  currentUserId: string;
-}) {
-  const template = await db.query.templateTable.findFirst({
+export async function applyTaskTemplateInTransaction(
+  tx: Tx,
+  {
+    templateId,
+    projectId,
+    parentId,
+    currentUserId,
+  }: {
+    templateId: string;
+    projectId: string;
+    parentId?: string | null;
+    currentUserId: string;
+  },
+) {
+  const template = await tx.query.templateTable.findFirst({
     where: eq(templateTable.id, templateId),
   });
 
   if (!template)
     throw new HTTPException(404, { message: "Template not found" });
 
-  const project = await db.query.projectTable.findFirst({
+  const project = await tx.query.projectTable.findFirst({
     where: eq(projectTable.id, projectId),
   });
 
@@ -138,7 +151,7 @@ export async function applyTaskTemplate({
   let parentDepth = -1;
 
   if (parentId) {
-    const parent = await db.query.taskTable.findFirst({
+    const parent = await tx.query.taskTable.findFirst({
       where: and(
         eq(taskTable.id, parentId),
         eq(taskTable.projectId, projectId),
@@ -154,7 +167,7 @@ export async function applyTaskTemplate({
     parentDepth = parent.depth;
   }
 
-  const maxDepth = await getMaxTaskDepth(projectId);
+  const maxDepth = await getMaxTaskDepth(projectId, tx);
   const needed = parentDepth + 1 + templateDepth(content.tasks);
 
   if (needed > maxDepth) {
@@ -169,14 +182,19 @@ export async function applyTaskTemplate({
     content.tasks,
     projectId,
     project.workspaceId,
+    tx,
   );
 
   const epicIdsByName = await resolveEpics(
     projectId,
     collectEpicNames(content.tasks),
+    tx,
   );
 
+  const afterCommit: Array<() => Promise<void>> = [];
   const created = await createBranch({
+    tx,
+    afterCommit,
     nodes: content.tasks,
     projectId,
     parentId: parentId ?? null,
@@ -186,7 +204,26 @@ export async function applyTaskTemplate({
     fieldsByNode,
   });
 
-  return { templateId, projectId, createdTaskCount: created };
+  return {
+    result: { templateId, projectId, createdTaskCount: created },
+    afterCommit: async () => {
+      for (const publish of afterCommit) await publish();
+    },
+  };
+}
+
+/**
+ * Aplica una plantilla en su propia transaccion: o se crea el arbol entero o
+ * nada, y los avisos salen solo si se confirma (auditoria 1.9).
+ */
+export async function applyTaskTemplate(
+  args: Parameters<typeof applyTaskTemplateInTransaction>[1],
+) {
+  const { result, afterCommit } = await db.transaction((tx) =>
+    applyTaskTemplateInTransaction(tx, args),
+  );
+  await afterCommit();
+  return result;
 }
 
 /** Cuantas tareas trae una plantilla, para enseñarlo antes de aplicarla. */

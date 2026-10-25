@@ -58,19 +58,29 @@ evidencia citada.
 
 ## Tanda 1 — Datos que se pierden o se corrompen (alta)
 
-1.1 ✔ **Arrastrar en tablero, lista o backlog manda un PUT completo por cada tarea de
-la columna**, con la foto que tenía el navegador (título, descripción, prioridad,
+1.1 ✔ ~~**Arrastrar en tablero, lista o backlog manda un PUT completo por cada tarea de
+la columna**~~ ✔ PR #79, con la foto que tenía el navegador (título, descripción, prioridad,
 fechas, asignado).
 - **Problema**: pisa lo que otra persona haya editado en las tareas vecinas. Cada
   PUT invalida 8 claves y manda un TASK_UPDATED a los demás.
 - **Dónde**: `components/kanban-board/index.tsx:158-183`, `list-view/index.tsx:408-440`
   y `:470`, `backlog-list-view/index.tsx:250-289`, `backlog.tsx:286`,
   `fetchers/task/update-task.ts`.
-- **Arreglo**: endpoint nuevo `PUT /task/reorder {projectId, status, orderedIds}`
+- **Arreglo**: endpoint nuevo `PUT /task/reorder/:id {status, afterId, beforeId}`
   que reordena en una transacción y publica un solo evento. El cliente lo llama una
   vez y usa `setQueryData`. «Mover todo» y «archivar columna» pasan a `/task/bulk`.
+  - Recibe la vecina y no la lista que ve el navegador (`orderedIds`, como se
+    pensó al principio). Con un filtro puesto esa lista es solo parte de la
+    columna, y renumerarla pisaría el sitio de las tareas ocultas.
+  - Solo cambia de estado la tarea soltada. Si la vecina ya no está en la
+    columna, prueba con la otra, y si tampoco, la pone al final.
+  - `get-tasks` desempata por id, igual que el endpoint.
+  - «Mover todo» lleva a la primera columna, como dice su aviso, y no a `to-do`.
+  - **Sigue mandando el PUT completo**, sobre una sola tarea: el Gantt
+    (`gantt-task-bar.tsx`), con la tarea del listado. Hay que pasarlo a una ruta
+    parcial antes del 5.2.
 
-1.2 ✔ **El borrado en lote no repara el árbol** (`bulk-update-tasks.ts:239`).
+1.2 ✔ ~~**El borrado en lote no repara el árbol**~~ ✔ PR #79 (`bulk-update-tasks.ts:239`).
 - **Problema**: deja hijas con `parent_id` NULL (la FK hace SET NULL) pero con
   `path` y `depth` viejos, y los CHECK no lo impiden. Tampoco limpia S3, y el evento
   `task.deleted` va sin `assigneeIds` ni `teamId`.
@@ -79,46 +89,66 @@ fechas, asignado).
   caminos.
 - **Datos existentes**: diagnóstico en el PC (`parent_id IS NULL AND depth > 0`) y,
   si aparece algo, una migración de reparación.
+  - Hecho sin esperar al diagnóstico: la migración `0096_repair_task_tree`
+    recalcula `path` y `depth` desde `parent_id` y solo escribe las filas que
+    no coinciden. En una base sana no cambia nada.
+  - El lote borra una a una, releyendo cada tarea, porque si su madre va en el
+    mismo lote su `path` ya ha cambiado. Toma el cerrojo de cada proyecto
+    siempre en el mismo orden. Además publica `task-relation.deleted`, como el
+    borrado de una sola.
 
-1.3 ✔ **Desasignar en lote publica `oldAssignee`** (`bulk-update-tasks.ts:224-232`),
+1.3 ✔ ~~**Desasignar en lote publica `oldAssignee`**~~ ✔ PR #79 (`bulk-update-tasks.ts:224-232`),
 pero `my-work/recipients.ts:86`, `activity/index.ts:250` y `get-task-baseline.ts:94`
 leen `previousAssigneeId`. La actividad pierde a quién se quitó.
 
-1.4 ✔ **El apagado corta trabajo en curso**: `index.ts:985-994` hace `server.close()`
+1.4 ✔ ~~**El apagado corta trabajo en curso**~~ ✔ PR #79: `index.ts:985-994` hace `server.close()`
 y `process.exit(0)` sin esperar, y `events/index.ts:136` tiene su propio SIGTERM
 que quita los oyentes.
 - **Arreglo**: esperar a `server.close` (con tope de unos 10 s), luego
   `settleEvents()`, `shutdownScheduler()` y `pool.end()`, y quitar el SIGTERM de
   `events`.
+  - Hecho en `shutdown.ts`. Antes de `server.close` se cierran los WebSocket
+    con 1001; si no, el cierre esperaría a que colgara cada navegador.
+  - El planificador espera al trabajo que esté corriendo (`isBusy` de croner).
+  - `compose.local.yml` da 15 s (`stop_grace_period`) para que Docker no corte
+    el apagado justo a los 10 s.
 
-1.5 ✔ **Sin `process.on("unhandledRejection")` ni `"uncaughtException"`**: en Node 24
+1.5 ✔ ~~**Sin `process.on("unhandledRejection")` ni `"uncaughtException"`**~~ ✔ PR #79: en Node 24
 un rechazo sin capturar tumba la API.
 - **Arreglo**: registrarlos con `log.error`. Un rechazo se anota y se sigue; una
   excepción sale con 1.
 
-1.6 ✔ **El cerrojo de las migraciones va por el pool**
+1.6 ✔ ~~**El cerrojo de las migraciones va por el pool**~~ ✔ PR #79
 (`database/run-migrations.ts:61-68`). `SET lock_timeout`, `pg_advisory_lock` y el
 unlock pueden caer en conexiones distintas.
 - **Arreglo**: un `pool.connect()` dedicado, `drizzle(client)` para `migrate`, y el
   unlock en ese mismo cliente.
 
-1.7 ✔ **Columnas.**
+1.7 ✔ ~~**Columnas.**~~ ✔ PR #79
 - `delete-column.ts:15-27` cuenta las tareas solo por `column_id`, así que las que
   tienen `column_id` NULL y `status = slug` desaparecen del tablero. Hay que contar
   también por `(project_id, status)`.
 - `reorder-columns.ts:10-24` va sin transacción: validar el lote antes, como
   `reorder-projects.ts`.
 
-1.8 ✔ **Renombrar una etiqueta da 500** (`label/controllers/update-label.ts:28-36`).
+1.8 ✔ ~~**Renombrar una etiqueta da 500**~~ ✔ PR #79 (`label/controllers/update-label.ts:28-36`).
 La cascada choca con `label_task_name_unique` y con `label_workspace_name_unique`.
 - **Arreglo**: devolver 409 con un mensaje, o fusionar quitando antes las copias
   duplicadas.
 
-1.9 **Plantillas y recurrencia no son atómicas.**
+1.9 ~~**Plantillas y recurrencia no son atómicas.**~~ ✔ PR #79
 - `create-project-from-template.ts:89-97` compensa borrando el proyecto cuando las
   `createTask` ya hicieron commit y emitieron eventos.
 - `recurrence/generate.ts:139-175` hace tres commits.
 - **Arreglo**: que `createTask` acepte un `tx` y publique después del commit.
+  - Hecho con `createTaskInTransaction(tx, …)`, que devuelve aparte un
+    `afterCommit` con los avisos, los recálculos y la replanificación.
+    `createTask` es el envoltorio que abre la transacción.
+  - La plantilla de proyecto crea proyecto, columnas, épicas y árbol en una
+    sola transacción, sin borrado compensatorio. La recurrencia reclama la
+    fecha, crea y decora en otra: si falla, se reintenta en la vuelta siguiente
+    en vez de perder la ocurrencia, y sigue sin duplicar.
+  - `decorateTask` ya no recalcula: lo hace el `afterCommit` del alta.
 
 ## Tanda 2 — Retiradas decididas (D2, D3, D4)
 
@@ -312,7 +342,8 @@ Inicializar por id.
 
 5.2 ✔ **La lista devuelve `description` de cada tarea** (`get-tasks.ts:133`) y
 ningún componente de lista la lee. Quitarla. **Requiere el 1.1**: el PUT de hoy
-mandaría la descripción vacía.
+mandaría la descripción vacía. Al arrastrar ya no se usa, pero el Gantt sí (ver
+el 1.1).
 
 5.3 ✔ **`inArray` con un parámetro por tarea** (`get-tasks.ts:183`) choca con el
 límite de 65.535. Usar un join o `= ANY(${sql.param(ids)}::text[])`.
@@ -395,6 +426,8 @@ avisar.
 6.4 **Posiciones leídas fuera del cerrojo**: `create-task.ts:87-99`,
 `create-epic.ts:31`, `create-view.ts:52`, `create-field-definition.ts:123`,
 `create-column.ts:60`.
+El de `create-task.ts` quedó resuelto con el 1.9: ahora lee la posición
+dentro de la transacción y después del cerrojo.
 
 6.5 ~ **El stand-up puede salir dos veces** si caduca el arrendamiento de 15 minutos
 (`automation/standup.ts:87-155`).

@@ -134,9 +134,3 @@ export async function subscribeToEvent<T>(
     throw error;
   }
 }
-
-process.on("SIGTERM", () => {
-  shutdownEventBus().catch((error) =>
-    log.error("Event bus shutdown failed", error),
-  );
-});

@@ -1,10 +1,13 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, or } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import {
+  assetTable,
   columnTable,
   labelTable,
   projectTable,
+  taskAssigneeTable,
+  taskRelationTable,
   taskTable,
   userTable,
   workspaceUserTable,
@@ -13,6 +16,7 @@ import { publishEvent } from "../../events";
 import { refreshFormulasAfter } from "../../field/formula/refresh";
 import { removeLabelFromGitea } from "../../plugins/gitea/utils/sync-label-to-gitea";
 import { removeLabelFromGitHub } from "../../plugins/github/utils/sync-label-to-github";
+import { deleteS3Keys } from "../../storage/cleanup-assets";
 import { assertAssignableUser } from "../../utils/assert-assignable-user";
 import { log } from "../../utils/log";
 import { scheduleAfter } from "../schedule/reschedule";
@@ -22,6 +26,8 @@ import {
 } from "../validate-task-fields";
 import { syncPrimaryAssigneeBulk } from "./assignees";
 import { cascadeStatusToSubtrees } from "./cascade-status";
+import { deleteTasksPromotingChildren } from "./delete-tasks-promoting-children";
+import { lockProjectTree } from "./lock-project-tree";
 
 type BulkOperation =
   | "updateStatus"
@@ -53,6 +59,7 @@ async function bulkUpdateTasks({
       userId: taskTable.userId,
       dueDate: taskTable.dueDate,
       parentId: taskTable.parentId,
+      teamId: taskTable.teamId,
       workspaceId: projectTable.workspaceId,
     })
     .from(taskTable)
@@ -100,6 +107,8 @@ async function bulkUpdateTasks({
 
   const foundIds = tasks.map((t) => t.id);
   let updatedCount = 0;
+  // Las madres de lo borrado, que es lo que hay que replanificar.
+  const deleteSeeds: { projectId: string; id: string }[] = [];
 
   switch (operation) {
     case "updateStatus": {
@@ -218,11 +227,22 @@ async function bulkUpdateTasks({
 
       updatedCount = result.rowCount ?? foundIds.length;
 
+      // Los mismos campos que `update-task-assignee.ts`: quitar lleva
+      // `previousAssigneeId`, que es lo que leen la actividad, "Mi trabajo" y
+      // la linea base; con `oldAssignee` se perdia a quien se quito.
       for (const task of tasks) {
-        const eventType = assigneeId
-          ? "task.assignee_changed"
-          : "task.unassigned";
-        await publishEvent(eventType, {
+        if (!assigneeId) {
+          await publishEvent("task.unassigned", {
+            taskId: task.id,
+            projectId: task.projectId,
+            userId,
+            previousAssigneeId: task.userId,
+            title: task.title,
+            type: "unassigned",
+          });
+          continue;
+        }
+        await publishEvent("task.assignee_changed", {
           taskId: task.id,
           projectId: task.projectId,
           userId,
@@ -230,26 +250,88 @@ async function bulkUpdateTasks({
           newAssignee: newAssigneeName,
           newAssigneeId: assigneeId,
           title: task.title,
-          type: assigneeId ? "assignee_changed" : "unassigned",
+          type: "assignee_changed",
         });
       }
       break;
     }
 
     case "delete": {
-      const result = await db
-        .delete(taskTable)
-        .where(inArray(taskTable.id, foundIds));
+      // Lo que ya no se podra leer cuando las filas no existan: a quien hay que
+      // refrescarle "Mi trabajo", sus relaciones y sus ficheros.
+      const assignees = await db
+        .select({
+          taskId: taskAssigneeTable.taskId,
+          userId: taskAssigneeTable.userId,
+        })
+        .from(taskAssigneeTable)
+        .where(inArray(taskAssigneeTable.taskId, foundIds));
+      const relations = await db
+        .select()
+        .from(taskRelationTable)
+        .where(
+          or(
+            inArray(taskRelationTable.sourceTaskId, foundIds),
+            inArray(taskRelationTable.targetTaskId, foundIds),
+          ),
+        );
+      const assetKeys = (
+        await db
+          .select({ objectKey: assetTable.objectKey })
+          .from(assetTable)
+          .where(inArray(assetTable.taskId, foundIds))
+      ).map((asset) => asset.objectKey);
 
-      updatedCount = result.rowCount ?? foundIds.length;
+      const removed = await db.transaction(async (tx) => {
+        // Siempre en el mismo orden, para que dos lotes no se interbloqueen.
+        for (const projectId of [
+          ...new Set(tasks.map((t) => t.projectId)),
+        ].sort()) {
+          await lockProjectTree(tx, projectId);
+        }
+        return deleteTasksPromotingChildren(tx, foundIds);
+      });
+
+      updatedCount = removed.length;
+      const removedIds = new Set(removed.map((row) => row.id));
+      for (const row of removed) {
+        // La madre que tenia al irse, si no se fue con ella: su rama encoge.
+        if (row.parentId && !removedIds.has(row.parentId)) {
+          deleteSeeds.push({ projectId: row.projectId, id: row.parentId });
+        }
+      }
 
       for (const task of tasks) {
+        if (!removedIds.has(task.id)) continue;
         await publishEvent("task.deleted", {
           taskId: task.id,
           projectId: task.projectId,
           userId,
           title: task.title,
+          assigneeIds: assignees
+            .filter((assignee) => assignee.taskId === task.id)
+            .map((assignee) => assignee.userId),
+          teamId: task.teamId,
         });
+      }
+
+      for (const relation of relations) {
+        const task = tasks.find(
+          (t) =>
+            t.id === relation.sourceTaskId || t.id === relation.targetTaskId,
+        );
+        if (!task) continue;
+        await publishEvent("task-relation.deleted", {
+          projectId: task.projectId,
+          userId,
+          taskId: task.id,
+          sourceTaskId: relation.sourceTaskId,
+          targetTaskId: relation.targetTaskId,
+        });
+      }
+
+      if (assetKeys.length > 0) {
+        deleteS3Keys(assetKeys).catch(() => {});
       }
       break;
     }
@@ -409,16 +491,21 @@ async function bulkUpdateTasks({
       (value === "archived" || tasks.some((t) => t.status === "archived")))
   ) {
     const byProject = new Map<string, string[]>();
-    for (const task of tasks) {
-      const seeds = byProject.get(task.projectId) ?? [];
-      seeds.push(operation === "delete" ? (task.parentId ?? "") : task.id);
-      byProject.set(task.projectId, seeds);
+    const seeds =
+      operation === "delete"
+        ? deleteSeeds
+        : tasks.map((task) => ({ projectId: task.projectId, id: task.id }));
+    for (const seed of seeds) {
+      byProject.set(seed.projectId, [
+        ...(byProject.get(seed.projectId) ?? []),
+        seed.id,
+      ]);
     }
-    for (const [projectId, seeds] of byProject) {
-      await scheduleAfter({ projectId, taskIds: seeds, actorId: userId });
+    for (const [projectId, taskIds] of byProject) {
+      await scheduleAfter({ projectId, taskIds, actorId: userId });
       // Archivar y borrar cambian lo que suma cada rama (ADR 090).
       if (operation !== "updateDueDate") {
-        await refreshFormulasAfter({ projectId, taskIds: seeds });
+        await refreshFormulasAfter({ projectId, taskIds });
       }
     }
   }

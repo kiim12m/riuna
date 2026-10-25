@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
-import { epicTable, projectTable, templateTable } from "../../database/schema";
+import { epicTable, templateTable } from "../../database/schema";
 import { insertProject } from "../../project/controllers/create-project";
 import { parseTemplateContent } from "../content";
-import { applyTaskTemplate } from "./apply-template";
+import { applyTaskTemplateInTransaction } from "./apply-template";
 
 /**
  * Crea un proyecto entero a partir de una plantilla: con **sus** columnas (las
@@ -12,11 +12,9 @@ import { applyTaskTemplate } from "./apply-template";
  *
  * Aplicar una plantilla a un proyecto que ya existe solo despliega el arbol
  * (ADR 027); esto cierra el hueco de empezar de cero. El arbol se despliega con
- * `applyTaskTemplate`, que comprueba la profundidad y los campos antes de crear
- * nada. Si aun asi falla, el proyecto recien creado se borra: no queda un
- * proyecto vacio que nadie pidio a medias. Lo que no se deshace son los
- * `task.created` de las tareas que si llegaron a crearse (actividad, avisos,
- * webhooks): solo pasa si la base falla a mitad, y se acepta a sabiendas.
+ * `applyTaskTemplateInTransaction`, en la misma transaccion que el proyecto: si
+ * algo falla a mitad no queda ni el proyecto ni sus tareas, y como los
+ * `task.created` salen solo al confirmar, tampoco se ha avisado de nada.
  */
 export async function createProjectFromTemplate({
   workspaceId,
@@ -61,14 +59,20 @@ export async function createProjectFromTemplate({
 
   const columns = content.columns?.length ? content.columns : undefined;
 
-  const project = await db.transaction(async (tx) => {
+  // Proyecto, columnas, epicas y arbol en una sola transaccion: si una tarea
+  // falla, no queda nada, y los avisos de las tareas solo salen al confirmar.
+  const { project, afterCommit } = await db.transaction(async (tx) => {
     const created = await insertProject(
       tx,
       { workspaceId, name, icon, slug },
       columns,
     );
 
-    if (created && content.epics?.length) {
+    if (!created) {
+      throw new HTTPException(500, { message: "Could not create the project" });
+    }
+
+    if (content.epics?.length) {
       await tx.insert(epicTable).values(
         content.epics.map((epic, index) => ({
           projectId: created.id,
@@ -79,23 +83,16 @@ export async function createProjectFromTemplate({
       );
     }
 
-    return created;
-  });
-
-  if (!project) {
-    throw new HTTPException(500, { message: "Could not create the project" });
-  }
-
-  try {
-    await applyTaskTemplate({
+    const applied = await applyTaskTemplateInTransaction(tx, {
       templateId,
-      projectId: project.id,
+      projectId: created.id,
       currentUserId,
     });
-  } catch (error) {
-    await db.delete(projectTable).where(eq(projectTable.id, project.id));
-    throw error;
-  }
+
+    return { project: created, afterCommit: applied.afterCommit };
+  });
+
+  await afterCommit();
 
   return project;
 }

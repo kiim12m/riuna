@@ -2,7 +2,7 @@ import { and, eq, lte, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../database";
 import { taskRecurrenceTable, taskTable } from "../database/schema";
-import createTask from "../task/controllers/create-task";
+import { createTaskInTransaction } from "../task/controllers/create-task";
 import { decorateTask, resolveEpics } from "../template/decorate-task";
 import { getProjectWorkspaceId } from "../utils/assert-assignable-user";
 import { log } from "../utils/log";
@@ -44,15 +44,15 @@ async function disable(recurrenceId: string, reason: string, error: unknown) {
 /**
  * Genera una ocurrencia.
  *
- * **Primero se reclama la fecha, despues se crea la tarea**, y la reclamacion
- * es condicional (`WHERE next_run_at = <la que se leyo>`). Si otro proceso se
- * adelanto, el UPDATE no casa ninguna fila y este se retira sin crear nada.
+ * Reclamar la fecha, crear la tarea y decorarla van en **una sola
+ * transaccion**, y la reclamacion es condicional (`WHERE next_run_at = <la que
+ * se leyo>`). Si otro proceso se adelanto, su UPDATE espera al cerrojo de la
+ * fila, ya no casa y este se retira sin crear nada: no se duplica.
  *
- * El orden importa y es deliberado: si la creacion falla despues de reclamar,
- * se pierde **una** ocurrencia. Al reves —crear y luego reclamar— un fallo al
- * avanzar la fecha dejaria la recurrencia disparando la misma tarea en cada
- * vuelta del planificador. Para una tarea recurrente, perder una es un
- * inconveniente y duplicar sin freno es un destrozo.
+ * Si algo falla a mitad, no queda ni la tarea a medias ni la fecha avanzada, y
+ * no se ha avisado de nada (auditoria 1.9): se reintenta en la vuelta
+ * siguiente. Antes eran tres confirmaciones seguidas, y un fallo en la ultima
+ * dejaba una tarea sin etiquetas y la ocurrencia perdida.
  */
 async function runOne(
   recurrence: DueRecurrence,
@@ -107,59 +107,72 @@ async function runOne(
   const { nextRunAt } = advancePast(cadence, recurrence.nextRunAt, now);
   const exhausted = recurrence.endsAt !== null && nextRunAt > recurrence.endsAt;
 
-  const claimed = await db
-    .update(taskRecurrenceTable)
-    .set({
-      nextRunAt,
-      lastRunAt: now,
-      active: exhausted ? false : recurrence.active,
-    })
-    .where(
-      and(
-        eq(taskRecurrenceTable.id, recurrence.id),
-        eq(taskRecurrenceTable.nextRunAt, recurrence.nextRunAt),
-      ),
-    )
-    .returning({ id: taskRecurrenceTable.id });
+  const workspaceId =
+    template.labels?.length || template.epics?.length || customFields
+      ? await getProjectWorkspaceId(recurrence.projectId)
+      : null;
 
-  if (claimed.length === 0) return "skipped";
+  const afterCommit = await db.transaction(async (tx) => {
+    const claimed = await tx
+      .update(taskRecurrenceTable)
+      .set({
+        nextRunAt,
+        lastRunAt: now,
+        active: exhausted ? false : recurrence.active,
+      })
+      .where(
+        and(
+          eq(taskRecurrenceTable.id, recurrence.id),
+          eq(taskRecurrenceTable.nextRunAt, recurrence.nextRunAt),
+        ),
+      )
+      .returning({ id: taskRecurrenceTable.id });
 
-  const created = await createTask({
-    projectId: recurrence.projectId,
-    currentUserId: recurrence.createdBy ?? "",
-    userId: template.assigneeId ?? undefined,
-    title: template.title,
-    status: template.status ?? "to-do",
-    description: template.description,
-    priority: template.priority,
-    estimate: template.estimate,
-    dueDate: recurrence.nextRunAt,
+    if (claimed.length === 0) return null;
+
+    const { task, afterCommit } = await createTaskInTransaction(tx, {
+      projectId: recurrence.projectId,
+      currentUserId: recurrence.createdBy ?? "",
+      userId: template.assigneeId ?? undefined,
+      title: template.title,
+      status: template.status ?? "to-do",
+      description: template.description,
+      priority: template.priority,
+      estimate: template.estimate,
+      dueDate: recurrence.nextRunAt,
+    });
+
+    await tx
+      .update(taskTable)
+      .set({
+        recurrenceId: recurrence.id,
+        teamId: template.teamId ?? null,
+      })
+      .where(eq(taskTable.id, task.id));
+
+    // Etiquetas, epicas y campos, con el mismo codigo que el desplegador de
+    // plantillas de tarea.
+    if (workspaceId) {
+      await decorateTask({
+        dbOrTx: tx,
+        taskId: task.id,
+        workspaceId,
+        customFields,
+        labels: template.labels,
+        epics: template.epics,
+        epicIdsByName: await resolveEpics(
+          recurrence.projectId,
+          template.epics ?? [],
+          tx,
+        ),
+      });
+    }
+
+    return afterCommit;
   });
 
-  await db
-    .update(taskTable)
-    .set({
-      recurrenceId: recurrence.id,
-      teamId: template.teamId ?? null,
-    })
-    .where(eq(taskTable.id, created.id));
-
-  // Etiquetas, epicas y campos, con el mismo codigo que el desplegador de
-  // plantillas de tarea.
-  if (template.labels?.length || template.epics?.length || customFields) {
-    const workspaceId = await getProjectWorkspaceId(recurrence.projectId);
-    await decorateTask({
-      taskId: created.id,
-      workspaceId,
-      customFields,
-      labels: template.labels,
-      epics: template.epics,
-      epicIdsByName: await resolveEpics(
-        recurrence.projectId,
-        template.epics ?? [],
-      ),
-    });
-  }
+  if (!afterCommit) return "skipped";
+  await afterCommit();
 
   return exhausted ? "finished" : "created";
 }

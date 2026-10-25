@@ -57,14 +57,16 @@ import notificationPreferences from "./notification-preferences";
 import oauth from "./oauth";
 import planner from "./planner";
 import { initializePlugins } from "./plugins";
+import { installProcessErrorHandlers } from "./process-errors";
 import project from "./project";
 import { getPublicProject } from "./project/controllers/get-public-project";
 import recurrence from "./recurrence";
 import review from "./review";
 import schedule from "./schedule";
-import { initializeScheduler, shutdownScheduler } from "./scheduler";
+import { initializeScheduler } from "./scheduler";
 import search from "./search";
 import sessions from "./session";
+import { gracefulShutdown } from "./shutdown";
 import slackIntegration from "./slack-integration";
 import { getPrivateObject } from "./storage/s3";
 import task from "./task";
@@ -113,7 +115,6 @@ import {
   initializeWebSocketAdapter,
   removeConnection,
   removeUserConnection,
-  shutdownWebSocketAdapter,
 } from "./ws";
 
 type ApiKey = {
@@ -959,6 +960,8 @@ export async function startServer(
   injectWebSocket: ReturnType<typeof createNodeWebSocket>["injectWebSocket"],
   port = 1337,
 ) {
+  installProcessErrorHandlers();
+
   try {
     await runStartupTasks();
   } catch (error) {
@@ -982,23 +985,26 @@ export async function startServer(
 
   injectWebSocket(server);
 
-  const gracefulShutdown = async () => {
+  const shutdown = async () => {
     if (shuttingDown) return;
     shuttingDown = true;
 
     log.info("🛑 Shutting down gracefully...");
-    shutdownScheduler();
-    await shutdownWebSocketAdapter();
-    server.close();
-    process.exit(0);
+    try {
+      await gracefulShutdown({ server });
+      process.exit(0);
+    } catch (error) {
+      log.error("Shutdown failed:", error);
+      process.exit(1);
+    }
   };
 
   process.on("SIGTERM", () => {
-    void gracefulShutdown();
+    void shutdown();
   });
 
   process.on("SIGINT", () => {
-    void gracefulShutdown();
+    void shutdown();
   });
 }
 

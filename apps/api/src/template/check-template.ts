@@ -1,4 +1,5 @@
 import { HTTPException } from "hono/http-exception";
+import db from "../database";
 import { getFieldDefinitionsForProject } from "../field/controllers/get-field-definitions";
 import type { FieldType } from "../field/field-types";
 import {
@@ -6,6 +7,7 @@ import {
   FieldValidationError,
   resolveFieldValueChanges,
 } from "../field/validate-field-values";
+import type { DbOrTx } from "../task/controllers/assignees";
 import { assertValidTaskStatus } from "../task/validate-task-fields";
 import type { TemplateNode } from "./content";
 
@@ -22,11 +24,15 @@ export async function checkTemplateFits(
   nodes: TemplateNode[],
   projectId: string,
   workspaceId: string,
+  dbOrTx: DbOrTx = db,
 ): Promise<Map<TemplateNode, Record<string, unknown>>> {
   const all = flatten(nodes);
 
+  // Por `dbOrTx`: las columnas de un proyecto que nace de una plantilla aun no
+  // existen fuera de su transaccion. Los campos si se leen fuera: un proyecto
+  // nuevo todavia no tiene campos propios.
   for (const status of new Set(all.map((node) => node.status ?? "to-do"))) {
-    await assertValidTaskStatus(status, projectId);
+    await assertValidTaskStatus(status, projectId, dbOrTx);
   }
 
   const fieldsByNode = new Map<TemplateNode, Record<string, unknown>>();

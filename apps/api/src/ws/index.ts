@@ -138,6 +138,23 @@ export async function initializeWebSocketAdapter() {
   log.info(`📡 WebSockets Initialized using: "${adapter.constructor.name}"`);
 }
 
+/**
+ * Cierra los sockets de esta instancia con 1001 («se va»): el navegador se
+ * reconecta, y `server.close` no se queda esperando a que cada uno cuelgue.
+ */
+export function closeLocalConnections() {
+  for (const connections of [
+    ...userConnections.values(),
+    ...projectConnections.values(),
+  ]) {
+    for (const connection of connections) {
+      connection.ws.close(1001, "Server shutting down");
+    }
+  }
+  userConnections.clear();
+  projectConnections.clear();
+}
+
 export async function shutdownWebSocketAdapter() {
   const pendingQueues = [...projectBroadcastQueues.entries()];
 

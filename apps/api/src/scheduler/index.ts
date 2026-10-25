@@ -174,9 +174,16 @@ export function initializeScheduler(): number {
   return jobs.length;
 }
 
-export function shutdownScheduler(): void {
-  for (const job of jobs) {
+/**
+ * Para los trabajos y espera al que este corriendo: `stop` no lo corta, y
+ * cerrar el pool por debajo lo dejaria a medias.
+ */
+export async function shutdownScheduler(): Promise<void> {
+  const stopping = jobs.splice(0);
+  for (const job of stopping) {
     job.stop();
   }
-  jobs.length = 0;
+  while (stopping.some((job) => job.isBusy())) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
 }
