@@ -58,8 +58,8 @@ evidencia citada.
 
 ## Tanda 1 — Datos que se pierden o se corrompen (alta)
 
-1.1 ✔ **Arrastrar en tablero, lista o backlog manda un PUT completo por cada tarea de
-la columna**, con la foto que tenía el navegador (título, descripción, prioridad,
+1.1 ✔ ~~**Arrastrar en tablero, lista o backlog manda un PUT completo por cada tarea de
+la columna**~~ ✔ PR #79, con la foto que tenía el navegador (título, descripción, prioridad,
 fechas, asignado).
 - **Problema**: pisa lo que otra persona haya editado en las tareas vecinas. Cada
   PUT invalida 8 claves y manda un TASK_UPDATED a los demás.
@@ -80,7 +80,7 @@ fechas, asignado).
     (`gantt-task-bar.tsx`), con la tarea del listado. Hay que pasarlo a una ruta
     parcial antes del 5.2.
 
-1.2 ✔ **El borrado en lote no repara el árbol** (`bulk-update-tasks.ts:239`).
+1.2 ✔ ~~**El borrado en lote no repara el árbol**~~ ✔ PR #79 (`bulk-update-tasks.ts:239`).
 - **Problema**: deja hijas con `parent_id` NULL (la FK hace SET NULL) pero con
   `path` y `depth` viejos, y los CHECK no lo impiden. Tampoco limpia S3, y el evento
   `task.deleted` va sin `assigneeIds` ni `teamId`.
@@ -97,11 +97,11 @@ fechas, asignado).
     siempre en el mismo orden. Además publica `task-relation.deleted`, como el
     borrado de una sola.
 
-1.3 ✔ **Desasignar en lote publica `oldAssignee`** (`bulk-update-tasks.ts:224-232`),
+1.3 ✔ ~~**Desasignar en lote publica `oldAssignee`**~~ ✔ PR #79 (`bulk-update-tasks.ts:224-232`),
 pero `my-work/recipients.ts:86`, `activity/index.ts:250` y `get-task-baseline.ts:94`
 leen `previousAssigneeId`. La actividad pierde a quién se quitó.
 
-1.4 ✔ **El apagado corta trabajo en curso**: `index.ts:985-994` hace `server.close()`
+1.4 ✔ ~~**El apagado corta trabajo en curso**~~ ✔ PR #79: `index.ts:985-994` hace `server.close()`
 y `process.exit(0)` sin esperar, y `events/index.ts:136` tiene su propio SIGTERM
 que quita los oyentes.
 - **Arreglo**: esperar a `server.close` (con tope de unos 10 s), luego
@@ -113,30 +113,30 @@ que quita los oyentes.
   - `compose.local.yml` da 15 s (`stop_grace_period`) para que Docker no corte
     el apagado justo a los 10 s.
 
-1.5 ✔ **Sin `process.on("unhandledRejection")` ni `"uncaughtException"`**: en Node 24
+1.5 ✔ ~~**Sin `process.on("unhandledRejection")` ni `"uncaughtException"`**~~ ✔ PR #79: en Node 24
 un rechazo sin capturar tumba la API.
 - **Arreglo**: registrarlos con `log.error`. Un rechazo se anota y se sigue; una
   excepción sale con 1.
 
-1.6 ✔ **El cerrojo de las migraciones va por el pool**
+1.6 ✔ ~~**El cerrojo de las migraciones va por el pool**~~ ✔ PR #79
 (`database/run-migrations.ts:61-68`). `SET lock_timeout`, `pg_advisory_lock` y el
 unlock pueden caer en conexiones distintas.
 - **Arreglo**: un `pool.connect()` dedicado, `drizzle(client)` para `migrate`, y el
   unlock en ese mismo cliente.
 
-1.7 ✔ **Columnas.**
+1.7 ✔ ~~**Columnas.**~~ ✔ PR #79
 - `delete-column.ts:15-27` cuenta las tareas solo por `column_id`, así que las que
   tienen `column_id` NULL y `status = slug` desaparecen del tablero. Hay que contar
   también por `(project_id, status)`.
 - `reorder-columns.ts:10-24` va sin transacción: validar el lote antes, como
   `reorder-projects.ts`.
 
-1.8 ✔ **Renombrar una etiqueta da 500** (`label/controllers/update-label.ts:28-36`).
+1.8 ✔ ~~**Renombrar una etiqueta da 500**~~ ✔ PR #79 (`label/controllers/update-label.ts:28-36`).
 La cascada choca con `label_task_name_unique` y con `label_workspace_name_unique`.
 - **Arreglo**: devolver 409 con un mensaje, o fusionar quitando antes las copias
   duplicadas.
 
-1.9 **Plantillas y recurrencia no son atómicas.**
+1.9 ~~**Plantillas y recurrencia no son atómicas.**~~ ✔ PR #79
 - `create-project-from-template.ts:89-97` compensa borrando el proyecto cuando las
   `createTask` ya hicieron commit y emitieron eventos.
 - `recurrence/generate.ts:139-175` hace tres commits.
