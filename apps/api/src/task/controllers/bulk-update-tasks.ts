@@ -227,11 +227,22 @@ async function bulkUpdateTasks({
 
       updatedCount = result.rowCount ?? foundIds.length;
 
+      // Los mismos campos que `update-task-assignee.ts`: quitar lleva
+      // `previousAssigneeId`, que es lo que leen la actividad, "Mi trabajo" y
+      // la linea base; con `oldAssignee` se perdia a quien se quito.
       for (const task of tasks) {
-        const eventType = assigneeId
-          ? "task.assignee_changed"
-          : "task.unassigned";
-        await publishEvent(eventType, {
+        if (!assigneeId) {
+          await publishEvent("task.unassigned", {
+            taskId: task.id,
+            projectId: task.projectId,
+            userId,
+            previousAssigneeId: task.userId,
+            title: task.title,
+            type: "unassigned",
+          });
+          continue;
+        }
+        await publishEvent("task.assignee_changed", {
           taskId: task.id,
           projectId: task.projectId,
           userId,
@@ -239,7 +250,7 @@ async function bulkUpdateTasks({
           newAssignee: newAssigneeName,
           newAssigneeId: assigneeId,
           title: task.title,
-          type: assigneeId ? "assignee_changed" : "unassigned",
+          type: "assignee_changed",
         });
       }
       break;
