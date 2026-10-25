@@ -280,6 +280,14 @@ export function getDatabasePool(): Pool {
   return pool;
 }
 
+/** Cierra el pool, si llego a abrirse. Lo usa el apagado (`shutdown.ts`). */
+export async function closeDatabasePool(): Promise<void> {
+  const current = pool;
+  pool = undefined;
+  dbInstance = undefined;
+  await current?.end();
+}
+
 export function getDatabase(): DatabaseInstance {
   if (!dbInstance) {
     dbInstance = drizzle(getDatabasePool(), {

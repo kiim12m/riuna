@@ -137,6 +137,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # El apagado espera hasta 10 s a lo que este a medias (shutdown.ts); los 10 s
+    # que da Docker por defecto lo cortarian justo al final.
+    stop_grace_period: 15s
     restart: unless-stopped
 
 #  Optional

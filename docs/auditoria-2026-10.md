@@ -107,6 +107,11 @@ que quita los oyentes.
 - **Arreglo**: esperar a `server.close` (con tope de unos 10 s), luego
   `settleEvents()`, `shutdownScheduler()` y `pool.end()`, y quitar el SIGTERM de
   `events`.
+  - Hecho en `shutdown.ts`. Antes de `server.close` se cierran los WebSocket
+    con 1001; si no, el cierre esperaría a que colgara cada navegador.
+  - El planificador espera al trabajo que esté corriendo (`isBusy` de croner).
+  - `compose.local.yml` da 15 s (`stop_grace_period`) para que Docker no corte
+    el apagado justo a los 10 s.
 
 1.5 ✔ **Sin `process.on("unhandledRejection")` ni `"uncaughtException"`**: en Node 24
 un rechazo sin capturar tumba la API.
