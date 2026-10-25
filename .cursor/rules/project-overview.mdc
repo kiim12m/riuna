@@ -21,7 +21,6 @@ riuna/
 │   ├── libs/         # Typed API client and shared runtime helpers
 │   ├── mcp/          # Stdio MCP package
 │   ├── permissions/  # Shared permission vocabulary and built-in roles
-│   ├── planka-import/  # PLANKA migration CLI
 │   └── typescript-config/  # TypeScript configurations
 ├── charts/           # Kubernetes Helm charts
 ├── docs/             # Riuna's own working documents (plan, ADRs, procedures)

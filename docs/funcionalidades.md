@@ -693,10 +693,6 @@ ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
     repetirse;
   - tiene ensayo en seco;
   - la hoja no mueve tareas de proyecto.
-- **Importador de PLANKA** (`packages/planka-import`): una CLI que lee PLANKA
-  por su API y crea en Riuna por la API pública con una API key, con
-  `--dry-run`. Mapea tableros, listas, tarjetas, checklists, elementos
-  enlazados, etiquetas, asignados y comentarios.
 - Los importadores de **Trello, Jira, Asana y Notion** están documentados, no
   construidos: la receta y lo que falta están en la
   [ADR 070](adr/070-como-se-anade-un-importador-externo.md).

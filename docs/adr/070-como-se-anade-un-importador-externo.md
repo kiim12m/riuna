@@ -11,7 +11,7 @@ saltarse las garantías que ya tienen.
 formato de origen a filas del formato de intercambio (ADR 017) y escribe con las piezas
 de abajo.
 
-- **No por la API pública**, como el CLI de PLANKA (`packages/planka-import`):
+- **No por la API pública**, como hacía el CLI de PLANKA (retirado en la ADR 097):
   - no puede fechar los comentarios;
   - cada alta y cada comentario dispara avisos e integraciones;
   - no llega a `external_ref`;

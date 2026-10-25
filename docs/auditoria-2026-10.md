@@ -162,7 +162,7 @@ Antes de cada retirada:
 - **Otros**: la dependencia `creem`; la excepción de `billing.tsx` en
   `hardcoded-copy.test.ts`.
 
-2.3 **Retirar `packages/planka-import`**, junto con sus referencias en la
+2.3 ✔ **Retirar `packages/planka-import`** (ADR 097), junto con sus referencias en la
 documentación.
 
 2.4 **Retirar los despliegues que no usa el PC.**

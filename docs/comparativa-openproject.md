@@ -127,7 +127,7 @@ Enterprise de OpenProject.
 | Slack, Discord, Telegram, ntfy, Gotify, webhook firmado | ✔ | ◐ webhooks |
 | Automatizaciones «Cuando · Si · Entonces» | ✔ para todos | ◐ acciones personalizadas (EE) |
 | Servidor MCP | ✔ 46 herramientas, HTTP y stdio | ✔ (EE, 17.2-17.9) |
-| Importadores | ✔ CSV/Excel, PLANKA, hoja de SERVITEC | ✔ CSV, Jira |
+| Importadores | ✔ CSV/Excel, hoja de SERVITEC | ✔ CSV, Jira |
 
 ## 7. Notificaciones
 
