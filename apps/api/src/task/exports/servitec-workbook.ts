@@ -27,6 +27,7 @@ export type ServitecRow = {
   /** El id de la tarea, en una columna oculta: es lo que reconoce la fila al volver. */
   id: string;
   fecha: Date | null;
+  /** Cuando se trabajo por ultima vez en la tarea (ADR 094), no `updated_at`. */
   fechaActualizacion: Date | null;
   concepto: string;
   proyecto: string;
