@@ -10,7 +10,6 @@ import { formatDateShort } from "@/lib/format";
 import { getInitials } from "@/lib/get-initials";
 import { getPriorityIcon } from "@/lib/priority";
 import type { PublicTask } from "@/types/project";
-import { PublicPRBadge } from "./public-pr-badge";
 import { PublicTaskLabels } from "./public-task-labels";
 
 type PublicTaskCardProps = {
@@ -30,7 +29,6 @@ export function PublicTaskCard({
 }: PublicTaskCardProps) {
   const taskIsCompleted = isCompleted ?? isTaskCompleted(task.status);
   const labels = task.labels || [];
-  const externalLinks = task.externalLinks || [];
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(
     null,
   );
@@ -141,10 +139,6 @@ export function PublicTaskCard({
                 "no-due-date") && <Calendar className="w-3 h-3" />}
             <span>{formatDateShort(task.dueDate)}</span>
           </div>
-        )}
-
-        {externalLinks.length > 0 && (
-          <PublicPRBadge externalLinks={externalLinks} />
         )}
       </div>
     </button>

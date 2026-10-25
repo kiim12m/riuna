@@ -21,7 +21,7 @@ Lo que falta en el repo para que eso sea repetible y seguro:
   (`runStartupTasks`, `apps/api/src/index.ts`; si fallan, el proceso sale con 1), así que una
   actualización sin copia previa arriesga los datos reales. **Solo el paso de drizzle va en una
   transacción**: `migrateWorkspaceUserEmail` y `migrateSessionColumn` corren antes, y
-  `migrateApiKeyReferenceId`, `migrateNotificationPreferencesSchema`, `migrateGitHubIntegration`,
+  `migrateApiKeyReferenceId`, `migrateNotificationPreferencesSchema`,
   `migrateColumns` y `seedDefaultWorkspaceRoles` después. Todas dan el mismo «❌ Database
   migration failed!», así que ese mensaje **no** significa que la base quedara intacta.
 - Las copias viven en el mismo disco que la base (`docs/copias-de-seguridad.md`, «Lo que esto no

@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { AutomationList } from "@/components/automation/automation-list";
 import PageTitle from "@/components/page-title";
-import WorkflowEditor from "@/components/project/workflow-editor";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 
 export const Route = createFileRoute(
@@ -11,11 +10,7 @@ export const Route = createFileRoute(
   component: RouteComponent,
 });
 
-/**
- * Las automatizaciones del proyecto (Fase 8, ADR 066) y, debajo, las reglas de
- * GitHub y Gitea que ya existian: los movimientos que estas provocan disparan
- * aquellas, asi que viven en la misma pagina.
- */
+/** Las automatizaciones del proyecto (Fase 8, ADR 066). */
 function RouteComponent() {
   const { t } = useTranslation();
   const { projectId, workspaceId } = Route.useParams();
@@ -39,18 +34,6 @@ function RouteComponent() {
           projectId={projectId}
           canEdit={canUpdateProjects()}
         />
-
-        <div className="space-y-6">
-          <div className="space-y-1">
-            <h2 className="text-section">
-              {t("settings:automations.integrationsTitle")}
-            </h2>
-            <p className="text-xs text-muted-foreground">
-              {t("settings:automations.integrationsDescription")}
-            </p>
-          </div>
-          <WorkflowEditor projectId={projectId} canEdit={canUpdateProjects()} />
-        </div>
       </div>
     </>
   );

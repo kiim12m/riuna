@@ -5,7 +5,6 @@ import { isTaskCompleted } from "@/lib/due-date-status";
 import { getInitials } from "@/lib/get-initials";
 import { getPriorityIcon } from "@/lib/priority";
 import type { PublicTask } from "@/types/project";
-import { PublicPRBadge } from "./public-pr-badge";
 import { PublicTaskLabels } from "./public-task-labels";
 
 type PublicTaskRowProps = {
@@ -26,7 +25,6 @@ export function PublicTaskRow({
   const taskIsCompleted = isCompleted ?? isTaskCompleted(task.status);
   const { t } = useTranslation();
   const labels = task.labels || [];
-  const externalLinks = task.externalLinks || [];
 
   return (
     <button
@@ -75,10 +73,6 @@ export function PublicTaskRow({
           <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-label font-medium text-muted-foreground">
             {getPriorityIcon(task.priority)}
           </div>
-        )}
-
-        {externalLinks.length > 0 && (
-          <PublicPRBadge externalLinks={externalLinks} />
         )}
       </div>
     </button>

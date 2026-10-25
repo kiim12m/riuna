@@ -12,7 +12,6 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import {
   columnTable,
-  externalLinkTable,
   labelTable,
   projectTable,
   taskRelationTable,
@@ -183,14 +182,6 @@ async function getProjectTasks(
           .where(inArray(labelTable.taskId, taskIds))
       : [];
 
-  const externalLinksData =
-    taskIds.length > 0
-      ? await db
-          .select()
-          .from(externalLinkTable)
-          .where(inArray(externalLinkTable.taskId, taskIds))
-      : [];
-
   const taskLabelsMap = new Map<
     string,
     Array<{ id: string; name: string; color: string }>
@@ -206,31 +197,6 @@ async function getProjectTasks(
         color: label.color,
       });
     }
-  }
-
-  const taskExternalLinksMap = new Map<
-    string,
-    Array<{
-      id: string;
-      taskId: string;
-      integrationId: string;
-      resourceType: string;
-      externalId: string;
-      url: string;
-      title: string | null;
-      metadata: Record<string, unknown> | null;
-    }>
-  >();
-  for (const externalLink of externalLinksData) {
-    if (!taskExternalLinksMap.has(externalLink.taskId)) {
-      taskExternalLinksMap.set(externalLink.taskId, []);
-    }
-    taskExternalLinksMap.get(externalLink.taskId)?.push({
-      ...externalLink,
-      metadata: externalLink.metadata
-        ? JSON.parse(externalLink.metadata)
-        : null,
-    });
   }
 
   const [aggregates, epicsByTask, multiAssignees] = await Promise.all([
@@ -281,7 +247,6 @@ async function getProjectTasks(
     hasPredecessors: followers.has(task.id),
     assignees: assigneesOf(task),
     labels: taskLabelsMap.get(task.id) || [],
-    externalLinks: taskExternalLinksMap.get(task.id) || [],
     epics: epicsByTask.get(task.id) || [],
     subtree: serializeAggregate(
       aggregates.get(task.id),

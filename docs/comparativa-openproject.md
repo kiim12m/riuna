@@ -123,11 +123,11 @@ Enterprise de OpenProject.
 | Foros | ✘ | ✔ |
 | Crear tareas y comentar por correo | ✘ | ✔ |
 | Nextcloud, OneDrive, SharePoint | ✘ adjuntos a S3 | ✔ |
-| GitHub, Gitea, GitLab | ✔ GitHub y Gitea | ✔ GitHub y GitLab |
+| GitHub, Gitea, GitLab | ✘ retiradas (ADR 095) | ✔ GitHub y GitLab |
 | Slack, Discord, Telegram, ntfy, Gotify, webhook firmado | ✔ | ◐ webhooks |
 | Automatizaciones «Cuando · Si · Entonces» | ✔ para todos | ◐ acciones personalizadas (EE) |
-| Servidor MCP | ✔ 46 herramientas, HTTP y stdio | ✔ (EE, 17.2-17.9) |
-| Importadores | ✔ CSV/Excel, PLANKA, GitHub, Gitea, hoja de SERVITEC | ✔ CSV, Jira |
+| Servidor MCP | ✔ HTTP | ✔ (EE, 17.2-17.9) |
+| Importadores | ✔ CSV/Excel, hoja de SERVITEC | ✔ CSV, Jira |
 
 ## 7. Notificaciones
 

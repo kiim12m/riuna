@@ -39,12 +39,3 @@ rewrite(
   (source) => source.replace(/^(\s*"version":\s*")[^"]*(")/m, `$1${version}$2`),
   [`"version": "${version}"`],
 );
-
-rewrite(
-  "charts/riuna/Chart.yaml",
-  (source) =>
-    source
-      .replace(/^version:.*$/m, `version: ${version}`)
-      .replace(/^appVersion:.*$/m, `appVersion: "${version}"`),
-  [`version: ${version}`, `appVersion: "${version}"`],
-);

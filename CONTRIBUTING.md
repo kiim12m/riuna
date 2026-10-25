@@ -190,12 +190,10 @@ riuna/
 ├── packages/
 │   ├── email/        # Shared email utilities and templates
 │   ├── libs/         # Typed API client and shared runtime helpers
-│   ├── mcp/          # Stdio MCP package
 │   ├── permissions/  # Shared permission vocabulary and built-in roles
 │   └── ...            # Import tooling and shared TypeScript configuration
 ├── docs/             # Riuna's own working documents (plan, ADRs, procedures)
-├── tests/            # API unit and integration tests
-└── charts/           # Kubernetes Helm chart
+└── tests/            # API unit and integration tests
 ```
 
 ## Using AI

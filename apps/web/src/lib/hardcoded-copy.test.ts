@@ -58,9 +58,6 @@ const NOT_TRANSLATED = new Set([
  * aqui es una deuda, no una excepcion.
  */
 const EXEMPT_FILES = new Set([
-  // Facturacion heredada, apagada por configuracion: deuda abierta a proposito
-  // hasta que se decida que hacer con ella (docs/plan.md).
-  "routes/_layout/_authenticated/dashboard/workspace/$workspaceId/admin/workspace/billing.tsx",
   // Pagina de prueba del manejo de errores, solo para desarrollo.
   "components/ui/error-test.tsx",
 ]);

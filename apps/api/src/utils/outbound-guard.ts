@@ -4,14 +4,14 @@ import { log } from "./log";
 /**
  * `RIUNA_DISABLE_OUTBOUND=true`: la API no sale de la máquina (ADR 072).
  *
- * Es para el simulacro de restauración. Una copia real trae en claro el token
- * de Gitea y los webhooks de Discord, Slack y Telegram de las integraciones de
+ * Es para el simulacro de restauración. Una copia real trae en claro los
+ * webhooks de Discord, Slack y Telegram de las integraciones de
  * proyecto, y los suscriptores de los plugins siguen escuchando: sin esto, una
  * tarea movida por el humo podía avisar a un chat de verdad (revisión de la
  * Fase 9).
  *
  * Basta con `fetch` porque toda salida HTTP de la API pasa por él: plugins,
- * Gitea, GitHub (Octokit usa el `fetch` global), ntfy, Gotify, el webhook de
+ * ntfy, Gotify, el webhook de
  * avisos y Turnstile. El correo no; el `.env` del simulacro no lleva SMTP.
  */
 export function outboundDisabled() {

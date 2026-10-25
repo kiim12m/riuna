@@ -1,7 +1,6 @@
 import { sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { migrateColumns } from "../migrations/column-migration";
-import { migrateGitHubIntegration } from "../plugins/github/migration";
 import { log } from "../utils/log";
 import { migrateApiKeyReferenceId } from "../utils/migrate-apikey-reference-id";
 import { migrateNotificationPreferencesSchema } from "../utils/migrate-notification-preferences-schema";
@@ -77,7 +76,6 @@ export async function runMigrations({
   await migrateApiKeyReferenceId();
 
   await migrateNotificationPreferencesSchema();
-  await migrateGitHubIntegration();
   await migrateColumns();
   await warnIfDatabaseIsNotUtc();
   await seedDefaultWorkspaceRoles();

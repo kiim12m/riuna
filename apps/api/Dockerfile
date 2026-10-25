@@ -71,7 +71,7 @@ RUN apk add --no-cache tzdata && \
 
 WORKDIR /app
 ENV NODE_ENV=production
-# Mismo criterio que Dockerfile.riuna (ADR 049): la API vive en Madrid y
+# ADR 049: la API vive en Madrid y
 # PostgreSQL en UTC; por eso no va en el `.env` que comparten.
 ENV TZ=Europe/Madrid
 
@@ -85,7 +85,7 @@ COPY --from=builder --chown=appuser:appuser /app/packages/email ./packages/email
 COPY --from=builder --chown=appuser:appuser /app/packages/permissions ./packages/permissions
 
 # Fail the build early if the runtime dependency layout is broken on the target architecture
-RUN cd /app/apps/api && node -e "const fs=require('fs');for(const m of ['bcryptjs','hono','pg','drizzle-orm','better-auth','ioredis','valibot','octokit','@modelcontextprotocol/sdk']){fs.accessSync('node_modules/'+m+'/package.json')}"
+RUN cd /app/apps/api && node -e "const fs=require('fs');for(const m of ['bcryptjs','hono','pg','drizzle-orm','better-auth','ioredis','valibot','@modelcontextprotocol/sdk']){fs.accessSync('node_modules/'+m+'/package.json')}"
 
 # El commit con el que se construyo, para el estado de la instancia (ADR 075).
 # Lo pasa `deploy/actualizar.sh`; vacio si se construye a mano. Va al final:

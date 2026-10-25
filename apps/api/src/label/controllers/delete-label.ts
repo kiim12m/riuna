@@ -3,9 +3,6 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { labelTable, projectTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
-import { removeLabelFromGitea } from "../../plugins/gitea/utils/sync-label-to-gitea";
-import { removeLabelFromGitHub } from "../../plugins/github/utils/sync-label-to-github";
-import { log } from "../../utils/log";
 
 async function deleteLabel(id: string, userId: string) {
   const label = await db.query.labelTable.findFirst({
@@ -19,7 +16,7 @@ async function deleteLabel(id: string, userId: string) {
   }
 
   if (label.taskId) {
-    // Task-level label: fetch task, delete with event + GitHub sync
+    // Task-level label: fetch task, delete with event
     const [task] = await db
       .select({
         id: taskTable.id,
@@ -46,14 +43,6 @@ async function deleteLabel(id: string, userId: string) {
       throw new HTTPException(404, {
         message: "Label not found",
       });
-    }
-
-    if (deletedLabel.taskId) {
-      removeLabelFromGitHub(deletedLabel.taskId, deletedLabel.name).catch(
-        (error) => {
-          log.error("Failed to remove label from GitHub:", error);
-        },
-      );
     }
 
     await publishEvent("task.label_deleted", {
@@ -116,17 +105,8 @@ async function deleteLabel(id: string, userId: string) {
       ),
     );
 
-  // Emit events and sync providers for each affected task
+  // Emit events for each affected task
   for (const { label: l, taskId, projectId } of affectedLabels) {
-    if (l.taskId) {
-      removeLabelFromGitHub(l.taskId, l.name).catch((error) => {
-        log.error("Failed to remove label from GitHub:", error);
-      });
-      removeLabelFromGitea(l.taskId, l.name).catch((error) => {
-        log.error("Failed to remove label from Gitea:", error);
-      });
-    }
-
     await publishEvent("task.label_deleted", {
       label: l,
       task: { id: taskId, projectId },

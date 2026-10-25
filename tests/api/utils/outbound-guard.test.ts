@@ -3,7 +3,7 @@ import { log } from "../../../apps/api/src/utils/log";
 import { installOutboundGuard } from "../../../apps/api/src/utils/outbound-guard";
 
 // Revision de la Fase 9, hallazgo 3: el simulacro restaura en claro los
-// webhooks y el token de Gitea de las integraciones de proyecto. Con
+// webhooks de las integraciones de proyecto. Con
 // RIUNA_DISABLE_OUTBOUND, la API no puede alcanzarlos.
 
 const realFetch = globalThis.fetch;

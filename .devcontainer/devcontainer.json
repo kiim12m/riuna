@@ -25,9 +25,7 @@
 		"source=riuna-nm-apps-web,target=${containerWorkspaceFolder}/apps/web/node_modules,type=volume",
 		"source=riuna-nm-pkg-email,target=${containerWorkspaceFolder}/packages/email/node_modules,type=volume",
 		"source=riuna-nm-pkg-libs,target=${containerWorkspaceFolder}/packages/libs/node_modules,type=volume",
-		"source=riuna-nm-pkg-mcp,target=${containerWorkspaceFolder}/packages/mcp/node_modules,type=volume",
 		"source=riuna-nm-pkg-permissions,target=${containerWorkspaceFolder}/packages/permissions/node_modules,type=volume",
-		"source=riuna-nm-pkg-planka-import,target=${containerWorkspaceFolder}/packages/planka-import/node_modules,type=volume",
 		"source=riuna-nm-pkg-typescript-config,target=${containerWorkspaceFolder}/packages/typescript-config/node_modules,type=volume",
 		// Survives rebuilds so a fresh container reinstalls from cache, not the network.
 		"source=riuna-pnpm-store,target=/home/node/.pnpm-store,type=volume"

@@ -2,8 +2,7 @@
 // cannot render anything — a spreadsheet cell, for instance.
 //
 // Bodies are Markdown (`editor.getMarkdown()`), with the editor's atom nodes
-// embedded as `<riuna-*>` tags and, in content imported from GitHub/Gitea or
-// written before the Kaneo->Riuna rename, occasional raw HTML. Those atoms are
+// embedded as `<riuna-*>` tags and, in content written before the Kaneo->Riuna rename, occasional raw HTML. Those atoms are
 // turned into the text a reader expects (`@name`, an issue key) rather than
 // dropped, since they often carry the point of the sentence.
 //

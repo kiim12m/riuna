@@ -16,8 +16,8 @@ beforeEach(async () => {
   await resetTestDatabase();
 });
 
-describe("github integration routes are workspace scoped", () => {
-  it("refuses to list repositories for a member without manage_settings", async () => {
+describe("project integration routes are workspace scoped", () => {
+  it("refuses to create an integration for a member without manage_settings", async () => {
     const { user, workspace } = await createWorkspaceMember({ role: "member" });
     const { project } = await createProjectFixture({
       workspaceId: workspace.id,
@@ -27,35 +27,20 @@ describe("github integration routes are workspace scoped", () => {
     const { app } = createApp();
 
     const response = await app.request(
-      `/api/github-integration/repositories/${project.id}`,
+      `/api/discord-integration/project/${project.id}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          webhookUrl: "https://discord.com/api/webhooks/1/abc",
+        }),
+      },
     );
 
     expect(response.status).toBe(403);
   });
 
-  it("refuses to verify an installation for a member without manage_settings", async () => {
-    const { user, workspace } = await createWorkspaceMember({ role: "member" });
-    const { project } = await createProjectFixture({
-      workspaceId: workspace.id,
-    });
-
-    mockAuthenticatedSession(user);
-    const { app } = createApp();
-
-    const response = await app.request("/api/github-integration/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        projectId: project.id,
-        repositoryOwner: "riuna",
-        repositoryName: "riuna",
-      }),
-    });
-
-    expect(response.status).toBe(403);
-  });
-
-  it("refuses to list repositories for a project in another workspace", async () => {
+  it("refuses to read the integration of a project in another workspace", async () => {
     const outsider = await createWorkspaceMember({ role: "owner" });
     const other = await createWorkspaceMember({ role: "owner" });
     const { project } = await createProjectFixture({
@@ -66,7 +51,7 @@ describe("github integration routes are workspace scoped", () => {
     const { app } = createApp();
 
     const response = await app.request(
-      `/api/github-integration/repositories/${project.id}`,
+      `/api/discord-integration/project/${project.id}`,
     );
 
     expect(response.status).toBe(403);

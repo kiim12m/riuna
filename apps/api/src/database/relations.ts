@@ -12,9 +12,7 @@ import {
   dashboardTable,
   dashboardWidgetTable,
   epicTable,
-  externalLinkTable,
   fieldDefinitionTable,
-  githubIntegrationTable,
   goalTable,
   goalTargetTable,
   integrationTable,
@@ -43,7 +41,6 @@ import {
   userWorkScheduleTable,
   verificationTable,
   viewTable,
-  workflowRuleTable,
   workspaceRoleTable,
   workspaceTable,
   workspaceUserTable,
@@ -131,8 +128,6 @@ export const projectTableRelations = relations(
     fieldDefinitions: many(fieldDefinitionTable),
     assets: many(assetTable),
     columns: many(columnTable),
-    workflowRules: many(workflowRuleTable),
-    githubIntegration: many(githubIntegrationTable),
     integrations: many(integrationTable),
     notificationWorkspaceProjects: many(userNotificationWorkspaceProjectTable),
   }),
@@ -144,7 +139,6 @@ export const columnTableRelations = relations(columnTable, ({ one, many }) => ({
     references: [projectTable.id],
   }),
   tasks: many(taskTable),
-  workflowRules: many(workflowRuleTable),
 }));
 
 export const automationTableRelations = relations(
@@ -180,20 +174,6 @@ export const automationRunTableRelations = relations(
   }),
 );
 
-export const workflowRuleTableRelations = relations(
-  workflowRuleTable,
-  ({ one }) => ({
-    project: one(projectTable, {
-      fields: [workflowRuleTable.projectId],
-      references: [projectTable.id],
-    }),
-    column: one(columnTable, {
-      fields: [workflowRuleTable.columnId],
-      references: [columnTable.id],
-    }),
-  }),
-);
-
 export const taskTableRelations = relations(taskTable, ({ one, many }) => ({
   project: one(projectTable, {
     fields: [taskTable.projectId],
@@ -216,7 +196,6 @@ export const taskTableRelations = relations(taskTable, ({ one, many }) => ({
   comments: many(commentTable),
   assets: many(assetTable),
   labels: many(labelTable),
-  externalLinks: many(externalLinkTable),
   sourceRelations: many(taskRelationTable, { relationName: "sourceTask" }),
   targetRelations: many(taskRelationTable, { relationName: "targetTask" }),
   remindersSent: many(taskReminderSentTable),
@@ -556,16 +535,6 @@ export const userNotificationWorkspaceProjectTableRelations = relations(
   }),
 );
 
-export const githubIntegrationTableRelations = relations(
-  githubIntegrationTable,
-  ({ one }) => ({
-    project: one(projectTable, {
-      fields: [githubIntegrationTable.projectId],
-      references: [projectTable.id],
-    }),
-  }),
-);
-
 export const teamTableRelations = relations(teamTable, ({ one, many }) => ({
   workspace: one(workspaceTable, {
     fields: [teamTable.workspaceId],
@@ -622,12 +591,11 @@ export const apikeyTableRelations = relations(apikeyTable, ({ one }) => ({
 
 export const integrationTableRelations = relations(
   integrationTable,
-  ({ one, many }) => ({
+  ({ one }) => ({
     project: one(projectTable, {
       fields: [integrationTable.projectId],
       references: [projectTable.id],
     }),
-    externalLinks: many(externalLinkTable),
   }),
 );
 
@@ -643,20 +611,6 @@ export const taskRelationTableRelations = relations(
       fields: [taskRelationTable.targetTaskId],
       references: [taskTable.id],
       relationName: "targetTask",
-    }),
-  }),
-);
-
-export const externalLinkTableRelations = relations(
-  externalLinkTable,
-  ({ one }) => ({
-    task: one(taskTable, {
-      fields: [externalLinkTable.taskId],
-      references: [taskTable.id],
-    }),
-    integration: one(integrationTable, {
-      fields: [externalLinkTable.integrationId],
-      references: [integrationTable.id],
     }),
   }),
 );

@@ -106,9 +106,6 @@
 						"openSettingsMenu": {
 							"type": "string"
 						},
-						"dismiss": {
-							"type": "string"
-						},
 						"loading": {
 							"type": "string"
 						}
@@ -117,7 +114,6 @@
 						"toggleSidebar",
 						"toggleTheme",
 						"openSettingsMenu",
-						"dismiss",
 						"loading"
 					]
 				},
@@ -3749,18 +3745,6 @@
 						"subtitle": {
 							"type": "string"
 						},
-						"githubSectionTitle": {
-							"type": "string"
-						},
-						"githubSectionSubtitle": {
-							"type": "string"
-						},
-						"giteaSectionTitle": {
-							"type": "string"
-						},
-						"giteaSectionSubtitle": {
-							"type": "string"
-						},
 						"discordSectionTitle": {
 							"type": "string"
 						},
@@ -3790,10 +3774,6 @@
 						"pageTitle",
 						"title",
 						"subtitle",
-						"githubSectionTitle",
-						"githubSectionSubtitle",
-						"giteaSectionTitle",
-						"giteaSectionSubtitle",
 						"discordSectionTitle",
 						"discordSectionSubtitle",
 						"genericWebhookSectionTitle",
@@ -3991,558 +3971,6 @@
 						"off",
 						"newColumnPlaceholder",
 						"add"
-					]
-				},
-				"githubIntegration": {
-					"type": "object",
-					"additionalProperties": false,
-					"properties": {
-						"validation": {
-							"type": "object",
-							"additionalProperties": false,
-							"properties": {
-								"ownerRequired": {
-									"type": "string"
-								},
-								"ownerInvalid": {
-									"type": "string"
-								},
-								"nameRequired": {
-									"type": "string"
-								},
-								"nameInvalid": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"ownerRequired",
-								"ownerInvalid",
-								"nameRequired",
-								"nameInvalid"
-							]
-						},
-						"toast": {
-							"type": "object",
-							"additionalProperties": false,
-							"properties": {
-								"installedOk": {
-									"type": "string"
-								},
-								"installedMissingPerms": {
-									"type": "string"
-								},
-								"needsInstallOnRepo": {
-									"type": "string"
-								},
-								"repoNotFound": {
-									"type": "string"
-								},
-								"verifyError": {
-									"type": "string"
-								},
-								"installAppFirst": {
-									"type": "string"
-								},
-								"missingPermsDetail": {
-									"type": "string"
-								},
-								"updated": {
-									"type": "string"
-								},
-								"updateError": {
-									"type": "string"
-								},
-								"removed": {
-									"type": "string"
-								},
-								"removeError": {
-									"type": "string"
-								},
-								"issuesImported": {
-									"type": "string"
-								},
-								"importError": {
-									"type": "string"
-								},
-								"commentOnEnabled": {
-									"type": "string"
-								},
-								"commentOnDisabled": {
-									"type": "string"
-								},
-								"settingsUpdateError": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"installedOk",
-								"installedMissingPerms",
-								"needsInstallOnRepo",
-								"repoNotFound",
-								"verifyError",
-								"installAppFirst",
-								"missingPermsDetail",
-								"updated",
-								"updateError",
-								"removed",
-								"removeError",
-								"issuesImported",
-								"importError",
-								"commentOnEnabled",
-								"commentOnDisabled",
-								"settingsUpdateError"
-							]
-						},
-						"connectionStatus": {
-							"type": "string"
-						},
-						"connectedActive": {
-							"type": "string"
-						},
-						"notConnectedHint": {
-							"type": "string"
-						},
-						"badgeConnected": {
-							"type": "string"
-						},
-						"badgeNotConnected": {
-							"type": "string"
-						},
-						"repository": {
-							"type": "string"
-						},
-						"repositoryHint": {
-							"type": "string"
-						},
-						"commentTaskLinkTitle": {
-							"type": "string"
-						},
-						"commentTaskLinkHint": {
-							"type": "string"
-						},
-						"appStatusTitle": {
-							"type": "string"
-						},
-						"appStatusHint": {
-							"type": "string"
-						},
-						"statusProperlyConfigured": {
-							"type": "string"
-						},
-						"statusMissingPermissions": {
-							"type": "string"
-						},
-						"statusNotInstalled": {
-							"type": "string"
-						},
-						"ownerLabel": {
-							"type": "string"
-						},
-						"ownerHint": {
-							"type": "string"
-						},
-						"ownerPlaceholder": {
-							"type": "string"
-						},
-						"repoNameLabel": {
-							"type": "string"
-						},
-						"repoNameHint": {
-							"type": "string"
-						},
-						"repoNamePlaceholder": {
-							"type": "string"
-						},
-						"actionsTitle": {
-							"type": "string"
-						},
-						"actionsHint": {
-							"type": "string"
-						},
-						"browse": {
-							"type": "string"
-						},
-						"verify": {
-							"type": "string"
-						},
-						"update": {
-							"type": "string"
-						},
-						"connect": {
-							"type": "string"
-						},
-						"disconnect": {
-							"type": "string"
-						},
-						"missingPermissionsLabel": {
-							"type": "string"
-						},
-						"updatePermissions": {
-							"type": "string"
-						},
-						"installGithubApp": {
-							"type": "string"
-						},
-						"importSectionTitle": {
-							"type": "string"
-						},
-						"importSectionHint": {
-							"type": "string"
-						},
-						"importing": {
-							"type": "string"
-						},
-						"importIssues": {
-							"type": "string"
-						},
-						"importDisabledHint": {
-							"type": "string"
-						}
-					},
-					"required": [
-						"validation",
-						"toast",
-						"connectionStatus",
-						"connectedActive",
-						"notConnectedHint",
-						"badgeConnected",
-						"badgeNotConnected",
-						"repository",
-						"repositoryHint",
-						"commentTaskLinkTitle",
-						"commentTaskLinkHint",
-						"appStatusTitle",
-						"appStatusHint",
-						"statusProperlyConfigured",
-						"statusMissingPermissions",
-						"statusNotInstalled",
-						"ownerLabel",
-						"ownerHint",
-						"ownerPlaceholder",
-						"repoNameLabel",
-						"repoNameHint",
-						"repoNamePlaceholder",
-						"actionsTitle",
-						"actionsHint",
-						"browse",
-						"verify",
-						"update",
-						"connect",
-						"disconnect",
-						"missingPermissionsLabel",
-						"updatePermissions",
-						"installGithubApp",
-						"importSectionTitle",
-						"importSectionHint",
-						"importing",
-						"importIssues",
-						"importDisabledHint"
-					]
-				},
-				"giteaIntegration": {
-					"type": "object",
-					"additionalProperties": false,
-					"properties": {
-						"validation": {
-							"type": "object",
-							"additionalProperties": false,
-							"properties": {
-								"baseUrlRequired": {
-									"type": "string"
-								},
-								"baseUrlInvalid": {
-									"type": "string"
-								},
-								"ownerRequired": {
-									"type": "string"
-								},
-								"ownerInvalid": {
-									"type": "string"
-								},
-								"nameRequired": {
-									"type": "string"
-								},
-								"nameInvalid": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"baseUrlRequired",
-								"baseUrlInvalid",
-								"ownerRequired",
-								"ownerInvalid",
-								"nameRequired",
-								"nameInvalid"
-							]
-						},
-						"toast": {
-							"type": "object",
-							"additionalProperties": false,
-							"properties": {
-								"verifyOk": {
-									"type": "string"
-								},
-								"verifyWarning": {
-									"type": "string"
-								},
-								"repoNotFound": {
-									"type": "string"
-								},
-								"redirected": {
-									"type": "string"
-								},
-								"notGiteaInstance": {
-									"type": "string"
-								},
-								"verifyError": {
-									"type": "string"
-								},
-								"tokenRequired": {
-									"type": "string"
-								},
-								"tokenRequiredVerify": {
-									"type": "string"
-								},
-								"verifyFirst": {
-									"type": "string"
-								},
-								"updated": {
-									"type": "string"
-								},
-								"updateError": {
-									"type": "string"
-								},
-								"removed": {
-									"type": "string"
-								},
-								"removeError": {
-									"type": "string"
-								},
-								"issuesImported": {
-									"type": "string"
-								},
-								"importError": {
-									"type": "string"
-								},
-								"commentOnEnabled": {
-									"type": "string"
-								},
-								"commentOnDisabled": {
-									"type": "string"
-								},
-								"settingsUpdateError": {
-									"type": "string"
-								},
-								"secretCopied": {
-									"type": "string"
-								},
-								"unableToCopySecret": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"verifyOk",
-								"verifyWarning",
-								"repoNotFound",
-								"redirected",
-								"notGiteaInstance",
-								"verifyError",
-								"tokenRequired",
-								"tokenRequiredVerify",
-								"verifyFirst",
-								"updated",
-								"updateError",
-								"removed",
-								"removeError",
-								"issuesImported",
-								"importError",
-								"commentOnEnabled",
-								"commentOnDisabled",
-								"settingsUpdateError",
-								"secretCopied",
-								"unableToCopySecret"
-							]
-						},
-						"webhookShow": {
-							"type": "string"
-						},
-						"webhookHide": {
-							"type": "string"
-						},
-						"webhookCopy": {
-							"type": "string"
-						},
-						"connectionStatus": {
-							"type": "string"
-						},
-						"connectedActive": {
-							"type": "string"
-						},
-						"notConnectedHint": {
-							"type": "string"
-						},
-						"badgeConnected": {
-							"type": "string"
-						},
-						"badgeNotConnected": {
-							"type": "string"
-						},
-						"repository": {
-							"type": "string"
-						},
-						"repositoryHint": {
-							"type": "string"
-						},
-						"commentTaskLinkTitle": {
-							"type": "string"
-						},
-						"commentTaskLinkHint": {
-							"type": "string"
-						},
-						"webhookTitle": {
-							"type": "string"
-						},
-						"webhookHint": {
-							"type": "string"
-						},
-						"webhookSecretLabel": {
-							"type": "string"
-						},
-						"baseUrlLabel": {
-							"type": "string"
-						},
-						"baseUrlHint": {
-							"type": "string"
-						},
-						"tokenLabel": {
-							"type": "string"
-						},
-						"tokenHint": {
-							"type": "string"
-						},
-						"tokenPlaceholder": {
-							"type": "string"
-						},
-						"tokenPlaceholderUpdate": {
-							"type": "string"
-						},
-						"currentToken": {
-							"type": "string"
-						},
-						"ownerLabel": {
-							"type": "string"
-						},
-						"ownerHint": {
-							"type": "string"
-						},
-						"repoNameLabel": {
-							"type": "string"
-						},
-						"repoNameHint": {
-							"type": "string"
-						},
-						"actionsTitle": {
-							"type": "string"
-						},
-						"actionsHint": {
-							"type": "string"
-						},
-						"browse": {
-							"type": "string"
-						},
-						"verify": {
-							"type": "string"
-						},
-						"update": {
-							"type": "string"
-						},
-						"connect": {
-							"type": "string"
-						},
-						"disconnect": {
-							"type": "string"
-						},
-						"importSectionTitle": {
-							"type": "string"
-						},
-						"importSectionHint": {
-							"type": "string"
-						},
-						"importing": {
-							"type": "string"
-						},
-						"importIssues": {
-							"type": "string"
-						},
-						"importDisabledHint": {
-							"type": "string"
-						},
-						"browseModalTitle": {
-							"type": "string"
-						},
-						"browseModalHint": {
-							"type": "string"
-						},
-						"searchRepos": {
-							"type": "string"
-						},
-						"browseNeedsCredentials": {
-							"type": "string"
-						},
-						"loadingRepos": {
-							"type": "string"
-						},
-						"retry": {
-							"type": "string"
-						}
-					},
-					"required": [
-						"validation",
-						"toast",
-						"webhookShow",
-						"webhookHide",
-						"webhookCopy",
-						"connectionStatus",
-						"connectedActive",
-						"notConnectedHint",
-						"badgeConnected",
-						"badgeNotConnected",
-						"repository",
-						"repositoryHint",
-						"commentTaskLinkTitle",
-						"commentTaskLinkHint",
-						"webhookTitle",
-						"webhookHint",
-						"webhookSecretLabel",
-						"baseUrlLabel",
-						"baseUrlHint",
-						"tokenLabel",
-						"tokenHint",
-						"tokenPlaceholder",
-						"tokenPlaceholderUpdate",
-						"currentToken",
-						"ownerLabel",
-						"ownerHint",
-						"repoNameLabel",
-						"repoNameHint",
-						"actionsTitle",
-						"actionsHint",
-						"browse",
-						"verify",
-						"update",
-						"connect",
-						"disconnect",
-						"importSectionTitle",
-						"importSectionHint",
-						"importing",
-						"importIssues",
-						"importDisabledHint",
-						"browseModalTitle",
-						"browseModalHint",
-						"searchRepos",
-						"browseNeedsCredentials",
-						"loadingRepos",
-						"retry"
 					]
 				},
 				"slackIntegration": {
@@ -5219,82 +4647,6 @@
 						"disconnect"
 					]
 				},
-				"repositoryBrowser": {
-					"type": "object",
-					"additionalProperties": false,
-					"properties": {
-						"title": {
-							"type": "string"
-						},
-						"description": {
-							"type": "string"
-						},
-						"searchPlaceholder": {
-							"type": "string"
-						},
-						"loadError": {
-							"type": "string"
-						},
-						"tryAgain": {
-							"type": "string"
-						},
-						"emptyTitle": {
-							"type": "string"
-						},
-						"emptyHint": {
-							"type": "string"
-						},
-						"installGithubApp": {
-							"type": "string"
-						},
-						"noSearchMatchTitle": {
-							"type": "string"
-						},
-						"noSearchMatchHint": {
-							"type": "string"
-						},
-						"footerSummary": {
-							"type": "string"
-						},
-						"manageInstallations": {
-							"type": "string"
-						},
-						"updatedPrefix": {
-							"type": "string"
-						},
-						"relativeJustNow": {
-							"type": "string"
-						},
-						"relativeMinutesAgo": {
-							"type": "string"
-						},
-						"relativeHoursAgo": {
-							"type": "string"
-						},
-						"relativeDaysAgo": {
-							"type": "string"
-						}
-					},
-					"required": [
-						"title",
-						"description",
-						"searchPlaceholder",
-						"loadError",
-						"tryAgain",
-						"emptyTitle",
-						"emptyHint",
-						"installGithubApp",
-						"noSearchMatchTitle",
-						"noSearchMatchHint",
-						"footerSummary",
-						"manageInstallations",
-						"updatedPrefix",
-						"relativeJustNow",
-						"relativeMinutesAgo",
-						"relativeHoursAgo",
-						"relativeDaysAgo"
-					]
-				},
 				"tasksImportExport": {
 					"type": "object",
 					"additionalProperties": false,
@@ -5531,127 +4883,6 @@
 						"targetIgnore",
 						"type",
 						"unnamedColumn"
-					]
-				},
-				"workflowEditor": {
-					"type": "object",
-					"additionalProperties": false,
-					"properties": {
-						"loading": {
-							"type": "string"
-						},
-						"createColumnsFirst": {
-							"type": "string"
-						},
-						"githubHeading": {
-							"type": "string"
-						},
-						"githubHint": {
-							"type": "string"
-						},
-						"giteaHeading": {
-							"type": "string"
-						},
-						"giteaHint": {
-							"type": "string"
-						},
-						"selectColumnPlaceholder": {
-							"type": "string"
-						},
-						"toastUpdated": {
-							"type": "string"
-						},
-						"toastError": {
-							"type": "string"
-						},
-						"events": {
-							"type": "object",
-							"additionalProperties": false,
-							"properties": {
-								"branch_push": {
-									"type": "string"
-								},
-								"pr_opened": {
-									"type": "string"
-								},
-								"pr_merged": {
-									"type": "string"
-								},
-								"issue_opened": {
-									"type": "string"
-								},
-								"issue_closed": {
-									"type": "string"
-								},
-								"issue_reopened": {
-									"type": "string"
-								}
-							},
-							"required": [
-								"branch_push",
-								"pr_opened",
-								"pr_merged",
-								"issue_opened",
-								"issue_closed",
-								"issue_reopened"
-							]
-						},
-						"defaultColumn": {
-							"type": "string"
-						},
-						"defaultHint": {
-							"type": "string"
-						},
-						"toastRemoved": {
-							"type": "string"
-						}
-					},
-					"required": [
-						"loading",
-						"createColumnsFirst",
-						"githubHeading",
-						"githubHint",
-						"giteaHeading",
-						"giteaHint",
-						"selectColumnPlaceholder",
-						"toastUpdated",
-						"toastError",
-						"events",
-						"defaultColumn",
-						"defaultHint",
-						"toastRemoved"
-					]
-				},
-				"externalLinks": {
-					"type": "object",
-					"additionalProperties": false,
-					"properties": {
-						"resources": {
-							"type": "string"
-						},
-						"issue": {
-							"type": "string"
-						},
-						"branch": {
-							"type": "string"
-						},
-						"merged": {
-							"type": "string"
-						},
-						"draft": {
-							"type": "string"
-						},
-						"open": {
-							"type": "string"
-						}
-					},
-					"required": [
-						"resources",
-						"issue",
-						"branch",
-						"merged",
-						"draft",
-						"open"
 					]
 				},
 				"projectTree": {
@@ -6075,12 +5306,6 @@
 							"type": "string"
 						},
 						"workspaceDescription": {
-							"type": "string"
-						},
-						"integrationsTitle": {
-							"type": "string"
-						},
-						"integrationsDescription": {
 							"type": "string"
 						},
 						"newRule": {
@@ -6760,8 +5985,6 @@
 						"workspacePageTitle",
 						"projectDescription",
 						"workspaceDescription",
-						"integrationsTitle",
-						"integrationsDescription",
 						"newRule",
 						"fromRecipe",
 						"empty",
@@ -7113,12 +6336,6 @@
 										"projectWebhookReminders": {
 											"type": "string"
 										},
-										"seatReconciliation": {
-											"type": "string"
-										},
-										"trialReminders": {
-											"type": "string"
-										},
 										"recurringTasks": {
 											"type": "string"
 										},
@@ -7135,8 +6352,6 @@
 									"required": [
 										"dueDateReminders",
 										"projectWebhookReminders",
-										"seatReconciliation",
-										"trialReminders",
 										"recurringTasks",
 										"automations",
 										"instanceHealth",
@@ -7481,16 +6696,11 @@
 				"projectWorkflow",
 				"projectSwitcher",
 				"columnEditor",
-				"githubIntegration",
-				"giteaIntegration",
 				"slackIntegration",
 				"discordIntegration",
 				"genericWebhookIntegration",
 				"telegramIntegration",
-				"repositoryBrowser",
 				"tasksImportExport",
-				"workflowEditor",
-				"externalLinks",
 				"projectTree",
 				"projectEpics",
 				"projectRecurrences",
@@ -8510,22 +7720,10 @@
 				"created": {
 					"type": "string"
 				},
-				"githubUser": {
-					"type": "string"
-				},
 				"comment": {
 					"type": "object",
 					"additionalProperties": false,
 					"properties": {
-						"github": {
-							"type": "string"
-						},
-						"viewGithubProfile": {
-							"type": "string"
-						},
-						"commentedOnGithub": {
-							"type": "string"
-						},
 						"cannotBeEmpty": {
 							"type": "string"
 						},
@@ -8893,9 +8091,6 @@
 						}
 					},
 					"required": [
-						"github",
-						"viewGithubProfile",
-						"commentedOnGithub",
 						"cannotBeEmpty",
 						"mustBeLoggedInToEdit",
 						"updated",
@@ -8993,7 +8188,6 @@
 				"changedTitle",
 				"moved",
 				"created",
-				"githubUser",
 				"comment",
 				"customFieldChanged",
 				"customFieldChangedPlain",
@@ -10475,38 +9669,6 @@
 						"labels"
 					]
 				},
-				"pr": {
-					"type": "object",
-					"additionalProperties": false,
-					"properties": {
-						"merged": {
-							"type": "string"
-						},
-						"draft": {
-							"type": "string"
-						},
-						"open": {
-							"type": "string"
-						},
-						"label": {
-							"type": "string"
-						},
-						"count_one": {
-							"type": "string"
-						},
-						"count_other": {
-							"type": "string"
-						}
-					},
-					"required": [
-						"merged",
-						"draft",
-						"open",
-						"label",
-						"count_one",
-						"count_other"
-					]
-				},
 				"priority": {
 					"type": "object",
 					"additionalProperties": false,
@@ -11957,7 +11119,6 @@
 				"listView",
 				"move",
 				"popover",
-				"pr",
 				"priority",
 				"projectSize",
 				"properties",
@@ -12824,22 +11985,7 @@
 						"labels": {
 							"type": "string"
 						},
-						"externalLinks": {
-							"type": "string"
-						},
 						"pullRequestFallback": {
-							"type": "string"
-						},
-						"issueFallback": {
-							"type": "string"
-						},
-						"prStatusMerged": {
-							"type": "string"
-						},
-						"prStatusDraft": {
-							"type": "string"
-						},
-						"prStatusOpen": {
 							"type": "string"
 						},
 						"dueWithDate": {
@@ -12854,12 +12000,7 @@
 					},
 					"required": [
 						"labels",
-						"externalLinks",
 						"pullRequestFallback",
-						"issueFallback",
-						"prStatusMerged",
-						"prStatusDraft",
-						"prStatusOpen",
 						"dueWithDate",
 						"created",
 						"dueDateLabel"

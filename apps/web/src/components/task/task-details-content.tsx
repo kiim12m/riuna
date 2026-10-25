@@ -4,16 +4,13 @@ import { useTranslation } from "react-i18next";
 import Activity from "@/components/activity";
 import CommentInput from "@/components/activity/comment-input";
 import { isCommentActivity } from "@/components/activity/utils";
-import { ExternalLinksAccordion } from "@/components/external-links/external-links-accordion";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { TaskTimerButton } from "@/components/timer/task-timer-button";
 import { Timeline } from "@/components/ui/timeline";
 import useGetActivitiesByTaskId from "@/hooks/queries/activity/use-get-activities-by-task-id";
-import useExternalLinks from "@/hooks/queries/external-link/use-external-links";
 import { useGetFieldDefinitions } from "@/hooks/queries/field/use-get-field-definitions";
 import useGetProject from "@/hooks/queries/project/use-get-project";
 import useGetTask from "@/hooks/queries/task/use-get-task";
-import type { ExternalLink } from "@/types/external-link";
 import type { FieldDefinition } from "../table-view/custom-field-cell";
 import TaskCustomFields from "./task-custom-fields";
 import TaskDescription from "./task-description";
@@ -55,8 +52,6 @@ export default function TaskDetailsContent({
   const { data: fieldDefinitions } = useGetFieldDefinitions(projectId, {
     includeArchived: true,
   });
-  const { data: externalLinks = [], isLoading: isLoadingExternalLinks } =
-    useExternalLinks(taskId ?? "");
   const { user } = useAuth();
 
   // El padre llega con el detalle: la jerarquia ya no se deduce cruzando
@@ -123,14 +118,6 @@ export default function TaskDetailsContent({
           variant="section"
           className="mt-4"
         />
-      )}
-      {!isLoadingExternalLinks && externalLinks.length > 0 && (
-        <div className="mt-4">
-          <ExternalLinksAccordion
-            externalLinks={externalLinks as ExternalLink[]}
-            isLoading={isLoadingExternalLinks}
-          />
-        </div>
       )}
       {task && (
         <div className="mt-4">

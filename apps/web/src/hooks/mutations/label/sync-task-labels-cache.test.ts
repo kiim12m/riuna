@@ -43,7 +43,6 @@ describe("updateTaskLabelsInProject", () => {
               assigneeImage: null,
               projectId: "project-1",
               labels: [],
-              externalLinks: [],
             },
             {
               id: "task-2",
@@ -63,7 +62,6 @@ describe("updateTaskLabelsInProject", () => {
               assigneeImage: null,
               projectId: "project-1",
               labels: [],
-              externalLinks: [],
             },
           ],
         },
@@ -140,7 +138,6 @@ describe("updateTaskLabelsInProject", () => {
               color: "red",
             },
           ],
-          externalLinks: [],
         },
       ],
       archivedTasks: [
@@ -168,7 +165,6 @@ describe("updateTaskLabelsInProject", () => {
               color: "red",
             },
           ],
-          externalLinks: [],
         },
       ],
     };

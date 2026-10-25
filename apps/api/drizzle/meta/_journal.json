@@ -673,6 +673,20 @@
 			"when": 1792018402469,
 			"tag": "0095_wiki",
 			"breakpoints": true
+		},
+		{
+			"idx": 96,
+			"version": "7",
+			"when": 1792950911817,
+			"tag": "0096_retirar_github_gitea",
+			"breakpoints": true
+		},
+		{
+			"idx": 97,
+			"version": "7",
+			"when": 1792951623233,
+			"tag": "0097_retirar_facturacion",
+			"breakpoints": true
 		}
 	]
 }

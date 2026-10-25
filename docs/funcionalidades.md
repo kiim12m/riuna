@@ -36,7 +36,7 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
   invitado, restringir la creación de espacios de trabajo, modo demo.
 - **API keys** por usuario, con alcance de permisos, caducidad (1/7/30/90 días
   o nunca) y límite de 100 peticiones por minuto.
-- **Device flow** para CLI y clientes MCP (`riuna-cli`, `riuna-mcp`).
+- **Device flow** para clientes de línea de órdenes (`riuna-cli`).
 - **Límites de tasa** ([ADR 074](adr/074-limites-de-tasa.md)):
   - entrar, registrarse, invitar y recuperar la contraseña, por IP;
   - toda la API, por persona o clave (600 por minuto);
@@ -253,8 +253,7 @@ resaltado** (~35 lenguajes), **tablas**, **diagramas Mermaid**, **embeds de
 YouTube**, **adjuntos arrastrando** el fichero (a S3 con URL prefirmada),
 **@menciones** que generan notificación, y enlaces a otras tareas.
 
-**Comentarios**: crear, y editar o borrar los propios. Los comentarios que
-llegan de GitHub se espejan con su avatar y su enlace.
+**Comentarios**: crear, y editar o borrar los propios.
 
 **Actividad**: historial por tarea de la creación y de los cambios de estado,
 prioridad, título, fechas, asignaciones de persona y de equipo, anidado,
@@ -694,11 +693,6 @@ ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
     repetirse;
   - tiene ensayo en seco;
   - la hoja no mueve tareas de proyecto.
-- **Importar issues** existentes de GitHub y de Gitea.
-- **Importador de PLANKA** (`packages/planka-import`): una CLI que lee PLANKA
-  por su API y crea en Riuna por la API pública con una API key, con
-  `--dry-run`. Mapea tableros, listas, tarjetas, checklists, elementos
-  enlazados, etiquetas, asignados y comentarios.
 - Los importadores de **Trello, Jira, Asana y Notion** están documentados, no
   construidos: la receta y lo que falta están en la
   [ADR 070](adr/070-como-se-anade-un-importador-externo.md).
@@ -707,8 +701,6 @@ ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
 
 | Integración | Dirección | Qué hace |
 |---|---|---|
-| **GitHub** | Bidireccional | GitHub App. Crea y actualiza issues, comentarios, título, descripción, prioridad, estado y etiquetas. Recibe diez webhooks —issues, comentarios, etiquetas, pull requests y push— con emparejado por nombre de rama. Importa issues existentes |
-| **Gitea** | Bidireccional | Lo mismo, con URL base y token personal por proyecto, y secreto de webhook propio |
 | **Slack** | Salida | Webhook entrante, seis eventos conmutables |
 | **Discord** | Salida | Webhook, los mismos seis eventos |
 | **Telegram** | Salida | Bot token y chat, los mismos seis eventos |
@@ -755,8 +747,6 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
   - **mensaje a Slack, Discord o Telegram**.
 
   Los textos admiten `{tarea}`, `{titulo}`, `{estado}`, `{proyecto}` y `{enlace}`.
-- **Encadenan con las reglas de GitHub y Gitea**: los movimientos que estas provocan
-  disparan aquellas.
 - **Actúa en nombre de quien la guardó por última vez.**
   - Si esa persona pierde el permiso, la regla se pausa sola y lo dice.
   - En la actividad aparece como «Automatización ‹nombre›».
@@ -779,17 +769,9 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 69 herramientas**. Una prueba de paridad
-(`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
-antes el paquete stdio se había quedado sin las cinco del plan personal y el
-cronómetro.
-
-- **Servidor HTTP integrado** en la API, en `/api/mcp`, con OAuth 2.1 y PKCE
-  S256, registro dinámico de clientes, página de consentimiento explícito y
-  sesiones aisladas por usuario.
-- **Paquete stdio publicable** `@riuna/mcp` (binario `riuna-mcp`), con
-  instalador interactivo para Cursor —global y por proyecto—, Claude Desktop o
-  una ruta JSON propia, y autenticación por device flow o `RIUNA_API_KEY`.
+Un solo camino, por HTTP ([ADR 099](adr/099-mcp-solo-por-http.md)): el servidor integrado en la
+API, en `/api/mcp`, con OAuth 2.1 y PKCE S256, registro dinámico de clientes, página de
+consentimiento explícito y sesiones aisladas por usuario.
 
 Las herramientas cubren identidad y espacios, proyectos con su estado, sus campos y sus subproyectos, los campos de las tareas con su ayuda y sus fórmulas (`list_project_fields`), tareas, comentarios,
 etiquetas, épicas, relaciones, observadores, recordatorios, acciones de un clic,
@@ -850,11 +832,8 @@ no lista los proyectos Personal.
 
 ## 15. Operación
 
-- **Despliegue**: imagen única —API y web tras nginx— o imágenes separadas.
-  `compose.yml` para producción, `compose.local.yml` para desarrollo con
-  servicio de copias, y `compose.coolify.yml`.
-- **Helm chart** con Ingress, **Gateway API (HTTPRoute)**, HPA, PVC y
-  PostgreSQL opcional, publicado como OCI.
+- **Despliegue**: `compose.local.yml`, el único (ADR 098): imágenes de la API y la web
+  construidas en la máquina, PostgreSQL y servicio de copias.
 - **Copias de seguridad automáticas**: `pg_dump | gzip` con la misma imagen de
   Postgres que el servidor, retención configurable, escritura a `.partial` y
   renombrado al final. La **restauración está verificada**: comprueba el

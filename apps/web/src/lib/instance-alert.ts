@@ -13,8 +13,6 @@ export const JOB_NAME_KEYS = {
   "due-date-reminders": "settings:instance.jobs.names.dueDateReminders",
   "project-webhook-reminders":
     "settings:instance.jobs.names.projectWebhookReminders",
-  "seat-reconciliation": "settings:instance.jobs.names.seatReconciliation",
-  "trial-reminders": "settings:instance.jobs.names.trialReminders",
   "recurring-tasks": "settings:instance.jobs.names.recurringTasks",
   automations: "settings:instance.jobs.names.automations",
   "instance-health": "settings:instance.jobs.names.instanceHealth",

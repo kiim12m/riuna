@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
-import { requireEntitlement } from "../billing/require-entitlement-middleware";
 import { projectSchema, taskSchema } from "../schemas";
 import { VALID_PRIORITIES } from "../task/validate-task-fields";
 import { dayKeySchema } from "../utils/day-key-schema";
@@ -97,7 +96,6 @@ const capture = new Hono<{
     validator("json", workspaceIdSchema),
     workspaceAccess.fromBody(),
     requireWorkspacePermission({ task: ["create"] }),
-    requireEntitlement,
     async (c) => {
       const inbox = await ensureInbox(c.get("workspaceId"), c.get("userId"));
       return c.json({ inbox: inbox ?? null });
@@ -122,7 +120,6 @@ const capture = new Hono<{
     validator("json", captureSchema),
     workspaceAccess.fromBody(),
     requireWorkspacePermission({ task: ["create"] }),
-    requireEntitlement,
     async (c) => {
       const captured = await captureTask({
         ...c.req.valid("json"),

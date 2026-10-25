@@ -1,9 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CommentEditor from "@/components/activity/comment-editor";
-import { GithubIcon } from "@/components/icons/github-icon";
 import { useAuth } from "@/components/providers/auth-provider/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -35,8 +34,6 @@ type CommentCardProps = {
     image?: string | null;
   } | null;
   createdAt: string;
-  externalSource?: string | null;
-  externalUrl?: string | null;
 };
 
 export default function CommentCard({
@@ -45,8 +42,6 @@ export default function CommentCard({
   content,
   user,
   createdAt,
-  externalSource,
-  externalUrl,
 }: CommentCardProps) {
   const { t } = useTranslation();
   const { user: currentUser } = useAuth();
@@ -58,10 +53,6 @@ export default function CommentCard({
   const queryClient = useQueryClient();
 
   const canEdit = currentUser?.id === user?.id;
-  const isFromGitHub = externalSource === "github";
-  const githubProfileUrl =
-    isFromGitHub && user?.name ? `https://github.com/${user.name}` : null;
-  const commentUrl = externalUrl || null;
   const fullTimestamp = formatDateTime(createdAt);
 
   const handleEdit = useCallback(() => {
@@ -143,27 +134,8 @@ export default function CommentCard({
                       {user.email}
                     </p>
                   )}
-                  {isFromGitHub && (
-                    <div className="mt-1.5 flex items-center gap-1">
-                      <GithubIcon className="size-3 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">
-                        {t("activity:comment.github")}
-                      </span>
-                    </div>
-                  )}
                 </div>
               </div>
-              {githubProfileUrl && (
-                <a
-                  href={githubProfileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-3 flex items-center gap-1.5 border-t border-border pt-3 text-xs text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <ExternalLink className="size-3" />
-                  {t("activity:comment.viewGithubProfile")}
-                </a>
-              )}
             </HoverCardContent>
           </HoverCard>
 
@@ -184,21 +156,6 @@ export default function CommentCard({
               <p className="text-xs">{fullTimestamp}</p>
             </TooltipContent>
           </Tooltip>
-
-          {commentUrl && (
-            <>
-              <span className="text-xs text-muted-foreground/40">·</span>
-              <a
-                href={commentUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <GithubIcon className="size-3" />
-                {t("activity:comment.commentedOnGithub")}
-              </a>
-            </>
-          )}
         </div>
 
         {canEdit && !isEditing && (

@@ -4,17 +4,6 @@ type TaskLabel = {
   color: string;
 };
 
-type TaskExternalLink = {
-  id: string;
-  taskId: string;
-  integrationId: string;
-  resourceType: string;
-  externalId: string;
-  url: string;
-  title: string | null;
-  metadata: Record<string, unknown> | null;
-};
-
 export type TaskEpic = {
   id: string;
   name: string;
@@ -72,7 +61,6 @@ type Task = {
   projectName?: string;
   columnId?: string | null;
   labels?: TaskLabel[];
-  externalLinks?: TaskExternalLink[];
   // El arbol. `parentId` manda; `path` y `depth` son su forma materializada y
   // llegan del servidor ya calculados, para poder ordenar y sangrar sin
   // reconstruir la jerarquia en el cliente.

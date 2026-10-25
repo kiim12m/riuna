@@ -26,7 +26,7 @@ For development, you'll need at minimum:
 - `RIUNA_CLIENT_URL` - The URL of the web application (e.g., `http://localhost:5173`)
 - `RIUNA_API_URL` - The URL of the API (e.g., `http://localhost:1337`)
 - `AUTH_SECRET` - Secret key for JWT token generation (**must be at least 32 characters long**; use a long, random value in production)
-- `DEVICE_AUTH_CLIENT_IDS` - **Optional.** Comma-separated list of allowed device-flow OAuth client IDs. When unset, Riuna implicitly allows `riuna-cli` and `riuna-mcp` by default (no extra configuration for the CLI or MCP). Override only when you need additional trusted clients, for example `riuna-cli,riuna-mcp,my-desktop-app`.
+- `DEVICE_AUTH_CLIENT_IDS` - **Optional.** Comma-separated list of allowed device-flow OAuth client IDs. When unset, Riuna implicitly allows `riuna-cli` by default. Override only when you need additional trusted clients, for example `riuna-cli,my-desktop-app`.
 - `DATABASE_URL` - PostgreSQL connection string
 - `POSTGRES_DB` - PostgreSQL database name
 - `POSTGRES_USER` - PostgreSQL username
@@ -45,7 +45,6 @@ For local development, the web app also supports:
 Riuna supports many optional configuration options including:
 - `RIUNA_INTERNAL_API_URL` - API origin used only for server-side requests from the built-in HTTP MCP endpoint. Defaults to `http://127.0.0.1:1337`; override it only if the API is not reachable there from its own process.
 - SSO providers (GitHub OAuth via `GITHUB_OAUTH_CLIENT_ID` / `GITHUB_OAUTH_CLIENT_SECRET`, Google, Discord, Custom OAuth/OIDC)
-- GitHub repository integration (GitHub App: `GITHUB_APP_ID`, `GITHUB_PRIVATE_KEY`, `GITHUB_WEBHOOK_SECRET`, optional `GITHUB_APP_NAME`), separate from GitHub SSO
 - SMTP configuration for email
 - Access control settings
 - CORS configuration
