@@ -36,7 +36,7 @@ Jira, Asana y Notion quedaron solo documentados, por decisión del usuario.
   invitado, restringir la creación de espacios de trabajo, modo demo.
 - **API keys** por usuario, con alcance de permisos, caducidad (1/7/30/90 días
   o nunca) y límite de 100 peticiones por minuto.
-- **Device flow** para CLI y clientes MCP (`riuna-cli`, `riuna-mcp`).
+- **Device flow** para clientes de línea de órdenes (`riuna-cli`).
 - **Límites de tasa** ([ADR 074](adr/074-limites-de-tasa.md)):
   - entrar, registrarse, invitar y recuperar la contraseña, por IP;
   - toda la API, por persona o clave (600 por minuto);
@@ -769,17 +769,9 @@ Automatizaciones* y en *Administración del espacio › Automatizaciones*.
 
 ## 12. MCP — agentes de IA
 
-Dos caminos con **las mismas 69 herramientas**. Una prueba de paridad
-(`tests/api/mcp-parity.test.ts`) falla en cuanto uno gana una que el otro no;
-antes el paquete stdio se había quedado sin las cinco del plan personal y el
-cronómetro.
-
-- **Servidor HTTP integrado** en la API, en `/api/mcp`, con OAuth 2.1 y PKCE
-  S256, registro dinámico de clientes, página de consentimiento explícito y
-  sesiones aisladas por usuario.
-- **Paquete stdio publicable** `@riuna/mcp` (binario `riuna-mcp`), con
-  instalador interactivo para Cursor —global y por proyecto—, Claude Desktop o
-  una ruta JSON propia, y autenticación por device flow o `RIUNA_API_KEY`.
+Un solo camino, por HTTP ([ADR 099](adr/099-mcp-solo-por-http.md)): el servidor integrado en la
+API, en `/api/mcp`, con OAuth 2.1 y PKCE S256, registro dinámico de clientes, página de
+consentimiento explícito y sesiones aisladas por usuario.
 
 Las herramientas cubren identidad y espacios, proyectos con su estado, sus campos y sus subproyectos, los campos de las tareas con su ayuda y sus fórmulas (`list_project_fields`), tareas, comentarios,
 etiquetas, épicas, relaciones, observadores, recordatorios, acciones de un clic,

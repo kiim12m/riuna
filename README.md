@@ -49,8 +49,7 @@ Riuna requires several environment variables to be configured — see
 
 Every instance ships a built-in HTTP MCP endpoint at `/api/mcp`, so AI tools
 like Claude, Cursor, and other MCP clients can manage tasks, projects, and
-labels. For stdio clients there is also the [`@riuna/mcp`](packages/mcp)
-package, built from source (see its own README).
+labels (HTTP only; see [ADR 099](docs/adr/099-mcp-solo-por-http.md)).
 
 ## License
 

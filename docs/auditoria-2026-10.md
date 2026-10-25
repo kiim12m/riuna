@@ -176,7 +176,7 @@ documentación.
   `compose.local.yml`. Revisar también `ENVIRONMENT_SETUP.md` y `README.md`.
 - **Se mantiene**: Redis sigue como opción. No se ha decidido nada sobre él.
 
-2.5 **Retirar el paquete MCP stdio** `packages/mcp`.
+2.5 ✔ **Retirar el paquete MCP stdio** `packages/mcp`. (ADR 099)
 - Con él desaparece la copia duplicada de las 71 herramientas.
 - Quitar sus referencias en `README.md`, `SECURITY.md`, `ENVIRONMENT_SETUP.md`,
   `AGENTS.md`, `.devcontainer/devcontainer.json` y `docs/`.

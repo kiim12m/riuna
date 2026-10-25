@@ -159,7 +159,7 @@ function getDeviceAuthClientIds(): Set<string> {
         .filter(Boolean),
     );
   }
-  return new Set(["riuna-cli", "riuna-mcp"]);
+  return new Set(["riuna-cli"]);
 }
 
 function getDeviceAuthVerificationUri(): string {

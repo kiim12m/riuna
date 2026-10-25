@@ -19,7 +19,6 @@ riuna/
 ├── packages/         # Shared code and configs
 │   ├── email/        # Email utilities
 │   ├── libs/         # Typed API client and shared runtime helpers
-│   ├── mcp/          # Stdio MCP package
 │   ├── permissions/  # Shared permission vocabulary and built-in roles
 │   └── typescript-config/  # TypeScript configurations
 ├── docs/             # Riuna's own working documents (plan, ADRs, procedures)

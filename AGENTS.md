@@ -23,7 +23,6 @@ This is an operating guide, not a README. These rules are good defaults; explici
 - `apps/web` — React/Vite UI, TanStack Router and Query, fetchers, hooks, and realtime cache updates.
 - `packages/libs` — shared typed Hono client and URL helpers.
 - `packages/permissions` — canonical permission vocabulary and built-in roles.
-- `packages/mcp` — published stdio MCP package.
 - `tests/api` contains API unit tests; `tests/api-integration` contains PostgreSQL-backed integration tests.
 - `docs/` — Riuna's own working documents: [`plan.md`](docs/plan.md) (the phased roadmap and its live status — read it before starting anything substantial), [`funcionalidades.md`](docs/funcionalidades.md) (the inventory of what the application can do today), the Phase 0 gap audit, the backup procedure, [`actualizar.md`](docs/actualizar.md) (how the running instance is rebuilt and updated), [`entorno-desarrollo.md`](docs/entorno-desarrollo.md) (the dev environment that runs alongside it), and the ADRs.
 

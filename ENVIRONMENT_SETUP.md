@@ -26,7 +26,7 @@ For development, you'll need at minimum:
 - `RIUNA_CLIENT_URL` - The URL of the web application (e.g., `http://localhost:5173`)
 - `RIUNA_API_URL` - The URL of the API (e.g., `http://localhost:1337`)
 - `AUTH_SECRET` - Secret key for JWT token generation (**must be at least 32 characters long**; use a long, random value in production)
-- `DEVICE_AUTH_CLIENT_IDS` - **Optional.** Comma-separated list of allowed device-flow OAuth client IDs. When unset, Riuna implicitly allows `riuna-cli` and `riuna-mcp` by default (no extra configuration for the CLI or MCP). Override only when you need additional trusted clients, for example `riuna-cli,riuna-mcp,my-desktop-app`.
+- `DEVICE_AUTH_CLIENT_IDS` - **Optional.** Comma-separated list of allowed device-flow OAuth client IDs. When unset, Riuna implicitly allows `riuna-cli` by default. Override only when you need additional trusted clients, for example `riuna-cli,my-desktop-app`.
 - `DATABASE_URL` - PostgreSQL connection string
 - `POSTGRES_DB` - PostgreSQL database name
 - `POSTGRES_USER` - PostgreSQL username
