@@ -335,6 +335,177 @@ describe("API integration: workspace tasks spreadsheet export", () => {
     ).toEqual(["05/08/2026", "06/08/2026"]);
   });
 
+  describe("column B, the last time someone worked on the task (ADR 094)", () => {
+    async function exportColumnB(
+      owner: Awaited<ReturnType<typeof createWorkspaceMember>>,
+    ) {
+      mockAuthenticatedSession(owner.user);
+      const { app } = createApp();
+      const response = await app.request(
+        `/api/task/export/servitec/${owner.workspace.id}`,
+      );
+      const sheet = await readSheet(response);
+      const byTitle = new Map<string, Date>();
+      for (let row = 4; row <= sheet.rowCount; row += 1) {
+        const title = sheet.getCell(row, 3).value;
+        const date = sheet.getCell(row, 2).value;
+        if (title && date instanceof Date) byTitle.set(String(title), date);
+      }
+      return byTitle;
+    }
+
+    const day = (iso: string) => new Date(`${iso}T00:00:00Z`);
+
+    it("ignores everything that is not a comment or time worked", async () => {
+      const owner = await createWorkspaceMember({ role: "owner" });
+      const { project, columns } = await createProjectFixture({
+        workspaceId: owner.workspace.id,
+      });
+      const task = await createTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+        title: "Sin tocar",
+        status: "to-do",
+        number: 1,
+      });
+      await db
+        .update(schema.taskTable)
+        .set({
+          createdAt: new Date("2026-10-01T10:00:00Z"),
+          // Lo que habria dejado una reimportacion de la hoja.
+          updatedAt: new Date("2026-10-23T10:00:00Z"),
+        })
+        .where(eq(schema.taskTable.id, task.id));
+      await db.insert(schema.activityTable).values({
+        taskId: task.id,
+        type: "status_changed",
+        userId: owner.user.id,
+        createdAt: new Date("2026-10-22T10:00:00Z"),
+      });
+
+      const dates = await exportColumnB(owner);
+
+      expect(dates.get("Sin tocar")).toEqual(day("2026-10-01"));
+    });
+
+    it("takes the most recent of the comment and the time entries", async () => {
+      const owner = await createWorkspaceMember({ role: "owner" });
+      const { project, columns } = await createProjectFixture({
+        workspaceId: owner.workspace.id,
+      });
+      const commented = await createTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+        title: "Comentada",
+        status: "to-do",
+        number: 1,
+      });
+      const closed = await createTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+        title: "Cronometro cerrado",
+        status: "to-do",
+        number: 2,
+      });
+      const running = await createTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+        title: "Cronometro en marcha",
+        status: "to-do",
+        number: 3,
+      });
+      const manual = await createTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+        title: "Registro manual antiguo",
+        status: "to-do",
+        number: 4,
+      });
+      await db
+        .update(schema.taskTable)
+        .set({ createdAt: new Date("2026-09-01T10:00:00Z") });
+
+      await db.insert(schema.activityTable).values([
+        {
+          taskId: commented.id,
+          type: "comment",
+          userId: owner.user.id,
+          content: "Primero",
+          createdAt: new Date("2026-10-05T10:00:00Z"),
+        },
+        {
+          taskId: commented.id,
+          type: "comment",
+          userId: owner.user.id,
+          content: "Segundo",
+          createdAt: new Date("2026-10-07T10:00:00Z"),
+        },
+      ]);
+      await db.insert(schema.timeEntryTable).values([
+        // Cerrado: cuenta su cierre, no su arranque.
+        {
+          taskId: closed.id,
+          userId: owner.user.id,
+          startTime: new Date("2026-10-10T09:00:00Z"),
+          endTime: new Date("2026-10-12T11:00:00Z"),
+          duration: 7200,
+        },
+        // En marcha: cuenta su arranque.
+        {
+          taskId: running.id,
+          userId: owner.user.id,
+          startTime: new Date("2026-10-15T09:00:00Z"),
+          endTime: null,
+        },
+        // Un registro manual cuenta con su fecha, no con la de escribirlo.
+        {
+          taskId: manual.id,
+          userId: owner.user.id,
+          startTime: new Date("2026-09-15T09:00:00Z"),
+          endTime: new Date("2026-09-15T10:00:00Z"),
+          duration: 3600,
+        },
+      ]);
+
+      const dates = await exportColumnB(owner);
+
+      expect(dates.get("Comentada")).toEqual(day("2026-10-07"));
+      expect(dates.get("Cronometro cerrado")).toEqual(day("2026-10-12"));
+      expect(dates.get("Cronometro en marcha")).toEqual(day("2026-10-15"));
+      expect(dates.get("Registro manual antiguo")).toEqual(day("2026-09-15"));
+    });
+
+    it("counts a focus session like any other time entry", async () => {
+      const owner = await createWorkspaceMember({ role: "owner" });
+      const { project, columns } = await createProjectFixture({
+        workspaceId: owner.workspace.id,
+      });
+      const task = await createTask({
+        projectId: project.id,
+        columnId: columns.todo.id,
+        title: "Con pomodoro",
+        status: "to-do",
+        number: 1,
+      });
+      await db
+        .update(schema.taskTable)
+        .set({ createdAt: new Date("2026-09-01T10:00:00Z") })
+        .where(eq(schema.taskTable.id, task.id));
+      await db.insert(schema.timeEntryTable).values({
+        taskId: task.id,
+        userId: owner.user.id,
+        startTime: new Date("2026-10-20T09:00:00Z"),
+        endTime: new Date("2026-10-20T09:25:00Z"),
+        duration: 1500,
+        focusMode: "pomodoro",
+      });
+
+      const dates = await exportColumnB(owner);
+
+      expect(dates.get("Con pomodoro")).toEqual(day("2026-10-20"));
+    });
+  });
+
   it("returns an empty but usable sheet for a workspace with no tasks", async () => {
     const owner = await createWorkspaceMember({ role: "owner" });
 

@@ -670,7 +670,9 @@ ajustes, y se rellenan en el detalle de la tarea y en la propia tabla.
   aplicados**, desde el menú «Exportar» de la Tabla, el Gantt y el Calendario; y
   el libro completo del espacio en formato SERVITEC
   ([ADR 012](adr/012-exportacion-a-excel.md)), con los comentarios seguidos y la
-  fecha de cada uno en negrita.
+  fecha de cada uno en negrita. Su columna B («FECHA») es cuándo se trabajó por
+  última vez en la tarea: el comentario o la entrada de tiempo más recientes, o el
+  alta si no hay ninguno ([ADR 094](adr/094-la-fecha-de-la-hoja-es-la-del-ultimo-trabajo.md)).
 - **Exportar a PDF** ([ADR 091](adr/091-exportar-a-pdf.md)), con la marca, de
   dónde sale, quién lo generó y la página:
   - una tarea, desde sus acciones: ficha con los campos, descripción, subtareas y
