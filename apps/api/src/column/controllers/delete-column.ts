@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { columnTable, taskTable } from "../../database/schema";
@@ -12,10 +12,20 @@ async function deleteColumn(id: string) {
     throw new HTTPException(404, { message: "Column not found" });
   }
 
+  // Tambien las que solo la nombran por `status`, con `column_id` nulo: el
+  // tablero las pinta en esta columna, y al borrarla desaparecerian de el.
   const [taskCount] = await db
     .select({ count: sql<number>`count(*)` })
     .from(taskTable)
-    .where(eq(taskTable.columnId, id));
+    .where(
+      or(
+        eq(taskTable.columnId, id),
+        and(
+          eq(taskTable.projectId, existing.projectId),
+          eq(taskTable.status, existing.slug),
+        ),
+      ),
+    );
 
   if (taskCount && taskCount.count > 0) {
     throw new HTTPException(409, {
